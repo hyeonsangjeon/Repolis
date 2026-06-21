@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: refresh-repolis
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -37,12 +41,19 @@ jobs:
 
       - name: Commit if changed
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A data/logs repos.json
           if git diff --cached --quiet; then
             echo "no changes"
           else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "chore: refresh Repolis traffic + data ($(date -u +%F))"
-            git push
+            # Rebase-and-retry so an overlapping run (manual + scheduled) never loses a push
+            for i in 1 2 3 4 5; do
+              if git push; then echo "pushed"; exit 0; fi
+              echo "push rejected (attempt $i) — rebasing on latest main"
+              git pull --rebase --autostash origin main
+            done
+            echo "push failed after retries" >&2
+            exit 1
           fi
