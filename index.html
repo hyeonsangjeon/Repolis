@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%98%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+<title>Repolis · 레포들의 도시 · hyeonsangjeon</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #8ed3cd;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    -webkit-user-select: none; user-select: none; }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  .hud { position: fixed; z-index: 10; color: #4a2f1e; }
+  #topbar { top: 14px; left: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .badge { background: rgba(255,251,242,.86); backdrop-filter: blur(6px);
+    border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: 13px;
+    box-shadow: 0 4px 14px rgba(80,50,20,.16); }
+  .badge b { color: #d2622f; }
+
+  #menuBtn { top: 14px; right: 14px; width: 46px; height: 46px; border: none; cursor: pointer;
+    border-radius: 14px; background: rgba(255,251,242,.9); box-shadow: 0 4px 14px rgba(80,50,20,.2);
+    font-size: 20px; display: flex; align-items: center; justify-content: center; position: fixed; z-index: 13; }
+  #menuBtn .dot { position: absolute; top: 8px; right: 8px; width: 9px; height: 9px;
+    border-radius: 50%; background: #e5533a; box-shadow: 0 0 0 2px #fff; }
+
+  #panel { position: fixed; z-index: 12; top: 70px; right: 14px; width: 300px; max-width: calc(100vw - 28px);
+    background: rgba(255,251,242,.95); backdrop-filter: blur(10px); border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(70,40,15,.26); padding: 12px; transform-origin: top right;
+    transition: opacity .18s ease, transform .18s ease; }
+  #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
+    padding: 4px 8px 10px; }
+  .repoRow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 12px;
+    cursor: pointer; transition: background .12s; }
+  .repoRow:hover { background: #f6ecdb; }
+  .repoRow .pin { width: 26px; height: 26px; border-radius: 8px; flex: 0 0 26px; display: flex;
+    align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; }
+  .repoRow .meta { flex: 1; min-width: 0; }
+  .repoRow .meta .nm { font-weight: 700; font-size: 13px; color: #4a2f1e; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; }
+  .repoRow .meta .sub { font-size: 11px; color: #ab8a66; }
+  .repoRow .go { font-size: 11px; font-weight: 700; color: #b85a26; background: #f6e3cf;
+    padding: 4px 8px; border-radius: 8px; }
+  .repoRow.visited .nm::after { content: " ✓"; color: #2f9d6a; }
+  #repoSearch { width: 100%; border: 1px solid #ecdcc4; background: #fffdf8; border-radius: 11px;
+    padding: 9px 12px; font-size: 13px; color: #4a2f1e; outline: none; margin-bottom: 8px; }
+  #repoSearch:focus { border-color: #e0b07a; }
+  #repoList { max-height: min(58vh, 460px); overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
+  #repoList::-webkit-scrollbar { width: 7px; }
+  #repoList::-webkit-scrollbar-thumb { background: #e6d3b8; border-radius: 6px; }
+  .secHead { font-size: 11px; font-weight: 800; letter-spacing: .03em; color: #b08a5e;
+    padding: 9px 8px 4px; display: flex; align-items: center; gap: 6px; }
+  .secHead .ct { font-weight: 600; color: #c9ab84; }
+  .noHit { padding: 14px 8px; font-size: 12px; color: #b29a78; text-align: center; }
+
+  #prompt { position: fixed; z-index: 11; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+    background: rgba(60,40,24,.9); color: #fff; padding: 12px 20px; border-radius: 14px; font-weight: 600;
+    font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: 0; transition: all .2s ease;
+    display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+  #prompt.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #prompt .key { background: #fff; color: #4a2f1e; border-radius: 7px; padding: 2px 9px; font-weight: 800; font-size: 12px; }
+
+  #modal { position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center;
+    background: rgba(30,18,8,.45); backdrop-filter: blur(4px); padding: 20px; }
+  #modal.show { display: flex; }
+  .card { background: #fffaf2; border-radius: 22px; width: 420px; max-width: 100%; overflow: hidden;
+    box-shadow: 0 24px 70px rgba(40,22,8,.4); animation: pop .22s cubic-bezier(.2,.9,.3,1.3); }
+  @keyframes pop { from { transform: scale(.9) translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .card .top { padding: 22px 24px; color: #fff; }
+  .card .top .lang { font-size: 12px; font-weight: 700; opacity: .92; letter-spacing: .03em; }
+  .card .top h2 { font-size: 21px; margin: 4px 0 2px; word-break: break-all; }
+  .card .top .stars { font-size: 13px; font-weight: 600; opacity: .92; }
+  .card .body { padding: 18px 24px 8px; }
+  .card .body p { font-size: 14px; line-height: 1.55; color: #5a4636; }
+  .card .body p.empty { color: #b39f8c; font-style: italic; }
+  .card .actions { padding: 16px 24px 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { flex: 1; min-width: 130px; text-align: center; text-decoration: none; padding: 12px 14px;
+    border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; }
+  .btn.gh { background: #2b2420; color: #fff; }
+  .btn.live { background: #c2702f; color: #fff; }
+  .btn.close { flex: 0 0 auto; min-width: 0; background: #f1e6d6; color: #6a523d; }
+  .card .hero { width: 100%; height: 188px; object-fit: cover; display: block; background: #e8ddca; }
+  .card .chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 14px 24px 2px; }
+  .chip { font-size: 12px; font-weight: 700; color: #6a523d; background: #f4ead8; border-radius: 999px; padding: 5px 11px; }
+  .chip b { color: #d2622f; }
+  .card .metricnote { font-size: 11px; color: #b39f8c; padding: 8px 24px 0; line-height: 1.4; }
+
+  #intro { position: fixed; inset: 0; z-index: 30; background: linear-gradient(165deg,#7fcdc4 0%,#e8b87a 100%);
+    display: flex; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 24px; }
+  #intro .inner { max-width: 440px; }
+  #intro h1 { font-size: 27px; line-height: 1.3; margin-bottom: 8px; text-shadow: 0 2px 8px rgba(60,30,10,.25); }
+  #intro .sub { font-size: 15px; opacity: .95; margin-bottom: 22px; line-height: 1.5; }
+  #intro .ctrls { display: flex; gap: 14px; justify-content: center; margin-bottom: 26px; flex-wrap: wrap; }
+  #intro .ctrls div { background: rgba(255,255,255,.18); border-radius: 12px; padding: 12px 16px; font-size: 13px; }
+  #intro .ctrls b { display: block; font-size: 16px; margin-bottom: 3px; }
+  #startBtn { background: #fff; color: #c2702f; border: none; border-radius: 14px; padding: 14px 40px;
+    font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(60,30,10,.25); }
+  #intro.hidden { opacity: 0; pointer-events: none; transition: opacity .4s; }
+
+  #loading { position: fixed; inset: 0; z-index: 40; background: #5fb0a8; color: #fff; display: flex;
+    align-items: center; justify-content: center; font-size: 15px; font-weight: 600; }
+
+  #stick { position: fixed; z-index: 11; left: 26px; bottom: 26px; width: 120px; height: 120px;
+    border-radius: 50%; background: rgba(255,255,255,.2); border: 2px solid rgba(255,255,255,.45);
+    display: none; touch-action: none; }
+  #stick .nub { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,255,255,.8); box-shadow: 0 3px 10px rgba(0,0,0,.2); }
+  @media (hover: none) and (pointer: coarse) { #stick { display: block; } }
+
+  .hint { position: fixed; z-index: 9; left: 50%; bottom: 6px; transform: translateX(-50%);
+    font-size: 11px; color: rgba(74,47,30,.6); font-weight: 600; }
+
+  /* ---- LLM taxi chat ---- */
+  #taxiBtn { position: fixed; z-index: 13; right: 14px; bottom: 18px; width: 60px; height: 60px;
+    border: none; border-radius: 50%; cursor: pointer; font-size: 28px; background: #ffd23f;
+    box-shadow: 0 10px 26px rgba(70,40,15,.32); transition: transform .15s; }
+  #taxiBtn:hover { transform: scale(1.07); }
+  #taxiBtn .pulse { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid #ffd23f;
+    animation: tpulse 2s ease-out infinite; pointer-events: none; }
+  @keyframes tpulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
+  #chat { position: fixed; z-index: 14; right: 14px; bottom: 88px; width: 360px; max-width: calc(100vw - 28px);
+    background: rgba(255,251,242,.97); backdrop-filter: blur(12px); border-radius: 20px;
+    box-shadow: 0 16px 48px rgba(70,40,15,.32); display: flex; flex-direction: column; overflow: hidden;
+    transform-origin: bottom right; transition: opacity .2s ease, transform .2s ease; }
+  #chat.hidden { opacity: 0; transform: scale(.92) translateY(8px); pointer-events: none; }
+  .chatHead { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: #fff4d6;
+    border-bottom: 1px solid #f0e2c6; }
+  .chatHead .ttl { font-weight: 800; font-size: 14px; color: #6a4a22; flex: 1; }
+  .chatHead select { font-size: 11px; border: 1px solid #e8d4b2; border-radius: 9px; padding: 4px 6px;
+    background: #fffdf8; color: #6a4a22; outline: none; }
+  .chatHead .x { border: none; background: none; font-size: 20px; color: #b08a5e; cursor: pointer; line-height: 1; }
+  #chatLog { padding: 12px; display: flex; flex-direction: column; gap: 9px; height: 320px; overflow-y: auto; }
+  #chatLog::-webkit-scrollbar { width: 7px; } #chatLog::-webkit-scrollbar-thumb { background: #e6d3b8; border-radius: 6px; }
+  .msg { max-width: 84%; padding: 9px 12px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
+  .msg.bot { align-self: flex-start; background: #f3ead4; color: #4a2f1e; border-bottom-left-radius: 5px; }
+  .msg.me { align-self: flex-end; background: #5bbcb0; color: #fff; border-bottom-right-radius: 5px; }
+  .msg.bot b { color: #b85a26; }
+  .msg .ride { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; cursor: pointer;
+    background: #ffd23f; color: #6a4a22; font-weight: 800; font-size: 12px; padding: 7px 12px; border-radius: 10px; }
+  .msg .ride:hover { filter: brightness(1.05); }
+  .msg .alt { display: inline-block; margin: 4px 5px 0 0; font-size: 11px; font-weight: 700; color: #3a6fb0;
+    background: #e7eef8; padding: 4px 9px; border-radius: 8px; cursor: pointer; }
+  .msg.typing { color: #b29a78; font-style: italic; }
+  .chatIn { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #f0e2c6; }
+  .chatIn input { flex: 1; border: 1px solid #ecdcc4; background: #fffdf8; border-radius: 12px;
+    padding: 10px 12px; font-size: 13px; color: #4a2f1e; outline: none; }
+  .chatIn input:focus { border-color: #e0b07a; }
+  .chatIn button { border: none; background: #5bbcb0; color: #fff; font-weight: 800; border-radius: 12px;
+    padding: 0 16px; font-size: 14px; cursor: pointer; }
+  #drivebar { position: fixed; z-index: 13; left: 50%; top: 64px; transform: translateX(-50%);
+    background: rgba(74,47,30,.9); color: #fff; font-size: 13px; font-weight: 700; padding: 9px 18px;
+    border-radius: 14px; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 22px rgba(0,0,0,.25); }
+  #drivebar .cancel { background: rgba(255,255,255,.22); border-radius: 8px; padding: 3px 9px; font-size: 11px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="loading">지브리 마을을 짓는 중…</div>
+
+<div id="topbar" class="hud">
+  <div class="badge">🏙️ Repolis</div>
+  <div class="badge">방문 <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
+  <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
+</div>
+<button id="menuBtn">☰<span class="dot"></span></button>
+
+<div id="panel" class="hidden">
+  <h3>Repolis · 길찾기</h3>
+  <input id="repoSearch" type="text" placeholder="레포·언어·주제 검색…" autocomplete="off" />
+  <div id="repoList"></div>
+</div>
+
+<div id="prompt"></div>
+
+<div id="modal">
+  <div class="card">
+    <img id="cardImg" class="hero" alt="repo social preview" />
+    <div class="top" id="cardTop">
+      <div class="lang" id="cardLang"></div>
+      <h2 id="cardName"></h2>
+      <div class="stars" id="cardStars"></div>
+    </div>
+    <div class="chips" id="cardChips"></div>
+    <div class="body"><p id="cardDesc"></p></div>
+    <div class="metricnote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.</div>
+    <div class="actions" id="cardActions"></div>
+  </div>
+</div>
+
+<div id="intro">
+  <div class="inner">
+    <h1>🏙️ Repolis — 레포들의 도시</h1>
+    <div class="sub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.</div>
+    <div class="ctrls">
+      <div><b>WASD / ←↑↓→</b>걷기</div>
+      <div><b>마우스 드래그</b>둘러보기</div>
+      <div><b>Enter / 클릭</b>레포 열기</div>
+    </div>
+    <button id="startBtn">마을 입장 →</button>
+  </div>
+</div>
+
+<div id="stick"><div class="nub"></div></div>
+<div class="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기</div>
+
+<div id="drivebar">🚕 <span id="driveName"></span> (으)로 가는 중… <span class="cancel" id="driveCancel">멈추기</span></div>
+
+<button id="taxiBtn">🚕<span class="pulse"></span></button>
+<div id="chat" class="hidden">
+  <div class="chatHead">
+    <span class="ttl">🚕 레포 택시기사</span>
+    <select id="modeSel" title="AI 모드">
+      <option value="local">로컬검색 · 무키</option>
+      <option value="webllm">WebLLM · 브라우저AI</option>
+      <option value="proxy">AI 프록시 · 고품질</option>
+    </select>
+    <button class="x" id="chatClose">×</button>
+  </div>
+  <div id="chatLog"></div>
+  <div class="chatIn">
+    <input id="chatText" type="text" placeholder="어떤 레포를 찾으세요? 예: RAG 관련" autocomplete="off" />
+    <button id="chatSend">▶</button>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+/* ====================== REPO DATA (loaded from repos.json, traffic-driven) ====================== */
+const OWNER = 'hyeonsangjeon';
+let REPOS = [];
+try { REPOS = await fetch('repos.json', { cache:'no-cache' }).then(r=>r.json()); }
+catch(e){ console.error('repos.json load failed', e); }
+
+/* language → palette (wall / roof / accent) — gives neighborhood color */
+const LANG_PALETTE = {
+  'Python':{wall:0xf0dbb0,roof:0x4f7cc2,accent:0x3a6fb0},
+  'Jupyter Notebook':{wall:0xf3d9bf,roof:0xd2752f,accent:0xe0742a},
+  'JavaScript':{wall:0xf6ecc0,roof:0xd9b730,accent:0xcaa916},
+  'TypeScript':{wall:0xd9e6f2,roof:0x3a76c0,accent:0x2f6fc0},
+  'Java':{wall:0xf0d9cf,roof:0xb5532f,accent:0xc05a33},
+  'Shell':{wall:0xd6ead2,roof:0x4f9a52,accent:0x59a85c},
+  'Dockerfile':{wall:0xd4e4ee,roof:0x2f80b3,accent:0x2f9bd0},
+  'HTML':{wall:0xf2ddc8,roof:0xd2562f,accent:0xe06a3a},
+  'PHP':{wall:0xe2dcf0,roof:0x6f5aa8,accent:0x7d68c0},
+  'PowerShell':{wall:0xd4dcee,roof:0x35509a,accent:0x3a5cc0},
+  'CSS':{wall:0xf0d8e6,roof:0xc04f8f,accent:0xd05fa0},
+  'Other':{wall:0xe7ddca,roof:0x8a7a5c,accent:0x9a875f}
+};
+const pal = l => LANG_PALETTE[l] || LANG_PALETTE.Other;
+const hexstr = n => '#'+(n>>>0).toString(16).padStart(6,'0');
+const labelOf = s => s.replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+
+const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
+const _maxVis    = Math.max(1, ...REPOS.map(r=>r.visitors||0));
+REPOS.forEach(repo=>{
+  const p = pal(repo.lang);
+  repo.label = labelOf(repo.repo);
+  repo.wall = p.wall; repo.roof = p.roof; repo.color = hexstr(p.accent);
+  repo.live = repo.home || ''; repo.vuniq = repo.visitors;
+  const lv = Math.log1p(repo.visitors||0), lc = Math.log1p(repo.clones||0);
+  repo._bright = Math.min(1, lv/Math.log1p(_maxVis));
+  repo._fancy  = Math.min(1, lc/Math.log1p(_maxClones));
+  repo._flags  = Math.round(repo._fancy*6);
+  repo._h = Math.min(18, 4 + lv*1.5 + Math.log1p(repo.stars||0)*0.55);
+  repo._w = 4.4 + Math.min(repo.forks||0,40)*0.13;
+  repo._yard = 5.2 + Math.log1p(repo.views||0)*0.95;
+  repo._downtown = (repo.rank||0) < 14;
+});
+
+/* ====================== RENDERER / SCENE ====================== */
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xcfe7da, 120, 320);
+const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, 0.1, 600);
+
+/* toon gradient + material factory */
+function toonGradient(){
+  const c = new Uint8Array([70,128,200,255]);
+  const t = new THREE.DataTexture(c, c.length, 1, THREE.RedFormat); t.needsUpdate = true; return t;
+}
+const GRAD = toonGradient();
+const toon = (color)=> new THREE.MeshToonMaterial({ color, gradientMap:GRAD });
+const basic = (color)=> new THREE.MeshBasicMaterial({ color });
+
+/* ---- cartoon outline (inverted hull) ---- */
+const outlineCache = {};
+function outlineMat(th){
+  if(outlineCache[th]) return outlineCache[th];
+  const m = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    uniforms: { th:{ value: th } },
+    vertexShader: `uniform float th; void main(){
+      vec3 n = normalize(normalMatrix * normal);
+      vec4 mv = modelViewMatrix * vec4(position,1.0);
+      mv.xyz += n * th;
+      gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `void main(){ gl_FragColor = vec4(0.16,0.12,0.10,1.0); }`
+  });
+  outlineCache[th] = m; return m;
+}
+function outline(mesh, th=0.05){
+  const o = new THREE.Mesh(mesh.geometry, outlineMat(th));
+  o.castShadow = false; o.receiveShadow = false; o.renderOrder = -1;
+  mesh.add(o); return mesh;
+}
+/* rounded box mesh helper */
+function rbox(w,h,d,color,r=0.12,seg=3){
+  const m = new THREE.Mesh(new RoundedBoxGeometry(w,h,d,seg,r), toon(color));
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
+
+/* ---- lights (golden hour warmth) ---- */
+scene.add(new THREE.HemisphereLight(0xcfeee8, 0x86996a, 0.85));
+const sun = new THREE.DirectionalLight(0xffe2b0, 1.45);
+sun.position.set(38, 46, 30); sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.near=1; sun.shadow.camera.far=220;
+sun.shadow.camera.left=-90; sun.shadow.camera.right=90;
+sun.shadow.camera.top=90; sun.shadow.camera.bottom=-90;
+sun.shadow.bias=-0.0004; sun.shadow.normalBias=0.02;
+scene.add(sun);
+
+/* ---- sky dome (teal→warm horizon) ---- */
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(320,32,16),
+  new THREE.ShaderMaterial({ side:THREE.BackSide,
+    uniforms:{ top:{value:new THREE.Color(0x4fb4c2)}, mid:{value:new THREE.Color(0xbfe9e2)}, bot:{value:new THREE.Color(0xfbe8c8)} },
+    vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
+    fragmentShader:`uniform vec3 top; uniform vec3 mid; uniform vec3 bot; varying vec3 vP;
+      void main(){ float h=normalize(vP).y*0.5+0.5;
+        vec3 c = h<0.5 ? mix(bot,mid,smoothstep(0.0,0.5,h)) : mix(mid,top,smoothstep(0.5,0.95,h));
+        gl_FragColor=vec4(c,1.0);} `
+  })));
+
+/* ---- ground ---- */
+const ground = new THREE.Mesh(new THREE.CircleGeometry(155,64), toon(0x91c266));
+ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5,40), toon(0xd8c596));
+plaza.rotation.x=-Math.PI/2; plaza.position.y=0.02; plaza.receiveShadow=true; scene.add(plaza);
+// plaza rim
+const rim = new THREE.Mesh(new THREE.RingGeometry(9.5,10.2,40), basic(0xc3ad7c));
+rim.rotation.x=-Math.PI/2; rim.position.y=0.025; scene.add(rim);
+// central landmark — flat plaza medallion + flowers (nothing tall, so houses stay visible)
+(function(){
+  const m1=new THREE.Mesh(new THREE.CylinderGeometry(3.0,3.0,0.12,28), toon(0xcdbfa0));
+  m1.position.y=0.06; m1.receiveShadow=true; scene.add(m1);
+  const m2=new THREE.Mesh(new THREE.CylinderGeometry(2.0,2.0,0.16,28), toon(0xe6d8b6));
+  m2.position.y=0.09; m2.receiveShadow=true; scene.add(m2);
+  const m3=new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.9,0.2,24), basic(0xd2622f));
+  m3.position.y=0.11; scene.add(m3);
+  for(let i=0;i<8;i++){ const a=i/8*Math.PI*2;
+    flowerPatch(Math.cos(a)*4.4, Math.sin(a)*4.4); }
+})();
+
+/* ---- clouds ---- */
+const clouds=[];
+for(let i=0;i<16;i++){
+  const g=new THREE.Group(), n=2+(Math.random()*3|0);
+  for(let j=0;j<n;j++){
+    const s=4+Math.random()*5;
+    const m=new THREE.Mesh(new THREE.SphereGeometry(s,10,8),
+      new THREE.MeshBasicMaterial({color:0xfffdf6,transparent:true,opacity:.92}));
+    m.position.set((Math.random()-.5)*11,(Math.random()-.5)*2,(Math.random()-.5)*6); m.scale.y=.6; g.add(m);
+  }
+  const a=Math.random()*Math.PI*2, r=95+Math.random()*130;
+  g.position.set(Math.cos(a)*r, 48+Math.random()*30, Math.sin(a)*r);
+  g.userData.spd=.4+Math.random()*.7; clouds.push(g); scene.add(g);
+}
+
+/* ---- trees / rocks / flowers ---- */
+function makeTree(x,z,s=1,big=false){
+  const g=new THREE.Group();
+  const trunk=rbox(0.5*s,1.8*s,0.5*s,0x7a5230,0.18); trunk.position.y=0.9*s; outline(trunk,0.045*s); g.add(trunk);
+  const greens=[0x5fa84a,0x4f9740,0x6cb858];
+  const n=big?4:3;
+  for(let i=0;i<n;i++){
+    const c=new THREE.Mesh(new THREE.ConeGeometry((1.6-i*0.3)*s,1.6*s,7), toon(greens[i%3]));
+    c.position.y=(1.8+i*0.85)*s; c.castShadow=true; outline(c,0.05*s); g.add(c);
+  }
+  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); return g;
+}
+function makeRock(x,z,s=1){
+  const r=new THREE.Mesh(new THREE.DodecahedronGeometry(0.6*s,0), toon(0x9a978d));
+  r.position.set(x,0.3*s,z); r.castShadow=true; r.receiveShadow=true;
+  r.rotation.set(Math.random(),Math.random(),Math.random()); outline(r,0.04*s); scene.add(r);
+}
+function flowerPatch(x,z){
+  const cols=[0xff6b6b,0xffd93d,0xfff0f0,0xff9ec7,0xffffff];
+  for(let i=0;i<5;i++){
+    const f=new THREE.Mesh(new THREE.SphereGeometry(0.18,6,5), basic(cols[Math.random()*cols.length|0]));
+    f.position.set(x+(Math.random()-.5)*1.6, 0.18, z+(Math.random()-.5)*1.6); scene.add(f);
+  }
+}
+for(let i=0;i<78;i++){ const a=Math.random()*Math.PI*2, r=112+Math.random()*38;
+  const x=Math.cos(a)*r, z=Math.sin(a)*r;
+  const t=Math.random();
+  if(t<0.7) makeTree(x,z,0.8+Math.random()*1.3);
+  else if(t<0.88) makeRock(x,z,0.7+Math.random()*1.3);
+  else flowerPatch(x,z);
+}
+
+/* ---- sign texture ---- */
+function signTexture(text){
+  const cv=document.createElement('canvas'); cv.width=320; cv.height=100; const ctx=cv.getContext('2d');
+  ctx.fillStyle='#fff8e9'; rr(ctx,6,6,308,88,16); ctx.fill();
+  ctx.lineWidth=6; ctx.strokeStyle='#9c6b3f'; rr(ctx,6,6,308,88,16); ctx.stroke();
+  ctx.fillStyle='#4a2f1e'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='700 30px -apple-system, sans-serif';
+  const words=text.split(' '); let line='', lines=[];
+  for(const w of words){ const test=line?line+' '+w:w; if(ctx.measureText(test).width>286 && line){ lines.push(line); line=w; } else line=test; }
+  if(line) lines.push(line); lines=lines.slice(0,2);
+  const y0=50-(lines.length-1)*17;
+  lines.forEach((l,i)=>ctx.fillText(l,160,y0+i*34,292));
+  const t=new THREE.CanvasTexture(cv); t.anisotropy=4; return t;
+}
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+/* ---- gold star ornament (flat shape) ---- */
+const _starShape=(()=>{ const s=new THREE.Shape(); for(let i=0;i<10;i++){ const a=Math.PI/5*i-Math.PI/2; const rr=(i%2?0.21:0.5); const px=Math.cos(a)*rr, py=Math.sin(a)*rr; i?s.lineTo(px,py):s.moveTo(px,py);} s.closePath(); return s; })();
+const STAR_GEO=new THREE.ShapeGeometry(_starShape);
+const STAR_MAT=new THREE.MeshBasicMaterial({color:0xffd23f,side:THREE.DoubleSide});
+
+/* ---- town layout: concentric ring streets, downtown → hometown by rank ---- */
+const buildings=[];
+const RINGS=[{r:27,n:6},{r:47,n:10},{r:70,n:14},{r:96,n:22}];
+(function place(){ let idx=0;
+  RINGS.forEach((ring,ri)=>{ for(let k=0;k<ring.n && idx<REPOS.length;k++,idx++){ const repo=REPOS[idx];
+    const ang=(k/ring.n)*Math.PI*2 + (ri%2?Math.PI/ring.n:0) - Math.PI/2;
+    repo._ang=ang; repo._x=Math.cos(ang)*ring.r; repo._z=Math.sin(ang)*ring.r; } });
+  while(idx<REPOS.length){ const repo=REPOS[idx]; const ang=(idx/8)*Math.PI*2; repo._ang=ang; repo._x=Math.cos(ang)*120; repo._z=Math.sin(ang)*120; idx++; }
+})();
+
+/* ring roads + radial avenues */
+RINGS.forEach(ring=>{ const road=new THREE.Mesh(new THREE.RingGeometry(ring.r-1.9,ring.r+1.9,96), toon(0xccb78a)); road.rotation.x=-Math.PI/2; road.position.y=0.013; road.receiveShadow=true; scene.add(road); });
+for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, len=110; const av=new THREE.Mesh(new THREE.PlaneGeometry(3.6,len), toon(0xccb78a)); av.rotation.x=-Math.PI/2; av.rotation.z=-ang; av.position.set(Math.cos(ang)*len/2,0.012,Math.sin(ang)*len/2); av.receiveShadow=true; scene.add(av); }
+
+function makeBuilding(repo){
+  const h=repo._h, w=repo._w, d=w, bright=repo._bright, fancy=repo._fancy, flags=repo._flags, yr=repo._yard;
+  const g=new THREE.Group(); g.position.set(repo._x,0,repo._z); g.rotation.y=-repo._ang-Math.PI/2;
+
+  // yard plot + hedge (size = views)
+  const plot=new THREE.Mesh(new THREE.CircleGeometry(yr,30), toon(repo._downtown?0xcbb888:0x86c069));
+  plot.rotation.x=-Math.PI/2; plot.position.y=0.018; plot.receiveShadow=true; g.add(plot);
+  const hedge=new THREE.Mesh(new THREE.TorusGeometry(yr,0.28,6,48), toon(repo._downtown?0xb7a274:0x5d9e46));
+  hedge.rotation.x=Math.PI/2; hedge.position.y=0.34; g.add(hedge);
+  if(!repo._downtown){ for(let i=0;i<3;i++){ const a=Math.random()*Math.PI*2, rr=yr*(0.4+Math.random()*0.4);
+    const b=new THREE.Mesh(new THREE.SphereGeometry(0.4+Math.random()*0.3,8,6), toon(0x5aa048)); b.position.set(Math.cos(a)*rr,0.4,Math.sin(a)*rr); b.scale.y=0.8; g.add(b); } }
+
+  // body + roof + chimney
+  const body=rbox(w,h,d,repo.wall,0.2); body.position.y=h/2; outline(body,0.06); g.add(body);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(w*0.95,2.6,4), toon(repo.roof)); roof.position.y=h+1.3; roof.rotation.y=Math.PI/4; roof.castShadow=true; outline(roof,0.06); g.add(roof);
+  const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.3,h+1.4,d*0.22); outline(chim,0.04); g.add(chim);
+  // door + awning
+  const door=rbox(1.4,2.1,0.3,0x6e4a2e,0.12); door.position.set(0,1.05,d/2); outline(door,0.04); g.add(door);
+  const knob=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6), basic(0xf3d27a)); knob.position.set(0.44,1.05,d/2+0.18); g.add(knob);
+  const awn=rbox(1.9,0.24,0.85,repo.roof,0.08); awn.position.set(0,2.3,d/2+0.32); outline(awn,0.03); g.add(awn);
+  // windows + warm glow (brightness = visitors)
+  const glowCol=new THREE.Color(0x352815).lerp(new THREE.Color(0xffe9a8), bright);
+  const rows = h>10.5?[h*0.32,h*0.55,h*0.78] : h>6.5?[h*0.42,h*0.72] : [Math.min(2.6,h*0.5)];
+  const xs=[-w*0.27,w*0.27];
+  rows.forEach(wy=>xs.forEach(wx=>{ const fr=rbox(1.05,1.05,0.22,0xf3ead4,0.06); fr.position.set(wx,wy,d/2); g.add(fr);
+    const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.72), basic(glowCol.getHex())); gl.position.set(wx,wy,d/2+0.12); g.add(gl); }));
+  // bunting flags (fancy = clones)
+  if(flags>0){ const fc=[0xe85d4e,0xf2b13c,0x4fa3d1,0x6fbf73,0xb07cc6];
+    for(let f=0;f<flags;f++){ const fx=-w*0.34+(w*0.68)*(f/Math.max(1,flags-1)); const fy=h-0.4-Math.sin((f/Math.max(1,flags-1))*Math.PI)*0.7;
+      const fl=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.64), basic(fc[f%fc.length])); fl.position.set(fx,fy,d/2+0.42); g.add(fl); } }
+  // gold roof trim when very fancy
+  if(fancy>0.62){ const trim=new THREE.Mesh(new THREE.TorusGeometry(w*0.5,0.07,6,18), basic(0xffd23f)); trim.rotation.x=Math.PI/2; trim.position.y=h+0.06; g.add(trim); }
+  // gold stars (= stars count, capped)
+  const sc=Math.min(repo.stars,6); for(let i=0;i<sc;i++){ const st=new THREE.Mesh(STAR_GEO,STAR_MAT);
+    const sx=(sc>1?(i/(sc-1)-0.5):0)*Math.min(w*0.95,3.4); st.position.set(sx,h+3.0,0); st.scale.setScalar(0.95); g.add(st); }
+
+  // signboard above the door, facing the street (plaza side = +z)
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(2.7,0.84), new THREE.MeshBasicMaterial({map:signTexture(repo.label),transparent:true}));
+  board.position.set(0,2.62,d/2+0.34); g.add(board);
+  // destination ring on the plot
+  const ring=new THREE.Mesh(new THREE.RingGeometry(Math.max(2,yr-1.4),Math.max(2.7,yr-0.8),40),
+    new THREE.MeshBasicMaterial({color:repo.color,transparent:true,opacity:.42,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2; ring.position.y=0.05; g.add(ring); repo._ring=ring;
+
+  scene.add(g);
+  repo._group=g; repo._pos=new THREE.Vector3(repo._x,0,repo._z); repo._visited=false; buildings.push(repo);
+}
+REPOS.forEach(makeBuilding);
+
+/* ---- taxi stand at the plaza (LLM 안내자가 사는 곳) ---- */
+const TAXI_POS=new THREE.Vector3(12,0,9);
+const taxi=new THREE.Group(); taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85;
+(function buildTaxi(){
+  const Y=0xffce2e, DK=0x24242c, GLASS=0xbfe6f0;
+  const base=rbox(3.5,1.0,1.8,Y,0.16); base.position.y=0.82; outline(base,0.05); taxi.add(base);
+  const cab=rbox(2.0,0.92,1.62,Y,0.18); cab.position.set(-0.15,1.62,0); outline(cab,0.05); taxi.add(cab);
+  // checker stripe
+  for(let i=0;i<7;i++){ const c=rbox(0.5,0.26,0.05,(i%2?0x222222:0xffffff),0.02); c.position.set(-1.5+i*0.5,0.95,0.92); taxi.add(c); const c2=c.clone(); c2.position.z=-0.92; taxi.add(c2); }
+  // windows (emissive)
+  const ws=new THREE.Mesh(new THREE.PlaneGeometry(1.5,0.66), basic(GLASS)); ws.position.set(0.86,1.62,0); ws.rotation.y=Math.PI/2; taxi.add(ws);
+  [-0.83,0.83].forEach(z=>{ const sw=new THREE.Mesh(new THREE.PlaneGeometry(1.5,0.6), basic(GLASS)); sw.position.set(-0.15,1.64,z); taxi.add(sw); });
+  // wheels
+  [[-1.05,0.9],[1.05,0.9],[-1.05,-0.9],[1.05,-0.9]].forEach(([wx,wz])=>{
+    const w=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,0.32,16), toon(DK)); w.rotation.x=Math.PI/2; w.position.set(wx,0.42,wz); outline(w,0.04); taxi.add(w);
+    const h=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.34,12), basic(0xd6d6d6)); h.rotation.x=Math.PI/2; h.position.set(wx,0.42,wz); taxi.add(h); });
+  // rooftop TAXI sign
+  const sb=rbox(1.0,0.42,0.56,0xfff4cf,0.06); sb.position.set(-0.15,2.32,0); outline(sb,0.03); taxi.add(sb);
+  [0.29,-0.29].forEach(z=>{ const f=new THREE.Mesh(new THREE.PlaneGeometry(0.92,0.34), new THREE.MeshBasicMaterial({map:signTexture('TAXI'),transparent:true})); f.position.set(-0.15,2.32,z); if(z<0) f.rotation.y=Math.PI; taxi.add(f); });
+  // headlights + taillights
+  [[1.78,0.55,0xfff3c0],[1.78,-0.55,0xfff3c0],[-1.78,0.55,0xe8442e],[-1.78,-0.55,0xe8442e]].forEach(([lx,lz,col])=>{
+    const l=new THREE.Mesh(new THREE.SphereGeometry(0.16,10,8), basic(col)); l.position.set(lx*0.92,0.86,lz); taxi.add(l); });
+  // little signpost
+  const post=rbox(0.16,2.0,0.16,0x8a5e38,0.05); post.position.set(2.4,1.0,-1.3); outline(post,0.03); taxi.add(post);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(1.7,0.66), new THREE.MeshBasicMaterial({map:signTexture('택시 정류장'),transparent:true})); board.position.set(2.4,2.1,-1.3); board.rotation.y=-0.5; taxi.add(board);
+})();
+scene.add(taxi);
+// driver NPC (chibi) standing by the door
+const driver=new THREE.Group(); driver.position.set(TAXI_POS.x-1.7,0,TAXI_POS.z+1.7);
+(function buildDriver(){
+  const SH=0x2f6f4f, SK=0xf0c79a, HR=0x33271c, CAP=0xf2b13c;
+  const tb=rbox(0.92,0.9,0.56,SH,0.16); tb.position.y=1.25; outline(tb,0.04); driver.add(tb);
+  const hd=rbox(1.0,0.92,0.92,SK,0.26,4); hd.position.y=2.1; outline(hd,0.05); driver.add(hd);
+  const cap=rbox(1.06,0.34,1.0,CAP,0.1,4); cap.position.y=2.55; outline(cap,0.03); driver.add(cap);
+  const brim=rbox(1.06,0.12,0.42,CAP,0.05); brim.position.set(0,2.42,0.6); driver.add(brim);
+  [[-0.24],[0.24]].forEach(([ex])=>{ const e=new THREE.Mesh(new THREE.SphereGeometry(0.1,10,8), basic(0x2a2320)); e.position.set(ex,2.08,0.48); e.scale.z=0.5; driver.add(e); });
+  const al=rbox(0.27,0.78,0.27,SH,0.1); al.position.set(-0.6,1.32,0); outline(al,0.03); driver.add(al);
+  const ar=al.clone(); ar.position.x=0.6; driver.add(ar);
+  const ll=rbox(0.34,0.78,0.34,0x394056,0.1); ll.position.set(-0.22,0.46,0); outline(ll,0.03); driver.add(ll);
+  const lr=ll.clone(); lr.position.x=0.22; driver.add(lr);
+  driver._head=hd;
+})();
+driver.rotation.y=-2.2; scene.add(driver);
+
+/* ---- character (chibi, cute) ---- */
+const player=new THREE.Group(); const model=new THREE.Group(); player.add(model);
+const SHIRT=0x3aa0d8, SKIN=0xf2cca2, HAIR=0x2c2521, PANTS=0x33406e, BAGC=0xe05642;
+const body=rbox(1.0,0.95,0.62,SHIRT,0.18); body.position.y=1.35; outline(body,0.045); model.add(body);
+const head=rbox(1.12,1.0,1.0,SKIN,0.28,4); head.position.y=2.3; outline(head,0.05); model.add(head);
+const hair=rbox(1.2,0.55,1.08,HAIR,0.22,4); hair.position.y=2.72; outline(hair,0.04); model.add(hair);
+const fringe=rbox(1.2,0.3,0.3,HAIR,0.1); fringe.position.set(0,2.55,0.48); model.add(fringe);
+// eyes + cheeks
+[[-0.26],[0.26]].forEach(([ex])=>{
+  const e=new THREE.Mesh(new THREE.SphereGeometry(0.11,10,8), basic(0x2a2320)); e.position.set(ex,2.28,0.52); e.scale.z=0.5; model.add(e);
+});
+[[-0.4],[0.4]].forEach(([cx])=>{
+  const c=new THREE.Mesh(new THREE.CircleGeometry(0.12,12), new THREE.MeshBasicMaterial({color:0xffa9a0,transparent:true,opacity:.7}));
+  c.position.set(cx,2.08,0.515); model.add(c);
+});
+const bag=rbox(0.78,0.85,0.4,BAGC,0.12); bag.position.set(0,1.4,-0.46); outline(bag,0.04); model.add(bag);
+const armL=rbox(0.3,0.85,0.3,SHIRT,0.12); armL.position.set(-0.66,1.45,0); outline(armL,0.035); model.add(armL);
+const armR=armL.clone(); armR.position.x=0.66; model.add(armR);
+const legL=rbox(0.38,0.85,0.38,PANTS,0.12); legL.position.set(-0.24,0.5,0); outline(legL,0.035); model.add(legL);
+const legR=legL.clone(); legR.position.x=0.24; model.add(legR);
+const shoeL=rbox(0.42,0.28,0.5,0x4a3a2a,0.08); shoeL.position.set(-0.24,0.14,0.08); model.add(shoeL);
+const shoeR=shoeL.clone(); shoeR.position.x=0.24; model.add(shoeR);
+scene.add(player);
+
+/* nav arrow */
+const navArrow=new THREE.Group();
+const aSh=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.7,8), basic(0xffcf3f)); navArrow.add(aSh);
+const aHd=new THREE.Mesh(new THREE.ConeGeometry(0.34,0.7,8), basic(0xffcf3f)); aHd.position.y=0.6; navArrow.add(aHd);
+navArrow.rotation.x=Math.PI/2;
+const navHolder=new THREE.Group(); navHolder.add(navArrow); navHolder.position.y=3.5; navHolder.visible=false; player.add(navHolder);
+let navTarget=null;
+
+/* ====================== CONTROLS ====================== */
+const keys={};
+const isTyping=()=>{ const a=document.activeElement; return a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
+addEventListener('keydown',e=>{ if(isTyping()) return; keys[e.code]=true;
+  if(e.code==='Enter'&&nearest&&!modalOpen) openCard(nearest);
+  if(e.code==='Escape'){ closeCard(); closeChat(); } });
+addEventListener('keyup',e=>{ if(isTyping()) return; keys[e.code]=false; });
+
+let camYaw=Math.PI, camPitch=0.42, camDist=13, dragging=false, px=0, py=0, dragMoved=false;
+const dom=renderer.domElement;
+dom.addEventListener('pointerdown',e=>{ dragging=true; dragMoved=false; px=e.clientX; py=e.clientY; });
+addEventListener('pointermove',e=>{ if(!dragging) return;
+  const dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
+  if(Math.abs(dx)+Math.abs(dy)>3) dragMoved=true;
+  camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005)); });
+addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&nearest&&!modalOpen) openCard(nearest); dragging=false; });
+dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
+
+let stickVec={x:0,y:0}; const stick=document.getElementById('stick'), nub=stick.querySelector('.nub'); let stickId=null;
+stick.addEventListener('pointerdown',e=>{ stickId=e.pointerId; stick.setPointerCapture(e.pointerId); moveStick(e); });
+stick.addEventListener('pointermove',e=>{ if(e.pointerId===stickId) moveStick(e); });
+stick.addEventListener('pointerup',()=>{ stickId=null; stickVec={x:0,y:0}; nub.style.left='35px'; nub.style.top='35px'; });
+function moveStick(e){ const r=stick.getBoundingClientRect(); let dx=e.clientX-(r.left+60), dy=e.clientY-(r.top+60);
+  const d=Math.hypot(dx,dy), mx=42; if(d>mx){ dx*=mx/d; dy*=mx/d; }
+  nub.style.left=(35+dx)+'px'; nub.style.top=(35+dy)+'px'; stickVec={x:dx/mx,y:dy/mx}; }
+
+/* ====================== UI ====================== */
+document.getElementById('totalCount').textContent=REPOS.length;
+const panel=document.getElementById('panel');
+document.getElementById('menuBtn').onclick=()=> panel.classList.toggle('hidden');
+const repoList=document.getElementById('repoList');
+function buildRow(repo){
+  const row=document.createElement('div'); row.className='repoRow'; repo._row=row;
+  if(repo._visited) row.classList.add('visited');
+  row.innerHTML=`<div class="pin" style="background:${repo.color}">${repo.label[0]}</div>
+    <div class="meta"><div class="nm">${repo.label}</div><div class="sub">${repo.lang} · 👁${repo.visitors} · ⑂${repo.forks} · ★${repo.stars}</div></div>
+    <div class="go">길찾기</div>`;
+  row.querySelector('.go').onclick=ev=>{ ev.stopPropagation(); setNav(repo); panel.classList.add('hidden'); };
+  row.onclick=()=> openCard(repo);
+  return row;
+}
+function renderList(q=''){
+  q=q.trim().toLowerCase();
+  const hit=repo=> !q || (repo.repo+' '+repo.label+' '+(repo.lang||'')+' '+(repo.desc||'')+' '+((repo.topics||[]).join(' '))).toLowerCase().includes(q);
+  const down=REPOS.filter(r=>r._downtown && hit(r));
+  const home=REPOS.filter(r=>!r._downtown && hit(r));
+  repoList.innerHTML='';
+  const section=(title,emoji,arr)=>{ if(!arr.length) return;
+    const h=document.createElement('div'); h.className='secHead';
+    h.innerHTML=`${emoji} ${title} <span class="ct">${arr.length}</span>`; repoList.appendChild(h);
+    arr.forEach(r=>repoList.appendChild(buildRow(r))); };
+  section('도심지','🏙️',down); section('홈타운','🏡',home);
+  if(!down.length && !home.length){ const n=document.createElement('div'); n.className='noHit'; n.textContent='검색 결과가 없어요'; repoList.appendChild(n); }
+}
+renderList();
+document.getElementById('repoSearch').addEventListener('input',e=>renderList(e.target.value));
+function setNav(repo){ navTarget=repo; navHolder.visible=true;
+  document.getElementById('navBadge').style.display=''; document.getElementById('navName').textContent=repo.label; }
+
+const modal=document.getElementById('modal'); let modalOpen=false;
+function openCard(repo){ modalOpen=true; modal.classList.add('show');
+  document.getElementById('cardTop').style.background=repo.color;
+  document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
+  document.getElementById('cardName').textContent=repo.label;
+  document.getElementById('cardStars').textContent='★ '+repo.stars+'  ·  '+repo.repo;
+  const img=document.getElementById('cardImg');
+  img.style.display='block';
+  img.onerror=()=>{ img.style.display='none'; };
+  img.src='https://opengraph.githubassets.com/'+repo.repo+'/hyeonsangjeon/'+repo.repo;
+  document.getElementById('cardChips').innerHTML=
+    `<span class="chip">★ <b>${repo.stars}</b> stars</span>`+
+    `<span class="chip">⑂ <b>${repo.forks}</b> forks</span>`+
+    `<span class="chip">👁 <b>${repo.vuniq}</b> visitors</span>`+
+    `<span class="chip">⬇ <b>${repo.clones}</b> clones</span>`;
+  const desc=document.getElementById('cardDesc');
+  if(repo.desc){ desc.textContent=repo.desc; desc.className=''; }
+  else { desc.textContent='아직 설명이 없는 레포예요. GitHub에서 확인해보세요.'; desc.className='empty'; }
+  const act=document.getElementById('cardActions');
+  act.innerHTML=`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">GitHub 열기 ↗</a>`
+    +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">라이브 데모 ↗</a>`:'')
+    +`<button class="btn close" id="closeBtn">닫기</button>`;
+  document.getElementById('closeBtn').onclick=closeCard; markVisited(repo); }
+function closeCard(){ modalOpen=false; modal.classList.remove('show'); }
+modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
+
+let visited=0;
+function markVisited(repo){ if(repo._visited) return; repo._visited=true; visited++;
+  document.getElementById('visitCount').textContent=visited; repo._row.classList.add('visited');
+  repo._ring.material.color.set(0x2f9d6a); }
+
+const promptEl=document.getElementById('prompt'); let nearest=null;
+document.getElementById('startBtn').onclick=()=> document.getElementById('intro').classList.add('hidden');
+document.getElementById('loading').style.display='none';
+
+/* ====================== LLM TAXI DRIVER ====================== */
+const chatEl=document.getElementById('chat'), chatLog=document.getElementById('chatLog'), chatText=document.getElementById('chatText');
+const taxiBtn=document.getElementById('taxiBtn'), modeSel=document.getElementById('modeSel');
+const driveBar=document.getElementById('drivebar'), driveNameEl=document.getElementById('driveName');
+let llmMode='local', chatGreeted=false, busy=false;
+
+function scrollChat(){ chatLog.scrollTop=chatLog.scrollHeight; }
+function addMsg(who,html,opts){
+  const m=document.createElement('div'); m.className='msg '+who; m.innerHTML=html;
+  if(opts&&opts.repo){ const r=document.createElement('div'); r.className='ride'; r.innerHTML='🚕 그 집까지 데려다줄게요';
+    r.onclick=()=>taxiTo(opts.repo); m.appendChild(document.createElement('br')); m.appendChild(r); }
+  if(opts&&opts.alts&&opts.alts.length){ const wrap=document.createElement('div');
+    opts.alts.forEach(a=>{ const c=document.createElement('span'); c.className='alt'; c.textContent=a.label;
+      c.onclick=()=>{ addMsg('me',a.label); replyFor(a,'그럼 '); }; wrap.appendChild(c); });
+    m.appendChild(wrap); }
+  chatLog.appendChild(m); scrollChat(); return m;
+}
+function openChat(){ chatEl.classList.remove('hidden');
+  if(!chatGreeted){ chatGreeted=true;
+    addMsg('bot','어서오세요! 🚕 <b>Repolis 택시기사</b>입니다.<br>어떤 걸 찾으세요? 예: <b>RAG 관련</b>, <b>제일 인기 레포</b>, <b>STT</b>, <b>아무거나</b>'); }
+  setTimeout(()=>chatText.focus(),60); }
+function closeChat(){ chatEl.classList.add('hidden'); }
+
+/* ---- Mode A: local intent search (no key, always works) ---- */
+const SYN={ rag:['rag','retrieval','faq','vector','embedding','검색증강','지식'], llm:['llm','gpt','openai','azure','generative','genai','foundry','language model','파운드리'],
+  stt:['stt','speech','asr','transcribe','transcription','음성','자막','whisper','wer'], 음성:['stt','speech','음성','asr','whisper'],
+  번역:['translate','translation','번역','nmt'], agent:['agent','agentic','orchestration','multi-agent','autonomous','에이전트'],
+  데이터:['data','dataset','etl','pipeline','spark','emr','pandas','데이터'], 크롤:['crawl','scrape','scraper','crawler','수집'],
+  유튜브:['youtube','yt','dl','nas','media','download'], nas:['nas','download','youtube','media','dl'],
+  감정:['sentiment','emotion','감정','classification'], aws:['aws','sagemaker','emr','s3','bedrock','cloud'],
+  시각화:['visualization','dashboard','streamlit','chart','plot','시각화'], 웹:['web','flask','streamlit','app','frontend','javascript'],
+  추천:['recommend','recommendation','추천'], 모니터:['monitor','traffic','insight','dashboard','모니터'] };
+const STOP=new Set(['관련','레포','repo','보여줘','알려줘','찾아줘','가줘','가자','으로','로','좀','그','이','저','것','거','해줘','있어','뭐','무슨','어떤','about','show','me','the','a','to','go','find','repo','please']);
+function tokens(q){ return (q.toLowerCase().match(/[a-z0-9]+|[가-힣]+/g)||[]).filter(t=>t.length>1&&!STOP.has(t)); }
+function expand(toks){ const set=new Set(); toks.forEach(t=>{ set.add(t); for(const k in SYN){ if(t.includes(k)||k.includes(t)) SYN[k].forEach(x=>set.add(x)); if(SYN[k].some(s=>s.includes(t)&&t.length>2)) SYN[k].forEach(x=>set.add(x)); } }); return [...set]; }
+function hay(r){ return (r.repo+' '+r.label+' '+(r.lang||'')+' '+(r.desc||'')+' '+((r.topics||[]).join(' '))).toLowerCase(); }
+function scoreRepo(r,terms){ const h=hay(r); let s=0; terms.forEach(t=>{ if(h.includes(t)){ s+=3; if((r.repo+' '+r.label).toLowerCase().includes(t)) s+=4; if((r.topics||[]).some(tp=>tp.toLowerCase()===t)) s+=3; } }); return s; }
+function localIntent(q){
+  const ql=q.toLowerCase();
+  if(/인기|popular|제일|최고|best|top|많이|핫|hot/.test(ql)) return pick(byRank()[0],'요즘 제일 인기 많은 ',byRank().slice(1,3));
+  if(/아무|랜덤|random|골라|추천만/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,'음~ 그럼 이건 어때요? ',[]); }
+  if(/스타|star|별/.test(ql)){ const r=[...REPOS].sort((a,b)=>b.stars-a.stars)[0]; return pick(r,'⭐ 스타가 제일 많은 ',[...REPOS].sort((a,b)=>b.stars-a.stars).slice(1,3)); }
+  if(/최근|recent|새로|new|요즘 만든/.test(ql)){ const r=[...REPOS].sort((a,b)=>new Date(b.pushed)-new Date(a.pushed))[0]; return pick(r,'가장 최근에 손본 ',[]); }
+  const terms=expand(tokens(q));
+  const ranked=REPOS.map(r=>({r,s:scoreRepo(r,terms)+Math.log1p(r.score||0)*0.15})).sort((a,b)=>b.s-a.s);
+  const hits=ranked.filter(x=>x.s>=3);
+  if(hits.length){ return pick(hits[0].r, '말씀하신 것엔 ', hits.slice(1,3).map(x=>x.r)); }
+  return pick(byRank()[0], '딱 맞는 건 못 찾았지만, 인기 많은 ', byRank().slice(1,3), true);
+}
+function byRank(){ return [...REPOS].sort((a,b)=>(a.rank||0)-(b.rank||0)); }
+function pick(repo,lead,alts,weak){
+  const d=repo.desc?repo.desc.replace(/\s+/g,' ').slice(0,70):'';
+  const msg=`${lead}‘<b>${repo.label}</b>’${weak?'은 어떠세요?':' 추천이요!'}${d?'<br>“'+d+(repo.desc.length>70?'…':'')+'”':''}<br><span style="color:#ab8a66">★${repo.stars} · 👁${repo.visitors} · ⑂${repo.forks} · ${repo.lang}</span>`;
+  return { repo, message:msg, alts:(alts||[]).filter(Boolean) };
+}
+function replyFor(repo,lead){ const r=pick(repo,lead||'',[]); addMsg('bot',r.message,{repo:r.repo}); }
+
+/* ---- Mode B: WebLLM (in-browser, no key) ---- */
+let webllmEngine=null;
+async function webllmAsk(q){
+  if(!navigator.gpu){ addMsg('bot','⚠️ 이 브라우저는 WebGPU를 지원하지 않아 브라우저AI를 못 써요. 로컬검색으로 안내할게요.'); return localIntent(q); }
+  if(!webllmEngine){
+    const note=addMsg('bot','🧠 브라우저 AI 모델을 처음 한 번만 내려받는 중이에요… (최대 ~1GB, 잠시만요)'); note.classList.add('typing');
+    try{ const mod=await import('https://esm.run/@mlc-ai/web-llm');
+      webllmEngine=await mod.CreateMLCEngine('Llama-3.2-1B-Instruct-q4f16_1-MLC',{ initProgressCallback:p=>{ note.textContent='🧠 모델 로딩 '+Math.round((p.progress||0)*100)+'%'; } });
+      note.remove();
+    }catch(e){ note.remove(); addMsg('bot','😢 브라우저AI 로딩 실패. 로컬검색으로 안내할게요.'); return localIntent(q); }
+  }
+  const catalog=REPOS.map(r=>`- ${r.repo} | ${r.lang} | ★${r.stars} 👁${r.visitors} | ${(r.topics||[]).slice(0,4).join(',')} | ${(r.desc||'').slice(0,60)}`).join('\n');
+  const sys=`너는 Repolis(내 모든 GitHub 레포가 사는 도시)의 친절한 택시기사야. 아래 레포 목록 중에서 사용자의 요청에 가장 맞는 레포 하나를 골라 한국어로 짧고 상냥하게 추천해. 마지막 줄에 반드시 정확히 "PICK: <레포이름>" 형식으로 골라줘.\n\n[레포목록]\n${catalog}`;
+  try{
+    const res=await webllmEngine.chat.completions.create({ messages:[{role:'system',content:sys},{role:'user',content:q}], temperature:0.6, max_tokens:220 });
+    const txt=res.choices[0].message.content||''; const m=txt.match(/PICK:\s*([A-Za-z0-9._-]+)/);
+    const repo=m?REPOS.find(r=>r.repo.toLowerCase()===m[1].toLowerCase()):null;
+    const clean=txt.replace(/PICK:.*/i,'').trim().replace(/\n/g,'<br>');
+    if(repo) return { repo, message:clean||pick(repo,'',[]).message, alts:[] };
+    return { repo:(localIntent(q).repo), message:clean||'이건 어때요?', alts:[] };
+  }catch(e){ addMsg('bot','😢 브라우저AI 응답 실패. 로컬검색으로 안내할게요.'); return localIntent(q); }
+}
+
+/* ---- Mode C: external proxy (Vercel → Azure OpenAI) ---- */
+function proxyUrl(){ return localStorage.getItem('taxiProxyUrl')||''; }
+async function proxyAsk(q){
+  let url=proxyUrl();
+  if(!url){ url=(prompt('AI 프록시(Vercel) URL을 입력하세요\n예: https://your-app.vercel.app/api/taxi')||'').trim(); if(url) localStorage.setItem('taxiProxyUrl',url); }
+  if(!url){ addMsg('bot','프록시 URL이 없어 로컬검색으로 안내할게요. (모드를 다시 프록시로 고르면 URL을 물어봐요)'); return localIntent(q); }
+  const catalog=REPOS.map(r=>({repo:r.repo,label:r.label,lang:r.lang,stars:r.stars,visitors:r.visitors,forks:r.forks,topics:(r.topics||[]).slice(0,5),desc:(r.desc||'').slice(0,80)}));
+  try{
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,repos:catalog})});
+    if(!res.ok) throw new Error('http '+res.status);
+    const data=await res.json();
+    const repo=data.repo?REPOS.find(r=>r.repo.toLowerCase()===String(data.repo).toLowerCase()):null;
+    const msg=(data.message||'이건 어때요?').replace(/\n/g,'<br>');
+    if(repo) return { repo, message:msg, alts:[] };
+    return { ...localIntent(q), message:msg };
+  }catch(e){ addMsg('bot','😢 프록시 연결 실패('+e.message+'). 로컬검색으로 안내할게요.'); return localIntent(q); }
+}
+
+async function askDriver(q){
+  const t=addMsg('bot','…'); t.classList.add('typing');
+  let r; try{ r = llmMode==='webllm'?await webllmAsk(q) : llmMode==='proxy'?await proxyAsk(q) : localIntent(q); }
+  finally{ t.remove(); }
+  if(r) addMsg('bot', r.message, { repo:r.repo, alts:r.alts });
+}
+async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; busy=true; chatText.value='';
+  addMsg('me',q.replace(/</g,'&lt;')); try{ await askDriver(q); } finally{ busy=false; chatText.focus(); } }
+
+/* ---- auto-drive (taxi takes you there) ---- */
+let driveTo=null;
+function taxiTo(repo){ driveTo=repo; setNav(repo); closeChat();
+  driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
+function endDrive(){ driveTo=null; driveBar.style.display='none'; }
+function arriveTaxi(repo){ endDrive(); openChat(); addMsg('bot',`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`);
+  setTimeout(()=>openCard(repo),500); }
+
+/* ---- wiring ---- */
+taxiBtn.onclick=()=> chatEl.classList.contains('hidden')?openChat():closeChat();
+document.getElementById('chatClose').onclick=closeChat;
+document.getElementById('chatSend').onclick=sendChat;
+chatText.addEventListener('keydown',e=>{ if(e.code==='Enter'){ e.preventDefault(); sendChat(); } e.stopPropagation(); });
+modeSel.onchange=e=>{ llmMode=e.target.value;
+  if(llmMode==='proxy'&&!proxyUrl()){ const u=(prompt('AI 프록시(Vercel) URL을 입력하세요\n예: https://your-app.vercel.app/api/taxi')||'').trim(); if(u) localStorage.setItem('taxiProxyUrl',u); }
+  addMsg('bot', llmMode==='local'?'🔎 로컬검색 모드예요. 키 없이 바로 안내해요!' : llmMode==='webllm'?'🧠 브라우저AI 모드예요. 첫 질문 때 모델을 한 번 받아요.' : '🌐 AI 프록시 모드예요. 고품질로 안내할게요!'); };
+document.getElementById('driveCancel').onclick=()=>{ endDrive(); navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; };
+
+/* ====================== LOOP ====================== */
+const clock=new THREE.Clock(); const up=new THREE.Vector3(0,1,0);
+const tF=new THREE.Vector3(), tR=new THREE.Vector3(), mv=new THREE.Vector3(); let walk=0;
+function lerpA(a,b,t){ let d=((b-a+Math.PI)%(Math.PI*2))-Math.PI; if(d<-Math.PI)d+=Math.PI*2; return a+d*t; }
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
+  tR.crossVectors(tF,up).normalize();
+  mv.set(0,0,0);
+  let autoSpeed=9, autopilot=false;
+  const userInput = keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
+  if(driveTo){
+    if(userInput){ endDrive(); }
+    else { const dx=driveTo._pos.x-player.position.x, dz=driveTo._pos.z-player.position.z, dd=Math.hypot(dx,dz);
+      if(dd<5.6){ arriveTaxi(driveTo); }
+      else { mv.set(dx,0,dz); autopilot=true; autoSpeed=Math.min(30,11+dd*0.45); } }
+  }
+  if(!autopilot){
+    if(keys['KeyW']||keys['ArrowUp']) mv.add(tF);
+    if(keys['KeyS']||keys['ArrowDown']) mv.sub(tF);
+    if(keys['KeyD']||keys['ArrowRight']) mv.add(tR);
+    if(keys['KeyA']||keys['ArrowLeft']) mv.sub(tR);
+    if(stickVec.x||stickVec.y){ mv.addScaledVector(tF,-stickVec.y); mv.addScaledVector(tR,stickVec.x); }
+  }
+  const moving=mv.lengthSq()>0.0001;
+  if(moving){ mv.normalize(); player.position.addScaledVector(mv,(autopilot?autoSpeed:9)*dt);
+    const r=Math.hypot(player.position.x,player.position.z); if(r>145){ player.position.x*=145/r; player.position.z*=145/r; }
+    model.rotation.y=lerpA(model.rotation.y,Math.atan2(mv.x,mv.z),autopilot?0.3:0.2); walk+=dt*(autopilot?16:10); }
+  else walk*=0.85;
+  const bob=Math.sin(walk)*0.5;
+  legL.rotation.x=bob; legR.rotation.x=-bob; armL.rotation.x=-bob; armR.rotation.x=bob;
+  model.position.y=Math.abs(Math.sin(walk))*0.12;
+
+  if(!dragging&&moving) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,autopilot?0.08:0.04);
+  const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist, oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist, oy=Math.sin(camPitch)*camDist;
+  camera.position.lerp(new THREE.Vector3(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz),0.12);
+  camera.lookAt(player.position.x,player.position.y+1.7,player.position.z);
+
+  nearest=null; let nd=7.8;
+  for(const b of buildings){
+    const d=player.position.distanceTo(b._pos);
+    b._ring.material.opacity=0.3+Math.sin(clock.elapsedTime*2+b._pos.z)*0.16;
+    if(d<nd){ nd=d; nearest=b; }
+  }
+  if(nearest&&!modalOpen){ promptEl.innerHTML=`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`; promptEl.classList.add('show'); }
+  else promptEl.classList.remove('show');
+
+  if(navTarget){ const dir=Math.atan2(navTarget._pos.x-player.position.x,navTarget._pos.z-player.position.z);
+    navHolder.rotation.y=dir; navHolder.position.y=3.5+Math.sin(clock.elapsedTime*3)*0.15;
+    const dist=player.position.distanceTo(navTarget._pos); document.getElementById('navDist').textContent=Math.round(dist);
+    if(dist<6){ navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; } }
+
+  for(const c of clouds){ c.position.x+=c.userData.spd*dt; if(c.position.x>170) c.position.x=-170; }
+  { const dxp=player.position.x-driver.position.x, dzp=player.position.z-driver.position.z;
+    const tgt = Math.hypot(dxp,dzp)<16 ? Math.atan2(dxp,dzp) : (-2.2+Math.sin(clock.elapsedTime*0.7)*0.22);
+    driver.rotation.y=lerpA(driver.rotation.y,tgt,0.07);
+    if(driver._head) driver._head.position.y=2.1+Math.sin(clock.elapsedTime*2)*0.03; }
+  renderer.render(scene,camera);
+}
+animate();
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+</script>
+</body>
+</html>
