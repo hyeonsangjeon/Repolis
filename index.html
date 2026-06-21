@@ -158,18 +158,19 @@
 </head>
 <body>
 <div id="app"></div>
-<div id="loading">지브리 마을을 짓는 중…</div>
+<div id="loading" data-i18n="loading">지브리 마을을 짓는 중…</div>
 
 <div id="topbar" class="hud">
   <div class="badge">🏙️ Repolis</div>
-  <div class="badge">방문 <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
+  <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
+  <div class="badge"><span data-i18n="visited">방문</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
 </div>
 <button id="menuBtn">☰<span class="dot"></span></button>
 
 <div id="panel" class="hidden">
-  <h3>Repolis · 길찾기</h3>
-  <input id="repoSearch" type="text" placeholder="레포·언어·주제 검색…" autocomplete="off" />
+  <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <input id="repoSearch" type="text" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" autocomplete="off" />
   <div id="repoList"></div>
 </div>
 
@@ -185,44 +186,44 @@
     </div>
     <div class="chips" id="cardChips"></div>
     <div class="body"><p id="cardDesc"></p></div>
-    <div class="metricnote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.</div>
+    <div class="metricnote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.</div>
     <div class="actions" id="cardActions"></div>
   </div>
 </div>
 
 <div id="intro">
   <div class="inner">
-    <h1>🏙️ Repolis — 레포들의 도시</h1>
-    <div class="sub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.</div>
+    <h1>🏙️ Repolis — <span data-i18n="cityOfRepos">레포들의 도시</span></h1>
+    <div class="sub" data-i18n-html="introSub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.</div>
     <div class="ctrls">
-      <div><b>WASD / ←↑↓→</b>걷기</div>
-      <div><b>좌클릭 드래그</b>시점 회전(자유 시점)</div>
-      <div><b>우클릭 드래그</b>캐릭터 조준 · WoW식 · 휠 줌</div>
-      <div><b>Enter / 클릭</b>레포 열기</div>
+      <div><b>WASD / ←↑↓→</b><span data-i18n="ctrlWalk">걷기</span></div>
+      <div><b>좌클릭 / Left</b><span data-i18n="ctrlLookL">시점 회전(자유 시점)</span></div>
+      <div><b>우클릭 / Right</b><span data-i18n="ctrlAimR">캐릭터 조준 · WoW식 · 휠 줌</span></div>
+      <div><b>Enter / 클릭</b><span data-i18n="ctrlOpen">레포 열기</span></div>
     </div>
-    <button id="startBtn">마을 입장 →</button>
+    <button id="startBtn" data-i18n="enterTown">마을 입장 →</button>
   </div>
 </div>
 
 <div id="stick"><div class="nub"></div></div>
-<div class="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기</div>
+<div class="hint" data-i18n-html="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기</div>
 
-<div id="drivebar">🚕 <span id="driveName"></span> (으)로 가는 중… <span class="cancel" id="driveCancel">멈추기</span></div>
+<div id="drivebar"><span data-i18n="drivePre">🚕 </span><span id="driveName"></span><span data-i18n="drivePost"> (으)로 가는 중…</span> <span class="cancel" id="driveCancel" data-i18n="stop">멈추기</span></div>
 
 <button id="taxiBtn">🚕<span class="pulse"></span></button>
 <div id="chat" class="hidden">
   <div class="chatHead">
-    <span class="ttl">🚕 레포 택시기사</span>
+    <span class="ttl" data-i18n="taxiTitle">🚕 레포 택시기사</span>
     <select id="modeSel" title="AI 모드">
-      <option value="local">로컬검색 · 무키</option>
-      <option value="webllm">WebLLM · 브라우저AI</option>
-      <option value="proxy">AI 프록시 · 고품질</option>
+      <option value="local" data-i18n="modeLocalOpt">로컬검색 · 무키</option>
+      <option value="webllm" data-i18n="modeWebllmOpt">WebLLM · 브라우저AI</option>
+      <option value="proxy" data-i18n="modeProxyOpt">AI 프록시 · 고품질</option>
     </select>
     <button class="x" id="chatClose">×</button>
   </div>
   <div id="chatLog"></div>
   <div class="chatIn">
-    <input id="chatText" type="text" placeholder="어떤 레포를 찾으세요? 예: RAG 관련" autocomplete="off" />
+    <input id="chatText" type="text" placeholder="어떤 레포를 찾으세요? 예: RAG 관련" data-i18n-ph="chatPh" autocomplete="off" />
     <button id="chatSend">▶</button>
   </div>
 </div>
@@ -262,6 +263,85 @@ const LANG_PALETTE = {
 const pal = l => LANG_PALETTE[l] || LANG_PALETTE.Other;
 const hexstr = n => '#'+(n>>>0).toString(16).padStart(6,'0');
 const labelOf = s => s.replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+
+/* ====================== i18n (EN / KO) ====================== */
+let LANG = localStorage.getItem('repolisLang');
+if(LANG!=='ko'&&LANG!=='en') LANG = (navigator.language||'').toLowerCase().startsWith('ko') ? 'ko' : 'en';
+const I18N = {
+  ko:{
+    loading:'지브리 마을을 짓는 중…',
+    visited:'방문', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…',
+    metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.',
+    cityOfRepos:'레포들의 도시',
+    introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
+    ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
+    enterTown:'마을 입장 →',
+    hint:'집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기',
+    drivePre:'🚕 ', drivePost:' (으)로 가는 중…', stop:'멈추기',
+    taxiTitle:'🚕 레포 택시기사',
+    modeLocalOpt:'로컬검색 · 무키', modeWebllmOpt:'WebLLM · 브라우저AI', modeProxyOpt:'AI 프록시 · 고품질',
+    chatPh:'어떤 레포를 찾으세요? 예: RAG 관련',
+    go:'길찾기', downtown:'도심지', hometown:'홈타운',
+    noResults:'검색 결과가 없어요', noDesc:'아직 설명이 없는 레포예요. GitHub에서 확인해보세요.',
+    openGithub:'GitHub 열기 ↗', liveDemo:'라이브 데모 ↗', close:'닫기',
+    rideThere:'🚕 그 집까지 데려다줄게요', soLead:'그럼 ',
+    greeterHtml:'어서오세요! 🚕 <b>Repolis 택시기사</b>입니다.<br>어떤 걸 찾으세요? 예: <b>RAG 관련</b>, <b>제일 인기 레포</b>, <b>STT</b>, <b>아무거나</b>',
+    leadPopular:'요즘 제일 인기 많은 ', leadRandom:'음~ 그럼 이건 어때요? ', leadStar:'⭐ 스타가 제일 많은 ',
+    leadRecent:'가장 최근에 손본 ', leadMatch:'말씀하신 것엔 ', leadFallback:'딱 맞는 건 못 찾았지만, 인기 많은 ',
+    howAbout:'은 어떠세요?', recommend:' 추천이요!', thisOne:'이건 어때요?',
+    modeLocalMsg:'🔎 로컬검색 모드예요. 키 없이 바로 안내해요!',
+    modeWebllmMsg:'🧠 브라우저AI 모드예요. 첫 질문 때 모델을 한 번 받아요.',
+    modeProxyMsg:'🌐 AI 프록시 모드예요. 고품질로 안내할게요!',
+    noGpu:'⚠️ 이 브라우저는 WebGPU를 지원하지 않아 브라우저AI를 못 써요. 로컬검색으로 안내할게요.',
+    downloading:'🧠 브라우저 AI 모델을 처음 한 번만 내려받는 중이에요… (최대 ~1GB, 잠시만요)',
+    loadFail:'😢 브라우저AI 로딩 실패. 로컬검색으로 안내할게요.',
+    ansFail:'😢 브라우저AI 응답 실패. 로컬검색으로 안내할게요.',
+    proxyPromptUrl:'AI 프록시(Vercel) URL을 입력하세요\n예: https://your-app.vercel.app/api/taxi',
+    proxyNoUrl:'프록시 URL이 없어 로컬검색으로 안내할게요. (모드를 다시 프록시로 고르면 URL을 물어봐요)',
+    taxiStand:'택시 정류장'
+  },
+  en:{
+    loading:'Building the Ghibli town…',
+    visited:'Visited', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…',
+    metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height·brightness · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold-star ornament.',
+    cityOfRepos:'the city of repos',
+    introSub:"Forget the 6-pin limit.<br>Stroll a Ghibli-style city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
+    ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
+    enterTown:'Enter the town →',
+    hint:'Walk up to a house (repo) · ☰ Wayfinding · 🚕 Ask the taxi driver',
+    drivePre:'🚕 Driving to ', drivePost:'…', stop:'Stop',
+    taxiTitle:'🚕 Repo Taxi Driver',
+    modeLocalOpt:'Local search · no key', modeWebllmOpt:'WebLLM · Browser AI', modeProxyOpt:'AI proxy · high quality',
+    chatPh:'Which repo are you after? e.g. about RAG',
+    go:'Route', downtown:'Downtown', hometown:'Hometown',
+    noResults:'No results', noDesc:'No description yet. Check it out on GitHub.',
+    openGithub:'Open on GitHub ↗', liveDemo:'Live demo ↗', close:'Close',
+    rideThere:"🚕 I'll drive you there", soLead:'Then ',
+    greeterHtml:"Welcome! 🚕 I'm the <b>Repolis taxi driver</b>.<br>What are you looking for? e.g. <b>about RAG</b>, <b>most popular repo</b>, <b>STT</b>, <b>anything</b>",
+    leadPopular:'The most popular right now is ', leadRandom:'Hmm, how about this one? ', leadStar:'⭐ The most-starred is ',
+    leadRecent:'The most recently updated is ', leadMatch:'For what you asked, ', leadFallback:"Couldn't find an exact match, but a popular one is ",
+    howAbout:' — how about it?', recommend:' — recommended!', thisOne:'How about this one?',
+    modeLocalMsg:'🔎 Local-search mode. No key needed — instant!',
+    modeWebllmMsg:'🧠 Browser-AI mode. The model downloads once on your first question.',
+    modeProxyMsg:'🌐 AI-proxy mode. High-quality answers!',
+    noGpu:'⚠️ This browser has no WebGPU, so Browser-AI is unavailable. Using local search instead.',
+    downloading:'🧠 Downloading the browser-AI model once… (up to ~1GB, please wait)',
+    loadFail:'😢 Browser-AI failed to load. Using local search.',
+    ansFail:'😢 Browser-AI failed to answer. Using local search.',
+    proxyPromptUrl:'Enter your AI proxy (Vercel) URL\ne.g. https://your-app.vercel.app/api/taxi',
+    proxyNoUrl:'No proxy URL — using local search. (Re-select the proxy mode to enter a URL.)',
+    taxiStand:'TAXI STAND'
+  }
+};
+const t = k => (I18N[LANG] && I18N[LANG][k]!=null) ? I18N[LANG][k] : (I18N.en[k]!=null ? I18N.en[k] : k);
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.dataset.i18n); if(v!=null) el.textContent=v; });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{ const v=t(el.dataset.i18nHtml); if(v!=null) el.innerHTML=v; });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ const v=t(el.dataset.i18nPh); if(v!=null) el.placeholder=v; });
+  const lb=document.getElementById('langBtn'); if(lb) lb.textContent = LANG==='ko' ? '🌐 EN' : '🌐 한국어';
+  if(typeof renderList==='function') renderList(document.getElementById('repoSearch').value||'');
+}
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
 const _maxVis    = Math.max(1, ...REPOS.map(r=>r.visitors||0));
@@ -529,7 +609,7 @@ const taxi=new THREE.Group(); taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.8
     const l=new THREE.Mesh(new THREE.SphereGeometry(0.16,10,8), basic(col)); l.position.set(lx*0.92,0.86,lz); taxi.add(l); });
   // little signpost
   const post=rbox(0.16,2.0,0.16,0x8a5e38,0.05); post.position.set(2.4,1.0,-1.3); outline(post,0.03); taxi.add(post);
-  const board=new THREE.Mesh(new THREE.PlaneGeometry(1.7,0.66), new THREE.MeshBasicMaterial({map:signTexture('택시 정류장'),transparent:true})); board.position.set(2.4,2.1,-1.3); board.rotation.y=-0.5; taxi.add(board);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(1.7,0.66), new THREE.MeshBasicMaterial({map:signTexture(t('taxiStand')),transparent:true})); board.position.set(2.4,2.1,-1.3); board.rotation.y=-0.5; taxi.add(board);
 })();
 scene.add(taxi);
 // driver NPC (chibi) standing by the door
@@ -625,7 +705,7 @@ function buildRow(repo){
   if(repo._visited) row.classList.add('visited');
   row.innerHTML=`<div class="pin" style="background:${repo.color}">${repo.label[0]}</div>
     <div class="meta"><div class="nm">${repo.label}</div><div class="sub">${repo.lang} · 👁${repo.visitors} · ⑂${repo.forks} · ★${repo.stars}</div></div>
-    <div class="go">길찾기</div>`;
+    <div class="go">${t('go')}</div>`;
   row.querySelector('.go').onclick=ev=>{ ev.stopPropagation(); setNav(repo); panel.classList.add('hidden'); };
   row.onclick=()=> openCard(repo);
   return row;
@@ -640,11 +720,14 @@ function renderList(q=''){
     const h=document.createElement('div'); h.className='secHead';
     h.innerHTML=`${emoji} ${title} <span class="ct">${arr.length}</span>`; repoList.appendChild(h);
     arr.forEach(r=>repoList.appendChild(buildRow(r))); };
-  section('도심지','🏙️',down); section('홈타운','🏡',home);
-  if(!down.length && !home.length){ const n=document.createElement('div'); n.className='noHit'; n.textContent='검색 결과가 없어요'; repoList.appendChild(n); }
+  section(t('downtown'),'🏙️',down); section(t('hometown'),'🏡',home);
+  if(!down.length && !home.length){ const n=document.createElement('div'); n.className='noHit'; n.textContent=t('noResults'); repoList.appendChild(n); }
 }
 renderList();
 document.getElementById('repoSearch').addEventListener('input',e=>renderList(e.target.value));
+const langBtn=document.getElementById('langBtn');
+langBtn.onclick=()=>{ LANG = LANG==='ko'?'en':'ko'; localStorage.setItem('repolisLang',LANG); applyLang(); };
+applyLang();
 function setNav(repo){ navTarget=repo; navHolder.visible=true;
   document.getElementById('navBadge').style.display=''; document.getElementById('navName').textContent=repo.label; }
 
@@ -665,11 +748,11 @@ function openCard(repo){ modalOpen=true; modal.classList.add('show');
     `<span class="chip">⬇ <b>${repo.clones}</b> clones</span>`;
   const desc=document.getElementById('cardDesc');
   if(repo.desc){ desc.textContent=repo.desc; desc.className=''; }
-  else { desc.textContent='아직 설명이 없는 레포예요. GitHub에서 확인해보세요.'; desc.className='empty'; }
+  else { desc.textContent=t('noDesc'); desc.className='empty'; }
   const act=document.getElementById('cardActions');
-  act.innerHTML=`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">GitHub 열기 ↗</a>`
-    +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">라이브 데모 ↗</a>`:'')
-    +`<button class="btn close" id="closeBtn">닫기</button>`;
+  act.innerHTML=`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">${t('openGithub')}</a>`
+    +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'')
+    +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
   document.getElementById('closeBtn').onclick=closeCard; markVisited(repo); }
 function closeCard(){ modalOpen=false; modal.classList.remove('show'); }
 modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
@@ -692,17 +775,17 @@ let llmMode='local', chatGreeted=false, busy=false;
 function scrollChat(){ chatLog.scrollTop=chatLog.scrollHeight; }
 function addMsg(who,html,opts){
   const m=document.createElement('div'); m.className='msg '+who; m.innerHTML=html;
-  if(opts&&opts.repo){ const r=document.createElement('div'); r.className='ride'; r.innerHTML='🚕 그 집까지 데려다줄게요';
+  if(opts&&opts.repo){ const r=document.createElement('div'); r.className='ride'; r.innerHTML=t('rideThere');
     r.onclick=()=>taxiTo(opts.repo); m.appendChild(document.createElement('br')); m.appendChild(r); }
   if(opts&&opts.alts&&opts.alts.length){ const wrap=document.createElement('div');
     opts.alts.forEach(a=>{ const c=document.createElement('span'); c.className='alt'; c.textContent=a.label;
-      c.onclick=()=>{ addMsg('me',a.label); replyFor(a,'그럼 '); }; wrap.appendChild(c); });
+      c.onclick=()=>{ addMsg('me',a.label); replyFor(a,t('soLead')); }; wrap.appendChild(c); });
     m.appendChild(wrap); }
   chatLog.appendChild(m); scrollChat(); return m;
 }
 function openChat(){ chatEl.classList.remove('hidden');
   if(!chatGreeted){ chatGreeted=true;
-    addMsg('bot','어서오세요! 🚕 <b>Repolis 택시기사</b>입니다.<br>어떤 걸 찾으세요? 예: <b>RAG 관련</b>, <b>제일 인기 레포</b>, <b>STT</b>, <b>아무거나</b>'); }
+    addMsg('bot',t('greeterHtml')); }
   setTimeout(()=>chatText.focus(),60); }
 function closeChat(){ chatEl.classList.add('hidden'); }
 
@@ -722,20 +805,20 @@ function hay(r){ return (r.repo+' '+r.label+' '+(r.lang||'')+' '+(r.desc||'')+' 
 function scoreRepo(r,terms){ const h=hay(r); let s=0; terms.forEach(t=>{ if(h.includes(t)){ s+=3; if((r.repo+' '+r.label).toLowerCase().includes(t)) s+=4; if((r.topics||[]).some(tp=>tp.toLowerCase()===t)) s+=3; } }); return s; }
 function localIntent(q){
   const ql=q.toLowerCase();
-  if(/인기|popular|제일|최고|best|top|많이|핫|hot/.test(ql)) return pick(byRank()[0],'요즘 제일 인기 많은 ',byRank().slice(1,3));
-  if(/아무|랜덤|random|골라|추천만/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,'음~ 그럼 이건 어때요? ',[]); }
-  if(/스타|star|별/.test(ql)){ const r=[...REPOS].sort((a,b)=>b.stars-a.stars)[0]; return pick(r,'⭐ 스타가 제일 많은 ',[...REPOS].sort((a,b)=>b.stars-a.stars).slice(1,3)); }
-  if(/최근|recent|새로|new|요즘 만든/.test(ql)){ const r=[...REPOS].sort((a,b)=>new Date(b.pushed)-new Date(a.pushed))[0]; return pick(r,'가장 최근에 손본 ',[]); }
+  if(/인기|popular|제일|최고|best|top|많이|핫|hot/.test(ql)) return pick(byRank()[0],t('leadPopular'),byRank().slice(1,3));
+  if(/아무|랜덤|random|골라|추천만/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
+  if(/스타|star|별/.test(ql)){ const r=[...REPOS].sort((a,b)=>b.stars-a.stars)[0]; return pick(r,t('leadStar'),[...REPOS].sort((a,b)=>b.stars-a.stars).slice(1,3)); }
+  if(/최근|recent|새로|new|요즘 만든/.test(ql)){ const r=[...REPOS].sort((a,b)=>new Date(b.pushed)-new Date(a.pushed))[0]; return pick(r,t('leadRecent'),[]); }
   const terms=expand(tokens(q));
   const ranked=REPOS.map(r=>({r,s:scoreRepo(r,terms)+Math.log1p(r.score||0)*0.15})).sort((a,b)=>b.s-a.s);
   const hits=ranked.filter(x=>x.s>=3);
-  if(hits.length){ return pick(hits[0].r, '말씀하신 것엔 ', hits.slice(1,3).map(x=>x.r)); }
-  return pick(byRank()[0], '딱 맞는 건 못 찾았지만, 인기 많은 ', byRank().slice(1,3), true);
+  if(hits.length){ return pick(hits[0].r, t('leadMatch'), hits.slice(1,3).map(x=>x.r)); }
+  return pick(byRank()[0], t('leadFallback'), byRank().slice(1,3), true);
 }
 function byRank(){ return [...REPOS].sort((a,b)=>(a.rank||0)-(b.rank||0)); }
 function pick(repo,lead,alts,weak){
   const d=repo.desc?repo.desc.replace(/\s+/g,' ').slice(0,70):'';
-  const msg=`${lead}‘<b>${repo.label}</b>’${weak?'은 어떠세요?':' 추천이요!'}${d?'<br>“'+d+(repo.desc.length>70?'…':'')+'”':''}<br><span style="color:#ab8a66">★${repo.stars} · 👁${repo.visitors} · ⑂${repo.forks} · ${repo.lang}</span>`;
+  const msg=`${lead}‘<b>${repo.label}</b>’${weak?t('howAbout'):t('recommend')}${d?'<br>“'+d+(repo.desc.length>70?'…':'')+'”':''}<br><span style="color:#ab8a66">★${repo.stars} · 👁${repo.visitors} · ⑂${repo.forks} · ${repo.lang}</span>`;
   return { repo, message:msg, alts:(alts||[]).filter(Boolean) };
 }
 function replyFor(repo,lead){ const r=pick(repo,lead||'',[]); addMsg('bot',r.message,{repo:r.repo}); }
@@ -743,42 +826,44 @@ function replyFor(repo,lead){ const r=pick(repo,lead||'',[]); addMsg('bot',r.mes
 /* ---- Mode B: WebLLM (in-browser, no key) ---- */
 let webllmEngine=null;
 async function webllmAsk(q){
-  if(!navigator.gpu){ addMsg('bot','⚠️ 이 브라우저는 WebGPU를 지원하지 않아 브라우저AI를 못 써요. 로컬검색으로 안내할게요.'); return localIntent(q); }
+  if(!navigator.gpu){ addMsg('bot',t('noGpu')); return localIntent(q); }
   if(!webllmEngine){
-    const note=addMsg('bot','🧠 브라우저 AI 모델을 처음 한 번만 내려받는 중이에요… (최대 ~1GB, 잠시만요)'); note.classList.add('typing');
+    const note=addMsg('bot',t('downloading')); note.classList.add('typing');
     try{ const mod=await import('https://esm.run/@mlc-ai/web-llm');
-      webllmEngine=await mod.CreateMLCEngine('Llama-3.2-1B-Instruct-q4f16_1-MLC',{ initProgressCallback:p=>{ note.textContent='🧠 모델 로딩 '+Math.round((p.progress||0)*100)+'%'; } });
+      webllmEngine=await mod.CreateMLCEngine('Llama-3.2-1B-Instruct-q4f16_1-MLC',{ initProgressCallback:p=>{ note.textContent=(LANG==='ko'?'🧠 모델 로딩 ':'🧠 Loading model ')+Math.round((p.progress||0)*100)+'%'; } });
       note.remove();
-    }catch(e){ note.remove(); addMsg('bot','😢 브라우저AI 로딩 실패. 로컬검색으로 안내할게요.'); return localIntent(q); }
+    }catch(e){ note.remove(); addMsg('bot',t('loadFail')); return localIntent(q); }
   }
   const catalog=REPOS.map(r=>`- ${r.repo} | ${r.lang} | ★${r.stars} 👁${r.visitors} | ${(r.topics||[]).slice(0,4).join(',')} | ${(r.desc||'').slice(0,60)}`).join('\n');
-  const sys=`너는 Repolis(내 모든 GitHub 레포가 사는 도시)의 친절한 택시기사야. 아래 레포 목록 중에서 사용자의 요청에 가장 맞는 레포 하나를 골라 한국어로 짧고 상냥하게 추천해. 마지막 줄에 반드시 정확히 "PICK: <레포이름>" 형식으로 골라줘.\n\n[레포목록]\n${catalog}`;
+  const sys=(LANG==='ko'
+    ? `너는 Repolis(내 모든 GitHub 레포가 사는 도시)의 친절한 택시기사야. 아래 레포 목록 중에서 사용자의 요청에 가장 맞는 레포 하나를 골라 한국어로 짧고 상냥하게 추천해. 마지막 줄에 반드시 정확히 "PICK: <레포이름>" 형식으로 골라줘.\n\n[레포목록]\n${catalog}`
+    : `You are the friendly taxi driver of Repolis, a city where all of my GitHub repos live. From the repo list below, pick the single best repo for the user's request and recommend it warmly in a short English reply. On the very last line, output exactly "PICK: <repo-name>".\n\n[REPOS]\n${catalog}`);
   try{
     const res=await webllmEngine.chat.completions.create({ messages:[{role:'system',content:sys},{role:'user',content:q}], temperature:0.6, max_tokens:220 });
     const txt=res.choices[0].message.content||''; const m=txt.match(/PICK:\s*([A-Za-z0-9._-]+)/);
     const repo=m?REPOS.find(r=>r.repo.toLowerCase()===m[1].toLowerCase()):null;
     const clean=txt.replace(/PICK:.*/i,'').trim().replace(/\n/g,'<br>');
     if(repo) return { repo, message:clean||pick(repo,'',[]).message, alts:[] };
-    return { repo:(localIntent(q).repo), message:clean||'이건 어때요?', alts:[] };
-  }catch(e){ addMsg('bot','😢 브라우저AI 응답 실패. 로컬검색으로 안내할게요.'); return localIntent(q); }
+    return { repo:(localIntent(q).repo), message:clean||t('thisOne'), alts:[] };
+  }catch(e){ addMsg('bot',t('ansFail')); return localIntent(q); }
 }
 
 /* ---- Mode C: external proxy (Vercel → Azure OpenAI) ---- */
 function proxyUrl(){ return localStorage.getItem('taxiProxyUrl')||''; }
 async function proxyAsk(q){
   let url=proxyUrl();
-  if(!url){ url=(prompt('AI 프록시(Vercel) URL을 입력하세요\n예: https://your-app.vercel.app/api/taxi')||'').trim(); if(url) localStorage.setItem('taxiProxyUrl',url); }
-  if(!url){ addMsg('bot','프록시 URL이 없어 로컬검색으로 안내할게요. (모드를 다시 프록시로 고르면 URL을 물어봐요)'); return localIntent(q); }
+  if(!url){ url=(prompt(t('proxyPromptUrl'))||'').trim(); if(url) localStorage.setItem('taxiProxyUrl',url); }
+  if(!url){ addMsg('bot',t('proxyNoUrl')); return localIntent(q); }
   const catalog=REPOS.map(r=>({repo:r.repo,label:r.label,lang:r.lang,stars:r.stars,visitors:r.visitors,forks:r.forks,topics:(r.topics||[]).slice(0,5),desc:(r.desc||'').slice(0,80)}));
   try{
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,repos:catalog})});
     if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json();
     const repo=data.repo?REPOS.find(r=>r.repo.toLowerCase()===String(data.repo).toLowerCase()):null;
-    const msg=(data.message||'이건 어때요?').replace(/\n/g,'<br>');
+    const msg=(data.message||t('thisOne')).replace(/\n/g,'<br>');
     if(repo) return { repo, message:msg, alts:[] };
     return { ...localIntent(q), message:msg };
-  }catch(e){ addMsg('bot','😢 프록시 연결 실패('+e.message+'). 로컬검색으로 안내할게요.'); return localIntent(q); }
+  }catch(e){ addMsg('bot',(LANG==='ko'?'😢 프록시 연결 실패(':'😢 Proxy connection failed (')+e.message+(LANG==='ko'?'). 로컬검색으로 안내할게요.':'). Falling back to local search.')); return localIntent(q); }
 }
 
 async function askDriver(q){
@@ -795,7 +880,7 @@ let driveTo=null;
 function taxiTo(repo){ driveTo=repo; setNav(repo); closeChat(); freeLook=false;
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ driveTo=null; driveBar.style.display='none'; }
-function arriveTaxi(repo){ endDrive(); openChat(); addMsg('bot',`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`);
+function arriveTaxi(repo){ endDrive(); openChat(); addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`));
   setTimeout(()=>openCard(repo),500); }
 
 /* ---- wiring ---- */
@@ -804,8 +889,8 @@ document.getElementById('chatClose').onclick=closeChat;
 document.getElementById('chatSend').onclick=sendChat;
 chatText.addEventListener('keydown',e=>{ if(e.code==='Enter'){ e.preventDefault(); sendChat(); } e.stopPropagation(); });
 modeSel.onchange=e=>{ llmMode=e.target.value;
-  if(llmMode==='proxy'&&!proxyUrl()){ const u=(prompt('AI 프록시(Vercel) URL을 입력하세요\n예: https://your-app.vercel.app/api/taxi')||'').trim(); if(u) localStorage.setItem('taxiProxyUrl',u); }
-  addMsg('bot', llmMode==='local'?'🔎 로컬검색 모드예요. 키 없이 바로 안내해요!' : llmMode==='webllm'?'🧠 브라우저AI 모드예요. 첫 질문 때 모델을 한 번 받아요.' : '🌐 AI 프록시 모드예요. 고품질로 안내할게요!'); };
+  if(llmMode==='proxy'&&!proxyUrl()){ const u=(prompt(t('proxyPromptUrl'))||'').trim(); if(u) localStorage.setItem('taxiProxyUrl',u); }
+  addMsg('bot', llmMode==='local'?t('modeLocalMsg'):llmMode==='webllm'?t('modeWebllmMsg'):t('modeProxyMsg')); };
 document.getElementById('driveCancel').onclick=()=>{ endDrive(); navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; };
 
 /* ====================== LOOP ====================== */
@@ -854,7 +939,7 @@ function animate(){
     b._ring.material.opacity=0.3+Math.sin(clock.elapsedTime*2+b._pos.z)*0.16;
     if(d<nd){ nd=d; nearest=b; }
   }
-  if(nearest&&!modalOpen){ promptEl.innerHTML=`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`; promptEl.classList.add('show'); }
+  if(nearest&&!modalOpen){ promptEl.innerHTML=(LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); }
   else promptEl.classList.remove('show');
 
   if(navTarget){ const dir=Math.atan2(navTarget._pos.x-player.position.x,navTarget._pos.z-player.position.z);
