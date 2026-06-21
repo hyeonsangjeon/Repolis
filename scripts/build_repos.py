@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """Repolis data builder.
 
-Aggregates GitHub traffic history (collected by the github-traffic-monitor repo)
-with live repo metadata, and writes ``repos.json`` — the data that powers the
-Repolis 3D city (one building per repo).
+Aggregates the GitHub traffic history collected by ``scripts/collect_traffic.py``
+(stored in ``data/logs/``) with live repo metadata, and writes ``repos.json`` —
+the data that powers the Repolis 3D city (one building per repo).
 
 Only PUBLIC, non-fork repos are included, so the public site never exposes
 private repository names. Traffic totals are cumulative over the whole period
-that github-traffic-monitor has been tracking.
+that has been tracked.
 
 Env vars:
   REPO_OWNER  GitHub login that owns the repos (default: hyeonsangjeon)
-  GTM_DIR     Path to a checkout of github-traffic-monitor (default: github-traffic-monitor)
+  GTM_DIR     Directory holding the collected logs/ tree (default: data)
   OUT         Output path (default: repos.json)
-  GH_TOKEN    Token used by `gh` (PAT with `repo` scope for private traffic-monitor + repo list)
+  GH_TOKEN    Token used by `gh` (PAT that can list the repos)
 """
 import csv
 import json
@@ -23,7 +23,7 @@ import subprocess
 from pathlib import Path
 
 OWNER = os.environ.get("REPO_OWNER", "hyeonsangjeon")
-GTM_DIR = Path(os.environ.get("GTM_DIR", "github-traffic-monitor"))
+GTM_DIR = Path(os.environ.get("GTM_DIR", "data"))
 OUT = Path(os.environ.get("OUT", "repos.json"))
 
 

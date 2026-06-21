@@ -14,34 +14,35 @@ jobs:
     steps:
       - name: Checkout Repolis
         uses: actions/checkout@v4
-
-      - name: Checkout github-traffic-monitor (read-only)
-        uses: actions/checkout@v4
         with:
-          repository: hyeonsangjeon/github-traffic-monitor
           token: ${{ secrets.GH_PAT }}
-          path: github-traffic-monitor
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Collect traffic into data/logs
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: python3 scripts/collect_traffic.py
+
       - name: Build repos.json
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          GTM_DIR: github-traffic-monitor
-          REPO_OWNER: hyeonsangjeon
+          GTM_DIR: data
+          REPO_OWNER: ${{ github.repository_owner }}
         run: python3 scripts/build_repos.py
 
       - name: Commit if changed
         run: |
-          if ! git diff --quiet -- repos.json; then
+          git add -A data/logs repos.json
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add repos.json
-            git commit -m "chore: refresh Repolis data ($(date -u +%F))"
+            git commit -m "chore: refresh Repolis traffic + data ($(date -u +%F))"
             git push
-          else
-            echo "repos.json unchanged"
           fi
