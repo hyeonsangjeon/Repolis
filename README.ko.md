@@ -17,7 +17,7 @@
 집 하나하나가 레포예요. 건물의 높이·밝기·화려함·마당은 ⭐가 아니라 **실제 트래픽**(방문자·클론·포크·조회수)으로 자라요.
 길을 잃었다면? 🚕 **LLM 택시기사**에게 물어보세요. _"RAG 관련 레포 보여줘"_ 하면 설명해주고, 택시가 **진짜로 내 옆까지 와서 태우고** 그 집까지 데려다줍니다.
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="레포 트래픽으로 지어진 도시 Repolis 둘러보기" width="86%"></a>
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis에서 🚕 택시를 타고 레포의 집으로 가 카드를 여는 데모" width="86%"></a>
 
 <sub>▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>라이브 데모</b></a> · Built with Three.js · 한 개의 <code>index.html</code></sub>
 
@@ -95,6 +95,7 @@ github-traffic-monitor (private)        Repolis (public)
 | 입력 | 동작 |
 |---|---|
 | `W A S D` / 방향키 / 조이스틱 | 걷기 |
+| 📱 **모바일** | **왼쪽 스틱** 이동 · **오른쪽 👁️ 스틱** 시점·회전 · 가운데 **🚪** 레포 열기 |
 | **좌클릭 드래그** | 시점 회전(자유 시점) |
 | **우클릭 드래그** | 캐릭터 조준 · WoW식 · 휠 = 줌 |
 | `Enter` / 클릭 | 도착한 레포 열기 |
