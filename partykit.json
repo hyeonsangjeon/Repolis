@@ -1,0 +1,5 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "repolis",
+  "main": "party/repolis.js"
+}

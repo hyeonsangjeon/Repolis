@@ -165,6 +165,7 @@
   <div class="badge">🏙️ Repolis</div>
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
   <div class="badge"><span data-i18n="visited">방문</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
+  <div class="badge" id="liveBadge" title="online now · today's visitors">🟢 <b id="liveCount">1</b><span id="todayWrap" style="display:none;"> · <span data-i18n="todayWord">오늘</span> <b id="todayCount">0</b></span></div>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
 </div>
 <button id="menuBtn">☰<span class="dot"></span></button>
@@ -272,7 +273,7 @@ if(LANG!=='ko'&&LANG!=='en') LANG = (navigator.language||'').toLowerCase().start
 const I18N = {
   ko:{
     loading:'지브리 마을을 짓는 중…',
-    visited:'방문', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…',
+    visited:'방문', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
@@ -305,7 +306,7 @@ const I18N = {
   },
   en:{
     loading:'Building the Ghibli town…',
-    visited:'Visited', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…',
+    visited:'Visited', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height·brightness · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold-star ornament.',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a Ghibli-style city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
@@ -1098,13 +1099,94 @@ function animate(){
     const tgt = Math.hypot(dxp,dzp)<16 ? Math.atan2(dxp,dzp) : (-2.2+Math.sin(clock.elapsedTime*0.7)*0.22);
     driver.rotation.y=lerpA(driver.rotation.y,tgt,0.07);
     if(driver._head) driver._head.position.y=2.1+Math.sin(clock.elapsedTime*2)*0.03; }
+  rtTick(dt);
   renderer.render(scene,camera);
 }
-animate();
+requestAnimationFrame(animate);
 addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+
+/* ---- Phase 4D: optional realtime multiplayer + live counter (backend-agnostic) ----
+   Static GitHub Pages can't host a socket server, so Repolis connects to an
+   external WebSocket endpoint ONLY if you configure one (PartyKit, or your own
+   ws server — see party/repolis.js & scripts/dev_realtime.mjs). Configure via
+   ?rt=wss://… , localStorage 'repolisRT', or window.REPOLIS_RT. With no endpoint
+   the world runs solo and simply shows "🟢 1". Everything is wrapped so a missing
+   or broken backend never affects the single-player experience. */
+const RT_URL=(new URLSearchParams(location.search).get('rt'))||localStorage.getItem('repolisRT')||(window.REPOLIS_RT||'');
+const liveCountEl=document.getElementById('liveCount'), todayWrap=document.getElementById('todayWrap'), todayCountEl=document.getElementById('todayCount');
+function guestId(){ let id=localStorage.getItem('repolisGuestId'); if(!id){ id='g'+Math.random().toString(36).slice(2,9); localStorage.setItem('repolisGuestId',id); } return id; }
+function guestName(){ let n=localStorage.getItem('repolisGuestName'); if(!n){ n='Guest-'+Math.floor(1000+Math.random()*9000); localStorage.setItem('repolisGuestName',n); } return n; }
+const peers=new Map();
+const PEER_COLORS=[0xef6f6f,0x6fa8ef,0x86d06f,0xe6b34d,0xb887e0,0x4fc4c4,0xe07fb0,0xef9a4d];
+function nameTag(name){
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=72; const x=cv.getContext('2d');
+  x.font='bold 34px system-ui,sans-serif'; x.textAlign='center'; x.textBaseline='middle';
+  const w=Math.min(240,x.measureText(name).width+34), bx=128-w/2;
+  x.fillStyle='rgba(38,28,18,.72)';
+  if(x.roundRect){ x.beginPath(); x.roundRect(bx,14,w,44,16); x.fill(); } else x.fillRect(bx,14,w,44);
+  x.fillStyle='#fff7ec'; x.fillText(name,128,37);
+  const tx=new THREE.CanvasTexture(cv); tx.anisotropy=MAXANISO;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthTest:false}));
+  sp.scale.set(3.4,0.96,1); sp.position.y=3.55; return sp;
+}
+function makePeerAvatar(name,color){
+  const g=new THREE.Group();
+  const b=rbox(0.95,0.92,0.6,color,0.18); b.position.y=1.32; g.add(b);
+  const h=rbox(1.06,0.96,0.96,0xf2cca2,0.28,4); h.position.y=2.25; g.add(h);
+  const hair=rbox(1.13,0.42,1.04,0x2c2521,0.2,3); hair.position.y=2.66; g.add(hair);
+  const lL=rbox(0.34,0.74,0.34,0x33406e,0.1); lL.position.set(-0.22,0.42,0); g.add(lL);
+  const lR=lL.clone(); lR.position.x=0.22; g.add(lR);
+  g.add(nameTag(name||'Guest')); return g;
+}
+let rtSock=null, rtSendT=0, lastSent={x:1e9,z:1e9,y:0};
+function setLive(n){ liveCountEl.textContent=Math.max(1,n|0); }
+function setToday(n){ todayWrap.style.display='inline'; todayCountEl.textContent=n|0; }
+function addPeer(p){ if(!p||p.id===guestId()||peers.has(p.id)) return;
+  const color=p.color!=null?p.color:PEER_COLORS[hashStr(p.id)%PEER_COLORS.length];
+  const g=makePeerAvatar(p.name,color); g.position.set(p.x||0,0,p.z||0); g.rotation.y=p.yaw||0; scene.add(g);
+  peers.set(p.id,{group:g,tx:p.x||0,tz:p.z||0,tyaw:p.yaw||0}); }
+function removePeer(id){ const p=peers.get(id); if(p){ scene.remove(p.group); peers.delete(id); } }
+function clearPeers(){ for(const id of [...peers.keys()]) removePeer(id); }
+function rtSend(o){ if(rtSock&&rtSock.readyState===1) rtSock.send(JSON.stringify(o)); }
+function rtHandle(m){
+  if(m.t==='welcome'){ (m.peers||[]).forEach(addPeer); if(m.live!=null) setLive(m.live); if(m.today!=null) setToday(m.today); }
+  else if(m.t==='join'){ addPeer(m.peer); if(m.live!=null) setLive(m.live); }
+  else if(m.t==='pos'){ const p=peers.get(m.id); if(p){ p.tx=m.x; p.tz=m.z; p.tyaw=m.yaw; } }
+  else if(m.t==='leave'){ removePeer(m.id); if(m.live!=null) setLive(m.live); }
+  else if(m.t==='stats'){ if(m.live!=null) setLive(m.live); if(m.today!=null) setToday(m.today); }
+}
+function rtConnect(){
+  if(!RT_URL){ setLive(1); return; }
+  try{
+    rtSock=new WebSocket(RT_URL);
+    rtSock.onopen=()=>rtSend({t:'join',id:guestId(),name:guestName(),x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2),yaw:+model.rotation.y.toFixed(2),color:SHIRT});
+    rtSock.onmessage=ev=>{ let m; try{ m=JSON.parse(ev.data); }catch(e){ return; } rtHandle(m); };
+    rtSock.onclose=()=>{ rtSock=null; clearPeers(); setLive(1); setTimeout(rtConnect,5000); };
+    rtSock.onerror=()=>{ try{ rtSock.close(); }catch(e){} };
+  }catch(e){ setLive(1); }
+}
+function rtTick(dt){
+  for(const p of peers.values()){
+    p.group.position.x+=(p.tx-p.group.position.x)*0.18;
+    p.group.position.z+=(p.tz-p.group.position.z)*0.18;
+    p.group.rotation.y=lerpA(p.group.rotation.y,p.tyaw,0.18);
+    const d=Math.hypot(p.tx-p.group.position.x,p.tz-p.group.position.z);
+    p.group.position.y=d>0.05?Math.abs(Math.sin(clock.elapsedTime*9))*0.12:0;
+  }
+  rtSendT+=dt;
+  if(rtSock&&rtSock.readyState===1&&rtSendT>0.1){ rtSendT=0;
+    if(Math.abs(player.position.x-lastSent.x)>0.02||Math.abs(player.position.z-lastSent.z)>0.02||Math.abs(model.rotation.y-lastSent.y)>0.02){
+      lastSent={x:player.position.x,z:player.position.z,y:model.rotation.y};
+      rtSend({t:'pos',id:guestId(),x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2),yaw:+model.rotation.y.toFixed(2)});
+    }
+  }
+}
+rtConnect();
+
 if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:model.rotation.y,freeLook,dragBtn});
   window.__ride=()=>ride?ride.phase:null; window.__taxiPos=()=>({x:+taxi.position.x.toFixed(1),z:+taxi.position.z.toFixed(1),vis:model.visible});
-  window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; }; }
+  window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; };
+  window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, ws:rtSock?rtSock.readyState:-1}); }
 </script>
 </body>
 </html>
