@@ -785,7 +785,7 @@ addEventListener('keyup',e=>{ if(isTyping()) return; keys[e.code]=false; });
 
 let camYaw=Math.PI, camPitch=0.42, camDist=13, dragging=false, dragBtn=0, px=0, py=0, dragMoved=false, freeLook=false;
 const dom=renderer.domElement;
-dom.addEventListener('contextmenu',e=>e.preventDefault());          // WoW: right mouse drives the camera, suppress browser menu
+addEventListener('contextmenu',e=>e.preventDefault(),true);          // WoW: suppress the browser right-click menu globally (capture phase, any target — canvas, HUD, overlays)
 dom.addEventListener('pointerdown',e=>{ if(e.button!==0&&e.button!==2) return;
   dragging=true; dragBtn=e.button; dragMoved=false; px=e.clientX; py=e.clientY;
   if(e.button===2) e.preventDefault();
