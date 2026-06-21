@@ -196,7 +196,8 @@
     <div class="sub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.</div>
     <div class="ctrls">
       <div><b>WASD / ←↑↓→</b>걷기</div>
-      <div><b>마우스 드래그</b>둘러보기</div>
+      <div><b>좌클릭 드래그</b>시점 회전(자유 시점)</div>
+      <div><b>우클릭 드래그</b>캐릭터 조준 · WoW식 · 휠 줌</div>
       <div><b>Enter / 클릭</b>레포 열기</div>
     </div>
     <button id="startBtn">마을 입장 →</button>
@@ -588,14 +589,22 @@ addEventListener('keydown',e=>{ if(isTyping()) return; keys[e.code]=true;
   if(e.code==='Escape'){ closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ if(isTyping()) return; keys[e.code]=false; });
 
-let camYaw=Math.PI, camPitch=0.42, camDist=13, dragging=false, px=0, py=0, dragMoved=false;
+let camYaw=Math.PI, camPitch=0.42, camDist=13, dragging=false, dragBtn=0, px=0, py=0, dragMoved=false, freeLook=false;
 const dom=renderer.domElement;
-dom.addEventListener('pointerdown',e=>{ dragging=true; dragMoved=false; px=e.clientX; py=e.clientY; });
+dom.addEventListener('contextmenu',e=>e.preventDefault());          // WoW: right mouse drives the camera, suppress browser menu
+dom.addEventListener('pointerdown',e=>{ if(e.button!==0&&e.button!==2) return;
+  dragging=true; dragBtn=e.button; dragMoved=false; px=e.clientX; py=e.clientY;
+  if(e.button===2) e.preventDefault();
+  try{ dom.setPointerCapture(e.pointerId); }catch(_){}
+  document.body.style.cursor='grabbing'; });
 addEventListener('pointermove',e=>{ if(!dragging) return;
   const dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
   if(Math.abs(dx)+Math.abs(dy)>3) dragMoved=true;
-  camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005)); });
-addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&nearest&&!modalOpen) openCard(nearest); dragging=false; });
+  camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005));
+  if(dragBtn===2){ model.rotation.y=camYaw+Math.PI; freeLook=false; }  // right drag = mouselook: steer character with the view
+  else freeLook=true; });                                             // left drag = free look: camera holds its angle
+addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&dragBtn===0&&nearest&&!modalOpen) openCard(nearest);
+  dragging=false; document.body.style.cursor=''; });
 dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
 
 let stickVec={x:0,y:0}; const stick=document.getElementById('stick'), nub=stick.querySelector('.nub'); let stickId=null;
@@ -783,7 +792,7 @@ async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; b
 
 /* ---- auto-drive (taxi takes you there) ---- */
 let driveTo=null;
-function taxiTo(repo){ driveTo=repo; setNav(repo); closeChat();
+function taxiTo(repo){ driveTo=repo; setNav(repo); closeChat(); freeLook=false;
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ driveTo=null; driveBar.style.display='none'; }
 function arriveTaxi(repo){ endDrive(); openChat(); addMsg('bot',`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`);
@@ -834,7 +843,7 @@ function animate(){
   legL.rotation.x=bob; legR.rotation.x=-bob; armL.rotation.x=-bob; armR.rotation.x=bob;
   model.position.y=Math.abs(Math.sin(walk))*0.12;
 
-  if(!dragging&&moving) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,autopilot?0.08:0.04);
+  if(!dragging&&moving&&(!freeLook||autopilot)) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,autopilot?0.08:0.04);
   const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist, oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist, oy=Math.sin(camPitch)*camDist;
   camera.position.lerp(new THREE.Vector3(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz),0.12);
   camera.lookAt(player.position.x,player.position.y+1.7,player.position.z);
@@ -862,6 +871,7 @@ function animate(){
 }
 animate();
 addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+if(location.search.includes('dbg')) window.__cam=()=>({camYaw,camPitch,charYaw:model.rotation.y,freeLook,dragBtn});
 </script>
 </body>
 </html>
