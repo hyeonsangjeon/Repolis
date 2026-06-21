@@ -1,82 +1,102 @@
 <div align="center">
 
-# 🏙️ Repolis — 레포들의 도시
+# 🏙️ Repolis — the City of Repos
 
-**핀 6개의 한계를 넘어, 내 모든 GitHub 레포가 사는 걸어다닐 수 있는 3D 도시.**
+**Beyond the 6‑pin limit: a walkable 3D city where every one of your GitHub repos lives.**
 
-집 하나하나가 레포예요. 건물의 높이·밝기·화려함·마당은 ⭐가 아니라 **실제 트래픽**(방문자·클론·포크·조회수)으로 자라요.
-길을 잃었다면? 🚕 **택시기사 NPC**에게 물어보세요. _"RAG 관련 레포 보여줘"_ 하면 설명해주고, 그 집까지 **자동으로 데려다줍니다.**
+[English](README.md) · [한국어](README.ko.md)
 
-[**▶ 라이브 데모**](https://hyeonsangjeon.github.io/Repolis/) · Built with Three.js · 한 개의 `index.html`
+Every house is a repo. Its height, brightness, ornamentation and garden don't grow from ⭐ — they grow from **real traffic** (visitors · clones · forks · views).
+Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the cab **physically drives over, picks you up, and takes you to that house.**
+
+[**▶ Live demo**](https://hyeonsangjeon.github.io/Repolis/) · Built with Three.js · one single `index.html`
 
 </div>
 
 ---
 
-## ✨ 무엇이 들어있나
+## ✨ What's inside
 
-- 🚶 **걸어다니는 오픈월드** — WASD/조이스틱으로 지브리풍 도시를 산책, 집(레포)에 도착하면 카드가 열려요(소셜 프리뷰 포함).
-- 🏙️ **도심지 & 홈타운 구역** — 종합 인기 상위 레포는 안쪽 도심지의 타워로, 나머지는 외곽 홈타운의 아늑한 코티지로.
-- 📊 **지표가 곧 건축** — 데이터가 도시를 짓습니다:
-  | 지표 | 건물에 반영 |
+- 🚶 **Walkable open world** — stroll a Ghibli‑style city with WASD / arrows / on‑screen joystick. Arrive at a house (repo) and a card opens (with its GitHub **social preview** image when set).
+- 🏙️ **Downtown & Hometown districts** — the most popular repos rise as inner‑city towers; the rest become cozy cottages in the outer hometown, along ring roads and radial avenues.
+- 📊 **Metrics _are_ the architecture** — the data builds the city:
+  | Metric | Shows up as |
   |---|---|
-  | 👁 방문자(unique visitors) | 건물 **높이** · 창문 **밝기** |
-  | ⑂ forks | 건물 **너비** |
-  | ⬇ clones | **화려함**(깃발·금장식) |
-  | 📈 views | **마당**·울타리 크기 |
-  | ★ stars | 지붕 위 **금별** 장식 |
-- 🚕 **LLM 택시기사** — 자연어로 물어보면 가장 맞는 레포를 골라 안내하고, **자동 주행**으로 그 집까지 데려다줘요. 3가지 모드:
-  - **로컬검색** (기본·키 불필요·즉시) — 동의어 확장 인텐트 검색
-  - **WebLLM** (브라우저 내장 AI·키 불필요·WebGPU)
-  - **AI 프록시** (Vercel → Azure OpenAI·최고 품질)
-- 🔎 **길찾기 메뉴** — 검색 + 구역별 그룹, 방문 진행도(n/총합).
+  | 👁 unique visitors | building **height** · window **brightness** |
+  | ⑂ forks | building **width** (lot size) |
+  | ⬇ clones | **ornamentation** (banners · gold trim) |
+  | 📈 views | **garden** · fence size |
+  | ★ stars | **gold‑star** ornaments on the roof |
+- 🗓️ **Cumulative since move‑in day** — visitors & clones are lifetime totals, counted from the day each house was "built" (first seen in the data). The card shows a _"since YYYY‑MM‑DD"_ note.
+- 🚕 **LLM taxi driver that actually drives you** — ask in natural language; it picks the best‑matching repo, explains it, then the cab **comes to your spot, you board, and it carries you** to the house. Three modes:
+  - **Local search** (default · no key · instant) — synonym‑expanded intent search, now also metric‑aware (_"most cloned"_, _"most visited"_, _"most forked"_).
+  - **WebLLM** (in‑browser AI · no key · WebGPU)
+  - **AI proxy** (Vercel → Azure OpenAI · best quality)
+- 🌳 **A city that feels alive** — gardens, pets (chow‑chow NPCs), street trees, varied house shapes, category logos on the roofs (AI / Data / Software / …), and proper town‑house roads.
+- 🟢 **Optional realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live online + today's unique‑visitor counter** in the HUD. Defaults to solo on a plain static host; turn it on with one free server (below).
+- 🌐 **English / 한국어 toggle** — switch the whole UI language live from the HUD.
 
-## 🧠 어떻게 동작하나 (데이터 흐름)
+## 🧠 How it works (data flow)
 
 ```
-github-traffic-monitor (private)        Repolis (public)
-  └ 매일 트래픽 누적(logs/*.csv) ──┐
-                                   ├─▶ .github/workflows/refresh.yml (매일)
-  gh api: 공개·non-fork 레포 메타 ─┘        └ scripts/build_repos.py
-                                              └─▶ repos.json  ──▶  index.html (Three.js 3D 도시)
+github-traffic-monitor (private)          Repolis (public)
+  └ daily cumulative traffic (logs/*.csv) ──┐
+                                            ├─▶ .github/workflows/refresh.yml (daily)
+  gh api: public · non-fork repo metadata ─┘        └ scripts/build_repos.py
+                                                       └─▶ repos.json ──▶ index.html (Three.js 3D city)
 ```
 
-- **공개·non-fork 레포만** 포함합니다 — 비공개 레포 이름이 공개 사이트에 절대 노출되지 않아요.
-- 트래픽 합계는 [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor)가 모아 온 **누적값**입니다.
+- **Public, non‑fork repos only** — a private repo name is never exposed on the public site.
+- Traffic totals are the **cumulative values** gathered by [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor). (GitHub's own traffic API only keeps a rolling 14‑day window — this is why a daily collector is needed to build lifetime totals.)
 
-## 🚀 직접 띄우기
+## 🚀 Run your own
 
-1. **이 레포를 Fork/사용** 후, 트래픽 데이터 소스가 필요해요. [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor) 같은 일일 트래픽 수집 레포를 두세요.
-2. **Secret 추가** — `Settings → Secrets and variables → Actions`:
-   - `GH_PAT` : `repo` 스코프 Personal Access Token (비공개 traffic-monitor 체크아웃 + 레포 목록 조회용)
-3. **GitHub Pages 켜기** — `Settings → Pages → Source: Deploy from a branch → main / (root)`.
-4. **Action 실행** — `Actions → Refresh Repolis data → Run workflow` (이후 매일 자동 갱신).
-5. 끝! `https://<당신>.github.io/Repolis/` 에서 도시가 열립니다.
+1. **Fork / copy this repo.** You also need a daily traffic source — keep a collector like [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor) running.
+2. **Add a secret** — `Settings → Secrets and variables → Actions`:
+   - `GH_PAT` : a `repo`‑scoped Personal Access Token (to check out the private traffic‑monitor + list your repos).
+3. **Enable GitHub Pages** — `Settings → Pages → Source: Deploy from a branch → main / (root)`.
+4. **Run the Action** — `Actions → Refresh Repolis data → Run workflow` (then it auto‑refreshes daily).
+5. Done — your city opens at `https://<you>.github.io/Repolis/`.
 
-### (선택) AI 프록시 모드 — Vercel + Azure OpenAI
+### (Optional) AI proxy mode — Vercel + Azure OpenAI
 
-최고 품질의 택시기사를 원하면 `api/taxi.js`를 Vercel에 배포하세요.
+For the highest‑quality taxi driver, deploy `api/taxi.js` to Vercel:
 
-- Vercel에 이 레포를 Import → 자동으로 `/api/taxi` 엔드포인트가 생겨요.
-- 환경변수: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_KEY`, (선택)`AZURE_OPENAI_API_VERSION`, `ALLOW_ORIGIN`.
-- 도시 안 택시 채팅에서 모드를 **AI 프록시**로 바꾸고, 프록시 URL(`https://<프로젝트>.vercel.app/api/taxi`)을 입력하면 됩니다.
+- Import this repo into Vercel → you automatically get an `/api/taxi` endpoint.
+- Env vars: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_KEY`, (optional) `AZURE_OPENAI_API_VERSION`, `ALLOW_ORIGIN`.
+- In the taxi chat, switch the mode to **AI proxy** and enter your proxy URL (`https://<project>.vercel.app/api/taxi`).
 
-## 🎮 조작
+### (Optional) Realtime multiplayer
 
-| 입력 | 동작 |
+The static site is solo by default. To let visitors meet each other, run one tiny WebSocket server and point the world at it:
+
+- **PartyKit (one command):** `npx partykit deploy` (uses `party/repolis.js` + `partykit.json`). You'll get a URL like `wss://repolis.<you>.partykit.dev/parties/main/world`.
+- **Self‑host:** `node scripts/dev_realtime.mjs` (needs `npm i ws`) → listens on `ws://localhost:1999`.
+- **Point the world at it** with any one of:
+  - URL query: `?rt=wss://…`
+  - `localStorage.setItem('repolisRT','wss://…')`
+  - `window.REPOLIS_RT = 'wss://…'`
+
+> Privacy: the traffic logs that drive the city are committed publicly, and only your **public, non‑fork** repos are ever shown.
+
+## 🎮 Controls (WoW‑style camera)
+
+| Input | Action |
 |---|---|
-| `W A S D` / 방향키 / 조이스틱 | 걷기 |
-| 마우스 드래그 | 둘러보기 · 휠: 줌 |
-| `Enter` / 클릭 | 도착한 레포 열기 |
-| 🚕 버튼 | 택시기사에게 묻기 |
-| ☰ 버튼 | 길찾기 메뉴(검색) |
+| `W A S D` / arrows / joystick | Walk |
+| **Left‑drag** | Orbit camera (free look) |
+| **Right‑drag** | Steer character · WoW‑style · wheel = zoom |
+| `Enter` / click | Open the repo you're standing at |
+| 🚕 button | Ask the taxi driver |
+| ☰ button | Wayfinding menu (search) |
+| 🌐 button | Switch English / 한국어 |
 
-## 🛠 기술
+## 🛠 Tech
 
-Three.js (r0.160) · toon shading + 인버티드-헐 아웃라인 · ACES 톤매핑 · 의존성 빌드 없는 단일 `index.html` · GitHub Actions · (선택) Vercel + Azure OpenAI · WebLLM.
+Three.js (r0.160) · toon shading + inverted‑hull outlines · ACES tone mapping · a single dependency‑free `index.html` · GitHub Actions · (optional) Vercel + Azure OpenAI · WebLLM · (optional) PartyKit / `ws` for realtime.
 
-## 🙏 크레딧
+## 🙏 Credits
 
-데이터: [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor) · 소셜 프리뷰: `opengraph.githubassets.com`.
+Data: [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor) · social previews: `opengraph.githubassets.com`.
 
-<div align="center"><sub>Made with ☕ &amp; Three.js — 핀은 6개지만, 레포는 도시가 됩니다. 🏙️</sub></div>
+<div align="center"><sub>Made with ☕ &amp; Three.js — only 6 pins, but your repos become a whole city. 🏙️</sub></div>
