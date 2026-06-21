@@ -66,7 +66,7 @@
   #modal { position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center;
     background: rgba(30,18,8,.45); backdrop-filter: blur(4px); padding: 20px; }
   #modal.show { display: flex; }
-  .card { background: #fffaf2; border-radius: 22px; width: 420px; max-width: 100%; overflow: hidden;
+  .card { background: #fffaf2; border-radius: 22px; width: 420px; max-width: 100%; overflow: hidden; position: relative;
     box-shadow: 0 24px 70px rgba(40,22,8,.4); animation: pop .22s cubic-bezier(.2,.9,.3,1.3); }
   @keyframes pop { from { transform: scale(.9) translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
   .card .top { padding: 22px 24px; color: #fff; }
@@ -82,7 +82,12 @@
   .btn.gh { background: #2b2420; color: #fff; }
   .btn.live { background: #c2702f; color: #fff; }
   .btn.close { flex: 0 0 auto; min-width: 0; background: #f1e6d6; color: #6a523d; }
-  .card .hero { width: 100%; height: 188px; object-fit: cover; display: block; background: #e8ddca; }
+  .card .hero { width: 100%; aspect-ratio: 2 / 1; height: auto; max-height: 230px; object-fit: cover; display: block;
+    background: linear-gradient(135deg,#efe6d3,#e2d4bb); }
+  .card .sociallabel { position: absolute; top: 12px; left: 12px; z-index: 3; display: none;
+    align-items: center; gap: 5px; background: rgba(26,18,12,.72); color: #ffe1a3; font-size: 11px;
+    font-weight: 800; letter-spacing: .02em; padding: 5px 11px; border-radius: 999px;
+    backdrop-filter: blur(5px); box-shadow: 0 3px 12px rgba(0,0,0,.3); }
   .card .chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 14px 24px 2px; }
   .chip { font-size: 12px; font-weight: 700; color: #6a523d; background: #f4ead8; border-radius: 999px; padding: 5px 11px; }
   .card .since { width: 100%; font-size: 11px; color: #ab8a66; padding: 8px 24px 0; line-height: 1.5; }
@@ -92,6 +97,11 @@
   #intro { position: fixed; inset: 0; z-index: 30; background: linear-gradient(165deg,#7fcdc4 0%,#e8b87a 100%);
     display: flex; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 24px; }
   #intro .inner { max-width: 440px; }
+  #intro .langsel { display: inline-flex; margin-bottom: 20px; background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.4); border-radius: 999px; padding: 3px; }
+  #intro .langsel button { border: none; background: transparent; color: #fff; font-weight: 800;
+    font-size: 13px; padding: 7px 18px; border-radius: 999px; cursor: pointer; opacity: .72; transition: .15s; }
+  #intro .langsel button.active { background: #fff; color: #c2702f; opacity: 1; box-shadow: 0 3px 10px rgba(60,30,10,.2); }
   #intro h1 { font-size: 27px; line-height: 1.3; margin-bottom: 8px; text-shadow: 0 2px 8px rgba(60,30,10,.25); }
   #intro .sub { font-size: 15px; opacity: .95; margin-bottom: 22px; line-height: 1.5; }
   #intro .ctrls { display: flex; gap: 14px; justify-content: center; margin-bottom: 26px; flex-wrap: wrap; }
@@ -181,6 +191,7 @@
 <div id="modal">
   <div class="card">
     <img id="cardImg" class="hero" alt="repo social preview" />
+    <div class="sociallabel" id="cardSocialTag">🎨 <span data-i18n="socialPreview">소셜 프리뷰</span></div>
     <div class="top" id="cardTop">
       <div class="lang" id="cardLang"></div>
       <h2 id="cardName"></h2>
@@ -196,6 +207,9 @@
 
 <div id="intro">
   <div class="inner">
+    <div class="langsel" id="introLang">
+      <button data-lang="ko">한국어</button><button data-lang="en">English</button>
+    </div>
     <h1>🏙️ Repolis — <span data-i18n="cityOfRepos">레포들의 도시</span></h1>
     <div class="sub" data-i18n-html="introSub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.</div>
     <div class="ctrls">
@@ -286,7 +300,7 @@ const I18N = {
     chatPh:'어떤 레포를 찾으세요? 예: RAG 관련',
     go:'길찾기', downtown:'도심지', hometown:'홈타운',
     noResults:'검색 결과가 없어요', noDesc:'아직 설명이 없는 레포예요. GitHub에서 확인해보세요.',
-    openGithub:'GitHub 열기 ↗', liveDemo:'라이브 데모 ↗', close:'닫기',
+    openGithub:'GitHub 열기 ↗', liveDemo:'라이브 데모 ↗', close:'닫기', socialPreview:'소셜 프리뷰',
     rideThere:'🚕 그 집까지 데려다줄게요', soLead:'그럼 ',
     greeterHtml:'어서오세요! 🚕 <b>Repolis 택시기사</b>입니다.<br>어떤 걸 찾으세요? 예: <b>RAG 관련</b>, <b>제일 인기 레포</b>, <b>STT</b>, <b>아무거나</b>',
     leadPopular:'요즘 제일 인기 많은 ', leadRandom:'음~ 그럼 이건 어때요? ', leadStar:'⭐ 스타가 제일 많은 ',
@@ -319,7 +333,7 @@ const I18N = {
     chatPh:'Which repo are you after? e.g. about RAG',
     go:'Route', downtown:'Downtown', hometown:'Hometown',
     noResults:'No results', noDesc:'No description yet. Check it out on GitHub.',
-    openGithub:'Open on GitHub ↗', liveDemo:'Live demo ↗', close:'Close',
+    openGithub:'Open on GitHub ↗', liveDemo:'Live demo ↗', close:'Close', socialPreview:'Social preview',
     rideThere:"🚕 I'll drive you there", soLead:'Then ',
     greeterHtml:"Welcome! 🚕 I'm the <b>Repolis taxi driver</b>.<br>What are you looking for? e.g. <b>about RAG</b>, <b>most popular repo</b>, <b>STT</b>, <b>anything</b>",
     leadPopular:'The most popular right now is ', leadRandom:'Hmm, how about this one? ', leadStar:'⭐ The most-starred is ',
@@ -345,6 +359,7 @@ function applyLang(){
   document.querySelectorAll('[data-i18n-html]').forEach(el=>{ const v=t(el.dataset.i18nHtml); if(v!=null) el.innerHTML=v; });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ const v=t(el.dataset.i18nPh); if(v!=null) el.placeholder=v; });
   const lb=document.getElementById('langBtn'); if(lb) lb.textContent = LANG==='ko' ? '🌐 EN' : '🌐 한국어';
+  document.querySelectorAll('#introLang button').forEach(b=> b.classList.toggle('active', b.dataset.lang===LANG));
   if(typeof renderList==='function') renderList(document.getElementById('repoSearch').value||'');
 }
 
@@ -556,6 +571,31 @@ for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, len=110;
   for(let rr=10;rr<len;rr+=5){ const dd=new THREE.Mesh(new THREE.PlaneGeometry(0.32,1.8), basic(LANE)); dd.rotation.x=-Math.PI/2; dd.rotation.z=-ang; dd.position.set(Math.cos(ang)*rr,0.014,Math.sin(ang)*rr); scene.add(dd); }
 }
 
+/* ---- street lamps + plaza benches (pretty townhouse street feel) ---- */
+const LAMP_BULBS=[];
+function makeLamp(x,z){
+  const g=new THREE.Group();
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.42,0.4,10), toon(0x3b3a44)); base.position.y=0.2; outline(base,0.03); g.add(base);
+  const post=rbox(0.2,3.3,0.2,0x42414c,0.05); post.position.y=1.85; outline(post,0.03); g.add(post);
+  const arm=rbox(0.85,0.16,0.16,0x42414c,0.04); arm.position.set(0.3,3.45,0); g.add(arm);
+  const head=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.36,0.52,8), toon(0x2c2b33)); head.position.set(0.62,3.28,0); outline(head,0.03); g.add(head);
+  const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8), new THREE.MeshBasicMaterial({color:0xffe6a8})); bulb.position.set(0.62,3.04,0); g.add(bulb); LAMP_BULBS.push(bulb);
+  const cap=new THREE.Mesh(new THREE.ConeGeometry(0.3,0.26,8), toon(0x2c2b33)); cap.position.set(0.62,3.62,0); g.add(cap);
+  g.position.set(x,0,z); scene.add(g);
+}
+for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, nx=Math.cos(ang+Math.PI/2), nz=Math.sin(ang+Math.PI/2);
+  [20,52].forEach(r=>{ const bx=Math.cos(ang)*r, bz=Math.sin(ang)*r, off=4.3;
+    makeLamp(bx+nx*off,bz+nz*off); makeLamp(bx-nx*off,bz-nz*off); }); }
+for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+Math.PI/6; makeLamp(Math.cos(a)*11.2,Math.sin(a)*11.2); }
+function makeBench(x,z,rot){
+  const g=new THREE.Group();
+  const seat=rbox(1.8,0.16,0.6,0x9a6b3f,0.05); seat.position.y=0.5; outline(seat,0.03); g.add(seat);
+  const back=rbox(1.8,0.6,0.14,0x9a6b3f,0.05); back.position.set(0,0.85,-0.24); outline(back,0.03); g.add(back);
+  [-0.72,0.72].forEach(sx=>{ const leg=rbox(0.16,0.5,0.52,0x6e4a2e,0.03); leg.position.set(sx,0.25,0); g.add(leg); });
+  g.position.set(x,0,z); g.rotation.y=rot; scene.add(g);
+}
+for(let i=0;i<4;i++){ const a=i/4*Math.PI*2+Math.PI/4; makeBench(Math.cos(a)*8.0,Math.sin(a)*8.0,-a+Math.PI/2); }
+
 /* ---- repo category (topics/lang/name/desc) → roof emblem ---- */
 const CATS={
   AI:{icon:'🤖',color:0x8b5cf6}, Data:{icon:'📊',color:0x0ea5a4}, AIOps:{icon:'⚙️',color:0xf59e0b},
@@ -586,9 +626,24 @@ function hashStr(s){ let h=0; for(let i=0;i<(s||'').length;i++) h=(h*31+s.charCo
 function typology(repo){
   const zero=(repo.visitors||0)===0 && (repo.clones||0)===0 && (repo.stars||0)===0 && (repo.forks||0)===0;
   const hsh=hashStr(repo.repo);
-  if(zero) return {kind:'hut', roof:'gable'};
-  if(repo._downtown) return (hsh%2) ? {kind:'tower', roof:'flat'} : {kind:'shop', roof:'flat'};
-  return {kind:'cottage', roof:['gable','hip','gambrel'][hsh%3]};
+  // rank percentile (0 = top score) drives a guaranteed pyramid of pretty house types
+  const p=(repo.rank||0)/Math.max(1,REPOS.length-1);
+  let tier;
+  if(zero) tier=0;
+  else if(p<0.06) tier=5;        // ~top 3  → mansions (저택)
+  else if(p<0.17) tier=4;        // ~next 6 → manors
+  else if(p<0.32) tier=3;        // ~next 8 → villas
+  else if(p<0.58) tier=2;        // → resident houses
+  else if(p<0.84) tier=1;        // → cottages
+  else tier=0;                   // → cabins
+  let kind, roof;
+  if(tier===0){ kind='cabin'; roof='gable'; }
+  else if(tier===1){ kind='cottage'; roof=['gable','hip','gambrel'][hsh%3]; }
+  else if(tier===2){ kind=(hsh%6===0)?'shop':'house'; roof=(kind==='shop')?'flat':((hsh%2)?'gable':'hip'); }
+  else if(tier===3){ kind=(repo._downtown && hsh%7===0)?'tower':'villa'; roof=(kind==='tower')?'flat':'hip'; }
+  else if(tier===4){ kind='manor'; roof='hip'; }
+  else { kind='mansion'; roof='hip'; }
+  return {kind, roof, tier};
 }
 /* ---- roof variants ---- */
 function makeRoof(style,w,h,color){
@@ -626,13 +681,64 @@ function makeChow(){
   return c;
 }
 
+/* ---- grand-house parts: wings, porch, balcony, portico, cupola, dormer ---- */
+function addWing(g, ww, wh, wd, wall, roofColor, x){
+  const wb=rbox(ww,wh,wd,wall,0.16); wb.position.set(x,wh/2,0); outline(wb,0.05); g.add(wb);
+  const wr=makeRoof('hip', ww*0.92, wh, roofColor); wr.position.x=x; g.add(wr);
+  const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.66,0.66), basic(0xffe4a0)); gl.position.set(x,wh*0.55,wd/2+0.05); g.add(gl);
+}
+function addPorch(g, w, d, color){
+  const roofY=2.8, fz=d/2+0.7;
+  const slab=rbox(Math.max(2.6,w*0.5),0.2,1.7,color,0.05); slab.position.set(0,roofY,fz); outline(slab,0.03); g.add(slab);
+  [-1.0,1.0].forEach(px=>{ const post=rbox(0.16,roofY,0.16,0xefe7d4,0.03); post.position.set(px,roofY/2,fz+0.55); g.add(post); });
+  const step=rbox(Math.max(2.4,w*0.5),0.18,0.5,0xd9cdb4,0.03); step.position.set(0,0.09,d/2+1.55); g.add(step);
+}
+function addBalcony(g, w, d, y, color){
+  const slab=rbox(w*0.52,0.16,1.0,0xefe7d4,0.04); slab.position.set(0,y,d/2+0.45); g.add(slab);
+  const rail=rbox(w*0.52,0.09,0.09,color,0.02); rail.position.set(0,y+0.62,d/2+0.92); g.add(rail);
+  for(let i=0;i<6;i++){ const x=(i/5-0.5)*w*0.48; const b=rbox(0.06,0.55,0.06,color,0.02); b.position.set(x,y+0.34,d/2+0.92); g.add(b); }
+}
+function addColumns(g, n, spanX, z, h, color){
+  for(let i=0;i<n;i++){ const x=(n>1?(i/(n-1)-0.5):0)*spanX;
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.2,h,12), toon(color)); c.position.set(x,h/2,z); c.castShadow=true; g.add(c);
+    const cap=rbox(0.46,0.16,0.46,color,0.03); cap.position.set(x,h+0.02,z); g.add(cap);
+    const bas=rbox(0.46,0.16,0.46,color,0.03); bas.position.set(x,0.08,z); g.add(bas); }
+}
+function triPrism(w,h,depth,color){
+  const s=new THREE.Shape(); s.moveTo(-w/2,0); s.lineTo(w/2,0); s.lineTo(0,h); s.lineTo(-w/2,0);
+  const m=new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:false}), toon(color)); m.castShadow=true; return m;
+}
+function addPortico(g, w, d, color, big){
+  const n=big?6:4, ph=3.3, z=d/2+1.1;
+  addColumns(g,n,w*0.62,z,ph,0xf1ead8);
+  const ent=rbox(w*0.74,0.42,1.1,color,0.04); ent.position.set(0,ph+0.21,z); outline(ent,0.03); g.add(ent);
+  const ped=triPrism(w*0.74,1.1,0.6,color); ped.position.set(0,ph+0.42,z-0.3); g.add(ped);
+  const step=rbox(w*0.68,0.2,1.3,0xe6dcc4,0.03); step.position.set(0,0.1,z+0.3); g.add(step);
+}
+function addCupola(g, h, color){
+  const drum=new THREE.Mesh(new THREE.CylinderGeometry(0.82,0.92,1.2,14), toon(0xf3ecd8)); drum.position.y=h+1.4; outline(drum,0.04); g.add(drum);
+  const dome=new THREE.Mesh(new THREE.SphereGeometry(0.88,16,10,0,Math.PI*2,0,Math.PI/2), toon(color)); dome.position.y=h+2.0; g.add(dome);
+  const fin=new THREE.Mesh(new THREE.SphereGeometry(0.14,8,8), basic(0xffd23f)); fin.position.y=h+3.0; g.add(fin);
+}
+function addDormer(g, d, y){
+  const db=rbox(1.1,0.95,0.9,0xf3ead4,0.05); db.position.set(0,y,d*0.16); g.add(db);
+  const dg=new THREE.Mesh(new THREE.PlaneGeometry(0.55,0.55), basic(0xffe4a0)); dg.position.set(0,y,d*0.16+0.47); g.add(dg);
+  const dr=new THREE.Mesh(new THREE.ConeGeometry(0.85,0.6,4), toon(0xb5532f)); dr.rotation.y=Math.PI/4; dr.position.set(0,y+0.7,d*0.16); g.add(dr);
+}
+
 function makeBuilding(repo){
   repo._cat = repoCategory(repo);
   const typ = typology(repo);
   const rich = Math.min(1,(repo.score||0)/_maxScore); repo._rich=rich;
   let h=repo._h, w=repo._w; const bright=repo._bright, fancy=repo._fancy, flags=repo._flags, yr=repo._yard;
-  if(typ.kind==='tower'){ w*=0.74; h=Math.min(22,h*1.2); }
-  else if(typ.kind==='hut'){ w*=0.66; h=Math.min(4.8,h); }
+  const kind=typ.kind;
+  if(kind==='tower'){ w*=0.72; h=Math.min(22,h*1.25); }
+  else if(kind==='cabin'){ w*=0.6; h=Math.min(4.4,Math.max(3,h)); }
+  else if(kind==='house'){ w*=1.02; h=Math.max(6.2,h); }
+  else if(kind==='townhouse'){ w*=0.82; h=Math.max(9,h*1.05); }
+  else if(kind==='villa'){ w*=1.08; h=Math.max(7,h); }
+  else if(kind==='manor'){ w*=1.14; h=Math.max(8,h); }
+  else if(kind==='mansion'){ w*=1.24; h=Math.max(9.5,h); }
   const d=w;
   const g=new THREE.Group(); g.position.set(repo._x,0,repo._z); g.rotation.y=-repo._ang-Math.PI/2;
 
@@ -654,23 +760,37 @@ function makeBuilding(repo){
     const crown=new THREE.Mesh(GEO_CROWN,MAT_CROWN); crown.position.set(Math.cos(a)*rr,1.32,Math.sin(a)*rr); crown.scale.y=1.1; crown.castShadow=true; g.add(crown); }
   if(rich>0.5){ const dog=makeChow(); const a=Math.random()*Math.PI*2; dog.position.set(Math.cos(a)*yr*0.5,0,Math.sin(a)*yr*0.5); dog.rotation.y=-a+Math.PI/2; dog.scale.setScalar(0.85); g.add(dog); }
 
-  // body + roof (typology-driven silhouette)
-  const body=rbox(w,h,d,repo.wall,typ.kind==='tower'?0.12:0.2); body.position.y=h/2; outline(body,0.06); g.add(body);
+  // body + roof (score-tiered silhouette: cabin→cottage→house→townhouse→villa→manor→mansion + tower/shop)
+  const bodyR=(kind==='tower'||kind==='townhouse')?0.12:0.2;
+  const body=rbox(w,h,d,repo.wall,bodyR); body.position.y=h/2; outline(body,0.06); g.add(body);
   let topH=h, topW=w;
-  if(typ.kind==='shop'){ const uh=Math.max(1.8,h*0.34); const up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
+  if(kind==='shop'){ const uh=Math.max(1.8,h*0.34); const up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
+  // side wings for grand residences (저택)
+  if(kind==='villa'){ addWing(g, w*0.52, h*0.66, d*0.8, repo.wall, repo.roof, w*0.66); }
+  else if(kind==='manor'||kind==='mansion'){ const wh=h*(kind==='mansion'?0.8:0.72), wx=w*0.72;
+    addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, wx); addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, -wx); }
+  // central roof
   const roof=makeRoof(typ.roof, topW, topH, repo.roof); g.add(roof);
-  if(typ.roof!=='flat'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.3,h+1.4,d*0.22); outline(chim,0.04); g.add(chim); }
-  if(typ.kind==='tower'){ const tank=new THREE.Mesh(new THREE.CylinderGeometry(w*0.16,w*0.16,0.9,10), toon(0x8a98a6)); tank.position.set(w*0.2,h+1.0,-d*0.18); outline(tank,0.04); g.add(tank); }
+  if(typ.roof!=='flat'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim); }
+  if(kind==='tower'){ const tank=new THREE.Mesh(new THREE.CylinderGeometry(w*0.16,w*0.16,0.9,10), toon(0x8a98a6)); tank.position.set(w*0.2,h+1.0,-d*0.18); outline(tank,0.04); g.add(tank); }
+  if(kind==='house'){ addDormer(g,d,topH+0.55); }
+  if(kind==='mansion'){ addCupola(g, topH, repo.roof); }
+  // entrance feature by tier
+  if(kind==='house'){ addPorch(g,w,d,repo.roof); }
+  else if(kind==='villa'){ addBalcony(g,w,d,h*0.58,repo.roof); }
+  else if(kind==='manor'){ addPortico(g,w,d,repo.roof,false); }
+  else if(kind==='mansion'){ addPortico(g,w,d,repo.roof,true); }
+  else if(kind==='townhouse'){ const stoop=rbox(2.0,0.5,1.1,0xd9cdb4,0.04); stoop.position.set(0,0.25,d/2+0.62); outline(stoop,0.02); g.add(stoop); }
   // door
   const door=rbox(1.4,2.1,0.3,0x6e4a2e,0.12); door.position.set(0,1.05,d/2); outline(door,0.04); g.add(door);
   const knob=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6), basic(0xf3d27a)); knob.position.set(0.44,1.05,d/2+0.18); g.add(knob);
-  // awning: wide store awning for shops, cottage awning otherwise (towers bare)
-  if(typ.kind==='shop'){ const aw=rbox(w*0.96,0.26,1.3,(CATS[repo._cat]||CATS.Software).color,0.06); aw.position.set(0,2.5,d/2+0.55); outline(aw,0.03); g.add(aw); }
-  else if(typ.kind!=='tower'){ const awn=rbox(1.9,0.24,0.85,repo.roof,0.08); awn.position.set(0,2.3,d/2+0.32); outline(awn,0.03); g.add(awn); }
+  // awning only for shop & small cabins/cottages (others have porch/portico/balcony)
+  if(kind==='shop'){ const aw=rbox(w*0.96,0.26,1.3,(CATS[repo._cat]||CATS.Software).color,0.06); aw.position.set(0,2.5,d/2+0.55); outline(aw,0.03); g.add(aw); }
+  else if(kind==='cottage'||kind==='cabin'){ const awn=rbox(1.9,0.24,0.85,repo.roof,0.08); awn.position.set(0,2.3,d/2+0.32); outline(awn,0.03); g.add(awn); }
   // windows + warm glow (brightness = visitors)
   const glowCol=new THREE.Color(0x352815).lerp(new THREE.Color(0xffe9a8), bright);
   const rows = h>10.5?[h*0.32,h*0.55,h*0.78] : h>6.5?[h*0.42,h*0.72] : [Math.min(2.6,h*0.5)];
-  const xs=[-w*0.27,w*0.27];
+  const xs = w>7 ? [-w*0.32,0,w*0.32] : [-w*0.27,w*0.27];
   rows.forEach(wy=>xs.forEach(wx=>{ const fr=rbox(1.05,1.05,0.22,0xf3ead4,0.06); fr.position.set(wx,wy,d/2); g.add(fr);
     const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.72), basic(glowCol.getHex())); gl.position.set(wx,wy,d/2+0.12); g.add(gl); }));
   // bunting flags (fancy = clones)
@@ -779,6 +899,7 @@ let navTarget=null;
 const keys={};
 const isTyping=()=>{ const a=document.activeElement; return a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
 addEventListener('keydown',e=>{ if(isTyping()) return; keys[e.code]=true;
+  if(e.code==='Space') e.preventDefault();
   if(e.code==='Enter'&&nearest&&!modalOpen) openCard(nearest);
   if(e.code==='Escape'){ closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ if(isTyping()) return; keys[e.code]=false; });
@@ -790,7 +911,7 @@ dom.addEventListener('pointerdown',e=>{ if(e.button!==0&&e.button!==2) return;
   dragging=true; dragBtn=e.button; dragMoved=false; px=e.clientX; py=e.clientY;
   if(e.button===2) e.preventDefault();
   try{ dom.setPointerCapture(e.pointerId); }catch(_){}
-  document.body.style.cursor='grabbing'; });
+  dom.style.cursor='grabbing'; document.body.style.cursor='grabbing'; });
 addEventListener('pointermove',e=>{ if(!dragging) return;
   const dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
   if(Math.abs(dx)+Math.abs(dy)>3) dragMoved=true;
@@ -798,7 +919,7 @@ addEventListener('pointermove',e=>{ if(!dragging) return;
   if(dragBtn===2){ model.rotation.y=camYaw+Math.PI; freeLook=false; }  // right drag = mouselook: steer character with the view
   else freeLook=true; });                                             // left drag = free look: camera holds its angle
 addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&dragBtn===0&&nearest&&!modalOpen) openCard(nearest);
-  dragging=false; document.body.style.cursor=''; });
+  dragging=false; dom.style.cursor=''; document.body.style.cursor=''; });
 dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
 
 let stickVec={x:0,y:0}; const stick=document.getElementById('stick'), nub=stick.querySelector('.nub'); let stickId=null;
@@ -840,7 +961,14 @@ function renderList(q=''){
 renderList();
 document.getElementById('repoSearch').addEventListener('input',e=>renderList(e.target.value));
 const langBtn=document.getElementById('langBtn');
-langBtn.onclick=()=>{ LANG = LANG==='ko'?'en':'ko'; localStorage.setItem('repolisLang',LANG); applyLang(); };
+function setLang(l){ if(l!==LANG){ LANG=l; localStorage.setItem('repolisLang',LANG); }
+  applyLang();
+  // refresh the taxi chat so no stale-language messages linger after a switch
+  if(typeof chatLog!=='undefined' && chatLog){ const wasOpen=!chatEl.classList.contains('hidden');
+    chatLog.innerHTML=''; chatGreeted=false;
+    if(wasOpen){ chatGreeted=true; addMsg('bot',t('greeterHtml')); } } }
+langBtn.onclick=()=> setLang(LANG==='ko'?'en':'ko');
+document.querySelectorAll('#introLang button').forEach(b=> b.onclick=()=> setLang(b.dataset.lang));
 applyLang();
 function setNav(repo){ navTarget=repo; navHolder.visible=true;
   document.getElementById('navBadge').style.display=''; document.getElementById('navName').textContent=repo.label; }
@@ -852,9 +980,11 @@ function openCard(repo){ modalOpen=true; modal.classList.add('show');
   document.getElementById('cardName').textContent=repo.label;
   document.getElementById('cardStars').textContent='★ '+repo.stars+'  ·  '+repo.repo;
   const img=document.getElementById('cardImg');
-  img.style.display='block';
-  img.onerror=()=>{ img.style.display='none'; };
-  img.src='https://opengraph.githubassets.com/'+repo.repo+'/hyeonsangjeon/'+repo.repo;
+  const sbadge=document.getElementById('cardSocialTag');
+  img.style.display='block'; if(sbadge) sbadge.style.display='none';
+  img.onerror=()=>{ img.style.display='none'; if(sbadge) sbadge.style.display='none'; };
+  img.onload=()=>{ if(sbadge) sbadge.style.display = repo.social_custom ? 'inline-flex' : 'none'; };
+  img.src = repo.social || ('https://opengraph.githubassets.com/'+repo.repo+'/'+OWNER+'/'+repo.repo);
   document.getElementById('cardChips').innerHTML=
     `<span class="chip">★ <b>${repo.stars}</b> stars</span>`+
     `<span class="chip">⑂ <b>${repo.forks}</b> forks</span>`+
@@ -1008,6 +1138,7 @@ function driveTaxiToward(px,pz,speed,dt,stop=0){
   return dd;
 }
 function taxiTo(repo){ ride={repo, phase:'coming', t:0}; setNav(repo); closeChat(); freeLook=false; model.visible=true;
+  if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
 function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; openChat();
@@ -1035,7 +1166,7 @@ function animate(){
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
   mv.set(0,0,0);
-  const userInput = keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
+  const userInput = keys['Space']||keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
   let moving=false;
   if(ride){
     if(userInput && ride.phase!=='arriving'){ endDrive(); }

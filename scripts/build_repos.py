@@ -33,6 +33,47 @@ def gh_api(path):
     return json.loads(out)
 
 
+def social_map(owner):
+    """Map repo name -> {url, custom} for GitHub social preview (open graph) images.
+
+    REST ``/user/repos`` does not expose the social preview, so we use GraphQL:
+      * ``openGraphImageUrl``        the image GitHub serves when the repo is shared.
+      * ``usesCustomOpenGraphImage`` True when the owner uploaded a custom preview
+        (served from repository-images.githubusercontent.com); False for the
+        auto-generated card (served from opengraph.githubassets.com).
+    """
+    out = {}
+    cursor = None
+    query = (
+        "query($owner:String!,$cursor:String){"
+        " repositoryOwner(login:$owner){"
+        " ... on User { repositories(first:100, ownerAffiliations:OWNER,"
+        " isFork:false, privacy:PUBLIC, after:$cursor){"
+        " nodes{ name usesCustomOpenGraphImage openGraphImageUrl }"
+        " pageInfo{ hasNextPage endCursor } } } } }"
+    )
+    while True:
+        cmd = ["gh", "api", "graphql", "-f", "query=" + query, "-F", "owner=" + owner]
+        if cursor:
+            cmd += ["-F", "cursor=" + cursor]
+        try:
+            data = json.loads(subprocess.check_output(cmd, text=True))
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            break  # graceful: builds still work without social data
+        conn = (((data.get("data") or {}).get("repositoryOwner") or {}).get("repositories")) or {}
+        for n in conn.get("nodes") or []:
+            out[n["name"]] = {
+                "url": n.get("openGraphImageUrl") or "",
+                "custom": bool(n.get("usesCustomOpenGraphImage")),
+            }
+        page = conn.get("pageInfo") or {}
+        if page.get("hasNextPage"):
+            cursor = page.get("endCursor")
+        else:
+            break
+    return out
+
+
 def sum_col(path, col):
     if not path.exists():
         return 0
@@ -61,6 +102,7 @@ def first_date(path):
 
 def build():
     repos = gh_api("/user/repos?per_page=100&affiliation=owner&sort=full_name")
+    social = social_map(OWNER)
     out = []
     for r in repos:
         if r.get("fork") or r.get("private"):
@@ -98,6 +140,8 @@ def build():
                 "pushed": (r.get("pushed_at") or "")[:10],
                 "tracked": tracked,
                 "first_seen": first_seen,
+                "social": (social.get(name) or {}).get("url", ""),
+                "social_custom": (social.get(name) or {}).get("custom", False),
                 "score": round(score, 3),
             }
         )
