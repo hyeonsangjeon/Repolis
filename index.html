@@ -288,6 +288,7 @@ const I18N = {
     greeterHtml:'어서오세요! 🚕 <b>Repolis 택시기사</b>입니다.<br>어떤 걸 찾으세요? 예: <b>RAG 관련</b>, <b>제일 인기 레포</b>, <b>STT</b>, <b>아무거나</b>',
     leadPopular:'요즘 제일 인기 많은 ', leadRandom:'음~ 그럼 이건 어때요? ', leadStar:'⭐ 스타가 제일 많은 ',
     leadRecent:'가장 최근에 손본 ', leadMatch:'말씀하신 것엔 ', leadFallback:'딱 맞는 건 못 찾았지만, 인기 많은 ',
+    leadVisitors:'👁 방문자가 제일 많은 ', leadClones:'⬇ 클론(다운로드)이 제일 많은 ', leadForks:'⑂ 포크가 제일 많은 ', leadViews:'📈 조회수가 제일 많은 ',
     howAbout:'은 어떠세요?', recommend:' 추천이요!', thisOne:'이건 어때요?',
     modeLocalMsg:'🔎 로컬검색 모드예요. 키 없이 바로 안내해요!',
     modeWebllmMsg:'🧠 브라우저AI 모드예요. 첫 질문 때 모델을 한 번 받아요.',
@@ -320,6 +321,7 @@ const I18N = {
     greeterHtml:"Welcome! 🚕 I'm the <b>Repolis taxi driver</b>.<br>What are you looking for? e.g. <b>about RAG</b>, <b>most popular repo</b>, <b>STT</b>, <b>anything</b>",
     leadPopular:'The most popular right now is ', leadRandom:'Hmm, how about this one? ', leadStar:'⭐ The most-starred is ',
     leadRecent:'The most recently updated is ', leadMatch:'For what you asked, ', leadFallback:"Couldn't find an exact match, but a popular one is ",
+    leadVisitors:'👁 The most-visited is ', leadClones:'⬇ The most-cloned is ', leadForks:'⑂ The most-forked is ', leadViews:'📈 The most-viewed is ',
     howAbout:' — how about it?', recommend:' — recommended!', thisOne:'How about this one?',
     modeLocalMsg:'🔎 Local-search mode. No key needed — instant!',
     modeWebllmMsg:'🧠 Browser-AI mode. The model downloads once on your first question.',
@@ -918,6 +920,10 @@ function localIntent(q){
   if(/아무|랜덤|random|골라|추천만/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
   if(/스타|star|별/.test(ql)){ const r=[...REPOS].sort((a,b)=>b.stars-a.stars)[0]; return pick(r,t('leadStar'),[...REPOS].sort((a,b)=>b.stars-a.stars).slice(1,3)); }
   if(/최근|recent|새로|new|요즘 만든/.test(ql)){ const r=[...REPOS].sort((a,b)=>new Date(b.pushed)-new Date(a.pushed))[0]; return pick(r,t('leadRecent'),[]); }
+  if(/방문|visitor|트래픽|traffic|왕래|사람 많/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.visitors||0)-(x.visitors||0)); return pick(a[0],t('leadVisitors'),a.slice(1,3)); }
+  if(/클론|clone|다운로드|download|받아|설치/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.clones||0)-(x.clones||0)); return pick(a[0],t('leadClones'),a.slice(1,3)); }
+  if(/포크|fork|파생|갈라/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.forks||0)-(x.forks||0)); return pick(a[0],t('leadForks'),a.slice(1,3)); }
+  if(/조회|view|뷰|페이지뷰/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.views||0)-(x.views||0)); return pick(a[0],t('leadViews'),a.slice(1,3)); }
   const terms=expand(tokens(q));
   const ranked=REPOS.map(r=>({r,s:scoreRepo(r,terms)+Math.log1p(r.score||0)*0.15})).sort((a,b)=>b.s-a.s);
   const hits=ranked.filter(x=>x.s>=3);
@@ -927,7 +933,7 @@ function localIntent(q){
 function byRank(){ return [...REPOS].sort((a,b)=>(a.rank||0)-(b.rank||0)); }
 function pick(repo,lead,alts,weak){
   const d=repo.desc?repo.desc.replace(/\s+/g,' ').slice(0,70):'';
-  const msg=`${lead}‘<b>${repo.label}</b>’${weak?t('howAbout'):t('recommend')}${d?'<br>“'+d+(repo.desc.length>70?'…':'')+'”':''}<br><span style="color:#ab8a66">★${repo.stars} · 👁${repo.visitors} · ⑂${repo.forks} · ${repo.lang}</span>`;
+  const msg=`${lead}‘<b>${repo.label}</b>’${weak?t('howAbout'):t('recommend')}${d?'<br>“'+d+(repo.desc.length>70?'…':'')+'”':''}<br><span style="color:#ab8a66">★${repo.stars} · 👁${repo.visitors} · ⬇${repo.clones||0} · ⑂${repo.forks} · ${repo.lang}</span>`;
   return { repo, message:msg, alts:(alts||[]).filter(Boolean) };
 }
 function replyFor(repo,lead){ const r=pick(repo,lead||'',[]); addMsg('bot',r.message,{repo:r.repo}); }
@@ -943,7 +949,7 @@ async function webllmAsk(q){
       note.remove();
     }catch(e){ note.remove(); addMsg('bot',t('loadFail')); return localIntent(q); }
   }
-  const catalog=REPOS.map(r=>`- ${r.repo} | ${r.lang} | ★${r.stars} 👁${r.visitors} | ${(r.topics||[]).slice(0,4).join(',')} | ${(r.desc||'').slice(0,60)}`).join('\n');
+  const catalog=REPOS.map(r=>`- ${r.repo} | ${r.lang} | ★${r.stars} 👁${r.visitors} ⬇${r.clones||0} ⑂${r.forks} | ${(r.topics||[]).slice(0,5).join(',')} | ${(r.desc||'').slice(0,70)}`).join('\n');
   const sys=(LANG==='ko'
     ? `너는 Repolis(내 모든 GitHub 레포가 사는 도시)의 친절한 택시기사야. 아래 레포 목록 중에서 사용자의 요청에 가장 맞는 레포 하나를 골라 한국어로 짧고 상냥하게 추천해. 마지막 줄에 반드시 정확히 "PICK: <레포이름>" 형식으로 골라줘.\n\n[레포목록]\n${catalog}`
     : `You are the friendly taxi driver of Repolis, a city where all of my GitHub repos live. From the repo list below, pick the single best repo for the user's request and recommend it warmly in a short English reply. On the very last line, output exactly "PICK: <repo-name>".\n\n[REPOS]\n${catalog}`);
@@ -963,7 +969,7 @@ async function proxyAsk(q){
   let url=proxyUrl();
   if(!url){ url=(prompt(t('proxyPromptUrl'))||'').trim(); if(url) localStorage.setItem('taxiProxyUrl',url); }
   if(!url){ addMsg('bot',t('proxyNoUrl')); return localIntent(q); }
-  const catalog=REPOS.map(r=>({repo:r.repo,label:r.label,lang:r.lang,stars:r.stars,visitors:r.visitors,forks:r.forks,topics:(r.topics||[]).slice(0,5),desc:(r.desc||'').slice(0,80)}));
+  const catalog=REPOS.map(r=>({repo:r.repo,label:r.label,lang:r.lang,stars:r.stars,visitors:r.visitors,clones:r.clones,forks:r.forks,topics:(r.topics||[]).slice(0,5),desc:(r.desc||'').slice(0,80)}));
   try{
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,repos:catalog})});
     if(!res.ok) throw new Error('http '+res.status);
@@ -1089,7 +1095,8 @@ function animate(){
 animate();
 addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:model.rotation.y,freeLook,dragBtn});
-  window.__ride=()=>ride?ride.phase:null; window.__taxiPos=()=>({x:+taxi.position.x.toFixed(1),z:+taxi.position.z.toFixed(1),vis:model.visible}); }
+  window.__ride=()=>ride?ride.phase:null; window.__taxiPos=()=>({x:+taxi.position.x.toFixed(1),z:+taxi.position.z.toFixed(1),vis:model.visible});
+  window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; }; }
 </script>
 </body>
 </html>
