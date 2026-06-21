@@ -85,6 +85,7 @@
   .card .hero { width: 100%; height: 188px; object-fit: cover; display: block; background: #e8ddca; }
   .card .chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 14px 24px 2px; }
   .chip { font-size: 12px; font-weight: 700; color: #6a523d; background: #f4ead8; border-radius: 999px; padding: 5px 11px; }
+  .card .since { width: 100%; font-size: 11px; color: #ab8a66; padding: 8px 24px 0; line-height: 1.5; }
   .chip b { color: #d2622f; }
   .card .metricnote { font-size: 11px; color: #b39f8c; padding: 8px 24px 0; line-height: 1.4; }
 
@@ -185,6 +186,7 @@
       <div class="stars" id="cardStars"></div>
     </div>
     <div class="chips" id="cardChips"></div>
+    <div class="since" id="cardSince"></div>
     <div class="body"><p id="cardDesc"></p></div>
     <div class="metricnote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.</div>
     <div class="actions" id="cardActions"></div>
@@ -857,6 +859,12 @@ function openCard(repo){ modalOpen=true; modal.classList.add('show');
     `<span class="chip">⑂ <b>${repo.forks}</b> forks</span>`+
     `<span class="chip">👁 <b>${repo.vuniq}</b> visitors</span>`+
     `<span class="chip">⬇ <b>${repo.clones}</b> clones</span>`;
+  const since=document.getElementById('cardSince');
+  if(repo.first_seen){ since.style.display='block';
+    since.innerHTML = LANG==='ko'
+      ? `🏡 <b>${repo.first_seen}</b> 분양 · 👁 방문자·⬇ 클론은 그날부터 누적된 값이에요`
+      : `🏡 Moved in <b>${repo.first_seen}</b> · 👁 visitors & ⬇ clones are cumulative since then`;
+  } else since.style.display='none';
   const desc=document.getElementById('cardDesc');
   if(repo.desc){ desc.textContent=repo.desc; desc.className=''; }
   else { desc.textContent=t('noDesc'); desc.className='empty'; }

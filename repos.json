@@ -36,6 +36,7 @@
 "created": "2018-09-21",
 "pushed": "2026-06-21",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 16.093,
 "rank": 0
 },
@@ -76,6 +77,7 @@
 "created": "2026-02-24",
 "pushed": "2026-06-21",
 "tracked": true,
+"first_seen": "2026-02-26",
 "score": 14.017,
 "rank": 1
 },
@@ -116,6 +118,7 @@
 "created": "2022-04-05",
 "pushed": "2025-06-18",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 13.992,
 "rank": 2
 },
@@ -154,6 +157,7 @@
 "created": "2020-09-14",
 "pushed": "2025-11-22",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 10.711,
 "rank": 3
 },
@@ -173,6 +177,7 @@
 "created": "2026-03-09",
 "pushed": "2026-06-10",
 "tracked": true,
+"first_seen": "2026-05-09",
 "score": 10.642,
 "rank": 4
 },
@@ -213,6 +218,7 @@
 "created": "2025-05-27",
 "pushed": "2026-01-22",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 10.187,
 "rank": 5
 },
@@ -245,6 +251,7 @@
 "created": "2026-06-03",
 "pushed": "2026-06-21",
 "tracked": true,
+"first_seen": "2026-06-03",
 "score": 8.903,
 "rank": 6
 },
@@ -279,6 +286,7 @@
 "created": "2023-08-28",
 "pushed": "2025-06-16",
 "tracked": true,
+"first_seen": "2025-07-03",
 "score": 8.713,
 "rank": 7
 },
@@ -313,6 +321,7 @@
 "created": "2026-05-30",
 "pushed": "2026-06-21",
 "tracked": true,
+"first_seen": "2026-06-13",
 "score": 8.385,
 "rank": 8
 },
@@ -332,6 +341,7 @@
 "created": "2025-04-04",
 "pushed": "2025-06-04",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 8.056,
 "rank": 9
 },
@@ -364,6 +374,7 @@
 "created": "2023-05-19",
 "pushed": "2023-08-25",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 7.276,
 "rank": 10
 },
@@ -389,6 +400,7 @@
 "created": "2025-05-17",
 "pushed": "2025-11-15",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 7.011,
 "rank": 11
 },
@@ -408,6 +420,7 @@
 "created": "2024-09-12",
 "pushed": "2026-01-08",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 6.705,
 "rank": 12
 },
@@ -427,6 +440,7 @@
 "created": "2022-04-12",
 "pushed": "2026-03-08",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 6.189,
 "rank": 13
 },
@@ -446,6 +460,7 @@
 "created": "2025-02-19",
 "pushed": "2025-03-07",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 5.979,
 "rank": 14
 },
@@ -465,6 +480,7 @@
 "created": "2024-04-17",
 "pushed": "2024-04-17",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 5.698,
 "rank": 15
 },
@@ -494,6 +510,7 @@
 "created": "2017-01-23",
 "pushed": "2026-06-02",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 4.206,
 "rank": 16
 },
@@ -513,6 +530,7 @@
 "created": "2023-05-19",
 "pushed": "2023-08-10",
 "tracked": true,
+"first_seen": "2025-07-02",
 "score": 3.801,
 "rank": 17
 },
@@ -538,6 +556,7 @@
 "created": "2018-06-11",
 "pushed": "2019-04-08",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 3.513,
 "rank": 18
 },
@@ -566,6 +585,7 @@
 "created": "2019-06-17",
 "pushed": "2019-11-07",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 3.045,
 "rank": 19
 },
@@ -585,6 +605,7 @@
 "created": "2019-05-20",
 "pushed": "2019-05-24",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 2.654,
 "rank": 20
 },
@@ -615,6 +636,7 @@
 "created": "2025-10-27",
 "pushed": "2025-11-03",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 2.435,
 "rank": 21
 },
@@ -634,6 +656,7 @@
 "created": "2026-06-14",
 "pushed": "2026-06-16",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 2.253,
 "rank": 22
 },
@@ -669,6 +692,7 @@
 "created": "2022-08-23",
 "pushed": "2023-04-10",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 1.874,
 "rank": 23
 },
@@ -697,6 +721,7 @@
 "created": "2018-10-19",
 "pushed": "2019-05-17",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 1.858,
 "rank": 24
 },
@@ -732,6 +757,7 @@
 "created": "2017-11-28",
 "pushed": "2019-02-15",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 1.758,
 "rank": 25
 },
@@ -757,6 +783,7 @@
 "created": "2019-05-29",
 "pushed": "2019-06-03",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 1.555,
 "rank": 26
 },
@@ -783,6 +810,7 @@
 "created": "2019-03-27",
 "pushed": "2019-04-29",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 1.45,
 "rank": 27
 },
@@ -806,6 +834,7 @@
 "created": "2018-08-20",
 "pushed": "2018-08-20",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 1.45,
 "rank": 28
 },
@@ -846,6 +875,7 @@
 "created": "2018-10-20",
 "pushed": "2024-09-12",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 1.417,
 "rank": 29
 },
@@ -873,6 +903,7 @@
 "created": "2020-02-03",
 "pushed": "2020-02-04",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 1.312,
 "rank": 30
 },
@@ -892,6 +923,7 @@
 "created": "2020-05-21",
 "pushed": "2020-06-05",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 1.248,
 "rank": 31
 },
@@ -921,6 +953,7 @@
 "created": "2018-02-08",
 "pushed": "2018-06-12",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 1.035,
 "rank": 32
 },
@@ -940,6 +973,7 @@
 "created": "2019-03-19",
 "pushed": "2023-07-21",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 1.035,
 "rank": 33
 },
@@ -963,6 +997,7 @@
 "created": "2019-12-23",
 "pushed": "2019-12-23",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 1.035,
 "rank": 34
 },
@@ -991,6 +1026,7 @@
 "created": "2019-05-17",
 "pushed": "2019-05-17",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 0.832,
 "rank": 35
 },
@@ -1010,6 +1046,7 @@
 "created": "2018-10-15",
 "pushed": "2019-04-29",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 0.832,
 "rank": 36
 },
@@ -1037,6 +1074,7 @@
 "created": "2020-01-14",
 "pushed": "2020-01-14",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 0.832,
 "rank": 37
 },
@@ -1063,6 +1101,7 @@
 "created": "2018-09-18",
 "pushed": "2018-09-22",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 0.832,
 "rank": 38
 },
@@ -1082,6 +1121,7 @@
 "created": "2022-05-24",
 "pushed": "2022-05-24",
 "tracked": true,
+"first_seen": "2026-06-19",
 "score": 0.693,
 "rank": 39
 },
@@ -1111,6 +1151,7 @@
 "created": "2023-08-10",
 "pushed": "2023-08-21",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 0.693,
 "rank": 40
 },
@@ -1130,6 +1171,7 @@
 "created": "2022-09-27",
 "pushed": "2023-02-09",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.485,
 "rank": 41
 },
@@ -1149,6 +1191,7 @@
 "created": "2026-04-13",
 "pushed": "2026-04-20",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.485,
 "rank": 42
 },
@@ -1168,6 +1211,7 @@
 "created": "2023-07-28",
 "pushed": "2025-11-11",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.485,
 "rank": 43
 },
@@ -1187,6 +1231,7 @@
 "created": "2020-07-21",
 "pushed": "2021-05-03",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 0.347,
 "rank": 44
 },
@@ -1206,6 +1251,7 @@
 "created": "2025-10-31",
 "pushed": "2025-10-31",
 "tracked": true,
+"first_seen": "2026-06-18",
 "score": 0.347,
 "rank": 45
 },
@@ -1225,6 +1271,7 @@
 "created": "2023-04-25",
 "pushed": "2023-06-19",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.0,
 "rank": 46
 },
@@ -1244,6 +1291,7 @@
 "created": "2021-11-02",
 "pushed": "2021-11-02",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.0,
 "rank": 47
 },
@@ -1263,6 +1311,7 @@
 "created": "2022-06-27",
 "pushed": "2022-06-27",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.0,
 "rank": 48
 },
@@ -1282,6 +1331,7 @@
 "created": "2021-10-12",
 "pushed": "2021-10-14",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.0,
 "rank": 49
 },
@@ -1301,6 +1351,7 @@
 "created": "2022-04-19",
 "pushed": "2022-04-19",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.0,
 "rank": 50
 },
@@ -1320,6 +1371,7 @@
 "created": "2023-03-22",
 "pushed": "2023-03-23",
 "tracked": true,
+"first_seen": "2026-06-20",
 "score": 0.0,
 "rank": 51
 },
@@ -1349,6 +1401,7 @@
 "created": "2026-06-21",
 "pushed": "2026-06-21",
 "tracked": true,
+"first_seen": "2026-06-21",
 "score": 0.0,
 "rank": 52
 }

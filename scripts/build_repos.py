@@ -46,6 +46,19 @@ def sum_col(path, col):
     return total
 
 
+def first_date(path):
+    """Earliest tracked date in a log = the day the repo's 'house' was built."""
+    if not path.exists():
+        return ""
+    earliest = None
+    with open(path, newline="") as f:
+        for row in csv.DictReader(f):
+            d = (row.get("date") or "").strip()
+            if d and (earliest is None or d < earliest):
+                earliest = d
+    return earliest or ""
+
+
 def build():
     repos = gh_api("/user/repos?per_page=100&affiliation=owner&sort=full_name")
     out = []
@@ -57,6 +70,8 @@ def build():
         visitors = sum_col(GTM_DIR / "logs" / f"{name}.csv", "uniques")
         clones = sum_col(GTM_DIR / "logs" / "clones" / f"{name}.csv", "clones")
         tracked = (GTM_DIR / "logs" / f"{name}.csv").exists()
+        first_seen = (first_date(GTM_DIR / "logs" / f"{name}.csv")
+                      or first_date(GTM_DIR / "logs" / "clones" / f"{name}.csv"))
         stars = r.get("stargazers_count", 0) or 0
         forks = r.get("forks_count", 0) or 0
         score = (
@@ -82,6 +97,7 @@ def build():
                 "created": (r.get("created_at") or "")[:10],
                 "pushed": (r.get("pushed_at") or "")[:10],
                 "tracked": tracked,
+                "first_seen": first_seen,
                 "score": round(score, 3),
             }
         )
