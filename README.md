@@ -1,15 +1,25 @@
 <div align="center">
 
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/banner.svg" alt="Repolis — the City of Repos" width="100%"></a>
+
 # 🏙️ Repolis — the City of Repos
 
 **Beyond the 6‑pin limit: a walkable 3D city where every one of your GitHub repos lives.**
+
+[![Live demo](https://img.shields.io/badge/Live%20demo-Repolis-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
+[![Pages](https://img.shields.io/github/deployments/hyeonsangjeon/Repolis/github-pages?style=for-the-badge&label=Pages&logo=githubpages&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
+[![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
+[![Single file](https://img.shields.io/badge/build-single%20index.html-83bb59?style=for-the-badge)](index.html)
+[![Last commit](https://img.shields.io/github/last-commit/hyeonsangjeon/Repolis?style=for-the-badge&color=b3a07f)](https://github.com/hyeonsangjeon/Repolis/commits)
 
 [English](README.md) · [한국어](README.ko.md)
 
 Every house is a repo. Its height, brightness, ornamentation and garden don't grow from ⭐ — they grow from **real traffic** (visitors · clones · forks · views).
 Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the cab **physically drives over, picks you up, and takes you to that house.**
 
-[**▶ Live demo**](https://hyeonsangjeon.github.io/Repolis/) · Built with Three.js · one single `index.html`
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Orbiting Repolis — a city built from your repo traffic" width="86%"></a>
+
+<sub>▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>Live demo</b></a> · Built with Three.js · one single <code>index.html</code></sub>
 
 </div>
 
@@ -32,7 +42,8 @@ Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the
   - **Local search** (default · no key · instant) — synonym‑expanded intent search, now also metric‑aware (_"most cloned"_, _"most visited"_, _"most forked"_).
   - **WebLLM** (in‑browser AI · no key · WebGPU)
   - **AI proxy** (Vercel → Azure OpenAI · best quality)
-- 🌳 **A city that feels alive** — gardens, pets (chow‑chow NPCs), street trees, varied house shapes, category logos on the roofs (AI / Data / Software / …), and proper town‑house roads.
+- 🏡 **Six house tiers, not just taller boxes** — by traffic rank each repo becomes a `cabin → cottage → house → villa → manor → portico mansion`, with wings, columns, porticos, dormers, balconies and cupolas. Top repos get grand columned 저택; quiet ones get cosy cabins.
+- 🌳 **A city that feels alive** — gardens, pets (chow‑chow NPCs), street trees, **street lamps & plaza benches**, category logos on the roofs (AI / Data / Software / …), and proper town‑house roads.
 - 🟢 **Optional realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live online + today's unique‑visitor counter** in the HUD. Defaults to solo on a plain static host; turn it on with one free server (below).
 - 🌐 **English / 한국어 toggle** — switch the whole UI language live from the HUD.
 

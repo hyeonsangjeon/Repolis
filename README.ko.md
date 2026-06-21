@@ -1,15 +1,25 @@
 <div align="center">
 
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/banner.svg" alt="Repolis — 레포들의 도시" width="100%"></a>
+
 # 🏙️ Repolis — 레포들의 도시
 
 **핀 6개의 한계를 넘어, 내 모든 GitHub 레포가 사는 걸어다닐 수 있는 3D 도시.**
+
+[![라이브 데모](https://img.shields.io/badge/Live%20demo-Repolis-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
+[![Pages](https://img.shields.io/github/deployments/hyeonsangjeon/Repolis/github-pages?style=for-the-badge&label=Pages&logo=githubpages&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
+[![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
+[![Single file](https://img.shields.io/badge/build-single%20index.html-83bb59?style=for-the-badge)](index.html)
+[![Last commit](https://img.shields.io/github/last-commit/hyeonsangjeon/Repolis?style=for-the-badge&color=b3a07f)](https://github.com/hyeonsangjeon/Repolis/commits)
 
 [English](README.md) · [한국어](README.ko.md)
 
 집 하나하나가 레포예요. 건물의 높이·밝기·화려함·마당은 ⭐가 아니라 **실제 트래픽**(방문자·클론·포크·조회수)으로 자라요.
 길을 잃었다면? 🚕 **LLM 택시기사**에게 물어보세요. _"RAG 관련 레포 보여줘"_ 하면 설명해주고, 택시가 **진짜로 내 옆까지 와서 태우고** 그 집까지 데려다줍니다.
 
-[**▶ 라이브 데모**](https://hyeonsangjeon.github.io/Repolis/) · Built with Three.js · 한 개의 `index.html`
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="레포 트래픽으로 지어진 도시 Repolis 둘러보기" width="86%"></a>
+
+<sub>▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>라이브 데모</b></a> · Built with Three.js · 한 개의 <code>index.html</code></sub>
 
 </div>
 
@@ -32,7 +42,8 @@
   - **로컬검색** (기본·키 불필요·즉시) — 동의어 확장 인텐트 검색. 이제 _"제일 많이 클론된"_, _"방문자 최다"_, _"포크 많은"_ 같은 **지표 기반 검색**도 됩니다.
   - **WebLLM** (브라우저 내장 AI·키 불필요·WebGPU)
   - **AI 프록시** (Vercel → Azure OpenAI·최고 품질)
-- 🌳 **살아있는 도시** — 정원, 펫(차우차우 NPC), 가로수, 다양한 집 모양, 지붕 위 카테고리 로고(AI / Data / Software …), 타운하우스 도로까지.
+- 🏡 **단순히 높아지는 게 아니라, 6단계 집 등급** — 트래픽 순위에 따라 `오두막 → 코티지 → 주택 → 빌라 → 저택 → 포르티코 맨션`으로 지어지고, 부속동·기둥·포르티코·다락창·발코니·큐폴라가 붙어요. 인기 레포는 웅장한 기둥 저택, 조용한 레포는 아담한 오두막.
+- 🌳 **살아있는 도시** — 정원, 펫(차우차우 NPC), 가로수, **가로등과 광장 벤치**, 지붕 위 카테고리 로고(AI / Data / Software …), 타운하우스 도로까지.
 - 🟢 **(선택) 실시간 멀티플레이어** — 다른 방문자가 이름표 달린 아바타로 함께 걸어다니고, HUD에 **현재 접속자 + 오늘의 순방문자 카운터**가 떠요. 일반 정적 호스팅에선 솔로가 기본, 무료 서버 하나로 켤 수 있어요(아래).
 - 🌐 **영어 / 한국어 전환** — HUD에서 UI 언어를 실시간으로 바꿔요.
 

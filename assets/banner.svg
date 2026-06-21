@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340" font-family="'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif" role="img" aria-label="Repolis — the City of Repos">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4fb4c2"/>
+      <stop offset="0.55" stop-color="#bfe9e2"/>
+      <stop offset="1" stop-color="#fbe8c8"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9ccb6a"/>
+      <stop offset="1" stop-color="#83bb59"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff6da"/>
+      <stop offset="0.5" stop-color="#ffe6a8"/>
+      <stop offset="1" stop-color="#ffe6a8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#2a3a2a" flood-opacity="0.18"/>
+    </filter>
+    <style>
+      .wall{stroke:#3a2f25;stroke-width:2.2;stroke-linejoin:round}
+      .roof{stroke:#3a2f25;stroke-width:2.2;stroke-linejoin:round}
+      .win{fill:#ffe6a0;stroke:#b98e3c;stroke-width:1.4}
+      .door{fill:#7a4a2a;stroke:#3a2f25;stroke-width:1.6}
+    </style>
+  </defs>
+
+  <!-- sky -->
+  <rect width="1200" height="340" fill="url(#sky)"/>
+  <circle cx="1010" cy="92" r="120" fill="url(#sun)"/>
+  <circle cx="1010" cy="92" r="40" fill="#fff3cf"/>
+
+  <!-- clouds -->
+  <g fill="#fffdf6" opacity="0.95">
+    <g transform="translate(180,70)"><ellipse cx="0" cy="0" rx="34" ry="18"/><ellipse cx="30" cy="6" rx="26" ry="15"/><ellipse cx="-28" cy="6" rx="24" ry="14"/></g>
+    <g transform="translate(640,48)"><ellipse cx="0" cy="0" rx="30" ry="16"/><ellipse cx="26" cy="5" rx="22" ry="13"/><ellipse cx="-24" cy="5" rx="20" ry="12"/></g>
+    <g transform="translate(860,120)" opacity="0.85"><ellipse cx="0" cy="0" rx="26" ry="14"/><ellipse cx="22" cy="4" rx="18" ry="11"/></g>
+  </g>
+
+  <!-- distant hills -->
+  <path d="M0,250 Q200,210 420,246 T840,244 T1200,250 V340 H0 Z" fill="#acd47e" opacity="0.7"/>
+  <!-- ground -->
+  <rect y="262" width="1200" height="78" fill="url(#ground)"/>
+  <!-- road -->
+  <path d="M0,300 H1200 V330 H0 Z" fill="#b3a07f"/>
+  <g stroke="#f5edcf" stroke-width="5" stroke-dasharray="26 22" stroke-linecap="round"><line x1="0" y1="315" x2="1200" y2="315"/></g>
+
+  <!-- city skyline -->
+  <g filter="url(#soft)">
+    <!-- cottage (gable) -->
+    <g transform="translate(95,196)">
+      <rect class="wall" x="0" y="40" width="84" height="62" rx="6" fill="#e8d6a8"/>
+      <path class="roof" d="M-8,42 L42,4 L92,42 Z" fill="#d2622f"/>
+      <rect class="win" x="12" y="56" width="18" height="18" rx="3"/>
+      <rect class="win" x="54" y="56" width="18" height="18" rx="3"/>
+      <rect class="door" x="34" y="74" width="18" height="28" rx="3"/>
+    </g>
+
+    <!-- AI villa (hip roof + chimney) -->
+    <g transform="translate(210,150)">
+      <rect class="wall" x="0" y="54" width="104" height="94" rx="7" fill="#cdbbf3"/>
+      <path class="roof" d="M-10,56 L22,18 L82,18 L114,56 Z" fill="#7c5cff"/>
+      <rect x="74" y="6" width="14" height="24" fill="#8a6a4a" stroke="#3a2f25" stroke-width="2"/>
+      <rect class="win" x="14" y="74" width="20" height="22" rx="3"/>
+      <rect class="win" x="70" y="74" width="20" height="22" rx="3"/>
+      <rect class="win" x="14" y="106" width="20" height="22" rx="3"/>
+      <rect class="door" x="44" y="104" width="22" height="44" rx="3"/>
+      <text x="52" y="42" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">AI</text>
+    </g>
+
+    <!-- portico mansion (top-ranked repo) -->
+    <g transform="translate(360,120)">
+      <rect class="wall" x="0" y="64" width="168" height="124" rx="8" fill="#efe2bd"/>
+      <path class="roof" d="M-12,66 L84,20 L180,66 Z" fill="#2bb8a3"/>
+      <!-- portico -->
+      <path class="roof" d="M40,150 L84,110 L128,150 Z" fill="#1f9e8b"/>
+      <g fill="#f6efdc" stroke="#b98e3c" stroke-width="1.6">
+        <rect x="48" y="150" width="11" height="38"/>
+        <rect x="70" y="150" width="11" height="38"/>
+        <rect x="92" y="150" width="11" height="38"/>
+        <rect x="114" y="150" width="11" height="38"/>
+      </g>
+      <rect class="door" x="74" y="156" width="22" height="32" rx="3"/>
+      <rect class="win" x="16" y="92" width="22" height="24" rx="3"/>
+      <rect class="win" x="132" y="92" width="22" height="24" rx="3"/>
+      <!-- gold star -->
+      <path d="M84,30 l5,11 12,1 -9,8 3,12 -11,-7 -11,7 3,-12 -9,-8 12,-1 z" fill="#ffd23f" stroke="#caa019" stroke-width="1"/>
+    </g>
+
+    <!-- Data townhouse (flat + parapet) -->
+    <g transform="translate(560,158)">
+      <rect class="wall" x="0" y="40" width="92" height="100" rx="6" fill="#bfe7df"/>
+      <rect class="roof" x="-6" y="30" width="104" height="16" rx="4" fill="#2bb8a3"/>
+      <rect class="win" x="14" y="56" width="18" height="20" rx="3"/>
+      <rect class="win" x="58" y="56" width="18" height="20" rx="3"/>
+      <rect class="win" x="14" y="86" width="18" height="20" rx="3"/>
+      <rect class="win" x="58" y="86" width="18" height="20" rx="3"/>
+      <rect class="door" x="36" y="108" width="20" height="32" rx="3"/>
+      <text x="46" y="24" text-anchor="middle" font-size="15" font-weight="800" fill="#1c7d6f">DATA</text>
+    </g>
+
+    <!-- Software house (gambrel) -->
+    <g transform="translate(672,168)">
+      <rect class="wall" x="0" y="46" width="92" height="84" rx="6" fill="#cfe0ff"/>
+      <path class="roof" d="M-8,48 L8,24 L84,24 L100,48 Z" fill="#4f8cff"/>
+      <path class="roof" d="M8,24 L46,6 L84,24 Z" fill="#4f8cff"/>
+      <rect class="win" x="14" y="62" width="18" height="20" rx="3"/>
+      <rect class="win" x="58" y="62" width="18" height="20" rx="3"/>
+      <rect class="door" x="36" y="98" width="20" height="32" rx="3"/>
+    </g>
+  </g>
+
+  <!-- taxi -->
+  <g transform="translate(820,278)" filter="url(#soft)">
+    <rect x="0" y="14" width="96" height="30" rx="11" fill="#e8c33a" stroke="#3a2f25" stroke-width="2.4"/>
+    <path d="M18,16 Q26,-2 50,-2 L74,-2 Q84,-2 88,16 Z" fill="#e8c33a" stroke="#3a2f25" stroke-width="2.4"/>
+    <rect x="30" y="2" width="22" height="14" rx="3" fill="#bfe9f2" stroke="#3a2f25" stroke-width="1.6"/>
+    <rect x="56" y="2" width="20" height="14" rx="3" fill="#bfe9f2" stroke="#3a2f25" stroke-width="1.6"/>
+    <rect x="36" y="-10" width="26" height="9" rx="2" fill="#fff3cf" stroke="#3a2f25" stroke-width="1.6"/>
+    <circle cx="26" cy="46" r="11" fill="#2b2b2b" stroke="#111" stroke-width="2"/>
+    <circle cx="72" cy="46" r="11" fill="#2b2b2b" stroke="#111" stroke-width="2"/>
+    <circle cx="26" cy="46" r="4" fill="#cfcfcf"/><circle cx="72" cy="46" r="4" fill="#cfcfcf"/>
+    <circle cx="92" cy="28" r="3.4" fill="#fff1b8"/>
+  </g>
+
+  <!-- title -->
+  <g>
+    <text x="64" y="92" font-size="62" font-weight="800" fill="#1d3b3f" letter-spacing="-1">Repolis</text>
+    <text x="66" y="128" font-size="22" font-weight="700" fill="#2f5b52">the City of Repos · 레포들의 도시</text>
+    <text x="66" y="158" font-size="16.5" font-weight="600" fill="#3a5a52" opacity="0.92">A walkable 3D city where every GitHub repo is a house — with an LLM 🚕 taxi driver.</text>
+  </g>
+</svg>
