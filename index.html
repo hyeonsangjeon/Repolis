@@ -984,12 +984,19 @@ async function askDriver(q){
 async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; busy=true; chatText.value='';
   addMsg('me',q.replace(/</g,'&lt;')); try{ await askDriver(q); } finally{ busy=false; chatText.focus(); } }
 
-/* ---- auto-drive (taxi takes you there) ---- */
-let driveTo=null;
-function taxiTo(repo){ driveTo=repo; setNav(repo); closeChat(); freeLook=false;
+/* ---- taxi ride: the cab drives to you, picks you up, carries you there ---- */
+let ride=null; // {repo, phase:'coming'|'boarding'|'riding'|'arriving', t}
+function driveTaxiToward(px,pz,speed,dt,stop=0){
+  const dx=px-taxi.position.x, dz=pz-taxi.position.z, dd=Math.hypot(dx,dz);
+  if(dd>stop+0.01){ const step=Math.min(dd-stop, speed*dt); taxi.position.x+=dx/dd*step; taxi.position.z+=dz/dd*step;
+    taxi.rotation.y=lerpA(taxi.rotation.y, Math.atan2(-dz,dx), 0.2); }
+  return dd;
+}
+function taxiTo(repo){ ride={repo, phase:'coming', t:0}; setNav(repo); closeChat(); freeLook=false; model.visible=true;
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
-function endDrive(){ driveTo=null; driveBar.style.display='none'; }
-function arriveTaxi(repo){ endDrive(); openChat(); addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`));
+function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
+function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; openChat();
+  addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`));
   setTimeout(()=>openCard(repo),500); }
 
 /* ---- wiring ---- */
@@ -1013,31 +1020,47 @@ function animate(){
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
   mv.set(0,0,0);
-  let autoSpeed=9, autopilot=false;
   const userInput = keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
-  if(driveTo){
-    if(userInput){ endDrive(); }
-    else { const dx=driveTo._pos.x-player.position.x, dz=driveTo._pos.z-player.position.z, dd=Math.hypot(dx,dz);
-      if(dd<5.6){ arriveTaxi(driveTo); }
-      else { mv.set(dx,0,dz); autopilot=true; autoSpeed=Math.min(30,11+dd*0.45); } }
-  }
-  if(!autopilot){
+  let moving=false;
+  if(ride){
+    if(userInput && ride.phase!=='arriving'){ endDrive(); }
+    else {
+      ride.t+=dt;
+      if(ride.phase==='coming'){
+        const dd=driveTaxiToward(player.position.x,player.position.z,24,dt,3.2);
+        model.rotation.y=lerpA(model.rotation.y,Math.atan2(taxi.position.x-player.position.x,taxi.position.z-player.position.z),0.15);
+        if(dd<3.6){ ride.phase='boarding'; ride.t=0; }
+      } else if(ride.phase==='boarding'){
+        if(ride.t>0.55){ model.visible=false; ride.phase='riding'; ride.t=0; }
+      } else if(ride.phase==='riding'){
+        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z,26,dt,6.0);
+        player.position.set(taxi.position.x,0,taxi.position.z);
+        const fx=Math.cos(taxi.rotation.y), fz=-Math.sin(taxi.rotation.y);
+        camYaw=lerpA(camYaw,Math.atan2(fx,fz)+Math.PI,0.05);
+        if(dd<6.4){ ride.phase='arriving'; ride.t=0; }
+      } else if(ride.phase==='arriving'){
+        model.visible=true; player.position.set(taxi.position.x,0,taxi.position.z);
+        const r=ride.repo; arriveTaxi(r);
+        setTimeout(()=>{ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; },2500);
+      }
+    }
+  } else {
     if(keys['KeyW']||keys['ArrowUp']) mv.add(tF);
     if(keys['KeyS']||keys['ArrowDown']) mv.sub(tF);
     if(keys['KeyD']||keys['ArrowRight']) mv.add(tR);
     if(keys['KeyA']||keys['ArrowLeft']) mv.sub(tR);
     if(stickVec.x||stickVec.y){ mv.addScaledVector(tF,-stickVec.y); mv.addScaledVector(tR,stickVec.x); }
+    moving=mv.lengthSq()>0.0001;
+    if(moving){ mv.normalize(); player.position.addScaledVector(mv,9*dt);
+      const r=Math.hypot(player.position.x,player.position.z); if(r>145){ player.position.x*=145/r; player.position.z*=145/r; }
+      model.rotation.y=lerpA(model.rotation.y,Math.atan2(mv.x,mv.z),0.2); walk+=dt*10; }
   }
-  const moving=mv.lengthSq()>0.0001;
-  if(moving){ mv.normalize(); player.position.addScaledVector(mv,(autopilot?autoSpeed:9)*dt);
-    const r=Math.hypot(player.position.x,player.position.z); if(r>145){ player.position.x*=145/r; player.position.z*=145/r; }
-    model.rotation.y=lerpA(model.rotation.y,Math.atan2(mv.x,mv.z),autopilot?0.3:0.2); walk+=dt*(autopilot?16:10); }
-  else walk*=0.85;
+  if(!moving) walk*=0.85;
   const bob=Math.sin(walk)*0.5;
   legL.rotation.x=bob; legR.rotation.x=-bob; armL.rotation.x=-bob; armR.rotation.x=bob;
   model.position.y=Math.abs(Math.sin(walk))*0.12;
 
-  if(!dragging&&moving&&(!freeLook||autopilot)) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,autopilot?0.08:0.04);
+  if(!dragging&&moving&&!freeLook) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,0.04);
   const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist, oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist, oy=Math.sin(camPitch)*camDist;
   camera.position.lerp(new THREE.Vector3(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz),0.12);
   camera.lookAt(player.position.x,player.position.y+1.7,player.position.z);
@@ -1065,7 +1088,8 @@ function animate(){
 }
 animate();
 addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
-if(location.search.includes('dbg')) window.__cam=()=>({camYaw,camPitch,charYaw:model.rotation.y,freeLook,dragBtn});
+if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:model.rotation.y,freeLook,dragBtn});
+  window.__ride=()=>ride?ride.phase:null; window.__taxiPos=()=>({x:+taxi.position.x.toFixed(1),z:+taxi.position.z.toFixed(1),vis:model.visible}); }
 </script>
 </body>
 </html>
