@@ -19,6 +19,9 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 ### 📊 More GitHub metrics on cards
 - Repo cards now also surface **open issues, license, latest release (with date) and an archived badge** when present.
 
+### 🎬 Demo
+- **Refreshed hero GIF** (EN/KO) — a high‑overhead tour of the newly textured city (pavilions, ponds, ground shadows), then hailing the taxi with "most popular repo" and riding to that repo's house and social card. Shot with an overhead‑locked camera so the city stays readable end‑to‑end.
+
 ## [1.1.0] — 2026-06-23
 
 ### 🚕 Smarter taxi driver (search quality)
