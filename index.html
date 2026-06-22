@@ -184,11 +184,12 @@
 </head>
 <body>
 <div id="app"></div>
-<div id="loading" data-i18n="loading">지브리 마을을 짓는 중…</div>
+<div id="loading" data-i18n="loading">레포 도시를 짓는 중…</div>
 
 <div id="topbar" class="hud">
   <div class="badge">🏙️ Repolis</div>
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
+  <button id="dayBtn" class="badge" title="day / night" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
   <div class="badge"><span data-i18n="visited">방문</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
   <div class="badge" id="liveBadge" title="online now · today · all-time unique visitors">🟢 <b id="liveCount">1</b><span id="todayWrap" style="display:none;"> · <span data-i18n="todayWord">오늘</span> <b id="todayCount">0</b></span><span id="allWrap" style="display:none;"> · <span data-i18n="totalWord">누적</span> <b id="allCount">0</b></span></div>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
@@ -215,7 +216,7 @@
     <div class="chips" id="cardChips"></div>
     <div class="since" id="cardSince"></div>
     <div class="body"><p id="cardDesc"></p></div>
-    <div class="metricnote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.</div>
+    <div class="metricnote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).</div>
     <div class="actions" id="cardActions"></div>
   </div>
 </div>
@@ -226,7 +227,7 @@
       <button data-lang="ko">한국어</button><button data-lang="en">English</button>
     </div>
     <h1>🏙️ Repolis — <span data-i18n="cityOfRepos">레포들의 도시</span></h1>
-    <div class="sub" data-i18n-html="introSub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.</div>
+    <div class="sub" data-i18n-html="introSub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.</div>
     <div class="ctrls">
       <div><b>WASD / ←↑↓→</b><span data-i18n="ctrlWalk">걷기</span></div>
       <div><b>좌클릭 / Left</b><span data-i18n="ctrlLookL">시점 회전(자유 시점)</span></div>
@@ -303,11 +304,11 @@ let LANG = localStorage.getItem('repolisLang');
 if(LANG!=='ko'&&LANG!=='en') LANG = (navigator.language||'').toLowerCase().startsWith('ko') ? 'ko' : 'en';
 const I18N = {
   ko:{
-    loading:'지브리 마을을 짓는 중…',
+    loading:'레포 도시를 짓는 중…',
     visited:'방문', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
-    metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.',
+    metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
-    introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
+    introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
     enterTown:'마을 입장 →',
     hint:'집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기',
@@ -336,11 +337,11 @@ const I18N = {
     taxiStand:'택시 정류장'
   },
   en:{
-    loading:'Building the Ghibli town…',
+    loading:'Building Repolis…',
     visited:'Visited', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
-    metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height·brightness · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold-star ornament.',
+    metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
-    introSub:"Forget the 6-pin limit.<br>Stroll a Ghibli-style city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
+    introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
     enterTown:'Enter the town →',
     hint:'Walk up to a house (repo) · ☰ Wayfinding · 🚕 Ask the taxi driver',
@@ -382,6 +383,8 @@ function applyLang(){
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
 const _maxVis    = Math.max(1, ...REPOS.map(r=>r.visitors||0));
+const _maxViews  = Math.max(1, ...REPOS.map(r=>r.views||0));
+const _now = Date.now();
 REPOS.forEach(repo=>{
   const p = pal(repo.lang);
   repo.label = labelOf(repo.repo);
@@ -395,6 +398,12 @@ REPOS.forEach(repo=>{
   repo._w = 4.4 + Math.min(repo.forks||0,40)*0.13;
   repo._yard = 5.2 + Math.log1p(repo.views||0)*0.95;
   repo._downtown = (repo.rank||0) < 14;
+  // activity (= how much work a repo gets): recent pushes + clones + views. Drives night-time window glow.
+  const days = repo.pushed ? Math.max(0,(_now - new Date(repo.pushed).getTime())/86400000) : 3650;
+  const recency = Math.exp(-days/120);
+  repo._activity = Math.min(1, 0.6*recency
+    + 0.3*(Math.log1p(repo.clones||0)/Math.log1p(_maxClones))
+    + 0.1*(Math.log1p(repo.views||0)/Math.log1p(_maxViews)));
 });
 const _maxScore = Math.max(0.001, ...REPOS.map(r=>r.score||0));
 
@@ -452,7 +461,7 @@ function rbox(w,h,d,color,r=0.12,seg=3){
 }
 
 /* ---- lights (golden hour warmth) ---- */
-scene.add(new THREE.HemisphereLight(0xcfeee8, 0x86996a, 0.85));
+const hemi = new THREE.HemisphereLight(0xcfeee8, 0x86996a, 0.85); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe2b0, 1.45);
 sun.position.set(38, 46, 30); sun.castShadow = true;
 sun.shadow.mapSize.set(2048,2048);
@@ -463,15 +472,27 @@ sun.shadow.bias=-0.0004; sun.shadow.normalBias=0.02;
 scene.add(sun);
 
 /* ---- sky dome (teal→warm horizon) ---- */
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(470,32,16),
-  new THREE.ShaderMaterial({ side:THREE.BackSide,
+const skyMat = new THREE.ShaderMaterial({ side:THREE.BackSide,
     uniforms:{ top:{value:new THREE.Color(0x4fb4c2)}, mid:{value:new THREE.Color(0xbfe9e2)}, bot:{value:new THREE.Color(0xfbe8c8)} },
     vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
     fragmentShader:`uniform vec3 top; uniform vec3 mid; uniform vec3 bot; varying vec3 vP;
       void main(){ float h=normalize(vP).y*0.5+0.5;
         vec3 c = h<0.5 ? mix(bot,mid,smoothstep(0.0,0.5,h)) : mix(mid,top,smoothstep(0.5,0.95,h));
         gl_FragColor=vec4(c,1.0);} `
-  })));
+  });
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(470,32,16), skyMat));
+
+/* ---- moon + stars (night only) ---- */
+const moon=new THREE.Group();
+const moonDisc=new THREE.Mesh(new THREE.CircleGeometry(8,32), new THREE.MeshBasicMaterial({color:0xfdf6df}));
+const moonHalo=new THREE.Mesh(new THREE.CircleGeometry(13,32), new THREE.MeshBasicMaterial({color:0xfdf6df,transparent:true,opacity:0.16}));
+moonHalo.position.z=-0.1; moon.add(moonHalo,moonDisc); moon.position.set(-150,150,-260); moon.visible=false; scene.add(moon);
+const _starGeo=new THREE.BufferGeometry(); const _sp=[];
+for(let i=0;i<620;i++){ const a=Math.random()*Math.PI*2, el=0.06+Math.random()*1.35, R=420;
+  _sp.push(Math.cos(a)*Math.cos(el)*R, Math.sin(el)*R+20, Math.sin(a)*Math.cos(el)*R); }
+_starGeo.setAttribute('position', new THREE.Float32BufferAttribute(_sp,3));
+const stars=new THREE.Points(_starGeo, new THREE.PointsMaterial({color:0xffffff,size:1.7,sizeAttenuation:true,transparent:true,opacity:0.9}));
+stars.visible=false; scene.add(stars);
 
 /* ---- ground ---- */
 const ground = new THREE.Mesh(new THREE.CircleGeometry(235,64), toon(0x91c266));
@@ -577,10 +598,11 @@ const RINGS=[{r:34,n:6},{r:60,n:9},{r:88,n:12},{r:118,n:13},{r:150,n:13}];
 })();
 
 /* ring roads + sidewalks + radial avenues with lane dashes */
-const ROAD=0xb3a07f, WALK=0xe4d7bb, LANE=0xf5edcf;
+const ROAD=0x3b3f47, WALK=0xe4d7bb, LANE=0xf4d24a;   // asphalt road · dirt-tan walking path (kept) · yellow lane line
 RINGS.forEach(ring=>{
   const walk=new THREE.Mesh(new THREE.RingGeometry(ring.r-2.8,ring.r+2.8,110), toon(WALK)); walk.rotation.x=-Math.PI/2; walk.position.y=0.010; walk.receiveShadow=true; scene.add(walk);
   const road=new THREE.Mesh(new THREE.RingGeometry(ring.r-1.9,ring.r+1.9,110), toon(ROAD)); road.rotation.x=-Math.PI/2; road.position.y=0.013; road.receiveShadow=true; scene.add(road);
+  const cl=new THREE.Mesh(new THREE.RingGeometry(ring.r-0.07,ring.r+0.07,128), basic(LANE)); cl.rotation.x=-Math.PI/2; cl.position.y=0.0145; scene.add(cl);
 });
 for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, len=160;
   const walk=new THREE.Mesh(new THREE.PlaneGeometry(5.2,len), toon(WALK)); walk.rotation.x=-Math.PI/2; walk.rotation.z=-ang; walk.position.set(Math.cos(ang)*len/2,0.009,Math.sin(ang)*len/2); walk.receiveShadow=true; scene.add(walk);
@@ -743,6 +765,19 @@ function addDormer(g, d, y){
   const dr=new THREE.Mesh(new THREE.ConeGeometry(0.85,0.6,4), toon(0xb5532f)); dr.rotation.y=Math.PI/4; dr.position.set(0,y+0.7,d*0.16); g.add(dr);
 }
 
+/* ---- shared window pane texture (frame + cross mullion baked; glass tinted per day/night) ---- */
+const DAY_GLASS=0xbfe0ef;
+const _winTex=(function(){
+  const S=4, W=44, H=52;
+  const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const x=cv.getContext('2d'); x.scale(S,S);
+  x.fillStyle='#ffffff'; rr(x,3,3,W-6,H-6,5); x.fill();
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'rgba(255,255,255,0.95)'); g.addColorStop(0.5,'rgba(255,255,255,0.5)'); g.addColorStop(1,'rgba(255,255,255,0.88)');
+  x.fillStyle=g; rr(x,3,3,W-6,H-6,5); x.fill();
+  x.strokeStyle='#5b4632'; x.lineWidth=2.2; x.beginPath(); x.moveTo(W/2,4); x.lineTo(W/2,H-4); x.moveTo(4,H/2); x.lineTo(W-4,H/2); x.stroke();
+  x.lineWidth=3.0; x.strokeStyle='#7a5a3a'; rr(x,3,3,W-6,H-6,5); x.stroke();
+  const t=new THREE.CanvasTexture(cv); t.anisotropy=MAXANISO; t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
+})();
+
 function makeBuilding(repo){
   repo._cat = repoCategory(repo);
   const typ = typology(repo);
@@ -780,6 +815,8 @@ function makeBuilding(repo){
   // body + roof (score-tiered silhouette: cabin→cottage→house→townhouse→villa→manor→mansion + tower/shop)
   const bodyR=(kind==='tower'||kind==='townhouse')?0.12:0.2;
   const body=rbox(w,h,d,repo.wall,bodyR); body.position.y=h/2; outline(body,0.06); g.add(body);
+  repo._body=body;
+  repo._cw=(w*0.5+0.6)*((kind==='manor'||kind==='mansion')?1.4:(kind==='villa')?1.18:1);
   let topH=h, topW=w;
   if(kind==='shop'){ const uh=Math.max(1.8,h*0.34); const up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
   // side wings for grand residences (저택)
@@ -804,12 +841,18 @@ function makeBuilding(repo){
   // awning only for shop & small cabins/cottages (others have porch/portico/balcony)
   if(kind==='shop'){ const aw=rbox(w*0.96,0.26,1.3,(CATS[repo._cat]||CATS.Software).color,0.06); aw.position.set(0,2.5,d/2+0.55); outline(aw,0.03); g.add(aw); }
   else if(kind==='cottage'||kind==='cabin'){ const awn=rbox(1.9,0.24,0.85,repo.roof,0.08); awn.position.set(0,2.3,d/2+0.32); outline(awn,0.03); g.add(awn); }
-  // windows + warm glow (brightness = visitors)
-  const glowCol=new THREE.Color(0x352815).lerp(new THREE.Color(0xffe9a8), bright);
+  // windows (frame + sill + glazed pane; glass tint responds to day/night & repo activity)
+  repo._windows=[];
   const rows = h>10.5?[h*0.32,h*0.55,h*0.78] : h>6.5?[h*0.42,h*0.72] : [Math.min(2.6,h*0.5)];
   const xs = w>7 ? [-w*0.32,0,w*0.32] : [-w*0.27,w*0.27];
-  rows.forEach(wy=>xs.forEach(wx=>{ const fr=rbox(1.05,1.05,0.22,0xf3ead4,0.06); fr.position.set(wx,wy,d/2); g.add(fr);
-    const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.72), basic(glowCol.getHex())); gl.position.set(wx,wy,d/2+0.12); g.add(gl); }));
+  rows.forEach(wy=>xs.forEach(wx=>{
+    const fr=rbox(1.18,1.30,0.16,0xeadfca,0.05); fr.position.set(wx,wy,d/2+0.01); g.add(fr);
+    const sill=rbox(1.32,0.16,0.30,0xe0d2b4,0.04); sill.position.set(wx,wy-0.74,d/2+0.10); g.add(sill);
+    const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.96,1.06), new THREE.MeshBasicMaterial({map:_winTex,transparent:true,color:DAY_GLASS}));
+    gl.position.set(wx,wy,d/2+0.11); g.add(gl); repo._windows.push(gl);
+    if(typ.tier>=3){ const fb=new THREE.Mesh(new THREE.BoxGeometry(0.62,0.16,0.2), toon(0x9c6f4a)); fb.position.set(wx,wy-0.6,d/2+0.2); g.add(fb);
+      const fl=new THREE.Mesh(GEO_FLOWER,FLOWER_MATS[(hashStr(repo.repo)+Math.round(wx*7))%FLOWER_MATS.length]); fl.position.set(wx,wy-0.46,d/2+0.24); g.add(fl); }
+  }));
   // bunting flags (fancy = clones)
   if(flags>0){ const fc=[0xe85d4e,0xf2b13c,0x4fa3d1,0x6fbf73,0xb07cc6];
     for(let f=0;f<flags;f++){ const fx=-w*0.34+(w*0.68)*(f/Math.max(1,flags-1)); const fy=h-0.4-Math.sin((f/Math.max(1,flags-1))*Math.PI)*0.7;
@@ -839,6 +882,34 @@ function makeBuilding(repo){
   repo._group=g; repo._pos=new THREE.Vector3(repo._x,0,repo._z); repo._visited=false; buildings.push(repo);
 }
 REPOS.forEach(makeBuilding);
+
+/* ---- building colliders (player can't walk through houses) ---- */
+const COLLIDERS = buildings.map(b=>({x:b._x, z:b._z, r:b._cw||3}));
+
+/* ---- day / night (night: window glow brightness = repo activity) ---- */
+let isNight=false;
+const _cDark=new THREE.Color(0x140a03), _cWarm=new THREE.Color(0xffcf86);
+function setTimeOfDay(night){
+  isNight=night;
+  skyMat.uniforms.top.value.setHex(night?0x0a1030:0x4fb4c2);
+  skyMat.uniforms.mid.value.setHex(night?0x1b2348:0xbfe9e2);
+  skyMat.uniforms.bot.value.setHex(night?0x3a3354:0xfbe8c8);
+  sun.intensity = night?0.16:1.45; sun.color.setHex(night?0xa8bdf0:0xffe2b0);
+  hemi.intensity = night?0.36:0.85; hemi.color.setHex(night?0x33406e:0xcfeee8); hemi.groundColor.setHex(night?0x12141d:0x86996a);
+  scene.fog.color.setHex(night?0x18203c:0xcfe7da);
+  renderer.toneMappingExposure = night?0.96:1.08;
+  moon.visible=night; stars.visible=night;
+  LAMP_BULBS.forEach(b=>b.material.color.setHex(night?0xfff0c2:0xffe6a8));
+  buildings.forEach(b=>{
+    const c = night ? _cDark.clone().lerp(_cWarm, b._activity) : new THREE.Color(DAY_GLASS);
+    (b._windows||[]).forEach(w=>w.material.color.copy(c));
+    if(b._body){ if(night) b._body.material.emissive.setRGB(0.5,0.32,0.12).multiplyScalar(0.45*b._activity);
+                 else b._body.material.emissive.setHex(0x000000); }
+  });
+  const db=document.getElementById('dayBtn'); if(db) db.textContent = night?'☀️':'🌙';
+}
+document.getElementById('dayBtn').onclick=()=>setTimeOfDay(!isNight);
+setTimeOfDay(false);
 
 /* ---- taxi stand at the plaza (LLM 안내자가 사는 곳) ---- */
 const TAXI_POS=new THREE.Vector3(12,0,9);
@@ -1232,6 +1303,8 @@ function animate(){
     moving=mv.lengthSq()>0.0001;
     if(moving){ mv.normalize(); player.position.addScaledVector(mv,9*dt);
       const r=Math.hypot(player.position.x,player.position.z); if(r>215){ player.position.x*=215/r; player.position.z*=215/r; }
+      for(const c of COLLIDERS){ const cx=player.position.x-c.x, cz=player.position.z-c.z, cd=Math.hypot(cx,cz);
+        if(cd<c.r){ const k=cd<1e-3?1:c.r/cd; player.position.x=c.x+cx*k; player.position.z=c.z+cz*k; } }
       model.rotation.y=lerpA(model.rotation.y,Math.atan2(mv.x,mv.z),0.2); walk+=dt*10; }
   }
   if(!moving) walk*=0.85;
