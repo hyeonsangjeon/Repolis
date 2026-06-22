@@ -482,17 +482,90 @@ const skyMat = new THREE.ShaderMaterial({ side:THREE.BackSide,
   });
 scene.add(new THREE.Mesh(new THREE.SphereGeometry(470,32,16), skyMat));
 
-/* ---- moon + stars (night only) ---- */
+/* ---- moon + galaxy night sky (a Milky Way to light the path of knowledge) ---- */
 const moon=new THREE.Group();
-const moonDisc=new THREE.Mesh(new THREE.CircleGeometry(8,32), new THREE.MeshBasicMaterial({color:0xfdf6df}));
-const moonHalo=new THREE.Mesh(new THREE.CircleGeometry(13,32), new THREE.MeshBasicMaterial({color:0xfdf6df,transparent:true,opacity:0.16}));
-moonHalo.position.z=-0.1; moon.add(moonHalo,moonDisc); moon.position.set(-150,150,-260); moon.visible=false; scene.add(moon);
-const _starGeo=new THREE.BufferGeometry(); const _sp=[];
-for(let i=0;i<620;i++){ const a=Math.random()*Math.PI*2, el=0.06+Math.random()*1.35, R=420;
-  _sp.push(Math.cos(a)*Math.cos(el)*R, Math.sin(el)*R+20, Math.sin(a)*Math.cos(el)*R); }
-_starGeo.setAttribute('position', new THREE.Float32BufferAttribute(_sp,3));
-const stars=new THREE.Points(_starGeo, new THREE.PointsMaterial({color:0xffffff,size:1.7,sizeAttenuation:true,transparent:true,opacity:0.9}));
-stars.visible=false; scene.add(stars);
+const moonDisc=new THREE.Mesh(new THREE.CircleGeometry(8.5,40), new THREE.MeshBasicMaterial({color:0xfdf6df,fog:false}));
+const moonGlow=new THREE.Mesh(new THREE.CircleGeometry(15,40), new THREE.MeshBasicMaterial({color:0xeaf2ff,transparent:true,opacity:0.13,fog:false,depthWrite:false,blending:THREE.AdditiveBlending}));
+const moonHalo=new THREE.Mesh(new THREE.CircleGeometry(26,40), new THREE.MeshBasicMaterial({color:0xcfe0ff,transparent:true,opacity:0.06,fog:false,depthWrite:false,blending:THREE.AdditiveBlending}));
+moonGlow.position.z=-0.1; moonHalo.position.z=-0.2; moon.add(moonHalo,moonGlow,moonDisc);
+moon.position.set(-150,150,-260); moon.visible=false; scene.add(moon);
+
+// soft round sprite texture → round glowy stars (not squares) + lamp/nebula glows
+function _radialTex(stops){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d');
+  const g=x.createRadialGradient(32,32,0,32,32,32); stops.forEach(s=>g.addColorStop(s[0],s[1])); x.fillStyle=g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); }
+const STAR_TEX=_radialTex([[0,'rgba(255,255,255,1)'],[0.35,'rgba(255,255,255,0.55)'],[1,'rgba(255,255,255,0)']]);
+const GLOW_TEX=_radialTex([[0,'rgba(255,255,255,0.95)'],[0.3,'rgba(255,255,255,0.32)'],[1,'rgba(255,255,255,0)']]);
+
+const starsGroup=new THREE.Group(); starsGroup.visible=false; scene.add(starsGroup);
+const STAR_R=425, _starTints=[0xffffff,0xffffff,0xffffff,0xcfe0ff,0xbcd0ff,0xfff0d6,0xffd9b0,0xd9fbff];
+function _starLayer(pos,col,size,opacity){
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+  if(col) g.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
+  const m=new THREE.PointsMaterial({size,map:STAR_TEX,transparent:true,opacity,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+  if(col) m.vertexColors=true;
+  const p=new THREE.Points(g,m); starsGroup.add(p); return p;
+}
+function _pushDir(a,d,r,y){ a.push(d.x*r,d.y*r+y,d.z*r); }
+// scattered all-sky stars (varied tint + brightness)
+{ const pos=[],col=[],tmp=new THREE.Color();
+  for(let i=0;i<1500;i++){ const az=Math.random()*Math.PI*2, el=0.04+Math.random()*1.46;
+    _pushDir(pos,new THREE.Vector3(Math.cos(az)*Math.cos(el),Math.sin(el),Math.sin(az)*Math.cos(el)),STAR_R,18);
+    tmp.setHex(_starTints[(Math.random()*_starTints.length)|0]); const b=0.45+Math.random()*0.55; col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
+  _starLayer(pos,col,2.0,0.96); }
+// bright hero stars (these twinkle)
+const bigStars=(()=>{ const pos=[],col=[],tmp=new THREE.Color();
+  for(let i=0;i<175;i++){ const az=Math.random()*Math.PI*2, el=0.07+Math.random()*1.4;
+    _pushDir(pos,new THREE.Vector3(Math.cos(az)*Math.cos(el),Math.sin(el),Math.sin(az)*Math.cos(el)),STAR_R,18);
+    tmp.setHex(_starTints[(Math.random()*_starTints.length)|0]); col.push(tmp.r,tmp.g,tmp.b); }
+  return _starLayer(pos,col,4.1,1.0); })();
+// --- Milky Way: a luminous river of stars arcing across the sky, with a bright galactic core ---
+const _bN=new THREE.Vector3(0.52,0.33,0.79).normalize();
+const _bU=new THREE.Vector3().crossVectors(_bN,new THREE.Vector3(0,1,0)).normalize();
+const _bV=new THREE.Vector3().crossVectors(_bN,_bU).normalize();
+const _gauss=()=>(Math.random()+Math.random()+Math.random()-1.5)/1.5;
+const _bandDir=(t,sp)=>new THREE.Vector3().copy(_bU).multiplyScalar(Math.cos(t)).addScaledVector(_bV,Math.sin(t)).addScaledVector(_bN,sp).normalize();
+const _coreT=2.3;  // angle along the band where the bright galactic bulge sits
+const mwT=[0xbcd0ff,0xdfe8ff,0xffffff,0xf1e8ff,0xffe9cf,0xcdbfff];
+{ const pos=[],col=[],tmp=new THREE.Color();
+  for(let i=0;i<2600;i++){ const t=Math.random()*Math.PI*2, sp=_gauss()*0.12;
+    const d=_bandDir(t,sp); if(d.y<-0.05) continue; _pushDir(pos,d,STAR_R-4,18);
+    const near=1-Math.min(1,Math.abs(sp)/0.17); let b=0.4+near*0.62;
+    const dc=Math.abs(((t-_coreT+Math.PI*3)%(Math.PI*2))-Math.PI); if(dc<0.9) b*=1+(0.9-dc)*0.7;
+    tmp.setHex(mwT[(Math.random()*mwT.length)|0]); col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
+  for(let i=0;i<700;i++){ const t=_coreT+_gauss()*0.5, sp=_gauss()*0.07;          // dense galactic-core cluster
+    const d=_bandDir(t,sp); if(d.y<-0.05) continue; _pushDir(pos,d,STAR_R-6,18);
+    tmp.setHex(mwT[(Math.random()*mwT.length)|0]); const b=0.7+Math.random()*0.5; col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
+  _starLayer(pos,col,1.95,0.95); }
+// nebula haze clouds along the band (soft additive glow → galaxy clouds), brightest at the core
+{ const cols=[0x3a57b0,0x5a3f9e,0x2f6f8f,0x7a3f6e,0x3f59a8,0x4a3a86];
+  function neb(t,sp,opMul,szMul,color){ const d=_bandDir(t,sp); if(d.y<-0.02) return;
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:color||cols[(Math.random()*cols.length)|0],transparent:true,opacity:(0.05+Math.random()*0.08)*opMul,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+    const sz=(48+Math.random()*82)*szMul; s.scale.set(sz,sz,1); s.position.set(d.x*(STAR_R-12),d.y*(STAR_R-12)+18,d.z*(STAR_R-12)); starsGroup.add(s); }
+  for(let i=0;i<95;i++) neb(Math.random()*Math.PI*2,_gauss()*0.1,1,1);
+  for(let i=0;i<26;i++) neb(_coreT+_gauss()*0.45,_gauss()*0.07,1.7,1.3,[0x8aa0e6,0x9b86d8,0x6f86c8][(Math.random()*3)|0]);
+}
+// bright multi-layer galactic core glow (the luminous heart of the river)
+{ const cd=_bandDir(_coreT,0), cp=cd.clone().multiplyScalar(STAR_R-22); cp.y+=18;
+  [[162,0x24376f,0.10],[122,0x5a3f9e,0.12],[92,0x2f7f9f,0.13],[120,0x7e93dd,0.10],[64,0xcfe0ff,0.17]]
+    .forEach(([s,c,o])=>{ const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:c,transparent:true,opacity:o,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); gl.scale.set(s,s,1); gl.position.copy(cp); starsGroup.add(gl); }); }
+// shooting stars — occasional glowing comet streaks lighting the path of knowledge
+const METEOR_N=16, mSprites=[], _mCol=i=>i===0?0xffffff:i<3?0xeaf3ff:i<7?0xc2d4ff:0x93acff;
+for(let i=0;i<METEOR_N;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:_mCol(i),transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  s.scale.setScalar(14*(1-i/METEOR_N)+2.0); starsGroup.add(s); mSprites.push(s); }
+let _mWait=2+Math.random()*4, _mClock=0, _mAge=0, _mDur=0;
+const _mP0=new THREE.Vector3(), _mV=new THREE.Vector3(), _mN=new THREE.Vector3(), _mH=new THREE.Vector3();
+function spawnMeteor(forceAz){ const az=(forceAz!=null?forceAz:Math.random()*Math.PI*2), el=0.16+Math.random()*0.34;
+  _mP0.set(Math.cos(az)*Math.cos(el),Math.sin(el),Math.sin(az)*Math.cos(el)).multiplyScalar(STAR_R-30); _mP0.y+=18;
+  const t2=az+Math.PI*0.5+(Math.random()-0.5)*0.9;
+  _mV.set(Math.cos(t2),-0.5-Math.random()*0.5,Math.sin(t2)).normalize().multiplyScalar(190);
+  _mN.copy(_mV).normalize(); _mDur=1.2+Math.random()*0.7; _mAge=0; }
+function updateMeteor(dt){ if(!isNight){ if(_mDur>0){ _mDur=0; mSprites.forEach(s=>s.material.opacity=0); } return; }
+  if(_mDur<=0){ _mClock+=dt; if(_mClock>=_mWait){ _mClock=0; _mWait=3.5+Math.random()*5.5; spawnMeteor(); } return; }
+  _mAge+=dt; const k=_mAge/_mDur;
+  if(k>=1){ _mDur=0; mSprites.forEach(s=>s.material.opacity=0); return; }
+  _mH.copy(_mP0).addScaledVector(_mV,_mAge); const env=Math.sin(k*Math.PI);
+  for(let i=0;i<METEOR_N;i++){ const s=mSprites[i]; s.position.copy(_mH).addScaledVector(_mN,-i*3.5); s.material.opacity=Math.min(1,env*(1.18-i/METEOR_N)); } }
 
 /* ---- ground ---- */
 const ground = new THREE.Mesh(new THREE.CircleGeometry(235,64), toon(0x91c266));
@@ -611,7 +684,7 @@ for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, len=160;
 }
 
 /* ---- street lamps + plaza benches (pretty townhouse street feel) ---- */
-const LAMP_BULBS=[];
+const LAMP_BULBS=[]; const LAMP_GLOWS=[];
 function makeLamp(x,z){
   const g=new THREE.Group();
   const base=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.42,0.4,10), toon(0x3b3a44)); base.position.y=0.2; outline(base,0.03); g.add(base);
@@ -620,6 +693,10 @@ function makeLamp(x,z){
   const head=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.36,0.52,8), toon(0x2c2b33)); head.position.set(0.62,3.28,0); outline(head,0.03); g.add(head);
   const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8), new THREE.MeshBasicMaterial({color:0xffe6a8})); bulb.position.set(0.62,3.04,0); g.add(bulb); LAMP_BULBS.push(bulb);
   const cap=new THREE.Mesh(new THREE.ConeGeometry(0.3,0.26,8), toon(0x2c2b33)); cap.position.set(0.62,3.62,0); g.add(cap);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffe0a0,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  halo.scale.set(3.4,3.4,1); halo.position.set(0.62,3.02,0); halo._nightOp=0.95; g.add(halo); LAMP_GLOWS.push(halo);
+  const pool=new THREE.Mesh(new THREE.CircleGeometry(4.8,28), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0xffc878,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  pool.rotation.x=-Math.PI/2; pool.position.set(0.62,0.08,0); pool._nightOp=0.46; g.add(pool); LAMP_GLOWS.push(pool);
   g.position.set(x,0,z); scene.add(g);
 }
 for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, nx=Math.cos(ang+Math.PI/2), nz=Math.sin(ang+Math.PI/2);
@@ -888,18 +965,22 @@ const COLLIDERS = buildings.map(b=>({x:b._x, z:b._z, r:b._cw||3}));
 
 /* ---- day / night (night: window glow brightness = repo activity) ---- */
 let isNight=false;
+let faceLight=null, faceMat=null;   // avatar fill light + face material (assigned when avatar is built, below)
 const _cDark=new THREE.Color(0x140a03), _cWarm=new THREE.Color(0xffcf86);
 function setTimeOfDay(night){
   isNight=night;
   skyMat.uniforms.top.value.setHex(night?0x0a1030:0x4fb4c2);
   skyMat.uniforms.mid.value.setHex(night?0x1b2348:0xbfe9e2);
   skyMat.uniforms.bot.value.setHex(night?0x3a3354:0xfbe8c8);
-  sun.intensity = night?0.16:1.45; sun.color.setHex(night?0xa8bdf0:0xffe2b0);
-  hemi.intensity = night?0.36:0.85; hemi.color.setHex(night?0x33406e:0xcfeee8); hemi.groundColor.setHex(night?0x12141d:0x86996a);
+  sun.intensity = night?0.26:1.45; sun.color.setHex(night?0xaec2ff:0xffe2b0);
+  hemi.intensity = night?0.55:0.85; hemi.color.setHex(night?0x3b4c86:0xcfeee8); hemi.groundColor.setHex(night?0x1b2030:0x86996a);
   scene.fog.color.setHex(night?0x18203c:0xcfe7da);
-  renderer.toneMappingExposure = night?0.96:1.08;
-  moon.visible=night; stars.visible=night;
+  renderer.toneMappingExposure = night?1.05:1.08;
+  moon.visible=night; starsGroup.visible=night;
   LAMP_BULBS.forEach(b=>b.material.color.setHex(night?0xfff0c2:0xffe6a8));
+  LAMP_GLOWS.forEach(o=>{ o.material.opacity = night? o._nightOp : 0; });
+  if(faceLight) faceLight.intensity = night?16:0;
+  if(faceMat) faceMat.emissive.setHex(night?0x6a4f30:0x000000);
   buildings.forEach(b=>{
     const c = night ? _cDark.clone().lerp(_cWarm, b._activity) : new THREE.Color(DAY_GLASS);
     (b._windows||[]).forEach(w=>w.material.color.copy(c));
@@ -977,6 +1058,8 @@ const legL=rbox(0.38,0.85,0.38,PANTS,0.12); legL.position.set(-0.24,0.5,0); outl
 const legR=legL.clone(); legR.position.x=0.24; model.add(legR);
 const shoeL=rbox(0.42,0.28,0.5,0x4a3a2a,0.08); shoeL.position.set(-0.24,0.14,0.08); model.add(shoeL);
 const shoeR=shoeL.clone(); shoeR.position.x=0.24; model.add(shoeR);
+faceLight=new THREE.PointLight(0xfff0d8,0,15,1.5); faceLight.position.set(0,2.35,0.7); model.add(faceLight);
+faceMat=head.material;
 scene.add(player);
 
 /* nav arrow */
@@ -1334,6 +1417,8 @@ function animate(){
     if(dist<6){ navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; } }
 
   for(const c of clouds){ c.position.x+=c.userData.spd*dt; if(c.position.x>300) c.position.x=-300; }
+  if(isNight){ bigStars.material.opacity=0.78+Math.sin(clock.elapsedTime*2.3)*0.22; starsGroup.rotation.y+=dt*0.0016; }
+  updateMeteor(dt);
   { const dxp=player.position.x-driver.position.x, dzp=player.position.z-driver.position.z;
     const tgt = Math.hypot(dxp,dzp)<16 ? Math.atan2(dxp,dzp) : (-2.2+Math.sin(clock.elapsedTime*0.7)*0.22);
     driver.rotation.y=lerpA(driver.rotation.y,tgt,0.07);
@@ -1436,7 +1521,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__taxi=(name)=>{ const r=REPOS.find(x=>x.repo===name); if(r&&r._pos){ taxiTo(r); return true; } return false; };
   window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom}));
   window.__modal=()=>modalOpen;
-  window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, total:allCountEl.textContent, ws:rtSock?rtSock.readyState:-1}); }
+  window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, total:allCountEl.textContent, ws:rtSock?rtSock.readyState:-1});
+  window.__meteor=(az)=>{ spawnMeteor(az); return true; };
+  window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; }; }
 </script>
 </body>
 </html>
