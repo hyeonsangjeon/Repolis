@@ -612,10 +612,28 @@ function updateFireflies(t){ if(!fireflyGroup.visible) return;
     f.position.y=u.by+Math.sin(t*u.sp*1.3+u.ph)*0.7;
     f.material.opacity=0.25+Math.abs(Math.sin(t*u.bl+u.ph))*0.75; } }
 
+/* ---- procedural ground / road textures (seamless tiling noise) ---- */
+function _noiseTex(base, layers, size=256){
+  const cv=document.createElement('canvas'); cv.width=cv.height=size; const x=cv.getContext('2d');
+  x.fillStyle=base; x.fillRect(0,0,size,size);
+  const blob=(cx,cy,r,fill)=>{ x.fillStyle=fill;
+    for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){ x.beginPath(); x.arc(cx+ox*size,cy+oy*size,r,0,Math.PI*2); x.fill(); } };
+  layers.forEach(([color,count,rmin,rmax,alpha])=>{ for(let i=0;i<count;i++){ x.globalAlpha=alpha;
+    blob(Math.random()*size,Math.random()*size,rmin+Math.random()*(rmax-rmin),color); } });
+  x.globalAlpha=1;
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.anisotropy=MAXANISO; t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
+}
+const GRASS_TEX=_noiseTex('#8cc55f',[['#6fa847',46,9,22,0.5],['#9ed36f',40,7,18,0.42],['#74b24c',64,3,7,0.4],['#c2e08c',26,2,5,0.5],['#5f9a40',30,4,10,0.3]]);
+const ASPHALT_TEX=_noiseTex('#3b3f47',[['#31343c',64,5,13,0.55],['#23252b',42,3,8,0.5],['#4a4e57',72,2,5,0.4],['#585d67',30,1,3,0.5]]);
+const DIRT_TEX=_noiseTex('#e1d3b3',[['#cfbd95',52,7,17,0.5],['#d8c9a3',40,5,12,0.42],['#b69d76',46,2,5,0.55],['#efe6cf',24,3,9,0.4]]);
+const SAND_TEX=_noiseTex('#d8c596',[['#cdb985',40,7,16,0.45],['#e3d3a8',34,5,12,0.4],['#c3ad7c',30,2,5,0.5]]);
+function texMat(tex, rx, ry, clone=true){ const t=clone?tex.clone():tex; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); t.anisotropy=MAXANISO; t.needsUpdate=true; return new THREE.MeshToonMaterial({ map:t, gradientMap:GRAD }); }
+
 /* ---- ground ---- */
-const ground = new THREE.Mesh(new THREE.CircleGeometry(235,64), toon(0x91c266));
+const ground = new THREE.Mesh(new THREE.CircleGeometry(235,64), texMat(GRASS_TEX,46,46,false));
 ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
-const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5,40), toon(0xd8c596));
+const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5,40), texMat(SAND_TEX,7,7,false));
 plaza.rotation.x=-Math.PI/2; plaza.position.y=0.02; plaza.receiveShadow=true; scene.add(plaza);
 // plaza rim
 const rim = new THREE.Mesh(new THREE.RingGeometry(9.5,10.2,40), basic(0xc3ad7c));
@@ -718,13 +736,15 @@ const RINGS=[{r:34,n:6},{r:60,n:9},{r:88,n:12},{r:118,n:13},{r:150,n:13}];
 /* ring roads + sidewalks + radial avenues with lane dashes */
 const ROAD=0x3b3f47, WALK=0xe4d7bb, LANE=0xf4d24a;   // asphalt road · dirt-tan walking path (kept) · yellow lane line
 RINGS.forEach(ring=>{
-  const walk=new THREE.Mesh(new THREE.RingGeometry(ring.r-2.8,ring.r+2.8,110), toon(WALK)); walk.rotation.x=-Math.PI/2; walk.position.y=0.010; walk.receiveShadow=true; scene.add(walk);
-  const road=new THREE.Mesh(new THREE.RingGeometry(ring.r-1.9,ring.r+1.9,110), toon(ROAD)); road.rotation.x=-Math.PI/2; road.position.y=0.013; road.receiveShadow=true; scene.add(road);
+  const rep=Math.max(8,Math.round(ring.r/3));
+  const walk=new THREE.Mesh(new THREE.RingGeometry(ring.r-2.8,ring.r+2.8,110), texMat(DIRT_TEX,rep,rep)); walk.rotation.x=-Math.PI/2; walk.position.y=0.010; walk.receiveShadow=true; scene.add(walk);
+  const road=new THREE.Mesh(new THREE.RingGeometry(ring.r-1.9,ring.r+1.9,110), texMat(ASPHALT_TEX,rep,rep)); road.rotation.x=-Math.PI/2; road.position.y=0.013; road.receiveShadow=true; scene.add(road);
   const cl=new THREE.Mesh(new THREE.RingGeometry(ring.r-0.07,ring.r+0.07,128), basic(LANE)); cl.rotation.x=-Math.PI/2; cl.position.y=0.0145; scene.add(cl);
 });
+const _avWalkMat=texMat(DIRT_TEX,1,26), _avRoadMat=texMat(ASPHALT_TEX,0.7,26);
 for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, len=160;
-  const walk=new THREE.Mesh(new THREE.PlaneGeometry(5.2,len), toon(WALK)); walk.rotation.x=-Math.PI/2; walk.rotation.z=-ang; walk.position.set(Math.cos(ang)*len/2,0.009,Math.sin(ang)*len/2); walk.receiveShadow=true; scene.add(walk);
-  const av=new THREE.Mesh(new THREE.PlaneGeometry(3.6,len), toon(ROAD)); av.rotation.x=-Math.PI/2; av.rotation.z=-ang; av.position.set(Math.cos(ang)*len/2,0.012,Math.sin(ang)*len/2); av.receiveShadow=true; scene.add(av);
+  const walk=new THREE.Mesh(new THREE.PlaneGeometry(5.2,len), _avWalkMat); walk.rotation.x=-Math.PI/2; walk.rotation.z=-ang; walk.position.set(Math.cos(ang)*len/2,0.009,Math.sin(ang)*len/2); walk.receiveShadow=true; scene.add(walk);
+  const av=new THREE.Mesh(new THREE.PlaneGeometry(3.6,len), _avRoadMat); av.rotation.x=-Math.PI/2; av.rotation.z=-ang; av.position.set(Math.cos(ang)*len/2,0.012,Math.sin(ang)*len/2); av.receiveShadow=true; scene.add(av);
   for(let rr=10;rr<len;rr+=5){ const dd=new THREE.Mesh(new THREE.PlaneGeometry(0.32,1.8), basic(LANE)); dd.rotation.x=-Math.PI/2; dd.rotation.z=-ang; dd.position.set(Math.cos(ang)*rr,0.014,Math.sin(ang)*rr); scene.add(dd); }
 }
 
