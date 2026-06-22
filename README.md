@@ -4,7 +4,7 @@
 
 # 🏙️ Repolis — the City of Repos
 
-**Beyond the 6‑pin limit: a walkable 3D city where every one of your GitHub repos lives.**
+**Your GitHub isn't a 6‑pin grid — it's a 3D city you can walk, and a taxi drives you to any repo you name.**
 
 [![Live demo](https://img.shields.io/badge/Live%20demo-Repolis-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
 [![Pages](https://img.shields.io/github/deployments/hyeonsangjeon/Repolis/github-pages?style=for-the-badge&label=Pages&logo=githubpages&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
@@ -16,10 +16,10 @@
 
 [English](README.md) · [한국어](README.ko.md)
 
-Every house is a repo. Its height, brightness, ornamentation and garden don't grow from ⭐ — they grow from **real traffic** (visitors · clones · forks · views).
-Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the cab **physically drives over, picks you up, and takes you to that house.**
+**Your GitHub repos aren't a list — they're a city you can walk.** Every house is a repo, and its height, brightness, ornaments and garden grow from **real traffic** (visitors · clones · forks · views), not ⭐.
+Don't know where to go? Just tell the 🚕 **LLM taxi driver** — say _"take me to the most popular repo"_ and the cab **drives over, picks you up, and carries you straight to that repo's house.**
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Hail the 🚕 taxi in Repolis, ride to a repo's house, open its card, and jump straight to the repo on GitHub" width="86%"></a>
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis: see your GitHub repos as a 3D city, tell the taxi &quot;most popular&quot;, ride to that repo's house, open its card, and jump straight to it on GitHub" width="86%"></a>
 
 <sub>▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>Live demo</b></a> · Built with Three.js · one single <code>index.html</code></sub>
 
@@ -51,7 +51,7 @@ Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the
 - 🟢 **Realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live · today · all-time unique-visitor counter** (🟢 현재 · 오늘 · 누적) in the HUD. It's **already live on the demo above**; a fork stays solo until you add one free server (below).
 - 🌐 **English / 한국어 toggle** — switch the whole UI language live from the HUD.
 
-> 💬 **Try asking the taxi:** _"most popular repo"_ · _"show me something about RAG"_ · _"most cloned"_ · _"a Korean STT project"_ · _"anything"_ — it picks the best match, explains why, then drives you there.
+> 💬 **Try asking the taxi:** _"most popular repo"_ · _"a repo about AI agents"_ · _"most cloned"_ · _"a Korean STT project"_ · _"anything"_ — it picks the best match, explains why, then drives you there.
 
 ## 🧠 How it works (data flow)
 

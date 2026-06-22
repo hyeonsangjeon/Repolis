@@ -4,7 +4,7 @@
 
 # 🏙️ Repolis — 레포들의 도시
 
-**핀 6개의 한계를 넘어, 내 모든 GitHub 레포가 사는 걸어다닐 수 있는 3D 도시.**
+**내 GitHub은 핀 6개짜리 격자가 아니라, 걸어다니는 3D 도시 — 택시기사에게 말만 하면 원하는 레포까지 태워다 줍니다.**
 
 [![라이브 데모](https://img.shields.io/badge/Live%20demo-Repolis-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
 [![Pages](https://img.shields.io/github/deployments/hyeonsangjeon/Repolis/github-pages?style=for-the-badge&label=Pages&logo=githubpages&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
@@ -16,10 +16,10 @@
 
 [English](README.md) · [한국어](README.ko.md)
 
-집 하나하나가 레포예요. 건물의 높이·밝기·화려함·마당은 ⭐가 아니라 **실제 트래픽**(방문자·클론·포크·조회수)으로 자라요.
-길을 잃었다면? 🚕 **LLM 택시기사**에게 물어보세요. _"RAG 관련 레포 보여줘"_ 하면 설명해주고, 택시가 **진짜로 내 옆까지 와서 태우고** 그 집까지 데려다줍니다.
+**내 GitHub 레포는 목록이 아니라 걸어다니는 도시예요.** 집 하나하나가 레포이고, 높이·밝기·화려함·마당은 ⭐가 아니라 **실제 트래픽**(방문자·클론·포크·조회수)으로 자라요.
+어디로 갈지 모르겠다면? 🚕 **LLM 택시기사**에게 말만 하세요 — _"제일 인기있는 레포로 데려다줘"_ 하면 택시가 **내 옆까지 와서 태우고** 그 레포의 집까지 곧장 데려다줍니다.
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis에서 🚕 택시를 불러 레포의 집으로 가 카드를 열고 GitHub 레포로 바로 이동하는 데모" width="86%"></a>
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis: 내 GitHub 레포가 3D 도시로 — 택시에게 &quot;제일 인기있는 레포&quot;라고 말해 그 집까지 타고 가서 카드를 열고 GitHub로 바로 이동하는 데모" width="86%"></a>
 
 <sub>▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>라이브 데모</b></a> · Built with Three.js · 한 개의 <code>index.html</code></sub>
 
@@ -51,7 +51,7 @@
 - 🟢 **실시간 멀티플레이어** — 다른 방문자가 이름표 달린 아바타로 함께 걸어다니고, HUD에 **현재 접속자 · 오늘 · 누적 순방문자 카운터**(🟢 N · 오늘 M · 누적 K)가 떠요. **데모에는 이미 켜져 있고**, fork 하면 무료 서버 하나를 연결하기 전까진 솔로가 기본이에요(아래).
 - 🌐 **영어 / 한국어 전환** — HUD에서 UI 언어를 실시간으로 바꿔요.
 
-> 💬 **택시에게 이렇게 물어보세요:** _"제일 인기있는 레포"_ · _"RAG 관련 보여줘"_ · _"제일 많이 클론된"_ · _"한국어 STT 프로젝트"_ · _"아무거나"_ — 가장 맞는 레포를 골라 이유를 설명하고, 그 집까지 데려다줘요.
+> 💬 **택시에게 이렇게 물어보세요:** _"제일 인기있는 레포"_ · _"AI 에이전트 관련"_ · _"제일 많이 클론된"_ · _"한국어 STT 프로젝트"_ · _"아무거나"_ — 가장 맞는 레포를 골라 이유를 설명하고, 그 집까지 데려다줘요.
 
 ## 🧠 어떻게 동작하나 (데이터 흐름)
 
