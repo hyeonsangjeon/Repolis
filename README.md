@@ -40,13 +40,13 @@ Don't know where to go? Just tell the 🚕 **LLM taxi driver** — say _"take me
   | 📈 views | **garden** · fence size |
   | ★ stars | **gold-star** ornaments on the roof |
   | 🌙 activity _(recent push · clones · views)_ | **window glow at night** |
-- 🗓️ **Cumulative since move‑in day** — visitors & clones are lifetime totals, counted from the day each house was "built" (first seen in the data). The card shows a _"since YYYY‑MM‑DD"_ note.
+- 🗓️ **Cumulative since move‑in day** — visitors & clones are lifetime totals, counted from the day each house was "built" (first seen in the data). The card shows a _"since YYYY‑MM‑DD"_ note, plus **live GitHub badges** — license, open issues and the latest release tag, shown when present.
 - 🚕 **LLM taxi driver that actually drives you** — ask in natural language; it picks the best‑matching repo, explains it, then the cab **comes to your spot, you board, and it carries you** to the house. Three modes:
-  - **Local search** (default · no key · instant) — synonym‑expanded intent search, now also metric‑aware (_"most cloned"_, _"most visited"_, _"most forked"_).
+  - **Local search** (default · no key · instant) — synonym‑expanded intent search, also metric‑aware (_"most cloned"_, _"most visited"_, _"most forked"_); a strong topic match always beats generic metric sorting, and you always get a few alternatives to pick from.
   - **WebLLM** (in‑browser AI · no key · WebGPU)
   - **AI proxy** (Vercel → Azure OpenAI · best quality)
 - 🏡 **Six house tiers, not just taller boxes** — by traffic rank each repo becomes a `cabin → cottage → house → villa → manor → portico mansion`, with wings, columns, porticos, dormers, balconies and cupolas. Top repos get grand columned 저택; quiet ones get cosy cabins.
-- 🌳 **A city that feels alive** — gardens, pets (chow‑chow NPCs), street trees, **street lamps & plaza benches**, category logos on the roofs (AI / Data / Software / …), and proper town‑house roads.
+- 🌳 **A city that feels alive** — **procedurally textured houses** (brick · siding · stone · shingle roofs — *zero image assets*), gardens, **roaming chow‑chow pets**, street trees, street lamps, **rest pavilions you can sit in** (and stand back up), and **koi ponds & driveway garages** for your most active repos. Category logos on the roofs (AI / Data / Software / …) and proper town‑house roads.
 - 🌙 **Day & night, with living windows** — flip the 🌙 / ☀️ switch in the HUD. At night the sky turns navy, lamps and stars switch on, and **each repo's windows glow by how active it is** (recent pushes · clones · views) — so your busiest repos literally light up the skyline.
 - 🟢 **Realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live · today · all-time unique-visitor counter** (🟢 현재 · 오늘 · 누적) in the HUD. It's **already live on the demo above**; a fork stays solo until you add one free server (below).
 - 🌐 **English / 한국어 toggle** — switch the whole UI language live from the HUD.
@@ -197,7 +197,7 @@ The static site is solo by default. To let visitors meet each other, run one tin
 
 ## 🛠 Tech
 
-Three.js (r0.160) · toon shading + inverted-hull outlines · ACES tone mapping · day/night lighting · circle-collision walking · a single dependency-free `index.html` · GitHub Actions · (optional) Vercel + Azure OpenAI · WebLLM · (optional) PartyKit / Cloudflare Workers for realtime.
+Three.js (r0.160) · toon shading + inverted-hull outlines · **Fresnel rim light** via `onBeforeCompile` · **procedural canvas textures** — walls, roofs, grass & asphalt are all generated in code, **no image assets** · ACES tone mapping · day/night lighting · circle-collision walking · **one dependency‑free `index.html` (~2,300 lines, zero build step)** · GitHub Actions · (optional) Vercel + Azure OpenAI · WebLLM · (optional) PartyKit / Cloudflare Workers for realtime.
 
 ## ⭐ Like it?
 
