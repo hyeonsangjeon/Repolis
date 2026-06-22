@@ -1075,19 +1075,19 @@ scene.add(taxi);
 const driver=new THREE.Group(); driver.position.set(TAXI_POS.x-1.7,0,TAXI_POS.z+1.7);
 (function buildDriver(){
   const SH=0x2f6f4f, SK=0xf0c79a, HR=0x33271c, CAP=0xf2b13c;
-  const tb=rbox(0.92,0.9,0.56,SH,0.16); tb.position.y=1.25; outline(tb,0.04); driver.add(tb);
-  const hd=rbox(1.0,0.92,0.92,SK,0.26,4); hd.position.y=2.1; outline(hd,0.05); driver.add(hd);
-  const cap=rbox(1.06,0.34,1.0,CAP,0.1,4); cap.position.y=2.55; outline(cap,0.03); driver.add(cap);
-  const brim=rbox(1.06,0.12,0.42,CAP,0.05); brim.position.set(0,2.42,0.6); driver.add(brim);
+  const tb=capsule(0.42,0.46,SH); tb.position.y=1.3; tb.scale.z=0.82; outline(tb,0.04); driver.add(tb);
+  const hd=ball(0.5,SK,18); hd.position.y=2.1; hd.scale.set(1.0,0.98,0.96); outline(hd,0.04); driver.add(hd);
+  const cap=ball(0.54,CAP,16); cap.position.y=2.4; cap.scale.set(1.05,0.5,1.05); outline(cap,0.03); driver.add(cap);
+  const brim=ball(0.5,CAP,14); brim.position.set(0,2.3,0.4); brim.scale.set(0.9,0.16,0.62); driver.add(brim);
   [[-0.24],[0.24]].forEach(([ex])=>{
     const e=new THREE.Mesh(new THREE.SphereGeometry(0.1,12,10), basic(0x2a2320)); e.position.set(ex,2.08,0.47); e.scale.z=0.5; driver.add(e);
     const hl=new THREE.Mesh(new THREE.SphereGeometry(0.032,8,6), basic(0xffffff)); hl.position.set(ex+0.04,2.12,0.52); driver.add(hl); });
   [[-0.24,1],[0.24,-1]].forEach(([ex,s])=>{ const b=rbox(0.24,0.07,0.07,0x2a211a,0.02); b.position.set(ex,2.27,0.45); b.rotation.z=s*0.13; driver.add(b); }); // brows
   { const m=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.026,8,16,Math.PI), basic(0x8a4f44)); m.position.set(0,1.9,0.47); m.rotation.z=Math.PI; driver.add(m); } // smile
-  const al=rbox(0.27,0.78,0.27,SH,0.1); al.position.set(-0.6,1.32,0); outline(al,0.03); driver.add(al);
-  const ar=al.clone(); ar.position.x=0.6; driver.add(ar);
-  const ll=rbox(0.34,0.78,0.34,0x394056,0.1); ll.position.set(-0.22,0.46,0); outline(ll,0.03); driver.add(ll);
-  const lr=ll.clone(); lr.position.x=0.22; driver.add(lr);
+  const al=capsule(0.14,0.4,SH); al.position.set(-0.52,1.36,0); outline(al,0.03); driver.add(al);
+  const ar=al.clone(); ar.position.x=0.52; driver.add(ar);
+  const ll=capsule(0.17,0.4,0x394056); ll.position.set(-0.2,0.5,0); outline(ll,0.03); driver.add(ll);
+  const lr=ll.clone(); lr.position.x=0.2; driver.add(lr);
   driver._head=hd; npcFaces.add(hd.material);
 })();
 driver.rotation.y=-2.2; scene.add(driver);
@@ -1539,17 +1539,19 @@ function nameTag(name){
 }
 function makePeerAvatar(name,color){
   const g=new THREE.Group();
-  const b=rbox(0.95,0.92,0.6,color,0.18); b.position.y=1.32; g.add(b);
-  const h=rbox(1.06,0.96,0.96,0xf2cca2,0.28,4); h.position.y=2.25; g.add(h);
-  const hair=rbox(1.13,0.42,1.04,0x2c2521,0.2,3); hair.position.y=2.66; g.add(hair);
+  const b=capsule(0.44,0.44,color); b.position.y=1.34; b.scale.z=0.82; g.add(b);
+  const h=ball(0.54,0xf2cca2,18); h.position.y=2.25; h.scale.set(1.0,0.98,0.96); g.add(h);
+  const hair=ball(0.56,0x2c2521,16); hair.position.set(0,2.6,-0.04); hair.scale.set(1.05,0.52,1.07); g.add(hair);
   // friendly face so peers match the player's expressiveness
   [[-0.25],[0.25]].forEach(([ex])=>{
     const e=new THREE.Mesh(new THREE.SphereGeometry(0.1,12,10), basic(0x2a2320)); e.position.set(ex,2.23,0.49); e.scale.z=0.5; g.add(e);
     const hl=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6), basic(0xffffff)); hl.position.set(ex+0.04,2.27,0.54); g.add(hl); });
   [[-0.25,1],[0.25,-1]].forEach(([ex,s])=>{ const br=rbox(0.24,0.07,0.07,0x2a211a,0.02); br.position.set(ex,2.43,0.47); br.rotation.z=s*0.13; g.add(br); });
   { const m=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.026,8,16,Math.PI), basic(0x8a4f44)); m.position.set(0,2.04,0.49); m.rotation.z=Math.PI; g.add(m); }
-  const lL=rbox(0.34,0.74,0.34,0x33406e,0.1); lL.position.set(-0.22,0.42,0); g.add(lL);
-  const lR=lL.clone(); lR.position.x=0.22; g.add(lR);
+  const aL=capsule(0.13,0.36,color); aL.position.set(-0.48,1.38,0); g.add(aL);
+  const aR=aL.clone(); aR.position.x=0.48; g.add(aR);
+  const lL=capsule(0.16,0.4,0x33406e); lL.position.set(-0.2,0.46,0); g.add(lL);
+  const lR=lL.clone(); lR.position.x=0.2; g.add(lR);
   g._faceMat=h.material; npcFaces.add(h.material);
   g.add(nameTag(name||'Guest')); return g;
 }
