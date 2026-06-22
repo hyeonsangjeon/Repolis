@@ -92,6 +92,72 @@ gh auth login
 GTM_DIR=data python3 scripts/build_repos.py   # repos.json 재생성
 ```
 
+### 🚕 AI 택시기사 — 모드 · 의도 라우팅 · 인덱싱
+
+택시기사는 자유 문장 질문을 작은 **검색 파이프라인**으로 알맞은 집에 연결해요. 그래서 브라우저 안 작은 모델로도 정확합니다:
+
+```
+질문
+  └▶ ① 의도 에이전트(결정적) ── "도서관 / library", "제일 인기", "스타 많은",
+  │      랜드마크·지표 라우팅      "최근", "클론·포크·조회 많은", "랜덤"
+  │      → LLM 없이 바로 응답      → 정확, 환각 0
+  └▶ ② 검색 인덱스(역색인) ──── tokens(이름·라벨·언어·설명·토픽) + 동의어,
+  │      후보 검색                 최초 1회 lazy 빌드 → 상위 K개 후보
+  └▶ ③ 랭킹 ─────────────────── 이름매칭 ≫ 토큰매칭 ≫ 부분문자열, +토픽, +인기,
+  │                              그리고 *사용자가 친 단어*가 레포 이름에 있으면 우선
+  └▶ ④ LLM이 후보 중 선택(RAG) ─ WebLLM/프록시는 후보 안에서만 골라 "PICK: <repo>"
+  └▶ ⑤ 복수 추천 ───────────── 나머지 후보는 한 번에 고를 수 있는 칩으로 표시
+```
+
+왜 중요하냐면: *"도서관 데려다줘"* 는 레포 검색이 아니라 **이동(네비)** 의도예요 — ①단계가 이걸 잡아 엉뚱한 레포 대신 기여 도서관으로 데려갑니다(질문이 곧장 모델로 가면 생기던 버그). "AI 에이전트 레포", "음성인식" 같은 자유 질문은 ②~⑤로 흘러가요.
+
+**3가지 모드** — 채팅 헤더에서 전환:
+
+| 모드 | 엔진 | 키? | 비고 |
+|---|---|---|---|
+| **로컬** | 동의어 + 지표 검색 | 없음 | 기본, 즉시, 완전 오프라인 |
+| **WebLLM** | 브라우저 내 LLM(WebGPU) | 없음 | 최초 1회 ~1GB 다운로드, 후보 중 선택 |
+| **AI 프록시** | 내 서버리스 엔드포인트 | 서버측 | 최고 품질 (예: Azure OpenAI) |
+
+브라우저가 항상 먼저 검색을 끝내고 모델엔 **추려진 후보**만 넘겨요 — 그래서 WebLLM/프록시 에이전트는 그중 하나만 고르면 됩니다:
+
+```jsonc
+// POST /api/taxi — 도시가 보내는 요청 (전체 카탈로그가 아니라 이미 추려진 후보)
+{
+  "question": "AI 에이전트 관련 레포 보여줘",
+  "repos": [
+    { "repo": "multi-agent-orchestration-observability", "lang": "Python",
+      "stars": 12, "topics": ["agent","observability","llm"], "desc": "…" },
+    { "repo": "strands-bedrock-agents-cookbook", "lang": "Jupyter Notebook", "…": "…" }
+  ]
+}
+```
+
+```js
+// api/taxi.js — 최소 에이전트: 후보 중 하나만 골라 엄격한 JSON 반환
+export default async function handler(req, res) {
+  const { question, repos } = req.body;
+  const sys = `너는 Repolis 택시기사야. 아래 후보 목록 안에서만 사용자에게 가장 맞는 레포 하나를
+골라(목록에 없는 건 절대 지어내지 마) 한두 문장으로 상냥하게 답해.
+반드시 엄격한 JSON {"repo":"<레포이름>","message":"<답변>"} 으로 반환해.
+후보:\n${repos.map(r => `- ${r.repo} | ${r.lang} | ${(r.topics||[]).join(',')} | ${r.desc}`).join('\n')}`;
+
+  const r = await fetch(`${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=${process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview'}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.AZURE_OPENAI_KEY },
+    body: JSON.stringify({
+      messages: [{ role: 'system', content: sys }, { role: 'user', content: question }],
+      temperature: 0.4, max_tokens: 200, response_format: { type: 'json_object' }
+    })
+  }).then(x => x.json());
+
+  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOW_ORIGIN || '*');
+  res.json(JSON.parse(r.choices[0].message.content)); // → { repo, message }
+}
+```
+
+`{ "repo": "<레포이름>", "message": "<답변>" }` 을 반환하면 도시가 그리로 달려가고, 남은 후보는 한 번에 고르는 대안으로 보여줘요. 엔드포인트가 안 닿으면 택시기사는 조용히 로컬 검색으로 폴백합니다.
+
 ### (선택) AI 프록시 모드 — Vercel + Azure OpenAI
 
 최고 품질의 택시기사를 원하면 `api/taxi.js`를 Vercel에 배포하세요.

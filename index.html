@@ -1750,23 +1750,45 @@ const STOP=new Set(['관련','레포','repo','보여줘','알려줘','찾아줘'
 function tokens(q){ return (q.toLowerCase().match(/[a-z0-9]+|[가-힣]+/g)||[]).filter(t=>t.length>1&&!STOP.has(t)); }
 function expand(toks){ const set=new Set(); toks.forEach(t=>{ set.add(t); for(const k in SYN){ if(t.includes(k)||k.includes(t)) SYN[k].forEach(x=>set.add(x)); if(SYN[k].some(s=>s.includes(t)&&t.length>2)) SYN[k].forEach(x=>set.add(x)); } }); return [...set]; }
 function hay(r){ return (r.repo+' '+r.label+' '+(r.lang||'')+' '+(r.desc||'')+' '+((r.topics||[]).join(' '))).toLowerCase(); }
-function scoreRepo(r,terms){ const h=hay(r); let s=0; terms.forEach(t=>{ if(h.includes(t)){ s+=3; if((r.repo+' '+r.label).toLowerCase().includes(t)) s+=4; if((r.topics||[]).some(tp=>tp.toLowerCase()===t)) s+=3; } }); return s; }
-function localIntent(q){
+/* ---- search index: inverted index + per-repo token sets, built once (lazily) ---- */
+let INVIDX=new Map(), _idxBuilt=false;
+function buildSearchIndex(){ if(_idxBuilt) return; _idxBuilt=true; INVIDX=new Map();
+  REPOS.forEach((r,i)=>{ const set=new Set();
+    [r.repo,r.label,r.lang,r.desc].forEach(s=>tokens(String(s||'')).forEach(t=>set.add(t)));
+    (r.topics||[]).forEach(tp=>tokens(tp).forEach(t=>set.add(t)));
+    r._name=new Set([...tokens(r.repo),...tokens(r.label||'')]);
+    r._topics=new Set((r.topics||[]).map(x=>String(x).toLowerCase()));
+    r._tok=new Set(expand([...set])); r._hay=hay(r);
+    r._tok.forEach(tk=>{ let s=INVIDX.get(tk); if(!s){ s=new Set(); INVIDX.set(tk,s); } s.add(i); }); }); }
+function scoreRepo(r,terms,raw){ const nm=r._name||new Set(), tk=r._tok||new Set(), tp=r._topics||new Set(), h=r._hay||hay(r); let s=0;
+  terms.forEach(t=>{ if(nm.has(t)) s+=7; else if(tk.has(t)) s+=4; else if(h.includes(t)) s+=2; if(tp.has(t)) s+=3; });
+  (raw||[]).forEach(t=>{ if(nm.has(t)) s+=6; });   // the user's own word appearing in the repo name wins
+  return s; }
+/* index-backed candidate retrieval: collect via inverted index, then rank */
+function searchCandidates(q,n=8){ buildSearchIndex(); const raw=tokens(q); const terms=expand(raw); const cand=new Set();
+  terms.forEach(t=>{ const s=INVIDX.get(t); if(s) s.forEach(i=>cand.add(i)); });
+  const pool=cand.size?[...cand].map(i=>REPOS[i]):REPOS;
+  const ranked=pool.map(r=>({r,s:scoreRepo(r,terms,raw)+Math.log1p(r.score||0)*0.15})).sort((a,b)=>b.s-a.s);
+  const hits=ranked.filter(x=>x.s>=3);
+  return { list:(hits.length?hits:ranked).slice(0,n).map(x=>x.r), strong:hits.length>0, terms }; }
+function deterministicIntent(q){
   const ql=q.toLowerCase();
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
-  if(/인기|popular|제일|최고|best|top|많이|핫|hot/.test(ql)) return pick(byRank()[0],t('leadPopular'),byRank().slice(1,3));
+  if(/인기|popular|제일|최고|best|top|많이|핫|hot/.test(ql)){ const a=byRank(); return pick(a[0],t('leadPopular'),a.slice(1,4)); }
   if(/아무|랜덤|random|골라|추천만/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
-  if(/스타|star|별/.test(ql)){ const r=[...REPOS].sort((a,b)=>b.stars-a.stars)[0]; return pick(r,t('leadStar'),[...REPOS].sort((a,b)=>b.stars-a.stars).slice(1,3)); }
-  if(/최근|recent|새로|new|요즘 만든/.test(ql)){ const r=[...REPOS].sort((a,b)=>new Date(b.pushed)-new Date(a.pushed))[0]; return pick(r,t('leadRecent'),[]); }
-  if(/방문|visitor|트래픽|traffic|왕래|사람 많/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.visitors||0)-(x.visitors||0)); return pick(a[0],t('leadVisitors'),a.slice(1,3)); }
-  if(/클론|clone|다운로드|download|받아|설치/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.clones||0)-(x.clones||0)); return pick(a[0],t('leadClones'),a.slice(1,3)); }
-  if(/포크|fork|파생|갈라/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.forks||0)-(x.forks||0)); return pick(a[0],t('leadForks'),a.slice(1,3)); }
-  if(/조회|view|뷰|페이지뷰/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.views||0)-(x.views||0)); return pick(a[0],t('leadViews'),a.slice(1,3)); }
-  const terms=expand(tokens(q));
-  const ranked=REPOS.map(r=>({r,s:scoreRepo(r,terms)+Math.log1p(r.score||0)*0.15})).sort((a,b)=>b.s-a.s);
-  const hits=ranked.filter(x=>x.s>=3);
-  if(hits.length){ return pick(hits[0].r, t('leadMatch'), hits.slice(1,3).map(x=>x.r)); }
-  return pick(byRank()[0], t('leadFallback'), byRank().slice(1,3), true);
+  if(/스타|star|별/.test(ql)){ const a=[...REPOS].sort((x,y)=>y.stars-x.stars); return pick(a[0],t('leadStar'),a.slice(1,4)); }
+  if(/최근|recent|새로|new|요즘 만든/.test(ql)){ const a=[...REPOS].sort((x,y)=>new Date(y.pushed)-new Date(x.pushed)); return pick(a[0],t('leadRecent'),a.slice(1,4)); }
+  if(/방문|visitor|트래픽|traffic|왕래|사람 많/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.visitors||0)-(x.visitors||0)); return pick(a[0],t('leadVisitors'),a.slice(1,4)); }
+  if(/클론|clone|다운로드|download|받아|설치/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.clones||0)-(x.clones||0)); return pick(a[0],t('leadClones'),a.slice(1,4)); }
+  if(/포크|fork|파생|갈라/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.forks||0)-(x.forks||0)); return pick(a[0],t('leadForks'),a.slice(1,4)); }
+  if(/조회|view|뷰|페이지뷰/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.views||0)-(x.views||0)); return pick(a[0],t('leadViews'),a.slice(1,4)); }
+  return null;
+}
+function localIntent(q){
+  const det=deterministicIntent(q); if(det) return det;
+  const sc=searchCandidates(q,8);
+  if(sc.strong) return pick(sc.list[0], t('leadMatch'), sc.list.slice(1,4));
+  return pick(byRank()[0], t('leadFallback'), byRank().slice(1,4), true);
 }
 function byRank(){ return [...REPOS].sort((a,b)=>(a.rank||0)-(b.rank||0)); }
 function pick(repo,lead,alts,weak){
@@ -1779,6 +1801,8 @@ function replyFor(repo,lead){ const r=pick(repo,lead||'',[]); addMsg('bot',r.mes
 /* ---- Mode B: WebLLM (in-browser, no key) ---- */
 let webllmEngine=null;
 async function webllmAsk(q){
+  const det=deterministicIntent(q); if(det) return det;             // intent filter: library/metric → no LLM, deterministic
+  const sc=searchCandidates(q,8); const cand=sc.list;               // retrieval: narrow to index top-K (RAG)
   if(!navigator.gpu){ addMsg('bot',t('noGpu')); return localIntent(q); }
   if(!webllmEngine){
     const note=addMsg('bot',t('downloading')); note.classList.add('typing');
@@ -1787,35 +1811,39 @@ async function webllmAsk(q){
       note.remove();
     }catch(e){ note.remove(); addMsg('bot',t('loadFail')); return localIntent(q); }
   }
-  const catalog=REPOS.map(r=>`- ${r.repo} | ${r.lang} | ★${r.stars} 👁${r.visitors} ⬇${r.clones||0} ⑂${r.forks} | ${(r.topics||[]).slice(0,5).join(',')} | ${(r.desc||'').slice(0,70)}`).join('\n');
+  const catalog=cand.map(r=>`- ${r.repo} | ${r.lang} | ★${r.stars} 👁${r.visitors} ⬇${r.clones||0} ⑂${r.forks} | ${(r.topics||[]).slice(0,5).join(',')} | ${(r.desc||'').slice(0,70)}`).join('\n');
   const sys=(LANG==='ko'
-    ? `너는 Repolis(내 모든 GitHub 레포가 사는 도시)의 친절한 택시기사야. 아래 레포 목록 중에서 사용자의 요청에 가장 맞는 레포 하나를 골라 한국어로 짧고 상냥하게 추천해. 마지막 줄에 반드시 정확히 "PICK: <레포이름>" 형식으로 골라줘.\n\n[레포목록]\n${catalog}`
-    : `You are the friendly taxi driver of Repolis, a city where all of my GitHub repos live. From the repo list below, pick the single best repo for the user's request and recommend it warmly in a short English reply. On the very last line, output exactly "PICK: <repo-name>".\n\n[REPOS]\n${catalog}`);
+    ? `너는 Repolis(내 모든 GitHub 레포가 사는 도시)의 친절한 택시기사야. 반드시 아래 [후보] 목록 안에서만 사용자의 요청에 가장 맞는 레포 하나를 골라 한국어로 짧고 상냥하게 추천해. 목록에 없는 레포는 절대 지어내지 마. 딱 맞는 게 없으면 목록 맨 위 것을 골라. 마지막 줄에 반드시 정확히 "PICK: <레포이름>" 형식으로 출력해.\n\n[후보]\n${catalog}`
+    : `You are the friendly taxi driver of Repolis, a city of my GitHub repos. Pick the single best repo ONLY from the [CANDIDATES] list below for the user's request, and recommend it warmly in a short English reply. Never invent a repo not in the list; if none fits well, pick the top one. On the very last line, output exactly "PICK: <repo-name>".\n\n[CANDIDATES]\n${catalog}`);
   try{
-    const res=await webllmEngine.chat.completions.create({ messages:[{role:'system',content:sys},{role:'user',content:q}], temperature:0.6, max_tokens:220 });
+    const res=await webllmEngine.chat.completions.create({ messages:[{role:'system',content:sys},{role:'user',content:q}], temperature:0.5, max_tokens:200 });
     const txt=res.choices[0].message.content||''; const m=txt.match(/PICK:\s*([A-Za-z0-9._-]+)/);
-    const repo=m?REPOS.find(r=>r.repo.toLowerCase()===m[1].toLowerCase()):null;
+    let repo=m?(cand.find(r=>r.repo.toLowerCase()===m[1].toLowerCase())||REPOS.find(r=>r.repo.toLowerCase()===m[1].toLowerCase())):null;
+    if(!repo) repo=cand[0];
     const clean=txt.replace(/PICK:.*/i,'').trim().replace(/\n/g,'<br>');
-    if(repo) return { repo, message:clean||pick(repo,'',[]).message, alts:[] };
-    return { repo:(localIntent(q).repo), message:clean||t('thisOne'), alts:[] };
+    const alts=cand.filter(r=>r!==repo).slice(0,3);
+    return { repo, message:clean||pick(repo,'',[]).message, alts };
   }catch(e){ addMsg('bot',t('ansFail')); return localIntent(q); }
 }
 
 /* ---- Mode C: external proxy (Vercel → Azure OpenAI) ---- */
 function proxyUrl(){ return localStorage.getItem('taxiProxyUrl')||''; }
 async function proxyAsk(q){
+  const det=deterministicIntent(q); if(det) return det;             // intent filter: library/metric → no remote call
   let url=proxyUrl();
   if(!url){ url=(prompt(t('proxyPromptUrl'))||'').trim(); if(url) localStorage.setItem('taxiProxyUrl',url); }
   if(!url){ addMsg('bot',t('proxyNoUrl')); return localIntent(q); }
-  const catalog=REPOS.map(r=>({repo:r.repo,label:r.label,lang:r.lang,stars:r.stars,visitors:r.visitors,clones:r.clones,forks:r.forks,topics:(r.topics||[]).slice(0,5),desc:(r.desc||'').slice(0,80)}));
+  const sc=searchCandidates(q,8); const cand=sc.list;               // retrieval: send only index top-K candidates (RAG)
+  const catalog=cand.map(r=>({repo:r.repo,label:r.label,lang:r.lang,stars:r.stars,visitors:r.visitors,clones:r.clones,forks:r.forks,topics:(r.topics||[]).slice(0,5),desc:(r.desc||'').slice(0,80)}));
   try{
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,repos:catalog})});
     if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json();
     const repo=data.repo?REPOS.find(r=>r.repo.toLowerCase()===String(data.repo).toLowerCase()):null;
+    const main=repo||cand[0];
     const msg=(data.message||t('thisOne')).replace(/\n/g,'<br>');
-    if(repo) return { repo, message:msg, alts:[] };
-    return { ...localIntent(q), message:msg };
+    const alts=cand.filter(r=>r!==main).slice(0,3);
+    return { repo:main, message:msg, alts };
   }catch(e){ addMsg('bot',(LANG==='ko'?'😢 프록시 연결 실패(':'😢 Proxy connection failed (')+e.message+(LANG==='ko'?'). 로컬검색으로 안내할게요.':'). Falling back to local search.')); return localIntent(q); }
 }
 
@@ -2064,6 +2092,10 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__libView=(back=20)=>{ player.position.set(0,0,LIB._z-LIB._cw-back); model.rotation.y=0; camYaw=Math.PI; camPitch=0.34; camDist=42; return {z:+player.position.z.toFixed(1)}; };
   window.__tp=(x,z,yaw=Math.PI,pitch=0.30,dist=24)=>{ player.position.set(x,0,z); model.rotation.y=Math.PI-yaw; camYaw=yaw; camPitch=pitch; camDist=dist; return {x,z}; };
   window.__libInfo=()=>({count:LIBCOUNT, pos:{x:+LIB._pos.x.toFixed(1),z:+LIB._pos.z.toFixed(1)}, cats:LIBDATA.length});
+  window.__cand=(q)=>{ const sc=searchCandidates(q,8); return {strong:sc.strong, list:sc.list.map(r=>r.repo)}; };
+  window.__intent=(q)=>{ const r=localIntent(q); return { repo:(r.repo&&(r.repo.repo||r.repo.label))||null, isLib:!!(r.repo&&r.repo._isLibrary), alts:(r.alts||[]).map(a=>a.label) }; };
+  window.__det=(q)=>{ const d=deterministicIntent(q); return d?{repo:(d.repo.repo||d.repo.label), isLib:!!d.repo._isLibrary, alts:(d.alts||[]).map(a=>a.label)}:null; };
+  window.__idx=()=>{ buildSearchIndex(); return {built:_idxBuilt, tokens:INVIDX.size, repos:REPOS.length}; };
   window.__pos=()=>({x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2)});
   window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)});
   window.__near=()=>nearest?(nearest._isLibrary?'__LIB__':nearest.repo):null;

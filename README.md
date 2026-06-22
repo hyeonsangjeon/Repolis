@@ -92,6 +92,72 @@ gh auth login
 GTM_DIR=data python3 scripts/build_repos.py   # regenerates repos.json
 ```
 
+### 🚕 AI taxi driver — modes, intent routing & indexing
+
+The driver turns a free‑text question into the right house through a small **retrieval pipeline**, so it stays accurate even on a tiny in‑browser model:
+
+```
+your question
+  └▶ ① intent agent (deterministic) ─ "library / 도서관", "most popular", "most stars",
+  │      landmark & metric routing      "recent", "most cloned·forked·viewed", "random"
+  │      → answered directly, no LLM     → exact, zero hallucination
+  └▶ ② search index (inverted index) ─ tokens(name·label·lang·desc·topics) + synonyms,
+  │      candidate retrieval             built once, lazily → top‑K shortlist
+  └▶ ③ ranking ────────────────────── name‑hit ≫ token‑hit ≫ substring, +topic, +popularity,
+  │                                      and your *own* word in a repo name wins
+  └▶ ④ LLM picks from candidates (RAG)─ WebLLM / proxy choose ONLY among the shortlist → "PICK: <repo>"
+  └▶ ⑤ multiple suggestions ────────── the remaining candidates become one‑tap chips you can pick from
+```
+
+Why it matters: *"take me to the library"* is a **navigation** intent, not a repo search — step ① catches it and drives you to the Contribution Library instead of guessing a random repo (the bug you'd hit when the question went straight to the model). Free‑form questions ("an AI agent repo", "speech‑to‑text") flow through ②–⑤.
+
+**Three modes** — switch from the chat header:
+
+| Mode | Engine | Key? | Notes |
+|---|---|---|---|
+| **Local** | synonym + metric search | none | default, instant, fully offline |
+| **WebLLM** | in‑browser LLM (WebGPU) | none | downloads ~1 GB once; picks from the index shortlist |
+| **AI proxy** | your serverless endpoint | server‑side | highest quality (e.g. Azure OpenAI) |
+
+The browser always does retrieval first and hands the model only the **shortlisted candidates** — so a WebLLM/proxy agent just has to choose one:
+
+```jsonc
+// POST /api/taxi — request the city sends (already shortlisted, not the full catalog)
+{
+  "question": "show me a repo about an AI agent",
+  "repos": [
+    { "repo": "multi-agent-orchestration-observability", "lang": "Python",
+      "stars": 12, "topics": ["agent","observability","llm"], "desc": "…" },
+    { "repo": "strands-bedrock-agents-cookbook", "lang": "Jupyter Notebook", "…": "…" }
+  ]
+}
+```
+
+```js
+// api/taxi.js — minimal agent: pick ONE from the candidates, return strict JSON
+export default async function handler(req, res) {
+  const { question, repos } = req.body;
+  const sys = `You are the Repolis taxi driver. Choose the single best repo for the user
+ONLY from this candidate list (never invent one). Reply warmly in one or two sentences.
+Return strict JSON {"repo":"<repo-name>","message":"<reply>"}.
+Candidates:\n${repos.map(r => `- ${r.repo} | ${r.lang} | ${(r.topics||[]).join(',')} | ${r.desc}`).join('\n')}`;
+
+  const r = await fetch(`${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=${process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview'}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.AZURE_OPENAI_KEY },
+    body: JSON.stringify({
+      messages: [{ role: 'system', content: sys }, { role: 'user', content: question }],
+      temperature: 0.4, max_tokens: 200, response_format: { type: 'json_object' }
+    })
+  }).then(x => x.json());
+
+  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOW_ORIGIN || '*');
+  res.json(JSON.parse(r.choices[0].message.content)); // → { repo, message }
+}
+```
+
+Return `{ "repo": "<repo-name>", "message": "<reply>" }`; the city drives there and offers the remaining candidates as one‑tap alternatives. If the endpoint is unreachable, the driver silently falls back to local search.
+
 ### (Optional) AI proxy mode — Vercel + Azure OpenAI
 
 For the highest‑quality taxi driver, deploy `api/taxi.js` to Vercel:
