@@ -1279,11 +1279,12 @@ addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.upd
    the world runs solo and simply shows "🟢 1". Everything is wrapped so a missing
    or broken backend never affects the single-player experience. */
 /* To enable the live / today / cumulative visitor counters for EVERY visitor,
-   deploy the (free) realtime room and paste its endpoint here once:
-     1) from this folder:  npx partykit deploy
-     2) RT_DEFAULT = 'wss://repolis.<you>.partykit.dev/parties/main/world'
+   deploy the (free) realtime room and paste its wss endpoint here once.
+   Deployed on Cloudflare Workers (see cloudflare/ — free SQLite Durable Object):
+     cd cloudflare && npx wrangler deploy  ->  wss://repolis-rt.<you>.workers.dev
+   (PartyKit alt: npx partykit deploy -> wss://repolis.<you>.partykit.dev/parties/main/world)
    With RT_DEFAULT empty the world runs solo and just shows "🟢 1". */
-const RT_DEFAULT='';
+const RT_DEFAULT='wss://repolis-rt.wingnut0310.workers.dev';
 const RT_URL=(new URLSearchParams(location.search).get('rt'))||localStorage.getItem('repolisRT')||window.REPOLIS_RT||RT_DEFAULT;
 const liveCountEl=document.getElementById('liveCount'), todayWrap=document.getElementById('todayWrap'), todayCountEl=document.getElementById('todayCount'), allWrap=document.getElementById('allWrap'), allCountEl=document.getElementById('allCount');
 function guestId(){ let id=localStorage.getItem('repolisGuestId'); if(!id){ id='g'+Math.random().toString(36).slice(2,9); localStorage.setItem('repolisGuestId',id); } return id; }
