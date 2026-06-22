@@ -17,7 +17,7 @@
 Every house is a repo. Its height, brightness, ornamentation and garden don't grow from ⭐ — they grow from **real traffic** (visitors · clones · forks · views).
 Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the cab **physically drives over, picks you up, and takes you to that house.**
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Hail the 🚕 taxi in Repolis, ride to a repo's house, and open its card" width="86%"></a>
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Hail the 🚕 taxi in Repolis, ride to a repo's house, open its card, and jump straight to the repo on GitHub" width="86%"></a>
 
 <sub>▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>Live demo</b></a> · Built with Three.js · one single <code>index.html</code></sub>
 
