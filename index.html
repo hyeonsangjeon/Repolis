@@ -843,19 +843,27 @@ for(let i=0;i<96;i++){ const a=Math.random()*Math.PI*2, r=172+Math.random()*52;
 }
 
 /* ---- sign texture ---- */
-function signTexture(text){
-  const S=3, W=320, H=100;
+function signTexture(text, accent){
+  const S=3, W=340, H=116;
   const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const ctx=cv.getContext('2d'); ctx.scale(S,S);
-  const grad=ctx.createLinearGradient(0,6,0,94); grad.addColorStop(0,'#fffaf0'); grad.addColorStop(1,'#f3e3c6');
-  ctx.fillStyle=grad; rr(ctx,6,6,308,88,16); ctx.fill();
-  ctx.lineWidth=5.5; ctx.strokeStyle='#9c6b3f'; rr(ctx,6,6,308,88,16); ctx.stroke();
-  ctx.lineWidth=1.6; ctx.strokeStyle='#c79a63'; rr(ctx,11,11,298,78,12); ctx.stroke();
-  ctx.fillStyle='#3c2613'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='800 30px -apple-system, system-ui, sans-serif';
+  const ac='#'+(((accent==null?0x6b4a2e:accent)>>>0)&0xffffff).toString(16).padStart(6,'0');
+  // cream plate
+  const grad=ctx.createLinearGradient(0,6,0,110); grad.addColorStop(0,'#fffdf6'); grad.addColorStop(1,'#f1e2c4');
+  ctx.fillStyle=grad; rr(ctx,7,7,326,102,17); ctx.fill();
+  // vivid category colour band across the top
+  ctx.save(); rr(ctx,7,7,326,102,17); ctx.clip(); ctx.fillStyle=ac; ctx.fillRect(7,7,326,30); ctx.restore();
+  // bold coloured frame for legibility at distance
+  ctx.lineWidth=7; ctx.strokeStyle=ac; rr(ctx,7,7,326,102,17); ctx.stroke();
+  ctx.lineWidth=1.8; ctx.strokeStyle='rgba(255,255,255,0.65)'; rr(ctx,13,13,314,90,13); ctx.stroke();
+  // name — bigger, with a white halo so it reads from across the city
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='800 34px -apple-system, system-ui, sans-serif';
   const words=text.split(' '); let line='', lines=[];
-  for(const w of words){ const test=line?line+' '+w:w; if(ctx.measureText(test).width>286 && line){ lines.push(line); line=w; } else line=test; }
+  for(const w of words){ const test=line?line+' '+w:w; if(ctx.measureText(test).width>296 && line){ lines.push(line); line=w; } else line=test; }
   if(line) lines.push(line); lines=lines.slice(0,2);
-  const y0=50-(lines.length-1)*17;
-  lines.forEach((l,i)=>ctx.fillText(l,160,y0+i*34,292));
+  const y0=70-(lines.length-1)*19;
+  lines.forEach((l,i)=>{ const y=y0+i*38;
+    ctx.lineWidth=6; ctx.lineJoin='round'; ctx.strokeStyle='rgba(255,255,255,0.95)'; ctx.strokeText(l,170,y,300);
+    ctx.fillStyle='#241405'; ctx.fillText(l,170,y,300); });
   const t=new THREE.CanvasTexture(cv);
   t.anisotropy=MAXANISO; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
   t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
@@ -1002,9 +1010,60 @@ function makeChow(){
   const nose=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), basic(0x2b1c12)); nose.position.set(0,0.69,0.99); c.add(nose);
   [-0.16,0.16].forEach(x=>{ const ear=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.22,7), toon(fur2)); ear.position.set(x,0.99,0.52); c.add(ear);
     const eye=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,8), basic(0x2b1c12)); eye.position.set(x*0.7,0.79,0.84); c.add(eye); });
-  const tail=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8), toon(fur2)); tail.position.set(0,0.7,-0.5); tail.scale.set(0.8,1.1,0.8); c.add(tail);
-  [[-0.27,0.4],[0.27,0.4],[-0.27,-0.33],[0.27,-0.33]].forEach(([x,z])=>{ const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.34,7), toon(fur)); leg.position.set(x,0.17,z); c.add(leg); });
+  const tail=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8), toon(fur2)); tail.position.set(0,0.78,-0.46); tail.scale.set(0.8,1.15,0.8); tail.rotation.x=0.5; c.add(tail);
+  const legs=[];
+  [[-0.27,0.4],[0.27,0.4],[-0.27,-0.33],[0.27,-0.33]].forEach(([x,z])=>{ const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.34,7), toon(fur)); leg.position.set(x,0.17,z); c.add(leg); legs.push(leg); });
+  c.userData.tail=tail; c.userData.legs=legs;
   return c;
+}
+
+/* ---- chow-chows that playfully roam the plaza, + pond & driveway-garage helpers ---- */
+const CHOWS=[];
+function pickChowTarget(d){ const a=Math.random()*Math.PI*2, rr=12+Math.random()*22; d.userData.tx=Math.cos(a)*rr; d.userData.tz=Math.sin(a)*rr; d.userData.wait=0.3+Math.random()*1.8; }
+function updateChows(t,dt){
+  for(const d of CHOWS){ const u=d.userData;
+    if(u.tail) u.tail.rotation.z=Math.sin(t*10+(u.ph||0))*0.55;            // happy tail wag
+    if(u.wld){
+      if((u.wait||0)>0){ u.wait-=dt; d.position.y*=0.8; if(u.legs) u.legs.forEach(l=>l.rotation.x*=0.8); continue; }
+      const dx=u.tx-d.position.x, dz=u.tz-d.position.z, dd=Math.hypot(dx,dz);
+      if(dd<0.5){ pickChowTarget(d); continue; }
+      const step=Math.min(dd,u.spd*dt); d.position.x+=dx/dd*step; d.position.z+=dz/dd*step;
+      d.rotation.y=lerpA(d.rotation.y,Math.atan2(dx,dz),0.18);
+      d.position.y=Math.abs(Math.sin(t*11+(u.ph||0)))*0.12;               // trotting bounce
+      if(u.legs) u.legs.forEach((l,i)=>l.rotation.x=Math.sin(t*11+i*1.6)*0.5);
+      const r=Math.hypot(d.position.x,d.position.z);
+      if(r<9){ d.position.x*=9/r; d.position.z*=9/r; pickChowTarget(d); }
+      else if(r>148){ d.position.x*=148/r; d.position.z*=148/r; pickChowTarget(d); }
+    } else { d.position.y=Math.abs(Math.sin(t*5+(u.ph||0)))*0.05; }        // garden dog idle hop
+  }
+}
+for(let i=0;i<4;i++){ const d=makeChow(); const a=(i/4)*Math.PI*2, rr=14+Math.random()*12;
+  d.position.set(Math.cos(a)*rr,0,Math.sin(a)*rr); d.scale.setScalar(0.92);
+  d.userData.wld=true; d.userData.spd=1.5+Math.random()*0.9; d.userData.ph=Math.random()*9; pickChowTarget(d); scene.add(d); CHOWS.push(d); }
+
+function addPond(g,yr){
+  const pr=Math.min(yr*0.32,1.7), px=yr*0.52, pz=-yr*0.34;
+  const water=new THREE.Mesh(new THREE.CircleGeometry(pr,26), new THREE.MeshBasicMaterial({color:0x3f8fb0}));
+  water.rotation.x=-Math.PI/2; water.position.set(px,0.05,pz); g.add(water);
+  const hi=new THREE.Mesh(new THREE.CircleGeometry(pr*0.46,18), new THREE.MeshBasicMaterial({color:0x9fd8e6,transparent:true,opacity:0.5}));
+  hi.rotation.x=-Math.PI/2; hi.position.set(px-pr*0.18,0.052,pz-pr*0.12); g.add(hi);
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(pr,0.13,6,26), toon(0x8d7c5b)); rim.rotation.x=Math.PI/2; rim.position.set(px,0.07,pz); g.add(rim);
+  for(let i=0;i<2;i++){ const lp=new THREE.Mesh(new THREE.CircleGeometry(0.2,8), basic(0x57a046));
+    lp.rotation.x=-Math.PI/2; lp.position.set(px+(Math.random()-0.5)*pr*1.2,0.075,pz+(Math.random()-0.5)*pr*1.2); g.add(lp); }
+}
+function addGarage(g,w,d,yr,roofColor){
+  const gx=-(w*0.5+1.5), gz=d*0.06; if(Math.abs(gx)>yr+0.8) return;
+  const gar=rbox(2.5,2.1,2.7,0xeae2d1,0.08); gar.position.set(gx,1.05,gz); outline(gar,0.04); g.add(gar);
+  const gr=makeRoof('hip',2.5,2.1,roofColor); gr.position.set(gx,0,gz); g.add(gr);
+  const sh=rbox(1.8,1.45,0.12,0x97a0aa,0.05); sh.position.set(gx,0.82,gz+1.36); g.add(sh);
+  for(let i=0;i<3;i++){ const ln=rbox(1.7,0.05,0.02,0x7c858f,0); ln.position.set(gx,0.5+i*0.36,gz+1.43); g.add(ln); }
+  const dw=rbox(2.2,0.05,3.0,0x6c7077,0.02); dw.position.set(gx,0.04,gz+2.6); g.add(dw);
+  const car=new THREE.Group();
+  const cb=rbox(1.6,0.5,0.82,0xcf4f3a,0.12); cb.position.y=0.46; outline(cb,0.03); car.add(cb);
+  const cc=rbox(0.95,0.42,0.76,0xeef0f2,0.1); cc.position.set(-0.08,0.84,0); car.add(cc);
+  [[-0.55,0.44],[0.55,0.44],[-0.55,-0.44],[0.55,-0.44]].forEach(([x,z])=>{ const wl=new THREE.Mesh(new THREE.CylinderGeometry(0.21,0.21,0.16,12), toon(0x202020));
+    wl.rotation.x=Math.PI/2; wl.position.set(x,0.22,z); car.add(wl); });
+  car.position.set(gx,0,gz+2.7); car.rotation.y=Math.PI/2; g.add(car);
 }
 
 /* ---- grand-house parts: wings, porch, balcony, portico, cupola, dormer ---- */
@@ -1123,7 +1182,10 @@ function makeBuilding(repo){
   for(let i=0;i<nt;i++){ const a=Math.random()*Math.PI*2, rr=yr*(0.62+Math.random()*0.28);
     const trunk=new THREE.Mesh(GEO_TRUNK,MAT_TRUNK); trunk.position.set(Math.cos(a)*rr,0.45,Math.sin(a)*rr); trunk.castShadow=true; g.add(trunk);
     const crown=new THREE.Mesh(GEO_CROWN,MAT_CROWN); crown.position.set(Math.cos(a)*rr,1.32,Math.sin(a)*rr); crown.scale.y=1.1; crown.castShadow=true; g.add(crown); }
-  if(rich>0.5){ const dog=makeChow(); const a=Math.random()*Math.PI*2; dog.position.set(Math.cos(a)*yr*0.5,0,Math.sin(a)*yr*0.5); dog.rotation.y=-a+Math.PI/2; dog.scale.setScalar(0.85); g.add(dog); }
+  if(rich>0.5){ const dog=makeChow(); const a=Math.random()*Math.PI*2; dog.position.set(Math.cos(a)*yr*0.5,0,Math.sin(a)*yr*0.5); dog.rotation.y=-a+Math.PI/2; dog.scale.setScalar(0.85); dog.userData.ph=Math.random()*9; g.add(dog); CHOWS.push(dog); }
+  // a koi pond for lively/active repos, a driveway garage for well-starred/forked ones
+  if(repo.stars>=8 || repo._activity>0.7) addPond(g,yr);
+  if(repo.stars>=11 || (repo.forks||0)>=4) addGarage(g,w,d,yr,repo.roof);
 
   // body + roof (score-tiered silhouette: cabin→cottage→house→townhouse→villa→manor→mansion + tower/shop)
   const bodyR=(kind==='tower'||kind==='townhouse')?0.12:0.2;
@@ -1178,11 +1240,11 @@ function makeBuilding(repo){
     const sx=(sc>1?(i/(sc-1)-0.5):0)*Math.min(w*0.95,3.4); st.position.set(sx,h+3.0,0); st.scale.setScalar(0.95); g.add(st); }
 
   // signboard — placement adapts to the entrance feature so columns/porch/awning never hide the repo name
-  let signW=2.7, signH=0.84, signY=2.62, signZ=d/2+0.34;
-  if(kind==='manor'||kind==='mansion'){ signW=3.0; signH=0.78; signY=3.6; signZ=d/2+1.72; }  // on the portico frieze, in front of the columns
-  else if(kind==='house'){ signY=3.18; signZ=d/2+0.46; }                                       // above the porch roof
-  else if(kind==='shop'){ signY=2.98; signZ=d/2+0.36; }                                        // above the shop awning
-  const board=new THREE.Mesh(new THREE.PlaneGeometry(signW,signH), new THREE.MeshBasicMaterial({map:signTexture(repo.label),transparent:true}));
+  let signW=3.1, signH=1.06, signY=2.66, signZ=d/2+0.34;
+  if(kind==='manor'||kind==='mansion'){ signW=3.5; signH=1.19; signY=3.66; signZ=d/2+1.72; }  // on the portico frieze, in front of the columns
+  else if(kind==='house'){ signY=3.24; signZ=d/2+0.46; }                                       // above the porch roof
+  else if(kind==='shop'){ signY=3.04; signZ=d/2+0.36; }                                        // above the shop awning
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(signW,signH), new THREE.MeshBasicMaterial({map:signTexture(repo.label,(CATS[repo._cat]||CATS.Software).color),transparent:true}));
   board.position.set(0,signY,signZ); g.add(board);
   // category emblem high on the front, facing street
   const emb=new THREE.Mesh(new THREE.PlaneGeometry(1.1,1.1), new THREE.MeshBasicMaterial({map:emblemTexture(repo._cat),transparent:true,depthWrite:false}));
@@ -1970,6 +2032,7 @@ function animate(){
 
   for(const c of clouds){ c.position.x+=c.userData.spd*dt; if(c.position.x>300) c.position.x=-300; }
   updateSmoke(clock.elapsedTime);
+  updateChows(clock.elapsedTime,dt);
   if(!isNight){ updateBirds(clock.elapsedTime); updateButterflies(clock.elapsedTime); }
   if(isNight){ bigStars.material.opacity=0.62+Math.sin(clock.elapsedTime*2.6)*0.38; starsGroup.rotation.y+=dt*0.0016; updateFireflies(clock.elapsedTime); }
   updateMeteor(dt);
@@ -2099,6 +2162,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__pos=()=>({x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2)});
   window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)});
   window.__near=()=>nearest?(nearest._isLibrary?'__LIB__':nearest.repo):null;
+  window.__chows=()=>({n:CHOWS.length, wld:CHOWS.filter(c=>c.userData.wld).length, tail:!!(CHOWS[0]&&CHOWS[0].userData.tail), sample:CHOWS.filter(c=>c.userData.wld).slice(0,4).map(c=>[+c.position.x.toFixed(2),+c.position.z.toFixed(2)])});
+  window.__feat=()=>({pond:buildings.filter(b=>b.stars>=8||b._activity>0.7).length, garage:buildings.filter(b=>b.stars>=11||(b.forks||0)>=4).length, buildings:buildings.length});
   window.__act=()=>({prompt:document.getElementById('prompt').classList.contains('show'), btn:document.getElementById('actBtn').classList.contains('avail')});
   window.__cw=(name)=>{ const b=buildings.find(x=>x.repo===name); return b?+(b._cw||3).toFixed(2):null; };
   window.__farZRepo=()=>{ let best=null,bz=-1e9; for(const b of buildings){ if(b._isLibrary) continue; if(b._z>bz){ bz=b._z; best=b; } } return best?{repo:best.repo,x:+best._x.toFixed(1),z:+best._z.toFixed(1)}:null; };
