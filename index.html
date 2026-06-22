@@ -179,7 +179,10 @@
   #drivebar { position: fixed; z-index: 13; left: 50%; top: 64px; transform: translateX(-50%);
     background: rgba(74,47,30,.9); color: #fff; font-size: 13px; font-weight: 700; padding: 9px 18px;
     border-radius: 14px; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 22px rgba(0,0,0,.25); }
-  #drivebar .cancel { background: rgba(255,255,255,.22); border-radius: 8px; padding: 3px 9px; font-size: 11px; cursor: pointer; }
+  #drivebar .cancel { position: relative; overflow: hidden; background: rgba(255,255,255,.22); border-radius: 8px; padding: 3px 10px; font-size: 11px; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none; }
+  #drivebar .cancel .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(231,76,60,.9); }
+  #drivebar .cancel.holding .fill { width: 100%; transition: width 1s linear; }
+  #drivebar .cancel .lbl { position: relative; z-index: 1; }
 </style>
 </head>
 <body>
@@ -243,7 +246,7 @@
 <button id="actBtn" title="Open" aria-label="Open">🚪</button>
 <div class="hint" data-i18n-html="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기</div>
 
-<div id="drivebar"><span data-i18n="drivePre">🚕 </span><span id="driveName"></span><span data-i18n="drivePost"> (으)로 가는 중…</span> <span class="cancel" id="driveCancel" data-i18n="stop">멈추기</span></div>
+<div id="drivebar"><span data-i18n="drivePre">🚕 </span><span id="driveName"></span><span data-i18n="drivePost"> (으)로 가는 중…</span> <span class="cancel" id="driveCancel"><span class="fill"></span><span class="lbl" data-i18n="stop">멈추기</span></span></div>
 
 <button id="taxiBtn">🚕<span class="pulse"></span></button>
 <div id="chat" class="hidden">
@@ -312,7 +315,7 @@ const I18N = {
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
     enterTown:'마을 입장 →',
     hint:'집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기',
-    drivePre:'🚕 ', drivePost:' (으)로 가는 중…', stop:'멈추기',
+    drivePre:'🚕 ', drivePost:' (으)로 가는 중…', stop:'🛑 꾹 눌러 내리기',
     taxiTitle:'🚕 레포 택시기사',
     modeLocalOpt:'로컬검색 · 무키', modeWebllmOpt:'WebLLM · 브라우저AI', modeProxyOpt:'AI 프록시 · 고품질',
     chatPh:'어떤 레포를 찾으세요? 예: RAG 관련',
@@ -345,7 +348,7 @@ const I18N = {
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
     enterTown:'Enter the town →',
     hint:'Walk up to a house (repo) · ☰ Wayfinding · 🚕 Ask the taxi driver',
-    drivePre:'🚕 Driving to ', drivePost:'…', stop:'Stop',
+    drivePre:'🚕 Driving to ', drivePost:'…', stop:'🛑 Hold to get off',
     taxiTitle:'🚕 Repo Taxi Driver',
     modeLocalOpt:'Local search · no key', modeWebllmOpt:'WebLLM · Browser AI', modeProxyOpt:'AI proxy · high quality',
     chatPh:'Which repo are you after? e.g. about RAG',
@@ -1520,7 +1523,14 @@ chatText.addEventListener('keydown',e=>{ if(e.code==='Enter'){ e.preventDefault(
 modeSel.onchange=e=>{ llmMode=e.target.value;
   if(llmMode==='proxy'&&!proxyUrl()){ const u=(prompt(t('proxyPromptUrl'))||'').trim(); if(u) localStorage.setItem('taxiProxyUrl',u); }
   addMsg('bot', llmMode==='local'?t('modeLocalMsg'):llmMode==='webllm'?t('modeWebllmMsg'):t('modeProxyMsg')); };
-document.getElementById('driveCancel').onclick=()=>{ endDrive(); navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; };
+/* hold-to-get-off: the cab no longer cancels on a stray key — hold the bar's button ~1s to step out */
+(()=>{ const dc=document.getElementById('driveCancel'); let exitHold=null;
+  const reset=()=>{ endDrive(); navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; };
+  const start=e=>{ if(e&&e.cancelable) e.preventDefault(); if(!ride||exitHold) return; dc.classList.add('holding');
+    exitHold=setTimeout(()=>{ exitHold=null; dc.classList.remove('holding'); reset(); }, 1000); };
+  const stop=()=>{ dc.classList.remove('holding'); if(exitHold){ clearTimeout(exitHold); exitHold=null; } };
+  dc.addEventListener('pointerdown',start); dc.addEventListener('pointerup',stop);
+  dc.addEventListener('pointerleave',stop); dc.addEventListener('pointercancel',stop); })();
 
 /* ====================== LOOP ====================== */
 const clock=new THREE.Clock(); const up=new THREE.Vector3(0,1,0);
@@ -1536,8 +1546,7 @@ function animate(){
   const userInput = keys['Space']||keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
   let moving=false;
   if(ride){
-    if(userInput && ride.phase!=='arriving'){ endDrive(); }
-    else {
+    { // ride no longer auto-cancels on key input — exit only via the hold-to-get-off button
       ride.t+=dt;
       if(ride.phase==='coming'){
         const dd=driveTaxiToward(player.position.x,player.position.z,24,dt,3.2);
