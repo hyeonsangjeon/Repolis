@@ -1,0 +1,16 @@
+name = "repolis-rt"
+main = "src/server.js"
+compatibility_date = "2025-04-01"
+
+# workers.dev gives a free public URL: https://repolis-rt.<your-subdomain>.workers.dev
+workers_dev = true
+
+[[durable_objects.bindings]]
+name = "REPOLIS_ROOM"
+class_name = "RepolisRoom"
+
+# new_sqlite_classes => SQLite-backed Durable Objects, which are on the FREE
+# Workers plan (no credit card). Do not change to new_classes (that needs a paid plan).
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RepolisRoom"]

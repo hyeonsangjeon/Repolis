@@ -82,6 +82,7 @@ github-traffic-monitor (private)        Repolis (public)
 정적 사이트는 기본이 솔로예요. 방문자끼리 만나게 하려면, 작은 WebSocket 서버 하나를 띄우고 월드가 거길 바라보게 하면 됩니다:
 
 - **PartyKit (명령 한 줄):** `npx partykit deploy` (`party/repolis.js` + `partykit.json` 사용). `wss://repolis.<당신>.partykit.dev/parties/main/world` 같은 URL이 생겨요.
+- **Cloudflare Workers (가장 안정적):** `cd cloudflare && npx wrangler login && npx wrangler deploy`. 같은 서버를 당신의 Cloudflare 계정에 **무료 플랜**으로 바로 올려요(SQLite Durable Objects·카드 불필요). `wss://repolis-rt.<당신>.workers.dev` URL이 나와요. 자세한 건 `cloudflare/README.md`. PartyKit 호스팅 로그인이 말썽일 때 특히 유용해요.
 - **셀프호스트:** `node scripts/dev_realtime.mjs` (`npm i ws` 필요) → `ws://localhost:1999` 에서 동작.
 - **월드에 연결** — 아래 중 하나로:
   - URL 쿼리: `?rt=wss://…`

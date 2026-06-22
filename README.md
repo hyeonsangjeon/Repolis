@@ -82,6 +82,7 @@ For the highest‑quality taxi driver, deploy `api/taxi.js` to Vercel:
 The static site is solo by default. To let visitors meet each other, run one tiny WebSocket server and point the world at it:
 
 - **PartyKit (one command):** `npx partykit deploy` (uses `party/repolis.js` + `partykit.json`). You'll get a URL like `wss://repolis.<you>.partykit.dev/parties/main/world`.
+- **Cloudflare Workers (most reliable):** `cd cloudflare && npx wrangler login && npx wrangler deploy`. Deploys the same server straight to your own Cloudflare account on the **free** plan (SQLite Durable Objects, no credit card). You'll get `wss://repolis-rt.<you>.workers.dev`. See `cloudflare/README.md`. Handy when PartyKit's hosted login is having a bad day.
 - **Self‑host:** `node scripts/dev_realtime.mjs` (needs `npm i ws`) → listens on `ws://localhost:1999`.
 - **Point the world at it** with any one of:
   - URL query: `?rt=wss://…`
