@@ -459,6 +459,15 @@ function rbox(w,h,d,color,r=0.12,seg=3){
   const m = new THREE.Mesh(new RoundedBoxGeometry(w,h,d,seg,r), toon(color));
   m.castShadow = true; m.receiveShadow = true; return m;
 }
+/* soft rounded primitives (for cute, non-boxy characters) */
+function ball(r,color,seg=18){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r,seg,Math.max(8,seg-4)), toon(color));
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
+function capsule(r,len,color,seg=12){
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r,len,5,seg), toon(color));
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
 
 /* ---- lights (golden hour warmth) ---- */
 const hemi = new THREE.HemisphereLight(0xcfeee8, 0x86996a, 0.85); scene.add(hemi);
@@ -1083,36 +1092,46 @@ const driver=new THREE.Group(); driver.position.set(TAXI_POS.x-1.7,0,TAXI_POS.z+
 })();
 driver.rotation.y=-2.2; scene.add(driver);
 
-/* ---- character (chibi, cute) ---- */
+/* ---- character (chibi, cute — soft rounded forms, no hard boxes) ---- */
 const player=new THREE.Group(); const model=new THREE.Group(); player.add(model);
 const SHIRT=0x3aa0d8, SKIN=0xf2cca2, HAIR=0x2c2521, PANTS=0x33406e, BAGC=0xe05642;
-const body=rbox(1.0,0.95,0.62,SHIRT,0.18); body.position.y=1.35; outline(body,0.045); model.add(body);
-const collar=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.07,8,20,Math.PI*1.25), basic(0x2f86b8)); collar.position.set(0,1.74,0.16); collar.rotation.set(Math.PI*0.5,0,Math.PI*0.875); model.add(collar);
-const placket=rbox(0.1,0.78,0.06,0x2f86b8,0.02); placket.position.set(0,1.36,0.32); model.add(placket); // shirt button line
-const head=rbox(1.12,1.0,1.0,SKIN,0.28,4); head.position.y=2.3; outline(head,0.05); model.add(head);
-const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.27,0.33,0.36,12), toon(SKIN)); neck.position.y=1.86; neck.castShadow=true; model.add(neck);
-const hair=rbox(1.2,0.55,1.08,HAIR,0.22,4); hair.position.y=2.72; outline(hair,0.04); model.add(hair);
-const fringe=rbox(1.2,0.3,0.3,HAIR,0.1); fringe.position.set(0,2.55,0.48); model.add(fringe);
-[[-0.6],[0.6]].forEach(([sx])=>{ const s=rbox(0.16,0.62,0.92,HAIR,0.06); s.position.set(sx,2.42,-0.02); model.add(s); }); // side hair framing the face
-// eyes (with catch-light) + brows + smile + cheeks
-[[-0.26],[0.26]].forEach(([ex])=>{
-  const e=new THREE.Mesh(new THREE.SphereGeometry(0.115,12,10), basic(0x2a2320)); e.position.set(ex,2.28,0.52); e.scale.z=0.5; model.add(e);
-  const hl=new THREE.Mesh(new THREE.SphereGeometry(0.036,8,6), basic(0xffffff)); hl.position.set(ex+0.045,2.32,0.575); model.add(hl);
+// torso — soft bean, slightly flattened front-to-back
+const body=capsule(0.45,0.46,SHIRT); body.position.y=1.4; body.scale.z=0.82; outline(body,0.04); model.add(body);
+const collar=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.07,10,24,Math.PI*1.3), basic(0x2f86b8)); collar.position.set(0,1.78,0.17); collar.rotation.set(Math.PI*0.5,0,Math.PI*0.85); model.add(collar);
+const placket=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.7,8), basic(0x2f86b8)); placket.position.set(0,1.4,0.34); model.add(placket); // shirt button line
+const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.28,0.3,14), toon(SKIN)); neck.position.y=1.88; neck.castShadow=true; model.add(neck);
+// head — rounded egg (faceMat = night glow material)
+const head=ball(0.58,SKIN,22); head.position.y=2.3; head.scale.set(1.0,0.98,0.96); outline(head,0.045); model.add(head);
+// hair — rounded cap + soft fringe + side locks
+const hair=ball(0.62,HAIR,20); hair.position.set(0,2.5,-0.05); hair.scale.set(1.04,0.82,1.06); outline(hair,0.035); model.add(hair);
+const fringe=ball(0.5,HAIR,16); fringe.position.set(0,2.62,0.3); fringe.scale.set(1.08,0.46,0.7); model.add(fringe);
+[[-0.54],[0.54]].forEach(([sx])=>{ const s=ball(0.26,HAIR,14); s.position.set(sx,2.32,0.0); s.scale.set(0.6,1.15,0.96); model.add(s); }); // side hair framing the face
+// eyes (with catch-light) + brows + tiny nose + smile + cheeks
+[[-0.24],[0.24]].forEach(([ex])=>{
+  const e=new THREE.Mesh(new THREE.SphereGeometry(0.12,14,12), basic(0x2a2320)); e.position.set(ex,2.3,0.5); e.scale.z=0.55; model.add(e);
+  const hl=new THREE.Mesh(new THREE.SphereGeometry(0.038,8,6), basic(0xffffff)); hl.position.set(ex+0.05,2.34,0.55); model.add(hl);
 });
-[[-0.26,1],[0.26,-1]].forEach(([ex,s])=>{ const b=rbox(0.27,0.075,0.08,HAIR,0.02); b.position.set(ex,2.47,0.5); b.rotation.z=s*0.13; model.add(b); }); // friendly brows
-{ const mouth=new THREE.Mesh(new THREE.TorusGeometry(0.12,0.03,8,16,Math.PI), basic(0x9c5a4a)); mouth.position.set(0,2.07,0.52); mouth.rotation.z=Math.PI; model.add(mouth); } // smile
-[[-0.4],[0.4]].forEach(([cx])=>{
-  const c=new THREE.Mesh(new THREE.CircleGeometry(0.12,12), new THREE.MeshBasicMaterial({color:0xffa9a0,transparent:true,opacity:.7}));
-  c.position.set(cx,2.08,0.515); model.add(c);
+[[-0.24,1],[0.24,-1]].forEach(([ex,s])=>{ const b=new THREE.Mesh(new THREE.CapsuleGeometry(0.03,0.18,3,8), toon(HAIR)); b.rotation.z=Math.PI/2+s*0.16; b.position.set(ex,2.5,0.49); model.add(b); }); // friendly brows
+{ const nose=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6), toon(0xeab98c)); nose.position.set(0,2.22,0.56); model.add(nose); }
+{ const mouth=new THREE.Mesh(new THREE.TorusGeometry(0.12,0.028,8,16,Math.PI), basic(0x9c5a4a)); mouth.position.set(0,2.09,0.5); mouth.rotation.z=Math.PI; model.add(mouth); } // smile
+[[-0.38],[0.38]].forEach(([cx])=>{
+  const c=new THREE.Mesh(new THREE.CircleGeometry(0.11,14), new THREE.MeshBasicMaterial({color:0xffa9a0,transparent:true,opacity:.6}));
+  c.position.set(cx,2.12,0.52); model.add(c);
 });
-const bag=rbox(0.78,0.85,0.4,BAGC,0.12); bag.position.set(0,1.4,-0.46); outline(bag,0.04); model.add(bag);
-const armL=rbox(0.3,0.85,0.3,SHIRT,0.12); armL.position.set(-0.66,1.45,0); outline(armL,0.035); model.add(armL);
-const armR=armL.clone(); armR.position.x=0.66; model.add(armR);
-const legL=rbox(0.38,0.85,0.38,PANTS,0.12); legL.position.set(-0.24,0.5,0); outline(legL,0.035); model.add(legL);
-const legR=legL.clone(); legR.position.x=0.24; model.add(legR);
-const shoeL=rbox(0.42,0.28,0.5,0x4a3a2a,0.08); shoeL.position.set(-0.24,0.14,0.08); model.add(shoeL);
-const shoeR=shoeL.clone(); shoeR.position.x=0.24; model.add(shoeR);
-const blob=new THREE.Mesh(new THREE.CircleGeometry(1.05,28), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0x07142e,transparent:true,opacity:0.32,depthWrite:false}));
+// backpack — rounded
+const bag=capsule(0.34,0.42,BAGC); bag.position.set(0,1.46,-0.48); bag.scale.z=0.66; outline(bag,0.035); model.add(bag);
+const bagFlap=ball(0.3,0xc6452f,12); bagFlap.position.set(0,1.62,-0.5); bagFlap.scale.set(1.05,0.7,0.7); model.add(bagFlap);
+// arms — capsules on shoulder pivots (swing from the shoulder)
+const armL=new THREE.Group(); armL.position.set(-0.5,1.78,0); model.add(armL);
+{ const a=capsule(0.15,0.44,SHIRT); a.position.y=-0.32; outline(a,0.03); armL.add(a);
+  const h=ball(0.155,SKIN,12); h.position.y=-0.66; armL.add(h); }
+const armR=armL.clone(); armR.position.x=0.5; model.add(armR);
+// legs — capsules on hip pivots, rounded shoes inside (swing together)
+const legL=new THREE.Group(); legL.position.set(-0.2,0.92,0); model.add(legL);
+{ const l=capsule(0.18,0.42,PANTS); l.position.y=-0.33; outline(l,0.03); legL.add(l);
+  const sh=new THREE.Mesh(new THREE.SphereGeometry(0.23,14,12), toon(0x4a3a2a)); sh.scale.set(1.0,0.7,1.45); sh.position.set(0,-0.7,0.12); sh.castShadow=true; legL.add(sh); }
+const legR=legL.clone(); legR.position.x=0.2; model.add(legR);
+const blob=new THREE.Mesh(new THREE.CircleGeometry(1.0,28), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0x07142e,transparent:true,opacity:0.32,depthWrite:false}));
 blob.rotation.x=-Math.PI/2; blob.position.y=0.03; player.add(blob); // soft contact shadow
 faceLight=new THREE.PointLight(0xfff0d8,0,15,1.5); faceLight.position.set(0,2.35,0.7); model.add(faceLight);
 faceMat=head.material;
