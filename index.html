@@ -511,7 +511,20 @@ function toonGradient(){
   const t = new THREE.DataTexture(c, c.length, 1, THREE.RedFormat); t.needsUpdate = true; return t;
 }
 const GRAD = toonGradient();
-const toon = (color)=> new THREE.MeshToonMaterial({ color, gradientMap:GRAD });
+/* shared fresnel rim light (cel "Wind Waker" silhouette glow) — pure shader math, injected into every toon material */
+const RIM = { color:{value:new THREE.Color(0xcfeaff)}, power:{value:2.8}, strength:{value:0.16} };
+function applyRim(mat){
+  mat.onBeforeCompile = (sh)=>{
+    sh.uniforms.uRimColor=RIM.color; sh.uniforms.uRimPower=RIM.power; sh.uniforms.uRimStrength=RIM.strength;
+    sh.fragmentShader = 'uniform vec3 uRimColor; uniform float uRimPower; uniform float uRimStrength;\n'+sh.fragmentShader;
+    sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>',
+      '  float _rim=pow(1.0-clamp(dot(normalize(normal),normalize(vViewPosition)),0.0,1.0),uRimPower);\n'+
+      '  gl_FragColor.rgb+=uRimColor*(_rim*uRimStrength);\n#include <dithering_fragment>');
+  };
+  mat.customProgramCacheKey=()=>'rimtoon'+(mat.map?'M':'')+(mat.gradientMap?'G':'');
+  return mat;
+}
+const toon = (color)=> applyRim(new THREE.MeshToonMaterial({ color, gradientMap:GRAD }));
 const basic = (color)=> new THREE.MeshBasicMaterial({ color });
 
 /* ---- cartoon outline (inverted hull) ---- */
@@ -760,7 +773,7 @@ const GRASS_TEX=_noiseTex('#8cc55f',[['#6fa847',46,9,22,0.5],['#9ed36f',40,7,18,
 const ASPHALT_TEX=_noiseTex('#3b3f47',[['#31343c',64,5,13,0.55],['#23252b',42,3,8,0.5],['#4a4e57',72,2,5,0.4],['#585d67',30,1,3,0.5]]);
 const DIRT_TEX=_noiseTex('#e1d3b3',[['#cfbd95',52,7,17,0.5],['#d8c9a3',40,5,12,0.42],['#b69d76',46,2,5,0.55],['#efe6cf',24,3,9,0.4]]);
 const SAND_TEX=_noiseTex('#d8c596',[['#cdb985',40,7,16,0.45],['#e3d3a8',34,5,12,0.4],['#c3ad7c',30,2,5,0.5]]);
-function texMat(tex, rx, ry, clone=true){ const t=clone?tex.clone():tex; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); t.anisotropy=MAXANISO; t.needsUpdate=true; return new THREE.MeshToonMaterial({ map:t, gradientMap:GRAD }); }
+function texMat(tex, rx, ry, clone=true){ const t=clone?tex.clone():tex; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); t.anisotropy=MAXANISO; t.needsUpdate=true; return applyRim(new THREE.MeshToonMaterial({ map:t, gradientMap:GRAD })); }
 
 /* ---- ground ---- */
 const ground = new THREE.Mesh(new THREE.CircleGeometry(300,72), texMat(GRASS_TEX,59,59,false));
@@ -1374,6 +1387,7 @@ function setTimeOfDay(night){
   hemi.intensity = night?0.55:0.85; hemi.color.setHex(night?0x3b4c86:0xcfeee8); hemi.groundColor.setHex(night?0x1b2030:0x86996a);
   scene.fog.color.setHex(night?0x18203c:0xcfe7da);
   renderer.toneMappingExposure = night?1.05:1.08;
+  RIM.color.value.setHex(night?0x9fb6ff:0xcfeaff); RIM.strength.value=night?0.34:0.16; RIM.power.value=night?2.2:2.8;
   moon.visible=night; starsGroup.visible=night; fireflyGroup.visible=night;
   birdFlock.visible=!night; butterflyGroup.visible=!night;
   LAMP_BULBS.forEach(b=>b.material.color.setHex(night?0xfff0c2:0xffe6a8));
