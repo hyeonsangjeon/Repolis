@@ -166,21 +166,22 @@
   #loading { position: fixed; inset: 0; z-index: 40; background: #5fb0a8; color: #fff; display: flex;
     align-items: center; justify-content: center; font-size: 15px; font-weight: 600; }
 
-  #stick, #look { position: fixed; z-index: 11; bottom: 26px; width: 120px; height: 120px;
-    border-radius: 50%; background: rgba(255,255,255,.2); border: 2px solid rgba(255,255,255,.45);
-    display: none; touch-action: none; }
-  #stick { left: 26px; } #look { right: 26px; }
-  #stick .nub, #look .nub { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; border-radius: 50%;
-    background: rgba(255,255,255,.8); box-shadow: 0 3px 10px rgba(0,0,0,.2); }
-  #look .nub { background: rgba(255,255,255,.62); }
-  #look .ico { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 26px; opacity: .42; pointer-events: none; }
-  #actBtn { position: fixed; z-index: 12; left: 50%; transform: translateX(-50%); bottom: 42px;
-    width: 66px; height: 66px; border-radius: 50%; border: none; cursor: pointer; font-size: 28px;
+  /* ---- Roblox-style touch controls: floating left thumbstick + drag-to-look right half + round action button ---- */
+  #joy { position: fixed; z-index: 11; width: 134px; height: 134px; margin-left: -67px; margin-top: -67px;
+    border-radius: 50%; display: none; pointer-events: none; touch-action: none;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.18), rgba(255,255,255,.06) 70%);
+    border: 2px solid rgba(255,255,255,.4); box-shadow: 0 4px 18px rgba(0,0,0,.18); }
+  #joy .nub { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px;
+    transform: translate(-50%,-50%); border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #fff, rgba(255,255,255,.82) 70%);
+    box-shadow: 0 4px 12px rgba(0,0,0,.24); }
+  #actBtn { position: fixed; z-index: 12; right: 24px; bottom: 30px;
+    width: 74px; height: 74px; border-radius: 50%; border: none; cursor: pointer; font-size: 30px;
     align-items: center; justify-content: center; background: #fff; color: #c2702f;
-    box-shadow: 0 8px 22px rgba(60,30,10,.3); display: none; }
+    box-shadow: 0 8px 22px rgba(60,30,10,.3); display: none; transition: transform .12s; }
+  #actBtn:active { transform: scale(.92); }
+  canvas { touch-action: none; }
   @media (hover: none) and (pointer: coarse) {
-    #stick, #look { display: block; }
     #actBtn.avail { display: flex; }
     .hint { display: none; }
   }
@@ -197,7 +198,7 @@
     animation: tpulse 2s ease-out infinite; pointer-events: none; }
   @keyframes tpulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
   @media (hover: none) and (pointer: coarse) {
-    #taxiBtn { right: 30px; bottom: 158px; }
+    #taxiBtn { right: 30px; bottom: 116px; }
   }
   #chat { position: fixed; z-index: 14; right: 14px; bottom: 88px; width: 360px; max-width: calc(100vw - 28px);
     background: rgba(255,251,242,.97); backdrop-filter: blur(12px); border-radius: 20px;
@@ -307,8 +308,7 @@
   </div>
 </div>
 
-<div id="stick"><div class="nub"></div></div>
-<div id="look"><div class="ico">👁️</div><div class="nub"></div></div>
+<div id="joy"><div class="nub"></div></div>
 <button id="actBtn" title="Open" aria-label="Open">🚪</button>
 <div class="hint" data-i18n-html="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기</div>
 
@@ -1495,12 +1495,12 @@ addEventListener('keyup',e=>{ if(isTyping()) return; keys[e.code]=false; });
 let camYaw=Math.PI, camPitch=0.42, camDist=13, dragging=false, dragBtn=0, px=0, py=0, dragMoved=false, freeLook=false;
 const dom=renderer.domElement;
 addEventListener('contextmenu',e=>e.preventDefault(),true);          // WoW: suppress the browser right-click menu globally (capture phase, any target — canvas, HUD, overlays)
-dom.addEventListener('pointerdown',e=>{ if(e.button!==0&&e.button!==2) return;
+dom.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch') return; if(e.button!==0&&e.button!==2) return;
   dragging=true; dragBtn=e.button; dragMoved=false; px=e.clientX; py=e.clientY;
   if(e.button===2) e.preventDefault();
   try{ dom.setPointerCapture(e.pointerId); }catch(_){}
   dom.style.cursor='grabbing'; document.body.style.cursor='grabbing'; });
-addEventListener('pointermove',e=>{ if(!dragging) return;
+addEventListener('pointermove',e=>{ if(e.pointerType==='touch') return; if(!dragging) return;
   const dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
   if(Math.abs(dx)+Math.abs(dy)>3) dragMoved=true;
   camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005));
@@ -1510,23 +1510,47 @@ addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&dragBtn===0&&nearest
   dragging=false; dom.style.cursor=''; document.body.style.cursor=''; });
 dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
 
-let stickVec={x:0,y:0}; const stick=document.getElementById('stick'), nub=stick.querySelector('.nub'); let stickId=null;
-stick.addEventListener('pointerdown',e=>{ stickId=e.pointerId; stick.setPointerCapture(e.pointerId); moveStick(e); });
-stick.addEventListener('pointermove',e=>{ if(e.pointerId===stickId) moveStick(e); });
-stick.addEventListener('pointerup',()=>{ stickId=null; stickVec={x:0,y:0}; nub.style.left='35px'; nub.style.top='35px'; });
-function moveStick(e){ const r=stick.getBoundingClientRect(); let dx=e.clientX-(r.left+60), dy=e.clientY-(r.top+60);
-  const d=Math.hypot(dx,dy), mx=42; if(d>mx){ dx*=mx/d; dy*=mx/d; }
-  nub.style.left=(35+dx)+'px'; nub.style.top=(35+dy)+'px'; stickVec={x:dx/mx,y:dy/mx}; }
-
-/* right-side look stick: rotate camera (WoW mouselook) + pitch — pairs with the left move stick on touch */
-let lookVec={x:0,y:0}; const lookEl=document.getElementById('look'), lookNub=lookEl.querySelector('.nub'); let lookId=null;
-lookEl.addEventListener('pointerdown',e=>{ lookId=e.pointerId; lookEl.setPointerCapture(e.pointerId); moveLook(e); });
-lookEl.addEventListener('pointermove',e=>{ if(e.pointerId===lookId) moveLook(e); });
-lookEl.addEventListener('pointerup',()=>{ lookId=null; lookVec={x:0,y:0}; lookNub.style.left='35px'; lookNub.style.top='35px'; });
-function moveLook(e){ const r=lookEl.getBoundingClientRect(); let dx=e.clientX-(r.left+60), dy=e.clientY-(r.top+60);
-  const d=Math.hypot(dx,dy), mx=42; if(d>mx){ dx*=mx/d; dy*=mx/d; }
-  lookNub.style.left=(35+dx)+'px'; lookNub.style.top=(35+dy)+'px'; lookVec={x:dx/mx,y:dy/mx}; }
-/* center action button: open the repo you're standing at (mobile substitute for Enter) */
+/* ===== Roblox-style touch controls =====
+   Left half: a floating thumbstick spawns wherever you first touch (drives stickVec — camera-relative move).
+   Right half: drag anywhere to look (delta -> camYaw/camPitch, steers the character like WoW mouselook).
+   Multi-touch: move + look run at once (one finger per side). Buttons/HUD sit above the canvas and take their own taps. */
+let stickVec={x:0,y:0};
+const joy=document.getElementById('joy'), joyNub=joy.querySelector('.nub');
+let moveTid=null, joyOX=0, joyOY=0; const JOYR=54;
+let lookTid=null, lookLX=0, lookLY=0, lookMoved=false;
+function setNub(dx,dy){ joyNub.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }
+dom.addEventListener('pointerdown',e=>{
+  if(e.pointerType!=='touch') return;
+  if(e.clientX < innerWidth*0.5 && moveTid===null){
+    moveTid=e.pointerId; joyOX=e.clientX; joyOY=e.clientY;
+    joy.style.left=joyOX+'px'; joy.style.top=joyOY+'px'; joy.style.display='block'; setNub(0,0);
+    try{ dom.setPointerCapture(e.pointerId); }catch(_){}
+  } else if(lookTid===null){
+    lookTid=e.pointerId; lookLX=e.clientX; lookLY=e.clientY; lookMoved=false;
+    try{ dom.setPointerCapture(e.pointerId); }catch(_){}
+  }
+});
+dom.addEventListener('pointermove',e=>{
+  if(e.pointerType!=='touch') return;
+  if(e.pointerId===moveTid){
+    let dx=e.clientX-joyOX, dy=e.clientY-joyOY; const d=Math.hypot(dx,dy);
+    if(d>JOYR){ dx*=JOYR/d; dy*=JOYR/d; }
+    setNub(dx,dy); stickVec={x:dx/JOYR,y:dy/JOYR};
+  } else if(e.pointerId===lookTid){
+    const dx=e.clientX-lookLX, dy=e.clientY-lookLY; lookLX=e.clientX; lookLY=e.clientY;
+    if(Math.abs(dx)+Math.abs(dy)>2) lookMoved=true;
+    camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005));
+    if(Math.abs(dx)>0.5){ model.rotation.y=camYaw+Math.PI; freeLook=false; }
+  }
+});
+function endTouch(e){
+  if(e.pointerType!=='touch') return;
+  if(e.pointerId===moveTid){ moveTid=null; stickVec={x:0,y:0}; joy.style.display='none'; }
+  else if(e.pointerId===lookTid){ if(!lookMoved&&nearest&&!modalOpen) openCard(nearest); lookTid=null; }
+}
+dom.addEventListener('pointerup',endTouch);
+dom.addEventListener('pointercancel',endTouch);
+/* round action button (bottom-right): open the repo you're standing at (mobile substitute for Enter) */
 const actBtn=document.getElementById('actBtn');
 actBtn.addEventListener('click',()=>{ if(nearest&&!modalOpen) openCard(nearest); });
 
@@ -1850,8 +1874,6 @@ function animate(){
   model.position.y=Math.abs(Math.sin(walk))*0.14;
   model.rotation.z=Math.sin(walk)*0.035;
 
-  if(lookVec.x||lookVec.y){ camYaw-=lookVec.x*2.4*dt; camPitch=Math.min(1.1,Math.max(0.12,camPitch-lookVec.y*1.5*dt));
-    if(Math.abs(lookVec.x)>0.06){ model.rotation.y=camYaw+Math.PI; freeLook=false; } }
   if(!dragging&&moving&&!freeLook) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,0.04);
   const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist, oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist, oy=Math.sin(camPitch)*camDist;
   camera.position.lerp(new THREE.Vector3(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz),0.12);
@@ -1996,7 +2018,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__lib=()=>{ openCard(LIB); return true; };
   window.__libView=(back=20)=>{ player.position.set(0,0,LIB._z-LIB._cw-back); model.rotation.y=0; camYaw=Math.PI; camPitch=0.34; camDist=42; return {z:+player.position.z.toFixed(1)}; };
   window.__tp=(x,z,yaw=Math.PI,pitch=0.30,dist=24)=>{ player.position.set(x,0,z); model.rotation.y=Math.PI-yaw; camYaw=yaw; camPitch=pitch; camDist=dist; return {x,z}; };
-  window.__libInfo=()=>({count:LIBCOUNT, pos:{x:+LIB._pos.x.toFixed(1),z:+LIB._pos.z.toFixed(1)}, cats:LIBDATA.length}); }
+  window.__libInfo=()=>({count:LIBCOUNT, pos:{x:+LIB._pos.x.toFixed(1),z:+LIB._pos.z.toFixed(1)}, cats:LIBDATA.length});
+  window.__pos=()=>({x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2)});
+  window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)}); }
 </script>
 </body>
 </html>
