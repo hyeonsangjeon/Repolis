@@ -921,14 +921,32 @@ for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, nx=Math.cos(ang+Math.PI/2), nz=Ma
   [22,52,84,116,146].forEach(r=>{ const bx=Math.cos(ang)*r, bz=Math.sin(ang)*r, off=4.3;
     makeLamp(bx+nx*off,bz+nz*off); makeLamp(bx-nx*off,bz-nz*off); }); }
 for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+Math.PI/6; makeLamp(Math.cos(a)*11.2,Math.sin(a)*11.2); }
+const SEATS=[];
 function makeBench(x,z,rot){
   const g=new THREE.Group();
   const seat=rbox(1.8,0.16,0.6,0x9a6b3f,0.05); seat.position.y=0.5; outline(seat,0.03); g.add(seat);
   const back=rbox(1.8,0.6,0.14,0x9a6b3f,0.05); back.position.set(0,0.85,-0.24); outline(back,0.03); g.add(back);
   [-0.72,0.72].forEach(sx=>{ const leg=rbox(0.16,0.5,0.52,0x6e4a2e,0.03); leg.position.set(sx,0.25,0); g.add(leg); });
   g.position.set(x,0,z); g.rotation.y=rot; scene.add(g);
+  SEATS.push({x,z,rot,y:0.58,pos:new THREE.Vector3(x,0,z)});
 }
 for(let i=0;i<4;i++){ const a=i/4*Math.PI*2+Math.PI/4; makeBench(Math.cos(a)*8.0,Math.sin(a)*8.0,-a+Math.PI/2); }
+// shaded rest pavilions (쉼터) tucked between the ring streets, each with two benches facing in
+function makePavilion(px,pz){
+  const g=new THREE.Group(); g.position.set(px,0,pz); scene.add(g);
+  const deck=new THREE.Mesh(new THREE.CylinderGeometry(3.5,3.7,0.22,10), toon(0xcdb98f)); deck.position.y=0.11; deck.receiveShadow=true; g.add(deck);
+  const step=new THREE.Mesh(new THREE.CylinderGeometry(4.0,4.2,0.12,12), toon(0xbfa776)); step.position.y=0.05; g.add(step);
+  const R=3.0;
+  for(let i=0;i<6;i++){ const a=i/6*Math.PI*2; const col=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.19,3.0,10), toon(0xeae0cc));
+    col.position.set(Math.cos(a)*R,1.62,Math.sin(a)*R); outline(col,0.04); g.add(col); }
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(R,0.12,6,24), toon(0xd8cdb2)); ring.rotation.x=Math.PI/2; ring.position.y=3.05; g.add(ring);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(4.0,1.7,8), toon(0x9c5a3c)); roof.position.y=3.95; roof.rotation.y=Math.PI/8; outline(roof,0.05); g.add(roof);
+  const finial=new THREE.Mesh(new THREE.SphereGeometry(0.22,10,8), basic(0xffd23f)); finial.position.y=4.85; g.add(finial);
+  const lantern=new THREE.Mesh(new THREE.SphereGeometry(0.18,10,8), new THREE.MeshBasicMaterial({color:0xffdca0})); lantern.position.y=2.9; g.add(lantern);
+  makeBench(px+1.55, pz, -Math.PI/2);
+  makeBench(px-1.55, pz, Math.PI/2);
+}
+[[47,0.55],[74,2.35],[103,3.95],[131,5.45],[88,1.15]].forEach(([r,a])=>makePavilion(Math.cos(a)*r, Math.sin(a)*r));
 
 /* ---- repo category (topics/lang/name/desc) → roof emblem ---- */
 const CATS={
@@ -1583,7 +1601,7 @@ const keys={};
 const isTyping=()=>{ const a=document.activeElement; return a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
 addEventListener('keydown',e=>{ if(isTyping()) return; keys[e.code]=true;
   if(e.code==='Space') e.preventDefault();
-  if(e.code==='Enter'&&nearest&&!modalOpen) openCard(nearest);
+  if(e.code==='Enter'&&!modalOpen){ if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
   if(e.code==='Escape'){ closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ if(isTyping()) return; keys[e.code]=false; });
 
@@ -1601,7 +1619,7 @@ addEventListener('pointermove',e=>{ if(e.pointerType==='touch') return; if(!drag
   camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005));
   if(dragBtn===2){ model.rotation.y=camYaw+Math.PI; freeLook=false; }  // right drag = mouselook: steer character with the view
   else freeLook=true; });                                             // left drag = free look: camera holds its angle
-addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&dragBtn===0&&nearest&&!modalOpen) openCard(nearest);
+addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&dragBtn===0&&!modalOpen){ if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
   dragging=false; dom.style.cursor=''; document.body.style.cursor=''; });
 dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
 
@@ -1644,16 +1662,16 @@ function endTouch(e){
   if(e.pointerId===moveTid){
     // a tap on the move half (no joystick drag) opens the building you're standing at,
     // mirroring the look half — so tapping the house works wherever it renders on screen
-    if(!moveMoved && nearest && !modalOpen) openCard(nearest);
+    if(!moveMoved && !modalOpen){ if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
     moveTid=null; stickVec={x:0,y:0}; joy.style.display='none';
   }
-  else if(e.pointerId===lookTid){ if(!lookMoved&&nearest&&!modalOpen) openCard(nearest); lookTid=null; }
+  else if(e.pointerId===lookTid){ if(!lookMoved&&!modalOpen){ if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); } lookTid=null; }
 }
 dom.addEventListener('pointerup',endTouch);
 dom.addEventListener('pointercancel',endTouch);
 /* round action button (bottom-right): open the repo you're standing at (mobile substitute for Enter) */
 const actBtn=document.getElementById('actBtn');
-actBtn.addEventListener('click',()=>{ if(nearest&&!modalOpen) openCard(nearest); });
+actBtn.addEventListener('click',()=>{ if(modalOpen) return; if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); });
 
 /* ====================== UI ====================== */
 document.getElementById('totalCount').textContent=REPOS.length;
@@ -1773,6 +1791,9 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
   repo._ring.material.color.set(0x2f9d6a); }
 
 const promptEl=document.getElementById('prompt'); let nearest=null;
+let sitting=null, nearestSeat=null;
+function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; player.position.set(seat.x,0,seat.z); model.rotation.y=seat.rot; camYaw=seat.rot+Math.PI; walk=0; }
+function standUp(){ sitting=null; }
 document.getElementById('startBtn').onclick=()=> document.getElementById('intro').classList.add('hidden');
 document.getElementById('loading').style.display='none';
 
@@ -1926,7 +1947,7 @@ function driveTaxiToward(px,pz,speed,dt,stop=0){
     taxi.rotation.y=lerpA(taxi.rotation.y, Math.atan2(-dz,dx), 0.2); }
   return dd;
 }
-function taxiTo(repo){ ride={repo, phase:'coming', t:0}; setNav(repo); closeChat(); freeLook=false; model.visible=true;
+function taxiTo(repo){ standUp(); ride={repo, phase:'coming', t:0}; setNav(repo); closeChat(); freeLook=false; model.visible=true;
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
@@ -1986,6 +2007,7 @@ function animate(){
       }
     }
   } else {
+    if(sitting&&userInput) standUp();
     if(keys['KeyW']||keys['ArrowUp']) mv.add(tF);
     if(keys['KeyS']||keys['ArrowDown']) mv.sub(tF);
     if(keys['KeyD']||keys['ArrowRight']) mv.add(tR);
@@ -1999,11 +2021,17 @@ function animate(){
       model.rotation.y=lerpA(model.rotation.y,Math.atan2(mv.x,mv.z),0.2); walk+=dt*10; }
   }
   if(!moving) walk*=0.85;
-  const bob=Math.sin(walk)*0.5;
-  legL.rotation.x=bob; legR.rotation.x=-bob; armL.rotation.x=-bob; armR.rotation.x=bob;
-  armL.rotation.z=0.04+Math.abs(Math.sin(walk))*0.05; armR.rotation.z=-0.04-Math.abs(Math.sin(walk))*0.05;
-  model.position.y=Math.abs(Math.sin(walk))*0.14;
-  model.rotation.z=Math.sin(walk)*0.035;
+  if(sitting){
+    legL.rotation.x=legR.rotation.x=-1.5; legL.rotation.z=legR.rotation.z=0;
+    armL.rotation.x=armR.rotation.x=-0.25; armL.rotation.z=0.12; armR.rotation.z=-0.12;
+    model.position.y=-0.34; model.rotation.z=0;
+  } else {
+    const bob=Math.sin(walk)*0.5;
+    legL.rotation.x=bob; legR.rotation.x=-bob; armL.rotation.x=-bob; armR.rotation.x=bob;
+    armL.rotation.z=0.04+Math.abs(Math.sin(walk))*0.05; armR.rotation.z=-0.04-Math.abs(Math.sin(walk))*0.05;
+    model.position.y=Math.abs(Math.sin(walk))*0.14;
+    model.rotation.z=Math.sin(walk)*0.035;
+  }
 
   if(!dragging&&moving&&!freeLook) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,0.04);
   const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist, oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist, oy=Math.sin(camPitch)*camDist;
@@ -2020,10 +2048,14 @@ function animate(){
     const reach=Math.min(b._cw||3,10)+4.8;
     if(d<reach && d<nd){ nd=d; nearest=b; }
   }
-  if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
+  nearestSeat=null;
+  if(!sitting && !nearest){ let sd=2.5; for(const s of SEATS){ const d=player.position.distanceTo(s.pos); if(d<sd){ sd=d; nearestSeat=s; } } }
+  if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
+  else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
-      : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); }
-  else { promptEl.classList.remove('show'); actBtn.classList.remove('avail'); }
+      : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
+  else if(nearestSeat&&!modalOpen){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> 또는 버튼으로 <b>앉기</b> 🪑`:`<span class="key">Enter</span> or button to <b>sit</b> 🪑`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪑'; }
+  else { promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪'; }
 
   if(navTarget){ const dir=Math.atan2(navTarget._pos.x-player.position.x,navTarget._pos.z-player.position.z);
     navHolder.rotation.y=dir; navHolder.position.y=3.5+Math.sin(clock.elapsedTime*3)*0.15;
@@ -2163,6 +2195,10 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)});
   window.__near=()=>nearest?(nearest._isLibrary?'__LIB__':nearest.repo):null;
   window.__chows=()=>({n:CHOWS.length, wld:CHOWS.filter(c=>c.userData.wld).length, tail:!!(CHOWS[0]&&CHOWS[0].userData.tail), sample:CHOWS.filter(c=>c.userData.wld).slice(0,4).map(c=>[+c.position.x.toFixed(2),+c.position.z.toFixed(2)])});
+  window.__seat=()=>({near:nearestSeat?[+nearestSeat.x.toFixed(1),+nearestSeat.z.toFixed(1)]:null, sitting:!!sitting, seats:SEATS.length});
+  window.__sit=()=>{ if(nearestSeat){ sitDown(nearestSeat); return true; } return false; };
+  window.__stand=()=>{ standUp(); return true; };
+  window.__tpSeat=(i=0)=>{ const s=SEATS[i]; player.position.set(s.x,0,s.z); model.rotation.y=s.rot; camYaw=s.rot+Math.PI; camPitch=0.28; camDist=11; return {x:+s.x.toFixed(1),z:+s.z.toFixed(1),legY:+legL.rotation.x.toFixed(2)}; };
   window.__feat=()=>({pond:buildings.filter(b=>b.stars>=8||b._activity>0.7).length, garage:buildings.filter(b=>b.stars>=11||(b.forks||0)>=4).length, buildings:buildings.length});
   window.__act=()=>({prompt:document.getElementById('prompt').classList.contains('show'), btn:document.getElementById('actBtn').classList.contains('avail')});
   window.__cw=(name)=>{ const b=buildings.find(x=>x.repo===name); return b?+(b._cw||3).toFixed(2):null; };
