@@ -108,6 +108,44 @@
   .chip b { color: #d2622f; }
   .card .metricnote { font-size: 11px; color: #b39f8c; padding: 8px 24px 0; line-height: 1.4; }
 
+  /* ---- Contribution Library panel ---- */
+  #libModal { position: fixed; inset: 0; z-index: 22; display: none; align-items: center; justify-content: center;
+    background: rgba(24,14,6,.55); backdrop-filter: blur(5px); padding: 18px; }
+  #libModal.show { display: flex; }
+  .libcard { background: #fbf3e4; border-radius: 22px; width: 680px; max-width: 100%; max-height: 88vh;
+    display: flex; flex-direction: column; overflow: hidden; position: relative;
+    box-shadow: 0 26px 80px rgba(30,16,4,.5); animation: pop .24s cubic-bezier(.2,.9,.3,1.3); }
+  .libhead { padding: 20px 24px 17px; color: #fff; position: relative;
+    background: linear-gradient(135deg,#6a4a30 0%,#3c2a1b 100%); }
+  .libhead .ic { font-size: 30px; line-height: 1; }
+  .libhead h2 { font-size: 22px; margin: 7px 0 3px; letter-spacing: .01em; }
+  .libhead .sub { font-size: 12.5px; opacity: .9; line-height: 1.5; }
+  .libhead .cnt { display: inline-block; margin-top: 9px; font-size: 11px; font-weight: 800; letter-spacing: .03em;
+    color: #4a2f1e; background: #ffd98a; border-radius: 999px; padding: 4px 11px; }
+  .libhead .x { position: absolute; top: 14px; right: 16px; width: 34px; height: 34px; border-radius: 50%;
+    border: none; cursor: pointer; font-size: 18px; color: #fff; background: rgba(255,255,255,.16); }
+  .libhead .x:hover { background: rgba(255,255,255,.3); }
+  .libbody { overflow-y: auto; padding: 6px 16px 8px; -webkit-overflow-scrolling: touch; }
+  .libbody::-webkit-scrollbar { width: 8px; }
+  .libbody::-webkit-scrollbar-thumb { background: #e0cba6; border-radius: 6px; }
+  .libcat { padding: 12px 6px 4px; }
+  .libcat h3 { font-size: 13px; font-weight: 800; color: #8a5a2e; letter-spacing: .02em;
+    display: flex; align-items: center; gap: 7px; padding: 4px 8px; border-bottom: 2px solid #efdfc4; margin-bottom: 4px; }
+  .libcat h3 .n { margin-left: auto; font-size: 11px; font-weight: 700; color: #b89a6c; }
+  a.libitem { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border-radius: 11px;
+    text-decoration: none; color: inherit; transition: background .13s; }
+  a.libitem:hover { background: #f4e8d2; }
+  a.libitem .dot { flex: 0 0 auto; margin-top: 4px; width: 8px; height: 8px; border-radius: 50%; background: #d8a24e; }
+  a.libitem .tx { flex: 1; min-width: 0; }
+  a.libitem .ti { display: block; font-size: 13.5px; font-weight: 700; color: #43321f; line-height: 1.42; }
+  a.libitem .me { display: block; font-size: 11.5px; color: #9b7d52; margin-top: 2px; }
+  a.libitem .go { flex: 0 0 auto; color: #b89a6c; font-size: 13px; margin-top: 2px; opacity: .6; }
+  a.libitem:hover .go { opacity: 1; color: #c2702f; }
+  .libfoot { padding: 13px 18px; border-top: 1px solid #ecdcc0; display: flex; gap: 10px; flex-wrap: wrap; }
+  .libfoot a, .libfoot button { flex: 1; min-width: 150px; text-align: center; text-decoration: none;
+    padding: 12px 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; }
+  .libfoot a.gh { background: #2b2420; color: #fff; }
+  .libfoot button.close { flex: 0 0 auto; min-width: 0; background: #f1e6d6; color: #6a523d; }
   #intro { position: fixed; inset: 0; z-index: 30; background: linear-gradient(165deg,#7fcdc4 0%,#e8b87a 100%);
     display: flex; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 24px; }
   #intro .inner { max-width: 440px; }
@@ -238,6 +276,20 @@
   </div>
 </div>
 
+<div id="libModal">
+  <div class="libcard">
+    <div class="libhead">
+      <button class="x" id="libClose" aria-label="close">✕</button>
+      <div class="ic">📚</div>
+      <h2 id="libTitle">기여 도서관</h2>
+      <div class="sub" id="libSubEl"></div>
+      <div class="cnt" id="libCnt"></div>
+    </div>
+    <div class="libbody" id="libBody"></div>
+    <div class="libfoot" id="libFoot"></div>
+  </div>
+</div>
+
 <div id="intro">
   <div class="inner">
     <div class="langsel" id="introLang">
@@ -351,7 +403,13 @@ const I18N = {
     ansFail:'😢 브라우저AI 응답 실패. 로컬검색으로 안내할게요.',
     proxyPromptUrl:'AI 프록시(Vercel) URL을 입력하세요\n예: https://your-app.vercel.app/api/taxi',
     proxyNoUrl:'프록시 URL이 없어 로컬검색으로 안내할게요. (모드를 다시 프록시로 고르면 URL을 물어봐요)',
-    taxiStand:'택시 정류장'
+    taxiStand:'택시 정류장',
+    libName:'기여 도서관', libSign:'LIBRARY 도서관',
+    libReached:'에 도착! <span class="key">Enter</span> 또는 클릭으로 입장',
+    libSub:'전현상의 논문 · 발표 · 오픈소스 기여 · 수상 아카이브',
+    libIntro:'핀 6개에는 다 담기지 않는 그동안의 글·강연·오픈소스 기여를 한곳에 모았어요. 제목을 누르면 원문으로 이동합니다.',
+    libRepoBtn:'GitHub에서 전체 보기 ↗', libCountWord:'개',
+    libDriver:'📚 <b>기여 도서관</b>으로 모실게요! 논문·발표·오픈소스 기여·수상이 전시되어 있어요.'
   },
   en:{
     loading:'Building Repolis…',
@@ -384,7 +442,13 @@ const I18N = {
     ansFail:'😢 Browser-AI failed to answer. Using local search.',
     proxyPromptUrl:'Enter your AI proxy (Vercel) URL\ne.g. https://your-app.vercel.app/api/taxi',
     proxyNoUrl:'No proxy URL — using local search. (Re-select the proxy mode to enter a URL.)',
-    taxiStand:'TAXI STAND'
+    taxiStand:'TAXI STAND',
+    libName:'Contribution Library', libSign:'LIBRARY 도서관',
+    libReached:' reached! <span class="key">Enter</span> or click to enter',
+    libSub:"Hyeonsang Jeon's papers · talks · open-source contributions · awards",
+    libIntro:"Everything that doesn't fit in six pins — articles, talks and open-source work, gathered in one hall. Tap a title to open the source.",
+    libRepoBtn:'View all on GitHub ↗', libCountWord:'',
+    libDriver:"📚 Let me take you to the <b>Contribution Library</b> — papers, talks, open-source work and awards are on display."
   }
 };
 const t = k => (I18N[LANG] && I18N[LANG][k]!=null) ? I18N[LANG][k] : (I18N.en[k]!=null ? I18N.en[k] : k);
@@ -699,7 +763,7 @@ const SAND_TEX=_noiseTex('#d8c596',[['#cdb985',40,7,16,0.45],['#e3d3a8',34,5,12,
 function texMat(tex, rx, ry, clone=true){ const t=clone?tex.clone():tex; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); t.anisotropy=MAXANISO; t.needsUpdate=true; return new THREE.MeshToonMaterial({ map:t, gradientMap:GRAD }); }
 
 /* ---- ground ---- */
-const ground = new THREE.Mesh(new THREE.CircleGeometry(235,64), texMat(GRASS_TEX,46,46,false));
+const ground = new THREE.Mesh(new THREE.CircleGeometry(300,72), texMat(GRASS_TEX,59,59,false));
 ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
 const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5,40), texMat(SAND_TEX,7,7,false));
 plaza.rotation.x=-Math.PI/2; plaza.position.y=0.02; plaza.receiveShadow=true; scene.add(plaza);
@@ -1124,8 +1188,158 @@ function makeBuilding(repo){
 }
 REPOS.forEach(makeBuilding);
 
+/* ====================== CONTRIBUTION LIBRARY (special civic landmark) ====================== */
+const LIBREPO='https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions';
+const LIBDATA=[
+  { icon:'📑', ko:'논문 · 강좌 · 발표', en:'Papers · Lectures · Talks', items:[
+    {t:'Disparity-based space-variant image deblurring', m:'Signal Processing: Image Communication, 2013', u:'https://github.com/hyeonsangjeon/disparity-based-space-vagriant-image-deblurring'},
+    {t:'Removing boundary defects in block-based deblurring using multiple images', m:'IPIU Workshop, 2011', u:LIBREPO},
+    {t:'금융 문서 지식 추출의 정확도를 높이는 AWS 생성형 AI 적용 방안', m:'ITDAILY 전문가 강좌, 2025', u:'http://www.itdaily.kr/news/articleView.html?idxno=235049'},
+    {t:'당신의 LLM이 잘 동작하지 않는 이유', m:'ITDAILY 전문가 강좌, 2024', u:'http://www.itdaily.kr/news/articleView.html?idxno=223730'},
+    {t:'클라우드와 오픈소스 위스퍼를 이용한 한국어 음성 텍스트 변환', m:'ITDAILY 전문가 강좌, 2022', u:'http://www.itdaily.kr/news/articleView.html?idxno=213297'},
+    {t:'AI 모델링에서의 하이퍼매개변수 최적화', m:'ITDAILY 전문가 강좌, 2022', u:'http://www.itdaily.kr/news/articleView.html?idxno=210339'},
+    {t:'허깅페이스와 LoRA로 단일 SageMaker GPU에서 LLM 훈련하기', m:'AWS Tech Blog, 2023', u:'https://aws.amazon.com/ko/blogs/tech/train-a-large-language-model-on-a-single-amazon-sagemaker-gpu-with-hugging-face-and-lora/'},
+    {t:'어텐션 기반 트랜스포머의 적용과 Generative AI의 동향', m:'과기정통부 · NRIC Meric 웨비나, 2023', u:'https://youtu.be/Oa-LD4NK4zg'},
+    {t:'클라우드 환경에서 생성형 AI의 미래 전략', m:'ITDAILY 클라우드 컨퍼런스, 2024', u:'https://www.youtube.com/watch?v=Fy9SRt-q1wY'},
+    {t:'딥러닝 플랫폼에서의 HPO 기반 AutoDL 기술 적용 사례', m:'전자신문 AI Innovation, 2020', u:'https://youtu.be/QMorERxb1YY'},
+    {t:'빗썸의 AWS Systems Manager 기반 EC2 보안 진단 자동화 (1부)', m:'AWS Tech Blog, 2024', u:'https://aws.amazon.com/ko/blogs/tech/building-ec2-diagnostics-automation-using-systems-manager-part1/'},
+    {t:'빗썸의 AWS Systems Manager 기반 EC2 보안 진단 자동화 (2부)', m:'AWS Tech Blog, 2024', u:'https://aws.amazon.com/ko/blogs/tech/building-ec2-diagnostics-automation-using-systems-manager-part2/'},
+    {t:'티머니의 MLOps 구현 사례: SageMaker 배차모델 자동화', m:'AWS Tech Blog, 2025', u:'https://aws.amazon.com/ko/blogs/tech/tmoney-sagemaker-mlops-case/'},
+    {t:'감성문장과 뉴스 학습모델 기반 주가 예측 연구 (BERT)', m:'SK holdings C&C 사내 컨퍼런스, 2020', u:'https://youtu.be/kSZOsFX_KHI'},
+    {t:'생성형 AI의 현재와 미래', m:'고려사이버대 대학원 AI·BigData Day, 2023', u:'https://www.youtube.com/watch?v=42gIUWYLrws'},
+  ]},
+  { icon:'🎤', ko:'AWS 공개 발표', en:'AWS Public Speaking', items:[
+    {t:'Amazon SageMaker로 LLM 배포 개발은 간편하게, 응답은 빠르게!', m:'AWS Summit Seoul, 2025', u:'https://youtu.be/20BTS3oTz3Y'},
+    {t:'Bedrock과 SageMaker를 이용한 LLM 파인튜닝 및 커스터마이징', m:'AWS Data & AI Roadshow Seoul, 2025', u:'https://www.slideshare.net/slideshow/25d2s08-_amazon-bedrock-sagemaker-llm-pdf/277480413'},
+    {t:'데이터 인사이트의 혁신: Amazon AI 서비스 활용법', m:'AWS Summit Seoul, 2024', u:'https://youtu.be/99G_qL6bojA'},
+    {t:'Gen AI 로드맵 — Bedrock AgentCore로 완성하는 Agentic AI', m:'AI x Industry Week, AWS, 2025', u:'https://youtu.be/Bz4FcH0GeE4'},
+    {t:'고성능 검색 증강 생성(RAG) 구축을 위한 실용적 기술', m:'AWS Data & AI Roadshow, 2024', u:'https://pages.awscloud.com/aws-kr-data-ai-roadshow-2024.html'},
+    {t:'AWS Generative AI 서비스의 활용방법과 데모', m:'금융사를 위한 AWS Gen AI Day, 2023', u:'https://d1.eventservice.kr/2023/aws/00/0808_gen_ai/0808_AWS_gen_ai.html'},
+    {t:'2022년 금융 고객사에게 가장 사랑받은 AWS 클라우드 서비스', m:'AWS Industry Week, 2022', u:'https://kr-resources.awscloud.com/aws-industry-week-2022-fintech/'},
+    {t:'SageMaker Canvas', m:'AWS Builders Korea & AI/ML Immersion Day, 2023', u:'https://aiml-immersionday-kr.splashthat.com/'},
+    {t:'Serverless Image Handler', m:'Solution Days, AWS Builders Korea, 2023', u:'https://catalog.us-east-1.prod.workshops.aws/workshops/fda23258-17b1-46ad-9cae-bef04b616673'},
+    {t:'PEFT & LLM Serving with QLoRA', m:'AWS Tech-Summit, 2023', u:LIBREPO},
+    {t:'Retrieval-Augmented Generation', m:'AWS Tech-Summit, 2023', u:LIBREPO},
+  ]},
+  { icon:'💻', ko:'GitHub · MVP 자산 기여', en:'GitHub & MVP Contributions', items:[
+    {t:'QLoRA: Efficient Finetuning of Quantized LLMs', m:'aws-samples · 기여', u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/30_fine_tune/01-instruction-tuning-peft-qlora'},
+    {t:'RAG for Finance Data Workshop', m:'aws-samples · 기여', u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/20_applications/04_rag_finance_opensearch_sllm_workshop'},
+    {t:'PEFT-Huggingface-LoRA-Korean-Data', m:'aws-samples · 기여', u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/30_fine_tune/02-tutorial-huggingface-peft-basic-lora'},
+    {t:'GenAI 멀티모달 문서 정보 추출 파이프라인', m:'aws-samples · 기여', u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/20_applications/27_multimodal_document_ai_pipeline'},
+    {t:'computing-Korean-STT-error-rates — 한국어 ASR 평가 패키지', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/computing-Korean-STT-error-rates'},
+    {t:'AIsketcher — Text-to-Image 패키지', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/AIsketcher'},
+    {t:'PDF2LLM-Tuning-Studio — 금융보안원 GenAI 딥다이브 강의', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/PDF2LLM-Tuning-Studio'},
+    {t:'Amazon-Bedrock-Guardrails-Toolkit', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/Amazon-Bedrock-Guardrails-Toolkit/tree/main'},
+    {t:'pronunciation-mapper — 한·영 발음 유사도 매핑', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/pronunciation-mapper'},
+    {t:'strands-bedrock-agents-cookbook — Claude Reasoning 핸즈온', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/strands-bedrock-agents-cookbook/tree/main'},
+    {t:'GPU 기반 금융 PDF 처리 · Bedrock QA 생성 파이프라인', m:'AWS Workshop', u:'https://catalog.us-east-1.prod.workshops.aws/workshops/61cd351b-6326-4618-ad97-e318ed31472f/ko-KR'},
+  ]},
+  { icon:'🌟', ko:'커뮤니티 · 사회 기여', en:'Community & Social', items:[
+    {t:'A World Heard with Eyes: Drawing Hearts with GenAI (청각장애 지원)', m:'청음복지센터 · AWS Korea, 2023', u:'http://m.ignnews.co.kr/news/articleView.html?idxno=13535'},
+    {t:'AWS 임직원 자녀 초등학생 대상 AI 워크숍', m:'AWS Coding School Day, 2023', u:'https://www.linkedin.com/pulse/things-sometimes-more-important-than-technology-%ED%98%84%EC%83%81-%EC%A0%84/'},
+    {t:'인공지능이란? AI 엔지니어의 역할 (미래교육 강연)', m:'언북초등학교, 2022', u:LIBREPO},
+  ]},
+  { icon:'🏅', ko:'수상 · 자격', en:'Awards & Certificates', items:[
+    {t:'Amazon Awesome Builder Award — aws-samples MVP 자산 기여', m:'AWS, 2024.09', u:LIBREPO},
+    {t:'Amazon Awesome Builder Award — Listening with Eyes: GenAI Coding School', m:'AWS, 2023.08', u:LIBREPO},
+    {t:'Amazon Awesome Builder Award — 임직원 자녀 초등 워크숍', m:'AWS, 2023.05', u:'https://www.linkedin.com/pulse/things-sometimes-more-important-than-technology-%ED%98%84%EC%83%81-%EC%A0%84/'},
+    {t:'Awsome Deliver Results — 2025 Summit AI FSI PDF Distillation 부스', m:'AWS, 2025', u:LIBREPO},
+    {t:'Awsome Deliver Results — 2023 Summit AI Basketball 부스', m:'AWS, 2023', u:LIBREPO},
+    {t:'Collaboration Champion — Library Dev & Platform Integration', m:'SK holdings C&C, 2021.04', u:LIBREPO},
+    {t:'Competition Champion — BERT 주가 종가 예측 모델링', m:'SK holdings C&C, 2020.08', u:'https://youtu.be/kSZOsFX_KHI'},
+    {t:'AWS Certified Machine Learning – Specialty', m:'AWS, 2022.12', u:LIBREPO},
+    {t:'AWS Certified Solutions Architect – Associate', m:'AWS, 2021.12', u:LIBREPO},
+  ]},
+];
+const LIBCOUNT=LIBDATA.reduce((n,c)=>n+c.items.length,0);
+let LIB=null; const libNightBoost=[];
+function makeLibrary(){
+  // A monumental peripteral Doric temple (Parthenon) — deliberately set far out on the
+  // +Z axis, beyond the outer ring, so it reads as a distant acropolis landmark you taxi to.
+  const LZ=192;                                  // world z of the temple centre (well past the r=150 ring)
+  const W=30, D=54, colH=14;                     // entrance width (x), depth (z), column height
+  const MARB=0xeee6d2, TRIM=0xe6dcc4, STEP=0xded0b2, ROOFC=0xd8c4a0, GOLD=0xffd23f, GLASS=0xffd98a, DARK=0x2e2014;
+  const WARM=0x342614, WARMR=0x2a1d10;           // night emissive tints
+  const halfW=W/2, halfD=D/2;
+  const g=new THREE.Group(); g.position.set(0,0,LZ);
+  const tag=(m,hex=WARM)=>{ m.userData.libGlow=hex; return m; };
+  const boost=(o,d,n)=>{ o._d=d; o._n=n; o.material.opacity=d; libNightBoost.push(o); return o; };
+  const glowSprite=(color,sx,sy,x,y,z,d,n)=>{ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color,transparent:true,opacity:d,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); s.scale.set(sx,sy,1); s.position.set(x,y,z); g.add(s); return boost(s,d,n); };
+  const glowDisc=(color,r,x,z,d,n)=>{ const m=new THREE.Mesh(new THREE.CircleGeometry(r,30), new THREE.MeshBasicMaterial({map:GLOW_TEX,color,transparent:true,opacity:d,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); m.rotation.x=-Math.PI/2; m.position.set(x,0.05,z); g.add(m); return boost(m,d,n); };
+
+  // ---- stepped crepidoma (stylobate) ----
+  const stepH=0.6, os=1.7, baseW=W+2, baseD=D+2;
+  for(let i=0;i<3;i++){ const k=2-i; const st=rbox(baseW+k*2*os, stepH, baseD+k*2*os, STEP, 0.04); st.position.y=stepH/2+i*stepH; outline(st,0.03); st.receiveShadow=true; g.add(st); }
+  const topY=3*stepH;                            // stylobate top surface (columns stand here)
+  const frontFootZ=-(baseD/2+2*os);              // local z of the bottom-step front edge
+
+  // ---- peristyle: Doric columns around the full perimeter ----
+  const colMat=toon(MARB); colMat.userData.libGlow=WARM;
+  const nF=8, nS=13;
+  const col=(x,z)=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.78,0.95,colH,16), colMat); c.position.set(x,topY+colH/2,z); c.castShadow=true; tag(c); g.add(c);
+    const ab=rbox(1.7,0.44,1.7,TRIM,0.03); ab.position.set(x,topY+colH+0.22,z); tag(ab); g.add(ab); };
+  for(let i=0;i<nF;i++){ const x=-halfW+(i/(nF-1))*W; col(x,-halfD); col(x,halfD); }
+  for(let j=1;j<nS-1;j++){ const z=-halfD+(j/(nS-1))*D; col(-halfW,z); col(halfW,z); }
+
+  // ---- entablature (architrave + frieze) ringing the colonnade ----
+  const eH=2.6, eY=topY+colH+0.44+eH/2;
+  const eF=rbox(W+3,eH,1.8,TRIM,0.03); eF.position.set(0,eY,-halfD); tag(eF); outline(eF,0.02); g.add(eF);
+  const eB=rbox(W+3,eH,1.8,TRIM,0.03); eB.position.set(0,eY, halfD); tag(eB); g.add(eB);
+  const eL=rbox(1.8,eH,D+3,TRIM,0.03); eL.position.set(-halfW,eY,0); tag(eL); g.add(eL);
+  const eR=rbox(1.8,eH,D+3,TRIM,0.03); eR.position.set( halfW,eY,0); tag(eR); g.add(eR);
+
+  // ---- pediments (front + back gable triangles) ----
+  const pedY=eY+eH/2, pedH=5.2;
+  const pedF=triPrism(W+3,pedH,1.8,MARB); pedF.position.set(0,pedY,-halfD-0.9); tag(pedF); g.add(pedF);
+  const pedB=triPrism(W+3,pedH,1.8,MARB); pedB.position.set(0,pedY, halfD-0.9); tag(pedB); g.add(pedB);
+  const apexY=pedY+pedH;
+
+  // ---- low gable roof ----
+  const hx=(W+3)/2, ang=Math.atan2(pedH,hx), slant=Math.hypot(hx,pedH);
+  const roofL=rbox(slant,0.42,D+3,ROOFC,0.02); roofL.position.set(-hx/2,(pedY+apexY)/2,0); roofL.rotation.z= ang; roofL.castShadow=true; tag(roofL,WARMR); g.add(roofL);
+  const roofR=rbox(slant,0.42,D+3,ROOFC,0.02); roofR.position.set( hx/2,(pedY+apexY)/2,0); roofR.rotation.z=-ang; roofR.castShadow=true; tag(roofR,WARMR); g.add(roofR);
+
+  // ---- cella (inner sanctuary) — also the warm interior light source at night ----
+  const cella=rbox(W-9,11,D-13,MARB,0.04); cella.position.y=topY+5.5; cella.castShadow=true; tag(cella,WARMR); outline(cella,0.04); g.add(cella);
+  const cz=-((D-13)/2);                          // front face of the cella
+  const door=rbox(4.6,8,0.7,DARK,0.06); door.position.set(0,topY+4,cz-0.1); g.add(door);
+  const doorGlow=new THREE.Mesh(new THREE.PlaneGeometry(4,7), basic(GLASS)); doorGlow.position.set(0,topY+3.6,cz-0.42); g.add(doorGlow); boost(doorGlow,0.06,0.9);
+  glowSprite(0xffca7a, W*0.78, colH*0.95, 0, topY+6, -halfD+2.2, 0, 0.5);   // interior light spilling through the colonnade
+
+  // ---- engraved name on the front frieze (faces the city at −Z) ----
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(15,3.6), new THREE.MeshBasicMaterial({map:signTexture(t('libSign')),transparent:true}));
+  sign.position.set(0,eY,-halfD-0.96); sign.rotation.y=Math.PI; g.add(sign);
+
+  // ---- golden akroterion at the apex (the night beacon over the city) ----
+  const akro=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,12), basic(GOLD)); akro.position.set(0,apexY+0.5,-halfD+0.6); g.add(akro);
+  glowSprite(0xffe6a8, 5,5, 0, apexY+0.7, -halfD+0.6, 0.28, 0.95);
+
+  // ---- two flaming braziers flanking the grand stair ----
+  [-9,9].forEach(x=>{ const post=rbox(0.55,2.0,0.55,0x5a4a32,0.06); post.position.set(x,1.0,frontFootZ-1.0); g.add(post);
+    const bowl=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.34,0.5,12), toon(0x7a6a4a)); bowl.position.set(x,2.2,frontFootZ-1.0); g.add(bowl);
+    const core=new THREE.Mesh(new THREE.SphereGeometry(0.26,10,8), basic(0xffd27a)); core.position.set(x,2.5,frontFootZ-1.0); g.add(core);
+    glowSprite(0xffb259, 3.4,4.4, x, 2.8, frontFootZ-1.0, 0.12, 1.0); });
+
+  // ---- approach: gold destination ring + warm pools of light on the plaza ----
+  const ring=new THREE.Mesh(new THREE.RingGeometry(5.0,6.2,48), new THREE.MeshBasicMaterial({color:GOLD,transparent:true,opacity:.42,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2; ring.position.set(0,0.06,frontFootZ-3.5); g.add(ring);
+  glowDisc(0xffb46a, 11, 0, -halfD+1, 0, 0.5);
+  glowDisc(0xffc878, 7, 0, frontFootZ-3.5, 0, 0.4);
+
+  // ---- a few cypress trees framing the monument ----
+  [[-24,-22],[24,-22],[-26,24],[26,24]].forEach(([x,z])=>{ const tr=rbox(0.5,3,0.5,0x6b4a2c,0.1); tr.position.set(x,1.5,z); g.add(tr);
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(2.0,8.5,10), toon(0x3f6b46)); cone.position.set(x,6.0,z); cone.castShadow=true; g.add(cone); });
+
+  scene.add(g);
+  LIB={ _isLibrary:true, label:t('libName'), color:GOLD, _x:0, _z:LZ, _cw:18, _ring:ring,
+        _pos:new THREE.Vector3(0,0,LZ+frontFootZ-3.5), _group:g, _activity:1, _windows:[], _visited:false };
+  buildings.push(LIB);
+}
+makeLibrary();
+
 /* ---- building colliders (player can't walk through houses) ---- */
 const COLLIDERS = buildings.map(b=>({x:b._x, z:b._z, r:b._cw||3}));
+if(LIB){ COLLIDERS.push({x:0,z:LIB._z-14,r:13}); COLLIDERS.push({x:0,z:LIB._z+14,r:14}); }
 
 /* ---- day / night (night: window glow brightness = repo activity) ---- */
 let isNight=false;
@@ -1158,6 +1372,8 @@ function setTimeOfDay(night){
                  else b._body.material.emissive.setHex(0x000000); }
     if(b._glowPool) b._glowPool.material.opacity = night ? (0.06+0.5*b._activity) : 0;
   });
+  libNightBoost.forEach(o=>{ o.material.opacity = night ? o._n : o._d; });
+  if(LIB&&LIB._group) LIB._group.traverse(o=>{ if(o.userData&&o.userData.libGlow!==undefined&&o.material&&o.material.emissive) o.material.emissive.setHex(night?o.userData.libGlow:0x000000); });
   const db=document.getElementById('dayBtn'); if(db) db.textContent = night?'☀️':'🌙';
 }
 document.getElementById('dayBtn').onclick=()=>setTimeOfDay(!isNight);
@@ -1358,7 +1574,8 @@ function setNav(repo){ navTarget=repo; navHolder.visible=true;
   document.getElementById('navBadge').style.display=''; document.getElementById('navName').textContent=repo.label; }
 
 const modal=document.getElementById('modal'); let modalOpen=false;
-function openCard(repo){ modalOpen=true; modal.classList.add('show');
+function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
+  modalOpen=true; modal.classList.add('show');
   document.getElementById('cardTop').style.background=repo.color;
   document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
   document.getElementById('cardName').textContent=repo.label;
@@ -1390,6 +1607,38 @@ function openCard(repo){ modalOpen=true; modal.classList.add('show');
   document.getElementById('closeBtn').onclick=closeCard; markVisited(repo); }
 function closeCard(){ modalOpen=false; modal.classList.remove('show'); }
 modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
+
+/* ---- Contribution Library panel ---- */
+const libModal=document.getElementById('libModal');
+let libBuilt=false;
+function buildLibrary(){
+  document.getElementById('libTitle').textContent=t('libName');
+  document.getElementById('libSubEl').textContent=t('libSub');
+  document.getElementById('libCnt').textContent='✦ '+LIBCOUNT+(LANG==='ko'?(' '+t('libCountWord')+' · '+t('libIntro')):(' entries · '+t('libIntro')));
+  const body=document.getElementById('libBody'); body.innerHTML='';
+  LIBDATA.forEach(cat=>{
+    const sec=document.createElement('div'); sec.className='libcat';
+    const h=document.createElement('h3');
+    h.innerHTML=`<span>${cat.icon}</span><span>${LANG==='ko'?cat.ko:cat.en}</span><span class="n">${cat.items.length}</span>`;
+    sec.appendChild(h);
+    cat.items.forEach(it=>{
+      const a=document.createElement('a'); a.className='libitem'; a.href=it.u; a.target='_blank'; a.rel='noopener';
+      a.innerHTML=`<span class="dot"></span><span class="tx"><span class="ti">${it.t.replace(/</g,'&lt;')}</span><span class="me">${(it.m||'').replace(/</g,'&lt;')}</span></span><span class="go">↗</span>`;
+      sec.appendChild(a);
+    });
+    body.appendChild(sec);
+  });
+  const foot=document.getElementById('libFoot');
+  foot.innerHTML=`<a class="gh" href="${LIBREPO}" target="_blank" rel="noopener">${t('libRepoBtn')}</a>`
+    +`<button class="close" id="libCloseB">${t('close')}</button>`;
+  document.getElementById('libCloseB').onclick=closeLibrary;
+  libBuilt=true; libModal._lang=LANG;
+}
+function openLibrary(){ if(!libBuilt||libModal._lang!==LANG) buildLibrary();
+  modalOpen=true; libModal.classList.add('show'); document.getElementById('libBody').scrollTop=0; }
+function closeLibrary(){ modalOpen=false; libModal.classList.remove('show'); }
+document.getElementById('libClose').onclick=closeLibrary;
+libModal.addEventListener('click',e=>{ if(e.target===libModal) closeLibrary(); });
 
 let visited=0;
 function markVisited(repo){ if(repo._visited) return; repo._visited=true; visited++;
@@ -1439,6 +1688,7 @@ function hay(r){ return (r.repo+' '+r.label+' '+(r.lang||'')+' '+(r.desc||'')+' 
 function scoreRepo(r,terms){ const h=hay(r); let s=0; terms.forEach(t=>{ if(h.includes(t)){ s+=3; if((r.repo+' '+r.label).toLowerCase().includes(t)) s+=4; if((r.topics||[]).some(tp=>tp.toLowerCase()===t)) s+=3; } }); return s; }
 function localIntent(q){
   const ql=q.toLowerCase();
+  if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
   if(/인기|popular|제일|최고|best|top|많이|핫|hot/.test(ql)) return pick(byRank()[0],t('leadPopular'),byRank().slice(1,3));
   if(/아무|랜덤|random|골라|추천만/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
   if(/스타|star|별/.test(ql)){ const r=[...REPOS].sort((a,b)=>b.stars-a.stars)[0]; return pick(r,t('leadStar'),[...REPOS].sort((a,b)=>b.stars-a.stars).slice(1,3)); }
@@ -1569,7 +1819,7 @@ function animate(){
       } else if(ride.phase==='boarding'){
         if(ride.t>0.55){ model.visible=false; ride.phase='riding'; ride.t=0; }
       } else if(ride.phase==='riding'){
-        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z,26,dt,6.0);
+        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z, ride.repo._isLibrary?44:26, dt,6.0);
         player.position.set(taxi.position.x,0,taxi.position.z);
         const fx=Math.cos(taxi.rotation.y), fz=-Math.sin(taxi.rotation.y);
         camYaw=lerpA(camYaw,Math.atan2(fx,fz)+Math.PI,0.05);
@@ -1613,7 +1863,9 @@ function animate(){
     b._ring.material.opacity=0.3+Math.sin(clock.elapsedTime*2+b._pos.z)*0.16;
     if(d<nd){ nd=d; nearest=b; }
   }
-  if(nearest&&!modalOpen){ promptEl.innerHTML=(LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); }
+  if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
+      ? `<b>${t('libName')}</b>${t('libReached')}`
+      : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); }
   else { promptEl.classList.remove('show'); actBtn.classList.remove('avail'); }
 
   if(navTarget){ const dir=Math.atan2(navTarget._pos.x-player.position.x,navTarget._pos.z-player.position.z);
@@ -1740,7 +1992,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__modal=()=>modalOpen;
   window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, total:allCountEl.textContent, ws:rtSock?rtSock.readyState:-1});
   window.__meteor=(az)=>{ spawnMeteor(az); return true; };
-  window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; }; }
+  window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; };
+  window.__lib=()=>{ openCard(LIB); return true; };
+  window.__libView=(back=20)=>{ player.position.set(0,0,LIB._z-LIB._cw-back); model.rotation.y=0; camYaw=Math.PI; camPitch=0.34; camDist=42; return {z:+player.position.z.toFixed(1)}; };
+  window.__tp=(x,z,yaw=Math.PI,pitch=0.30,dist=24)=>{ player.position.set(x,0,z); model.rotation.y=Math.PI-yaw; camYaw=yaw; camPitch=pitch; camDist=dist; return {x,z}; };
+  window.__libInfo=()=>({count:LIBCOUNT, pos:{x:+LIB._pos.x.toFixed(1),z:+LIB._pos.z.toFixed(1)}, cats:LIBDATA.length}); }
 </script>
 </body>
 </html>
