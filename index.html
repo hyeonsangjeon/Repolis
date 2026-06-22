@@ -190,7 +190,7 @@
   <div class="badge">🏙️ Repolis</div>
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
   <div class="badge"><span data-i18n="visited">방문</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
-  <div class="badge" id="liveBadge" title="online now · today's visitors">🟢 <b id="liveCount">1</b><span id="todayWrap" style="display:none;"> · <span data-i18n="todayWord">오늘</span> <b id="todayCount">0</b></span></div>
+  <div class="badge" id="liveBadge" title="online now · today · all-time unique visitors">🟢 <b id="liveCount">1</b><span id="todayWrap" style="display:none;"> · <span data-i18n="todayWord">오늘</span> <b id="todayCount">0</b></span><span id="allWrap" style="display:none;"> · <span data-i18n="totalWord">누적</span> <b id="allCount">0</b></span></div>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
 </div>
 <button id="menuBtn">☰<span class="dot"></span></button>
@@ -304,7 +304,7 @@ if(LANG!=='ko'&&LANG!=='en') LANG = (navigator.language||'').toLowerCase().start
 const I18N = {
   ko:{
     loading:'지브리 마을을 짓는 중…',
-    visited:'방문', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘',
+    visited:'방문', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이·밝기 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 장식.',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 지브리풍 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
@@ -337,7 +337,7 @@ const I18N = {
   },
   en:{
     loading:'Building the Ghibli town…',
-    visited:'Visited', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today',
+    visited:'Visited', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height·brightness · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold-star ornament.',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a Ghibli-style city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
@@ -1278,8 +1278,14 @@ addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.upd
    ?rt=wss://… , localStorage 'repolisRT', or window.REPOLIS_RT. With no endpoint
    the world runs solo and simply shows "🟢 1". Everything is wrapped so a missing
    or broken backend never affects the single-player experience. */
-const RT_URL=(new URLSearchParams(location.search).get('rt'))||localStorage.getItem('repolisRT')||(window.REPOLIS_RT||'');
-const liveCountEl=document.getElementById('liveCount'), todayWrap=document.getElementById('todayWrap'), todayCountEl=document.getElementById('todayCount');
+/* To enable the live / today / cumulative visitor counters for EVERY visitor,
+   deploy the (free) realtime room and paste its endpoint here once:
+     1) from this folder:  npx partykit deploy
+     2) RT_DEFAULT = 'wss://repolis.<you>.partykit.dev/parties/main/world'
+   With RT_DEFAULT empty the world runs solo and just shows "🟢 1". */
+const RT_DEFAULT='';
+const RT_URL=(new URLSearchParams(location.search).get('rt'))||localStorage.getItem('repolisRT')||window.REPOLIS_RT||RT_DEFAULT;
+const liveCountEl=document.getElementById('liveCount'), todayWrap=document.getElementById('todayWrap'), todayCountEl=document.getElementById('todayCount'), allWrap=document.getElementById('allWrap'), allCountEl=document.getElementById('allCount');
 function guestId(){ let id=localStorage.getItem('repolisGuestId'); if(!id){ id='g'+Math.random().toString(36).slice(2,9); localStorage.setItem('repolisGuestId',id); } return id; }
 function guestName(){ let n=localStorage.getItem('repolisGuestName'); if(!n){ n='Guest-'+Math.floor(1000+Math.random()*9000); localStorage.setItem('repolisGuestName',n); } return n; }
 const peers=new Map();
@@ -1307,6 +1313,7 @@ function makePeerAvatar(name,color){
 let rtSock=null, rtSendT=0, lastSent={x:1e9,z:1e9,y:0};
 function setLive(n){ liveCountEl.textContent=Math.max(1,n|0); }
 function setToday(n){ todayWrap.style.display='inline'; todayCountEl.textContent=n|0; }
+function setTotal(n){ allWrap.style.display='inline'; allCountEl.textContent=n|0; }
 function addPeer(p){ if(!p||p.id===guestId()||peers.has(p.id)) return;
   const color=p.color!=null?p.color:PEER_COLORS[hashStr(p.id)%PEER_COLORS.length];
   const g=makePeerAvatar(p.name,color); g.position.set(p.x||0,0,p.z||0); g.rotation.y=p.yaw||0; scene.add(g);
@@ -1315,11 +1322,11 @@ function removePeer(id){ const p=peers.get(id); if(p){ scene.remove(p.group); pe
 function clearPeers(){ for(const id of [...peers.keys()]) removePeer(id); }
 function rtSend(o){ if(rtSock&&rtSock.readyState===1) rtSock.send(JSON.stringify(o)); }
 function rtHandle(m){
-  if(m.t==='welcome'){ (m.peers||[]).forEach(addPeer); if(m.live!=null) setLive(m.live); if(m.today!=null) setToday(m.today); }
-  else if(m.t==='join'){ addPeer(m.peer); if(m.live!=null) setLive(m.live); }
+  if(m.t==='welcome'){ (m.peers||[]).forEach(addPeer); if(m.live!=null) setLive(m.live); if(m.today!=null) setToday(m.today); if(m.total!=null) setTotal(m.total); }
+  else if(m.t==='join'){ addPeer(m.peer); if(m.live!=null) setLive(m.live); if(m.today!=null) setToday(m.today); if(m.total!=null) setTotal(m.total); }
   else if(m.t==='pos'){ const p=peers.get(m.id); if(p){ p.tx=m.x; p.tz=m.z; p.tyaw=m.yaw; } }
   else if(m.t==='leave'){ removePeer(m.id); if(m.live!=null) setLive(m.live); }
-  else if(m.t==='stats'){ if(m.live!=null) setLive(m.live); if(m.today!=null) setToday(m.today); }
+  else if(m.t==='stats'){ if(m.live!=null) setLive(m.live); if(m.today!=null) setToday(m.today); if(m.total!=null) setTotal(m.total); }
 }
 function rtConnect(){
   if(!RT_URL){ setLive(1); return; }
@@ -1355,7 +1362,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__taxi=(name)=>{ const r=REPOS.find(x=>x.repo===name); if(r&&r._pos){ taxiTo(r); return true; } return false; };
   window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom}));
   window.__modal=()=>modalOpen;
-  window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, ws:rtSock?rtSock.readyState:-1}); }
+  window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, total:allCountEl.textContent, ws:rtSock?rtSock.readyState:-1}); }
 </script>
 </body>
 </html>

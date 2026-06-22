@@ -15,8 +15,8 @@
 // Protocol (JSON over WS), shared with scripts/dev_realtime.mjs:
 //   client -> { t:'join', id, name, x, z, yaw, color }
 //   client -> { t:'pos',  id, x, z, yaw }
-//   server -> { t:'welcome', peers:[...], live, today }
-//   server -> { t:'join', peer, live, today }
+//   server -> { t:'welcome', peers:[...], live, today, total }
+//   server -> { t:'join', peer, live, today, total }
 //   server -> { t:'pos', id, x, z, yaw }
 //   server -> { t:'leave', id, live }
 
@@ -30,14 +30,15 @@ export default class Repolis {
     return "uv:" + new Date().toISOString().slice(0, 10);
   }
 
-  async bumpToday(gid) {
-    const key = this.todayKey();
-    const set = (await this.room.storage.get(key)) || {};
-    if (!set[gid]) {
-      set[gid] = 1;
-      await this.room.storage.put(key, set);
-    }
-    return Object.keys(set).length;
+  // Count a guest as a unique visitor for today AND all-time ("visitors to date").
+  // Both are persisted in room storage, so the cumulative total survives restarts.
+  async bumpCounts(gid) {
+    const dkey = this.todayKey();
+    const day = (await this.room.storage.get(dkey)) || {};
+    if (!day[gid]) { day[gid] = 1; await this.room.storage.put(dkey, day); }
+    const all = (await this.room.storage.get("uv:all")) || {};
+    if (!all[gid]) { all[gid] = 1; await this.room.storage.put("uv:all", all); }
+    return { today: Object.keys(day).length, total: Object.keys(all).length };
   }
 
   async onMessage(raw, sender) {
@@ -52,13 +53,13 @@ export default class Repolis {
         color: m.color,
       };
       this.peers.set(sender.id, peer);
-      const today = await this.bumpToday(peer.id);
+      const { today, total } = await this.bumpCounts(peer.id);
       const live = this.peers.size;
       const others = [...this.peers.entries()]
         .filter(([cid]) => cid !== sender.id)
         .map(([, p]) => p);
-      sender.send(JSON.stringify({ t: "welcome", peers: others, live, today }));
-      this.room.broadcast(JSON.stringify({ t: "join", peer, live, today }), [sender.id]);
+      sender.send(JSON.stringify({ t: "welcome", peers: others, live, today, total }));
+      this.room.broadcast(JSON.stringify({ t: "join", peer, live, today, total }), [sender.id]);
     } else if (m.t === "pos") {
       const p = this.peers.get(sender.id);
       if (!p) return;

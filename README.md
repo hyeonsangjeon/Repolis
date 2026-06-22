@@ -44,7 +44,7 @@ Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the
   - **AI proxy** (Vercel → Azure OpenAI · best quality)
 - 🏡 **Six house tiers, not just taller boxes** — by traffic rank each repo becomes a `cabin → cottage → house → villa → manor → portico mansion`, with wings, columns, porticos, dormers, balconies and cupolas. Top repos get grand columned 저택; quiet ones get cosy cabins.
 - 🌳 **A city that feels alive** — gardens, pets (chow‑chow NPCs), street trees, **street lamps & plaza benches**, category logos on the roofs (AI / Data / Software / …), and proper town‑house roads.
-- 🟢 **Optional realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live online + today's unique‑visitor counter** in the HUD. Defaults to solo on a plain static host; turn it on with one free server (below).
+- 🟢 **Optional realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live · today · all‑time unique‑visitor counter** (🟢 현재 · 오늘 · 누적) in the HUD. Defaults to solo on a plain static host; turn it on with one free server (below).
 - 🌐 **English / 한국어 toggle** — switch the whole UI language live from the HUD.
 
 ## 🧠 How it works (data flow)
@@ -87,6 +87,7 @@ The static site is solo by default. To let visitors meet each other, run one tin
   - URL query: `?rt=wss://…`
   - `localStorage.setItem('repolisRT','wss://…')`
   - `window.REPOLIS_RT = 'wss://…'`
+- **Count *every* visitor (not just you):** the three options above only affect whoever sets them. To bake it in for all visitors, set `const RT_DEFAULT='wss://…'` near the realtime block in `index.html` and push. The HUD then shows **🟢 live · today · all‑time** for everyone. On PartyKit the cumulative total is kept in room storage, so it survives restarts (the self‑host `ws` server keeps counts in memory only).
 
 > Privacy: the traffic logs that drive the city are committed publicly, and only your **public, non‑fork** repos are ever shown.
 

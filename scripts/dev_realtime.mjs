@@ -13,8 +13,8 @@
 // Protocol:
 //   client -> { t:'join', id, name, x, z, yaw, color }
 //   client -> { t:'pos',  id, x, z, yaw }
-//   server -> { t:'welcome', peers:[...], live, today }
-//   server -> { t:'join', peer, live, today }
+//   server -> { t:'welcome', peers:[...], live, today, total }
+//   server -> { t:'join', peer, live, today, total }
 //   server -> { t:'pos', id, x, z, yaw }
 //   server -> { t:'leave', id, live }
 
@@ -26,6 +26,7 @@ const wss = new WebSocketServer({ port: PORT });
 const peers = new Map(); // ws -> peer
 let today = new Date().toISOString().slice(0, 10);
 const todaySet = new Set(); // unique guest ids seen today
+const allSet = new Set();   // unique guest ids all-time ("visitors to date"); in-memory only — restarts reset it (PartyKit persists)
 
 function rollDay() {
   const d = new Date().toISOString().slice(0, 10);
@@ -51,9 +52,10 @@ wss.on("connection", (ws) => {
       };
       peers.set(ws, peer);
       todaySet.add(peer.id);
+      allSet.add(peer.id);
       const others = [...peers.values()].filter((p) => p !== peer);
-      ws.send(JSON.stringify({ t: "welcome", peers: others, live: peers.size, today: todaySet.size }));
-      broadcast({ t: "join", peer, live: peers.size, today: todaySet.size }, ws);
+      ws.send(JSON.stringify({ t: "welcome", peers: others, live: peers.size, today: todaySet.size, total: allSet.size }));
+      broadcast({ t: "join", peer, live: peers.size, today: todaySet.size, total: allSet.size }, ws);
     } else if (m.t === "pos") {
       const p = peers.get(ws);
       if (!p) return;
