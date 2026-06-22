@@ -1194,59 +1194,78 @@ const LIBDATA=[
   { icon:'📑', ko:'논문 · 강좌 · 발표', en:'Papers · Lectures · Talks', items:[
     {t:'Disparity-based space-variant image deblurring', m:'Signal Processing: Image Communication, 2013', u:'https://github.com/hyeonsangjeon/disparity-based-space-vagriant-image-deblurring'},
     {t:'Removing boundary defects in block-based deblurring using multiple images', m:'IPIU Workshop, 2011', u:LIBREPO},
-    {t:'금융 문서 지식 추출의 정확도를 높이는 AWS 생성형 AI 적용 방안', m:'ITDAILY 전문가 강좌, 2025', u:'http://www.itdaily.kr/news/articleView.html?idxno=235049'},
-    {t:'당신의 LLM이 잘 동작하지 않는 이유', m:'ITDAILY 전문가 강좌, 2024', u:'http://www.itdaily.kr/news/articleView.html?idxno=223730'},
-    {t:'클라우드와 오픈소스 위스퍼를 이용한 한국어 음성 텍스트 변환', m:'ITDAILY 전문가 강좌, 2022', u:'http://www.itdaily.kr/news/articleView.html?idxno=213297'},
-    {t:'AI 모델링에서의 하이퍼매개변수 최적화', m:'ITDAILY 전문가 강좌, 2022', u:'http://www.itdaily.kr/news/articleView.html?idxno=210339'},
-    {t:'허깅페이스와 LoRA로 단일 SageMaker GPU에서 LLM 훈련하기', m:'AWS Tech Blog, 2023', u:'https://aws.amazon.com/ko/blogs/tech/train-a-large-language-model-on-a-single-amazon-sagemaker-gpu-with-hugging-face-and-lora/'},
-    {t:'어텐션 기반 트랜스포머의 적용과 Generative AI의 동향', m:'과기정통부 · NRIC Meric 웨비나, 2023', u:'https://youtu.be/Oa-LD4NK4zg'},
-    {t:'클라우드 환경에서 생성형 AI의 미래 전략', m:'ITDAILY 클라우드 컨퍼런스, 2024', u:'https://www.youtube.com/watch?v=Fy9SRt-q1wY'},
-    {t:'딥러닝 플랫폼에서의 HPO 기반 AutoDL 기술 적용 사례', m:'전자신문 AI Innovation, 2020', u:'https://youtu.be/QMorERxb1YY'},
-    {t:'빗썸의 AWS Systems Manager 기반 EC2 보안 진단 자동화 (1부)', m:'AWS Tech Blog, 2024', u:'https://aws.amazon.com/ko/blogs/tech/building-ec2-diagnostics-automation-using-systems-manager-part1/'},
-    {t:'빗썸의 AWS Systems Manager 기반 EC2 보안 진단 자동화 (2부)', m:'AWS Tech Blog, 2024', u:'https://aws.amazon.com/ko/blogs/tech/building-ec2-diagnostics-automation-using-systems-manager-part2/'},
-    {t:'티머니의 MLOps 구현 사례: SageMaker 배차모델 자동화', m:'AWS Tech Blog, 2025', u:'https://aws.amazon.com/ko/blogs/tech/tmoney-sagemaker-mlops-case/'},
-    {t:'감성문장과 뉴스 학습모델 기반 주가 예측 연구 (BERT)', m:'SK holdings C&C 사내 컨퍼런스, 2020', u:'https://youtu.be/kSZOsFX_KHI'},
-    {t:'생성형 AI의 현재와 미래', m:'고려사이버대 대학원 AI·BigData Day, 2023', u:'https://www.youtube.com/watch?v=42gIUWYLrws'},
+    {t:{ko:'금융 문서 지식 추출의 정확도를 높이는 AWS 생성형 AI 적용 방안', en:'Expert Lecture: Applying AWS Generative AI to Improve Knowledge Extraction Accuracy from Financial Documents'}, m:{ko:'ITDAILY 전문가 강좌, 2025', en:'ITDAILY Expert Lecture, 2025'}, u:'http://www.itdaily.kr/news/articleView.html?idxno=235049'},
+    {t:{ko:'당신의 LLM이 잘 동작하지 않는 이유', en:'Expert Lecture: Why Your LLM Is Not Working Properly'}, m:{ko:'ITDAILY 전문가 강좌, 2024', en:'ITDAILY Expert Lecture, 2024'}, u:'http://www.itdaily.kr/news/articleView.html?idxno=223730'},
+    {t:{ko:'클라우드와 오픈소스 위스퍼를 이용한 한국어 음성 텍스트 변환', en:'Expert Lecture: Korean Speech-to-Text Using Cloud and Open-Source Whisper'}, m:{ko:'ITDAILY 전문가 강좌, 2022', en:'ITDAILY Expert Lecture, 2022'}, u:'http://www.itdaily.kr/news/articleView.html?idxno=213297'},
+    {t:{ko:'AI 모델링에서의 하이퍼매개변수 최적화', en:'Expert Lecture: Hyperparameter Optimization in AI Modeling'}, m:{ko:'ITDAILY 전문가 강좌, 2022', en:'ITDAILY Expert Lecture, 2022'}, u:'http://www.itdaily.kr/news/articleView.html?idxno=210339'},
+    {t:{ko:'허깅페이스와 LoRA로 단일 SageMaker GPU에서 LLM 훈련하기', en:'Training LLMs on a Single Amazon SageMaker GPU with Hugging Face and LoRA'}, m:'AWS Tech Blog, 2023', u:'https://aws.amazon.com/ko/blogs/tech/train-a-large-language-model-on-a-single-amazon-sagemaker-gpu-with-hugging-face-and-lora/'},
+    {t:{ko:'어텐션 기반 트랜스포머의 적용과 Generative AI의 동향', en:'Practical Applications of Attention-Based Transformers and Trends in Generative AI'}, m:{ko:'과기정통부 · NRIC Meric 웨비나, 2023', en:'NRIC Meric Webinar · Ministry of Science and ICT, 2023'}, u:'https://youtu.be/Oa-LD4NK4zg'},
+    {t:{ko:'클라우드 환경에서 생성형 AI의 미래 전략', en:'Future Strategies of Generative AI in Cloud Environments'}, m:{ko:'ITDAILY 클라우드 컨퍼런스, 2024', en:'ITDAILY Cloud Conference, 2024'}, u:'https://www.youtube.com/watch?v=Fy9SRt-q1wY'},
+    {t:{ko:'딥러닝 플랫폼에서의 HPO 기반 AutoDL 기술 적용 사례', en:'Case Study: AutoDL with Hyperparameter Optimization in Deep Learning Platforms'}, m:{ko:'전자신문 AI Innovation, 2020', en:'AI Innovation · The Electronic Times, 2020'}, u:'https://youtu.be/QMorERxb1YY'},
+    {t:{ko:'빗썸의 AWS Systems Manager 기반 EC2 보안 진단 자동화 (1부)', en:'Automating Company-Wide EC2 Security Diagnostics with AWS Systems Manager (Part 1)'}, m:'AWS Tech Blog, 2024', u:'https://aws.amazon.com/ko/blogs/tech/building-ec2-diagnostics-automation-using-systems-manager-part1/'},
+    {t:{ko:'빗썸의 AWS Systems Manager 기반 EC2 보안 진단 자동화 (2부)', en:'Automating Company-Wide EC2 Security Diagnostics with AWS Systems Manager (Part 2)'}, m:'AWS Tech Blog, 2024', u:'https://aws.amazon.com/ko/blogs/tech/building-ec2-diagnostics-automation-using-systems-manager-part2/'},
+    {t:{ko:'티머니의 MLOps 구현 사례: SageMaker 배차모델 자동화', en:"T-Money's MLOps Implementation: Dispatch Model Automation with Amazon SageMaker"}, m:'AWS Tech Blog, 2025', u:'https://aws.amazon.com/ko/blogs/tech/tmoney-sagemaker-mlops-case/'},
+    {t:{ko:'감성문장과 뉴스 학습모델 기반 주가 예측 연구 (BERT)', en:'Stock Price Prediction Based on Sentiment Analysis and News Classification Models (BERT)'}, m:{ko:'SK holdings C&C 사내 컨퍼런스, 2020', en:'SK holdings C&C Internal Conference, 2020'}, u:'https://youtu.be/kSZOsFX_KHI'},
+    {t:{ko:'생성형 AI의 현재와 미래', en:'The Present and Future of Generative AI'}, m:{ko:'고려사이버대 대학원 AI·BigData Day, 2023', en:'Korea Cyber University Graduate School · AI·BigData Day, 2023'}, u:'https://www.youtube.com/watch?v=42gIUWYLrws'},
   ]},
   { icon:'🎤', ko:'AWS 공개 발표', en:'AWS Public Speaking', items:[
-    {t:'Amazon SageMaker로 LLM 배포 개발은 간편하게, 응답은 빠르게!', m:'AWS Summit Seoul, 2025', u:'https://youtu.be/20BTS3oTz3Y'},
-    {t:'Bedrock과 SageMaker를 이용한 LLM 파인튜닝 및 커스터마이징', m:'AWS Data & AI Roadshow Seoul, 2025', u:'https://www.slideshare.net/slideshow/25d2s08-_amazon-bedrock-sagemaker-llm-pdf/277480413'},
-    {t:'데이터 인사이트의 혁신: Amazon AI 서비스 활용법', m:'AWS Summit Seoul, 2024', u:'https://youtu.be/99G_qL6bojA'},
-    {t:'Gen AI 로드맵 — Bedrock AgentCore로 완성하는 Agentic AI', m:'AI x Industry Week, AWS, 2025', u:'https://youtu.be/Bz4FcH0GeE4'},
-    {t:'고성능 검색 증강 생성(RAG) 구축을 위한 실용적 기술', m:'AWS Data & AI Roadshow, 2024', u:'https://pages.awscloud.com/aws-kr-data-ai-roadshow-2024.html'},
-    {t:'AWS Generative AI 서비스의 활용방법과 데모', m:'금융사를 위한 AWS Gen AI Day, 2023', u:'https://d1.eventservice.kr/2023/aws/00/0808_gen_ai/0808_AWS_gen_ai.html'},
-    {t:'2022년 금융 고객사에게 가장 사랑받은 AWS 클라우드 서비스', m:'AWS Industry Week, 2022', u:'https://kr-resources.awscloud.com/aws-industry-week-2022-fintech/'},
+    {t:{ko:'Amazon SageMaker로 LLM 배포 개발은 간편하게, 응답은 빠르게!', en:'Deploying LLMs with Amazon SageMaker: Easy to Build, Fast to Respond'}, m:'AWS Summit Seoul, 2025', u:'https://youtu.be/20BTS3oTz3Y'},
+    {t:{ko:'Bedrock과 SageMaker를 이용한 LLM 파인튜닝 및 커스터마이징', en:'Understanding LLM Fine-Tuning and Customization with Amazon Bedrock and SageMaker'}, m:'AWS Data & AI Roadshow Seoul, 2025', u:'https://www.slideshare.net/slideshow/25d2s08-_amazon-bedrock-sagemaker-llm-pdf/277480413'},
+    {t:{ko:'데이터 인사이트의 혁신: Amazon AI 서비스 활용법', en:'Innovation in Data Insights: Leveraging Amazon AI Services'}, m:'AWS Summit Seoul, 2024', u:'https://youtu.be/99G_qL6bojA'},
+    {t:{ko:'Gen AI 로드맵 — Bedrock AgentCore로 완성하는 Agentic AI', en:'Gen AI Roadmap — Agentic AI Completed with Amazon Bedrock AgentCore'}, m:'AI x Industry Week · AWS, 2025', u:'https://youtu.be/Bz4FcH0GeE4'},
+    {t:{ko:'고성능 검색 증강 생성(RAG) 구축을 위한 실용적 기술', en:'Practical Technologies for Building High-Performance RAG'}, m:'AWS Data & AI Roadshow, 2024', u:'https://pages.awscloud.com/aws-kr-data-ai-roadshow-2024.html'},
+    {t:{ko:'AWS Generative AI 서비스의 활용방법과 데모', en:'Utilizing and Demonstrating AWS Generative AI Services'}, m:{ko:'금융사를 위한 AWS Gen AI Day, 2023', en:'AWS Generative AI Day for Financial Institutions, 2023'}, u:'https://d1.eventservice.kr/2023/aws/00/0808_gen_ai/0808_AWS_gen_ai.html'},
+    {t:{ko:'2022년 금융 고객사에게 가장 사랑받은 AWS 클라우드 서비스', en:'The Most Loved AWS Cloud Services by Financial Customers in 2022'}, m:'AWS Industry Week, 2022', u:'https://kr-resources.awscloud.com/aws-industry-week-2022-fintech/'},
     {t:'SageMaker Canvas', m:'AWS Builders Korea & AI/ML Immersion Day, 2023', u:'https://aiml-immersionday-kr.splashthat.com/'},
-    {t:'Serverless Image Handler', m:'Solution Days, AWS Builders Korea, 2023', u:'https://catalog.us-east-1.prod.workshops.aws/workshops/fda23258-17b1-46ad-9cae-bef04b616673'},
+    {t:'Serverless Image Handler', m:'Solution Days · AWS Builders Korea, 2023', u:'https://catalog.us-east-1.prod.workshops.aws/workshops/fda23258-17b1-46ad-9cae-bef04b616673'},
     {t:'PEFT & LLM Serving with QLoRA', m:'AWS Tech-Summit, 2023', u:LIBREPO},
     {t:'Retrieval-Augmented Generation', m:'AWS Tech-Summit, 2023', u:LIBREPO},
   ]},
-  { icon:'💻', ko:'GitHub · MVP 자산 기여', en:'GitHub & MVP Contributions', items:[
-    {t:'QLoRA: Efficient Finetuning of Quantized LLMs', m:'aws-samples · 기여', u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/30_fine_tune/01-instruction-tuning-peft-qlora'},
-    {t:'RAG for Finance Data Workshop', m:'aws-samples · 기여', u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/20_applications/04_rag_finance_opensearch_sllm_workshop'},
-    {t:'PEFT-Huggingface-LoRA-Korean-Data', m:'aws-samples · 기여', u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/30_fine_tune/02-tutorial-huggingface-peft-basic-lora'},
-    {t:'GenAI 멀티모달 문서 정보 추출 파이프라인', m:'aws-samples · 기여', u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/20_applications/27_multimodal_document_ai_pipeline'},
-    {t:'computing-Korean-STT-error-rates — 한국어 ASR 평가 패키지', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/computing-Korean-STT-error-rates'},
-    {t:'AIsketcher — Text-to-Image 패키지', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/AIsketcher'},
-    {t:'PDF2LLM-Tuning-Studio — 금융보안원 GenAI 딥다이브 강의', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/PDF2LLM-Tuning-Studio'},
+  { icon:'🎤', ko:'Microsoft 공개 발표', en:'Microsoft Public Speaking', items:[
+    {t:{ko:'모델은 쏟아진다 — 뭘 고르고, 얼마나 되는가: Foundry 벤치마크 · 모델 라우팅 · BYOM', en:'Models Are Flooding In — Which to Choose and at What Cost: Foundry Benchmark, Model Routing, BYOM'}, m:{ko:'Microsoft Event, 2026.06', en:'Microsoft Event, June 2026'}, u:'https://msevents.microsoft.com/event?id=3011252995&ocid=AID2445079_FACEBOOK_oo_spl100010613930089'},
+    {t:'Build faster with Solution Accelerators — Foundry IQ + Fabric IQ', m:{ko:'CAIP Roadshow · SE 핸즈온 워크숍 · Microsoft, 2026.04', en:'CAIP Roadshow · SE Hands-on Workshop · Microsoft, Apr. 2026'}, u:'https://github.com/hyeonsangjeon/foundry-iq-demo-suite/tree/main/docs/handson-0423/demo-pack'},
+    {t:'Work IQ / Fabric IQ / Foundry IQ Deep Dive', m:{ko:'CAIP FF Roadshow Day 1 · STU ROADSHOW · Microsoft, 2026.04 (내부 자료)', en:'CAIP FF Roadshow Day 1 · STU ROADSHOW · Microsoft, Apr. 2026 (Internal deck)'}, u:LIBREPO},
+    {t:'Knowledge Retrieval Studio', m:{ko:'GBB Connect · Microsoft, 2026.04', en:'GBB Connect · Microsoft, Apr. 2026'}, u:'https://github.com/hyeonsangjeon/foundry-iq-demo-suite'},
+  ]},
+  { icon:'💻', ko:'GitHub · MVP 자산 기여 — AWS', en:'GitHub & MVP Contributions — AWS', items:[
+    {t:'QLoRA: Efficient Finetuning of Quantized LLMs', m:{ko:'aws-samples · 기여', en:'aws-samples · contribution'}, u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/30_fine_tune/01-instruction-tuning-peft-qlora'},
+    {t:'RAG for Finance Data Workshop', m:{ko:'aws-samples · 기여', en:'aws-samples · contribution'}, u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/20_applications/04_rag_finance_opensearch_sllm_workshop'},
+    {t:'PEFT-Huggingface-LoRA-Korean-Data', m:{ko:'aws-samples · 기여', en:'aws-samples · contribution'}, u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/30_fine_tune/02-tutorial-huggingface-peft-basic-lora'},
+    {t:{ko:'GenAI 멀티모달 문서 정보 추출 파이프라인', en:'GenAI Multimodal Document Information Extraction Pipeline'}, m:{ko:'aws-samples · 기여', en:'aws-samples · contribution'}, u:'https://github.com/aws-samples/aws-ai-ml-workshop-kr/tree/master/genai/aws-gen-ai-kr/20_applications/27_multimodal_document_ai_pipeline'},
+    {t:{ko:'computing-Korean-STT-error-rates — 한국어 ASR 평가 패키지', en:'computing-Korean-STT-error-rates — Korean ASR evaluation package'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/computing-Korean-STT-error-rates'},
+    {t:{ko:'AIsketcher — Text-to-Image 패키지', en:'AIsketcher — Text-to-Image package'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/AIsketcher'},
+    {t:{ko:'PDF2LLM-Tuning-Studio — 금융보안원 GenAI 딥다이브 강의', en:'PDF2LLM-Tuning-Studio — GenAI deep-dive lecture for the Financial Security Institute'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/PDF2LLM-Tuning-Studio'},
     {t:'Amazon-Bedrock-Guardrails-Toolkit', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/Amazon-Bedrock-Guardrails-Toolkit/tree/main'},
-    {t:'pronunciation-mapper — 한·영 발음 유사도 매핑', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/pronunciation-mapper'},
-    {t:'strands-bedrock-agents-cookbook — Claude Reasoning 핸즈온', m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/strands-bedrock-agents-cookbook/tree/main'},
-    {t:'GPU 기반 금융 PDF 처리 · Bedrock QA 생성 파이프라인', m:'AWS Workshop', u:'https://catalog.us-east-1.prod.workshops.aws/workshops/61cd351b-6326-4618-ad97-e318ed31472f/ko-KR'},
+    {t:{ko:'pronunciation-mapper — 한·영 발음 유사도 매핑', en:'pronunciation-mapper — Korean–English pronunciation similarity mapping'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/pronunciation-mapper'},
+    {t:{ko:'strands-bedrock-agents-cookbook — Claude Reasoning 핸즈온', en:'strands-bedrock-agents-cookbook — Claude Reasoning hands-on'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/strands-bedrock-agents-cookbook/tree/main'},
+    {t:{ko:'GPU 기반 금융 PDF 처리 · Bedrock QA 생성 파이프라인', en:'GPU-Accelerated Financial PDF Processing · Bedrock QA Generation Pipeline'}, m:'AWS Workshop', u:'https://catalog.us-east-1.prod.workshops.aws/workshops/61cd351b-6326-4618-ad97-e318ed31472f/ko-KR'},
+  ]},
+  { icon:'💻', ko:'GitHub · MVP 자산 기여 — Microsoft', en:'GitHub & MVP Contributions — Microsoft', items:[
+    {t:{ko:'GDPVal RealWorks — 실제 전문 업무 기반 LLM 벤치마크 · YAML 실험 파이프라인 · 라이브 대시보드', en:'GDPVal RealWorks — LLM benchmarking on real professional tasks with a YAML-driven pipeline and live dashboard'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/gdpval-realworks'},
+    {t:{ko:'Foundry Agent Network Diagnostic — BYO VNet의 Data Proxy → Private APIM 경로 진단 도구', en:'Foundry Agent Network Diagnostic — read-only diagnostics for the Data Proxy → Private APIM path in BYO VNet'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/foundry-agent-network-diagnostic'},
+    {t:{ko:'When Reasoning Pays Off — reasoning effort의 비용·지연·품질·용량 영향 벤치마크 및 운영 가이드', en:'When Reasoning Pays Off — benchmark and operator guide for reasoning-effort cost, latency, quality and capacity'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/when-reasoning-pays-off'},
+    {t:{ko:'Azure AI Search Foundry IQ Live Knowledge Sources — MCP Server · Fabric Ontology 기반 실시간 근거 추적 샘플', en:'Azure AI Search Foundry IQ Live Knowledge Sources — live grounding sample for MCP Server and Fabric Ontology with traceable evidence'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/azure-ai-search-foundry-iq-live-knowledge-sources'},
+    {t:{ko:'Foundry IQ Demo Suite — Knowledge Bases · Knowledge Sources · Semantic JOIN · Fabric IQ · SharePoint · MCP grounding Studio', en:'Foundry IQ Demo Suite — Knowledge Retrieval Studio for Knowledge Bases, Knowledge Sources, Semantic JOIN, Fabric IQ, SharePoint and MCP grounding'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/foundry-iq-demo-suite'},
+    {t:{ko:'Multi-Agent Orchestration Observability — 추적·로깅·재라우팅 가능한 Semantic Kernel/Azure OpenAI 노트북', en:'Multi-Agent Orchestration Observability — Semantic Kernel / Azure OpenAI notebook for transparent, loggable, overridable routing'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/multi-agent-orchestration-observability'},
+    {t:{ko:'EXAONE Multi-LoRA on Azure — Azure GPU VM에서 vLLM 기반 EXAONE 3.5 Multi-LoRA 서빙·성능 검증', en:'EXAONE Multi-LoRA on Azure — vLLM-based EXAONE 3.5 Multi-LoRA serving and benchmarking on Azure GPU VMs'}, m:'Hyeonsang Jeon & Xinyuwei', u:'https://github.com/david-xinyuwei/EXAONE-Multi-LoRA-on-Azure'},
+  ]},
+  { icon:'💻', ko:'개인 앱 · 개발자 도구', en:'Personal Apps & Developer Tools', items:[
+    {t:{ko:'Repolis — 내 GitHub 레포를 걸어서 탐험하는 3D 도시 포트폴리오', en:'Repolis — a walkable 3D city for exploring my GitHub repositories'}, m:'hyeonsangjeon', u:'https://github.com/hyeonsangjeon/Repolis'},
   ]},
   { icon:'🌟', ko:'커뮤니티 · 사회 기여', en:'Community & Social', items:[
-    {t:'A World Heard with Eyes: Drawing Hearts with GenAI (청각장애 지원)', m:'청음복지센터 · AWS Korea, 2023', u:'http://m.ignnews.co.kr/news/articleView.html?idxno=13535'},
-    {t:'AWS 임직원 자녀 초등학생 대상 AI 워크숍', m:'AWS Coding School Day, 2023', u:'https://www.linkedin.com/pulse/things-sometimes-more-important-than-technology-%ED%98%84%EC%83%81-%EC%A0%84/'},
-    {t:'인공지능이란? AI 엔지니어의 역할 (미래교육 강연)', m:'언북초등학교, 2022', u:LIBREPO},
+    {t:{ko:'컴퓨터가 내 숙제를 대신 해주면 몇 점을 받을까? — AI에게 어른들의 일을 시켜본 실험', en:"What Grade Would I Get If a Computer Did My Homework? — Experiments Asking AI to Do Adults' Work"}, m:{ko:'언북초등학교 미래설계교육, 2026.06', en:'Future Planning Education · Eonbuk Elementary, June 2026'}, u:'https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions/blob/main/assets/social-contributions/2026-06-08-eonbuk-ai-homework-ai-experiment.pdf'},
+    {t:{ko:'A World Heard with Eyes: Drawing Hearts with GenAI (청각장애 지원)', en:'A World Heard with Eyes: Drawing Hearts with GenAI (for the Hearing Impaired)'}, m:{ko:'청음복지센터 · AWS Korea, 2023', en:'Cheong-eum Welfare Center · AWS Korea, 2023'}, u:'http://m.ignnews.co.kr/news/articleView.html?idxno=13535'},
+    {t:{ko:'AWS 임직원 자녀 초등학생 대상 AI 워크숍', en:'AI Workshop for Elementary School-Aged Children of Amazon Employees'}, m:'AWS Coding School Day, 2023', u:'https://www.linkedin.com/pulse/things-sometimes-more-important-than-technology-%ED%98%84%EC%83%81-%EC%A0%84/'},
+    {t:{ko:'인공지능이란? AI 엔지니어의 역할 (미래교육 강연)', en:'What is Artificial Intelligence? The Role of an AI Engineer'}, m:{ko:'언북초등학교, 2022', en:'Eonbuk Elementary School, 2022'}, u:LIBREPO},
   ]},
   { icon:'🏅', ko:'수상 · 자격', en:'Awards & Certificates', items:[
-    {t:'Amazon Awesome Builder Award — aws-samples MVP 자산 기여', m:'AWS, 2024.09', u:LIBREPO},
+    {t:{ko:'Amazon Awesome Builder Award — aws-samples MVP 자산 기여', en:'Amazon Awesome Builder Award — aws-samples MVP asset contribution'}, m:'AWS, 2024.09', u:LIBREPO},
     {t:'Amazon Awesome Builder Award — Listening with Eyes: GenAI Coding School', m:'AWS, 2023.08', u:LIBREPO},
-    {t:'Amazon Awesome Builder Award — 임직원 자녀 초등 워크숍', m:'AWS, 2023.05', u:'https://www.linkedin.com/pulse/things-sometimes-more-important-than-technology-%ED%98%84%EC%83%81-%EC%A0%84/'},
-    {t:'Awsome Deliver Results — 2025 Summit AI FSI PDF Distillation 부스', m:'AWS, 2025', u:LIBREPO},
-    {t:'Awsome Deliver Results — 2023 Summit AI Basketball 부스', m:'AWS, 2023', u:LIBREPO},
+    {t:{ko:'Amazon Awesome Builder Award — 임직원 자녀 초등 워크숍', en:"Amazon Awesome Builder Award — Workshop for Employees' Children"}, m:'AWS, 2023.05', u:'https://www.linkedin.com/pulse/things-sometimes-more-important-than-technology-%ED%98%84%EC%83%81-%EC%A0%84/'},
+    {t:{ko:'Awesome Deliver Results — 2025 Summit AI FSI PDF Distillation 부스', en:'Awesome Deliver Results — 2025 Summit AI FSI PDF Distillation Booth'}, m:'AWS, 2025', u:LIBREPO},
+    {t:{ko:'Awesome Deliver Results — 2023 Summit AI Basketball 부스', en:'Awesome Deliver Results — 2023 Summit AI Basketball Booth'}, m:'AWS, 2023', u:LIBREPO},
     {t:'Collaboration Champion — Library Dev & Platform Integration', m:'SK holdings C&C, 2021.04', u:LIBREPO},
-    {t:'Competition Champion — BERT 주가 종가 예측 모델링', m:'SK holdings C&C, 2020.08', u:'https://youtu.be/kSZOsFX_KHI'},
+    {t:{ko:'Competition Champion — BERT 주가 종가 예측 모델링', en:'Competition Champion — BERT Stock Closing-Price Prediction Modeling'}, m:'SK holdings C&C, 2020.08', u:'https://youtu.be/kSZOsFX_KHI'},
     {t:'AWS Certified Machine Learning – Specialty', m:'AWS, 2022.12', u:LIBREPO},
     {t:'AWS Certified Solutions Architect – Associate', m:'AWS, 2021.12', u:LIBREPO},
   ]},
@@ -1641,6 +1660,8 @@ modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
 /* ---- Contribution Library panel ---- */
 const libModal=document.getElementById('libModal');
 let libBuilt=false;
+const LT=v=>(v&&typeof v==='object')?(LANG==='ko'?v.ko:v.en):v;
+const libRepoUrl=()=>LANG==='ko'?LIBREPO:LIBREPO+'/blob/main/README-EN.md';
 function buildLibrary(){
   document.getElementById('libTitle').textContent=t('libName');
   document.getElementById('libSubEl').textContent=t('libSub');
@@ -1652,14 +1673,14 @@ function buildLibrary(){
     h.innerHTML=`<span>${cat.icon}</span><span>${LANG==='ko'?cat.ko:cat.en}</span><span class="n">${cat.items.length}</span>`;
     sec.appendChild(h);
     cat.items.forEach(it=>{
-      const a=document.createElement('a'); a.className='libitem'; a.href=it.u; a.target='_blank'; a.rel='noopener';
-      a.innerHTML=`<span class="dot"></span><span class="tx"><span class="ti">${it.t.replace(/</g,'&lt;')}</span><span class="me">${(it.m||'').replace(/</g,'&lt;')}</span></span><span class="go">↗</span>`;
+      const a=document.createElement('a'); a.className='libitem'; a.href=(it.u===LIBREPO?libRepoUrl():it.u); a.target='_blank'; a.rel='noopener';
+      a.innerHTML=`<span class="dot"></span><span class="tx"><span class="ti">${LT(it.t).replace(/</g,'&lt;')}</span><span class="me">${(LT(it.m)||'').replace(/</g,'&lt;')}</span></span><span class="go">↗</span>`;
       sec.appendChild(a);
     });
     body.appendChild(sec);
   });
   const foot=document.getElementById('libFoot');
-  foot.innerHTML=`<a class="gh" href="${LIBREPO}" target="_blank" rel="noopener">${t('libRepoBtn')}</a>`
+  foot.innerHTML=`<a class="gh" href="${libRepoUrl()}" target="_blank" rel="noopener">${t('libRepoBtn')}</a>`
     +`<button class="close" id="libCloseB">${t('close')}</button>`;
   document.getElementById('libCloseB').onclick=closeLibrary;
   libBuilt=true; libModal._lang=LANG;
