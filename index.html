@@ -775,6 +775,51 @@ const DIRT_TEX=_noiseTex('#e1d3b3',[['#cfbd95',52,7,17,0.5],['#d8c9a3',40,5,12,0
 const SAND_TEX=_noiseTex('#d8c596',[['#cdb985',40,7,16,0.45],['#e3d3a8',34,5,12,0.4],['#c3ad7c',30,2,5,0.5]]);
 function texMat(tex, rx, ry, clone=true){ const t=clone?tex.clone():tex; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); t.anisotropy=MAXANISO; t.needsUpdate=true; return applyRim(new THREE.MeshToonMaterial({ map:t, gradientMap:GRAD })); }
 
+/* ---- procedural wall & roof textures, themed per category (cached by style+colour) ---- */
+function shade(col, amt){
+  const n=(typeof col==='string')?parseInt(col.replace('#',''),16):(col>>>0);
+  let r=(n>>16)&255, g=(n>>8)&255, b=n&255; const f=amt/100;
+  const a=v=>Math.max(0,Math.min(255,Math.round(amt>=0?v+(255-v)*f:v*(1+f))));
+  return '#'+(((a(r)<<16)|(a(g)<<8)|a(b))>>>0).toString(16).padStart(6,'0');
+}
+const WALL_STYLE={ AI:'panel', Data:'brick', AIOps:'stone', Finetune:'stucco', Software:'siding' };
+const _wallCache=new Map();
+function wallTexture(style, col){
+  const key=style+'_'+col; if(_wallCache.has(key)) return _wallCache.get(key);
+  const W=128,H=128,S=2; const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const x=cv.getContext('2d'); x.scale(S,S);
+  const base=shade(col,0), dk=shade(col,-15), dk2=shade(col,-30), lt=shade(col,14);
+  let seed=(((typeof col==='string')?parseInt(col.replace('#',''),16):col)>>>0)||1; const rnd=()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
+  x.fillStyle=base; x.fillRect(0,0,W,H);
+  if(style==='brick'){ const bh=15,bw=30;
+    for(let r=0,row=0;r<H+bh;r+=bh,row++){ const off=(row%2)?bw/2:0;
+      x.fillStyle=dk2; x.fillRect(0,r,W,1.6);
+      x.fillStyle=dk; for(let c=-bw;c<W+bw;c+=bw){ x.fillRect(c+off,r,1.6,bh); } } }
+  else if(style==='siding'){ const bh=12;
+    for(let r=0;r<H;r+=bh){ x.fillStyle='rgba(255,255,255,0.07)'; x.fillRect(0,r,W,bh*0.5); x.fillStyle=dk; x.fillRect(0,r+bh-1.6,W,1.6); } }
+  else if(style==='panel'){ const g=22; x.lineWidth=1.4; x.strokeStyle=dk;
+    for(let c=0;c<=W;c+=g){ x.beginPath(); x.moveTo(c,0); x.lineTo(c,H); x.stroke(); }
+    for(let r=0;r<=H;r+=g){ x.beginPath(); x.moveTo(0,r); x.lineTo(W,r); x.stroke(); }
+    x.fillStyle=dk2; for(let c=g/2;c<W;c+=g) for(let r=g/2;r<H;r+=g){ x.beginPath(); x.arc(c,r,1.3,0,7); x.fill(); } }
+  else if(style==='stone'){ x.strokeStyle=dk2; x.lineWidth=1.5;
+    let y=0; while(y<H){ const rh=10+rnd()*8; let xx=-rnd()*20; while(xx<W){ const rw=16+rnd()*16; x.fillStyle=rnd()<0.5?dk:base; x.fillRect(xx,y,rw,rh); x.strokeRect(xx,y,rw,rh); xx+=rw; } y+=rh; } }
+  else { for(let i=0;i<1100;i++){ const px=rnd()*W, py=rnd()*H; x.fillStyle=rnd()<0.5?dk:lt; x.globalAlpha=0.08+rnd()*0.12; x.fillRect(px,py,1.7,1.7); } x.globalAlpha=1; }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANISO; t.needsUpdate=true;
+  _wallCache.set(key,t); return t;
+}
+const _roofCache=new Map();
+function roofTexture(col){ const key='r_'+col; if(_roofCache.has(key)) return _roofCache.get(key);
+  const W=64,H=64,S=2; const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const x=cv.getContext('2d'); x.scale(S,S);
+  const base=shade(col,0), dk=shade(col,-22);
+  x.fillStyle=base; x.fillRect(0,0,W,H);
+  const rh=11; for(let r=0,row=0;r<H+rh;r+=rh,row++){ const off=(row%2)?9:0;
+    x.fillStyle=dk; x.fillRect(0,r-2,W,2.4);
+    x.strokeStyle=dk; x.lineWidth=1.2;
+    for(let c=-18;c<W+18;c+=18){ x.beginPath(); x.moveTo(c+off,r); x.lineTo(c+off,r-rh); x.stroke(); }
+    x.fillStyle='rgba(255,255,255,0.06)'; x.fillRect(0,r-rh,W,3); }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANISO; t.needsUpdate=true;
+  _roofCache.set(key,t); return t;
+}
+
 /* ---- ground ---- */
 const ground = new THREE.Mesh(new THREE.CircleGeometry(300,72), texMat(GRASS_TEX,59,59,false));
 ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
@@ -1000,17 +1045,18 @@ function typology(repo){
 /* ---- roof variants ---- */
 function makeRoof(style,w,h,color){
   const grp=new THREE.Group();
+  const rmat=(rx,ry)=>texMat(roofTexture(color), rx, ry);
   if(style==='flat'){
-    const slab=rbox(w*1.02,0.5,w*1.02,color,0.06); slab.position.y=h+0.25; outline(slab,0.05); grp.add(slab);
+    const slab=rbox(w*1.02,0.5,w*1.02,color,0.06); slab.material=rmat(2.4,2.4); slab.position.y=h+0.25; outline(slab,0.05); grp.add(slab);
     const ph=0.55, pt=0.16, e=w*0.51;
     [[0,e],[0,-e],[e,0],[-e,0]].forEach(([x,z])=>{ const horiz=Math.abs(z)>0; const pr=rbox(horiz?w*1.04:pt, ph, horiz?pt:w*1.04, color,0.04); pr.position.set(x,h+0.6,z); grp.add(pr); });
   } else if(style==='hip'){
-    const r=new THREE.Mesh(new THREE.ConeGeometry(w*0.9,1.7,4), toon(color)); r.position.y=h+0.85; r.rotation.y=Math.PI/4; r.castShadow=true; outline(r,0.06); grp.add(r);
+    const r=new THREE.Mesh(new THREE.ConeGeometry(w*0.9,1.7,4), rmat(4,1.4)); r.position.y=h+0.85; r.rotation.y=Math.PI/4; r.castShadow=true; outline(r,0.06); grp.add(r);
   } else if(style==='gambrel'){
-    const lo=new THREE.Mesh(new THREE.CylinderGeometry(w*0.62,w*0.96,1.1,4,1), toon(color)); lo.position.y=h+0.55; lo.rotation.y=Math.PI/4; lo.castShadow=true; outline(lo,0.06); grp.add(lo);
-    const hi=new THREE.Mesh(new THREE.ConeGeometry(w*0.64,1.5,4), toon(color)); hi.position.y=h+1.6; hi.rotation.y=Math.PI/4; hi.castShadow=true; outline(hi,0.06); grp.add(hi);
+    const lo=new THREE.Mesh(new THREE.CylinderGeometry(w*0.62,w*0.96,1.1,4,1), rmat(4,1.2)); lo.position.y=h+0.55; lo.rotation.y=Math.PI/4; lo.castShadow=true; outline(lo,0.06); grp.add(lo);
+    const hi=new THREE.Mesh(new THREE.ConeGeometry(w*0.64,1.5,4), rmat(4,1.3)); hi.position.y=h+1.6; hi.rotation.y=Math.PI/4; hi.castShadow=true; outline(hi,0.06); grp.add(hi);
   } else {
-    const r=new THREE.Mesh(new THREE.ConeGeometry(w*0.95,2.6,4), toon(color)); r.position.y=h+1.3; r.rotation.y=Math.PI/4; r.castShadow=true; outline(r,0.06); grp.add(r);
+    const r=new THREE.Mesh(new THREE.ConeGeometry(w*0.95,2.6,4), rmat(4,1.8)); r.position.y=h+1.3; r.rotation.y=Math.PI/4; r.castShadow=true; outline(r,0.06); grp.add(r);
   }
   return grp;
 }
@@ -1207,11 +1253,13 @@ function makeBuilding(repo){
 
   // body + roof (score-tiered silhouette: cabin→cottage→house→townhouse→villa→manor→mansion + tower/shop)
   const bodyR=(kind==='tower'||kind==='townhouse')?0.12:0.2;
-  const body=rbox(w,h,d,repo.wall,bodyR); body.position.y=h/2; outline(body,0.06); g.add(body);
+  const wstyle=WALL_STYLE[repo._cat]||'siding'; const wtex=wallTexture(wstyle, repo.wall);
+  const body=rbox(w,h,d,repo.wall,bodyR); body.material=texMat(wtex, Math.max(1.2,w/3.2), Math.max(1.2,h/3.2));
+  body.position.y=h/2; outline(body,0.06); g.add(body);
   repo._body=body;
   repo._cw=(w*0.5+0.6)*((kind==='manor'||kind==='mansion')?1.4:(kind==='villa')?1.18:1);
   let topH=h, topW=w;
-  if(kind==='shop'){ const uh=Math.max(1.8,h*0.34); const up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
+  if(kind==='shop'){ const uh=Math.max(1.8,h*0.34); const up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.material=texMat(wtex, Math.max(1,w*0.62/3.2), Math.max(1,uh/3.2)); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
   // side wings for grand residences (저택)
   if(kind==='villa'){ addWing(g, w*0.52, h*0.66, d*0.8, repo.wall, repo.roof, w*0.66); }
   else if(kind==='manor'||kind==='mansion'){ const wh=h*(kind==='mansion'?0.8:0.72), wx=w*0.72;
