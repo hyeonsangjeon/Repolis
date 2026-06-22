@@ -1516,13 +1516,13 @@ dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.delta
    Multi-touch: move + look run at once (one finger per side). Buttons/HUD sit above the canvas and take their own taps. */
 let stickVec={x:0,y:0};
 const joy=document.getElementById('joy'), joyNub=joy.querySelector('.nub');
-let moveTid=null, joyOX=0, joyOY=0; const JOYR=54;
+let moveTid=null, joyOX=0, joyOY=0, moveMoved=false; const JOYR=54;
 let lookTid=null, lookLX=0, lookLY=0, lookMoved=false;
 function setNub(dx,dy){ joyNub.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }
 dom.addEventListener('pointerdown',e=>{
   if(e.pointerType!=='touch') return;
   if(e.clientX < innerWidth*0.5 && moveTid===null){
-    moveTid=e.pointerId; joyOX=e.clientX; joyOY=e.clientY;
+    moveTid=e.pointerId; joyOX=e.clientX; joyOY=e.clientY; moveMoved=false;
     joy.style.left=joyOX+'px'; joy.style.top=joyOY+'px'; joy.style.display='block'; setNub(0,0);
     try{ dom.setPointerCapture(e.pointerId); }catch(_){}
   } else if(lookTid===null){
@@ -1534,6 +1534,7 @@ dom.addEventListener('pointermove',e=>{
   if(e.pointerType!=='touch') return;
   if(e.pointerId===moveTid){
     let dx=e.clientX-joyOX, dy=e.clientY-joyOY; const d=Math.hypot(dx,dy);
+    if(d>12) moveMoved=true;
     if(d>JOYR){ dx*=JOYR/d; dy*=JOYR/d; }
     setNub(dx,dy); stickVec={x:dx/JOYR,y:dy/JOYR};
   } else if(e.pointerId===lookTid){
@@ -1545,7 +1546,12 @@ dom.addEventListener('pointermove',e=>{
 });
 function endTouch(e){
   if(e.pointerType!=='touch') return;
-  if(e.pointerId===moveTid){ moveTid=null; stickVec={x:0,y:0}; joy.style.display='none'; }
+  if(e.pointerId===moveTid){
+    // a tap on the move half (no joystick drag) opens the building you're standing at,
+    // mirroring the look half — so tapping the house works wherever it renders on screen
+    if(!moveMoved && nearest && !modalOpen) openCard(nearest);
+    moveTid=null; stickVec={x:0,y:0}; joy.style.display='none';
+  }
   else if(e.pointerId===lookTid){ if(!lookMoved&&nearest&&!modalOpen) openCard(nearest); lookTid=null; }
 }
 dom.addEventListener('pointerup',endTouch);
@@ -1879,11 +1885,15 @@ function animate(){
   camera.position.lerp(new THREE.Vector3(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz),0.12);
   camera.lookAt(player.position.x,player.position.y+1.7,player.position.z);
 
-  nearest=null; let nd=7.8;
+  nearest=null; let nd=Infinity;
   for(const b of buildings){
     const d=player.position.distanceTo(b._pos);
     b._ring.material.opacity=0.3+Math.sin(clock.elapsedTime*2+b._pos.z)*0.16;
-    if(d<nd){ nd=d; nearest=b; }
+    // walk-up range scales with the building footprint: a big house's collider stops you
+    // ~_cw from its centre, so a fixed radius could sit *inside* the collider and never
+    // trigger (e.g. the rank-0 mansion at _cw 9.2 > old 7.8). Pick the nearest one in range.
+    const reach=Math.min(b._cw||3,10)+4.8;
+    if(d<reach && d<nd){ nd=d; nearest=b; }
   }
   if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
@@ -2020,7 +2030,16 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__tp=(x,z,yaw=Math.PI,pitch=0.30,dist=24)=>{ player.position.set(x,0,z); model.rotation.y=Math.PI-yaw; camYaw=yaw; camPitch=pitch; camDist=dist; return {x,z}; };
   window.__libInfo=()=>({count:LIBCOUNT, pos:{x:+LIB._pos.x.toFixed(1),z:+LIB._pos.z.toFixed(1)}, cats:LIBDATA.length});
   window.__pos=()=>({x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2)});
-  window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)}); }
+  window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)});
+  window.__near=()=>nearest?(nearest._isLibrary?'__LIB__':nearest.repo):null;
+  window.__act=()=>({prompt:document.getElementById('prompt').classList.contains('show'), btn:document.getElementById('actBtn').classList.contains('avail')});
+  window.__cw=(name)=>{ const b=buildings.find(x=>x.repo===name); return b?+(b._cw||3).toFixed(2):null; };
+  window.__farZRepo=()=>{ let best=null,bz=-1e9; for(const b of buildings){ if(b._isLibrary) continue; if(b._z>bz){ bz=b._z; best=b; } } return best?{repo:best.repo,x:+best._x.toFixed(1),z:+best._z.toFixed(1)}:null; };
+  window.__walkInto=(name,fromAngle=Math.PI)=>{ const b=buildings.find(x=>x.repo===name); if(!b) return null;
+    // drop the player on b's footprint edge as the collider would, approaching from the city centre
+    const ux=Math.cos(fromAngle), uz=Math.sin(fromAngle), r=(b._cw||3);
+    player.position.set(b._x+ux*r, 0, b._z+uz*r); camYaw=Math.atan2(b._x-player.position.x,b._z-player.position.z); camPitch=0.32; camDist=20;
+    return {x:+player.position.x.toFixed(2), z:+player.position.z.toFixed(2), d:+player.position.distanceTo(b._pos).toFixed(2), cw:+r.toFixed(2)}; }; }
 </script>
 </body>
 </html>
