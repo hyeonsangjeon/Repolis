@@ -1196,42 +1196,43 @@ driver.rotation.y=-2.2; scene.add(driver);
 
 /* ---- character (chibi, cute — soft rounded forms, no hard boxes) ---- */
 const player=new THREE.Group(); const model=new THREE.Group(); player.add(model);
-const SHIRT=0x3aa0d8, SKIN=0xf2cca2, HAIR=0x2c2521, PANTS=0x33406e, BAGC=0xe05642;
-// torso — soft bean, slightly flattened front-to-back
-const body=capsule(0.45,0.46,SHIRT); body.position.y=1.4; body.scale.z=0.82; outline(body,0.04); model.add(body);
-const collar=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.07,10,24,Math.PI*1.3), basic(0x2f86b8)); collar.position.set(0,1.78,0.17); collar.rotation.set(Math.PI*0.5,0,Math.PI*0.85); model.add(collar);
-const placket=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.7,8), basic(0x2f86b8)); placket.position.set(0,1.4,0.34); model.add(placket); // shirt button line
-const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.28,0.3,14), toon(SKIN)); neck.position.y=1.88; neck.castShadow=true; model.add(neck);
+const SHIRT=0xf4f4f0, SKIN=0xf3cda3, HAIR=0x231b16, PANTS=0x26262c, SOCK=0x20202a, SHOE=0xf2f2f0;
+// torso — soft bean, oversized white running tee
+const body=capsule(0.46,0.5,SHIRT); body.position.y=1.4; body.scale.z=0.82; outline(body,0.04); model.add(body);
+const collar=new THREE.Mesh(new THREE.TorusGeometry(0.2,0.05,10,24), basic(0xdcdcd6)); collar.position.set(0,1.8,0.1); collar.rotation.x=Math.PI/2; model.add(collar); // round neckline
+const print=new THREE.Mesh(new THREE.PlaneGeometry(0.32,0.24), basic(0x3a3a40)); print.position.set(0,1.5,0.39); model.add(print); // little race-bib print
+const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.26,0.28,14), toon(SKIN)); neck.position.y=1.86; neck.castShadow=true; model.add(neck);
 // head — rounded egg (faceMat = night glow material)
 const head=ball(0.58,SKIN,22); head.position.y=2.3; head.scale.set(1.0,0.98,0.96); outline(head,0.045); model.add(head);
-// hair — rounded cap + soft fringe + side locks
-const hair=ball(0.62,HAIR,20); hair.position.set(0,2.5,-0.05); hair.scale.set(1.04,0.82,1.06); outline(hair,0.035); model.add(hair);
-const fringe=ball(0.5,HAIR,16); fringe.position.set(0,2.62,0.3); fringe.scale.set(1.08,0.46,0.7); model.add(fringe);
-[[-0.54],[0.54]].forEach(([sx])=>{ const s=ball(0.26,HAIR,14); s.position.set(sx,2.32,0.0); s.scale.set(0.6,1.15,0.96); model.add(s); }); // side hair framing the face
+// hair — 서원이 mushroom bob: domed shell + cheek-length sides + straight blunt fringe
+const hair=ball(0.66,HAIR,22); hair.position.set(0,2.42,-0.2); hair.scale.set(1.06,1.02,0.94); outline(hair,0.035); model.add(hair); // mushroom dome — 뒤·위·옆만 덮어 얼굴 노출
+[[-0.52],[0.52]].forEach(([sx])=>{ const s=ball(0.3,HAIR,16); s.position.set(sx,2.16,-0.06); s.scale.set(0.5,1.45,0.9); model.add(s); }); // cheek-length side hair (단발)
+const bang=rbox(1.06,0.3,0.42,HAIR,0.09,4); bang.position.set(0,2.57,0.36); bang.scale.z=0.78; model.add(bang); // straight blunt fringe (일자 앞머리)
 // eyes (with catch-light) + brows + tiny nose + smile + cheeks
 [[-0.24],[0.24]].forEach(([ex])=>{
   const e=new THREE.Mesh(new THREE.SphereGeometry(0.12,14,12), basic(0x2a2320)); e.position.set(ex,2.3,0.5); e.scale.z=0.55; model.add(e);
   const hl=new THREE.Mesh(new THREE.SphereGeometry(0.038,8,6), basic(0xffffff)); hl.position.set(ex+0.05,2.34,0.55); model.add(hl);
 });
-[[-0.24,1],[0.24,-1]].forEach(([ex,s])=>{ const b=new THREE.Mesh(new THREE.CapsuleGeometry(0.03,0.18,3,8), toon(HAIR)); b.rotation.z=Math.PI/2+s*0.16; b.position.set(ex,2.5,0.49); model.add(b); }); // friendly brows
+[[-0.24,1],[0.24,-1]].forEach(([ex,s])=>{ const b=new THREE.Mesh(new THREE.CapsuleGeometry(0.028,0.17,3,8), toon(HAIR)); b.rotation.z=Math.PI/2+s*0.14; b.position.set(ex,2.44,0.49); model.add(b); }); // brows just under the fringe
 { const nose=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6), toon(0xeab98c)); nose.position.set(0,2.22,0.56); model.add(nose); }
 { const mouth=new THREE.Mesh(new THREE.TorusGeometry(0.12,0.028,8,16,Math.PI), basic(0x9c5a4a)); mouth.position.set(0,2.09,0.5); mouth.rotation.z=Math.PI; model.add(mouth); } // smile
 [[-0.38],[0.38]].forEach(([cx])=>{
   const c=new THREE.Mesh(new THREE.CircleGeometry(0.11,14), new THREE.MeshBasicMaterial({color:0xffa9a0,transparent:true,opacity:.6}));
   c.position.set(cx,2.12,0.52); model.add(c);
 });
-// backpack — rounded
-const bag=capsule(0.34,0.42,BAGC); bag.position.set(0,1.46,-0.48); bag.scale.z=0.66; outline(bag,0.035); model.add(bag);
-const bagFlap=ball(0.3,0xc6452f,12); bagFlap.position.set(0,1.62,-0.5); bagFlap.scale.set(1.05,0.7,0.7); model.add(bagFlap);
+// (no backpack — 서원이 러닝룩)
 // arms — capsules on shoulder pivots (swing from the shoulder)
 const armL=new THREE.Group(); armL.position.set(-0.5,1.78,0); model.add(armL);
 { const a=capsule(0.15,0.44,SHIRT); a.position.y=-0.32; outline(a,0.03); armL.add(a);
   const h=ball(0.155,SKIN,12); h.position.y=-0.66; armL.add(h); }
 const armR=armL.clone(); armR.position.x=0.5; model.add(armR);
-// legs — capsules on hip pivots, rounded shoes inside (swing together)
+// legs — black shorts + bare shins + black socks + white sneakers (swing together)
 const legL=new THREE.Group(); legL.position.set(-0.2,0.92,0); model.add(legL);
-{ const l=capsule(0.18,0.42,PANTS); l.position.y=-0.33; outline(l,0.03); legL.add(l);
-  const sh=new THREE.Mesh(new THREE.SphereGeometry(0.23,14,12), toon(0x4a3a2a)); sh.scale.set(1.0,0.7,1.45); sh.position.set(0,-0.7,0.12); sh.castShadow=true; legL.add(sh); }
+{ const shorts=capsule(0.2,0.22,PANTS); shorts.position.y=-0.18; outline(shorts,0.03); legL.add(shorts);   // 검정 반바지
+  const shin=capsule(0.145,0.26,SKIN); shin.position.y=-0.47; legL.add(shin);                              // 맨종아리
+  const sock=new THREE.Mesh(new THREE.CylinderGeometry(0.155,0.16,0.18,12), toon(SOCK)); sock.position.y=-0.64; legL.add(sock); // 검정 양말
+  const sh=new THREE.Mesh(new THREE.SphereGeometry(0.23,14,12), toon(SHOE)); sh.scale.set(1.0,0.66,1.45); sh.position.set(0,-0.74,0.12); sh.castShadow=true; legL.add(sh);   // 흰 운동화
+  const sole=new THREE.Mesh(new THREE.SphereGeometry(0.22,12,8), basic(0xd8d8d2)); sole.scale.set(1.04,0.3,1.42); sole.position.set(0,-0.81,0.13); legL.add(sole); }          // 밑창
 const legR=legL.clone(); legR.position.x=0.2; model.add(legR);
 const blob=new THREE.Mesh(new THREE.CircleGeometry(1.0,28), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0x07142e,transparent:true,opacity:0.32,depthWrite:false}));
 blob.rotation.x=-Math.PI/2; blob.position.y=0.03; player.add(blob); // soft contact shadow
