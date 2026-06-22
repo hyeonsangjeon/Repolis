@@ -1781,7 +1781,11 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
     `<span class="chip">★ <b>${repo.stars}</b> stars</span>`+
     `<span class="chip">⑂ <b>${repo.forks}</b> forks</span>`+
     `<span class="chip">👁 <b>${repo.vuniq}</b> visitors</span>`+
-    `<span class="chip">⬇ <b>${repo.clones}</b> clones</span>`;
+    `<span class="chip">⬇ <b>${repo.clones}</b> clones</span>`+
+    (repo.open_issues?`<span class="chip">◎ <b>${repo.open_issues}</b> issues</span>`:'')+
+    (repo.license?`<span class="chip">⚖ <b>${repo.license}</b></span>`:'')+
+    (repo.release_tag?`<span class="chip" title="${repo.release_date||''}">🏷 <b>${repo.release_tag}</b></span>`:'')+
+    (repo.archived?`<span class="chip">📦 ${LANG==='ko'?'보관됨':'archived'}</span>`:'');
   const since=document.getElementById('cardSince');
   if(repo.first_seen){ since.style.display='block';
     since.innerHTML = LANG==='ko'
@@ -2227,6 +2231,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; };
   window.__taxi=(name)=>{ const r=REPOS.find(x=>x.repo===name); if(r&&r._pos){ taxiTo(r); return true; } return false; };
   window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom}));
+  window.__card=(name)=>{ const r=REPOS.find(x=>x.repo===name); if(r){ openCard(r); return {repo:r.repo,license:r.license,open_issues:r.open_issues,release_tag:r.release_tag,archived:r.archived,chips:[...document.querySelectorAll('#cardChips .chip')].map(c=>c.textContent.trim())}; } return null; };
   window.__modal=()=>modalOpen;
   window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, total:allCountEl.textContent, ws:rtSock?rtSock.readyState:-1});
   window.__meteor=(az)=>{ spawnMeteor(az); return true; };

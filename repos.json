@@ -41,7 +41,13 @@
 "social": "https://repository-images.githubusercontent.com/149748615/d9b76edc-f71d-4ef2-954a-5d2615b6c315",
 "social_custom": true,
 "score": 16.093,
-"rank": 0
+"rank": 0,
+"open_issues": 27,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "gdpval-realworks",
@@ -85,7 +91,13 @@
 "social": "https://opengraph.githubassets.com/865ed4017ae77e3fc0a5926909add62d2b40cded14a32b8bfd396e926dfb230a/hyeonsangjeon/gdpval-realworks",
 "social_custom": false,
 "score": 14.017,
-"rank": 1
+"rank": 1,
+"open_issues": 1,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "computing-Korean-STT-error-rates",
@@ -129,7 +141,13 @@
 "social": "https://opengraph.githubassets.com/b15a0258908ffc8fb20c221530a56a309c265cef62f693520a3e11224248ecd5/hyeonsangjeon/computing-Korean-STT-error-rates",
 "social_custom": false,
 "score": 13.992,
-"rank": 2
+"rank": 2,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "0.0.0.9",
+"release_date": "2025-06-18"
 },
 {
 "repo": "Hyperparameters-Optimization",
@@ -171,7 +189,13 @@
 "social": "https://opengraph.githubassets.com/c89e586d82d5923cd4d4786c7ff9cf507bb040c6cbdf8a7e593058a07e7494f5/hyeonsangjeon/Hyperparameters-Optimization",
 "social_custom": false,
 "score": 10.711,
-"rank": 3
+"rank": 3,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "foundry-iq-demo-suite",
@@ -194,7 +218,13 @@
 "social": "https://repository-images.githubusercontent.com/1176412666/40a9785e-78a6-4ce3-b389-765d98ebfbf6",
 "social_custom": true,
 "score": 10.642,
-"rank": 4
+"rank": 4,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "PDF2LLM-Tuning-Studio",
@@ -238,7 +268,13 @@
 "social": "https://opengraph.githubassets.com/533f6edc7ebfc75cc5605fd1bca6ef448c0fea6fe091d3442bf9f23f2a0c55a0/hyeonsangjeon/PDF2LLM-Tuning-Studio",
 "social_custom": false,
 "score": 10.187,
-"rank": 5
+"rank": 5,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "when-reasoning-pays-off",
@@ -274,7 +310,13 @@
 "social": "https://repository-images.githubusercontent.com/1258087491/b2072549-593d-487c-9e8e-b575f5ede7d3",
 "social_custom": true,
 "score": 8.903,
-"rank": 6
+"rank": 6,
+"open_issues": 1,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "AWS-LLM-SageMaker",
@@ -312,7 +354,13 @@
 "social": "https://opengraph.githubassets.com/bf774150f8f8453566dfd860337cfcf172f8b37d8da388928e1b64a3f8de0d3f/hyeonsangjeon/AWS-LLM-SageMaker",
 "social_custom": false,
 "score": 8.713,
-"rank": 7
+"rank": 7,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "channel-vault-nas",
@@ -350,7 +398,13 @@
 "social": "https://repository-images.githubusercontent.com/1254165127/30e8c2e8-7e4e-4639-9649-e199cfa9eb94",
 "social_custom": true,
 "score": 8.385,
-"rank": 8
+"rank": 8,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "Amazon-Bedrock-Guardrails-Toolkit",
@@ -373,7 +427,13 @@
 "social": "https://opengraph.githubassets.com/f0b6df03983dc82aa3bf36cc92042cf1ab4dde18c69c87fae718563b4063e442/hyeonsangjeon/Amazon-Bedrock-Guardrails-Toolkit",
 "social_custom": false,
 "score": 8.056,
-"rank": 9
+"rank": 9,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "AIsketcher",
@@ -409,7 +469,13 @@
 "social": "https://opengraph.githubassets.com/c23ab404cf63e3fb04dd12299585592618d05826d400e6d9bf5c8aa1a839d5d6/hyeonsangjeon/AIsketcher",
 "social_custom": false,
 "score": 7.276,
-"rank": 10
+"rank": 10,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "pronunciation-mapper",
@@ -438,7 +504,13 @@
 "social": "https://opengraph.githubassets.com/afbaba984690b2960fee2bc2f71b6aab47c306558b0e76885dc78512949492a7/hyeonsangjeon/pronunciation-mapper",
 "social_custom": false,
 "score": 7.011,
-"rank": 11
+"rank": 11,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "Hyeonsang-AI-Contributions",
@@ -461,7 +533,13 @@
 "social": "https://opengraph.githubassets.com/1054d54892a2c353b93d5b7a08d708e1cae703601224dcf8ca675d18dbee4043/hyeonsangjeon/Hyeonsang-AI-Contributions",
 "social_custom": false,
 "score": 6.705,
-"rank": 12
+"rank": 12,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "FSI-Gameday-General-Immersion-Day",
@@ -484,7 +562,13 @@
 "social": "https://opengraph.githubassets.com/f8b4971d7a787bb905006c223c26c32e431684f31693c0b419b488196011abc0/hyeonsangjeon/FSI-Gameday-General-Immersion-Day",
 "social_custom": false,
 "score": 6.189,
-"rank": 13
+"rank": 13,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "aws-llm-dashboard",
@@ -507,7 +591,13 @@
 "social": "https://opengraph.githubassets.com/921ad92312293a729d6973f87b81d4bf1aeb13f3834b157f92170d484839bb4a/hyeonsangjeon/aws-llm-dashboard",
 "social_custom": false,
 "score": 5.979,
-"rank": 14
+"rank": 14,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "PEFT-Huggingface-LoRA-Korean-Data",
@@ -530,7 +620,13 @@
 "social": "https://opengraph.githubassets.com/f84e5076135401a9a9473a197892070c2f2e68311d71bfb2e0c8563386770769/hyeonsangjeon/PEFT-Huggingface-LoRA-Korean-Data",
 "social_custom": false,
 "score": 5.698,
-"rank": 15
+"rank": 15,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "vertx-embedded-springboot",
@@ -563,7 +659,13 @@
 "social": "https://opengraph.githubassets.com/52b0d4fdca0dd2002ffa66367a290c8843cfab313cbb96e6ce09f887edc59a5b/hyeonsangjeon/vertx-embedded-springboot",
 "social_custom": false,
 "score": 4.206,
-"rank": 16
+"rank": 16,
+"open_issues": 1,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "aws-korea-2023-coding-school",
@@ -586,7 +688,13 @@
 "social": "https://opengraph.githubassets.com/c2ab0dba5580d1adb575d7b140eb33543a9059fda82b91f038e6c7a5ad531966/hyeonsangjeon/aws-korea-2023-coding-school",
 "social_custom": false,
 "score": 3.801,
-"rank": 17
+"rank": 17,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "gotty-docker",
@@ -626,7 +734,13 @@
 "social": "https://opengraph.githubassets.com/3d63b2491098b709d35ceb2424beaea404978102c207d8e81fa46321983b5256/hyeonsangjeon/gotty-docker",
 "social_custom": false,
 "score": 3.513,
-"rank": 18
+"rank": 18,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "master",
+"release_tag": "v1.8.0",
+"release_date": "2026-06-21"
 },
 {
 "repo": "dataplatform",
@@ -658,7 +772,13 @@
 "social": "https://opengraph.githubassets.com/68e6434695cab3a90d033b73181c2871fa4fa2d2be2aa4ec9520226874a5e8bd/hyeonsangjeon/dataplatform",
 "social_custom": false,
 "score": 3.045,
-"rank": 19
+"rank": 19,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "mariadb-galera-cluster",
@@ -681,7 +801,13 @@
 "social": "https://opengraph.githubassets.com/4eece9c23052bdff218e1925b89a1e8360ebc7b7581f6f9fabad9e516c106c83/hyeonsangjeon/mariadb-galera-cluster",
 "social_custom": false,
 "score": 2.654,
-"rank": 20
+"rank": 20,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "strands-bedrock-agents-cookbook",
@@ -715,7 +841,13 @@
 "social": "https://opengraph.githubassets.com/be89bccc658e94a998571511d81fc5f1473088e77ecdef4f9bbba982c3afaa27/hyeonsangjeon/strands-bedrock-agents-cookbook",
 "social_custom": false,
 "score": 2.435,
-"rank": 21
+"rank": 21,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "sysmon",
@@ -738,7 +870,13 @@
 "social": "https://opengraph.githubassets.com/7034dc21c46b7ccd3bee49b1c609dc72b775d86f5b7c6c8e746c7fd7eabe5b51/hyeonsangjeon/sysmon",
 "social_custom": false,
 "score": 2.253,
-"rank": 22
+"rank": 22,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "colab-tensorflow-tpu-example",
@@ -777,7 +915,13 @@
 "social": "https://opengraph.githubassets.com/70a42062d00d831c5aaf740c9264364b1a315e000e694e230f02440564d9b0e9/hyeonsangjeon/colab-tensorflow-tpu-example",
 "social_custom": false,
 "score": 1.874,
-"rank": 23
+"rank": 23,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "vagrant-rancher2.0",
@@ -809,7 +953,13 @@
 "social": "https://opengraph.githubassets.com/086fa7f71911bc09de021d91a63a53c616473675616c7f5148f316f6ada65912/hyeonsangjeon/vagrant-rancher2.0",
 "social_custom": false,
 "score": 1.858,
-"rank": 24
+"rank": 24,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "springboot-examples",
@@ -848,7 +998,13 @@
 "social": "https://opengraph.githubassets.com/ff62277b3219218a52bcb85a3c2ceff29ba91fe403dc485d293eb00de46679c8/hyeonsangjeon/springboot-examples",
 "social_custom": false,
 "score": 1.758,
-"rank": 25
+"rank": 25,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "springboot-properties-docker",
@@ -877,7 +1033,13 @@
 "social": "https://opengraph.githubassets.com/63403d67bf504b473f9dd67ae0e13d004db526ab77cb1033d9346b6ac71ea1e4/hyeonsangjeon/springboot-properties-docker",
 "social_custom": false,
 "score": 1.555,
-"rank": 26
+"rank": 26,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "kubernetes-dashboard-nodeport",
@@ -907,7 +1069,13 @@
 "social": "https://opengraph.githubassets.com/3f9202cedb3cb17c753ec8b39c58274d870e2016147f245ada9e43415d855b93/hyeonsangjeon/kubernetes-dashboard-nodeport",
 "social_custom": false,
 "score": 1.45,
-"rank": 27
+"rank": 27,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "ubuntu-dind",
@@ -934,7 +1102,13 @@
 "social": "https://opengraph.githubassets.com/a363ff46068a5b4d07aae15a56bf5c4450306aa3a99abebe1411f7f3631602bb/hyeonsangjeon/ubuntu-dind",
 "social_custom": false,
 "score": 1.45,
-"rank": 28
+"rank": 28,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "disparity-based-space-vagriant-image-deblurring",
@@ -978,7 +1152,13 @@
 "social": "https://opengraph.githubassets.com/cb85031528b47df355976a68ce3a07225bc940b741a9515eea09415df7ab8db5/hyeonsangjeon/disparity-based-space-vagriant-image-deblurring",
 "social_custom": false,
 "score": 1.417,
-"rank": 29
+"rank": 29,
+"open_issues": 1,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "ISO-3166-alpha2-alpha3-korean",
@@ -1009,7 +1189,13 @@
 "social": "https://opengraph.githubassets.com/25d1927802393b7a26a40e6246ac959fab796b26566c4b15220b958be4a548db/hyeonsangjeon/ISO-3166-alpha2-alpha3-korean",
 "social_custom": false,
 "score": 1.312,
-"rank": 30
+"rank": 30,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "Deep-Learning-Hyperparameter-optimization",
@@ -1032,7 +1218,13 @@
 "social": "https://opengraph.githubassets.com/d38b0de75e24436a86224daecf601d79dc4e4e0505dbe4d175fec64b4a00ffe7/hyeonsangjeon/Deep-Learning-Hyperparameter-optimization",
 "social_custom": false,
 "score": 1.248,
-"rank": 31
+"rank": 31,
+"open_issues": 1,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "jenkins-dind",
@@ -1065,7 +1257,13 @@
 "social": "https://opengraph.githubassets.com/1a35e6dce6c58b58a5960eac4521e97012e115f4222e2f2bfada86276bc6ac6f/hyeonsangjeon/jenkins-dind",
 "social_custom": false,
 "score": 1.035,
-"rank": 32
+"rank": 32,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "kafka-metric-example",
@@ -1088,7 +1286,13 @@
 "social": "https://opengraph.githubassets.com/078b4bc3e3f6027ca2a4c7ac3c57c36a7c028e51dbf3058358c92252b1f17ac9/hyeonsangjeon/kafka-metric-example",
 "social_custom": false,
 "score": 1.035,
-"rank": 33
+"rank": 33,
+"open_issues": 2,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "python-xmas-tree",
@@ -1115,7 +1319,13 @@
 "social": "https://opengraph.githubassets.com/f54d607ea51c439d7d71d8d600ac87cda554f54fe6504e05c76be48a4ff8ca96/hyeonsangjeon/python-xmas-tree",
 "social_custom": false,
 "score": 1.035,
-"rank": 34
+"rank": 34,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "alpine-nginx-perl",
@@ -1147,7 +1357,13 @@
 "social": "https://opengraph.githubassets.com/adbed0236324341a80510cc58e0e23dc9d83e6129d232436a6052c1c35e51877/hyeonsangjeon/alpine-nginx-perl",
 "social_custom": false,
 "score": 0.832,
-"rank": 35
+"rank": 35,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "minikube-dev-env",
@@ -1170,7 +1386,13 @@
 "social": "https://opengraph.githubassets.com/b9a2388f352e1af6af25c18344d6d9e4b80c131b94922dda9cb05155a66cc3d0/hyeonsangjeon/minikube-dev-env",
 "social_custom": false,
 "score": 0.832,
-"rank": 36
+"rank": 36,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "morgan-winston-dailylog",
@@ -1201,7 +1423,13 @@
 "social": "https://opengraph.githubassets.com/f54d607ea51c439d7d71d8d600ac87cda554f54fe6504e05c76be48a4ff8ca96/hyeonsangjeon/morgan-winston-dailylog",
 "social_custom": false,
 "score": 0.832,
-"rank": 37
+"rank": 37,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "python-threads-queue",
@@ -1231,7 +1459,13 @@
 "social": "https://opengraph.githubassets.com/b571e8f7f95f614067023c03c78f8c9b7173890a61ebb9cc3d191240c1f2e495/hyeonsangjeon/python-threads-queue",
 "social_custom": false,
 "score": 0.832,
-"rank": 38
+"rank": 38,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "ECS-Immersion-Day",
@@ -1254,7 +1488,13 @@
 "social": "https://opengraph.githubassets.com/45c89945a521f8cadc70d08e9caf37d861563f30b5431fffb95270ca8176d458/hyeonsangjeon/ECS-Immersion-Day",
 "social_custom": false,
 "score": 0.693,
-"rank": 39
+"rank": 39,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "yesno",
@@ -1287,7 +1527,13 @@
 "social": "https://opengraph.githubassets.com/131a9aa294597f3111891cb41de8dfc53c219d148e7e32ec9c5039561dfbb235/hyeonsangjeon/yesno",
 "social_custom": false,
 "score": 0.693,
-"rank": 40
+"rank": 40,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "Kor-LLM-On-SageMaker",
@@ -1310,7 +1556,13 @@
 "social": "",
 "social_custom": false,
 "score": 0.549,
-"rank": 41
+"rank": 41,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "job-transcribe",
@@ -1333,7 +1585,13 @@
 "social": "https://opengraph.githubassets.com/1a0956860099a45b507174a01e79810bb0687d8db35ef3de21b8c5d1d56844ef/hyeonsangjeon/job-transcribe",
 "social_custom": false,
 "score": 0.485,
-"rank": 42
+"rank": 42,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "multi-agent-orchestration-observability",
@@ -1356,7 +1614,13 @@
 "social": "https://repository-images.githubusercontent.com/1209250476/f7a400df-cb32-4050-a35d-ff861e50c84a",
 "social_custom": true,
 "score": 0.485,
-"rank": 43
+"rank": 43,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "rag-faq-streamlit",
@@ -1379,7 +1643,13 @@
 "social": "https://opengraph.githubassets.com/83318c9657b81e4e93a49f776a0c75fd2e9b2c7094eca9916e30253f470f25ac/hyeonsangjeon/rag-faq-streamlit",
 "social_custom": false,
 "score": 0.485,
-"rank": 44
+"rank": 44,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "competition",
@@ -1402,7 +1672,13 @@
 "social": "https://opengraph.githubassets.com/7fe10c7324a764799188366dad23a53b6f1b26094c8c94f386c36ae63c5f8ada/hyeonsangjeon/competition",
 "social_custom": false,
 "score": 0.347,
-"rank": 45
+"rank": 45,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "pyveil",
@@ -1425,7 +1701,13 @@
 "social": "https://opengraph.githubassets.com/f04c1a0e781a9b1c97bc3fe7ee5dfb2ac32caa30e4fa786ad20500112e0bdbd3/hyeonsangjeon/pyveil",
 "social_custom": false,
 "score": 0.347,
-"rank": 46
+"rank": 46,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "AccuPreLab",
@@ -1448,7 +1730,13 @@
 "social": "",
 "social_custom": false,
 "score": 0.0,
-"rank": 47
+"rank": 47,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "amazon-transcribe-websocket-static",
@@ -1471,7 +1759,13 @@
 "social": "",
 "social_custom": false,
 "score": 0.0,
-"rank": 48
+"rank": 48,
+"open_issues": 0,
+"license": "Apache-2.0",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "aws-ai-ml-workshop-kr",
@@ -1494,7 +1788,13 @@
 "social": "",
 "social_custom": false,
 "score": 0.0,
-"rank": 49
+"rank": 49,
+"open_issues": 0,
+"license": "MIT-0",
+"archived": false,
+"default_branch": "master",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "ChatGPT-API-JS",
@@ -1517,7 +1817,13 @@
 "social": "https://opengraph.githubassets.com/9490c73a3d20f384de8dfd4c92e5ed1f1d312991f4d061873dad9d502076c410/hyeonsangjeon/ChatGPT-API-JS",
 "social_custom": false,
 "score": 0.0,
-"rank": 50
+"rank": 50,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "EMRSparkNotebook",
@@ -1540,7 +1846,13 @@
 "social": "https://opengraph.githubassets.com/58bb9d3abf18151327e6414bf33142eb4227ef41082e4b4d60b1e162680714fa/hyeonsangjeon/EMRSparkNotebook",
 "social_custom": false,
 "score": 0.0,
-"rank": 51
+"rank": 51,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "ent-boost-aiml-b05-ch08",
@@ -1563,7 +1875,13 @@
 "social": "https://opengraph.githubassets.com/2ccdf0d8146d42a1686505afc11dd64da2df975f9ca68cd6189f956a5a219a9a/hyeonsangjeon/ent-boost-aiml-b05-ch08",
 "social_custom": false,
 "score": 0.0,
-"rank": 52
+"rank": 52,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "flask-sentiment-detector",
@@ -1586,7 +1904,13 @@
 "social": "https://opengraph.githubassets.com/f8fb847d06e72e40c52c251e4de54aac3da7e93529e7af9fd8e2d19039faba14/hyeonsangjeon/flask-sentiment-detector",
 "social_custom": false,
 "score": 0.0,
-"rank": 53
+"rank": 53,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "genai-ko-LLM",
@@ -1609,7 +1933,13 @@
 "social": "",
 "social_custom": false,
 "score": 0.0,
-"rank": 54
+"rank": 54,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "General-Immersion-Day",
@@ -1632,7 +1962,13 @@
 "social": "https://opengraph.githubassets.com/59679b7daf7d2e84123605bc887b7cae530f01866b346595f5d0136e26ac9295/hyeonsangjeon/General-Immersion-Day",
 "social_custom": false,
 "score": 0.0,
-"rank": 55
+"rank": 55,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "myipynb",
@@ -1655,7 +1991,13 @@
 "social": "https://opengraph.githubassets.com/c7e1b9817869717ca886b6b34a53a612fc37e74a1a28910b2f128adaf0b2899e/hyeonsangjeon/myipynb",
 "social_custom": false,
 "score": 0.0,
-"rank": 56
+"rank": 56,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "pptx-translation-with-llm",
@@ -1678,7 +2020,13 @@
 "social": "",
 "social_custom": false,
 "score": 0.0,
-"rank": 57
+"rank": 57,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "Repolis",
@@ -1711,7 +2059,13 @@
 "social": "https://opengraph.githubassets.com/348802a8414dbcf5be1d59f2264419bacfe11fefe73340c417548cb39366282d/hyeonsangjeon/Repolis",
 "social_custom": false,
 "score": 0.0,
-"rank": 58
+"rank": 58,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "v1.0.0",
+"release_date": "2026-06-22"
 },
 {
 "repo": "sagemaker-immersion-day",
@@ -1734,7 +2088,13 @@
 "social": "",
 "social_custom": false,
 "score": 0.0,
-"rank": 59
+"rank": 59,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 },
 {
 "repo": "skcc-accuinsight-examples",
@@ -1757,6 +2117,12 @@
 "social": "",
 "social_custom": false,
 "score": 0.0,
-"rank": 60
+"rank": 60,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": ""
 }
 ]

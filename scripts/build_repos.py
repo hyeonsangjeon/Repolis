@@ -34,6 +34,19 @@ def gh_api(path):
     return json.loads(out)
 
 
+def latest_release(full_name):
+    """Latest published release tag + date, or None when the repo has none."""
+    try:
+        out = subprocess.check_output(
+            ["gh", "api", f"/repos/{full_name}/releases/latest"],
+            text=True, stderr=subprocess.DEVNULL,
+        )
+        d = json.loads(out)
+        return {"tag": d.get("tag_name") or "", "date": (d.get("published_at") or "")[:10]}
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        return None
+
+
 def i_committed(full_name):
     """True when OWNER has authored at least one commit in this repo.
 
@@ -136,6 +149,12 @@ def build():
                       or first_date(GTM_DIR / "logs" / "clones" / f"{name}.csv"))
         stars = r.get("stargazers_count", 0) or 0
         forks = r.get("forks_count", 0) or 0
+        full = r.get("full_name") or f"{OWNER}/{name}"
+        lic = r.get("license") or {}
+        lic_name = lic.get("spdx_id") or lic.get("name") or ""
+        if lic_name in ("NOASSERTION", "NONE"):
+            lic_name = ""
+        rel = latest_release(full)
         score = (
             math.log1p(visitors) * 1.0
             + math.log1p(clones) * 0.7
@@ -157,6 +176,12 @@ def build():
                 "visitors": visitors,
                 "clones": clones,
                 "size": r.get("size", 0) or 0,
+                "open_issues": r.get("open_issues_count", 0) or 0,
+                "license": lic_name,
+                "archived": bool(r.get("archived")),
+                "default_branch": r.get("default_branch") or "main",
+                "release_tag": (rel or {}).get("tag", ""),
+                "release_date": (rel or {}).get("date", ""),
                 "created": (r.get("created_at") or "")[:10],
                 "pushed": (r.get("pushed_at") or "")[:10],
                 "tracked": tracked,
