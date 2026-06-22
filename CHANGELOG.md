@@ -3,6 +3,22 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.2.0] — 2026-06-23
+
+### 🎨 Procedural texture detail
+- **3D‑beveled surfaces** — the category‑themed wall textures (brick · siding · panel · stone · stucco) and shingled roofs now have per‑brick/plank/stone colour variation, highlight + shadow edges, recessed mortar and panel bolts, so flat patterns read as raised masonry. Still 100% procedural canvas textures, zero image assets.
+- **Detailed ground** — directional grass blades on the lawn, gravel speckle + jagged cracks on asphalt, and fine grain on dirt/sand, all seamless (9‑tile wrap) and deterministic.
+- **Contact shadows** — every building drops a soft shadow onto its plot so houses sit grounded on the lawn instead of floating (daytime depth cue).
+
+### 🏘️ A livelier, more varied world
+- **High‑contrast signage** — white halo + category colour band, sized up for readability from a distance.
+- **Roaming chow‑chows** trot between plaza waypoints with wagging tails; well‑loved repos also get a garden dog.
+- **Ponds & garages** — koi ponds for active / well‑starred repos and driveway garages with a parked car for well‑forked ones.
+- **Rest pavilions** dotted around the city — and you can now **sit** on benches/chairs and stand back up.
+
+### 📊 More GitHub metrics on cards
+- Repo cards now also surface **open issues, license, latest release (with date) and an archived badge** when present.
+
 ## [1.1.0] — 2026-06-23
 
 ### 🚕 Smarter taxi driver (search quality)
