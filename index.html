@@ -612,6 +612,57 @@ function updateFireflies(t){ if(!fireflyGroup.visible) return;
     f.position.y=u.by+Math.sin(t*u.sp*1.3+u.ph)*0.7;
     f.material.opacity=0.25+Math.abs(Math.sin(t*u.bl+u.ph))*0.75; } }
 
+/* ---- daytime life: gliding birds, fluttering butterflies, chimney smoke ---- */
+function _birdTex(){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d');
+  x.strokeStyle='#2c313c'; x.lineWidth=7; x.lineCap='round'; x.beginPath();
+  x.moveTo(8,42); x.quadraticCurveTo(22,22,32,36); x.quadraticCurveTo(42,22,56,42); x.stroke();
+  return new THREE.CanvasTexture(c); }
+const BIRD_TEX=_birdTex();
+const birdFlock=new THREE.Group(); scene.add(birdFlock);
+const birds=[];
+for(let i=0;i<11;i++){
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:BIRD_TEX,color:0x343b4d,transparent:true,opacity:0.92,depthWrite:false}));
+  s.userData={ cx:(Math.random()-0.5)*120, cz:(Math.random()-0.5)*120, rad:48+Math.random()*120, h:30+Math.random()*28, sp:0.05+Math.random()*0.06, ph:Math.random()*Math.PI*2, fl:3+Math.random()*2, sc:1.7+Math.random()*1.4 };
+  birdFlock.add(s); birds.push(s);
+}
+function updateBirds(t){ if(!birdFlock.visible) return;
+  for(const b of birds){ const u=b.userData; const a=t*u.sp+u.ph;
+    b.position.set(u.cx+Math.cos(a)*u.rad, u.h+Math.sin(a*2.0)*2.2, u.cz+Math.sin(a)*u.rad);
+    const f=0.55+Math.abs(Math.sin(t*u.fl+u.ph))*0.55; b.scale.set(u.sc,u.sc*0.46*f,1); } }
+
+const BFLY_COLS=[0xff7eb0,0xffd23f,0x6fd0ef,0xb78cff,0xff9a4d,0xff6b6b,0x7be0a0];
+const _bflyL=new THREE.PlaneGeometry(0.34,0.46); _bflyL.translate(-0.17,0,0);
+const _bflyR=new THREE.PlaneGeometry(0.34,0.46); _bflyR.translate(0.17,0,0);
+function makeButterfly(col){ const g=new THREE.Group();
+  const mat=new THREE.MeshBasicMaterial({color:col,side:THREE.DoubleSide,transparent:true,opacity:0.96});
+  const wl=new THREE.Mesh(_bflyL,mat), wr=new THREE.Mesh(_bflyR,mat);
+  const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.04,0.32,3,6), new THREE.MeshBasicMaterial({color:0x33291f}));
+  g.add(wl,wr,body); g._wl=wl; g._wr=wr; return g; }
+const butterflyGroup=new THREE.Group(); scene.add(butterflyGroup);
+const butterflies=[];
+for(let i=0;i<16;i++){
+  const g=makeButterfly(BFLY_COLS[i%BFLY_COLS.length]);
+  const a=Math.random()*Math.PI*2, r=6+Math.random()*62;
+  g.userData={ cx:Math.cos(a)*r, cz:Math.sin(a)*r, rad:1.6+Math.random()*4.5, by:0.8+Math.random()*2.2, sp:0.45+Math.random()*0.7, ph:Math.random()*Math.PI*2, fl:9+Math.random()*5 };
+  butterflyGroup.add(g); butterflies.push(g);
+}
+function updateButterflies(t){ if(!butterflyGroup.visible) return;
+  for(const g of butterflies){ const u=g.userData; const a=t*u.sp+u.ph;
+    g.position.set(u.cx+Math.cos(a)*u.rad, u.by+Math.sin(t*2.0+u.ph)*0.5, u.cz+Math.sin(a*1.3)*u.rad*0.85);
+    g.rotation.y=-a+Math.PI/2;
+    const f=Math.sin(t*u.fl+u.ph); g._wl.rotation.y=0.3+f*0.95; g._wr.rotation.y=-(0.3+f*0.95); } }
+
+const smokeStacks=[];
+function addSmoke(parent, lx, ly, lz){ const puffs=[];
+  for(let i=0;i<3;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xe9ece8,transparent:true,opacity:0,depthWrite:false}));
+    s.position.set(lx,ly,lz); s.userData={off:i/3}; parent.add(s); puffs.push(s); }
+  smokeStacks.push({puffs,lx,ly,lz}); }
+function updateSmoke(t){ const day=isNight?0:1;
+  for(const st of smokeStacks){ for(const s of st.puffs){ const p=((t*0.3+s.userData.off)%1);
+    s.position.y=st.ly+p*3.6; s.position.x=st.lx+Math.sin(p*5+s.userData.off*8)*0.4;
+    s.scale.setScalar(0.5+p*1.7);
+    s.material.opacity=day*Math.sin(Math.min(1,p)*Math.PI)*0.5; } } }
+
 /* ---- procedural ground / road textures (seamless tiling noise) ---- */
 function _noiseTex(base, layers, size=256){
   const cv=document.createElement('canvas'); cv.width=cv.height=size; const x=cv.getContext('2d');
@@ -967,7 +1018,8 @@ function makeBuilding(repo){
     addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, wx); addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, -wx); }
   // central roof
   const roof=makeRoof(typ.roof, topW, topH, repo.roof); g.add(roof);
-  if(typ.roof!=='flat'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim); }
+  if(typ.roof!=='flat'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim);
+    if(rich>0.18) addSmoke(g, w*0.32, topH+2.3, d*0.22); }
   if(kind==='tower'){ const tank=new THREE.Mesh(new THREE.CylinderGeometry(w*0.16,w*0.16,0.9,10), toon(0x8a98a6)); tank.position.set(w*0.2,h+1.0,-d*0.18); outline(tank,0.04); g.add(tank); }
   if(kind==='house'){ addDormer(g,d,topH+0.55); }
   if(kind==='mansion'){ addCupola(g, topH, repo.roof); }
@@ -1047,6 +1099,7 @@ function setTimeOfDay(night){
   scene.fog.color.setHex(night?0x18203c:0xcfe7da);
   renderer.toneMappingExposure = night?1.05:1.08;
   moon.visible=night; starsGroup.visible=night; fireflyGroup.visible=night;
+  birdFlock.visible=!night; butterflyGroup.visible=!night;
   LAMP_BULBS.forEach(b=>b.material.color.setHex(night?0xfff0c2:0xffe6a8));
   LAMP_GLOWS.forEach(o=>{ o.material.opacity = night? o._nightOp : 0; });
   if(faceLight) faceLight.intensity = night?16:0;
@@ -1514,6 +1567,8 @@ function animate(){
     if(dist<6){ navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; } }
 
   for(const c of clouds){ c.position.x+=c.userData.spd*dt; if(c.position.x>300) c.position.x=-300; }
+  updateSmoke(clock.elapsedTime);
+  if(!isNight){ updateBirds(clock.elapsedTime); updateButterflies(clock.elapsedTime); }
   if(isNight){ bigStars.material.opacity=0.62+Math.sin(clock.elapsedTime*2.6)*0.38; starsGroup.rotation.y+=dt*0.0016; updateFireflies(clock.elapsedTime); }
   updateMeteor(dt);
   { const dxp=player.position.x-driver.position.x, dzp=player.position.z-driver.position.z;
