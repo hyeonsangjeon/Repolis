@@ -493,32 +493,49 @@ moon.position.set(-150,150,-260); moon.visible=false; scene.add(moon);
 // soft round sprite texture → round glowy stars (not squares) + lamp/nebula glows
 function _radialTex(stops){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d');
   const g=x.createRadialGradient(32,32,0,32,32,32); stops.forEach(s=>g.addColorStop(s[0],s[1])); x.fillStyle=g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); }
-const STAR_TEX=_radialTex([[0,'rgba(255,255,255,1)'],[0.35,'rgba(255,255,255,0.55)'],[1,'rgba(255,255,255,0)']]);
+const STAR_TEX=_radialTex([[0,'rgba(255,255,255,1)'],[0.28,'rgba(255,255,255,0.7)'],[0.6,'rgba(255,255,255,0.18)'],[1,'rgba(255,255,255,0)']]);
 const GLOW_TEX=_radialTex([[0,'rgba(255,255,255,0.95)'],[0.3,'rgba(255,255,255,0.32)'],[1,'rgba(255,255,255,0)']]);
+// sparkling star with a bright core + 4-point diffraction spikes (hero stars)
+const GLINT_TEX=(function(){ const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d'); const C=64;
+  let g=x.createRadialGradient(C,C,0,C,C,30); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.28,'rgba(255,255,255,0.6)'); g.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=g; x.fillRect(0,0,128,128); x.globalCompositeOperation='lighter';
+  for(const a of [0,Math.PI/2]){ x.save(); x.translate(C,C); x.rotate(a);
+    const lg=x.createLinearGradient(-C,0,C,0); lg.addColorStop(0,'rgba(255,255,255,0)'); lg.addColorStop(0.5,'rgba(255,255,255,0.95)'); lg.addColorStop(1,'rgba(255,255,255,0)');
+    x.fillStyle=lg; x.fillRect(-C,-1.7,128,3.4); x.restore(); }
+  for(const a of [Math.PI/4,-Math.PI/4]){ x.save(); x.translate(C,C); x.rotate(a);
+    const lg=x.createLinearGradient(-C,0,C,0); lg.addColorStop(0,'rgba(255,255,255,0)'); lg.addColorStop(0.5,'rgba(255,255,255,0.42)'); lg.addColorStop(1,'rgba(255,255,255,0)');
+    x.fillStyle=lg; x.fillRect(-C,-1.0,128,2.0); x.restore(); }
+  return new THREE.CanvasTexture(c); })();
 
 const starsGroup=new THREE.Group(); starsGroup.visible=false; scene.add(starsGroup);
-const STAR_R=425, _starTints=[0xffffff,0xffffff,0xffffff,0xcfe0ff,0xbcd0ff,0xfff0d6,0xffd9b0,0xd9fbff];
-function _starLayer(pos,col,size,opacity){
+const STAR_R=365, _starTints=[0xffffff,0xffffff,0xffffff,0xcfe0ff,0xbcd0ff,0xfff0d6,0xffd9b0,0xd9fbff];
+function _starLayer(pos,col,size,opacity,tex){
   const g=new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
   if(col) g.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
-  const m=new THREE.PointsMaterial({size,map:STAR_TEX,transparent:true,opacity,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+  const m=new THREE.PointsMaterial({size,map:tex||STAR_TEX,transparent:true,opacity,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
   if(col) m.vertexColors=true;
   const p=new THREE.Points(g,m); starsGroup.add(p); return p;
 }
 function _pushDir(a,d,r,y){ a.push(d.x*r,d.y*r+y,d.z*r); }
 // scattered all-sky stars (varied tint + brightness)
 { const pos=[],col=[],tmp=new THREE.Color();
-  for(let i=0;i<1500;i++){ const az=Math.random()*Math.PI*2, el=0.04+Math.random()*1.46;
+  for(let i=0;i<2300;i++){ const az=Math.random()*Math.PI*2, el=0.04+Math.random()*1.46;
     _pushDir(pos,new THREE.Vector3(Math.cos(az)*Math.cos(el),Math.sin(el),Math.sin(az)*Math.cos(el)),STAR_R,18);
-    tmp.setHex(_starTints[(Math.random()*_starTints.length)|0]); const b=0.45+Math.random()*0.55; col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
-  _starLayer(pos,col,2.0,0.96); }
-// bright hero stars (these twinkle)
+    tmp.setHex(_starTints[(Math.random()*_starTints.length)|0]); const b=0.55+Math.random()*0.55; col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
+  _starLayer(pos,col,3.2,1.0); }
+// mid-tier glints sprinkled across the sky for sparkle density
+{ const pos=[],col=[],tmp=new THREE.Color();
+  for(let i=0;i<430;i++){ const az=Math.random()*Math.PI*2, el=0.06+Math.random()*1.42;
+    _pushDir(pos,new THREE.Vector3(Math.cos(az)*Math.cos(el),Math.sin(el),Math.sin(az)*Math.cos(el)),STAR_R-2,18);
+    tmp.setHex(_starTints[(Math.random()*_starTints.length)|0]); const b=0.7+Math.random()*0.4; col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
+  _starLayer(pos,col,7.0,0.95,GLINT_TEX); }
+// bright hero stars (these twinkle) — big diffraction-spike glints
 const bigStars=(()=>{ const pos=[],col=[],tmp=new THREE.Color();
   for(let i=0;i<175;i++){ const az=Math.random()*Math.PI*2, el=0.07+Math.random()*1.4;
     _pushDir(pos,new THREE.Vector3(Math.cos(az)*Math.cos(el),Math.sin(el),Math.sin(az)*Math.cos(el)),STAR_R,18);
     tmp.setHex(_starTints[(Math.random()*_starTints.length)|0]); col.push(tmp.r,tmp.g,tmp.b); }
-  return _starLayer(pos,col,4.1,1.0); })();
+  return _starLayer(pos,col,15.0,1.0,GLINT_TEX); })();
 // --- Milky Way: a luminous river of stars arcing across the sky, with a bright galactic core ---
 const _bN=new THREE.Vector3(0.52,0.33,0.79).normalize();
 const _bU=new THREE.Vector3().crossVectors(_bN,new THREE.Vector3(0,1,0)).normalize();
@@ -528,15 +545,15 @@ const _bandDir=(t,sp)=>new THREE.Vector3().copy(_bU).multiplyScalar(Math.cos(t))
 const _coreT=2.3;  // angle along the band where the bright galactic bulge sits
 const mwT=[0xbcd0ff,0xdfe8ff,0xffffff,0xf1e8ff,0xffe9cf,0xcdbfff];
 { const pos=[],col=[],tmp=new THREE.Color();
-  for(let i=0;i<2600;i++){ const t=Math.random()*Math.PI*2, sp=_gauss()*0.12;
+  for(let i=0;i<3200;i++){ const t=Math.random()*Math.PI*2, sp=_gauss()*0.12;
     const d=_bandDir(t,sp); if(d.y<-0.05) continue; _pushDir(pos,d,STAR_R-4,18);
-    const near=1-Math.min(1,Math.abs(sp)/0.17); let b=0.4+near*0.62;
-    const dc=Math.abs(((t-_coreT+Math.PI*3)%(Math.PI*2))-Math.PI); if(dc<0.9) b*=1+(0.9-dc)*0.7;
+    const near=1-Math.min(1,Math.abs(sp)/0.17); let b=0.5+near*0.7;
+    const dc=Math.abs(((t-_coreT+Math.PI*3)%(Math.PI*2))-Math.PI); if(dc<0.9) b*=1+(0.9-dc)*0.8;
     tmp.setHex(mwT[(Math.random()*mwT.length)|0]); col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
-  for(let i=0;i<700;i++){ const t=_coreT+_gauss()*0.5, sp=_gauss()*0.07;          // dense galactic-core cluster
+  for(let i=0;i<850;i++){ const t=_coreT+_gauss()*0.5, sp=_gauss()*0.07;          // dense galactic-core cluster
     const d=_bandDir(t,sp); if(d.y<-0.05) continue; _pushDir(pos,d,STAR_R-6,18);
-    tmp.setHex(mwT[(Math.random()*mwT.length)|0]); const b=0.7+Math.random()*0.5; col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
-  _starLayer(pos,col,1.95,0.95); }
+    tmp.setHex(mwT[(Math.random()*mwT.length)|0]); const b=0.8+Math.random()*0.5; col.push(tmp.r*b,tmp.g*b,tmp.b*b); }
+  _starLayer(pos,col,2.4,1.0); }
 // nebula haze clouds along the band (soft additive glow → galaxy clouds), brightest at the core
 { const cols=[0x3a57b0,0x5a3f9e,0x2f6f8f,0x7a3f6e,0x3f59a8,0x4a3a86];
   function neb(t,sp,opMul,szMul,color){ const d=_bandDir(t,sp); if(d.y<-0.02) return;
@@ -566,6 +583,25 @@ function updateMeteor(dt){ if(!isNight){ if(_mDur>0){ _mDur=0; mSprites.forEach(
   if(k>=1){ _mDur=0; mSprites.forEach(s=>s.material.opacity=0); return; }
   _mH.copy(_mP0).addScaledVector(_mV,_mAge); const env=Math.sin(k*Math.PI);
   for(let i=0;i<METEOR_N;i++){ const s=mSprites[i]; s.position.copy(_mH).addScaledVector(_mN,-i*3.5); s.material.opacity=Math.min(1,env*(1.18-i/METEOR_N)); } }
+
+// fireflies — drifting glow motes that wake at night, a little living magic in the dark
+const fireflyGroup=new THREE.Group(); fireflyGroup.visible=false; scene.add(fireflyGroup);
+const fireflies=[];
+for(let i=0;i<70;i++){
+  const col=Math.random()<0.68?0xbdff7e:0xffe27a;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:col,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  const a=Math.random()*Math.PI*2, r=7+Math.random()*132;
+  s.scale.setScalar(0.5+Math.random()*0.45);
+  s.userData={ bx:Math.cos(a)*r, bz:Math.sin(a)*r, by:0.7+Math.random()*4.2, ph:Math.random()*Math.PI*2, sp:0.35+Math.random()*0.8, rad:1.1+Math.random()*2.6, bl:0.55+Math.random()*1.7 };
+  s.position.set(s.userData.bx,s.userData.by,s.userData.bz);
+  fireflyGroup.add(s); fireflies.push(s);
+}
+function updateFireflies(t){ if(!fireflyGroup.visible) return;
+  for(const f of fireflies){ const u=f.userData;
+    f.position.x=u.bx+Math.cos(t*u.sp+u.ph)*u.rad;
+    f.position.z=u.bz+Math.sin(t*u.sp*0.8+u.ph)*u.rad;
+    f.position.y=u.by+Math.sin(t*u.sp*1.3+u.ph)*0.7;
+    f.material.opacity=0.25+Math.abs(Math.sin(t*u.bl+u.ph))*0.75; } }
 
 /* ---- ground ---- */
 const ground = new THREE.Mesh(new THREE.CircleGeometry(235,64), toon(0x91c266));
@@ -976,7 +1012,7 @@ function setTimeOfDay(night){
   hemi.intensity = night?0.55:0.85; hemi.color.setHex(night?0x3b4c86:0xcfeee8); hemi.groundColor.setHex(night?0x1b2030:0x86996a);
   scene.fog.color.setHex(night?0x18203c:0xcfe7da);
   renderer.toneMappingExposure = night?1.05:1.08;
-  moon.visible=night; starsGroup.visible=night;
+  moon.visible=night; starsGroup.visible=night; fireflyGroup.visible=night;
   LAMP_BULBS.forEach(b=>b.material.color.setHex(night?0xfff0c2:0xffe6a8));
   LAMP_GLOWS.forEach(o=>{ o.material.opacity = night? o._nightOp : 0; });
   if(faceLight) faceLight.intensity = night?16:0;
@@ -1040,13 +1076,20 @@ driver.rotation.y=-2.2; scene.add(driver);
 const player=new THREE.Group(); const model=new THREE.Group(); player.add(model);
 const SHIRT=0x3aa0d8, SKIN=0xf2cca2, HAIR=0x2c2521, PANTS=0x33406e, BAGC=0xe05642;
 const body=rbox(1.0,0.95,0.62,SHIRT,0.18); body.position.y=1.35; outline(body,0.045); model.add(body);
+const collar=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.07,8,20,Math.PI*1.25), basic(0x2f86b8)); collar.position.set(0,1.74,0.16); collar.rotation.set(Math.PI*0.5,0,Math.PI*0.875); model.add(collar);
+const placket=rbox(0.1,0.78,0.06,0x2f86b8,0.02); placket.position.set(0,1.36,0.32); model.add(placket); // shirt button line
 const head=rbox(1.12,1.0,1.0,SKIN,0.28,4); head.position.y=2.3; outline(head,0.05); model.add(head);
+const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.27,0.33,0.36,12), toon(SKIN)); neck.position.y=1.86; neck.castShadow=true; model.add(neck);
 const hair=rbox(1.2,0.55,1.08,HAIR,0.22,4); hair.position.y=2.72; outline(hair,0.04); model.add(hair);
 const fringe=rbox(1.2,0.3,0.3,HAIR,0.1); fringe.position.set(0,2.55,0.48); model.add(fringe);
-// eyes + cheeks
+[[-0.6],[0.6]].forEach(([sx])=>{ const s=rbox(0.16,0.62,0.92,HAIR,0.06); s.position.set(sx,2.42,-0.02); model.add(s); }); // side hair framing the face
+// eyes (with catch-light) + brows + smile + cheeks
 [[-0.26],[0.26]].forEach(([ex])=>{
-  const e=new THREE.Mesh(new THREE.SphereGeometry(0.11,10,8), basic(0x2a2320)); e.position.set(ex,2.28,0.52); e.scale.z=0.5; model.add(e);
+  const e=new THREE.Mesh(new THREE.SphereGeometry(0.115,12,10), basic(0x2a2320)); e.position.set(ex,2.28,0.52); e.scale.z=0.5; model.add(e);
+  const hl=new THREE.Mesh(new THREE.SphereGeometry(0.036,8,6), basic(0xffffff)); hl.position.set(ex+0.045,2.32,0.575); model.add(hl);
 });
+[[-0.26,1],[0.26,-1]].forEach(([ex,s])=>{ const b=rbox(0.27,0.075,0.08,HAIR,0.02); b.position.set(ex,2.47,0.5); b.rotation.z=s*0.13; model.add(b); }); // friendly brows
+{ const mouth=new THREE.Mesh(new THREE.TorusGeometry(0.12,0.03,8,16,Math.PI), basic(0x9c5a4a)); mouth.position.set(0,2.07,0.52); mouth.rotation.z=Math.PI; model.add(mouth); } // smile
 [[-0.4],[0.4]].forEach(([cx])=>{
   const c=new THREE.Mesh(new THREE.CircleGeometry(0.12,12), new THREE.MeshBasicMaterial({color:0xffa9a0,transparent:true,opacity:.7}));
   c.position.set(cx,2.08,0.515); model.add(c);
@@ -1058,6 +1101,8 @@ const legL=rbox(0.38,0.85,0.38,PANTS,0.12); legL.position.set(-0.24,0.5,0); outl
 const legR=legL.clone(); legR.position.x=0.24; model.add(legR);
 const shoeL=rbox(0.42,0.28,0.5,0x4a3a2a,0.08); shoeL.position.set(-0.24,0.14,0.08); model.add(shoeL);
 const shoeR=shoeL.clone(); shoeR.position.x=0.24; model.add(shoeR);
+const blob=new THREE.Mesh(new THREE.CircleGeometry(1.05,28), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0x07142e,transparent:true,opacity:0.32,depthWrite:false}));
+blob.rotation.x=-Math.PI/2; blob.position.y=0.03; player.add(blob); // soft contact shadow
 faceLight=new THREE.PointLight(0xfff0d8,0,15,1.5); faceLight.position.set(0,2.35,0.7); model.add(faceLight);
 faceMat=head.material;
 scene.add(player);
@@ -1393,7 +1438,9 @@ function animate(){
   if(!moving) walk*=0.85;
   const bob=Math.sin(walk)*0.5;
   legL.rotation.x=bob; legR.rotation.x=-bob; armL.rotation.x=-bob; armR.rotation.x=bob;
-  model.position.y=Math.abs(Math.sin(walk))*0.12;
+  armL.rotation.z=0.04+Math.abs(Math.sin(walk))*0.05; armR.rotation.z=-0.04-Math.abs(Math.sin(walk))*0.05;
+  model.position.y=Math.abs(Math.sin(walk))*0.14;
+  model.rotation.z=Math.sin(walk)*0.035;
 
   if(lookVec.x||lookVec.y){ camYaw-=lookVec.x*2.4*dt; camPitch=Math.min(1.1,Math.max(0.12,camPitch-lookVec.y*1.5*dt));
     if(Math.abs(lookVec.x)>0.06){ model.rotation.y=camYaw+Math.PI; freeLook=false; } }
@@ -1417,7 +1464,7 @@ function animate(){
     if(dist<6){ navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; } }
 
   for(const c of clouds){ c.position.x+=c.userData.spd*dt; if(c.position.x>300) c.position.x=-300; }
-  if(isNight){ bigStars.material.opacity=0.78+Math.sin(clock.elapsedTime*2.3)*0.22; starsGroup.rotation.y+=dt*0.0016; }
+  if(isNight){ bigStars.material.opacity=0.62+Math.sin(clock.elapsedTime*2.6)*0.38; starsGroup.rotation.y+=dt*0.0016; updateFireflies(clock.elapsedTime); }
   updateMeteor(dt);
   { const dxp=player.position.x-driver.position.x, dzp=player.position.z-driver.position.z;
     const tgt = Math.hypot(dxp,dzp)<16 ? Math.atan2(dxp,dzp) : (-2.2+Math.sin(clock.elapsedTime*0.7)*0.22);
