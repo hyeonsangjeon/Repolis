@@ -990,6 +990,10 @@ function makeBuilding(repo){
   const ring=new THREE.Mesh(new THREE.RingGeometry(Math.max(2,yr-1.4),Math.max(2.7,yr-0.8),40),
     new THREE.MeshBasicMaterial({color:repo.color,transparent:true,opacity:.42,side:THREE.DoubleSide}));
   ring.rotation.x=-Math.PI/2; ring.position.y=0.05; g.add(ring); repo._ring=ring;
+  // warm light spill — glows at night, brighter for busier repos (visualizes activity)
+  const glowPool=new THREE.Mesh(new THREE.CircleGeometry(Math.max(yr*0.92,3.4),30),
+    new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0xffb46a,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  glowPool.rotation.x=-Math.PI/2; glowPool.position.y=0.06; g.add(glowPool); repo._glowPool=glowPool;
 
   scene.add(g);
   repo._group=g; repo._pos=new THREE.Vector3(repo._x,0,repo._z); repo._visited=false; buildings.push(repo);
@@ -1024,6 +1028,7 @@ function setTimeOfDay(night){
     (b._windows||[]).forEach(w=>w.material.color.copy(c));
     if(b._body){ if(night) b._body.material.emissive.setRGB(0.5,0.32,0.12).multiplyScalar(0.45*b._activity);
                  else b._body.material.emissive.setHex(0x000000); }
+    if(b._glowPool) b._glowPool.material.opacity = night ? (0.06+0.5*b._activity) : 0;
   });
   const db=document.getElementById('dayBtn'); if(db) db.textContent = night?'☀️':'🌙';
 }
