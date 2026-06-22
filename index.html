@@ -1204,16 +1204,18 @@ const print=new THREE.Mesh(new THREE.PlaneGeometry(0.32,0.24), basic(0x3a3a40));
 const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.26,0.28,14), toon(SKIN)); neck.position.y=1.86; neck.castShadow=true; model.add(neck);
 // head — rounded egg (faceMat = night glow material)
 const head=ball(0.58,SKIN,22); head.position.y=2.3; head.scale.set(1.0,0.98,0.96); outline(head,0.045); model.add(head);
-// hair — 서원이 mushroom bob: domed shell + cheek-length sides + straight blunt fringe
-const hair=ball(0.66,HAIR,22); hair.position.set(0,2.42,-0.2); hair.scale.set(1.06,1.02,0.94); outline(hair,0.035); model.add(hair); // mushroom dome — 뒤·위·옆만 덮어 얼굴 노출
-[[-0.52],[0.52]].forEach(([sx])=>{ const s=ball(0.3,HAIR,16); s.position.set(sx,2.16,-0.06); s.scale.set(0.5,1.45,0.9); model.add(s); }); // cheek-length side hair (단발)
-const bang=rbox(1.06,0.3,0.42,HAIR,0.09,4); bang.position.set(0,2.57,0.36); bang.scale.z=0.78; model.add(bang); // straight blunt fringe (일자 앞머리)
+// hair — 레고 미니피규어 헬멧컷: 매끈한 한 덩어리 셸 + 플라스틱 광택 + 깔끔한 일자 앞머리 + 각진 구레나룻
+const hair=ball(0.66,HAIR,28); hair.position.set(0,2.45,-0.18); hair.scale.set(1.08,1.06,0.96); outline(hair,0.04); model.add(hair); // smooth one-piece LEGO shell
+[[-0.55],[0.55]].forEach(([sx])=>{ const tab=rbox(0.15,0.34,0.42,HAIR,0.06,4); tab.position.set(sx,2.17,-0.04); model.add(tab); }); // 각진 구레나룻 탭
+const bang=rbox(1.02,0.26,0.44,HAIR,0.09,5); bang.position.set(0,2.57,0.34); bang.scale.z=0.78; model.add(bang); // 깔끔한 일자 앞머리
+const sheen=new THREE.Mesh(new THREE.SphereGeometry(0.675,26,16, 1.0, 1.25, 0.2, 0.5), toon(0x4a392e)); sheen.position.copy(hair.position); sheen.scale.copy(hair.scale); sheen.castShadow=false; model.add(sheen); // 크라운 플라스틱 광택(앞·옆)
+const shine=new THREE.Mesh(new THREE.SphereGeometry(0.69,18,14, 1.28, 0.5, 0.3, 0.3), toon(0x8a7162)); shine.position.copy(hair.position); shine.scale.copy(hair.scale); shine.castShadow=false; model.add(shine); // 레고 반짝 streak
 // eyes (with catch-light) + brows + tiny nose + smile + cheeks
 [[-0.24],[0.24]].forEach(([ex])=>{
   const e=new THREE.Mesh(new THREE.SphereGeometry(0.12,14,12), basic(0x2a2320)); e.position.set(ex,2.3,0.5); e.scale.z=0.55; model.add(e);
   const hl=new THREE.Mesh(new THREE.SphereGeometry(0.038,8,6), basic(0xffffff)); hl.position.set(ex+0.05,2.34,0.55); model.add(hl);
 });
-[[-0.24,1],[0.24,-1]].forEach(([ex,s])=>{ const b=new THREE.Mesh(new THREE.CapsuleGeometry(0.028,0.17,3,8), toon(HAIR)); b.rotation.z=Math.PI/2+s*0.14; b.position.set(ex,2.44,0.49); model.add(b); }); // brows just under the fringe
+[[-0.23,1],[0.23,-1]].forEach(([ex,s])=>{ const b=new THREE.Mesh(new THREE.CapsuleGeometry(0.02,0.12,3,8), toon(0x6f5644)); b.rotation.z=Math.PI/2+s*0.1; b.position.set(ex,2.43,0.5); model.add(b); }); // soft slim brows (톤다운)
 { const nose=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6), toon(0xeab98c)); nose.position.set(0,2.22,0.56); model.add(nose); }
 { const mouth=new THREE.Mesh(new THREE.TorusGeometry(0.12,0.028,8,16,Math.PI), basic(0x9c5a4a)); mouth.position.set(0,2.09,0.5); mouth.rotation.z=Math.PI; model.add(mouth); } // smile
 [[-0.38],[0.38]].forEach(([cx])=>{
