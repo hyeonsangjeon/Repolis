@@ -7,9 +7,10 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 
 ### 🚕 Smarter taxi driver (search quality)
 - **Intent agent** — a deterministic router now runs *before* any LLM in all three modes, so navigation/metric questions are exact and never hallucinated: "library / 도서관" drives to the Contribution Library, and "most popular / most stars / recent / most cloned·forked·viewed / random" are answered directly. (Fixes WebLLM sending "도서관 데려다줘" to a random repo.)
+- **Topic beats metric sorting** — a strong subject match now wins over generic "popular/clones/traffic" sorting, and English metric keywords are word‑boundary matched, so "youtube **download**er nas" lands on the repo instead of the most‑cloned one and "traffic monitor" finds dashboard tools rather than the busiest page.
 - **Search index** — repos are indexed once into an inverted index with per‑repo token sets (name · label · language · description · topics) plus synonym expansion; ranking weighs name‑hit ≫ token‑hit ≫ substring, with topic and popularity boosts, and a bonus when *your own word* appears in a repo's name.
 - **Candidate RAG** — WebLLM and the AI proxy now receive only the index's top‑K shortlist (not the full catalog) and must `PICK` from it, cutting wrong/invented picks and speeding up the tiny in‑browser model.
-- **Multiple suggestions** — every mode returns the remaining candidates as one‑tap chips, so you can pick among several recommendations instead of one.
+- **Multiple suggestions** — every mode now always returns a few remaining candidates as one‑tap chips (padded with popular repos when a query has only one hit), so you can pick among several recommendations instead of one.
 
 ### 🎨 Visuals
 - **Fresnel rim light** on all toon materials (buildings · ground · characters · NPCs · trees) — a soft sky backlight by day and a cool moonlight silhouette by night, for a cleaner cel look. Pure shader math, zero assets.

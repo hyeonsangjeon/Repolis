@@ -1906,26 +1906,32 @@ function searchCandidates(q,n=8){ buildSearchIndex(); const raw=tokens(q); const
   const ranked=pool.map(r=>({r,s:scoreRepo(r,terms,raw)+Math.log1p(r.score||0)*0.15})).sort((a,b)=>b.s-a.s);
   const hits=ranked.filter(x=>x.s>=3);
   return { list:(hits.length?hits:ranked).slice(0,n).map(x=>x.r), strong:hits.length>0, terms }; }
+const M=o=>{ if(o) o._metric=true; return o; };   // tag generic metric-sort intents (topic match may override)
 function deterministicIntent(q){
   const ql=q.toLowerCase();
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
-  if(/인기|popular|제일|최고|best|top|많이|핫|hot/.test(ql)){ const a=byRank(); return pick(a[0],t('leadPopular'),a.slice(1,4)); }
-  if(/아무|랜덤|random|골라|추천만/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
-  if(/스타|star|별/.test(ql)){ const a=[...REPOS].sort((x,y)=>y.stars-x.stars); return pick(a[0],t('leadStar'),a.slice(1,4)); }
-  if(/최근|recent|새로|new|요즘 만든/.test(ql)){ const a=[...REPOS].sort((x,y)=>new Date(y.pushed)-new Date(x.pushed)); return pick(a[0],t('leadRecent'),a.slice(1,4)); }
-  if(/방문|visitor|트래픽|traffic|왕래|사람 많/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.visitors||0)-(x.visitors||0)); return pick(a[0],t('leadVisitors'),a.slice(1,4)); }
-  if(/클론|clone|다운로드|download|받아|설치/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.clones||0)-(x.clones||0)); return pick(a[0],t('leadClones'),a.slice(1,4)); }
-  if(/포크|fork|파생|갈라/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.forks||0)-(x.forks||0)); return pick(a[0],t('leadForks'),a.slice(1,4)); }
-  if(/조회|view|뷰|페이지뷰/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.views||0)-(x.views||0)); return pick(a[0],t('leadViews'),a.slice(1,4)); }
+  if(/인기|제일|최고|많이|핫|\bpopular\b|\bbest\b|\btop\b|\bhot\b/.test(ql)){ const a=byRank(); return M(pick(a[0],t('leadPopular'),a.slice(1,4))); }
+  if(/아무|랜덤|골라|추천만|\brandom\b/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
+  if(/스타|별|\bstars?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>y.stars-x.stars); return M(pick(a[0],t('leadStar'),a.slice(1,4))); }
+  if(/최근|새로|요즘 만든|\brecent\b|\bnew\b|\blatest\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>new Date(y.pushed)-new Date(x.pushed)); return M(pick(a[0],t('leadRecent'),a.slice(1,4))); }
+  if(/방문|왕래|사람 많|트래픽|\bvisitors?\b|\btraffic\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.visitors||0)-(x.visitors||0)); return M(pick(a[0],t('leadVisitors'),a.slice(1,4))); }
+  if(/클론|다운로드|받아|설치|\bclones?\b|\bdownloads?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.clones||0)-(x.clones||0)); return M(pick(a[0],t('leadClones'),a.slice(1,4))); }
+  if(/포크|파생|갈라|\bforks?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.forks||0)-(x.forks||0)); return M(pick(a[0],t('leadForks'),a.slice(1,4))); }
+  if(/조회|페이지뷰|\bviews?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.views||0)-(x.views||0)); return M(pick(a[0],t('leadViews'),a.slice(1,4))); }
   return null;
 }
 function localIntent(q){
-  const det=deterministicIntent(q); if(det) return det;
+  const det=deterministicIntent(q);
+  if(det && !det._metric) return det;                         // library / random: explicit, win outright
   const sc=searchCandidates(q,8);
-  if(sc.strong) return pick(sc.list[0], t('leadMatch'), sc.list.slice(1,4));
-  return pick(byRank()[0], t('leadFallback'), byRank().slice(1,4), true);
+  if(sc.strong) return pickList(sc.list, t('leadMatch'));     // a real topic match beats generic metric sorting
+  if(det) return det;                                         // metric sort only when no strong topic hit
+  return pick(byRank()[0], t('leadFallback'), padAlts(byRank()[0], byRank().slice(1,4)), true);
 }
 function byRank(){ return [...REPOS].sort((a,b)=>(a.rank||0)-(b.rank||0)); }
+function pickList(list, lead){ const main=list[0]; return pick(main, lead, padAlts(main, list.slice(1,4))); }
+function padAlts(main, alts){ const out=(alts||[]).filter(Boolean); const seen=new Set([main&&main.repo, ...out.map(a=>a.repo)]);
+  for(const r of byRank()){ if(out.length>=3) break; if(!seen.has(r.repo)){ out.push(r); seen.add(r.repo); } } return out; }
 function pick(repo,lead,alts,weak){
   const d=repo.desc?repo.desc.replace(/\s+/g,' ').slice(0,70):'';
   const msg=`${lead}‘<b>${repo.label}</b>’${weak?t('howAbout'):t('recommend')}${d?'<br>“'+d+(repo.desc.length>70?'…':'')+'”':''}<br><span style="color:#ab8a66">★${repo.stars} · 👁${repo.visitors} · ⬇${repo.clones||0} · ⑂${repo.forks} · ${repo.lang}</span>`;
@@ -1956,7 +1962,7 @@ async function webllmAsk(q){
     let repo=m?(cand.find(r=>r.repo.toLowerCase()===m[1].toLowerCase())||REPOS.find(r=>r.repo.toLowerCase()===m[1].toLowerCase())):null;
     if(!repo) repo=cand[0];
     const clean=txt.replace(/PICK:.*/i,'').trim().replace(/\n/g,'<br>');
-    const alts=cand.filter(r=>r!==repo).slice(0,3);
+    const alts=padAlts(repo, cand.filter(r=>r!==repo).slice(0,3));
     return { repo, message:clean||pick(repo,'',[]).message, alts };
   }catch(e){ addMsg('bot',t('ansFail')); return localIntent(q); }
 }
@@ -1977,7 +1983,7 @@ async function proxyAsk(q){
     const repo=data.repo?REPOS.find(r=>r.repo.toLowerCase()===String(data.repo).toLowerCase()):null;
     const main=repo||cand[0];
     const msg=(data.message||t('thisOne')).replace(/\n/g,'<br>');
-    const alts=cand.filter(r=>r!==main).slice(0,3);
+    const alts=padAlts(main, cand.filter(r=>r!==main).slice(0,3));
     return { repo:main, message:msg, alts };
   }catch(e){ addMsg('bot',(LANG==='ko'?'😢 프록시 연결 실패(':'😢 Proxy connection failed (')+e.message+(LANG==='ko'?'). 로컬검색으로 안내할게요.':'). Falling back to local search.')); return localIntent(q); }
 }
