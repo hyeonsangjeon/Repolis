@@ -971,6 +971,32 @@ const _winTex=(function(){
   const t=new THREE.CanvasTexture(cv); t.anisotropy=MAXANISO; t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
 })();
 
+/* warm room interior — lit windows read as cozy rooms at night (lamp, curtains, furniture, recessed frame) */
+const _roomTex=(function(){
+  const S=4, W=44, H=52;
+  const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const x=cv.getContext('2d'); x.scale(S,S);
+  const g=x.createLinearGradient(0,3,0,H-3); g.addColorStop(0,'#fff3cf'); g.addColorStop(0.45,'#ffd98c'); g.addColorStop(1,'#b9793c');
+  x.fillStyle=g; rr(x,3,3,W-6,H-6,5); x.fill();
+  x.save(); rr(x,3,3,W-6,H-6,5); x.clip();
+  const lg=x.createRadialGradient(W/2,12,1,W/2,12,15); lg.addColorStop(0,'rgba(255,252,232,0.95)'); lg.addColorStop(1,'rgba(255,252,232,0)');
+  x.fillStyle=lg; x.fillRect(0,0,W,28);
+  x.strokeStyle='rgba(120,80,40,0.5)'; x.lineWidth=1; x.beginPath(); x.moveTo(W/2,4); x.lineTo(W/2,10); x.stroke();
+  x.fillStyle='#fff7df'; x.beginPath(); x.arc(W/2,11,2.2,0,Math.PI*2); x.fill();
+  x.fillStyle='rgba(150,96,50,0.55)'; x.fillRect(4,H-15,W-8,8);
+  x.fillStyle='rgba(120,74,38,0.5)'; x.fillRect(8,H-19,12,5);
+  ['l','r'].forEach(side=>{ const cw=10, x0=side==='l'?3:W-3-cw;
+    const cg=x.createLinearGradient(x0,0,x0+cw,0);
+    if(side==='l'){ cg.addColorStop(0,'rgba(206,128,60,0.92)'); cg.addColorStop(1,'rgba(230,170,96,0.32)'); }
+    else { cg.addColorStop(0,'rgba(230,170,96,0.32)'); cg.addColorStop(1,'rgba(206,128,60,0.92)'); }
+    x.fillStyle=cg; x.fillRect(x0,3,cw,H-6);
+    x.strokeStyle='rgba(120,70,34,0.4)'; x.lineWidth=1;
+    for(let i=1;i<4;i++){ const fx=x0+cw*i/4; x.beginPath(); x.moveTo(fx,4); x.lineTo(fx,H-4); x.stroke(); } });
+  x.restore();
+  x.strokeStyle='#6e4f33'; x.lineWidth=2.2; x.beginPath(); x.moveTo(W/2,4); x.lineTo(W/2,H-4); x.moveTo(4,H/2); x.lineTo(W-4,H/2); x.stroke();
+  x.lineWidth=3.2; x.strokeStyle='#5b4026'; rr(x,3,3,W-6,H-6,5); x.stroke();
+  const t=new THREE.CanvasTexture(cv); t.anisotropy=MAXANISO; t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
+})();
+
 function makeBuilding(repo){
   repo._cat = repoCategory(repo);
   const typ = typology(repo);
@@ -1043,7 +1069,7 @@ function makeBuilding(repo){
     const fr=rbox(1.18,1.30,0.16,0xeadfca,0.05); fr.position.set(wx,wy,d/2+0.01); g.add(fr);
     const sill=rbox(1.32,0.16,0.30,0xe0d2b4,0.04); sill.position.set(wx,wy-0.74,d/2+0.10); g.add(sill);
     const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.96,1.06), new THREE.MeshBasicMaterial({map:_winTex,transparent:true,color:DAY_GLASS}));
-    gl.position.set(wx,wy,d/2+0.11); g.add(gl); repo._windows.push(gl);
+    gl.position.set(wx,wy,d/2+0.11); gl.userData={ lit: Math.random()<(0.3+0.55*repo._activity), j:0.82+Math.random()*0.32 }; g.add(gl); repo._windows.push(gl);
     if(typ.tier>=3){ const fb=new THREE.Mesh(new THREE.BoxGeometry(0.62,0.16,0.2), toon(0x9c6f4a)); fb.position.set(wx,wy-0.6,d/2+0.2); g.add(fb);
       const fl=new THREE.Mesh(GEO_FLOWER,FLOWER_MATS[(hashStr(repo.repo)+Math.round(wx*7))%FLOWER_MATS.length]); fl.position.set(wx,wy-0.46,d/2+0.24); g.add(fl); }
   }));
@@ -1088,7 +1114,7 @@ const COLLIDERS = buildings.map(b=>({x:b._x, z:b._z, r:b._cw||3}));
 let isNight=false;
 let faceLight=null, faceMat=null;   // avatar fill light + face material (assigned when avatar is built, below)
 const npcFaces=new Set();           // driver + peer head materials — given a gentle emissive at night so plaza folk aren't black
-const _cDark=new THREE.Color(0x140a03), _cWarm=new THREE.Color(0xffcf86);
+const _cDark=new THREE.Color(0x140a03), _cWarm=new THREE.Color(0xffcf86), _cRoom=new THREE.Color(0xfff1d6);
 function setTimeOfDay(night){
   isNight=night;
   skyMat.uniforms.top.value.setHex(night?0x0a1030:0x4fb4c2);
@@ -1106,8 +1132,11 @@ function setTimeOfDay(night){
   if(faceMat) faceMat.emissive.setHex(night?0x6a4f30:0x000000);
   npcFaces.forEach(m=>m.emissive.setHex(night?0x4a3a24:0x000000));   // softer than the player so the hero still reads brightest
   buildings.forEach(b=>{
-    const c = night ? _cDark.clone().lerp(_cWarm, b._activity) : new THREE.Color(DAY_GLASS);
-    (b._windows||[]).forEach(w=>w.material.color.copy(c));
+    (b._windows||[]).forEach(w=>{ const m=w.material;
+      if(night){ if(w.userData.lit){ m.map=_roomTex; m.color.copy(_cRoom).multiplyScalar((0.5+0.5*b._activity)*w.userData.j); }
+                 else { m.map=_winTex; m.color.setHex(0x2b3442); } }
+      else { m.map=_winTex; m.color.setHex(DAY_GLASS); }
+      m.needsUpdate=true; });
     if(b._body){ if(night) b._body.material.emissive.setRGB(0.5,0.32,0.12).multiplyScalar(0.45*b._activity);
                  else b._body.material.emissive.setHex(0x000000); }
     if(b._glowPool) b._glowPool.material.opacity = night ? (0.06+0.5*b._activity) : 0;
