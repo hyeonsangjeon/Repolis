@@ -5,9 +5,10 @@ Aggregates the GitHub traffic history collected by ``scripts/collect_traffic.py`
 (stored in ``data/logs/``) with live repo metadata, and writes ``repos.json`` —
 the data that powers the Repolis 3D city (one building per repo).
 
-Only PUBLIC, non-fork repos are included, so the public site never exposes
-private repository names. Traffic totals are cumulative over the whole period
-that has been tracked.
+Only PUBLIC repos are included, so the public site never exposes private
+repository names: every repo the owner created, plus any fork the owner has
+actually committed to (pure untouched mirrors are skipped). Traffic totals are
+cumulative over the whole period that has been tracked.
 
 Env vars:
   REPO_OWNER  GitHub login that owns the repos (default: hyeonsangjeon)
@@ -31,6 +32,23 @@ def gh_api(path):
     out = subprocess.check_output(["gh", "api", "--paginate", path], text=True)
     # gh --paginate concatenates pages of a JSON array into a single array.
     return json.loads(out)
+
+
+def i_committed(full_name):
+    """True when OWNER has authored at least one commit in this repo.
+
+    Used to keep forks that the owner actually worked on while dropping forks
+    that were never touched (pure mirrors of someone else's project).
+    """
+    try:
+        out = subprocess.check_output(
+            ["gh", "api", f"/repos/{full_name}/commits?author={OWNER}&per_page=1"],
+            text=True, stderr=subprocess.DEVNULL,
+        )
+        data = json.loads(out)
+        return isinstance(data, list) and len(data) > 0
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        return False
 
 
 def social_map(owner):
@@ -105,7 +123,9 @@ def build():
     social = social_map(OWNER)
     out = []
     for r in repos:
-        if r.get("fork") or r.get("private"):
+        if r.get("private"):
+            continue
+        if r.get("fork") and not i_committed(r.get("full_name") or f"{OWNER}/{r['name']}"):
             continue
         name = r["name"]
         views = sum_col(GTM_DIR / "logs" / f"{name}.csv", "views")
@@ -132,6 +152,7 @@ def build():
                 "home": (r.get("homepage") or "").strip(),
                 "stars": stars,
                 "forks": forks,
+                "fork": bool(r.get("fork")),
                 "views": views,
                 "visitors": visitors,
                 "clones": clones,
@@ -154,7 +175,8 @@ def build():
 
     downtown = sum(1 for o in out if o["rank"] < 14)
     tracked_n = sum(1 for o in out if o["tracked"])
-    print(f"wrote {OUT} with {len(out)} public non-fork repos")
+    forks_n = sum(1 for o in out if o.get("fork"))
+    print(f"wrote {OUT} with {len(out)} public repos ({forks_n} forks I committed to)")
     print(f"  downtown(rank<14)={downtown} hometown={len(out) - downtown} tracked={tracked_n}")
 
 
