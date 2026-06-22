@@ -11,6 +11,8 @@
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
 [![Single file](https://img.shields.io/badge/build-single%20index.html-83bb59?style=for-the-badge)](index.html)
 [![Last commit](https://img.shields.io/github/last-commit/hyeonsangjeon/Repolis?style=for-the-badge&color=b3a07f)](https://github.com/hyeonsangjeon/Repolis/commits)
+[![Stars](https://img.shields.io/github/stars/hyeonsangjeon/Repolis?style=for-the-badge&logo=github&color=f5c542&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-a0a0a0?style=for-the-badge)](LICENSE)
 
 [English](README.md) · [한국어](README.ko.md)
 
@@ -27,16 +29,17 @@ Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the
 
 ## ✨ What's inside
 
-- 🚶 **Walkable open world** — stroll a Ghibli‑style city with WASD / arrows / on‑screen joystick. Arrive at a house (repo) and a card opens (with its GitHub **social preview** image when set).
+- 🚶 **Walkable open world** — stroll a hand-built low-poly city with WASD / arrows / on-screen joystick. **Houses are solid** — walk *around* them, down brown dirt paths and along asphalt ring-roads with painted lane lines. Reach a house (repo) and its card opens (with the GitHub **social preview** image when set).
 - 🏙️ **Downtown & Hometown districts** — the most popular repos rise as inner‑city towers; the rest become cozy cottages in the outer hometown, along ring roads and radial avenues.
 - 📊 **Metrics _are_ the architecture** — the data builds the city:
   | Metric | Shows up as |
   |---|---|
-  | 👁 unique visitors | building **height** · window **brightness** |
+  | 👁 unique visitors | building **height** |
   | ⑂ forks | building **width** (lot size) |
   | ⬇ clones | **ornamentation** (banners · gold trim) |
   | 📈 views | **garden** · fence size |
-  | ★ stars | **gold‑star** ornaments on the roof |
+  | ★ stars | **gold-star** ornaments on the roof |
+  | 🌙 activity _(recent push · clones · views)_ | **window glow at night** |
 - 🗓️ **Cumulative since move‑in day** — visitors & clones are lifetime totals, counted from the day each house was "built" (first seen in the data). The card shows a _"since YYYY‑MM‑DD"_ note.
 - 🚕 **LLM taxi driver that actually drives you** — ask in natural language; it picks the best‑matching repo, explains it, then the cab **comes to your spot, you board, and it carries you** to the house. Three modes:
   - **Local search** (default · no key · instant) — synonym‑expanded intent search, now also metric‑aware (_"most cloned"_, _"most visited"_, _"most forked"_).
@@ -44,8 +47,11 @@ Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the
   - **AI proxy** (Vercel → Azure OpenAI · best quality)
 - 🏡 **Six house tiers, not just taller boxes** — by traffic rank each repo becomes a `cabin → cottage → house → villa → manor → portico mansion`, with wings, columns, porticos, dormers, balconies and cupolas. Top repos get grand columned 저택; quiet ones get cosy cabins.
 - 🌳 **A city that feels alive** — gardens, pets (chow‑chow NPCs), street trees, **street lamps & plaza benches**, category logos on the roofs (AI / Data / Software / …), and proper town‑house roads.
-- 🟢 **Optional realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live · today · all‑time unique‑visitor counter** (🟢 현재 · 오늘 · 누적) in the HUD. Defaults to solo on a plain static host; turn it on with one free server (below).
+- 🌙 **Day & night, with living windows** — flip the 🌙 / ☀️ switch in the HUD. At night the sky turns navy, lamps and stars switch on, and **each repo's windows glow by how active it is** (recent pushes · clones · views) — so your busiest repos literally light up the skyline.
+- 🟢 **Realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live · today · all-time unique-visitor counter** (🟢 현재 · 오늘 · 누적) in the HUD. It's **already live on the demo above**; a fork stays solo until you add one free server (below).
 - 🌐 **English / 한국어 toggle** — switch the whole UI language live from the HUD.
+
+> 💬 **Try asking the taxi:** _"most popular repo"_ · _"show me something about RAG"_ · _"most cloned"_ · _"a Korean STT project"_ · _"anything"_ — it picks the best match, explains why, then drives you there.
 
 ## 🧠 How it works (data flow)
 
@@ -53,11 +59,11 @@ Lost? Ask the 🚕 **LLM taxi driver**. Say _"show me a repo about RAG"_ and the
 github-traffic-monitor (private)          Repolis (public)
   └ daily cumulative traffic (logs/*.csv) ──┐
                                             ├─▶ .github/workflows/refresh.yml (daily)
-  gh api: public · non-fork repo metadata ─┘        └ scripts/build_repos.py
+  gh api: your public repos (+ committed forks) ─┘  └ scripts/build_repos.py
                                                        └─▶ repos.json ──▶ index.html (Three.js 3D city)
 ```
 
-- **Public, non‑fork repos only** — a private repo name is never exposed on the public site.
+- **Your public repos** — everything you created, **plus any fork you've actually committed to** (untouched mirror forks are skipped). A private repo name is never exposed on the public site.
 - Traffic totals are the **cumulative values** gathered by [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor). (GitHub's own traffic API only keeps a rolling 14‑day window — this is why a daily collector is needed to build lifetime totals.)
 
 ## 🚀 Run your own
@@ -68,6 +74,23 @@ github-traffic-monitor (private)          Repolis (public)
 3. **Enable GitHub Pages** — `Settings → Pages → Source: Deploy from a branch → main / (root)`.
 4. **Run the Action** — `Actions → Refresh Repolis data → Run workflow` (then it auto‑refreshes daily).
 5. Done — your city opens at `https://<you>.github.io/Repolis/`.
+
+### Try it locally (no build step)
+
+It's one static file — clone and serve:
+
+```bash
+git clone https://github.com/hyeonsangjeon/Repolis && cd Repolis
+python3 -m http.server 8000      # or: npx serve .
+# open http://localhost:8000
+```
+
+Rebuild the city from **your** repos (needs the GitHub CLI, logged in):
+
+```bash
+gh auth login
+GTM_DIR=data python3 scripts/build_repos.py   # regenerates repos.json
+```
 
 ### (Optional) AI proxy mode — Vercel + Azure OpenAI
 
@@ -90,7 +113,7 @@ The static site is solo by default. To let visitors meet each other, run one tin
   - `window.REPOLIS_RT = 'wss://…'`
 - **Count *every* visitor (not just you):** the three options above only affect whoever sets them. To bake it in for all visitors, set `const RT_DEFAULT='wss://…'` near the realtime block in `index.html` and push. The HUD then shows **🟢 live · today · all‑time** for everyone. On PartyKit the cumulative total is kept in room storage, so it survives restarts (the self‑host `ws` server keeps counts in memory only).
 
-> Privacy: the traffic logs that drive the city are committed publicly, and only your **public, non‑fork** repos are ever shown.
+> Privacy: the traffic logs that drive the city are committed publicly, and only your **public** repos — the ones you created, plus forks you've committed to — are ever shown. Private repos never appear.
 
 ## 🎮 Controls (WoW‑style camera)
 
@@ -104,13 +127,22 @@ The static site is solo by default. To let visitors meet each other, run one tin
 | 🚕 button | Ask the taxi driver |
 | ☰ button | Wayfinding menu (search) |
 | 🌐 button | Switch English / 한국어 |
+| 🌙 / ☀️ button | Toggle day / night (night = activity-lit windows) |
 
 ## 🛠 Tech
 
-Three.js (r0.160) · toon shading + inverted‑hull outlines · ACES tone mapping · a single dependency‑free `index.html` · GitHub Actions · (optional) Vercel + Azure OpenAI · WebLLM · (optional) PartyKit / `ws` for realtime.
+Three.js (r0.160) · toon shading + inverted-hull outlines · ACES tone mapping · day/night lighting · circle-collision walking · a single dependency-free `index.html` · GitHub Actions · (optional) Vercel + Azure OpenAI · WebLLM · (optional) PartyKit / Cloudflare Workers for realtime.
+
+## ⭐ Like it?
+
+Only six pins on your profile — but **all** your repos can be a city. If that made you smile, **[give it a star](https://github.com/hyeonsangjeon/Repolis)** so more people stumble onto Repolis. New here? See [`CHANGELOG.md`](CHANGELOG.md) for what shipped.
 
 ## 🙏 Credits
 
 Data: [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor) · social previews: `opengraph.githubassets.com`.
+
+## 📄 License
+
+MIT © [Hyeonsang Jeon](https://github.com/hyeonsangjeon) — see [`LICENSE`](LICENSE).
 
 <div align="center"><sub>Made with ☕ &amp; Three.js — only 6 pins, but your repos become a whole city. 🏙️</sub></div>

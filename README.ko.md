@@ -11,6 +11,8 @@
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
 [![Single file](https://img.shields.io/badge/build-single%20index.html-83bb59?style=for-the-badge)](index.html)
 [![Last commit](https://img.shields.io/github/last-commit/hyeonsangjeon/Repolis?style=for-the-badge&color=b3a07f)](https://github.com/hyeonsangjeon/Repolis/commits)
+[![Stars](https://img.shields.io/github/stars/hyeonsangjeon/Repolis?style=for-the-badge&logo=github&color=f5c542&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-a0a0a0?style=for-the-badge)](LICENSE)
 
 [English](README.md) · [한국어](README.ko.md)
 
@@ -27,16 +29,17 @@
 
 ## ✨ 무엇이 들어있나
 
-- 🚶 **걸어다니는 오픈월드** — WASD/방향키/조이스틱으로 지브리풍 도시를 산책. 집(레포)에 도착하면 카드가 열려요(설정돼 있으면 GitHub **소셜 프리뷰** 이미지까지).
+- 🚶 **걸어다니는 오픈월드** — WASD/방향키/조이스틱으로 직접 디자인한 로우폴리 도시를 산책. **이제 건물은 단단해서** 통과하지 않고 *돌아서* 다녀요 — 갈색 흙길과 차선을 그린 아스팔트 링도로를 따라. 집(레포)에 도착하면 카드가 열려요(설정돼 있으면 GitHub **소셜 프리뷰** 이미지까지).
 - 🏙️ **도심지 & 홈타운 구역** — 종합 인기 상위 레포는 안쪽 도심지의 타워로, 나머지는 외곽 홈타운의 아늑한 코티지로. 링 도로와 방사형 대로로 이어져요.
 - 📊 **지표가 곧 건축** — 데이터가 도시를 짓습니다:
   | 지표 | 건물에 반영 |
   |---|---|
-  | 👁 방문자(unique visitors) | 건물 **높이** · 창문 **밝기** |
+  | 👁 방문자(unique visitors) | 건물 **높이** |
   | ⑂ forks | 건물 **너비**(터 크기) |
   | ⬇ clones | **화려함**(깃발·금장식) |
   | 📈 views | **마당**·울타리 크기 |
   | ★ stars | 지붕 위 **금별** 장식 |
+  | 🌙 활동량 _(최근 push · clone · view)_ | **밤의 창문 밝기** |
 - 🗓️ **분양일부터 누적** — 방문자·클론은 그 집이 "지어진 날"(데이터에 처음 잡힌 날)부터의 **누적 합계**예요. 카드에 _"since YYYY‑MM‑DD"_ 분양일이 표시됩니다.
 - 🚕 **진짜로 태워주는 LLM 택시기사** — 자연어로 물어보면 가장 맞는 레포를 골라 설명하고, 택시가 **내 자리로 와서 → 탑승 → 그 집까지 데려다줘요.** 3가지 모드:
   - **로컬검색** (기본·키 불필요·즉시) — 동의어 확장 인텐트 검색. 이제 _"제일 많이 클론된"_, _"방문자 최다"_, _"포크 많은"_ 같은 **지표 기반 검색**도 됩니다.
@@ -44,8 +47,11 @@
   - **AI 프록시** (Vercel → Azure OpenAI·최고 품질)
 - 🏡 **단순히 높아지는 게 아니라, 6단계 집 등급** — 트래픽 순위에 따라 `오두막 → 코티지 → 주택 → 빌라 → 저택 → 포르티코 맨션`으로 지어지고, 부속동·기둥·포르티코·다락창·발코니·큐폴라가 붙어요. 인기 레포는 웅장한 기둥 저택, 조용한 레포는 아담한 오두막.
 - 🌳 **살아있는 도시** — 정원, 펫(차우차우 NPC), 가로수, **가로등과 광장 벤치**, 지붕 위 카테고리 로고(AI / Data / Software …), 타운하우스 도로까지.
-- 🟢 **(선택) 실시간 멀티플레이어** — 다른 방문자가 이름표 달린 아바타로 함께 걸어다니고, HUD에 **현재 접속자 · 오늘 · 누적 순방문자 카운터**(🟢 N · 오늘 M · 누적 K)가 떠요. 일반 정적 호스팅에선 솔로가 기본, 무료 서버 하나로 켤 수 있어요(아래).
+- 🌙 **낮과 밤, 그리고 살아있는 창문** — HUD의 🌙 / ☀️ 스위치를 눌러요. 밤이 되면 하늘이 남색으로 물들고 가로등·별이 켜지며, **각 레포의 창문이 활동량(최근 push · clone · view)만큼 밝게 빛나요** — 그래서 가장 바쁜 레포가 스카이라인을 밝힙니다.
+- 🟢 **실시간 멀티플레이어** — 다른 방문자가 이름표 달린 아바타로 함께 걸어다니고, HUD에 **현재 접속자 · 오늘 · 누적 순방문자 카운터**(🟢 N · 오늘 M · 누적 K)가 떠요. **데모에는 이미 켜져 있고**, fork 하면 무료 서버 하나를 연결하기 전까진 솔로가 기본이에요(아래).
 - 🌐 **영어 / 한국어 전환** — HUD에서 UI 언어를 실시간으로 바꿔요.
+
+> 💬 **택시에게 이렇게 물어보세요:** _"제일 인기있는 레포"_ · _"RAG 관련 보여줘"_ · _"제일 많이 클론된"_ · _"한국어 STT 프로젝트"_ · _"아무거나"_ — 가장 맞는 레포를 골라 이유를 설명하고, 그 집까지 데려다줘요.
 
 ## 🧠 어떻게 동작하나 (데이터 흐름)
 
@@ -53,11 +59,11 @@
 github-traffic-monitor (private)        Repolis (public)
   └ 매일 트래픽 누적(logs/*.csv) ──┐
                                     ├─▶ .github/workflows/refresh.yml (매일)
-  gh api: 공개·non-fork 레포 메타 ─┘        └ scripts/build_repos.py
+  gh api: 내 공개 레포 (+ 커밋한 fork) ─┘  └ scripts/build_repos.py
                                                └─▶ repos.json  ──▶  index.html (Three.js 3D 도시)
 ```
 
-- **공개·non-fork 레포만** 포함합니다 — 비공개 레포 이름이 공개 사이트에 절대 노출되지 않아요.
+- **내 공개 레포**를 포함합니다 — 내가 만든 레포 전부에, **내가 실제로 커밋한 fork**까지(손대지 않은 단순 미러 fork는 제외). 비공개 레포 이름은 공개 사이트에 절대 노출되지 않아요.
 - 트래픽 합계는 [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor)가 모아 온 **누적값**입니다. (GitHub 트래픽 API는 14일치만 보관하므로, 평생 누적치를 만들려면 매일 모으는 수집기가 필요해요.)
 
 ## 🚀 직접 띄우기
@@ -68,6 +74,23 @@ github-traffic-monitor (private)        Repolis (public)
 3. **GitHub Pages 켜기** — `Settings → Pages → Source: Deploy from a branch → main / (root)`.
 4. **Action 실행** — `Actions → Refresh Repolis data → Run workflow` (이후 매일 자동 갱신).
 5. 끝! `https://<당신>.github.io/Repolis/` 에서 도시가 열립니다.
+
+### 로컬에서 바로 띄우기 (빌드 없음)
+
+정적 파일 하나예요 — 클론해서 서빙만 하면 됩니다:
+
+```bash
+git clone https://github.com/hyeonsangjeon/Repolis && cd Repolis
+python3 -m http.server 8000      # 또는: npx serve .
+# http://localhost:8000 열기
+```
+
+**내** 레포로 도시를 다시 짓기 (GitHub CLI 로그인 필요):
+
+```bash
+gh auth login
+GTM_DIR=data python3 scripts/build_repos.py   # repos.json 재생성
+```
 
 ### (선택) AI 프록시 모드 — Vercel + Azure OpenAI
 
@@ -90,7 +113,7 @@ github-traffic-monitor (private)        Repolis (public)
   - `window.REPOLIS_RT = 'wss://…'`
 - **모든 방문자 카운트(나만 말고):** 위 3가지는 *그걸 설정한 사람*에게만 적용돼요. 전체 방문자에게 켜려면 `index.html`의 실시간 블록 근처 `const RT_DEFAULT='wss://…'`에 URL을 박고 push 하세요. 그럼 HUD에 **🟢 현재 · 오늘 · 누적**이 모두에게 떠요. PartyKit은 누적치를 방 저장소에 보관해서 재시작에도 살아남고(셀프호스트 `ws` 서버는 메모리 보관이라 재시작 시 초기화).
 
-> 프라이버시: 도시를 그리는 트래픽 로그는 공개로 커밋되며, **공개·non-fork** 레포만 표시됩니다.
+> 프라이버시: 도시를 그리는 트래픽 로그는 공개로 커밋되며, **공개 레포**(내가 만든 것 + 내가 커밋한 fork)만 표시돼요 — 비공개 레포는 절대 나오지 않습니다.
 
 ## 🎮 조작 (WoW식 카메라)
 
@@ -104,13 +127,22 @@ github-traffic-monitor (private)        Repolis (public)
 | 🚕 버튼 | 택시기사에게 묻기 |
 | ☰ 버튼 | 길찾기 메뉴(검색) |
 | 🌐 버튼 | 영어 / 한국어 전환 |
+| 🌙 / ☀️ 버튼 | 낮 / 밤 전환 (밤 = 활동량만큼 빛나는 창문) |
 
 ## 🛠 기술
 
-Three.js (r0.160) · toon shading + 인버티드-헐 아웃라인 · ACES 톤매핑 · 의존성 빌드 없는 단일 `index.html` · GitHub Actions · (선택) Vercel + Azure OpenAI · WebLLM · (선택) 실시간용 PartyKit / `ws`.
+Three.js (r0.160) · toon shading + 인버티드-헐 아웃라인 · ACES 톤매핑 · 낮/밤 라이팅 · 원형 충돌 보행 · 의존성 빌드 없는 단일 `index.html` · GitHub Actions · (선택) Vercel + Azure OpenAI · WebLLM · (선택) 실시간용 PartyKit / Cloudflare Workers.
+
+## ⭐ 마음에 드셨나요?
+
+프로필 핀은 6개뿐이지만, **모든** 레포가 도시가 될 수 있어요. 재밌으셨다면 **[스타 한 번](https://github.com/hyeonsangjeon/Repolis)** 눌러주세요 — 더 많은 분들이 Repolis를 발견할 수 있게요. 처음이라면 [`CHANGELOG.md`](CHANGELOG.md)에서 무엇이 추가됐는지 확인하세요.
 
 ## 🙏 크레딧
 
 데이터: [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor) · 소셜 프리뷰: `opengraph.githubassets.com`.
+
+## 📄 라이선스
+
+MIT © [전현상](https://github.com/hyeonsangjeon) — [`LICENSE`](LICENSE) 참고.
 
 <div align="center"><sub>Made with ☕ &amp; Three.js — 핀은 6개지만, 레포는 도시가 됩니다. 🏙️</sub></div>
