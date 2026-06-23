@@ -10,6 +10,13 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 - **Detailed ground** — directional grass blades on the lawn, gravel speckle + jagged cracks on asphalt, and fine grain on dirt/sand, all seamless (9‑tile wrap) and deterministic.
 - **Contact shadows** — every building drops a soft shadow onto its plot so houses sit grounded on the lawn instead of floating (daytime depth cue).
 
+### 🏛️ Varied architecture
+- **Eight roof styles** — added **mansard, A‑frame, shed (mono‑pitch) and barrel‑vault** roofs alongside the existing flat · hip · gambrel · gable, so the skyline now reads as a real mix of silhouettes instead of repeating gables.
+- **New wall textures** — **Tudor half‑timber, vertical board‑and‑batten and corrugated metal** join brick · siding · panel · stone · stucco, assigned per repo so neighbours look distinct (still 100% procedural, zero image assets).
+- **Stone base plinth** — every building now sits on a projecting water‑table base course, grounding it on its plot.
+- **Window shutters** — traditional pitched‑roof homes gain colour‑matched shutters flanking their windows, skipped automatically where they'd overhang the wall edge.
+- **Rooftop tech on flat‑roofed shops** — commercial flat roofs carry a tilted solar array, a glowing skylight and an HVAC unit, tucked inside the parapet.
+
 ### 💧 Living water
 - **Animated cel water** — ponds and the new plaza fountain use a custom shader with drifting ripples, a sun/moon glint, depth‑tinted colour and a day↔night palette, so water actually moves and catches the light instead of sitting as a flat disc. One shared time/night uniform drives every water surface.
 - **Town‑square fountain** — the central plaza medallion is now a two‑tier stone fountain with a pedestal bowl, arcing spray particles and stone coping; it glows softly at night while staying low enough that distant houses remain visible.

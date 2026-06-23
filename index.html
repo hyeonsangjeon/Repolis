@@ -862,7 +862,8 @@ function shade(col, amt){
   const a=v=>Math.max(0,Math.min(255,Math.round(amt>=0?v+(255-v)*f:v*(1+f))));
   return '#'+(((a(r)<<16)|(a(g)<<8)|a(b))>>>0).toString(16).padStart(6,'0');
 }
-const WALL_STYLE={ AI:'panel', Data:'brick', AIOps:'stone', Finetune:'stucco', Software:'siding' };
+const WALL_STYLES={ AI:['panel','metal'], Data:['brick','board'], AIOps:['stone','metal'], Finetune:['stucco','timber'], Software:['siding','board'] };
+function wallStyleFor(repo){ const arr=WALL_STYLES[repo._cat]||['siding']; return arr[hashStr((repo.repo||'')+'w')%arr.length]; }
 const _wallCache=new Map();
 function wallTexture(style, col){
   const key=style+'_'+col; if(_wallCache.has(key)) return _wallCache.get(key);
@@ -895,6 +896,24 @@ function wallTexture(style, col){
       x.globalAlpha=0.45; x.fillStyle=lt2; x.fillRect(xx+1,y+1,rw-2,1.2); x.fillRect(xx+1,y+1,1.2,rh-2);
       x.globalAlpha=0.5; x.fillStyle=dk2; x.fillRect(xx+1,y+rh-2,rw-2,1.4); x.fillRect(xx+rw-2,y+1,1.4,rh-2); x.globalAlpha=1;
       xx+=rw; } y+=rh; } }
+  else if(style==='timber'){ // Tudor half-timber: pale stucco field crossed by dark structural beams
+    x.fillStyle=lt; x.fillRect(0,0,W,H);
+    for(let i=0;i<420;i++){ x.fillStyle=rnd()<0.5?base:lt2; x.globalAlpha=0.05+rnd()*0.08; x.fillRect(rnd()*W,rnd()*H,2,2); } x.globalAlpha=1;
+    const beam=shade(col,-54), bw=7; x.fillStyle=beam;
+    x.fillRect(0,0,W,bw); x.fillRect(0,H-bw,W,bw); x.fillRect(0,0,bw,H); x.fillRect(W-bw,0,bw,H);
+    x.fillRect(0,H/2-bw/2,W,bw); x.fillRect(W/3-bw/2,0,bw,H); x.fillRect(2*W/3-bw/2,0,bw,H);
+    x.strokeStyle=beam; x.lineWidth=bw; x.beginPath(); x.moveTo(bw,H/2); x.lineTo(W/3,H-bw); x.moveTo(W-bw,H/2); x.lineTo(2*W/3,H-bw); x.stroke();
+    x.globalAlpha=0.32; x.fillStyle=shade(col,-72); x.fillRect(0,H/2+bw/2-1.4,W,1.4); x.globalAlpha=1; }
+  else if(style==='board'){ // board-and-batten: wide vertical boards with raised battens over the seams
+    const bw=16;
+    for(let c=0;c<W+bw;c+=bw){ x.fillStyle=shade(col,(rnd()-0.5)*12); x.fillRect(c,0,bw,H);
+      x.globalAlpha=0.5; x.fillStyle=lt2; x.fillRect(c,0,2,H); x.globalAlpha=0.5; x.fillStyle=dk2; x.fillRect(c+bw-2.2,0,2.2,H); x.globalAlpha=1;
+      x.fillStyle=shade(col,9); x.fillRect(c-2,0,4,H);
+      x.globalAlpha=0.4; x.fillStyle=lt2; x.fillRect(c-2,0,1,H); x.globalAlpha=0.5; x.fillStyle=dk2; x.fillRect(c+1,0,1,H); x.globalAlpha=1; } }
+  else if(style==='metal'){ // standing-seam metal: vertical ribbed panels with a soft sheen
+    const pw=16; const gr=x.createLinearGradient(0,0,0,H); gr.addColorStop(0,dk); gr.addColorStop(0.5,lt2); gr.addColorStop(1,dk); x.fillStyle=gr; x.fillRect(0,0,W,H);
+    for(let c=0;c<=W;c+=pw){ x.globalAlpha=0.55; x.fillStyle=dk2; x.fillRect(c-1,0,2,H); x.globalAlpha=0.5; x.fillStyle=lt2; x.fillRect(c+1,0,1.4,H); x.globalAlpha=1; }
+    x.globalAlpha=0.16; x.fillStyle=dk2; for(let r=10;r<H;r+=34) x.fillRect(0,r,W,1); x.globalAlpha=1; }
   else { for(let i=0;i<26;i++){ x.globalAlpha=0.05+rnd()*0.06; x.fillStyle=rnd()<0.5?dk:lt; const px=rnd()*W,py=rnd()*H,r=8+rnd()*20; x.beginPath(); x.arc(px,py,r,0,7); x.fill(); }
     for(let i=0;i<1300;i++){ const px=rnd()*W, py=rnd()*H; x.fillStyle=rnd()<0.5?dk:lt; x.globalAlpha=0.07+rnd()*0.12; x.fillRect(px,py,1.6,1.6); } x.globalAlpha=1; }
   const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANISO; t.needsUpdate=true;
@@ -1150,12 +1169,12 @@ function typology(repo){
   else if(p<0.84) tier=1;        // → cottages
   else tier=0;                   // → cabins
   let kind, roof;
-  if(tier===0){ kind='cabin'; roof='gable'; }
-  else if(tier===1){ kind='cottage'; roof=['gable','hip','gambrel'][hsh%3]; }
-  else if(tier===2){ kind=(hsh%6===0)?'shop':'house'; roof=(kind==='shop')?'flat':((hsh%2)?'gable':'hip'); }
-  else if(tier===3){ kind=(repo._downtown && hsh%7===0)?'tower':'villa'; roof=(kind==='tower')?'flat':'hip'; }
-  else if(tier===4){ kind='manor'; roof='hip'; }
-  else { kind='mansion'; roof='hip'; }
+  if(tier===0){ kind='cabin'; roof=(hsh%3===0)?'aframe':'gable'; }
+  else if(tier===1){ kind='cottage'; roof=['gable','hip','gambrel','aframe'][hsh%4]; }
+  else if(tier===2){ kind=(hsh%6===0)?'shop':'house'; roof=(kind==='shop')?'flat':['gable','hip','shed','mansard'][hsh%4]; }
+  else if(tier===3){ kind=(repo._downtown && hsh%3===0)?'tower':'villa'; roof=(kind==='tower')?'flat':['hip','mansard','barrel'][hsh%3]; }
+  else if(tier===4){ kind='manor'; roof=(hsh%2)?'mansard':'hip'; }
+  else { kind='mansion'; roof=(hsh%2)?'mansard':'hip'; }
   return {kind, roof, tier};
 }
 /* ---- roof variants ---- */
@@ -1171,6 +1190,25 @@ function makeRoof(style,w,h,color){
   } else if(style==='gambrel'){
     const lo=new THREE.Mesh(new THREE.CylinderGeometry(w*0.62,w*0.96,1.1,4,1), rmat(4,1.2)); lo.position.y=h+0.55; lo.rotation.y=Math.PI/4; lo.castShadow=true; outline(lo,0.06); grp.add(lo);
     const hi=new THREE.Mesh(new THREE.ConeGeometry(w*0.64,1.5,4), rmat(4,1.3)); hi.position.y=h+1.6; hi.rotation.y=Math.PI/4; hi.castShadow=true; outline(hi,0.06); grp.add(hi);
+  } else if(style==='mansard'){
+    // French Second-Empire: steep flared lower skirt + shallow hip cap (a graceful, boxy top)
+    const skirt=new THREE.Mesh(new THREE.CylinderGeometry(w*0.7,w*1.0,1.6,4,1), rmat(4,1.5)); skirt.position.y=h+0.8; skirt.rotation.y=Math.PI/4; skirt.castShadow=true; outline(skirt,0.06); grp.add(skirt);
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(w*0.74,0.7,4), rmat(4,0.8)); cap.position.y=h+1.95; cap.rotation.y=Math.PI/4; cap.castShadow=true; outline(cap,0.05); grp.add(cap);
+    const cor=new THREE.Mesh(new THREE.TorusGeometry(w*0.7,0.07,6,4), basic(0xeadfca)); cor.rotation.x=Math.PI/2; cor.rotation.z=Math.PI/4; cor.position.y=h+1.6; grp.add(cor);
+  } else if(style==='aframe'){
+    // chalet: a tall, sharp gable whose eaves sweep down low over the walls
+    const r=new THREE.Mesh(new THREE.ConeGeometry(w*0.82,3.5,4), rmat(4,2.3)); r.position.y=h+0.45; r.rotation.y=Math.PI/4; r.castShadow=true; outline(r,0.06); grp.add(r);
+    const ridge=rbox(0.18,0.18,w*1.18,shade(color,-26),0.04); ridge.position.y=h+1.0; grp.add(ridge);
+  } else if(style==='shed'){
+    // modern single-slope (mono-pitch): a clean wedge, low at the street, high at the back
+    const sh=new THREE.Shape(); sh.moveTo(-w*0.54,0); sh.lineTo(w*0.54,0); sh.lineTo(w*0.54,1.5); sh.lineTo(-w*0.54,0.06); sh.lineTo(-w*0.54,0);
+    const wedge=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:w*1.06,bevelEnabled:false}), rmat(2.0,1.3));
+    wedge.position.set(0,h+0.02,w*0.53); wedge.castShadow=true; outline(wedge,0.05); grp.add(wedge);
+  } else if(style==='barrel'){
+    // rounded barrel vault running front-to-back
+    const v=new THREE.Mesh(new THREE.CylinderGeometry(w*0.58,w*0.58,w*1.06,18,1,false,0,Math.PI), rmat(3.2,1.4));
+    v.rotation.x=Math.PI/2; v.position.y=h+0.04; v.castShadow=true; outline(v,0.05); grp.add(v);
+    [w*0.53,-w*0.53].forEach(z=>{ const cap=new THREE.Mesh(new THREE.CircleGeometry(w*0.58,18,0,Math.PI), toon(shade(color,-12))); cap.position.set(0,h+0.04,z); if(z<0) cap.rotation.y=Math.PI; grp.add(cap); });
   } else {
     const r=new THREE.Mesh(new THREE.ConeGeometry(w*0.95,2.6,4), rmat(4,1.8)); r.position.y=h+1.3; r.rotation.y=Math.PI/4; r.castShadow=true; outline(r,0.06); grp.add(r);
   }
@@ -1341,6 +1379,16 @@ const _roomTex=(function(){
   const t=new THREE.CanvasTexture(cv); t.anisotropy=MAXANISO; t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
 })();
 
+/* modern flat-roof tech: tilted solar array + glowing skylight + HVAC unit */
+function addRoofTech(g,w,topH){
+  const St=topH+0.5;
+  for(let i=0;i<2;i++){ const px=-w*0.22+i*w*0.30;
+    const fr=rbox(w*0.26,0.05,w*0.34,0x33405a,0.01); fr.position.set(px,St+0.12,0); fr.rotation.z=0.34; g.add(fr);
+    const pn=rbox(w*0.24,0.05,w*0.32,0x16345f,0.01); pn.position.set(px,St+0.17,0); pn.rotation.z=0.34; outline(pn,0.02); g.add(pn); }
+  const sky=new THREE.Mesh(new THREE.PlaneGeometry(w*0.3,w*0.3), new THREE.MeshBasicMaterial({map:_winTex,transparent:true,color:DAY_GLASS}));
+  sky.rotation.x=-Math.PI/2; sky.position.set(w*0.22,St+0.03,w*0.22); g.add(sky);
+  const hv=rbox(w*0.2,0.42,w*0.2,0xbcc3cb,0.03); hv.position.set(-w*0.24,St+0.22,-w*0.22); outline(hv,0.03); g.add(hv);
+}
 function makeBuilding(repo){
   repo._cat = repoCategory(repo);
   const typ = typology(repo);
@@ -1383,10 +1431,12 @@ function makeBuilding(repo){
 
   // body + roof (score-tiered silhouette: cabin→cottage→house→townhouse→villa→manor→mansion + tower/shop)
   const bodyR=(kind==='tower'||kind==='townhouse')?0.12:0.2;
-  const wstyle=WALL_STYLE[repo._cat]||'siding'; const wtex=wallTexture(wstyle, repo.wall);
+  const wstyle=wallStyleFor(repo); repo._wstyle=wstyle; const wtex=wallTexture(wstyle, repo.wall);
   const body=rbox(w,h,d,repo.wall,bodyR); body.material=texMat(wtex, Math.max(1.2,w/3.2), Math.max(1.2,h/3.2));
   body.position.y=h/2; outline(body,0.06); g.add(body);
   repo._body=body;
+  // projecting stone base course (water-table) grounds the building on its plot
+  const plinth=rbox(w+0.26, 0.5, d+0.26, 0x8f8676, bodyR); plinth.position.y=0.25; outline(plinth,0.05); g.add(plinth);
   repo._cw=(w*0.5+0.6)*((kind==='manor'||kind==='mansion')?1.4:(kind==='villa')?1.18:1);
   let topH=h, topW=w;
   if(kind==='shop'){ const uh=Math.max(1.8,h*0.34); const up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.material=texMat(wtex, Math.max(1,w*0.62/3.2), Math.max(1,uh/3.2)); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
@@ -1396,11 +1446,13 @@ function makeBuilding(repo){
     addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, wx); addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, -wx); }
   // central roof
   const roof=makeRoof(typ.roof, topW, topH, repo.roof); g.add(roof);
-  if(typ.roof!=='flat'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim);
+  const flatTop = (typ.roof==='flat');
+  if(typ.roof!=='flat' && typ.roof!=='aframe'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim);
     if(rich>0.18) addSmoke(g, w*0.32, topH+2.3, d*0.22); }
   if(kind==='tower'){ const tank=new THREE.Mesh(new THREE.CylinderGeometry(w*0.16,w*0.16,0.9,10), toon(0x8a98a6)); tank.position.set(w*0.2,h+1.0,-d*0.18); outline(tank,0.04); g.add(tank); }
-  if(kind==='house'){ addDormer(g,d,topH+0.55); }
+  if(kind==='house' && typ.roof!=='shed' && typ.roof!=='aframe'){ addDormer(g,d,topH+0.55); }
   if(kind==='mansion'){ addCupola(g, topH, repo.roof); }
+  if(typ.roof==='flat'){ addRoofTech(g, topW, topH); }
   // entrance feature by tier
   if(kind==='house'){ addPorch(g,w,d,repo.roof); }
   else if(kind==='villa'){ addBalcony(g,w,d,h*0.58,repo.roof); }
@@ -1422,6 +1474,10 @@ function makeBuilding(repo){
     const sill=rbox(1.32,0.16,0.30,0xe0d2b4,0.04); sill.position.set(wx,wy-0.74,d/2+0.10); g.add(sill);
     const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.96,1.06), new THREE.MeshBasicMaterial({map:_winTex,transparent:true,color:DAY_GLASS}));
     gl.position.set(wx,wy,d/2+0.11); gl.userData={ lit: Math.random()<(0.3+0.55*repo._activity), j:0.82+Math.random()*0.32 }; g.add(gl); repo._windows.push(gl);
+    // operable shutters flank windows on traditional pitched-roof homes
+    if(typ.tier>=2 && typ.roof!=='flat' && typ.roof!=='shed' && kind!=='tower'){ const shCol=shade(repo.roof,-14), off=0.72;
+      [-1,1].forEach(s=>{ const sx=wx+s*off; if(Math.abs(sx)+0.16 > w*0.5-0.05) return;
+        const sh=rbox(0.30,1.30,0.12, shCol, 0.03); sh.position.set(sx,wy,d/2+0.04); outline(sh,0.025); g.add(sh); }); }
     if(typ.tier>=3){ const fb=new THREE.Mesh(new THREE.BoxGeometry(0.62,0.16,0.2), toon(0x9c6f4a)); fb.position.set(wx,wy-0.6,d/2+0.2); g.add(fb);
       const fl=new THREE.Mesh(GEO_FLOWER,FLOWER_MATS[(hashStr(repo.repo)+Math.round(wx*7))%FLOWER_MATS.length]); fl.position.set(wx,wy-0.46,d/2+0.24); g.add(fl); }
   }));
