@@ -3,6 +3,22 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.9.0] — 2026-06-24
+
+### 🏘️ Colmar — an Alsace‑village makeover for the plaza
+- **The town square is now dressed like a corner of Colmar.** Pretty objects are scattered through the village so every stroll passes something charming:
+  - **🛶 Petite‑Venise canal nook** — a quiet pocket with a **cel‑animated canal**, flower‑box banks, a **humpbacked flower bridge** and a moored rowboat, framed by cypress.
+  - **🌸 Flower market** — striped market stalls, flower carts (blooming wheelbarrows), barrels and crates clustered like a Sunday morning *marché aux fleurs*.
+  - **🌹 Rose arches** arc over the six avenue mouths, with **flower planters** flanking each one.
+  - **⛲ A stone well**, **guild lanterns**, lavender clumps and a gentle scatter of charms across the lawns.
+- **🌙 Beautiful by night, free of cost.** Every bloom, lantern and the canal water glow warmly after dusk by **reusing the existing lamp‑glow and cel‑water systems** — no new lights, shared geometry and materials, glow sprites only. The decorations melt into the night‑sky / starlight theme instead of fighting it.
+
+### 🐕 Fluffy chow‑chows
+- **The plaza chow‑chows are properly poofy now.** Each dog was rebuilt with **fur tufts** — a layered coat, a lion‑mane ruff, fuzzy cheeks, a curled fluffy tail and paw fluff — in a warm ginger double‑coat. All **16 chows** still wander, wag and trot (tufts share geometry and skip shadows, so the fur is free).
+
+### 🐛 Fixes
+- **Spawn beside the fountain, not in it.** New visitors used to materialise **standing inside the plaza fountain** (the camera framed the back of the avatar's head against the water like a dark orb). The spawn point now places 서원이 **on the plaza beside the fountain**, so the very first frame shows the square — fountain, blooms and scholars — cleanly.
+
 ## [1.8.0] — 2026-06-24
 
 ### ✦ Every scholar can chat — starlit general conversation (Azure AI Foundry)

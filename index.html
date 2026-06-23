@@ -1296,6 +1296,145 @@ function makePavilion(px,pz){
 }
 [[47,0.55],[74,2.35],[103,3.95],[131,5.45],[88,1.15]].forEach(([r,a])=>makePavilion(Math.cos(a)*r, Math.sin(a)*r));
 
+/* ---- 🌸 Colmar village charms: flower carts, market stalls, a stone well, rose arches, wine barrels, planters, guild lanterns + a Petite-Venise canal & flower bridge ---- */
+const EXTRA_COLLIDERS=[];   // big props get a soft collider (merged into COLLIDERS after the building pass)
+const BLOOM_MATS=[0xff5d8f,0xffd23f,0xff8a3d,0xb06fe0,0xfff0f5,0xff3b6e,0xff7eb0,0xffe08a,0xe6486e].map(basic);
+function bloom(parent,x,y,z,spread=0.5,n=10,s=1){   // a colorful mound of blossoms (shared geo+mats)
+  for(let i=0;i<n;i++){ const a=Math.random()*6.2832, rr=Math.random()*spread;
+    const f=new THREE.Mesh(GEO_FLOWER, BLOOM_MATS[Math.random()*BLOOM_MATS.length|0]);
+    f.position.set(x+Math.cos(a)*rr, y+Math.random()*spread*0.55, z+Math.sin(a)*rr); f.scale.setScalar((0.7+Math.random()*0.7)*s); parent.add(f); }
+}
+function stripeTex(c1,c2){ const cv=document.createElement('canvas'); cv.width=64; cv.height=8; const x=cv.getContext('2d');
+  for(let i=0;i<8;i++){ x.fillStyle=i%2?c2:c1; x.fillRect(i*8,0,8,8); } const t=new THREE.CanvasTexture(cv);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t; }
+function makeFlowerCart(x,z,rot=0){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot; scene.add(g);
+  const bed=rbox(1.5,0.44,0.86,0x9a6b3f,0.06); bed.position.y=0.62; outline(bed,0.03); g.add(bed);
+  [-0.43,0.43].forEach(zz=>{ const rail=rbox(1.5,0.18,0.06,0x7e5532,0.02); rail.position.set(0,0.86,zz); g.add(rail); });
+  [-0.55,0.55].forEach(sz=>{ const w=new THREE.Group(); w.position.set(-0.45,0.4,sz);
+    const tire=new THREE.Mesh(new THREE.TorusGeometry(0.4,0.08,8,16), toon(0x5a3b22)); w.add(tire);
+    for(let i=0;i<4;i++){ const sp=rbox(0.05,0.7,0.05,0x6e4a2e,0.02); sp.rotation.z=i/4*Math.PI; w.add(sp); }
+    const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.16,8), toon(0x6e4a2e)); hub.rotation.x=Math.PI/2; w.add(hub); g.add(w); });
+  [-0.34,0.34].forEach(zz=>{ const h=rbox(1.0,0.07,0.07,0x7e5532,0.02); h.position.set(1.05,0.66,zz); g.add(h); });
+  bloom(g,0,0.98,0,0.64,18,1.15);
+  EXTRA_COLLIDERS.push({x,z,r:1.5});
+}
+function makeStall(x,z,rot,c1,c2){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot; scene.add(g);
+  [[-1,-0.7],[1,-0.7],[-1,0.7],[1,0.7]].forEach(([px,pz])=>{ const p=rbox(0.1,2.0,0.1,0x8a6440,0.03); p.position.set(px,1.0,pz); g.add(p); });
+  const cnt=rbox(2.2,0.18,1.5,0xb88a52,0.04); cnt.position.set(0,1.0,0); outline(cnt,0.03); g.add(cnt);
+  const front=rbox(2.2,0.94,0.1,0xa07644,0.03); front.position.set(0,0.5,0.74); g.add(front);
+  const awnMat=new THREE.MeshToonMaterial({map:stripeTex(c1,c2),side:THREE.DoubleSide}); awnMat.map.repeat.set(5,1);
+  const awn=new THREE.Mesh(new THREE.PlaneGeometry(2.5,1.4), awnMat); awn.position.set(0,2.16,0.46); awn.rotation.x=-Math.PI/2.5; g.add(awn);
+  const val=new THREE.Mesh(new THREE.PlaneGeometry(2.5,0.34,5,1), awnMat); val.position.set(0,1.86,1.06); g.add(val);
+  for(let i=-1;i<=1;i++){ const b=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.2,0.26,10), toon(0x9a6b3f)); b.position.set(i*0.7,1.22,0); g.add(b); bloom(g,i*0.7,1.4,0,0.24,7,0.9); }
+  EXTRA_COLLIDERS.push({x,z,r:1.7});
+}
+function makeWell(x,z){
+  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  const wall=new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.95,1.0,16,1,true), toon(0x9c958a)); wall.position.y=0.5; wall.receiveShadow=true; outline(wall,0.03); g.add(wall);
+  const cope=new THREE.Mesh(new THREE.TorusGeometry(0.92,0.12,8,18), toon(0x837c72)); cope.rotation.x=Math.PI/2; cope.position.y=1.0; g.add(cope);
+  const water=makeWater(0.82,18); water.position.y=0.62; g.add(water);
+  [-0.78,0.78].forEach(px=>{ const p=rbox(0.12,1.7,0.12,0x6e4a2e,0.03); p.position.set(px,1.7,0); g.add(p); });
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(1.2,0.7,4), toon(0xb05a3a)); roof.position.y=2.78; roof.rotation.y=Math.PI/4; outline(roof,0.04); g.add(roof);
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,1.6,8), toon(0x6e4a2e)); beam.rotation.z=Math.PI/2; beam.position.y=2.3; g.add(beam);
+  const bucket=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.13,0.24,10), toon(0x7e5532)); bucket.position.y=1.5; g.add(bucket);
+  const rope=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.8,5), toon(0xcdbb88)); rope.position.y=1.9; g.add(rope);
+  bloom(g,0.96,1.05,0.4,0.3,7,0.9);
+  EXTRA_COLLIDERS.push({x,z,r:1.1});
+}
+function makeRoseArch(x,z,rot){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot; scene.add(g);
+  const W=2.6;
+  [-W/2,W/2].forEach(px=>{ const p=rbox(0.12,2.4,0.12,0xeae0cc,0.03); p.position.set(px,1.2,0); outline(p,0.03); g.add(p); bloom(g,px,1.5,0,0.18,8,0.85); });
+  const arch=new THREE.Mesh(new THREE.TorusGeometry(W/2,0.1,8,20,Math.PI), toon(0xeae0cc)); arch.position.y=2.4; g.add(arch);
+  for(let i=0;i<=6;i++){ const a=i/6*Math.PI; bloom(g, Math.cos(a)*W/2, 2.4+Math.sin(a)*W/2, 0, 0.16,5,0.8); }
+}
+function makeBarrel(x,z,flowers){
+  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  const b=new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.3,0.86,14), toon(0x9a6b3f)); b.position.y=0.43; b.castShadow=true; outline(b,0.03); g.add(b);
+  [0.18,0.62].forEach(yy=>{ const hoop=new THREE.Mesh(new THREE.TorusGeometry(0.345,0.035,6,16), toon(0x5a4631)); hoop.rotation.x=Math.PI/2; hoop.position.y=yy; g.add(hoop); });
+  if(flowers) bloom(g,0,0.92,0,0.32,11,1.0);
+  return g;
+}
+function makeCrate(x,z){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=Math.random()*0.6-0.3; scene.add(g);
+  const box=rbox(0.6,0.5,0.6,0xb88a52,0.04); box.position.y=0.25; box.castShadow=true; g.add(box);
+  for(let i=0;i<5;i++){ const ap=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6), basic(Math.random()<0.5?0xd23b3b:0xe0a93b)); ap.position.set((Math.random()-0.5)*0.4,0.56,(Math.random()-0.5)*0.4); g.add(ap); }
+  return g;
+}
+function makePlanter(x,z,s=1){
+  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  const box=new THREE.Mesh(new THREE.CylinderGeometry(0.34*s,0.28*s,0.42*s,8), toon(0xcaa56e)); box.position.y=0.21*s; box.castShadow=true; outline(box,0.03); g.add(box);
+  bloom(g,0,0.44*s,0,0.3*s,11,s);
+  return g;
+}
+function makeGuildLantern(x,z){
+  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  const post=rbox(0.14,2.6,0.14,0x35323a,0.03); post.position.y=1.3; outline(post,0.03); g.add(post);
+  const arm=rbox(0.7,0.1,0.1,0x35323a,0.02); arm.position.set(0.3,2.5,0); g.add(arm);
+  const scroll=new THREE.Mesh(new THREE.TorusGeometry(0.16,0.04,6,12,Math.PI), toon(0x35323a)); scroll.position.set(0.6,2.4,0); scroll.rotation.z=-Math.PI/2; g.add(scroll);
+  const cage=new THREE.Mesh(new THREE.CylinderGeometry(0.17,0.2,0.42,6), toon(0x2c2b33)); cage.position.set(0.62,2.16,0); g.add(cage);
+  const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.13,10,8), new THREE.MeshBasicMaterial({color:0xffe6a8})); bulb.position.set(0.62,2.16,0); g.add(bulb); LAMP_BULBS.push(bulb);
+  const cap=new THREE.Mesh(new THREE.ConeGeometry(0.22,0.2,6), toon(0x2c2b33)); cap.position.set(0.62,2.46,0); g.add(cap);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffdca0,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  halo.scale.set(2.4,2.4,1); halo.position.set(0.62,2.16,0); halo._nightOp=0.9; g.add(halo); LAMP_GLOWS.push(halo);
+  const pool=new THREE.Mesh(new THREE.CircleGeometry(3.2,20), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0xffc878,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  pool.rotation.x=-Math.PI/2; pool.position.set(0.62,0.07,0); pool._nightOp=0.4; g.add(pool); LAMP_GLOWS.push(pool);
+  bloom(g,0.62,1.8,0,0.16,6,0.8);
+  EXTRA_COLLIDERS.push({x,z,r:0.5});
+}
+function makeCanalNook(x,z,rot){   // ✦ a quiet Petite-Venise pocket: cel-water canal, flower-box banks, a humpbacked flower bridge & a moored boat
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot; scene.add(g);
+  const W=2.4, L=6.6;
+  const water=makeWater(L*0.5,8); water.geometry.dispose(); water.geometry=new THREE.PlaneGeometry(W,L); water.position.y=0.07; g.add(water);
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(W,L), basic(0x1f5066)); floor.rotation.x=-Math.PI/2; floor.position.y=0.03; g.add(floor);
+  [-1,1].forEach(side=>{ const bank=rbox(0.5,0.5,L+0.5,0x9c958a,0.06); bank.position.set(side*(W/2+0.25),0.25,0); bank.receiveShadow=true; outline(bank,0.02); g.add(bank);
+    for(let i=-1;i<=1;i++){ const fb=rbox(0.44,0.22,1.6,0xb88a52,0.03); fb.position.set(side*(W/2+0.25),0.6,i*2.2); g.add(fb); bloom(g,side*(W/2+0.25),0.78,i*2.2,0.46,9,0.85); } });
+  [-1,1].forEach(s=>{ const cap=rbox(W+1.0,0.5,0.5,0x9c958a,0.06); cap.position.set(0,0.25,s*(L/2+0.25)); g.add(cap); });
+  // humpbacked flower bridge across the middle
+  const deck=new THREE.Mesh(new THREE.BoxGeometry(W+1.6,0.16,1.4), toon(0xa9794a)); deck.position.y=0.66; deck.castShadow=true; g.add(deck);
+  [-0.62,0.62].forEach(zz=>{ const rail=rbox(W+1.6,0.46,0.1,0xb88a52,0.03); rail.position.set(0,0.98,zz); g.add(rail);
+    for(let i=-2;i<=2;i++) bloom(g,i*0.72,1.2,zz,0.18,4,0.75); });
+  // moored rowboat
+  const boat=new THREE.Group(); boat.position.set(0,0.16,L*0.5-1.4); boat.rotation.y=0.2; g.add(boat);
+  const hull=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,8,0,Math.PI*2,0,Math.PI/2), toon(0x8a5a36)); hull.scale.set(1.0,0.7,2.0); hull.rotation.x=Math.PI; hull.position.y=0.18; boat.add(hull);
+  for(let i=-1;i<=1;i++){ const seat=rbox(0.8,0.05,0.12,0x7e5532,0.02); seat.position.set(0,0.2,i*0.55); boat.add(seat); }
+  bloom(boat,0,0.26,0.7,0.3,8,0.9);
+  // framing cypress
+  makeCypress(x+Math.cos(rot+1.2)*3.2, z+Math.sin(rot+1.2)*3.2, 0.95);
+  makeCypress(x+Math.cos(rot-1.2)*3.2, z+Math.sin(rot-1.2)*3.2, 1.05);
+  EXTRA_COLLIDERS.push({x:x+Math.cos(rot+Math.PI/2)*1.7, z:z+Math.sin(rot+Math.PI/2)*1.7, r:1.4});
+  EXTRA_COLLIDERS.push({x:x-Math.cos(rot+Math.PI/2)*1.7, z:z-Math.sin(rot+Math.PI/2)*1.7, r:1.4});
+}
+function placeColmar(){   // invoked after the shared garden geo (GEO_FLOWER) is defined, below
+  const D=Math.PI/180;
+  makeCanalNook(Math.cos(45*D)*23, Math.sin(45*D)*23, 45*D+Math.PI/2);
+  // market cluster (315°)
+  (function(){ const a=315*D, cx=Math.cos(a)*22, cz=Math.sin(a)*22, n=Math.atan2(cz,cx);
+    makeStall(cx,cz,n+Math.PI,0xd23b3b,0xfff0f0);
+    makeStall(cx+Math.cos(n+Math.PI/2)*3.2, cz+Math.sin(n+Math.PI/2)*3.2, n+Math.PI, 0x3f7fd0,0xffffff);
+    makeFlowerCart(cx+Math.cos(n-Math.PI/2)*3.2, cz+Math.sin(n-Math.PI/2)*3.2, n);
+    makeBarrel(cx+Math.cos(n)*1.7, cz+Math.sin(n)*1.7, true);
+    makeCrate(cx+Math.cos(n)*1.7+Math.cos(n+Math.PI/2)*0.9, cz+Math.sin(n)*1.7+Math.sin(n+Math.PI/2)*0.9);
+    makeGuildLantern(cx-Math.cos(n)*2.2, cz-Math.sin(n)*2.2); })();
+  makeWell(Math.cos(195*D)*21, Math.sin(195*D)*21);
+  makeFlowerCart(Math.cos(75*D)*20, Math.sin(75*D)*20, 75*D);
+  makeFlowerCart(Math.cos(255*D)*22, Math.sin(255*D)*22, 255*D+1);
+  makeGuildLantern(Math.cos(135*D)*19, Math.sin(135*D)*19);
+  makeGuildLantern(Math.cos(225*D)*19, Math.sin(225*D)*19);
+  // rose arches framing the 6 avenue mouths + planters flanking them
+  for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, nx=Math.cos(ang+Math.PI/2), nz=Math.sin(ang+Math.PI/2);
+    makeRoseArch(Math.cos(ang)*13.5, Math.sin(ang)*13.5, ang+Math.PI/2);
+    makePlanter(Math.cos(ang)*12.4+nx*1.9, Math.sin(ang)*12.4+nz*1.9, 1.1);
+    makePlanter(Math.cos(ang)*12.4-nx*1.9, Math.sin(ang)*12.4-nz*1.9, 1.1); }
+  // gentle scatter of small charms across the lawns (마을 중간중간), away from rings & pavilions
+  const scR=[44,70,99,126];
+  scR.forEach((rr,ri)=>{ for(let k=0;k<5;k++){ const ang=(k/5*Math.PI*2)+(22*D)+(ri*13*D);
+    const px=Math.cos(ang)*rr, pz=Math.sin(ang)*rr, t=(k+ri)%3;
+    if(t===0){ makePlanter(px,pz,1.0); } else if(t===1){ makeBarrel(px,pz,Math.random()<0.6); } else { makeFlowerCart(px,pz,ang); } } });
+}
+
 /* ---- repo category (topics/lang/name/desc) → roof emblem ---- */
 const CATS={
   AI:{icon:'🤖',color:0x8b5cf6}, Data:{icon:'📊',color:0x0ea5a4}, AIOps:{icon:'⚙️',color:0xf59e0b},
@@ -1387,18 +1526,34 @@ const GEO_STEM=new THREE.CylinderGeometry(0.03,0.03,0.42,5), GEO_FLOWER=new THRE
       GEO_TRUNK=new THREE.CylinderGeometry(0.12,0.16,0.9,6), GEO_CROWN=new THREE.SphereGeometry(0.7,10,8);
 const MAT_STEM=toon(0x5aa048), MAT_TRUNK=toon(0x7a5230), MAT_CROWN=toon(0x5aa048);
 const FLOWER_MATS=[0xff6f91,0xffd23f,0xff8c42,0xb06fe0,0xffffff].map(c=>basic(c));
+const GEO_TUFT=new THREE.SphereGeometry(0.17,8,6);   // shared fluffy fur puff (cheap, no shadow)
+// 🐾 fluffy chow-chow — thick double-coat, lion mane ruff, poofy curled tail (복슬복슬)
 function makeChow(){
-  const c=new THREE.Group(); const fur=0xd99a5b, fur2=0xc6884a;
-  const body=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,10), toon(fur)); body.position.y=0.5; body.scale.set(1.15,0.95,1.35); body.castShadow=true; c.add(body);
-  const mane=new THREE.Mesh(new THREE.SphereGeometry(0.44,12,10), toon(fur2)); mane.position.set(0,0.62,0.4); c.add(mane);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(0.33,12,10), toon(fur)); head.position.set(0,0.74,0.6); head.castShadow=true; c.add(head);
-  const snout=new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), toon(0xf0d8b8)); snout.position.set(0,0.66,0.86); c.add(snout);
-  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), basic(0x2b1c12)); nose.position.set(0,0.69,0.99); c.add(nose);
-  [-0.16,0.16].forEach(x=>{ const ear=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.22,7), toon(fur2)); ear.position.set(x,0.99,0.52); c.add(ear);
-    const eye=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,8), basic(0x2b1c12)); eye.position.set(x*0.7,0.79,0.84); c.add(eye); });
-  const tail=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8), toon(fur2)); tail.position.set(0,0.78,-0.46); tail.scale.set(0.8,1.15,0.8); tail.rotation.x=0.5; c.add(tail);
+  const c=new THREE.Group();
+  const fur=0xe2a567, fur2=0xd0904c, fur3=0xf2cd9c;   // warm ginger coat shades
+  const MF=toon(fur), MF2=toon(fur2), MF3=toon(fur3);
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,10), MF); body.position.y=0.54; body.scale.set(1.1,0.98,1.32); body.castShadow=true; c.add(body);
+  // poofy coat tufts billowing over the back & flanks
+  [[0,0.94,-0.16,1.3],[-0.34,0.78,-0.1,1.18],[0.34,0.78,-0.1,1.18],[-0.3,0.62,0.28,1.05],[0.3,0.62,0.28,1.05],[0,0.9,0.1,1.2],[-0.22,0.84,-0.46,1.08],[0.22,0.84,-0.46,1.08]]
+    .forEach(([x,y,z,s],i)=>{ const t=new THREE.Mesh(GEO_TUFT, i%2?MF3:MF2); t.position.set(x,y,z); t.scale.setScalar(s); c.add(t); });
+  // lion mane ruff — a thick fluffy collar around the neck/shoulders
+  for(let i=0;i<10;i++){ const a=i/10*Math.PI*2; const t=new THREE.Mesh(GEO_TUFT, i%2?MF2:MF);
+    t.position.set(Math.cos(a)*0.5, 0.8+Math.sin(a)*0.27, 0.34+Math.cos(a)*0.05); t.scale.setScalar(1.36); c.add(t); }
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.32,12,10), MF); head.position.set(0,0.84,0.6); head.castShadow=true; c.add(head);
+  [-0.27,0.27].forEach(x=>{ const ch=new THREE.Mesh(GEO_TUFT,MF3); ch.position.set(x,0.76,0.58); c.add(ch); });   // fuzzy cheeks
+  const snout=new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), toon(0xf3ddc0)); snout.position.set(0,0.74,0.88); c.add(snout);
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), basic(0x2b1c12)); nose.position.set(0,0.77,1.0); c.add(nose);
+  [-0.14,0.14].forEach(x=>{ const ear=new THREE.Mesh(new THREE.ConeGeometry(0.14,0.2,7), MF2); ear.position.set(x,1.1,0.5); ear.rotation.z=-x*0.3; c.add(ear);
+    const efl=new THREE.Mesh(GEO_TUFT,MF3); efl.position.set(x,1.0,0.5); efl.scale.setScalar(0.66); c.add(efl);
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,8), basic(0x241910)); eye.position.set(x*0.62,0.87,0.85); c.add(eye); });
+  // fluffy curled tail arching over the back
+  const tail=new THREE.Group(); tail.position.set(0,0.86,-0.5);
+  for(let i=0;i<4;i++){ const t=new THREE.Mesh(GEO_TUFT, i%2?MF2:MF3); t.position.set(0,i*0.17,-0.03-i*0.11); t.scale.setScalar(1.24-i*0.13); tail.add(t); }
+  c.add(tail);
   const legs=[];
-  [[-0.27,0.4],[0.27,0.4],[-0.27,-0.33],[0.27,-0.33]].forEach(([x,z])=>{ const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.34,7), toon(fur)); leg.position.set(x,0.17,z); c.add(leg); legs.push(leg); });
+  [[-0.26,0.38],[0.26,0.38],[-0.26,-0.3],[0.26,-0.3]].forEach(([x,z])=>{
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.12,0.32,7), MF); leg.position.set(x,0.16,z); c.add(leg);
+    const paw=new THREE.Mesh(GEO_TUFT,MF2); paw.position.set(x,0.06,z+0.03); paw.scale.setScalar(0.62); c.add(paw); legs.push(leg); });
   c.userData.tail=tail; c.userData.legs=legs;
   return c;
 }
@@ -1426,6 +1581,7 @@ function updateChows(t,dt){
 for(let i=0;i<4;i++){ const d=makeChow(); const a=(i/4)*Math.PI*2, rr=14+Math.random()*12;
   d.position.set(Math.cos(a)*rr,0,Math.sin(a)*rr); d.scale.setScalar(0.92);
   d.userData.wld=true; d.userData.spd=1.5+Math.random()*0.9; d.userData.ph=Math.random()*9; pickChowTarget(d); scene.add(d); CHOWS.push(d); }
+placeColmar();   // 🌸 Colmar charms — defined above, run here so GEO_FLOWER/bloom() exist
 
 function addPond(g,yr){
   const pr=Math.min(yr*0.32,1.7), px=yr*0.52, pz=-yr*0.34;
@@ -1857,6 +2013,7 @@ makeLibrary();
 /* ---- building colliders (player can't walk through houses) ---- */
 const COLLIDERS = buildings.map(b=>({x:b._x, z:b._z, r:b._cw||3}));
 if(LIB){ COLLIDERS.push({x:0,z:LIB._z-14,r:13}); COLLIDERS.push({x:0,z:LIB._z+14,r:14}); }
+if(typeof EXTRA_COLLIDERS!=='undefined') COLLIDERS.push(...EXTRA_COLLIDERS);   // Colmar charms (carts/stalls/well/canal) get soft colliders
 
 /* ---- day / night (night: window glow brightness = repo activity) ---- */
 let isNight=false;
@@ -2109,6 +2266,7 @@ const blob=new THREE.Mesh(new THREE.CircleGeometry(1.0,28), new THREE.MeshBasicM
 blob.rotation.x=-Math.PI/2; blob.position.y=0.03; player.add(blob); // soft contact shadow
 faceLight=new THREE.PointLight(0xfff0d8,0,15,1.5); faceLight.position.set(0,2.35,0.7); model.add(faceLight);
 faceMat=head.material;
+player.position.set(2.6,0,-3.2);   // spawn beside the plaza fountain (not inside the basin)
 scene.add(player);
 // ✦ player aura — 서원이도 별빛을 두른다 (따뜻한 금빛, 밤에 더 밝게)
 { const pa1=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffe6b8,transparent:true,opacity:0.09,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); pa1.scale.set(3.6,3.6,1); pa1.position.y=1.35; model.add(pa1);
