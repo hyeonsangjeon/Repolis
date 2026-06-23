@@ -2327,7 +2327,7 @@ async function proxyAsk(q){
 // every visitor — a Cloudflare Worker (see cloudflare-taxi/README.md), e.g.
 // 'https://repolis-taxi.<you>.workers.dev/'. Empty = the site stays Local-default and
 // each visitor can still set their own backend URL in the taxi mode prompt.
-const GROUNDED_DEFAULT='';
+const GROUNDED_DEFAULT='https://repolis-taxi.wingnut0310.workers.dev/';
 function groundedUrl(){ return localStorage.getItem('taxiGroundedUrl')||GROUNDED_DEFAULT; }
 async function groundedAsk(q){
   const det=deterministicIntent(q);                                   // nav/metric/small talk/off-topic stays local — KS only for real live questions
