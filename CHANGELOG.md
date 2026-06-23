@@ -3,6 +3,20 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.6.0] — 2026-06-23
+
+### ✨ Named night‑sky scholars
+- **The scholars now have names, myths and stars.** The two town NPCs are **POLARIS · the Wayfinder** (the taxi driver, carrying the spirit of *Hermes*) and **VEGA · the Archivist** (the MS Docs engineer, carrying *Daidalos*). Each is rendered as **one star in the night sky**:
+  - **Myth‑constellations on the dome** — POLARIS anchors **Ursa Minor**, VEGA is the lead star of **Lyra**; each scholar's own star is the brightest and twinkles.
+  - **A floating ✦ star‑nameplate** over each scholar's head, tinted to their star's colour.
+  - **A softly pulsing aura** around each scholar.
+  - **Astronomer‑mage robes** — POLARIS wears a compass‑star chest badge and a pole‑star cap; VEGA wears a star cape, a pointed wizard hat with a glowing star at its tip, and star‑rune robes.
+- **Persona‑aware chat ([`scholars.js`](scholars.js))** — each scholar now *knows who it is*. Ask **"who are you?"**, **"what is this place?"**, **"who built this city?"** or **"who else is here?"** and it replies **in‑character** — its star name and myth, the city **Repolis**, its owner **Hyeon Sang Jeon (`hyeonsangjeon`)**, and the roster of fellow scholars — **instantly, with no Knowledge‑Source call**. A new `scholars.js` data module is the single source of truth (star · myth · constellation · persona · backstory), shared by the night‑sky constellations, the name‑plates and the chat; [`SCHOLARS.md`](SCHOLARS.md) mirrors it.
+- **🐛 Identity vs. search** — fixed an English edge case where *"who are you / what can you do"* could leak into a repo search (the token *you* → `youtube‑dl‑nas`). Identity and help small‑talk are now matched **before** the search gate, in every chat path (local, grounded and the engineer).
+
+### 🌌 Plaza beautification
+- **Rune‑circle + star‑dust** in the plaza — glowing concentric starlight rings with two polygon stars set into the ground, and 96 drifting motes of golden star‑dust overhead, all pulsing softly at night and fading by day.
+
 ## [1.5.0] — 2026-06-23
 
 ### 🏛️ Every scholar grounded by Foundry MCP Knowledge Sources

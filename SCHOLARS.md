@@ -34,10 +34,17 @@ NPC says it's live‑site‑only). No backend is ever *required* to run the city
 
 ## 👥 Active scholars
 
-| NPC | Domain | MCP server | Auth | Key tool(s) | Knowledge Source | Knowledge Base | Status |
-|-----|--------|------------|------|-------------|------------------|----------------|--------|
-| 🚕 **Taxi driver** | The owner's GitHub repos | [GitHub MCP](https://api.githubcopilot.com/mcp/readonly) | `storedHeaders` (PAT, server‑side) | `search_repositories`, `get_file_contents`, `list_commits`, `list_issues` | `github-repos-mcp-ks` | `repolis-github-kb` | ✅ live |
-| 📘 **MS Docs engineer** | Microsoft · Azure · .NET docs | [Microsoft Learn MCP](https://learn.microsoft.com/api/mcp) | keyless (no auth) | `microsoft_docs_search` | `microsoft-learn-mcp-ks` | `repolis-mslearn-kb` | 🛠️ registering |
+Each scholar is **one star in the night sky** — a name‑plate floating overhead, a
+myth‑constellation drawn on the dome, a softly pulsing aura, and astronomer‑mage robes.
+Their persona — star name, the myth they carry, the town, and the owner they serve — lives
+in [`scholars.js`](scholars.js) and is wired into the chat, so *"who are you?"*, *"what is
+this place?"* and *"who else is here?"* are answered **in‑character**, instantly, without
+ever spending a Knowledge‑Source call.
+
+| Scholar | Plays | Domain | MCP server | Auth | Key tool(s) | Knowledge Source | Knowledge Base | Status |
+|---------|-------|--------|------------|------|-------------|------------------|----------------|--------|
+| 🚕 **POLARIS** · the Wayfinder<br><sub>_Hermes · Ursa Minor_</sub> | Taxi driver | The owner's GitHub repos | [GitHub MCP](https://api.githubcopilot.com/mcp/readonly) | `storedHeaders` (PAT, server‑side) | `search_repositories`, `get_file_contents`, `list_commits`, `list_issues` | `github-repos-mcp-ks` | `repolis-github-kb` | ✅ live |
+| 📘 **VEGA** · the Archivist<br><sub>_Daidalos · Lyra_</sub> | MS Docs engineer | Microsoft · Azure · .NET docs | [Microsoft Learn MCP](https://learn.microsoft.com/api/mcp) | keyless (no auth) | `microsoft_docs_search` | `microsoft-learn-mcp-ks` | `repolis-mslearn-kb` | ✅ live |
 
 ---
 

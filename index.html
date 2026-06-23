@@ -343,6 +343,7 @@
   </div>
 </div>
 
+<script src="scholars.js"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -802,6 +803,32 @@ const mwT=[0xbcd0ff,0xdfe8ff,0xffffff,0xf1e8ff,0xffe9cf,0xcdbfff];
 { const cd=_bandDir(_coreT,0), cp=cd.clone().multiplyScalar(STAR_R-22); cp.y+=18;
   [[162,0x24376f,0.10],[122,0x5a3f9e,0.12],[92,0x2f7f9f,0.13],[120,0x7e93dd,0.10],[64,0xcfe0ff,0.17]]
     .forEach(([s,c,o])=>{ const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:c,transparent:true,opacity:o,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); gl.scale.set(s,s,1); gl.position.copy(cp); starsGroup.add(gl); }); }
+// --- scholar constellations: each active scholar's myth-constellation + its own bright star, on the night dome ---
+const scholarStars=[];   // {scholar, mat, dir} → twinkled in animate(); also anchors sky-label/aura color
+(function buildConstellations(){
+  if(!window.SCHOLARS) return;
+  const UP=new THREE.Vector3(0,1,0);
+  window.SCHOLARS.forEach(sc=>{
+    const C=sc.constellation; if(!sc.active||!C) return;
+    const ctr=new THREE.Vector3(Math.cos(C.az)*Math.cos(C.el),Math.sin(C.el),Math.sin(C.az)*Math.cos(C.el)).normalize();
+    const u=new THREE.Vector3().crossVectors(ctr,UP).normalize();
+    const v=new THREE.Vector3().crossVectors(ctr,u).normalize();
+    const W=C.nodes.map(([a,b])=>{ const d=ctr.clone().addScaledVector(u,a).addScaledVector(v,b).normalize();
+      return new THREE.Vector3(d.x*STAR_R, d.y*STAR_R+18, d.z*STAR_R); });
+    const lp=[]; C.edges.forEach(([i,j])=>{ lp.push(...W[i].toArray(),...W[j].toArray()); });
+    const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));
+    starsGroup.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:sc.color,transparent:true,opacity:0.18,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})));
+    const sp=[]; W.forEach((n,k)=>{ if(k!==C.primary) sp.push(...n.toArray()); });   // companion stars
+    if(sp.length){ const sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
+      starsGroup.add(new THREE.Points(sg,new THREE.PointsMaterial({size:9,map:GLINT_TEX,color:sc.color,transparent:true,opacity:0.85,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true}))); }
+    const pn=W[C.primary];                                                            // the scholar's own star — biggest, twinkles
+    const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Float32BufferAttribute(pn.toArray(),3));
+    const pm=new THREE.PointsMaterial({size:30,map:GLINT_TEX,color:sc.color,transparent:true,opacity:1,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+    starsGroup.add(new THREE.Points(pg,pm));
+    scholarStars.push({ scholar:sc, mat:pm, dir:pn.clone().normalize() });
+  });
+})();
+
 // shooting stars — occasional glowing comet streaks lighting the path of knowledge
 const METEOR_N=16, mSprites=[], _mCol=i=>i===0?0xffffff:i<3?0xeaf3ff:i<7?0xc2d4ff:0x93acff;
 for(let i=0;i<METEOR_N;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:_mCol(i),transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
@@ -1012,6 +1039,26 @@ const ground = new THREE.Mesh(new THREE.CircleGeometry(300,72), texMat(GRASS_TEX
 ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
 const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5,40), texMat(SAND_TEX,7,7,false));
 plaza.rotation.x=-Math.PI/2; plaza.position.y=0.02; plaza.receiveShadow=true; scene.add(plaza);
+// ✦ the sages' rune-circle — a starlight glyph on the plaza floor, brightening at night
+const runeCircle=new THREE.Group(); runeCircle.position.y=0.04; scene.add(runeCircle);
+const RUNE_MATS=[];
+(function buildRuneCircle(){
+  const COL=0x9fc6ff;
+  function ring(r,w,op){ const m=new THREE.MeshBasicMaterial({color:COL,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false,fog:false,blending:THREE.AdditiveBlending});
+    const me=new THREE.Mesh(new THREE.RingGeometry(r-w,r,72),m); me.rotation.x=-Math.PI/2; runeCircle.add(me); RUNE_MATS.push({m,base:op}); }
+  ring(8.4,0.12,0.42); ring(7.5,0.05,0.30); ring(3.7,0.05,0.26);
+  function star(R1,R2,n,op){ const pts=[]; for(let i=0;i<=n*2;i++){ const a=i/(n*2)*Math.PI*2, r=i%2?R2:R1; pts.push(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r)); }
+    const mat=new THREE.LineBasicMaterial({color:COL,transparent:true,opacity:op,depthWrite:false,fog:false,blending:THREE.AdditiveBlending});
+    runeCircle.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat)); RUNE_MATS.push({m:mat,base:op}); }
+  star(8.2,6.0,12,0.34); star(7.2,4.2,6,0.22);   // 12-pt + 6-pt starlight polygons woven between rings
+})();
+// floating star-dust drifting over the plaza (magic motes)
+const starDust=(function(){ const N=96, pos=[], base=[], ph=[];
+  for(let i=0;i<N;i++){ const a=Math.random()*Math.PI*2, r=Math.random()*8.6, y=0.4+Math.random()*3.6;
+    pos.push(Math.cos(a)*r,y,Math.sin(a)*r); base.push(Math.cos(a)*r,y,Math.sin(a)*r); ph.push(Math.random()*6.28); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  const m=new THREE.PointsMaterial({size:0.17,map:STAR_TEX,color:0xffe9c0,transparent:true,opacity:0.28,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+  const p=new THREE.Points(g,m); p._base=base; p._ph=ph; scene.add(p); return p; })();
 // plaza rim
 const rim = new THREE.Mesh(new THREE.RingGeometry(9.5,10.2,40), basic(0xc3ad7c));
 rim.rotation.x=-Math.PI/2; rim.position.y=0.025; scene.add(rim);
@@ -1891,6 +1938,11 @@ const driver=new THREE.Group(); driver.position.set(TAXI_POS.x-1.7,0,TAXI_POS.z+
   const ar=al.clone(); ar.position.x=0.52; driver.add(ar);
   const ll=capsule(0.17,0.4,0x394056); ll.position.set(-0.2,0.5,0); outline(ll,0.03); driver.add(ll);
   const lr=ll.clone(); lr.position.x=0.2; driver.add(lr);
+  // ✦ POLARIS the Wayfinder — pole-star navigator accents
+  { const badge=new THREE.Mesh(new THREE.CircleGeometry(0.12,4), basic(0xfff0d6)); badge.position.set(0,1.52,0.43); badge.rotation.z=Math.PI/4; driver.add(badge);
+    const bdot=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:0xffe0a0,transparent:true,opacity:0.95,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); bdot.scale.set(0.34,0.34,1); bdot.position.set(0,1.52,0.47); driver.add(bdot);                 // compass-star chest badge
+    const cstar=new THREE.Sprite(new THREE.SpriteMaterial({map:GLINT_TEX,color:0xfff0d6,transparent:true,opacity:0.95,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); cstar.scale.set(0.62,0.62,1); cstar.position.set(0,2.72,0.16); driver.add(cstar);                  // a small pole star over the cap
+    const cb=rbox(0.5,0.07,0.04,0xfff0d6,0.01); cb.position.set(0,2.36,0.42); cb.scale.x=0.92; driver.add(cb); }                                                                                                                                                                          // star band on the cap brim
   driver._head=hd; npcFaces.add(hd.material);
 })();
 driver.rotation.y=-2.2; scene.add(driver);
@@ -1902,7 +1954,7 @@ NPCS.push({ group:driver, pos:driver.position.clone(), kind:'taxi', reach:4.6 })
 // 📘 Microsoft Docs engineer — answers from the live Microsoft Learn MCP server (official docs)
 const engineer=new THREE.Group(); engineer.position.set(-10.5,0,0);
 (function buildEngineer(){
-  const SH=0x1f6feb, SK=0xf0c79a, HR=0x2b2118, PANT=0x2a3346;
+  const SH=0x2b3576, SK=0xf0c79a, HR=0x2b2118, PANT=0x2a3346;
   const tb=capsule(0.42,0.46,SH); tb.position.y=1.3; tb.scale.z=0.82; outline(tb,0.04); engineer.add(tb);
   const col=rbox(0.34,0.1,0.16,0xeef3fb,0.02); col.position.set(0,1.62,0.34); engineer.add(col);            // tidy shirt collar
   const hd=ball(0.5,SK,18); hd.position.y=2.1; hd.scale.set(1.0,0.98,0.96); outline(hd,0.04); engineer.add(hd);
@@ -1919,10 +1971,44 @@ const engineer=new THREE.Group(); engineer.position.set(-10.5,0,0);
   const lr=ll.clone(); lr.position.x=0.2; engineer.add(lr);
   const book=rbox(0.42,0.52,0.1,0xeaf1fb,0.03); book.position.set(0.5,1.18,0.3); book.rotation.set(-0.5,0,0.1); engineer.add(book);   // docs tablet
   const bl=rbox(0.42,0.52,0.02,0x9fc0ec,0.01); bl.position.set(0.5,1.2,0.36); bl.rotation.set(-0.5,0,0.1); engineer.add(bl);
+  // ✦ VEGA the Archivist — star-reading astronomer-mage robes
+  const cape=new THREE.Mesh(new THREE.ConeGeometry(0.62,1.45,18,1,true), toon(0x141a3a)); cape.material.side=THREE.DoubleSide; cape.position.set(0,1.42,-0.16); engineer.add(cape);                                                  // star cape over the shoulders
+  const brim2=new THREE.Mesh(new THREE.CircleGeometry(0.6,22), toon(0x1a2048)); brim2.rotation.x=-Math.PI/2; brim2.position.set(0,2.5,0); engineer.add(brim2);                                                                        // wide hat brim
+  const hat=new THREE.Mesh(new THREE.ConeGeometry(0.44,0.82,20), toon(0x1a2048)); hat.position.set(0,2.9,-0.02); hat.rotation.x=-0.06; outline(hat,0.03); engineer.add(hat);                                                          // pointed wizard hat
+  const hband=rbox(0.22,0.07,0.05,0xbcd0ff,0.01); hband.position.set(0,2.6,0.45); engineer.add(hband);
+  { const hs=new THREE.Sprite(new THREE.SpriteMaterial({map:GLINT_TEX,color:0xbcd0ff,transparent:true,opacity:0.95,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); hs.scale.set(0.62,0.62,1); hs.position.set(0,3.32,-0.02); engineer.add(hs); }                          // glowing star at the hat tip
+  [[-0.24,1.5,0.38,0.16],[0.22,1.32,0.36,0.13],[-0.05,1.16,0.36,0.11]].forEach(([rx,ry,rz,s])=>{ const r=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:0xcfe0ff,transparent:true,opacity:0.8,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); r.scale.set(s,s,1); r.position.set(rx,ry,rz); engineer.add(r); });   // star runes on the robe
   engineer._head=hd; npcFaces.add(hd.material);
 })();
 engineer.rotation.y=Math.PI/2; scene.add(engineer);
 NPCS.push({ group:engineer, pos:engineer.position.clone(), kind:'msdocs', reach:4.6 });
+
+/* ---- floating ✦ star-nameplate + soft pulsing aura over each active scholar NPC ---- */
+const auraPulse=[];
+(function dressScholars(){
+  function _round(x,X,Y,w,h,r){ x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+w,Y,X+w,Y+h,r); x.arcTo(X+w,Y+h,X,Y+h,r); x.arcTo(X,Y+h,X,Y,r); x.arcTo(X,Y,X+w,Y,r); x.closePath(); }
+  function nameplate(sc){
+    const W=512,H=170, c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+    const hex='#'+(sc.color>>>0).toString(16).padStart(6,'0');
+    _round(x,24,30,W-48,H-58,46); x.fillStyle='rgba(10,12,24,0.58)'; x.fill();
+    x.lineWidth=3; x.strokeStyle=hex; x.globalAlpha=0.85; _round(x,24,30,W-48,H-58,46); x.stroke(); x.globalAlpha=1;
+    x.textAlign='center'; x.textBaseline='middle';
+    x.shadowColor=hex; x.shadowBlur=22; x.fillStyle='#ffffff'; x.font='700 56px system-ui,"Segoe UI",Arial';
+    x.fillText('\u2726 '+sc.star, W/2, 80);
+    x.shadowBlur=8; x.fillStyle=hex; x.font='600 27px system-ui,"Segoe UI",Arial';
+    x.fillText('\u00b7 '+sc.epithetEn+' \u00b7', W/2, 126);
+    const t=new THREE.CanvasTexture(c); t.anisotropy=8;
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,fog:false}));
+    s.scale.set(3.5,1.16,1); s.renderOrder=5; return s;
+  }
+  function aura(color,size,op){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color,transparent:true,opacity:op,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); s.scale.set(size,size,1); return s; }
+  NPCS.forEach(n=>{ const sc=window.scholarByKind&&window.scholarByKind(n.kind); if(!sc||!sc.active) return;
+    n.scholar=sc;
+    const plate=nameplate(sc); plate.position.set(0,3.5,0); n.group.add(plate); n.plate=plate;
+    const a1=aura(sc.auraColor,3.7,0.13), a2=aura(sc.auraColor,2.2,0.20); a1.position.y=1.5; a2.position.y=1.35; n.group.add(a1,a2);
+    auraPulse.push({ s1:a1, s2:a2, b1:0.13, b2:0.20 });
+  });
+})();
 
 /* ---- character (chibi, cute — soft rounded forms, no hard boxes) ---- */
 const player=new THREE.Group(); const model=new THREE.Group(); player.add(model);
@@ -1971,6 +2057,10 @@ blob.rotation.x=-Math.PI/2; blob.position.y=0.03; player.add(blob); // soft cont
 faceLight=new THREE.PointLight(0xfff0d8,0,15,1.5); faceLight.position.set(0,2.35,0.7); model.add(faceLight);
 faceMat=head.material;
 scene.add(player);
+// ✦ player aura — 서원이도 별빛을 두른다 (따뜻한 금빛, 밤에 더 밝게)
+{ const pa1=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffe6b8,transparent:true,opacity:0.09,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); pa1.scale.set(3.6,3.6,1); pa1.position.y=1.35; model.add(pa1);
+  const pa2=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xfff4dd,transparent:true,opacity:0.15,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); pa2.scale.set(2.1,2.1,1); pa2.position.y=1.25; model.add(pa2);
+  auraPulse.push({ s1:pa1, s2:pa2, b1:0.09, b2:0.15 }); }
 
 /* nav arrow */
 const navArrow=new THREE.Group();
@@ -2235,7 +2325,8 @@ function buildTracePanel(tr){
 }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
-function npcGreet(n){ return (n&&n.kind==='msdocs')? t('engGreet') : t('greeterHtml'); }
+function scholarPersona(kind, slot){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(sc&&sc.active&&sc.persona){ const p=sc.persona[LANG]||sc.persona.ko; if(p&&p[slot]) return p[slot]; } return null; }
+function npcGreet(n){ const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
 function applyNpcChrome(n){ const eng=n&&n.kind==='msdocs';
   if(chatHeadTtl) chatHeadTtl.innerHTML = eng? t('engTitle') : t('taxiTitle');
   modeSel.style.display = eng?'none':''; chatText.placeholder = eng? t('engPh') : t('chatPh'); }
@@ -2289,10 +2380,10 @@ function smalltalk(q){
   if(/^(안녕(하세요|하십니까|하셔요|들)?|안뇽\S*|하이\S*|헬[로루]\S*|반가\S*|반갑\S*|여보세요|저기요?|이봐\S*|야+|헤이\S*|ㅎㅇ|hi+|hello+|hey+|heya|hiya|yo+|howdy|sup|wassup|what'?s? ?up|good ?(morning|afternoon|evening|day)|morning|evening|greetings|gm|gn)( ?(there|driver|기사님?|택시|taxi|아저씨|선생님?))?$/i.test(g)) return 'greetReply';
   if(/^(고+마+워?요?|고맙[습다]\S*|감사\S*|ㄳ\S*|ㄱㅅ|thank ?(you|u)?\S*|thanks\S*|thx|ty|appreciate\S*)( ?(so ?much|very ?much|it|this|기사님?|driver))?$/i.test(g)) return 'stThanks';
   if(/^(잘 ?가\S*|잘 ?있어\S*|안녕히 ?(가|계)\S*|또 ?(봐\S*|와\S*|만나\S*|올게\S*|뵈\S*)|들어가\S*|수고\S*|이만.*|bye+|goodbye\S*|see ?(you|ya)\S*|cya|later|gotta ?go|그만\S*|끝)( ?(기사님?|driver))?$/i.test(g)) return 'stBye';
+  if(/^.*((너|넌|당신|네|니|자네) ?(는 )?누구|누구(세요|야|니|냐|예요|에요)|정체 ?(가 )?(뭐|무엇)|(너|넌|당신) ?(는 )?뭐(야|니|예요|에요)|이름 ?(이 )?(뭐|무엇)|네 ?이름).*$|^((너|네) ?소개\S*|소개 ?좀\S*|who ?are ?you\S*|what ?are ?you\S*|your ?name\S*|introduce ?yourself\S*)$/i.test(g)) return 'stWho';   // identity — before the search gate so "who are you" isn't eaten by a repo token (you→youtube)
+  if(/^.*((뭘?|무엇을?) ?할 ?수 ?있|뭐 ?(해줄|할 ?줄 ?알|하는 ?거)|어떻게 ?(써|쓰|사용)|사용 ?법|쓰는 ?법|기능 ?(이 )?(뭐|무엇)).*$|^(도움말|도와줘\S*|help\S*|what ?can ?you ?do\S*|how ?(do|to) ?(i )?use\S*|how ?does ?(this|it) ?work\S*|명령어\S*)$/i.test(g)) return 'stHelp';   // help — also before the search gate
   if(searchCandidates(q,8).strong) return null;   // a real repo matched → not small talk; let it search
   if(/^.*(어떻게 ?지내|잘 ?지내|잘 ?지냈|잘 ?있었|별일 ?없|요즘 ?어때|오늘 ?어때|기분 ?어때|컨디션 ?어때).*$|^(뭐\s*해\S*|뭐\s*하(고\s*있|니|는|냐)\S*|how ?are ?you\S*|how'?s? ?(it ?going|things|your ?day|life)\S*|hru|wyd)$/i.test(g)) return 'stHow';
-  if(/^.*((너|넌|당신|네|니|자네) ?(는 )?누구|누구(세요|야|니|냐|예요|에요)|정체 ?(가 )?(뭐|무엇)|(너|넌|당신) ?(는 )?뭐(야|니|예요|에요)|이름 ?(이 )?(뭐|무엇)|네 ?이름).*$|^((너|네) ?소개\S*|소개 ?좀\S*|who ?are ?you\S*|what ?are ?you\S*|your ?name\S*|introduce ?yourself\S*)$/i.test(g)) return 'stWho';
-  if(/^.*((뭘?|무엇을?) ?할 ?수 ?있|뭐 ?(해줄|할 ?줄 ?알|하는 ?거)|어떻게 ?(써|쓰|사용)|사용 ?법|쓰는 ?법|기능 ?(이 )?(뭐|무엇)).*$|^(도움말|도와줘\S*|help\S*|what ?can ?you ?do\S*|how ?(do|to) ?(i )?use\S*|how ?does ?(this|it) ?work\S*|명령어\S*)$/i.test(g)) return 'stHelp';
   if(/^(멋[지져]+\S*|좋[다네아][요]?\S*|최고\S*|짱\S*|굿\S*|귀[엽여]\S*|대단\S*|훌륭\S*|nice\S*|cool\S*|awesome\S*|great\S*|amazing\S*|wonderful\S*|love ?(it|this|you)\S*|good ?(job|work|boy)\S*|lol|lmao|haha+|hehe+|ㅋㅋ+\S*|ㅎㅎ+\S*|👍+)$/i.test(g)) return 'stNice';
   return null;
 }
@@ -2325,6 +2416,35 @@ function townMeta(q){
       : `There are ${REPOS.length} repositories standing as buildings here. Which one would you like to see?`;
   return null;
 }
+/* lore about the town itself — its owner (the player's relationship), what Repolis is, and
+   who the other scholars are. Answered from scholars.js data, never spends a KS call. Checked
+   BEFORE small-talk so "who built this city?" isn't mistaken for "who are you?". */
+function townLore(q, kind){
+  const ql=q.toLowerCase().trim();
+  const O=window.SCHOLAR_OWNER||{ko:'전현상',en:'Hyeon Sang Jeon',id:'hyeonsangjeon'};
+  const self=/^(너|넌|네|니|당신|자네)\b/.test(q.trim());
+  // owner — who built / owns this city (the player)
+  if((!self && /(누가|누구|whose|who).{0,14}(만들|세웠|지었|owns?|made|built|created|founded)/.test(ql))
+     || /(주인|만든 ?(사람|이|분)).{0,6}(누구|누가|who)/.test(ql)
+     || /전현상|현상님|hyeonsangjeon/.test(ql))
+    return LANG==='ko'
+      ? `이 도시 <b>Repolis</b>는 <b>${O.ko}</b>(${O.id})님의 GitHub 세계예요. 그분의 모든 레포가 이곳에 집으로 서 있고, 저희 현자들은 그 세계를 지키는 별이랍니다 ✨`
+      : `This city <b>Repolis</b> is <b>${O.en}</b>'s (${O.id}) GitHub world. Every one of their repos stands here as a house, and we scholars are the stars that watch over it ✨`;
+  // town — what / where is this place
+  if(/이 ?(마을|도시|동네)|여(기|긴).{0,3}어디|이곳[은는이가]? ?(뭐|무엇|어디)|레폴리스 ?(가|는|란|이란)? ?(뭐|무엇|어디|소개)|repolis ?(is|가|는)? ?(뭐|뭔|무엇|what)|where ?am ?i|what ?is ?(this ?place|repolis)|tell ?me ?about ?(this ?(city|town|place)|repolis)/.test(ql))
+    return LANG==='ko'
+      ? `여긴 <b>Repolis</b> — ${O.ko}님의 레포들이 사는 밤하늘의 도시예요 🌃 건물 하나하나가 GitHub 레포이고, 광장의 현자들에게 물어보면 별빛으로 길을 밝혀드려요.`
+      : `This is <b>Repolis</b> — a night-sky city where ${O.en}'s repos live 🌃 Every building is a GitHub repo, and the plaza's scholars light your way by starlight.`;
+  // roster — who else is here
+  if(/(다른|또 ?다른|어떤|무슨|누구).{0,8}(현자|학자|npc|주민|사람|캐릭터)|(현자|학자|npc|주민|캐릭터).{0,8}(누구|누가|있|살)|who.{0,14}(scholars?|npcs?|else|here|around|live)|other ?(scholars?|npcs?)|(마을|광장|동네).{0,8}(누가|누구)/.test(ql)){
+    const act=(window.activeScholars&&window.activeScholars())||[];
+    if(act.length){ const list=act.map(s=>`<b>${s.star}</b> · ${LANG==='ko'?s.epithetKo:s.epithetEn}`).join(', ');
+      return LANG==='ko'
+        ? `이 광장에는 ${list} 가 별빛 아래 있어요 ✨ 저마다 다른 지식의 신탁에 연결된 현자들이죠. 누구와 이야기해 볼까요?`
+        : `Here in the plaza you'll find ${list} under the starlight ✨ each a scholar bound to a different oracle of knowledge. Who would you like to talk to?`; }
+  }
+  return null;
+}
 /* engineer "what are you / how do you work / which MCP·model" → self-description, no MCP call */
 function engMeta(q){
   const ql=q.toLowerCase();
@@ -2336,7 +2456,8 @@ function engMeta(q){
 }
 function _coreIntent(q){
   const ql=q.toLowerCase();
-  const st=smalltalk(q); if(st) return { repo:null, message:t(st), alts:[] };
+  const lore=townLore(q,'taxi'); if(lore) return { repo:null, message:lore, alts:[] };
+  const st=smalltalk(q); if(st){ const p=(st==='stWho'?scholarPersona('taxi','who'):st==='stHelp'?scholarPersona('taxi','help'):null); return { repo:null, message:p||t(st), alts:[] }; }
   const meta=townMeta(q); if(meta) return { repo:null, message:meta, alts:[] };
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
   if(/인기|제일|최고|많이|핫|\bpopular\b|\bbest\b|\btop\b|\bhot\b/.test(ql)){ const a=byRank(); return M(pick(a[0],t('leadPopular'),a.slice(1,4))); }
@@ -2463,7 +2584,8 @@ async function groundedAsk(q){
 
 const ENG_SM={ greetReply:'engGreet', stThanks:'engThanks', stBye:'engBye', stHow:'engHow', stWho:'engWho', stHelp:'engHelp', stNice:'engNice' };
 async function askScholar(q, npc){
-  const sm=smalltalk(q); if(sm){ addMsg('bot', t(ENG_SM[sm]||sm)); return; }    // greet/thanks in the engineer's voice, no MCP call
+  const lore=townLore(q,'msdocs'); if(lore){ addMsg('bot', lore); return; }      // town / owner / roster → instant, no MCP call
+  const sm=smalltalk(q); if(sm){ const p=(sm==='stWho'?scholarPersona('msdocs','who'):sm==='stHelp'?scholarPersona('msdocs','help'):null); addMsg('bot', p||t(ENG_SM[sm]||sm)); return; }    // greet/thanks/who/help in the engineer's voice, no MCP call
   const meta=engMeta(q)||townMeta(q); if(meta){ addMsg('bot', meta); return; }  // "what are you / how many scholars" → instant, no MCP call
   const url=groundedUrl();
   if(!url){ addMsg('bot', t('engNoBackend')); return; }                // self-hosted clone without the worker
@@ -2634,7 +2756,14 @@ function animate(){
   updateSmoke(clock.elapsedTime);
   updateChows(clock.elapsedTime,dt);
   if(!isNight){ updateBirds(clock.elapsedTime); updateButterflies(clock.elapsedTime); }
-  if(isNight){ bigStars.material.opacity=0.62+Math.sin(clock.elapsedTime*2.6)*0.38; starsGroup.rotation.y+=dt*0.0016; updateFireflies(clock.elapsedTime); }
+  if(isNight){ bigStars.material.opacity=0.62+Math.sin(clock.elapsedTime*2.6)*0.38; starsGroup.rotation.y+=dt*0.0016; updateFireflies(clock.elapsedTime);
+    for(let i=0;i<scholarStars.length;i++) scholarStars[i].mat.opacity=0.55+Math.sin(clock.elapsedTime*2.1+i*1.9)*0.45; }
+  { const _ap=0.5+0.5*Math.sin(clock.elapsedTime*1.6), _nf=isNight?1.6:0.8;
+    for(const a of auraPulse){ a.s1.material.opacity=a.b1*(0.55+0.6*_ap)*_nf; a.s2.material.opacity=a.b2*(0.6+0.6*_ap)*_nf; } }
+  { const _t=clock.elapsedTime, _arr=starDust.geometry.attributes.position.array, _b=starDust._base, _ph=starDust._ph;
+    for(let i=0;i<_ph.length;i++){ _arr[i*3]=_b[i*3]+Math.cos(_t*0.28+_ph[i])*0.45; _arr[i*3+1]=_b[i*3+1]+Math.sin(_t*0.5+_ph[i])*0.55; }
+    starDust.geometry.attributes.position.needsUpdate=true; starDust.material.opacity=isNight?0.72:0.26;
+    for(const r of RUNE_MATS) r.m.opacity=r.base*(isNight?1.5:0.5)*(0.85+0.15*Math.sin(_t*0.8)); }
   updateMeteor(dt);
   { const dxp=player.position.x-driver.position.x, dzp=player.position.z-driver.position.z;
     const tgt = Math.hypot(dxp,dzp)<16 ? Math.atan2(dxp,dzp) : (-2.2+Math.sin(clock.elapsedTime*0.7)*0.22);
