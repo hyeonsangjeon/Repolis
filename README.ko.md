@@ -175,6 +175,8 @@ export default async function handler(req, res) {
 
 > ⏱️ **Vercel Hobby 주의:** KB는 콜드/복잡 쿼리에서 6~21초가 걸리는데 Hobby는 함수를 ~10초로 끊어요. `GROUNDED_TIMEOUT_MS`(9000)가 그 직전에 중단시키고 택시는 **조용히 로컬로 폴백**합니다 — 그래서 멈추진 않지만 느린 쿼리는 grounded 결과가 안 떠요. 항상 grounded로 받으려면 **Vercel Pro**에서 `maxDuration`을 올리고 브라우저 `localStorage.taxiGroundedTimeoutMs`도 키우세요.
 
+> ☁️ **권장 — Cloudflare Workers (~10초 벽 없음).** Workers는 서브리퀘스트 대기 시간이 아니라 *CPU 시간*으로 과금해서, 느린 KB 호출이 끊기지 않고 끝까지 완료돼요 — 로컬 폴백이 훨씬 줄고, **무료** 플랜이라 카드도 필요 없어요. 바로 배포 가능한 포트가 [`cloudflare-taxi/`](cloudflare-taxi/)에 있어요: `wrangler secret put SEARCH_ENDPOINT && wrangler secret put SEARCH_API_KEY && wrangler deploy`. 나온 Worker URL을 택시에 붙여넣거나, `index.html`의 **`GROUNDED_DEFAULT`**에 박으면 **모든 방문자**에게 grounding이 켜져요. [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md) 참고.
+
 #### 🌐 AI 프록시 (단순) — Azure OpenAI 한 번 호출
 
 전체 grounding 스택 대신 가벼운 LLM 선택기를 원하면? `api/taxi.js`는 브라우저가 이미 추려둔 후보를 받아 Azure OpenAI에 하나만 고르게 해요. Vercel에 배포하고 `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_DEPLOYMENT` / `AZURE_OPENAI_KEY`를 설정([`.env.example`](.env.example) 참고)한 뒤 택시를 `/api/taxi`로 가리키면 됩니다. 엔드포인트가 안 닿으면 로컬검색으로 폴백해요. _(이 모드는 기본 드롭다운엔 없지만, 선호하는 fork를 위해 코드에 남아 있어요.)_

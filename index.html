@@ -2323,7 +2323,12 @@ async function proxyAsk(q){
 }
 
 /* ---- Mode D: live grounding (Vercel → Azure AI Search KB → GitHub hosted MCP) ---- */
-function groundedUrl(){ return localStorage.getItem('taxiGroundedUrl')||''; }
+// Paste your deployed grounding backend URL here to enable 🛰️ AI Foundry Live for
+// every visitor — a Cloudflare Worker (see cloudflare-taxi/README.md), e.g.
+// 'https://repolis-taxi.<you>.workers.dev/'. Empty = the site stays Local-default and
+// each visitor can still set their own backend URL in the taxi mode prompt.
+const GROUNDED_DEFAULT='';
+function groundedUrl(){ return localStorage.getItem('taxiGroundedUrl')||GROUNDED_DEFAULT; }
 async function groundedAsk(q){
   const det=deterministicIntent(q);                                   // nav/metric/small talk/off-topic stays local — KS only for real live questions
   if(det){ addMsg('bot', det.message, { repo:det.repo, alts:det.alts }); return; }

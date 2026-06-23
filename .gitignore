@@ -1,4 +1,9 @@
 .DS_Store
 node_modules/
 cloudflare/.wrangler/
+cloudflare-taxi/.wrangler/
 .wrangler/
+# Cloudflare Worker local secrets (wrangler dev) — never commit real keys
+.dev.vars
+# Local-only notes that record real keys/secrets (kept out of git on purpose)
+*.local.md

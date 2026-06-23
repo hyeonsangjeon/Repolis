@@ -1,0 +1,25 @@
+#:schema node_modules/wrangler/config-schema.json
+# Repolis taxi grounding backend — Cloudflare Worker (separate from the realtime
+# presence Worker in ../cloudflare). Deploy makes the public site's "🛰️ AI Foundry
+# Live" taxi mode answer real, live repo questions through your Azure AI Search KB.
+
+name = "repolis-taxi"
+main = "src/grounded.js"
+compatibility_date = "2025-04-01"
+workers_dev = true
+
+# Non-secret config. The Search key is a SECRET — never put it here:
+#   wrangler secret put SEARCH_API_KEY
+[vars]
+SEARCH_KB_NAME = "repolis-github-kb"
+SEARCH_KS_NAME = "github-repos-mcp-ks"
+SEARCH_API_VERSION = "2026-05-01-preview"
+GROUNDED_MAX_RUNTIME_S = "30"
+GROUNDED_TIMEOUT_MS = "25000"
+
+# Set your Azure AI Search endpoint (not secret, but account-specific). Either
+# uncomment + edit here, or keep it out of git with `wrangler secret put SEARCH_ENDPOINT`:
+# SEARCH_ENDPOINT = "https://<your-search>.search.windows.net"
+
+# (Optional) lock CORS to your Pages origin so only your site can call it. Default is "*".
+# ALLOW_ORIGIN = "https://<you>.github.io"

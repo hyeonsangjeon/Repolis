@@ -175,6 +175,8 @@ Both backends are **opt‑in** — the city is fully usable without them. All co
 
 > ⏱️ **Vercel Hobby caveat:** the KB can take 6–21 s on cold/complex queries, but Hobby caps a function at ~10 s. `GROUNDED_TIMEOUT_MS` (9000) aborts just before that and the taxi **silently falls back to Local** — so it never hangs, but slow queries won't show grounded results. For consistently grounded answers, deploy on **Vercel Pro** and raise `maxDuration` (and `localStorage.taxiGroundedTimeoutMs` in the browser).
 
+> ☁️ **Recommended — Cloudflare Workers (no ~10 s wall).** Workers bill *CPU time*, not the wall‑clock spent awaiting a subrequest, so the slow KB call finishes instead of being cut off — far fewer Local fallbacks, on the **free** plan (no card). A ready‑to‑deploy port lives in [`cloudflare-taxi/`](cloudflare-taxi/): `wrangler secret put SEARCH_ENDPOINT && wrangler secret put SEARCH_API_KEY && wrangler deploy`. Paste the resulting Worker URL into the taxi, or into **`GROUNDED_DEFAULT`** in `index.html` to enable grounding for **every visitor**. See [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md).
+
 #### 🌐 AI proxy (simple) — one Azure OpenAI call
 
 Prefer a lightweight LLM picker over the full grounding stack? `api/taxi.js` takes the shortlist the browser already retrieved and asks Azure OpenAI to choose one repo. Deploy it to Vercel, set `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_DEPLOYMENT` / `AZURE_OPENAI_KEY` (see [`.env.example`](.env.example)), and point the taxi at `/api/taxi`. If the endpoint is unreachable, the driver falls back to Local search. _(This mode isn't in the default dropdown; it stays available for forks that prefer it.)_
