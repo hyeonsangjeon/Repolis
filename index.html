@@ -222,6 +222,17 @@
   .msg .ride:hover { filter: brightness(1.05); }
   .msg .alt { display: inline-block; margin: 4px 5px 0 0; font-size: 11px; font-weight: 700; color: #3a6fb0;
     background: #e7eef8; padding: 4px 9px; border-radius: 8px; cursor: pointer; }
+  .msg .trace { margin-top: 8px; font-size: 11px; }
+  .msg .trace summary { cursor: pointer; color: #8a6a3a; font-weight: 700; list-style: none; user-select: none; }
+  .msg .trace summary::-webkit-details-marker { display: none; }
+  .msg .trace summary::before { content: '▸ '; }
+  .msg .trace[open] summary::before { content: '▾ '; }
+  .msg .traceBody { margin-top: 6px; padding: 8px 10px; background: #efe6cf; border-radius: 9px; color: #5a4326;
+    display: flex; flex-direction: column; gap: 4px; }
+  .msg .traceRefs { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+  .msg .traceRef { color: #3a6fb0; text-decoration: none; }
+  .msg .traceRef code { background: #e0d5bb; padding: 1px 5px; border-radius: 5px; }
+  .msg .traceRef:hover { text-decoration: underline; }
   .msg.typing { color: #b29a78; font-style: italic; }
   .chatIn { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #f0e2c6; }
   .chatIn input { flex: 1; border: 1px solid #ecdcc4; background: #fffdf8; border-radius: 12px;
@@ -321,7 +332,7 @@
     <select id="modeSel" title="AI 모드">
       <option value="local" data-i18n="modeLocalOpt">로컬검색 · 무키</option>
       <option value="webllm" data-i18n="modeWebllmOpt">WebLLM · 브라우저AI</option>
-      <option value="proxy" data-i18n="modeProxyOpt">AI 프록시 · 고품질</option>
+      <option value="grounded" data-i18n="modeGroundedOpt">🛰️ AI Foundry Live</option>
     </select>
     <button class="x" id="chatClose">×</button>
   </div>
@@ -393,6 +404,20 @@ const I18N = {
     openGithub:'GitHub 열기 ↗', liveDemo:'라이브 데모 ↗', close:'닫기', socialPreview:'소셜 프리뷰',
     rideThere:'🚕 그 집까지 데려다줄게요', soLead:'그럼 ',
     greeterHtml:'어서오세요! 🚕 <b>Repolis 택시기사</b>입니다.<br>어떤 걸 찾으세요? 예: <b>제일 인기있는 레포</b>, <b>AI 에이전트</b>, <b>STT</b>, <b>아무거나</b>',
+    greetReply:'안녕하세요! 🚕 어떤 레포를 찾으세요? 예: <b>제일 인기있는 레포</b>, <b>AI 에이전트</b>, <b>STT</b>',
+    stThanks:'천만에요! 😊 또 어디로 모셔다드릴까요?',
+    stBye:'안녕히 가세요! 🚕 또 들러주세요.',
+    stHow:'저야 늘 쌩쌩하죠! 😄 필요할 때 편하게 불러주세요!',
+    stWho:'저는 Repolis의 택시기사예요 🚕 이 도시의 어떤 레포든 모셔다드려요. 어디로 갈까요?',
+    stHelp:'레포를 찾아 그 집까지 태워다드려요! “제일 인기있는 레포”, “RAG”, “최근에 뭐 푸시했어?”처럼 물어보세요 🚕',
+    stNice:'헤헤, 고마워요! 😊',
+    stOff1:'하하, 그건 제 전문은 아니지만 😄 그래도 얘기 즐겁네요!',
+    stOff2:'음~ 저는 사실 레포 구경시켜드리는 택시기사라 그쪽은 잘 몰라요 ㅎㅎ',
+    stOff3:'제가 아는 건 현상님 GitHub 레포들뿐이라… 그래도 궁금한 거 있으면 편하게 물어봐요! 😊',
+    stOff4:'오늘은 손님이 좀 한가하신가 봐요 😄 저는 미터기 대신 레포만 세고 있어요 ㅎㅎ',
+    stOff5:'하하 이런 수다도 좋지만, 제 특기는 역시 레포 안내라서요 🚕 한 곳 구경 가보실래요?',
+    stOfftopicRedirect:'레포 얘기로 돌아가 볼까요? 🚕 “제일 인기있는 레포”나 “AI 에이전트”처럼 물어보시면 바로 모셔다드릴게요!',
+    stOfftopic:'하하, 그건 저도 잘 모르겠어요 😅',
     leadPopular:'요즘 제일 인기 많은 ', leadRandom:'음~ 그럼 이건 어때요? ', leadStar:'⭐ 스타가 제일 많은 ',
     leadRecent:'가장 최근에 손본 ', leadMatch:'말씀하신 것엔 ', leadFallback:'딱 맞는 건 못 찾았지만, 인기 많은 ',
     leadVisitors:'👁 방문자가 제일 많은 ', leadClones:'⬇ 클론(다운로드)이 제일 많은 ', leadForks:'⑂ 포크가 제일 많은 ', leadViews:'📈 조회수가 제일 많은 ',
@@ -406,6 +431,11 @@ const I18N = {
     ansFail:'😢 브라우저AI 응답 실패. 로컬검색으로 안내할게요.',
     proxyPromptUrl:'AI 프록시(Vercel) URL을 입력하세요\n예: https://your-app.vercel.app/api/taxi',
     proxyNoUrl:'프록시 URL이 없어 로컬검색으로 안내할게요. (모드를 다시 프록시로 고르면 URL을 물어봐요)',
+    modeGroundedOpt:'🛰️ AI Foundry Live',
+    modeGroundedMsg:'🛰️ AI Foundry Live 모드예요. GitHub을 실시간으로 찾아 안내해요! (Azure AI Search + MCP)',
+    groundedSearching:'MS Foundry MCP KS로 GitHub 찾아볼게요 🔍',
+    groundedPromptUrl:'AI Foundry Live API URL을 입력하세요 (없으면 비워두세요 → 키 없이 로컬검색으로 동작)\n예: https://your-app.vercel.app/api/taxi-grounded',
+    traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceRefs:'참조 레포',
     taxiStand:'택시 정류장',
     libName:'기여 도서관', libSign:'LIBRARY 도서관',
     libReached:'에 도착! <span class="key">Enter</span> 또는 클릭으로 입장',
@@ -432,6 +462,20 @@ const I18N = {
     openGithub:'Open on GitHub ↗', liveDemo:'Live demo ↗', close:'Close', socialPreview:'Social preview',
     rideThere:"🚕 I'll drive you there", soLead:'Then ',
     greeterHtml:"Welcome! 🚕 I'm the <b>Repolis taxi driver</b>.<br>What are you looking for? e.g. <b>most popular repo</b>, <b>AI agents</b>, <b>STT</b>, <b>anything</b>",
+    greetReply:"Hello! 🚕 Which repo are you after? e.g. <b>most popular</b>, <b>AI agents</b>, <b>STT</b>",
+    stThanks:"Anytime! 😊 Where to next?",
+    stBye:"Take care! 🚕 Come back anytime.",
+    stHow:"Doing great, thanks! 😄 Just give me a shout whenever you need me!",
+    stWho:"I'm the Repolis taxi driver 🚕 I'll drive you to any repo in this city. Where to?",
+    stHelp:'I find repos and drive you to them! Try “most popular”, “RAG”, or “what did I push recently?” 🚕',
+    stNice:"Aw, thank you! 😊",
+    stOff1:"Haha, not really my area 😄 but fun to chat!",
+    stOff2:"Hmm, I'm just the repo taxi driver, so I don't know much about that 😅",
+    stOff3:"All I really know is your GitHub repos… but feel free to ask me about those! 😊",
+    stOff4:"Slow day, huh? 😄 The only meter I run counts repos, not fares!",
+    stOff5:"Haha I'm enjoying the chat, but repo tours are my real talent 🚕 want to go see one?",
+    stOfftopicRedirect:'Shall we get back to repos? 🚕 Try "most popular" or "AI agents" and I\'ll drive you right there!',
+    stOfftopic:"Haha, not sure about that one 😅",
     leadPopular:'The most popular right now is ', leadRandom:'Hmm, how about this one? ', leadStar:'⭐ The most-starred is ',
     leadRecent:'The most recently updated is ', leadMatch:'For what you asked, ', leadFallback:"Couldn't find an exact match, but a popular one is ",
     leadVisitors:'👁 The most-visited is ', leadClones:'⬇ The most-cloned is ', leadForks:'⑂ The most-forked is ', leadViews:'📈 The most-viewed is ',
@@ -445,6 +489,11 @@ const I18N = {
     ansFail:'😢 Browser-AI failed to answer. Using local search.',
     proxyPromptUrl:'Enter your AI proxy (Vercel) URL\ne.g. https://your-app.vercel.app/api/taxi',
     proxyNoUrl:'No proxy URL — using local search. (Re-select the proxy mode to enter a URL.)',
+    modeGroundedOpt:'🛰️ AI Foundry Live',
+    modeGroundedMsg:'🛰️ AI Foundry Live mode. I search GitHub in real time (Azure AI Search + MCP)!',
+    groundedSearching:'Searching GitHub via the MS Foundry MCP KS 🔍',
+    groundedPromptUrl:'Enter your AI Foundry Live API URL (or leave blank → keyless Local search)\ne.g. https://your-app.vercel.app/api/taxi-grounded',
+    traceTitle:'🔎 How I found this', traceKs:'Knowledge source', traceTool:'MCP tool', traceRefs:'References',
     taxiStand:'TAXI STAND',
     libName:'Contribution Library', libSign:'LIBRARY 도서관',
     libReached:' reached! <span class="key">Enter</span> or click to enter',
@@ -2091,7 +2140,7 @@ document.getElementById('loading').style.display='none';
 const chatEl=document.getElementById('chat'), chatLog=document.getElementById('chatLog'), chatText=document.getElementById('chatText');
 const taxiBtn=document.getElementById('taxiBtn'), modeSel=document.getElementById('modeSel');
 const driveBar=document.getElementById('drivebar'), driveNameEl=document.getElementById('driveName');
-let llmMode='local', chatGreeted=false, busy=false;
+let llmMode=localStorage.getItem('taxiMode')||'local', chatGreeted=false, busy=false; modeSel.value=llmMode;
 
 function scrollChat(){ chatLog.scrollTop=chatLog.scrollHeight; }
 function addMsg(who,html,opts){
@@ -2102,7 +2151,23 @@ function addMsg(who,html,opts){
     opts.alts.forEach(a=>{ const c=document.createElement('span'); c.className='alt'; c.textContent=a.label;
       c.onclick=()=>{ addMsg('me',a.label); replyFor(a,t('soLead')); }; wrap.appendChild(c); });
     m.appendChild(wrap); }
+  if(opts&&opts.trace){ m.appendChild(buildTracePanel(opts.trace)); }
   chatLog.appendChild(m); scrollChat(); return m;
+}
+function buildTracePanel(tr){
+  const d=document.createElement('details'); d.className='trace';
+  const s=document.createElement('summary'); s.textContent=t('traceTitle'); d.appendChild(s);
+  const body=document.createElement('div'); body.className='traceBody';
+  const ks=document.createElement('div'); ks.innerHTML='<b>'+t('traceKs')+':</b> '+(tr.ks||'-');
+  const tool=document.createElement('div');
+  tool.innerHTML='<b>'+t('traceTool')+':</b> '+((tr.tools||[]).join(', ')||'-')+(tr.partial?' ⚠️':'')+(tr.mcpMs?(' · '+tr.mcpMs+'ms'):'');
+  body.appendChild(ks); body.appendChild(tool);
+  if(tr.refs&&tr.refs.length){ const rl=document.createElement('div'); rl.className='traceRefs';
+    rl.innerHTML='<b>'+t('traceRefs')+':</b>';
+    tr.refs.forEach(r=>{ const a=document.createElement('a'); a.className='traceRef'; a.href=r.url||'#'; a.target='_blank'; a.rel='noopener';
+      a.innerHTML='<code>'+String(r.name).replace(/</g,'&lt;')+'</code>'+(r.stars!=null?(' ★'+r.stars):'')+(r.lang?(' · '+String(r.lang).replace(/</g,'&lt;')):''); rl.appendChild(a); });
+    body.appendChild(rl); }
+  d.appendChild(body); return d;
 }
 function openChat(){ chatEl.classList.remove('hidden');
   if(!chatGreeted){ chatGreeted=true;
@@ -2145,8 +2210,29 @@ function searchCandidates(q,n=8){ buildSearchIndex(); const raw=tokens(q); const
   const hits=ranked.filter(x=>x.s>=3);
   return { list:(hits.length?hits:ranked).slice(0,n).map(x=>x.r), strong:hits.length>0, terms }; }
 const M=o=>{ if(o) o._metric=true; return o; };   // tag generic metric-sort intents (topic match may override)
-function deterministicIntent(q){
+/* small talk → instant in-character reply, never the KS. Greeting/thanks/bye match the
+   whole phrase (safe); the ambiguous ones (how/who/help/compliment) only fire when no repo matched. */
+function smalltalk(q){
   const ql=q.toLowerCase();
+  const g=ql.trim().replace(/[!?.~ㅋㅎ\s]+$/,'').trim();
+  if(/^(안녕(하세요|하십니까|하셔요|들)?|안뇽\S*|하이\S*|헬[로루]\S*|반가\S*|반갑\S*|여보세요|저기요?|이봐\S*|야+|헤이\S*|ㅎㅇ|hi+|hello+|hey+|heya|hiya|yo+|howdy|sup|wassup|what'?s? ?up|good ?(morning|afternoon|evening|day)|morning|evening|greetings|gm|gn)( ?(there|driver|기사님?|택시|taxi|아저씨|선생님?))?$/i.test(g)) return t('greetReply');
+  if(/^(고+마+워?요?|고맙[습다]\S*|감사\S*|ㄳ\S*|ㄱㅅ|thank ?(you|u)?\S*|thanks\S*|thx|ty|appreciate\S*)( ?(so ?much|very ?much|it|this|기사님?|driver))?$/i.test(g)) return t('stThanks');
+  if(/^(잘 ?가\S*|잘 ?있어\S*|안녕히 ?(가|계)\S*|또 ?(봐\S*|와\S*|만나\S*|올게\S*|뵈\S*)|들어가\S*|수고\S*|이만.*|bye+|goodbye\S*|see ?(you|ya)\S*|cya|later|gotta ?go|그만\S*|끝)( ?(기사님?|driver))?$/i.test(g)) return t('stBye');
+  if(searchCandidates(q,8).strong) return null;   // a real repo matched → not small talk; let it search
+  if(/^.*(어떻게 ?지내|잘 ?지내|잘 ?지냈|잘 ?있었|별일 ?없|요즘 ?어때|오늘 ?어때|기분 ?어때|컨디션 ?어때).*$|^(뭐\s*해\S*|뭐\s*하(고\s*있|니|는|냐)\S*|how ?are ?you\S*|how'?s? ?(it ?going|things|your ?day|life)\S*|hru|wyd)$/i.test(g)) return t('stHow');
+  if(/^.*((너|넌|당신|네|니|자네) ?(는 )?누구|누구(세요|야|니|냐|예요|에요)|정체 ?(가 )?(뭐|무엇)|(너|넌|당신) ?(는 )?뭐(야|니|예요|에요)|이름 ?(이 )?(뭐|무엇)|네 ?이름).*$|^((너|네) ?소개\S*|소개 ?좀\S*|who ?are ?you\S*|what ?are ?you\S*|your ?name\S*|introduce ?yourself\S*)$/i.test(g)) return t('stWho');
+  if(/^.*((뭘?|무엇을?) ?할 ?수 ?있|뭐 ?(해줄|할 ?줄 ?알|하는 ?거)|어떻게 ?(써|쓰|사용)|사용 ?법|쓰는 ?법|기능 ?(이 )?(뭐|무엇)).*$|^(도움말|도와줘\S*|help\S*|what ?can ?you ?do\S*|how ?(do|to) ?(i )?use\S*|how ?does ?(this|it) ?work\S*|명령어\S*)$/i.test(g)) return t('stHelp');
+  if(/^(멋[지져]+\S*|좋[다네아][요]?\S*|최고\S*|짱\S*|굿\S*|귀[엽여]\S*|대단\S*|훌륭\S*|nice\S*|cool\S*|awesome\S*|great\S*|amazing\S*|wonderful\S*|love ?(it|this|you)\S*|good ?(job|work|boy)\S*|lol|lmao|haha+|hehe+|ㅋㅋ+\S*|ㅎㅎ+\S*|👍+)$/i.test(g)) return t('stNice');
+  return null;
+}
+/* does this query actually call for a repo search (→ the KS), or is it general chat? */
+function needsSearch(q){
+  if(searchCandidates(q,8).strong) return true;
+  return /레포|repo|저장소|프로젝트|project|코드|커밋|commit|푸시|push|이슈|issue|readme|라이브러리|library|도서관|fork|포크|clone|클론|데모|demo|github|깃헙|깃허브|스타\b|\bstars?\b|만든|개발|최근|recent|latest|업데이트|update|보여|show|데려다|소개|introduce|알려줘|tell me|버전|version|토픽|topic/i.test(q);
+}
+function _coreIntent(q){
+  const ql=q.toLowerCase();
+  const st=smalltalk(q); if(st) return { repo:null, message:st, alts:[] };
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
   if(/인기|제일|최고|많이|핫|\bpopular\b|\bbest\b|\btop\b|\bhot\b/.test(ql)){ const a=byRank(); return M(pick(a[0],t('leadPopular'),a.slice(1,4))); }
   if(/아무|랜덤|골라|추천만|\brandom\b/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
@@ -2157,6 +2243,16 @@ function deterministicIntent(q){
   if(/포크|파생|갈라|\bforks?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.forks||0)-(x.forks||0)); return M(pick(a[0],t('leadForks'),a.slice(1,4))); }
   if(/조회|페이지뷰|\bviews?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.views||0)-(x.views||0)); return M(pick(a[0],t('leadViews'),a.slice(1,4))); }
   return null;
+}
+const OFFTOPIC_FUNNEL=false;   // this week: off-topic gets a plain reply, NO repo funneling/redirect. set true to restore the 5-step ladder.
+let offCount=0;
+function deterministicIntent(q){
+  const r=_coreIntent(q);
+  if(r){ offCount=0; return r; }                     // small talk (greeting) / library / metric → engaged
+  if(needsSearch(q)){ offCount=0; return null; }      // a real repo query → let the search run (KS in grounded mode)
+  if(!OFFTOPIC_FUNNEL) return { repo:null, message:t('stOfftopic'), alts:[] };   // off-topic → plain friendly reply, no repo push
+  offCount++;                                         // (dormant) 1-5 chat along, 6+ gently steer back to repos
+  return { repo:null, message:t(offCount>=6?'stOfftopicRedirect':'stOff'+offCount), alts:[] };
 }
 function localIntent(q){
   const det=deterministicIntent(q);
@@ -2226,10 +2322,38 @@ async function proxyAsk(q){
   }catch(e){ addMsg('bot',(LANG==='ko'?'😢 프록시 연결 실패(':'😢 Proxy connection failed (')+e.message+(LANG==='ko'?'). 로컬검색으로 안내할게요.':'). Falling back to local search.')); return localIntent(q); }
 }
 
+/* ---- Mode D: live grounding (Vercel → Azure AI Search KB → GitHub hosted MCP) ---- */
+function groundedUrl(){ return localStorage.getItem('taxiGroundedUrl')||''; }
+async function groundedAsk(q){
+  const det=deterministicIntent(q);                                   // nav/metric/small talk/off-topic stays local — KS only for real live questions
+  if(det){ addMsg('bot', det.message, { repo:det.repo, alts:det.alts }); return; }
+  let url=groundedUrl();
+  if(!url){ const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); return; }   // no backend configured → silent Local (mode switch already offered to set a URL; no per-message nag)
+  const sb=addMsg('bot', t('groundedSearching')); sb.classList.add('typing');   // phase 1: instant "searching" bubble
+  const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||9500;  // configurable (Pro: raise w/ maxDuration)
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), tmo);
+  try{
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q}),signal:ctrl.signal});
+    clearTimeout(to);
+    if(!res.ok) throw new Error('http '+res.status);
+    const data=await res.json();
+    if(data.fallback){ sb.remove(); const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); return; }   // silent local fallback
+    sb.classList.remove('typing');                                    // settle the searching line — keep it as a record
+    let repo=data.repo?REPOS.find(r=>r.repo.toLowerCase()===String(data.repo).toLowerCase()):null;
+    if(!repo){ const ticks=[...String(data.message||'').matchAll(/`([\w.\-]+)`/g)].map(m=>m[1].toLowerCase());   // KB returned no repo (empty refs) → recover from names the answer named
+      for(const tk of ticks){ const hit=REPOS.find(r=>r.repo.toLowerCase()===tk); if(hit){ repo=hit; break; } } }
+    const sc=searchCandidates(q,8); const main=repo||sc.list[0];
+    let msg=String(data.message||t('thisOne')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
+    const alts=padAlts(main, sc.list.filter(r=>r!==main).slice(0,3));
+    addMsg('bot', msg, { repo:main, alts, trace:data.trace });        // phase 2: grounded answer + trace panel
+  }catch(e){ clearTimeout(to); sb.remove(); const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); }   // timeout/error → silent local fallback
+}
+
 async function askDriver(q){
-  const t=addMsg('bot','…'); t.classList.add('typing');
+  if(llmMode==='grounded') return groundedAsk(q);                     // self-manages its own 2-phase messaging
+  const tb=addMsg('bot','…'); tb.classList.add('typing');
   let r; try{ r = llmMode==='webllm'?await webllmAsk(q) : llmMode==='proxy'?await proxyAsk(q) : localIntent(q); }
-  finally{ t.remove(); }
+  finally{ tb.remove(); }
   if(r) addMsg('bot', r.message, { repo:r.repo, alts:r.alts });
 }
 async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; busy=true; chatText.value='';
@@ -2255,10 +2379,11 @@ function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visib
 taxiBtn.onclick=()=> chatEl.classList.contains('hidden')?openChat():closeChat();
 document.getElementById('chatClose').onclick=closeChat;
 document.getElementById('chatSend').onclick=sendChat;
-chatText.addEventListener('keydown',e=>{ if(e.code==='Enter'){ e.preventDefault(); sendChat(); } e.stopPropagation(); });
-modeSel.onchange=e=>{ llmMode=e.target.value;
+chatText.addEventListener('keydown',e=>{ if(e.code==='Enter'&&!e.isComposing&&e.keyCode!==229){ e.preventDefault(); sendChat(); } e.stopPropagation(); });
+modeSel.onchange=e=>{ llmMode=e.target.value; localStorage.setItem('taxiMode',llmMode);
   if(llmMode==='proxy'&&!proxyUrl()){ const u=(prompt(t('proxyPromptUrl'))||'').trim(); if(u) localStorage.setItem('taxiProxyUrl',u); }
-  addMsg('bot', llmMode==='local'?t('modeLocalMsg'):llmMode==='webllm'?t('modeWebllmMsg'):t('modeProxyMsg')); };
+  if(llmMode==='grounded'&&!groundedUrl()){ const u=(prompt(t('groundedPromptUrl'))||'').trim(); if(u) localStorage.setItem('taxiGroundedUrl',u); }
+  addMsg('bot', llmMode==='local'?t('modeLocalMsg'):llmMode==='webllm'?t('modeWebllmMsg'):llmMode==='grounded'?t('modeGroundedMsg'):t('modeProxyMsg')); };
 /* hold-to-get-off: the cab no longer cancels on a stray key — hold the bar's button ~1s to step out */
 (()=>{ const dc=document.getElementById('driveCancel'); let exitHold=null;
   const reset=()=>{ endDrive(); navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; };
@@ -2489,7 +2614,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__libInfo=()=>({count:LIBCOUNT, pos:{x:+LIB._pos.x.toFixed(1),z:+LIB._pos.z.toFixed(1)}, cats:LIBDATA.length});
   window.__cand=(q)=>{ const sc=searchCandidates(q,8); return {strong:sc.strong, list:sc.list.map(r=>r.repo)}; };
   window.__intent=(q)=>{ const r=localIntent(q); return { repo:(r.repo&&(r.repo.repo||r.repo.label))||null, isLib:!!(r.repo&&r.repo._isLibrary), alts:(r.alts||[]).map(a=>a.label) }; };
-  window.__det=(q)=>{ const d=deterministicIntent(q); return d?{repo:(d.repo.repo||d.repo.label), isLib:!!d.repo._isLibrary, alts:(d.alts||[]).map(a=>a.label)}:null; };
+  window.__det=(q)=>{ const d=deterministicIntent(q); return d?{repo:(d.repo&&(d.repo.repo||d.repo.label))||null, isLib:!!(d.repo&&d.repo._isLibrary), alts:(d.alts||[]).map(a=>a.label)}:null; };
   window.__idx=()=>{ buildSearchIndex(); return {built:_idxBuilt, tokens:INVIDX.size, repos:REPOS.length}; };
   window.__pos=()=>({x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2)});
   window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)});

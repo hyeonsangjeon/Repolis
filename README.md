@@ -44,7 +44,7 @@ Don't know where to go? Just tell the 🚕 **LLM taxi driver** — say _"take me
 - 🚕 **LLM taxi driver that actually drives you** — ask in natural language; it picks the best‑matching repo, explains it, then the cab **comes to your spot, you board, and it carries you** to the house. Three modes:
   - **Local search** (default · no key · instant) — synonym‑expanded intent search, also metric‑aware (_"most cloned"_, _"most visited"_, _"most forked"_); a strong topic match always beats generic metric sorting, and you always get a few alternatives to pick from.
   - **WebLLM** (in‑browser AI · no key · WebGPU)
-  - **AI proxy** (Vercel → Azure OpenAI · best quality)
+  - **🛰️ AI Foundry Live** (optional · grounded) — live questions about your repos route through an Azure AI Search Knowledge Base + GitHub's hosted MCP server; **falls back to Local automatically** when no backend is set, so a keyless clone still works.
 - 🏡 **Six house tiers, not just taller boxes** — by traffic rank each repo becomes a `cabin → cottage → house → villa → manor → portico mansion`, with wings, columns, porticos, dormers, balconies and cupolas. Top repos get grand columned 저택; quiet ones get cosy cabins.
 - 🌳 **A city that feels alive** — **procedurally textured houses** (brick · siding · stone · shingle roofs — *zero image assets*), gardens, **roaming chow‑chow pets**, street trees, street lamps, **rest pavilions you can sit in** (and stand back up), and **koi ponds & driveway garages** for your most active repos. Category logos on the roofs (AI / Data / Software / …) and proper town‑house roads.
 - 🌙 **Day & night, with living windows** — flip the 🌙 / ☀️ switch in the HUD. At night the sky turns navy, lamps and stars switch on, and **each repo's windows glow by how active it is** (recent pushes · clones · views) — so your busiest repos literally light up the skyline.
@@ -115,11 +115,13 @@ Why it matters: *"take me to the library"* is a **navigation** intent, not a rep
 
 | Mode | Engine | Key? | Notes |
 |---|---|---|---|
-| **Local** | synonym + metric search | none | default, instant, fully offline |
+| **Local** | synonym + metric search | none | **default** · instant · fully offline — *what every fresh clone ships with* |
 | **WebLLM** | in‑browser LLM (WebGPU) | none | downloads ~1 GB once; picks from the index shortlist |
-| **AI proxy** | your serverless endpoint | server‑side | highest quality (e.g. Azure OpenAI) |
+| **🛰️ AI Foundry Live** | Vercel → Azure AI Search KB → GitHub MCP | server‑side | optional · live, grounded repo Q&A. **Unconfigured → silent Local fallback** |
 
-The browser always does retrieval first and hands the model only the **shortlisted candidates** — so a WebLLM/proxy agent just has to choose one:
+> 🔌 **No backend required.** A fresh clone runs entirely in the browser: **Local** is the default and needs no key, and **WebLLM** runs on‑device. **AI Foundry Live** is 100% optional — if you don't deploy it, selecting that mode just **falls back to Local search** (no errors, no setup). Deploy to GitHub Pages and everything works. _(A simpler `api/taxi.js` Azure‑OpenAI proxy is also available — see below.)_
+
+The browser always does retrieval first and hands the model only the **shortlisted candidates** — so a WebLLM/grounded agent just has to choose one:
 
 ```jsonc
 // POST /api/taxi — request the city sends (already shortlisted, not the full catalog)
@@ -158,13 +160,24 @@ Candidates:\n${repos.map(r => `- ${r.repo} | ${r.lang} | ${(r.topics||[]).join('
 
 Return `{ "repo": "<repo-name>", "message": "<reply>" }`; the city drives there and offers the remaining candidates as one‑tap alternatives. If the endpoint is unreachable, the driver silently falls back to local search.
 
-### (Optional) AI proxy mode — Vercel + Azure OpenAI
+### (Optional) AI backends for the taxi
 
-For the highest‑quality taxi driver, deploy `api/taxi.js` to Vercel:
+Both backends are **opt‑in** — the city is fully usable without them. All configuration lives in [`.env.example`](.env.example): copy it to `.env` for local `vercel dev`, or paste the values into **Vercel → Settings → Environment Variables**.
 
-- Import this repo into Vercel → you automatically get an `/api/taxi` endpoint.
-- Env vars: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_KEY`, (optional) `AZURE_OPENAI_API_VERSION`, `ALLOW_ORIGIN`.
-- In the taxi chat, switch the mode to **AI proxy** and enter your proxy URL (`https://<project>.vercel.app/api/taxi`).
+#### 🛰️ AI Foundry Live (grounded) — live answers about your repos
+
+`api/taxi-grounded.js` routes a free‑text question through an **Azure AI Search Knowledge Base** whose **MCP Knowledge Source** calls **GitHub's hosted MCP server**, then synthesises the answer with a small model — all server‑side. The serverless function only ever holds a **Search key**; your Azure OpenAI key and GitHub PAT stay inside the Knowledge Source on Azure (never in the browser, never in this function). The chat shows a live **trace panel** — knowledge source · MCP tools · reference repos — for each grounded answer.
+
+1. **Azure AI Search** — create a service, then a **Knowledge Base** (e.g. `repolis-github-kb`) with a **Knowledge Source** of kind *MCP server* pointing at GitHub's hosted MCP (`https://api.githubcopilot.com/mcp/`, with a **read‑only** PAT in its header). Give the search service a **managed identity** with access to an Azure OpenAI deployment for answer synthesis.
+2. **Deploy** `api/taxi-grounded.js` to Vercel (import the repo → you get `/api/taxi-grounded`).
+3. **Set env vars** (see [`.env.example`](.env.example)): `SEARCH_ENDPOINT`, `SEARCH_API_KEY`, `SEARCH_KB_NAME`, `SEARCH_KS_NAME` (comma‑separated to attach more MCPs), plus optional `SEARCH_API_VERSION`, `GROUNDED_TIMEOUT_MS`, `GROUNDED_MAX_RUNTIME_S`, `ALLOW_ORIGIN`.
+4. In the taxi, pick **🛰️ AI Foundry Live** and paste your URL (`https://<project>.vercel.app/api/taxi-grounded`). Leave it blank to stay on Local.
+
+> ⏱️ **Vercel Hobby caveat:** the KB can take 6–21 s on cold/complex queries, but Hobby caps a function at ~10 s. `GROUNDED_TIMEOUT_MS` (9000) aborts just before that and the taxi **silently falls back to Local** — so it never hangs, but slow queries won't show grounded results. For consistently grounded answers, deploy on **Vercel Pro** and raise `maxDuration` (and `localStorage.taxiGroundedTimeoutMs` in the browser).
+
+#### 🌐 AI proxy (simple) — one Azure OpenAI call
+
+Prefer a lightweight LLM picker over the full grounding stack? `api/taxi.js` takes the shortlist the browser already retrieved and asks Azure OpenAI to choose one repo. Deploy it to Vercel, set `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_DEPLOYMENT` / `AZURE_OPENAI_KEY` (see [`.env.example`](.env.example)), and point the taxi at `/api/taxi`. If the endpoint is unreachable, the driver falls back to Local search. _(This mode isn't in the default dropdown; it stays available for forks that prefer it.)_
 
 ### (Optional) Realtime multiplayer
 
@@ -197,7 +210,7 @@ The static site is solo by default. To let visitors meet each other, run one tin
 
 ## 🛠 Tech
 
-Three.js (r0.160) · toon shading + inverted-hull outlines · **Fresnel rim light** via `onBeforeCompile` · **procedural canvas textures** — walls, roofs, grass & asphalt are all generated in code, **no image assets** · ACES tone mapping · day/night lighting · circle-collision walking · **one dependency‑free `index.html` (~2,300 lines, zero build step)** · GitHub Actions · (optional) Vercel + Azure OpenAI · WebLLM · (optional) PartyKit / Cloudflare Workers for realtime.
+Three.js (r0.160) · toon shading + inverted-hull outlines · **Fresnel rim light** via `onBeforeCompile` · **procedural canvas textures** — walls, roofs, grass & asphalt are all generated in code, **no image assets** · ACES tone mapping · day/night lighting · circle-collision walking · **one dependency‑free `index.html` (~2,300 lines, zero build step)** · GitHub Actions · (optional) Vercel + Azure OpenAI · **Azure AI Search + GitHub MCP grounding** · WebLLM · (optional) PartyKit / Cloudflare Workers for realtime.
 
 ## ⭐ Like it?
 

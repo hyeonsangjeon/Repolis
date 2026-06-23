@@ -3,6 +3,21 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.3.0] — 2026-06-23
+
+### 🛰️ AI Foundry Live — grounded taxi mode
+- New **🛰️ AI Foundry Live** taxi mode: live, real‑time answers about your repos via an **Azure AI Search Knowledge Base** whose **MCP Knowledge Source** calls **GitHub's hosted MCP server** (`api/taxi-grounded.js`). The serverless function holds only a Search key — the Azure OpenAI key and GitHub PAT stay server‑side inside the Knowledge Source. A live **trace panel** shows the knowledge source, MCP tools and reference repos behind each answer. `SEARCH_KS_NAME` is comma‑separated, so you can attach more MCP sources to the same KB.
+- **Zero‑backend by design** — a fresh clone needs no keys or servers: **Local** is the default and **WebLLM** runs on‑device. AI Foundry Live is fully optional and **silently falls back to Local** when unconfigured, unreachable or slow (no errors, no hanging). Added [`.env.example`](.env.example) documenting every backend variable for both `api/taxi-grounded.js` and `api/taxi.js`.
+
+### 🧠 Smarter, friendlier chat
+- **Auto knowledge‑source routing** — the driver now decides *per message* whether a question actually needs a repo search (→ grounding/Knowledge Base) or is just chit‑chat, so greetings and small talk get instant local replies and only real repo questions hit the KB.
+- **Friendlier small talk** — greetings, thanks, "who are you?", "what can you do?" get warm, direct answers; mid‑chat replies no longer tack on a forced repo recommendation.
+
+### 🐛 Fixes & polish
+- **Korean IME + Enter** — fixed the input getting garbled when pressing Enter mid‑composition (now commits the syllable first; a second Enter sends — standard Korean web UX).
+- **Mode persistence** — the selected taxi mode is remembered across reloads (`localStorage`).
+- The grounded backend's runtime budget is configurable (`GROUNDED_MAX_RUNTIME_S`, default 30; KB requires 11–599), and selecting AI Foundry Live with no URL now stays on Local **without re‑prompting on every message**.
+
 ## [1.2.0] — 2026-06-23
 
 ### 🌿 Provençal village

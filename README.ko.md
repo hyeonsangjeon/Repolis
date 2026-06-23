@@ -44,7 +44,7 @@
 - 🚕 **진짜로 태워주는 LLM 택시기사** — 자연어로 물어보면 가장 맞는 레포를 골라 설명하고, 택시가 **내 자리로 와서 → 탑승 → 그 집까지 데려다줘요.** 3가지 모드:
   - **로컬검색** (기본·키 불필요·즉시) — 동의어 확장 인텐트 검색. _"제일 많이 클론된"_, _"방문자 최다"_, _"포크 많은"_ 같은 **지표 기반 검색**도 되고, 확실한 주제 매칭은 일반 지표 정렬보다 항상 우선하며, 고를 수 있는 **대안 추천 몇 개**가 늘 함께 떠요.
   - **WebLLM** (브라우저 내장 AI·키 불필요·WebGPU)
-  - **AI 프록시** (Vercel → Azure OpenAI·최고 품질)
+  - **🛰️ AI Foundry Live** (선택·grounded) — 내 레포에 대한 라이브 질문을 Azure AI Search 지식 베이스 + GitHub 호스티드 MCP로 처리. 백엔드가 없으면 **자동으로 로컬검색으로 폴백**해서 키 없이도 동작해요.
 - 🏡 **단순히 높아지는 게 아니라, 6단계 집 등급** — 트래픽 순위에 따라 `오두막 → 코티지 → 주택 → 빌라 → 저택 → 포르티코 맨션`으로 지어지고, 부속동·기둥·포르티코·다락창·발코니·큐폴라가 붙어요. 인기 레포는 웅장한 기둥 저택, 조용한 레포는 아담한 오두막.
 - 🌳 **살아있는 도시** — **절차적으로 텍스처링된 집**(벽돌 · 사이딩 · 석재 · 슁글 지붕 — *이미지 에셋 0개*), 정원, **광장을 뛰노는 차우차우 펫**, 가로수, 가로등, **앉았다 일어설 수 있는 쉼터 정자**, 그리고 가장 활발한 레포를 위한 **koi 연못과 차고**까지. 지붕 위 카테고리 로고(AI / Data / Software …)와 타운하우스 도로도 그대로.
 - 🌙 **낮과 밤, 그리고 살아있는 창문** — HUD의 🌙 / ☀️ 스위치를 눌러요. 밤이 되면 하늘이 남색으로 물들고 가로등·별이 켜지며, **각 레포의 창문이 활동량(최근 push · clone · view)만큼 밝게 빛나요** — 그래서 가장 바쁜 레포가 스카이라인을 밝힙니다.
@@ -115,11 +115,13 @@ GTM_DIR=data python3 scripts/build_repos.py   # repos.json 재생성
 
 | 모드 | 엔진 | 키? | 비고 |
 |---|---|---|---|
-| **로컬** | 동의어 + 지표 검색 | 없음 | 기본, 즉시, 완전 오프라인 |
+| **로컬** | 동의어 + 지표 검색 | 없음 | **기본** · 즉시 · 완전 오프라인 — *모든 클론이 그대로 쓰는 모드* |
 | **WebLLM** | 브라우저 내 LLM(WebGPU) | 없음 | 최초 1회 ~1GB 다운로드, 후보 중 선택 |
-| **AI 프록시** | 내 서버리스 엔드포인트 | 서버측 | 최고 품질 (예: Azure OpenAI) |
+| **🛰️ AI Foundry Live** | Vercel → Azure AI Search KB → GitHub MCP | 서버측 | 선택 · 라이브 grounded 레포 Q&A. **미설정 시 조용히 로컬로 폴백** |
 
-브라우저가 항상 먼저 검색을 끝내고 모델엔 **추려진 후보**만 넘겨요 — 그래서 WebLLM/프록시 에이전트는 그중 하나만 고르면 됩니다:
+> 🔌 **백엔드 없이도 동작.** 갓 클론한 사이트는 전부 브라우저 안에서 돌아가요: **로컬**이 기본이라 키가 필요 없고 **WebLLM**도 기기 안에서 실행돼요. **AI Foundry Live**는 100% 선택 — 배포하지 않으면 그 모드를 골라도 그냥 **로컬검색으로 폴백**합니다(에러도 설정도 없음). GitHub Pages에 올리면 전부 동작해요. _(더 단순한 `api/taxi.js` Azure OpenAI 프록시도 있어요 — 아래 참고.)_
+
+브라우저가 항상 먼저 검색을 끝내고 모델엔 **추려진 후보**만 넘겨요 — 그래서 WebLLM/grounded 에이전트는 그중 하나만 고르면 됩니다:
 
 ```jsonc
 // POST /api/taxi — 도시가 보내는 요청 (전체 카탈로그가 아니라 이미 추려진 후보)
@@ -158,13 +160,24 @@ export default async function handler(req, res) {
 
 `{ "repo": "<레포이름>", "message": "<답변>" }` 을 반환하면 도시가 그리로 달려가고, 남은 후보는 한 번에 고르는 대안으로 보여줘요. 엔드포인트가 안 닿으면 택시기사는 조용히 로컬 검색으로 폴백합니다.
 
-### (선택) AI 프록시 모드 — Vercel + Azure OpenAI
+### (선택) 택시기사 AI 백엔드
 
-최고 품질의 택시기사를 원하면 `api/taxi.js`를 Vercel에 배포하세요.
+두 백엔드 모두 **선택**이에요 — 없이도 도시는 완전히 돌아갑니다. 모든 설정은 [`.env.example`](.env.example)에 있어요: 로컬 `vercel dev`엔 `.env`로 복사하고, 프로덕션은 **Vercel → Settings → Environment Variables**에 붙여넣으면 됩니다.
 
-- Vercel에 이 레포를 Import → 자동으로 `/api/taxi` 엔드포인트가 생겨요.
-- 환경변수: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_KEY`, (선택)`AZURE_OPENAI_API_VERSION`, `ALLOW_ORIGIN`.
-- 도시 안 택시 채팅에서 모드를 **AI 프록시**로 바꾸고, 프록시 URL(`https://<프로젝트>.vercel.app/api/taxi`)을 입력하면 됩니다.
+#### 🛰️ AI Foundry Live (grounded) — 내 레포에 대한 라이브 응답
+
+`api/taxi-grounded.js`는 자유 문장 질문을 **Azure AI Search 지식 베이스**로 보내고, 그 **MCP 지식 소스**가 **GitHub 호스티드 MCP 서버**를 호출한 뒤 작은 모델로 답을 합성해요 — 전부 서버측에서. 이 서버리스 함수는 **Search 키**만 들고 있고, Azure OpenAI 키와 GitHub PAT는 Azure의 지식 소스 안에 머물러요(브라우저에도, 이 함수에도 노출 안 됨). 채팅엔 답마다 **트레이스 패널**(지식 소스 · MCP 도구 · 참조 레포)이 떠요.
+
+1. **Azure AI Search** — 서비스를 만들고, **지식 베이스**(예: `repolis-github-kb`)에 *MCP server* 종류의 **지식 소스**를 추가해 GitHub 호스티드 MCP(`https://api.githubcopilot.com/mcp/`, 헤더에 **읽기 전용** PAT)를 가리키게 하세요. 검색 서비스엔 **관리 ID**를 줘서 답 합성용 Azure OpenAI 배포에 접근하게 합니다.
+2. `api/taxi-grounded.js`를 **Vercel에 배포**(레포 Import → `/api/taxi-grounded` 생성).
+3. **환경변수 설정**([`.env.example`](.env.example) 참고): `SEARCH_ENDPOINT`, `SEARCH_API_KEY`, `SEARCH_KB_NAME`, `SEARCH_KS_NAME`(쉼표로 MCP 여러 개 연결), 선택 `SEARCH_API_VERSION`, `GROUNDED_TIMEOUT_MS`, `GROUNDED_MAX_RUNTIME_S`, `ALLOW_ORIGIN`.
+4. 택시에서 **🛰️ AI Foundry Live**를 고르고 URL(`https://<프로젝트>.vercel.app/api/taxi-grounded`)을 붙여넣으세요. 비워두면 로컬로 동작해요.
+
+> ⏱️ **Vercel Hobby 주의:** KB는 콜드/복잡 쿼리에서 6~21초가 걸리는데 Hobby는 함수를 ~10초로 끊어요. `GROUNDED_TIMEOUT_MS`(9000)가 그 직전에 중단시키고 택시는 **조용히 로컬로 폴백**합니다 — 그래서 멈추진 않지만 느린 쿼리는 grounded 결과가 안 떠요. 항상 grounded로 받으려면 **Vercel Pro**에서 `maxDuration`을 올리고 브라우저 `localStorage.taxiGroundedTimeoutMs`도 키우세요.
+
+#### 🌐 AI 프록시 (단순) — Azure OpenAI 한 번 호출
+
+전체 grounding 스택 대신 가벼운 LLM 선택기를 원하면? `api/taxi.js`는 브라우저가 이미 추려둔 후보를 받아 Azure OpenAI에 하나만 고르게 해요. Vercel에 배포하고 `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_DEPLOYMENT` / `AZURE_OPENAI_KEY`를 설정([`.env.example`](.env.example) 참고)한 뒤 택시를 `/api/taxi`로 가리키면 됩니다. 엔드포인트가 안 닿으면 로컬검색으로 폴백해요. _(이 모드는 기본 드롭다운엔 없지만, 선호하는 fork를 위해 코드에 남아 있어요.)_
 
 ### (선택) 실시간 멀티플레이어
 
@@ -197,7 +210,7 @@ export default async function handler(req, res) {
 
 ## 🛠 기술
 
-Three.js (r0.160) · toon shading + 인버티드-헐 아웃라인 · `onBeforeCompile` **프레넬 림 라이트** · **절차적 캔버스 텍스처** — 벽·지붕·잔디·아스팔트를 전부 코드로 생성, **이미지 에셋 0개** · ACES 톤매핑 · 낮/밤 라이팅 · 원형 충돌 보행 · **의존성·빌드 없는 단일 `index.html`(~2,300줄, 빌드 스텝 0)** · GitHub Actions · (선택) Vercel + Azure OpenAI · WebLLM · (선택) 실시간용 PartyKit / Cloudflare Workers.
+Three.js (r0.160) · toon shading + 인버티드-헐 아웃라인 · `onBeforeCompile` **프레넬 림 라이트** · **절차적 캔버스 텍스처** — 벽·지붕·잔디·아스팔트를 전부 코드로 생성, **이미지 에셋 0개** · ACES 톤매핑 · 낮/밤 라이팅 · 원형 충돌 보행 · **의존성·빌드 없는 단일 `index.html`(~2,300줄, 빌드 스텝 0)** · GitHub Actions · (선택) Vercel + Azure OpenAI · **Azure AI Search + GitHub MCP grounding** · WebLLM · (선택) 실시간용 PartyKit / Cloudflare Workers.
 
 ## ⭐ 마음에 드셨나요?
 
