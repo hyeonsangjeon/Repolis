@@ -2330,7 +2330,7 @@ async function proxyAsk(q){
 const GROUNDED_DEFAULT='https://repolis-taxi.wingnut0310.workers.dev/';
 function groundedUrl(){ return localStorage.getItem('taxiGroundedUrl')||GROUNDED_DEFAULT; }
 async function groundedAsk(q){
-  const det=deterministicIntent(q);                                   // nav/metric/small talk/off-topic stays local — KS only for real live questions
+  const det=_coreIntent(q);                                          // greeting/library/metric → instant local; everything else (repo Qs, follow-ups, ambiguous, off-topic) goes to the live LLM
   if(det){ addMsg('bot', det.message, { repo:det.repo, alts:det.alts }); return; }
   let url=groundedUrl();
   if(!url){ const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); return; }   // no backend configured → silent Local (mode switch already offered to set a URL; no per-message nag)
