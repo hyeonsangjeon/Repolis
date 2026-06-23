@@ -26,9 +26,9 @@
 //   GROUNDED_MAX_RUNTIME_S optional KB runtime budget seconds (default 30; KB requires 11–599)
 //   ALLOW_ORIGIN           optional, e.g. https://<you>.github.io (default *)
 
-// --- Scholar/engineer NPC MCP servers (public, read-only; the Worker calls them directly,
-// so these need no Azure Knowledge Base and no key). The allowlist stops clients from
-// pointing the Worker at arbitrary MCP endpoints. Each maps one town NPC → one hosted MCP. ---
+// --- Direct-MCP fallback for scholar NPCs. Used ONLY when the scholar's Azure Knowledge
+// Base is unreachable/unconfigured (clone-friendly, keyless). Normally scholars go through
+// the shared KB-retrieve pipeline below (GPT synthesis in the user's language + trace). ---
 const MCP_NPCS = {
   msdocs: {
     url: "https://learn.microsoft.com/api/mcp",
@@ -37,6 +37,26 @@ const MCP_NPCS = {
     source: "Microsoft Learn (MCP)",
   },
 };
+
+// One town NPC → one grounded Knowledge Base (+ its MCP Knowledge Source). Every scholar
+// shares the SAME Azure AI Search KB-retrieve pipeline (gpt-5.4-mini answerSynthesis,
+// multi-turn, "how I found this" trace); only kb/ks differ. `ride` = the taxi can drive you
+// to a repo, scholars just cite docs. See SCHOLARS.md. Any name is env-overridable.
+function scholarConfig(npc, env) {
+  const reg = {
+    taxi: {
+      kb: env.SEARCH_KB_NAME || "repolis-github-kb",
+      ks: env.SEARCH_KS_NAME || "github-repos-mcp-ks",
+      ride: true,
+    },
+    msdocs: {
+      kb: env.MSDOCS_KB_NAME || "repolis-mslearn-kb",
+      ks: env.MSDOCS_KS_NAME || "microsoft-learn-mcp-ks",
+      ride: false,
+    },
+  };
+  return reg[npc] || null;
+}
 
 // Streamable-HTTP MCP responses come back as SSE ("data: {json}" lines).
 function parseSSE(text) {
@@ -157,6 +177,46 @@ function pickRepo(answer, refs) {
   return null;
 }
 
+// Scholar references are documentation links, not repos: title + url for the trace panel.
+// (MS Learn refs carry the title at the top level; sourceData holds the JSON doc when
+// includeReferenceSourceData is on.)
+function parseDocs(references) {
+  const out = [], seen = new Set();
+  for (const r of references || []) {
+    if (!r) continue;
+    let title = r.title || "";
+    let url = "";
+    const sd = r.sourceData;
+    const c = sd && (typeof sd === "object" ? sd.content : sd);
+    if (typeof c === "string") {
+      try { const o = JSON.parse(c); title = o.title || title; url = o.contentUrl || o.url || url; }
+      catch { /* plain snippet */ }
+    } else if (c && typeof c === "object") {
+      title = c.title || title; url = c.contentUrl || c.url || url;
+    }
+    if (!url && sd && typeof sd === "object") url = sd.contentUrl || sd.url || "";
+    title = String(title).slice(0, 160);
+    const k = url || title;
+    if ((title || url) && !seen.has(k)) { seen.add(k); out.push({ name: title, url }); }
+  }
+  return out;
+}
+
+// Thread recent chat history into the KB as a multi-turn conversation so follow-ups
+// ("그건 AWS꺼잖아", "다른 건?") keep context. History items are { role, text }; newest
+// question goes last. Capped so the request stays small.
+function buildMessages(history, question) {
+  const msgs = [];
+  const hist = Array.isArray(history) ? history.slice(-8) : [];
+  for (const h of hist) {
+    if (!h || !h.text) continue;
+    const role = h.role === "assistant" ? "assistant" : "user";
+    msgs.push({ role, content: [{ type: "text", text: String(h.text).slice(0, 600) }] });
+  }
+  msgs.push({ role: "user", content: [{ type: "text", text: String(question).slice(0, 500) }] });
+  return msgs;
+}
+
 function corsHeaders(env) {
   return {
     "Access-Control-Allow-Origin": env.ALLOW_ORIGIN || "*",
@@ -172,6 +232,62 @@ function json(obj, status, env) {
   });
 }
 
+// Shared Azure AI Search KB-retrieve for every scholar. Returns parsed pieces on success,
+// or { fallback:true, reason } when the KB is unconfigured/slow/erroring so the caller can
+// fall back (direct MCP for scholars, Local search for the taxi).
+async function groundedRetrieve(cfg, messages, env) {
+  const endpoint = env.SEARCH_ENDPOINT;
+  const key = env.SEARCH_API_KEY;
+  const apiVersion = env.SEARCH_API_VERSION || "2026-05-01-preview";
+  const timeoutMs = Number(env.GROUNDED_TIMEOUT_MS || 25000); // CF: no ~10s wall, let the slow KB finish
+  const maxRuntime = Number(env.GROUNDED_MAX_RUNTIME_S || 30); // KB requires 11–599
+  if (!endpoint || !key || !cfg.kb) return { fallback: true, reason: "grounding not configured" };
+
+  const ksList = (cfg.ks || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const url = `${endpoint.replace(/\/$/, "")}/knowledgebases/${cfg.kb}/retrieve?api-version=${apiVersion}`;
+  const payload = {
+    messages,
+    includeActivity: true,
+    knowledgeSourceParams: ksList.map((name) => ({
+      kind: "mcpServer", knowledgeSourceName: name, includeReferences: true, includeReferenceSourceData: true,
+    })),
+    outputMode: "answerSynthesis",
+    maxRuntimeInSeconds: maxRuntime,
+  };
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const started = Date.now();
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "api-key": key },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    // 200 OK or 206 Partial (ran the budget but returned usable refs) are both fine.
+    if (r.status !== 200 && r.status !== 206) {
+      const detail = (await r.text().catch(() => "")).slice(0, 200);
+      return { fallback: true, reason: "kb " + r.status, detail };
+    }
+    const data = await r.json();
+    const blocks = data.response?.[0]?.content || [];
+    let answer = "";
+    for (const c of blocks) if (c.type === "text") answer += c.text;
+    answer = answer.replace(/\s*\[ref_id:\d+\]/g, "").trim(); // strip citation markers for the chat bubble
+    const tools = [...new Set((data.references || []).map((x) => x.toolName).filter(Boolean))];
+    const mcpMs = (data.activity || [])
+      .filter((a) => a.type === "mcpServer")
+      .reduce((s, a) => s + (a.elapsedMs || 0), 0);
+    return { ok: true, status: r.status, data, answer, tools, mcpMs, totalMs: Date.now() - started };
+  } catch (e) {
+    clearTimeout(timer);
+    const reason = e.name === "AbortError" ? "timeout " + timeoutMs + "ms" : String(e).slice(0, 160);
+    return { fallback: true, reason };
+  }
+}
+
 export default {
   async fetch(request, env) {
     const headers = corsHeaders(env);
@@ -181,94 +297,46 @@ export default {
     }
     if (request.method !== "POST") return json({ error: "POST only" }, 405, env);
 
-    let question, npc;
+    let question, npc, history;
     try {
-      ({ question, npc } = await request.json());
+      ({ question, npc, history } = await request.json());
     } catch {
       return json({ error: "bad body" }, 400, env);
     }
     if (!question) return json({ error: "question required" }, 400, env);
 
-    // Scholar/engineer NPCs answer from their own public MCP server (no Azure, no key).
-    if (npc && MCP_NPCS[npc]) return mcpAsk(npc, question, env);
+    // Route to a scholar config (taxi by default). Every scholar shares the KB pipeline;
+    // only the knowledge base / source differ. Multi-turn history is threaded in.
+    const who = npc && scholarConfig(npc, env) ? npc : "taxi";
+    const cfg = scholarConfig(who, env);
+    const messages = buildMessages(history, question);
 
-    // --- default (taxi driver): Azure AI Search KB → live GitHub MCP ---
-    const endpoint = env.SEARCH_ENDPOINT;
-    const key = env.SEARCH_API_KEY;
-    const kb = env.SEARCH_KB_NAME;
-    const ksList = (env.SEARCH_KS_NAME || "github-repos-mcp-ks")
-      .split(",").map((s) => s.trim()).filter(Boolean);   // attach N MCP sources to one KB
-    const apiVersion = env.SEARCH_API_VERSION || "2026-05-01-preview";
-    const timeoutMs = Number(env.GROUNDED_TIMEOUT_MS || 25000); // CF: no ~10s wall, let the slow KB finish
-    const maxRuntime = Number(env.GROUNDED_MAX_RUNTIME_S || 30); // KB requires 11–599
+    const out = await groundedRetrieve(cfg, messages, env);
 
-    // No KB configured → tell the client to use Local search (silent fallback).
-    if (!endpoint || !key || !kb) {
-      return json({ fallback: true, reason: "grounding not configured" }, 200, env);
+    // KB unreachable / slow / unconfigured / empty. A scholar with its own public MCP falls
+    // back to a direct keyless call (clone-friendly); the taxi tells the client to use Local.
+    if (out.fallback || (!out.answer && !(out.data?.references || []).length)) {
+      if (MCP_NPCS[who]) return mcpAsk(who, question, env);
+      return json({ fallback: true, reason: out.reason || "empty grounding", detail: out.detail }, 200, env);
     }
 
-    const url = `${endpoint.replace(/\/$/, "")}/knowledgebases/${kb}/retrieve?api-version=${apiVersion}`;
-    const payload = {
-      messages: [{ role: "user", content: [{ type: "text", text: String(question).slice(0, 500) }] }],
-      includeActivity: true,
-      knowledgeSourceParams: ksList.map((name) => ({
-        kind: "mcpServer", knowledgeSourceName: name, includeReferences: true, includeReferenceSourceData: true,
-      })),
-      outputMode: "answerSynthesis",
-      maxRuntimeInSeconds: maxRuntime,
-    };
-
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-    const started = Date.now();
-    try {
-      const r = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "api-key": key },
-        body: JSON.stringify(payload),
-        signal: ctrl.signal,
-      });
-      clearTimeout(timer);
-
-      // 200 OK or 206 Partial (ran the budget but returned usable refs) are both fine.
-      if (r.status !== 200 && r.status !== 206) {
-        const detail = (await r.text().catch(() => "")).slice(0, 200);
-        return json({ fallback: true, reason: "kb " + r.status, detail }, 200, env);
-      }
-
-      const data = await r.json();
-      const blocks = data.response?.[0]?.content || [];
-      let answer = "";
-      for (const c of blocks) if (c.type === "text") answer += c.text;
-      answer = answer.replace(/\s*\[ref_id:\d+\]/g, "").trim(); // strip citation markers for the chat bubble
-
-      const refs = parseRefs(data.references);
-      if (!answer && !refs.length) {
-        return json({ fallback: true, reason: "empty grounding" }, 200, env);
-      }
-
-      const repo = pickRepo(answer, refs);
-      const tools = [...new Set((data.references || []).map((x) => x.toolName).filter(Boolean))];
-      const mcpMs = (data.activity || [])
-        .filter((a) => a.type === "mcpServer")
-        .reduce((s, a) => s + (a.elapsedMs || 0), 0);
-
+    if (cfg.ride) {
+      // Taxi driver → pick the best repo so the client can drive there.
+      const refs = parseRefs(out.data.references);
+      const repo = pickRepo(out.answer, refs);
       return json({
         repo,
-        message: answer,
-        trace: {
-          ks: ksList.join(", "),
-          tools,
-          refs: refs.slice(0, 6),
-          mcpMs,
-          totalMs: Date.now() - started,
-          partial: r.status === 206,
-        },
+        message: out.answer,
+        trace: { ks: cfg.ks, tools: out.tools, refs: refs.slice(0, 6), mcpMs: out.mcpMs, totalMs: out.totalMs, partial: out.status === 206 },
       }, 200, env);
-    } catch (e) {
-      clearTimeout(timer);
-      const reason = e.name === "AbortError" ? "timeout " + timeoutMs + "ms" : String(e).slice(0, 160);
-      return json({ fallback: true, reason }, 200, env);
     }
+
+    // Scholar (e.g. MS Docs engineer) → synthesized answer in the user's language + doc links.
+    const docs = parseDocs(out.data.references);
+    return json({
+      repo: null,
+      message: out.answer,
+      trace: { ks: cfg.ks, tools: out.tools, refs: docs.slice(0, 6), docs: true, mcpMs: out.mcpMs, totalMs: out.totalMs, partial: out.status === 206 },
+    }, 200, env);
   },
 };

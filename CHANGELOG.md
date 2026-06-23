@@ -3,7 +3,19 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
-## [1.4.0] — 2026-06-23
+## [1.5.0] — 2026-06-23
+
+### 🏛️ Every scholar grounded by Foundry MCP Knowledge Sources
+- **Unified all town NPCs on one Azure AI Search KB‑retrieve pipeline.** The **MS Docs engineer** no longer dumps raw doc snippets — it now answers through its own **Foundry MCP Knowledge Source** (`microsoft-learn-mcp-ks`) and a persona **Knowledge Base** (`repolis-mslearn-kb`), so replies are **synthesised by `gpt-5.4-mini` in the user's own language** with a doc‑link trace. Ask in Korean → get Korean (fixes the earlier Korean‑question‑English‑answer bug). The taxi driver and the engineer now share a single `groundedRetrieve()` path in the Worker; only the `{ kb, ks }` differ per NPC.
+- **🗂️ [`SCHOLARS.md`](SCHOLARS.md)** — an awesome‑style registry that is the single source of truth for every scholar (NPC · domain · MCP server · auth · tool · Knowledge Source · Knowledge Base), with KS/KB JSON shapes and a 5‑step "add a scholar" guide.
+- **🛠️ [`scripts/register_scholar_ks.sh`](scripts/register_scholar_ks.sh)** — one command registers a scholar's MCP Knowledge Source **and** clones a persona Knowledge Base (model binding copied from an existing KB). Keyless servers (e.g. Microsoft Learn) need no auth; private servers pass `AUTH_HEADER`.
+
+### 💬 Memory + meta‑routing
+- **Multi‑turn memory** — the chat now threads recent conversation history to the Worker (`history[]` → KB `messages[]`), so follow‑ups like *"다른 건?"* or *"그건 어떻게 시작해?"* keep context instead of starting over.
+- **Town meta‑questions answered locally** — *"현자 몇 명이야?"*, *"몇 명이 물어봤어?"* and *"레포 몇 개야?"* are answered instantly from town data and **never spend a Knowledge‑Source call**; off‑topic questions get a friendly reply, while genuine repo questions and mid‑thread follow‑ups still reach the live LLM.
+- **Clone‑friendly fallback kept** — if a scholar's KB isn't configured, the Worker still answers via a direct keyless MCP call, so a no‑Azure clone keeps working.
+
+
 
 ### 📘 Knowledge NPCs — talk to MCP‑grounded experts (NPC = MCP)
 - New **MS Docs engineer NPC** in the plaza: walk up and ask about Azure, .NET or Copilot, and it answers from the **official Microsoft Learn docs in real time** via the hosted **Microsoft Learn MCP server** (`learn.microsoft.com/api/mcp`) — **keyless and free** (this NPC needs no Azure and no key). Each answer shows a **trace panel** linking the source docs.

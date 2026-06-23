@@ -445,6 +445,7 @@ const I18N = {
     engNone:'관련 문서를 못 찾았어요. 조금 다르게 물어봐 주실래요?',
     engErr:'문서를 찾는 중 문제가 생겼어요 😅 잠시 후 다시 시도해 주세요.',
     engNoBackend:'문서 검색 백엔드(MCP)가 연결돼 있지 않아요. 라이브 사이트에서 사용해 주세요 📘',
+    engAbout:'저는 <b>Microsoft Learn MCP</b>에 연결된 <b>MS Docs 엔지니어</b>예요 📘 Azure AI Search Foundry의 <b>Knowledge Source</b>로 공식 Microsoft Learn 문서를 실시간 검색하고, <b>gpt-5.4-mini</b>가 여러분의 언어로 답을 정리해 드려요. 무엇이 궁금하세요?',
     taxiStand:'택시 정류장',
     libName:'기여 도서관', libSign:'LIBRARY 도서관',
     libReached:'에 도착! <span class="key">Enter</span> 또는 클릭으로 입장',
@@ -512,6 +513,7 @@ const I18N = {
     engNone:"Couldn't find relevant docs. Want to rephrase?",
     engErr:'Something went wrong searching the docs 😅 Please try again.',
     engNoBackend:"The docs backend (MCP) isn't connected. Try it on the live site 📘",
+    engAbout:"I'm the <b>MS Docs engineer</b>, wired to the <b>Microsoft Learn MCP</b> 📘 I search the official Microsoft Learn docs through an Azure AI Search Foundry <b>Knowledge Source</b>, and <b>gpt-5.4-mini</b> composes the answer in your language. What would you like to know?",
     taxiStand:'TAXI STAND',
     libName:'Contribution Library', libSign:'LIBRARY 도서관',
     libReached:' reached! <span class="key">Enter</span> or click to enter',
@@ -2194,6 +2196,12 @@ const driveBar=document.getElementById('drivebar'), driveNameEl=document.getElem
 let llmMode=localStorage.getItem('taxiMode')||'local', chatGreeted=false, busy=false; modeSel.value=llmMode;
 
 function scrollChat(){ chatLog.scrollTop=chatLog.scrollHeight; }
+/* ---- multi-turn memory: thread recent Q&A so follow-ups keep context ---- */
+let chatHistory=[];                                                   // {role:'user'|'assistant', text}
+function stripHtml(h){ const d=document.createElement('div'); d.innerHTML=String(h||''); return (d.textContent||d.innerText||'').replace(/\s+/g,' ').trim().slice(0,600); }
+function pushHist(role,text){ const s=stripHtml(text); if(!s) return; chatHistory.push({role,text:s}); if(chatHistory.length>12) chatHistory=chatHistory.slice(-12); }
+function recentHist(){ return chatHistory.slice(-8); }
+function priorHist(){ const h=recentHist(); return (h.length&&h[h.length-1].role==='user')? h.slice(0,-1):h; }   // history minus the current question (the worker appends it)
 function addMsg(who,html,opts){
   const m=document.createElement('div'); m.className='msg '+who; m.innerHTML=html;
   if(opts&&opts.repo){ const r=document.createElement('div'); r.className='ride'; r.innerHTML=t('rideThere');
@@ -2203,7 +2211,12 @@ function addMsg(who,html,opts){
       c.onclick=()=>{ addMsg('me',a.label); replyFor(a,t('soLead')); }; wrap.appendChild(c); });
     m.appendChild(wrap); }
   if(opts&&opts.trace){ m.appendChild(buildTracePanel(opts.trace)); }
-  chatLog.appendChild(m); scrollChat(); return m;
+  chatLog.appendChild(m); scrollChat();
+  if(!(opts&&opts.noHist)){                                          // record real turns; skip "searching…"/typing/greeting chrome
+    if(who==='me') pushHist('user', stripHtml(html));
+    else if(who==='bot') pushHist('assistant', stripHtml(html));
+  }
+  return m;
 }
 function buildTracePanel(tr){
   const d=document.createElement('details'); d.className='trace';
@@ -2227,9 +2240,9 @@ function applyNpcChrome(n){ const eng=n&&n.kind==='msdocs';
   if(chatHeadTtl) chatHeadTtl.innerHTML = eng? t('engTitle') : t('taxiTitle');
   modeSel.style.display = eng?'none':''; chatText.placeholder = eng? t('engPh') : t('chatPh'); }
 function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); chatEl.classList.remove('hidden');
-  if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; }           // switching NPC resets the thread
+  if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; chatHistory=[]; }   // switching NPC resets the thread + memory
   applyNpcChrome(npc);
-  if(!chatGreeted){ chatGreeted=true; addMsg('bot', npcGreet(npc)); }
+  if(!chatGreeted){ chatGreeted=true; addMsg('bot', npcGreet(npc), {noHist:true}); }
   setTimeout(()=>chatText.focus(),60); }
 function closeChat(){ chatEl.classList.add('hidden'); }
 
@@ -2288,9 +2301,43 @@ function needsSearch(q){
   if(searchCandidates(q,8).strong) return true;
   return /레포|repo|저장소|프로젝트|project|코드|커밋|commit|푸시|push|이슈|issue|readme|라이브러리|library|도서관|fork|포크|clone|클론|데모|demo|github|깃헙|깃허브|스타\b|\bstars?\b|만든|개발|최근|recent|latest|업데이트|update|보여|show|데려다|소개|introduce|알려줘|tell me|버전|version|토픽|topic/i.test(q);
 }
+/* meta questions about the town itself (how many scholars / repos / who asked) → answer from
+   data, never spend a Knowledge-Source call. Bilingual via inline LANG. */
+function townMeta(q){
+  const ql=q.toLowerCase();
+  const howMany=/(몇|얼마나|개수|숫자|how many|number of|count|how much)/;
+  // "몇 명이 물어봤어?" / visitor counts — not tracked
+  if(/(물어봤|물어 ?봤|물어보았|질문했|얼마나.*물어|몇.*물어|방문자|방문 ?수|visitors?|how many (?:people|users|asked)|who asked)/.test(ql))
+    return LANG==='ko'
+      ? `방문자 수는 따로 세고 있지 않아요 😊 그래도 ${REPOS.length}개의 레포가 늘 여러분을 기다리고 있답니다.`
+      : `I don't keep a visitor count 😊 but all ${REPOS.length} repos are always here waiting for you.`;
+  // how many scholars / NPCs
+  if(howMany.test(ql) && /(현자|학자|npc|엔지니어|기사|주민|캐릭터|scholars?|npcs?|characters?|residents?)/.test(ql)){
+    const scholars=NPCS.filter(n=>n.kind!=='taxi').length, total=NPCS.length;
+    return LANG==='ko'
+      ? `이 도시에는 택시 기사 1명과 현자 ${scholars}명, 모두 ${total}명의 NPC가 있어요. 누구와 이야기해 볼까요? 🙂`
+      : `This town has 1 taxi driver and ${scholars} scholar(s) — ${total} NPCs in total. Who would you like to talk to? 🙂`;
+  }
+  // how many repos / buildings
+  if(howMany.test(ql) && /(레포|repo|저장소|프로젝트|project|building|건물|집)/.test(ql))
+    return LANG==='ko'
+      ? `이 도시에는 ${REPOS.length}개의 레포가 건물로 서 있어요. 어떤 걸 구경해 볼까요?`
+      : `There are ${REPOS.length} repositories standing as buildings here. Which one would you like to see?`;
+  return null;
+}
+/* engineer "what are you / how do you work / which MCP·model" → self-description, no MCP call */
+function engMeta(q){
+  const ql=q.toLowerCase();
+  if(/(어떻게|무슨|어떤|뭐로|뭘로|what|which|how)[^]*?(만들|동작|작동|이뤄|기반|데이터|문서|소스|출처|mcp|모델|model|답해|대답|채팅|chat|work|built|made|powered)/.test(ql)
+     || /(mcp|모델|model)[^]*?(뭐|무엇|what|which)/.test(ql)
+     || /(누가 ?만들|넌 ?뭐|정체|who built|what kind of (?:bot|chat))/.test(ql))
+    return t('engAbout');
+  return null;
+}
 function _coreIntent(q){
   const ql=q.toLowerCase();
   const st=smalltalk(q); if(st) return { repo:null, message:t(st), alts:[] };
+  const meta=townMeta(q); if(meta) return { repo:null, message:meta, alts:[] };
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
   if(/인기|제일|최고|많이|핫|\bpopular\b|\bbest\b|\btop\b|\bhot\b/.test(ql)){ const a=byRank(); return M(pick(a[0],t('leadPopular'),a.slice(1,4))); }
   if(/아무|랜덤|골라|추천만|\brandom\b/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
@@ -2388,15 +2435,17 @@ async function proxyAsk(q){
 const GROUNDED_DEFAULT='https://repolis-taxi.wingnut0310.workers.dev/';
 function groundedUrl(){ return localStorage.getItem('taxiGroundedUrl')||GROUNDED_DEFAULT; }
 async function groundedAsk(q){
-  const det=_coreIntent(q);                                          // greeting/library/metric → instant local; everything else (repo Qs, follow-ups, ambiguous, off-topic) goes to the live LLM
+  const det=_coreIntent(q);                                          // greeting/library/metric/town-meta → instant local; everything else (repo Qs, follow-ups, ambiguous) goes to the live LLM
   if(det){ addMsg('bot', det.message, { repo:det.repo, alts:det.alts }); return; }
+  const followup = priorHist().length && /다른|또\b|더\b|그건|그거|그게|그럼|그러면|말고|아니|이전|방금|저번|other|another|more|else|instead|what about|how about/i.test(q);
+  if(!needsSearch(q) && !followup){ addMsg('bot', t('stOfftopic')); return; }   // off-topic → friendly reply; but mid-thread follow-ups ("다른 건?") still reach the LLM with history
   let url=groundedUrl();
   if(!url){ const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); return; }   // no backend configured → silent Local (mode switch already offered to set a URL; no per-message nag)
-  const sb=addMsg('bot', t('groundedSearching')); sb.classList.add('typing');   // phase 1: instant "searching" bubble
+  const sb=addMsg('bot', t('groundedSearching'), {noHist:true}); sb.classList.add('typing');   // phase 1: instant "searching" bubble
   const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||9500;  // configurable (Pro: raise w/ maxDuration)
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), tmo);
   try{
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q}),signal:ctrl.signal});
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,history:priorHist(),lang:LANG}),signal:ctrl.signal});
     clearTimeout(to);
     if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json();
@@ -2415,28 +2464,36 @@ async function groundedAsk(q){
 const ENG_SM={ greetReply:'engGreet', stThanks:'engThanks', stBye:'engBye', stHow:'engHow', stWho:'engWho', stHelp:'engHelp', stNice:'engNice' };
 async function askScholar(q, npc){
   const sm=smalltalk(q); if(sm){ addMsg('bot', t(ENG_SM[sm]||sm)); return; }    // greet/thanks in the engineer's voice, no MCP call
+  const meta=engMeta(q)||townMeta(q); if(meta){ addMsg('bot', meta); return; }  // "what are you / how many scholars" → instant, no MCP call
   const url=groundedUrl();
   if(!url){ addMsg('bot', t('engNoBackend')); return; }                // self-hosted clone without the worker
-  const sb=addMsg('bot', t('engSearching')); sb.classList.add('typing');
-  const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||12000;
+  const sb=addMsg('bot', t('engSearching'), {noHist:true}); sb.classList.add('typing');
+  const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||30000;   // KB synthesis (search+GPT) can take ~5–20s
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),tmo);
   try{
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,npc}),signal:ctrl.signal});
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,npc,history:priorHist(),lang:LANG}),signal:ctrl.signal});
     clearTimeout(to); if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json(); sb.remove();
-    if(data.fallback||!data.items||!data.items.length){ addMsg('bot', t('engNone')); return; }
-    const top=data.items[0]; let msg=t('engIntro');
-    if(top.title) msg+='<br><br><b>'+esc(top.title)+'</b>';
-    if(top.snippet) msg+='<br>'+esc(top.snippet);
-    const tr=data.trace||{};
-    const trace={ ks:tr.source, tools:[tr.tool].filter(Boolean), refs:(data.items||[]).map(i=>({name:i.title,url:i.url})), mcpMs:tr.mcpMs };
-    addMsg('bot', msg, { trace });                                     // reuses the taxi's 'how I found this' panel
+    if(data.message){                                                 // grounded KB synthesis (preferred): answer already in the user's language
+      const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
+      addMsg('bot', msg, { trace:data.trace });                       // reuses the taxi's 'how I found this' panel (refs = doc links)
+      return;
+    }
+    if(data.items&&data.items.length){                                // direct-MCP fallback shape (KB unconfigured clone)
+      const top=data.items[0]; let msg=t('engIntro');
+      if(top.title) msg+='<br><br><b>'+esc(top.title)+'</b>';
+      if(top.snippet) msg+='<br>'+esc(top.snippet);
+      const tr=data.trace||{};
+      const trace={ ks:tr.source, tools:[tr.tool].filter(Boolean), refs:(data.items||[]).map(i=>({name:i.title,url:i.url})), mcpMs:tr.mcpMs };
+      addMsg('bot', msg, { trace }); return;
+    }
+    addMsg('bot', t('engNone'));
   }catch(e){ clearTimeout(to); sb.remove(); addMsg('bot', t('engErr')); }
 }
 async function askDriver(q){
   if(activeNpc&&activeNpc.kind==='msdocs') return askScholar(q, activeNpc.kind);
   if(llmMode==='grounded') return groundedAsk(q);                     // self-manages its own 2-phase messaging
-  const tb=addMsg('bot','…'); tb.classList.add('typing');
+  const tb=addMsg('bot','…',{noHist:true}); tb.classList.add('typing');
   let r; try{ r = llmMode==='webllm'?await webllmAsk(q) : llmMode==='proxy'?await proxyAsk(q) : localIntent(q); }
   finally{ tb.remove(); }
   if(r) addMsg('bot', r.message, { repo:r.repo, alts:r.alts });
@@ -2457,7 +2514,7 @@ function taxiTo(repo){ standUp(); ride={repo, phase:'coming', t:0}; setNav(repo)
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
 function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; openChat();
-  addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`));
+  addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
   setTimeout(()=>openCard(repo),500); }
 
 /* ---- wiring ---- */

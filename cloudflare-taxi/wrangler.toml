@@ -13,6 +13,10 @@ workers_dev = true
 [vars]
 SEARCH_KB_NAME = "repolis-github-kb"
 SEARCH_KS_NAME = "github-repos-mcp-ks"
+# Scholar NPCs share the same KB-retrieve pipeline; each just points at its own KB + MCP
+# knowledge source (see SCHOLARS.md). Defaults are baked into src/grounded.js — override here:
+MSDOCS_KB_NAME = "repolis-mslearn-kb"
+MSDOCS_KS_NAME = "microsoft-learn-mcp-ks"
 SEARCH_API_VERSION = "2026-05-01-preview"
 GROUNDED_MAX_RUNTIME_S = "30"
 GROUNDED_TIMEOUT_MS = "25000"
