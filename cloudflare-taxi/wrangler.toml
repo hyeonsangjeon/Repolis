@@ -21,9 +21,25 @@ SEARCH_API_VERSION = "2026-05-01-preview"
 GROUNDED_MAX_RUNTIME_S = "30"
 GROUNDED_TIMEOUT_MS = "25000"
 
+# General-knowledge fallback: scholars answer off-KB questions (trivia, lore, small talk) in
+# persona via a direct Azure OpenAI chat-completion, authenticated keyless with an Entra ID
+# service principal. These two are generic defaults (safe to commit); the account-specific
+# endpoint/tenant/client id and the secret are kept out of git (see below + wrangler secret).
+AOAI_DEPLOYMENT = "gpt-5.4-mini"
+AOAI_API_VERSION = "2025-04-01-preview"
+
 # Set your Azure AI Search endpoint (not secret, but account-specific). Either
 # uncomment + edit here, or keep it out of git with `wrangler secret put SEARCH_ENDPOINT`:
 # SEARCH_ENDPOINT = "https://<your-search>.search.windows.net"
+
+# Entra ID service principal for the general-knowledge fallback (account-specific). Keep
+# these OUT of git — set with `wrangler secret put` (and mirror into .dev.vars for local dev):
+#   wrangler secret put AOAI_ENDPOINT      # https://<your-aoai>.cognitiveservices.azure.com
+#   wrangler secret put AAD_TENANT         # directory (tenant) id
+#   wrangler secret put AAD_CLIENT_ID      # service principal appId
+#   wrangler secret put AAD_CLIENT_SECRET  # service principal password (the only true secret)
+# Create the SP once:  az ad sp create-for-rbac --name repolis-taxi-aoai \
+#   --role "Cognitive Services OpenAI User" --scopes <aoai-resource-id>
 
 # (Optional) lock CORS to your Pages origin so only your site can call it. Default is "*".
 # ALLOW_ORIGIN = "https://<you>.github.io"

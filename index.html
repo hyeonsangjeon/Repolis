@@ -435,8 +435,10 @@ const I18N = {
     modeGroundedOpt:'🛰️ AI Foundry Live',
     modeGroundedMsg:'🛰️ AI Foundry Live 모드예요. GitHub을 실시간으로 찾아 안내해요! (Azure AI Search + MCP)',
     groundedSearching:'MS Foundry MCP KS로 GitHub 찾아볼게요 🔍',
+    taxiThinking:'별빛에 비춰 잠깐 헤아려볼게요 ✦',
     groundedPromptUrl:'AI Foundry Live API URL을 입력하세요 (없으면 비워두세요 → 키 없이 로컬검색으로 동작)\n예: https://your-app.vercel.app/api/taxi-grounded',
     traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceRefs:'참조',
+    traceGenTitle:'✦ 어떻게 답했나', traceGeneral:'별빛에 깃든 일반 지식에서 답했어요',
     npcTaxi:'택시기사', npcEng:'MS Docs 엔지니어', engTitle:'📘 MS Docs 엔지니어',
     engThanks:'도움이 됐다니 기뻐요! 📘 더 궁금한 게 있으면 물어보세요.', engBye:'또 궁금한 게 생기면 찾아오세요! 📘', engHow:'저야 늘 문서 읽느라 바쁘죠 😄 어떤 Microsoft 기술이 궁금하세요?', engWho:'저는 <b>MS Docs 엔지니어</b>예요 📘 Microsoft Learn 공식 문서에서 답을 찾아드려요. 무엇이 궁금하세요?', engHelp:'Azure·.NET·Copilot 같은 Microsoft 기술을 물어보세요 📘 <b>공식 문서</b>에서 실시간으로 찾아드려요. 예: “Azure AI Foundry 에이전트”', engNice:'감사해요! 😊 더 찾아드릴 게 있을까요?',
     engGreet:'안녕하세요! 📘 저는 <b>Microsoft Docs 엔지니어</b>예요. Azure·.NET·Copilot 같은 <b>Microsoft Learn 공식 문서</b>를 실시간으로 찾아드려요. 무엇이 궁금하세요? 예: <b>Azure AI Foundry 에이전트</b>, <b>Azure AI Search</b>',
@@ -503,8 +505,10 @@ const I18N = {
     modeGroundedOpt:'🛰️ AI Foundry Live',
     modeGroundedMsg:'🛰️ AI Foundry Live mode. I search GitHub in real time (Azure AI Search + MCP)!',
     groundedSearching:'Searching GitHub via the MS Foundry MCP KS 🔍',
+    taxiThinking:'Let me reckon by the starlight ✦',
     groundedPromptUrl:'Enter your AI Foundry Live API URL (or leave blank → keyless Local search)\ne.g. https://your-app.vercel.app/api/taxi-grounded',
     traceTitle:'🔎 How I found this', traceKs:'Knowledge source', traceTool:'MCP tool', traceRefs:'References',
+    traceGenTitle:'✦ How I answered', traceGeneral:'Answered from general starlit knowledge',
     npcTaxi:'Taxi driver', npcEng:'MS Docs Engineer', engTitle:'📘 MS Docs Engineer',
     engThanks:"Glad it helped! 📘 Ask me anything else.", engBye:"Come back whenever you have a question! 📘", engHow:"Always busy reading docs 😄 What Microsoft tech can I help with?", engWho:"I'm the <b>MS Docs engineer</b> 📘 I find answers in the official Microsoft Learn docs. What do you need?", engHelp:'Ask about Azure, .NET, Copilot and other Microsoft tech 📘 I search the <b>official docs</b> in real time. e.g. “Azure AI Foundry agent”', engNice:"Thank you! 😊 Anything else I can look up?",
     engGreet:"Hi! 📘 I'm the <b>Microsoft Docs engineer</b>. I search the <b>official Microsoft Learn docs</b> (Azure, .NET, Copilot…) in real time. What do you need? e.g. <b>Azure AI Foundry agent</b>, <b>Azure AI Search</b>",
@@ -565,9 +569,10 @@ const _maxScore = Math.max(0.001, ...REPOS.map(r=>r.score||0));
 const app = document.getElementById('app');
 const renderer = new THREE.WebGLRenderer({ antialias:true });
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));     // 화질 원복(선명도 우선). 무손실 최적화는 shadow autoUpdate + 유휴 fps 캡에서.
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;                     // perf: 태양·건물 고정 → 그림자는 활동 중에만 갱신(animate), 유휴 시 동결
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.08;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -701,7 +706,7 @@ function updateFountains(dt){
 const hemi = new THREE.HemisphereLight(0xcfeee8, 0x86996a, 0.85); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe2b0, 1.45);
 sun.position.set(38, 46, 30); sun.castShadow = true;
-sun.shadow.mapSize.set(2048,2048);
+sun.shadow.mapSize.set(2048,2048);   // 화질 원복(그림자 선명). autoUpdate=false라 유휴 시 재렌더 0, 활동 중에만 갱신 → 화질·성능 양립
 sun.shadow.camera.near=1; sun.shadow.camera.far=320;
 sun.shadow.camera.left=-150; sun.shadow.camera.right=150;
 sun.shadow.camera.top=150; sun.shadow.camera.bottom=-150;
@@ -1855,11 +1860,13 @@ if(LIB){ COLLIDERS.push({x:0,z:LIB._z-14,r:13}); COLLIDERS.push({x:0,z:LIB._z+14
 
 /* ---- day / night (night: window glow brightness = repo activity) ---- */
 let isNight=false;
+let lastAct=performance.now(), lastFrame=0, frame=0;   // perf: adaptive frame-rate (idle→~30fps) + frame counter for VFX throttling
 let faceLight=null, faceMat=null;   // avatar fill light + face material (assigned when avatar is built, below)
 const npcFaces=new Set();           // driver + peer head materials — given a gentle emissive at night so plaza folk aren't black
 const _cDark=new THREE.Color(0x140a03), _cWarm=new THREE.Color(0xffcf86), _cRoom=new THREE.Color(0xfff1d6);
 function setTimeOfDay(night){
   isNight=night;
+  renderer.shadowMap.needsUpdate=true; lastAct=performance.now();   // perf: 밤낮 전환 → 그림자 1회 강제 갱신 + 60fps 깨우기
   skyMat.uniforms.top.value.setHex(night?0x0a1030:0x3f93d6);
   skyMat.uniforms.mid.value.setHex(night?0x1b2348:0xa9d4ea);
   skyMat.uniforms.bot.value.setHex(night?0x3a3354:0xf8e4bf);
@@ -2318,7 +2325,8 @@ const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
 function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
-function npcPrompt(n){ const nm=(n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi');
+function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
+  const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
 function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; player.position.set(seat.x,0,seat.z); model.rotation.y=seat.rot; camYaw=seat.rot+Math.PI; walk=0; }
 function standUp(){ sitting=null; }
@@ -2356,8 +2364,15 @@ function addMsg(who,html,opts){
 }
 function buildTracePanel(tr){
   const d=document.createElement('details'); d.className='trace';
-  const s=document.createElement('summary'); s.textContent=t('traceTitle'); d.appendChild(s);
+  const s=document.createElement('summary'); d.appendChild(s);
   const body=document.createElement('div'); body.className='traceBody';
+  if(tr.general){
+    s.textContent=t('traceGenTitle');
+    const g=document.createElement('div');
+    g.innerHTML='<b>'+t('traceGeneral')+'</b>'+(tr.model?(' · <code>'+String(tr.model).replace(/</g,'&lt;')+'</code>'):'');
+    body.appendChild(g); d.appendChild(body); return d;
+  }
+  s.textContent=t('traceTitle');
   const ks=document.createElement('div'); ks.innerHTML='<b>'+t('traceKs')+':</b> '+(tr.ks||'-');
   const tool=document.createElement('div');
   tool.innerHTML='<b>'+t('traceTool')+':</b> '+((tr.tools||[]).join(', ')||'-')+(tr.partial?' ⚠️':'')+(tr.mcpMs?(' · '+tr.mcpMs+'ms'):'');
@@ -2506,7 +2521,13 @@ function _coreIntent(q){
   const st=smalltalk(q); if(st){ const p=(st==='stWho'?scholarPersona('taxi','who'):st==='stHelp'?scholarPersona('taxi','help'):null); return { repo:null, message:p||t(st), alts:[] }; }
   const meta=townMeta(q); if(meta) return { repo:null, message:meta, alts:[] };
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
-  if(/인기|제일|최고|많이|핫|\bpopular\b|\bbest\b|\btop\b|\bhot\b/.test(ql)){ const a=byRank(); return M(pick(a[0],t('leadPopular'),a.slice(1,4))); }
+  // ✦ night-sky / cosmic small talk shares words with our metrics (별 = star, 하늘 보다…). Don't let
+  //   "밤하늘 별 보는 거 좋아해?" become a star-count sort — fall through to general chat, unless the
+  //   question is clearly about repos or star *counts*.
+  if(/밤하늘|밤 ?하늘|별자리|별빛|별똥|별 ?(보는|보기|볼래|볼까|구경|감상|봐|바라보)|하늘 ?(을 ?)?(보|올려|구경)|반짝이는 ?별|빛나는 ?별|은하수|stargaz|starlight|constellation|milky ?way|night ?sky|cosmos|stars?[^.]{0,14}night|night[^.]{0,14}stars?/i.test(ql)
+     && !/레포|repo|저장소|프로젝트|project|깃헙|깃허브|github|스타 ?(수|순|많|제일|개수|랭킹|높)|star ?(count|sort|most|rank)|많은 ?레포|인기 ?(레포|있)/.test(ql))
+    return null;
+  if(/인기|제일|최고|핫|\bpopular\b|\bbest\b|\btop\b|\bhot\b/.test(ql)){ const a=byRank(); return M(pick(a[0],t('leadPopular'),a.slice(1,4))); }
   if(/아무|랜덤|골라|추천만|\brandom\b/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
   if(/스타|별|\bstars?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>y.stars-x.stars); return M(pick(a[0],t('leadStar'),a.slice(1,4))); }
   if(/최근|새로|요즘 만든|\brecent\b|\bnew\b|\blatest\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>new Date(y.pushed)-new Date(x.pushed)); return M(pick(a[0],t('leadRecent'),a.slice(1,4))); }
@@ -2600,12 +2621,30 @@ async function proxyAsk(q){
 // 'https://repolis-taxi.<you>.workers.dev/'. Empty = the site stays Local-default and
 // each visitor can still set their own backend URL in the taxi mode prompt.
 const GROUNDED_DEFAULT='https://repolis-taxi.wingnut0310.workers.dev/';
-function groundedUrl(){ return localStorage.getItem('taxiGroundedUrl')||GROUNDED_DEFAULT; }
+function groundedUrl(){
+  const saved=localStorage.getItem('taxiGroundedUrl');
+  if(saved && /(localhost|127\.0\.0\.1)/.test(saved) && !/(localhost|127\.0\.0\.1)/.test(location.hostname)) return GROUNDED_DEFAULT;   // a saved dev URL is dead on the live site → use prod
+  return saved||GROUNDED_DEFAULT;
+}
+async function taxiChat(q){   // POLARIS general chat: smalltalk/off-topic answered by the model in persona, no KB, no repo push
+  const url=groundedUrl();
+  if(!url){ addMsg('bot', t('stOfftopic')); return; }            // no backend → plain friendly reply
+  const sb=addMsg('bot', t('taxiThinking'), {noHist:true}); sb.classList.add('typing');
+  const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||20000;
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),tmo);
+  try{
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,npc:'taxi',chat:true,history:priorHist(),lang:LANG}),signal:ctrl.signal});
+    clearTimeout(to); if(!res.ok) throw new Error('http '+res.status);
+    const data=await res.json(); sb.remove();
+    if(data.message){ addMsg('bot', esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>'), { trace:data.trace }); return; }
+    addMsg('bot', t('stOfftopic'));
+  }catch(e){ clearTimeout(to); sb.remove(); addMsg('bot', t('stOfftopic')); }
+}
 async function groundedAsk(q){
   const det=_coreIntent(q);                                          // greeting/library/metric/town-meta → instant local; everything else (repo Qs, follow-ups, ambiguous) goes to the live LLM
   if(det){ addMsg('bot', det.message, { repo:det.repo, alts:det.alts }); return; }
   const followup = priorHist().length && /다른|또\b|더\b|그건|그거|그게|그럼|그러면|말고|아니|이전|방금|저번|other|another|more|else|instead|what about|how about/i.test(q);
-  if(!needsSearch(q) && !followup){ addMsg('bot', t('stOfftopic')); return; }   // off-topic → friendly reply; but mid-thread follow-ups ("다른 건?") still reach the LLM with history
+  if(!needsSearch(q) && !followup){ await taxiChat(q); return; }   // off-topic/smalltalk → POLARIS answers from the model (general persona chat), no repo funneling; mid-thread follow-ups still reach the LLM with history
   let url=groundedUrl();
   if(!url){ const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); return; }   // no backend configured → silent Local (mode switch already offered to set a URL; no per-message nag)
   const sb=addMsg('bot', t('groundedSearching'), {noHist:true}); sb.classList.add('typing');   // phase 1: instant "searching" bubble
@@ -2732,6 +2771,11 @@ function lerpA(a,b,t){ let d=((b-a+Math.PI)%(Math.PI*2))-Math.PI; if(d<-Math.PI)
 
 function animate(){
   requestAnimationFrame(animate);
+  frame++;
+  const _now=performance.now();
+  const _idle=(_now-lastAct)>1200;                 // perf: no input/move >1.2s → idle
+  if(_idle && _now-lastFrame<33) return;            // perf: idle → cap ~30fps (VFX still smooth, GPU rests)
+  lastFrame=_now;
   const dt=Math.min(clock.getDelta(),0.05);
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
@@ -2828,9 +2872,11 @@ function animate(){
     for(let i=0;i<scholarStars.length;i++) scholarStars[i].mat.opacity=0.55+Math.sin(clock.elapsedTime*2.1+i*1.9)*0.45; }
   { const _ap=0.5+0.5*Math.sin(clock.elapsedTime*1.6), _nf=isNight?1.6:0.8;
     for(const a of auraPulse){ a.s1.material.opacity=a.b1*(0.55+0.6*_ap)*_nf; a.s2.material.opacity=a.b2*(0.6+0.6*_ap)*_nf; } }
-  { const _t=clock.elapsedTime, _arr=starDust.geometry.attributes.position.array, _b=starDust._base, _ph=starDust._ph;
-    for(let i=0;i<_ph.length;i++){ _arr[i*3]=_b[i*3]+Math.cos(_t*0.28+_ph[i])*0.45; _arr[i*3+1]=_b[i*3+1]+Math.sin(_t*0.5+_ph[i])*0.55; }
-    starDust.geometry.attributes.position.needsUpdate=true; starDust.material.opacity=isNight?0.72:0.26;
+  { const _t=clock.elapsedTime;
+    if((frame&1)===0){ const _arr=starDust.geometry.attributes.position.array, _b=starDust._base, _ph=starDust._ph;   // perf: drift every other frame (halves CPU calc + GPU upload)
+      for(let i=0;i<_ph.length;i++){ _arr[i*3]=_b[i*3]+Math.cos(_t*0.28+_ph[i])*0.45; _arr[i*3+1]=_b[i*3+1]+Math.sin(_t*0.5+_ph[i])*0.55; }
+      starDust.geometry.attributes.position.needsUpdate=true; }
+    starDust.material.opacity=isNight?0.72:0.26;
     for(const r of RUNE_MATS) r.m.opacity=r.base*(isNight?1.5:0.5)*(0.85+0.15*Math.sin(_t*0.8)); }
   updateMeteor(dt);
   { const dxp=player.position.x-driver.position.x, dzp=player.position.z-driver.position.z;
@@ -2838,6 +2884,8 @@ function animate(){
     driver.rotation.y=lerpA(driver.rotation.y,tgt,0.07);
     if(driver._head) driver._head.position.y=2.1+Math.sin(clock.elapsedTime*2)*0.03; }
   rtTick(dt);
+  if(userInput||moving||ride||dragging||navTarget) lastAct=_now;   // perf: dynamic state → stay 60fps + refresh shadows next frames
+  if(!_idle) renderer.shadowMap.needsUpdate=true;                  // perf: refresh shadow map only while active; frozen when idle
   renderer.render(scene,camera);
 }
 requestAnimationFrame(animate);

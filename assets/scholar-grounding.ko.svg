@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" width="1200" height="760" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue','Apple SD Gothic Neo','Malgun Gothic',Arial,sans-serif" role="img" aria-label="Repolis 현자들이 답하는 법 — 지식 베이스 그라운딩과 별빛 일반 대화">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#060b1c"/>
+      <stop offset="0.55" stop-color="#0c1430"/>
+      <stop offset="1" stop-color="#131d40"/>
+    </linearGradient>
+    <radialGradient id="milky" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6e7bd8" stop-opacity="0.30"/>
+      <stop offset="0.5" stop-color="#3a4790" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#0c1430" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="kbFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16244e"/><stop offset="1" stop-color="#101b3c"/>
+    </linearGradient>
+    <linearGradient id="genFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2440"/><stop offset="1" stop-color="#1a1733"/>
+    </linearGradient>
+    <radialGradient id="starGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="0.4" stop-color="#ffe6a8" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffe6a8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <marker id="arrB" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#8fb6ff"/></marker>
+    <marker id="arrG" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#ffd89a"/></marker>
+    <marker id="arrD" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#9fb0d0"/></marker>
+    <marker id="arrW" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#cfe0ff"/></marker>
+  </defs>
+
+  <rect width="1200" height="760" fill="url(#sky)"/>
+  <g transform="rotate(-24 600 300)" opacity="0.9"><ellipse cx="600" cy="300" rx="760" ry="120" fill="url(#milky)"/></g>
+
+  <g fill="#fff">
+    <circle cx="80" cy="70" r="1.4" opacity="0.8"/><circle cx="170" cy="130" r="1" opacity="0.6"/>
+    <circle cx="300" cy="60" r="1.2" opacity="0.7"/><circle cx="430" cy="110" r="0.9" opacity="0.5"/>
+    <circle cx="560" cy="70" r="1.5" opacity="0.85"/><circle cx="690" cy="120" r="1" opacity="0.6"/>
+    <circle cx="820" cy="60" r="1.2" opacity="0.7"/><circle cx="960" cy="100" r="1.4" opacity="0.8"/>
+    <circle cx="1080" cy="64" r="1" opacity="0.6"/><circle cx="1140" cy="150" r="1.3" opacity="0.75"/>
+    <circle cx="40" cy="240" r="1.1" opacity="0.6"/><circle cx="150" cy="330" r="1.3" opacity="0.7"/>
+    <circle cx="1160" cy="320" r="1.2" opacity="0.7"/><circle cx="1100" cy="430" r="1" opacity="0.55"/>
+    <circle cx="60" cy="520" r="1.3" opacity="0.7"/><circle cx="200" cy="640" r="1.1" opacity="0.6"/>
+    <circle cx="360" cy="700" r="1.2" opacity="0.65"/><circle cx="520" cy="680" r="0.9" opacity="0.5"/>
+    <circle cx="700" cy="710" r="1.3" opacity="0.7"/><circle cx="880" cy="690" r="1" opacity="0.55"/>
+    <circle cx="1030" cy="700" r="1.2" opacity="0.65"/><circle cx="1150" cy="640" r="1.1" opacity="0.6"/>
+    <circle cx="1170" cy="500" r="1" opacity="0.55"/><circle cx="30" cy="430" r="1" opacity="0.55"/>
+  </g>
+  <g>
+    <circle cx="240" cy="90" r="22" fill="url(#starGlow)"/><circle cx="240" cy="90" r="1.8" fill="#fff"/>
+    <circle cx="1010" cy="150" r="20" fill="url(#starGlow)"/><circle cx="1010" cy="150" r="1.6" fill="#fff"/>
+    <circle cx="120" cy="610" r="18" fill="url(#starGlow)"/><circle cx="120" cy="610" r="1.5" fill="#fff"/>
+    <circle cx="820" cy="650" r="20" fill="url(#starGlow)"/><circle cx="820" cy="650" r="1.6" fill="#fff"/>
+  </g>
+
+  <!-- header -->
+  <text x="60" y="58" fill="#f3f7ff" font-size="32" font-weight="700">✦ 현자는 어떻게 답하나</text>
+  <text x="60" y="90" fill="#9fb0d0" font-size="16">현자에게 말을 걸면 — 레포·문서는 <tspan fill="#8fb6ff">지식 베이스 그라운딩</tspan>, 잡담·일반 질문은 <tspan fill="#ffd89a">별빛 일반 지식</tspan>으로 답해요</text>
+  <text x="1140" y="58" text-anchor="end" fill="#5f6f96" font-size="14" font-style="italic">Repolis · 레포들의 도시</text>
+
+  <!-- Visitor -->
+  <g filter="url(#soft)">
+    <rect x="44" y="332" width="150" height="104" rx="16" fill="#131d3d" stroke="#cfe0ff" stroke-width="1.5" stroke-opacity="0.5"/>
+  </g>
+  <text x="119" y="372" text-anchor="middle" font-size="30">👤</text>
+  <text x="119" y="402" text-anchor="middle" fill="#eaf1ff" font-size="16" font-weight="600">방문자</text>
+  <text x="119" y="422" text-anchor="middle" fill="#9fb0d0" font-size="13">당신</text>
+
+  <!-- Scholar -->
+  <g filter="url(#soft)">
+    <rect x="244" y="300" width="234" height="168" rx="18" fill="#13213f" stroke="#ffe6a8" stroke-width="1.6" stroke-opacity="0.55"/>
+  </g>
+  <text x="361" y="342" text-anchor="middle" font-size="26" filter="url(#glow)">✦</text>
+  <text x="361" y="372" text-anchor="middle" fill="#f3f7ff" font-size="17" font-weight="700">현자 NPC</text>
+  <text x="361" y="393" text-anchor="middle" fill="#9fb0d0" font-size="12.5">말을 걸면 그 현자의 지식만 깨어나요</text>
+  <g font-weight="600">
+    <rect x="248" y="404" width="70" height="56" rx="11" fill="#1d2747" stroke="#ffd27f" stroke-opacity="0.6"/>
+    <text x="283" y="424" text-anchor="middle" font-size="15">🚕</text>
+    <text x="283" y="440" text-anchor="middle" fill="#ffd27f" font-size="10.5">POLARIS</text>
+    <text x="283" y="453" text-anchor="middle" fill="#9fb0d0" font-weight="400" font-size="9.5">길잡이</text>
+    <rect x="326" y="404" width="70" height="56" rx="11" fill="#1d2747" stroke="#8fb6ff" stroke-opacity="0.6"/>
+    <text x="361" y="424" text-anchor="middle" font-size="15">📘</text>
+    <text x="361" y="440" text-anchor="middle" fill="#8fb6ff" font-size="10.5">VEGA</text>
+    <text x="361" y="453" text-anchor="middle" fill="#9fb0d0" font-weight="400" font-size="9.5">기록보관자</text>
+    <rect x="404" y="404" width="70" height="56" rx="11" fill="#1d2747" stroke="#7fe3da" stroke-opacity="0.6"/>
+    <text x="439" y="424" text-anchor="middle" font-size="15">🗺️</text>
+    <text x="439" y="440" text-anchor="middle" fill="#7fe3da" font-size="10.5">RIGEL</text>
+    <text x="439" y="453" text-anchor="middle" fill="#9fb0d0" font-weight="400" font-size="9.5">지도제작자</text>
+  </g>
+
+  <path d="M194,384 L240,384" fill="none" stroke="#cfe0ff" stroke-width="2.2" marker-end="url(#arrW)"/>
+  <text x="217" y="374" text-anchor="middle" fill="#cfe0ff" font-size="11">묻는다</text>
+
+  <!-- KB Retrieval -->
+  <g filter="url(#soft)">
+    <rect x="556" y="150" width="300" height="150" rx="18" fill="url(#kbFill)" stroke="#8fb6ff" stroke-width="1.8" stroke-opacity="0.7"/>
+  </g>
+  <text x="576" y="186" font-size="20">🔎</text>
+  <text x="606" y="186" fill="#dce8ff" font-size="17" font-weight="700">지식 베이스 검색</text>
+  <text x="576" y="212" fill="#9fb0d0" font-size="13">현자의 MCP 지식 소스를 호출해</text>
+  <text x="576" y="231" fill="#9fb0d0" font-size="13">레포·문서에서 근거를 찾아요</text>
+  <g font-size="11" font-weight="600">
+    <rect x="576" y="248" width="96" height="34" rx="9" fill="#1a2950" stroke="#8fb6ff" stroke-opacity="0.45"/>
+    <text x="624" y="270" text-anchor="middle" fill="#bcd2ff">MS Learn</text>
+    <rect x="678" y="248" width="72" height="34" rx="9" fill="#1a2950" stroke="#7fe3da" stroke-opacity="0.45"/>
+    <text x="714" y="270" text-anchor="middle" fill="#a8efe6">DeepWiki</text>
+    <rect x="756" y="248" width="80" height="34" rx="9" fill="#1a2950" stroke="#bcd2ff" stroke-opacity="0.4"/>
+    <text x="796" y="270" text-anchor="middle" fill="#aebfe0">AI Search</text>
+  </g>
+
+  <!-- Grounded answer -->
+  <g filter="url(#soft)">
+    <rect x="912" y="150" width="246" height="150" rx="18" fill="url(#kbFill)" stroke="#8fb6ff" stroke-width="1.8" stroke-opacity="0.7"/>
+  </g>
+  <text x="934" y="190" font-size="20">📚</text>
+  <text x="964" y="190" fill="#dce8ff" font-size="16.5" font-weight="700">근거 있는 답</text>
+  <text x="934" y="216" fill="#9fb0d0" font-size="13">문서에 근거한 답 +</text>
+  <text x="934" y="235" fill="#9fb0d0" font-size="13">🔗 출처(references) 인용</text>
+  <text x="934" y="270" fill="#8fb6ff" font-size="12" font-weight="600">🔎 어떻게 찾았나 패널</text>
+
+  <!-- Foundry -->
+  <g filter="url(#soft)">
+    <rect x="556" y="470" width="300" height="150" rx="18" fill="url(#genFill)" stroke="#ffd89a" stroke-width="1.8" stroke-opacity="0.75"/>
+  </g>
+  <text x="576" y="506" font-size="20" filter="url(#glow)">✦</text>
+  <text x="606" y="506" fill="#ffe9c4" font-size="17" font-weight="700">Azure AI Foundry</text>
+  <text x="576" y="532" fill="#bdb3d6" font-size="13">KB 밖 질문(상식·천문·신화·</text>
+  <text x="576" y="551" fill="#bdb3d6" font-size="13">잡담)은 모델이 직접 답해요</text>
+  <g font-size="11.5" font-weight="600">
+    <rect x="576" y="568" width="132" height="34" rx="9" fill="#322a4c" stroke="#ffd89a" stroke-opacity="0.45"/>
+    <text x="642" y="590" text-anchor="middle" fill="#ffe2ad">gpt-5.4-mini</text>
+    <rect x="716" y="568" width="120" height="34" rx="9" fill="#322a4c" stroke="#d6b8ff" stroke-opacity="0.45"/>
+    <text x="776" y="590" text-anchor="middle" fill="#e2d0ff">페르소나 유지</text>
+  </g>
+
+  <!-- Starlit answer -->
+  <g filter="url(#soft)">
+    <rect x="912" y="470" width="246" height="150" rx="18" fill="url(#genFill)" stroke="#ffd89a" stroke-width="1.8" stroke-opacity="0.75"/>
+  </g>
+  <text x="934" y="510" font-size="20" filter="url(#glow)">✦</text>
+  <text x="964" y="510" fill="#ffe9c4" font-size="16.5" font-weight="700">별빛 답변</text>
+  <text x="934" y="536" fill="#bdb3d6" font-size="13">별빛에 깃든 일반 지식,</text>
+  <text x="934" y="555" fill="#bdb3d6" font-size="13">현자의 말투 그대로</text>
+  <text x="934" y="590" fill="#ffd89a" font-size="12" font-weight="600">✦ 어떻게 답했나 패널</text>
+
+  <!-- Scholar -> KB -->
+  <path d="M478,352 C516,320 520,250 554,234" fill="none" stroke="#8fb6ff" stroke-width="2.4" marker-end="url(#arrB)"/>
+  <text x="512" y="300" text-anchor="middle" fill="#8fb6ff" font-size="11.5" font-weight="600">레포·문서 질문</text>
+  <text x="512" y="316" text-anchor="middle" fill="#6f80a6" font-size="10.5">repo · docs</text>
+
+  <!-- Scholar -> Foundry -->
+  <path d="M478,416 C516,448 520,520 554,536" fill="none" stroke="#ffd89a" stroke-width="2.4" marker-end="url(#arrG)"/>
+  <text x="512" y="470" text-anchor="middle" fill="#ffd89a" font-size="11.5" font-weight="600">잡담·일반 질문</text>
+  <text x="512" y="486" text-anchor="middle" fill="#6f80a6" font-size="10.5">smalltalk · general</text>
+
+  <!-- KB -> Grounded -->
+  <path d="M856,225 L908,225" fill="none" stroke="#8fb6ff" stroke-width="2.4" marker-end="url(#arrB)"/>
+  <text x="882" y="215" text-anchor="middle" fill="#8fb6ff" font-size="10.5">문서 찾음</text>
+
+  <!-- KB -> Foundry (not found) -->
+  <path d="M706,300 L706,468" fill="none" stroke="#9fb0d0" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrD)"/>
+  <text x="716" y="388" fill="#9fb0d0" font-size="10.5">못 찾으면</text>
+  <text x="716" y="403" fill="#6f80a6" font-size="9.5">↓</text>
+
+  <!-- Foundry -> Starlit -->
+  <path d="M856,545 L908,545" fill="none" stroke="#ffd89a" stroke-width="2.4" marker-end="url(#arrG)"/>
+
+  <!-- footer legend -->
+  <g font-size="12.5">
+    <circle cx="64" cy="712" r="6" fill="#8fb6ff"/>
+    <text x="78" y="716" fill="#9fb0d0">KB 그라운딩 — 레포·문서 근거 + 출처 (MCP)</text>
+    <circle cx="430" cy="712" r="6" fill="#ffd89a"/>
+    <text x="444" y="716" fill="#9fb0d0">별빛 일반 대화 — Foundry gpt-5.4-mini, 페르소나 유지</text>
+    <text x="1140" y="716" text-anchor="end" fill="#5f6f96">keyless · MCP · Cloudflare Worker</text>
+  </g>
+</svg>

@@ -45,7 +45,21 @@ const MCP_NPCS = {
     source: "DeepWiki (MCP)",
     needsRepo: true,
     prose: true,
-    args: (q, x) => ({ repoName: x.repoName, question: String(q).slice(0, 500) }),
+    // Answer in the UI language. A repo-name-only input ("vercel/next.js") carries no
+    // language/intent signal, so synthesize a default question; otherwise nudge Korean.
+    args: (q, x) => {
+      let question = String(q || "").slice(0, 500).trim();
+      const ko = String(x.lang || "").toLowerCase().startsWith("ko");
+      const repoOnly = /^[A-Za-z0-9][\w.\-]*\/[A-Za-z0-9][\w.\-]+$/.test(question);
+      if (repoOnly || !question) {
+        question = ko
+          ? "이 저장소는 내부적으로 어떻게 동작하나요? 핵심 구조와 동작 방식을 한국어로 설명해 주세요."
+          : "How does this repository work internally? Explain its core architecture.";
+      } else if (ko && !/[가-힣]/.test(question)) {
+        question += " (한국어로 답변해 주세요.)";
+      }
+      return { repoName: x.repoName, question };
+    },
   },
 };
 
@@ -295,6 +309,100 @@ function json(obj, status, env) {
   });
 }
 
+// --- General-knowledge fallback for scholars (Entra ID → Azure OpenAI) ---------------------
+// When a scholar's Knowledge Base has nothing relevant, the scholar still answers from the
+// model's own knowledge — in character, in the user's language. This is a *direct* Azure
+// OpenAI chat-completion call (NOT the KB), authenticated keyless via an Entra ID service
+// principal (client-credentials). The target AOAI resource has local-auth disabled, so a
+// bearer token is the only way in; the SP secret is a Worker secret (AAD_CLIENT_SECRET).
+
+// Short, self-contained persona summaries (the canonical source is scholars.js on the
+// client). Kept here so the Worker stays in character even for a self-hosted clone.
+const PERSONA = {
+  taxi:     { star: "POLARIS", ko: "길잡이(헤르메스의 혼)이자 Repolis의 북극성", en: "the Wayfinder (spirit of Hermes), the pole star of Repolis" },
+  msdocs:   { star: "VEGA",    ko: "기록보관자(다이달로스의 혼), 거문고자리의 직녀성 — Microsoft Learn을 읽는 별 읽는 현자", en: "the Archivist (spirit of Daidalos), Vega the bright star of Lyra who reads Microsoft Learn" },
+  deepwiki: { star: "RIGEL",   ko: "지도제작자(아리아드네의 혼), 오리온자리의 리겔 — 레포의 미궁을 지도로 그리는 현자", en: "the Cartographer (spirit of Ariadne), Rigel of Orion who maps a repo's labyrinth" },
+};
+
+function personaPrompt(who, lang) {
+  const p = PERSONA[who] || PERSONA.taxi;
+  const ko = String(lang || "").toLowerCase().startsWith("ko");
+  if (ko) {
+    return `당신은 밤하늘의 도시 Repolis의 현자 ${p.star} — ${p.ko}입니다. `
+      + `사용자가 당신의 지식 베이스 밖의 일반적인 질문(상식·천문·신화·일상 잡담 등)을 했어요. `
+      + `회피하거나 자기소개만 하지 말고, 당신이 아는 실제 지식으로 친절하고 정확하게 한국어로 답하세요. `
+      + `2~4문장으로, 따뜻한 캐릭터 말투를 유지하되 질문에 직접 답하고, 별·밤하늘의 정취를 살짝 곁들여도 좋아요. `
+      + `정말 모르면 솔직히 모른다고 말하세요.`;
+  }
+  return `You are ${p.star}, a scholar of the night-sky city Repolis — ${p.en}. `
+    + `The user asked a general question outside your knowledge base (trivia, astronomy, myth, everyday small talk, etc.). `
+    + `Don't deflect or just introduce yourself — answer helpfully and accurately from your own knowledge, in the user's language. `
+    + `2-4 sentences, keep your warm in-character voice but actually answer, with a light touch of starlight if it fits. `
+    + `If you truly don't know, say so honestly.`;
+}
+
+// A KB "couldn't find it" answer is a dead end for the user. Detect those so we can hand
+// off to the general-knowledge model instead of showing the apology.
+function isNotFound(a) {
+  return /못 ?찾|찾을 수 ?없|찾지 못|확인(?:하지 못|할 수 ?없|되지 ?않)|해당[^.]{0,12}(문서|내용|정보)[^.]{0,8}없|관련[^.]{0,16}(문서|내용|정보)[^.]{0,10}없|정보가 ?없|(?:설명|답변|답)[^.]{0,8}어렵|couldn'?t find|could not find|no (?:relevant|matching|related)|not found|not covered|no information (?:about|on|regarding)|unable to (?:find|locate|provide)|don'?t have (?:any )?(?:info|docs|information)|can'?t (?:find|locate|provide|answer)/i.test(String(a || ""));
+}
+
+// Entra ID service-principal token (client-credentials), cached until ~1 min before expiry.
+let _aad = { token: "", exp: 0 };
+async function aadToken(env) {
+  const now = Date.now();
+  if (_aad.token && now < _aad.exp - 60000) return _aad.token;
+  const body = new URLSearchParams({
+    client_id: env.AAD_CLIENT_ID,
+    client_secret: env.AAD_CLIENT_SECRET,
+    scope: "https://cognitiveservices.azure.com/.default",
+    grant_type: "client_credentials",
+  });
+  const r = await fetch(`https://login.microsoftonline.com/${env.AAD_TENANT}/oauth2/v2.0/token`, {
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body,
+  });
+  if (!r.ok) throw new Error("aad token " + r.status);
+  const j = await r.json();
+  _aad = { token: j.access_token, exp: now + (Number(j.expires_in) || 3600) * 1000 };
+  return _aad.token;
+}
+
+// In-character general answer from Azure OpenAI. Returns the text, or null on any
+// misconfig/error so the caller can fall back to the KB apology silently.
+async function chatLLM(who, history, question, lang, env) {
+  if (!env.AAD_CLIENT_ID || !env.AAD_CLIENT_SECRET || !env.AAD_TENANT || !env.AOAI_ENDPOINT) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), Number(env.LLM_TIMEOUT_MS || 20000));
+  try {
+    const token = await aadToken(env);
+    const dep = env.AOAI_DEPLOYMENT || "gpt-5.4-mini";
+    const ver = env.AOAI_API_VERSION || "2025-04-01-preview";
+    const url = `${env.AOAI_ENDPOINT.replace(/\/$/, "")}/openai/deployments/${dep}/chat/completions?api-version=${ver}`;
+    const hist = (Array.isArray(history) ? history.slice(-8) : [])
+      .filter((h) => h && h.text)
+      .map((h) => ({ role: h.role === "assistant" ? "assistant" : "user", content: String(h.text).slice(0, 600) }));
+    const messages = [
+      { role: "system", content: personaPrompt(who, lang) },
+      ...hist,
+      { role: "user", content: String(question).slice(0, 500) },
+    ];
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({ messages, max_completion_tokens: 400 }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const txt = j.choices?.[0]?.message?.content;
+    return (txt && txt.trim()) || null;
+  } catch {
+    clearTimeout(timer);
+    return null;
+  }
+}
+
 // Shared Azure AI Search KB-retrieve for every scholar. Returns parsed pieces on success,
 // or { fallback:true, reason } when the KB is unconfigured/slow/erroring so the caller can
 // fall back (direct MCP for scholars, Local search for the taxi).
@@ -360,9 +468,9 @@ export default {
     }
     if (request.method !== "POST") return json({ error: "POST only" }, 405, env);
 
-    let question, npc, history, repoName;
+    let question, npc, history, repoName, lang, chat;
     try {
-      ({ question, npc, history, repoName } = await request.json());
+      ({ question, npc, history, repoName, lang, chat } = await request.json());
     } catch {
       return json({ error: "bad body" }, 400, env);
     }
@@ -374,12 +482,22 @@ export default {
     const cfg = scholarConfig(who, env);
     const messages = buildMessages(history, question);
 
+    // Explicit small-talk / general intent (the client decided this isn't a repo or doc
+    // lookup) → answer straight from the model in the scholar's voice, no KB retrieval.
+    if (chat) {
+      const g = await chatLLM(who, history, question, lang, env);
+      if (g) return json({
+        repo: null, message: g, general: true,
+        trace: { general: true, model: env.AOAI_DEPLOYMENT || "gpt-5.4-mini" },
+      }, 200, env);
+    }
+
     const out = await groundedRetrieve(cfg, messages, env);
 
     // KB unreachable / slow / unconfigured / empty. A scholar with its own public MCP falls
     // back to a direct keyless call (clone-friendly); the taxi tells the client to use Local.
     if (out.fallback || (!out.answer && !(out.data?.references || []).length)) {
-      if (MCP_NPCS[who]) return mcpAsk(who, question, env, { repoName });
+      if (MCP_NPCS[who]) return mcpAsk(who, question, env, { repoName, lang });
       return json({ fallback: true, reason: out.reason || "empty grounding", detail: out.detail }, 200, env);
     }
 
@@ -394,8 +512,17 @@ export default {
       }, 200, env);
     }
 
-    // Scholar (e.g. MS Docs engineer) → synthesized answer in the user's language + doc links.
+    // Scholar (e.g. VEGA / MS Docs) → synthesized answer in the user's language + doc links.
     const docs = parseDocs(out.data.references);
+    // KB found nothing relevant (no refs, or a "couldn't find it" answer) → the scholar still
+    // answers the general question from the model's own knowledge, in character & in language.
+    if (!docs.length || isNotFound(out.answer)) {
+      const g = await chatLLM(who, history, question, lang, env);
+      if (g) return json({
+        repo: null, message: g, general: true,
+        trace: { general: true, model: env.AOAI_DEPLOYMENT || "gpt-5.4-mini" },
+      }, 200, env);
+    }
     return json({
       repo: null,
       message: out.answer,

@@ -3,6 +3,19 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.8.0] — 2026-06-24
+
+### ✦ Every scholar can chat — starlit general conversation (Azure AI Foundry)
+- **All members — the taxi POLARIS included — now do general chat.** Ask anything off‑topic, cosmic, mythic, or just small talk (*"직녀성이 뭐야?"*, *"오늘 좀 울적해"*, *"do you like stargazing?"*) and the scholar answers **in‑persona from general knowledge** via **Azure AI Foundry `gpt-5.4-mini`** — no repo pushed, no knowledge‑base call. Previously the taxi blocked off‑topic questions with *"저도 모르겠어요 😅"*; now it reckons by the starlight.
+- **Two clean paths, one chat.** A **repo / doc question** runs **KB grounding** through that scholar's MCP knowledge source and returns references; an **off‑KB / small‑talk question** — or a KB miss — falls to the **starlit general** model. The client sends a `chat:true` flag so the worker skips retrieval entirely for pure small talk (faster, no wasted KS call).
+- **✦ "how I answered" trace panel** — general replies get their own trace panel (*별빛에 깃든 일반 지식에서 답했어요 · gpt-5.4-mini*), distinct from the 🔎 *"how I found this"* grounding panel.
+- **🌌 New diagram** — an awesome self‑contained night‑sky SVG (`assets/scholar-grounding.svg` · `assets/scholar-grounding.ko.svg`) shows the grounding‑vs‑starlit fork, embedded in both READMEs.
+
+### 🐛 Fixes
+- **Ambiguous‑word routing** — cosmic small talk that shares words with our metrics (*"밤하늘 **별** 보는 거 좋아해?"* → `별`=star) no longer triggers a star‑count sort; it now correctly routes to general chat. A night‑sky/cosmic guard runs before the metric branches, and a bare `많이` no longer false‑fires the popularity sort.
+- **"택시기사" mislabel** — the chat action bar now names each scholar by its star + epithet (🗺️ RIGEL · the Cartographer) via `scholarByKind`, instead of falling through to "택시기사" for non‑taxi NPCs.
+- **Live‑site guard** — a stale `localhost` grounding URL saved in `localStorage` is ignored on the live site, so a dev URL can't break production chat.
+
 ## [1.7.0] — 2026-06-23
 
 ### 🗺️ RIGEL · the Cartographer — a third scholar (DeepWiki)

@@ -30,6 +30,19 @@ You ─▶ NPC chat ─▶ Cloudflare Worker ─▶ Azure AI Search  Knowledge B
 configured, the worker degrades gracefully (direct keyless MCP call where possible, or the
 NPC says it's live‑site‑only). No backend is ever *required* to run the city.
 
+**✦ Off‑KB? The scholar still answers.** Every scholar — **the taxi POLARIS included** —
+also handles **general conversation**. When a question falls outside its knowledge base
+(trivia, astronomy, myth, plain small talk), or the KB returns nothing, the worker answers
+**in‑persona** straight from **Azure AI Foundry `gpt-5.4-mini`** — no retrieval, no repo
+pushed — and tags the reply with a ✦ *"how I answered"* trace panel. The client marks pure
+small talk with a `chat:true` flag so the knowledge source is skipped entirely.
+
+```
+                    ┌─ repo / doc question ─▶ Knowledge Base (grounding) ─▶ answer + 🔎 refs
+You ─▶ NPC chat ─▶ ┤
+                    └─ small talk / off‑KB ─▶ Foundry gpt-5.4-mini (in‑persona) ─▶ answer + ✦ panel
+```
+
 ---
 
 ## 👥 Active scholars
