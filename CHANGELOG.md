@@ -10,10 +10,15 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 - **Detailed ground** — directional grass blades on the lawn, gravel speckle + jagged cracks on asphalt, and fine grain on dirt/sand, all seamless (9‑tile wrap) and deterministic.
 - **Contact shadows** — every building drops a soft shadow onto its plot so houses sit grounded on the lawn instead of floating (daytime depth cue).
 
+### 💧 Living water
+- **Animated cel water** — ponds and the new plaza fountain use a custom shader with drifting ripples, a sun/moon glint, depth‑tinted colour and a day↔night palette, so water actually moves and catches the light instead of sitting as a flat disc. One shared time/night uniform drives every water surface.
+- **Town‑square fountain** — the central plaza medallion is now a two‑tier stone fountain with a pedestal bowl, arcing spray particles and stone coping; it glows softly at night while staying low enough that distant houses remain visible.
+- **Koi, lotus & reeds** — ponds gained swimming koi that trace lazy circles, a lotus bloom, lily pads and cattail reeds at the rim.
+
 ### 🏘️ A livelier, more varied world
 - **High‑contrast signage** — white halo + category colour band, sized up for readability from a distance.
 - **Roaming chow‑chows** trot between plaza waypoints with wagging tails; well‑loved repos also get a garden dog.
-- **Ponds & garages** — koi ponds for active / well‑starred repos and driveway garages with a parked car for well‑forked ones.
+- **Ponds & garages** — animated koi ponds (swimming koi, lotus & reeds) for active / well‑starred repos and driveway garages with a parked car for well‑forked ones.
 - **Rest pavilions** dotted around the city — and you can now **sit** on benches/chairs and stand back up.
 
 ### 📊 More GitHub metrics on cards

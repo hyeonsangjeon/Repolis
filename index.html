@@ -563,6 +563,67 @@ function capsule(r,len,color,seg=12){
   m.castShadow = true; m.receiveShadow = true; return m;
 }
 
+/* ---- animated cel water (ponds + fountains): drifting ripples, sun/moon glint, depth tint, day↔night ---- */
+const WATER_TIME={value:0}, WATER_NIGHT={value:0};
+const _wCol=h=>new THREE.Color(h);
+function makeWater(radius, seg=44){
+  const uni={ uTime:WATER_TIME, uNight:WATER_NIGHT, uRadius:{value:radius},
+    uShal:{value:_wCol(0x79c9d8)}, uDeep:{value:_wCol(0x2f7f9e)}, uGlint:{value:_wCol(0xffffff)},
+    uShalN:{value:_wCol(0x2f6088)}, uDeepN:{value:_wCol(0x16324f)}, uGlintN:{value:_wCol(0xc2d4ff)} };
+  const mat=new THREE.ShaderMaterial({ transparent:true, side:THREE.DoubleSide, fog:false, uniforms:uni,
+    vertexShader:'varying vec2 vL; void main(){ vL=position.xy; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+    fragmentShader:[
+      'uniform float uTime,uNight,uRadius;',
+      'uniform vec3 uShal,uDeep,uGlint,uShalN,uDeepN,uGlintN;',
+      'varying vec2 vL;',
+      'void main(){',
+      '  float t=uTime;',
+      '  float r=clamp(length(vL)/max(uRadius,0.001),0.0,1.0);',
+      '  float w=sin(vL.x*2.3+t*1.6)+sin(vL.y*2.7-t*1.3)+sin((vL.x+vL.y)*1.9+t*0.9)+sin((vL.x-vL.y)*3.2-t*0.7);',
+      '  w*=0.25;',
+      '  vec3 shal=mix(uShal,uShalN,uNight), deep=mix(uDeep,uDeepN,uNight), glint=mix(uGlint,uGlintN,uNight);',
+      '  vec3 col=mix(shal,deep,smoothstep(0.0,1.0,r));',
+      '  col+=shal*0.16*w;',
+      '  float g=smoothstep(0.62,0.98,w);',
+      '  col+=glint*g*(0.42+0.34*(1.0-uNight));',
+      '  col+=shal*smoothstep(0.78,1.0,r)*0.20;',
+      '  float a=0.93-smoothstep(0.94,1.0,r)*0.32;',
+      '  gl_FragColor=vec4(col,a);',
+      '}'
+    ].join('\n')
+  });
+  const mesh=new THREE.Mesh(new THREE.CircleGeometry(radius,seg),mat);
+  mesh.rotation.x=-Math.PI/2; mesh.renderOrder=1; return mesh;
+}
+
+/* koi that swim lazy circles in the ponds */
+const KOI=[];
+function makeKoi(color){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.16,12,10),toon(color)); body.scale.set(1.1,0.42,0.6); g.add(body);
+  const tail=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.2,8),toon(color)); tail.rotation.z=-Math.PI/2; tail.position.x=-0.22; tail.scale.set(1,0.42,1); g.add(tail);
+  const spot=new THREE.Mesh(new THREE.SphereGeometry(0.08,8,6),toon(0xfff2e6)); spot.scale.set(1,0.42,0.62); spot.position.set(0.05,0.04,0); g.add(spot);
+  return g;
+}
+function updateKoi(t){
+  for(const k of KOI){ const u=k.userData; const a=t*u.sp+u.ph;
+    k.position.set(u.px+Math.cos(a)*u.rr, u.y+Math.sin(t*2.0+u.yb)*0.012, u.pz+Math.sin(a)*u.rr);
+    k.rotation.y=-a-Math.PI/2; }
+}
+
+/* plaza fountain spray (gravity particles) + glows toggled at night */
+const FOUNTAINS=[]; const NIGHT_GLOWS=[];
+function updateFountains(dt){
+  for(const F of FOUNTAINS){ const a=F.pos, st=F.st;
+    for(let i=0;i<st.length;i++){ const d=st[i];
+      d.vy-=6.6*dt; d.x+=d.vx*dt; d.y+=d.vy*dt; d.z+=d.vz*dt;
+      if(d.y<F.basinY){ d.x=0; d.z=0; d.y=F.originY;
+        const an=Math.random()*6.2832, sp=0.32+Math.random()*0.5;
+        d.vx=Math.cos(an)*sp; d.vz=Math.sin(an)*sp; d.vy=2.0+Math.random()*0.8; }
+      a[i*3]=d.x; a[i*3+1]=d.y; a[i*3+2]=d.z; }
+    F.geom.attributes.position.needsUpdate=true; }
+}
+
 /* ---- lights (golden hour warmth) ---- */
 const hemi = new THREE.HemisphereLight(0xcfeee8, 0x86996a, 0.85); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe2b0, 1.45);
@@ -863,16 +924,36 @@ plaza.rotation.x=-Math.PI/2; plaza.position.y=0.02; plaza.receiveShadow=true; sc
 // plaza rim
 const rim = new THREE.Mesh(new THREE.RingGeometry(9.5,10.2,40), basic(0xc3ad7c));
 rim.rotation.x=-Math.PI/2; rim.position.y=0.025; scene.add(rim);
-// central landmark — flat plaza medallion + flowers (nothing tall, so houses stay visible)
+// central landmark — a town-square fountain on low stone tiers (kept modest so distant houses stay visible)
 (function(){
   const m1=new THREE.Mesh(new THREE.CylinderGeometry(3.0,3.0,0.12,28), toon(0xcdbfa0));
   m1.position.y=0.06; m1.receiveShadow=true; scene.add(m1);
-  const m2=new THREE.Mesh(new THREE.CylinderGeometry(2.0,2.0,0.16,28), toon(0xe6d8b6));
+  const m2=new THREE.Mesh(new THREE.CylinderGeometry(2.05,2.2,0.16,28), toon(0xe6d8b6));
   m2.position.y=0.09; m2.receiveShadow=true; scene.add(m2);
-  const m3=new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.9,0.2,24), basic(0xd2622f));
-  m3.position.y=0.11; scene.add(m3);
-  for(let i=0;i<8;i++){ const a=i/8*Math.PI*2;
-    flowerPatch(Math.cos(a)*4.4, Math.sin(a)*4.4); }
+  const fy=0.17;
+  // basin: stone wall ring + coping + dark base + animated water
+  const wall=new THREE.Mesh(new THREE.CylinderGeometry(1.72,1.86,0.52,30,1,true), toon(0xd6c8a6)); wall.position.y=fy+0.26; wall.receiveShadow=true; scene.add(wall);
+  const cope=new THREE.Mesh(new THREE.TorusGeometry(1.78,0.12,8,30), toon(0xc3b289)); cope.rotation.x=Math.PI/2; cope.position.y=fy+0.52; scene.add(cope);
+  const base=new THREE.Mesh(new THREE.CircleGeometry(1.7,30), basic(0x215c75)); base.rotation.x=-Math.PI/2; base.position.y=fy+0.06; scene.add(base);
+  const basin=makeWater(1.64,40); basin.position.y=fy+0.46; scene.add(basin);
+  // central pedestal + upper bowl + animated water + finial
+  const ped=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.34,0.92,16), toon(0xe6d8b6)); ped.position.y=fy+0.52+0.46; ped.castShadow=true; scene.add(ped);
+  const bowl=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.42,0.16,22), toon(0xd6c8a6)); bowl.position.y=fy+1.42; bowl.castShadow=true; scene.add(bowl);
+  const topw=makeWater(0.5,26); topw.position.y=fy+1.51; scene.add(topw);
+  const fin=new THREE.Mesh(new THREE.SphereGeometry(0.11,12,10), toon(0xf0e6c8)); fin.position.y=fy+1.62; scene.add(fin);
+  // spray particles arcing from the finial into the basin
+  const SP_N=54, pos=new Float32Array(SP_N*3), st=[]; const oY=fy+1.6, bY=fy+0.46;
+  for(let i=0;i<SP_N;i++){ const an=Math.random()*6.2832, sp=0.32+Math.random()*0.5;
+    st.push({x:0,z:0,y:bY+Math.random()*(oY-bY),vx:Math.cos(an)*sp,vz:Math.sin(an)*sp,vy:Math.random()*2.2}); }
+  const sgeo=new THREE.BufferGeometry(); sgeo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const smat=new THREE.PointsMaterial({size:0.17,map:GLOW_TEX,color:0xe2f3ff,transparent:true,opacity:0.92,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true,fog:false});
+  const spray=new THREE.Points(sgeo,smat); scene.add(spray);
+  FOUNTAINS.push({pos,st,geom:sgeo,originY:oY,basinY:bY});
+  // soft glow lighting the fountain at night
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xbfe0ff,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  glow.scale.set(5,5,1); glow.position.y=fy+0.7; glow._n=0.42; scene.add(glow); NIGHT_GLOWS.push(glow);
+  // flower ring (kept)
+  for(let i=0;i<8;i++){ const a=i/8*Math.PI*2; flowerPatch(Math.cos(a)*4.4, Math.sin(a)*4.4); }
 })();
 
 /* ---- clouds ---- */
@@ -1142,13 +1223,24 @@ for(let i=0;i<4;i++){ const d=makeChow(); const a=(i/4)*Math.PI*2, rr=14+Math.ra
 
 function addPond(g,yr){
   const pr=Math.min(yr*0.32,1.7), px=yr*0.52, pz=-yr*0.34;
-  const water=new THREE.Mesh(new THREE.CircleGeometry(pr,26), new THREE.MeshBasicMaterial({color:0x3f8fb0}));
-  water.rotation.x=-Math.PI/2; water.position.set(px,0.05,pz); g.add(water);
-  const hi=new THREE.Mesh(new THREE.CircleGeometry(pr*0.46,18), new THREE.MeshBasicMaterial({color:0x9fd8e6,transparent:true,opacity:0.5}));
-  hi.rotation.x=-Math.PI/2; hi.position.set(px-pr*0.18,0.052,pz-pr*0.12); g.add(hi);
+  const base=new THREE.Mesh(new THREE.CircleGeometry(pr,26), basic(0x215c75)); base.rotation.x=-Math.PI/2; base.position.set(px,0.045,pz); g.add(base);
+  const water=makeWater(pr,28); water.position.set(px,0.075,pz); g.add(water);
   const rim=new THREE.Mesh(new THREE.TorusGeometry(pr,0.13,6,26), toon(0x8d7c5b)); rim.rotation.x=Math.PI/2; rim.position.set(px,0.07,pz); g.add(rim);
+  // lily pads + a lotus bloom
   for(let i=0;i<2;i++){ const lp=new THREE.Mesh(new THREE.CircleGeometry(0.2,8), basic(0x57a046));
-    lp.rotation.x=-Math.PI/2; lp.position.set(px+(Math.random()-0.5)*pr*1.2,0.075,pz+(Math.random()-0.5)*pr*1.2); g.add(lp); }
+    lp.rotation.x=-Math.PI/2; lp.position.set(px+(Math.random()-0.5)*pr*1.1,0.085,pz+(Math.random()-0.5)*pr*1.1); g.add(lp); }
+  const lotus=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6), toon(0xf2a6c0)); lotus.scale.y=0.6; lotus.position.set(px+pr*0.3,0.12,pz-pr*0.2); g.add(lotus);
+  // reeds at the rim (cattails)
+  for(let i=0;i<3;i++){ const a=Math.random()*Math.PI*2, rr=pr*0.92;
+    const reed=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.03,0.6,5), toon(0x5b8f3a));
+    reed.position.set(px+Math.cos(a)*rr,0.32,pz+Math.sin(a)*rr); g.add(reed);
+    const tip=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.16,6), toon(0x7a5230));
+    tip.position.set(px+Math.cos(a)*rr,0.66,pz+Math.sin(a)*rr); g.add(tip); }
+  // a couple of koi swimming
+  const koiN = pr>1.2?2:1;
+  for(let i=0;i<koiN;i++){ const k=makeKoi(i?0xf2c14e:0xef7d3a); const u=k.userData;
+    u.px=px; u.pz=pz; u.y=0.11; u.rr=pr*(0.32+Math.random()*0.22); u.sp=0.5+Math.random()*0.5; u.ph=Math.random()*6.28; u.yb=Math.random()*6.28;
+    k.position.y=u.y; g.add(k); KOI.push(k); }
 }
 function addGarage(g,w,d,yr,roofColor){
   const gx=-(w*0.5+1.5), gz=d*0.06; if(Math.abs(gx)>yr+0.8) return;
@@ -1558,6 +1650,8 @@ function setTimeOfDay(night){
   birdFlock.visible=!night; butterflyGroup.visible=!night;
   LAMP_BULBS.forEach(b=>b.material.color.setHex(night?0xfff0c2:0xffe6a8));
   LAMP_GLOWS.forEach(o=>{ o.material.opacity = night? o._nightOp : 0; });
+  WATER_NIGHT.value = night?1:0;
+  NIGHT_GLOWS.forEach(o=>{ o.material.opacity = night? o._n : 0; });
   if(faceLight) faceLight.intensity = night?16:0;
   if(faceMat) faceMat.emissive.setHex(night?0x6a4f30:0x000000);
   npcFaces.forEach(m=>m.emissive.setHex(night?0x4a3a24:0x000000));   // softer than the player so the hero still reads brightest
@@ -2159,6 +2253,9 @@ function animate(){
     if(dist<6){ navHolder.visible=false; navTarget=null; document.getElementById('navBadge').style.display='none'; } }
 
   for(const c of clouds){ c.position.x+=c.userData.spd*dt; if(c.position.x>300) c.position.x=-300; }
+  WATER_TIME.value=clock.elapsedTime;
+  updateKoi(clock.elapsedTime);
+  updateFountains(dt);
   updateSmoke(clock.elapsedTime);
   updateChows(clock.elapsedTime,dt);
   if(!isNight){ updateBirds(clock.elapsedTime); updateButterflies(clock.elapsedTime); }
