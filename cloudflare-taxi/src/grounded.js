@@ -26,6 +26,99 @@
 //   GROUNDED_MAX_RUNTIME_S optional KB runtime budget seconds (default 30; KB requires 11–599)
 //   ALLOW_ORIGIN           optional, e.g. https://<you>.github.io (default *)
 
+// --- Scholar/engineer NPC MCP servers (public, read-only; the Worker calls them directly,
+// so these need no Azure Knowledge Base and no key). The allowlist stops clients from
+// pointing the Worker at arbitrary MCP endpoints. Each maps one town NPC → one hosted MCP. ---
+const MCP_NPCS = {
+  msdocs: {
+    url: "https://learn.microsoft.com/api/mcp",
+    tool: "microsoft_docs_search",
+    arg: "query",
+    source: "Microsoft Learn (MCP)",
+  },
+};
+
+// Streamable-HTTP MCP responses come back as SSE ("data: {json}" lines).
+function parseSSE(text) {
+  const out = [];
+  for (const line of String(text || "").split("\n")) {
+    const m = line.match(/^data:\s?(.*)$/);
+    if (m) { try { out.push(JSON.parse(m[1])); } catch { /* skip keep-alives */ } }
+  }
+  return out;
+}
+
+async function mcpRpc(url, method, params, sid, isNotif, signal) {
+  const headers = { "Content-Type": "application/json", Accept: "application/json, text/event-stream" };
+  if (sid) headers["mcp-session-id"] = sid;
+  const body = { jsonrpc: "2.0", method };
+  if (!isNotif) body.id = Math.floor(Math.random() * 1e9);
+  if (params) body.params = params;
+  const r = await fetch(url, { method: "POST", headers, body: JSON.stringify(body), signal });
+  const ct = r.headers.get("content-type") || "";
+  const txt = await r.text();
+  let data = [];
+  if (ct.includes("event-stream")) data = parseSSE(txt);
+  else { try { data = [JSON.parse(txt)]; } catch { data = []; } }
+  return { status: r.status, sid: r.headers.get("mcp-session-id"), data };
+}
+
+// Strip markdown so a docs snippet reads like a sentence in the chat bubble.
+function cleanDoc(s) {
+  return String(s || "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\]\(https?:\/\/[^)]+\)/g, "")
+    .replace(/^\s{0,3}#+\s*/gm, "")
+    .replace(/[*_`>[\]]+/g, " ")
+    .replace(/\r/g, "")
+    .replace(/\n{2,}/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+// Talk to a public MCP server (initialize → tools/call) and shape the top docs for the chat.
+async function mcpAsk(npc, question, env) {
+  const cfg = MCP_NPCS[npc];
+  const timeoutMs = Number(env.MCP_TIMEOUT_MS || 20000);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const started = Date.now();
+  try {
+    const init = await mcpRpc(cfg.url, "initialize",
+      { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "repolis-taxi", version: "1.0" } },
+      null, false, ctrl.signal);
+    const sid = init.sid;
+    if (sid) await mcpRpc(cfg.url, "notifications/initialized", null, sid, true, ctrl.signal);
+    const call = await mcpRpc(cfg.url, "tools/call",
+      { name: cfg.tool, arguments: { [cfg.arg]: String(question).slice(0, 500) } },
+      sid, false, ctrl.signal);
+    clearTimeout(timer);
+
+    const res = call.data.find((d) => d.result)?.result;
+    const textBlock = (res?.content || []).find((b) => b.type === "text")?.text || "";
+    let results = [];
+    try { results = JSON.parse(textBlock).results || []; }
+    catch { if (textBlock) results = [{ title: "", content: textBlock, contentUrl: "" }]; }
+
+    const items = results.slice(0, 6).map((r) => ({
+      title: String(r.title || "").slice(0, 160),
+      url: r.contentUrl || r.url || "",
+      snippet: cleanDoc(r.content).slice(0, 420),
+    })).filter((i) => i.title || i.snippet);
+
+    if (!items.length) return json({ fallback: true, reason: "no docs" }, 200, env);
+    return json({
+      kind: "docs",
+      items,
+      trace: { source: cfg.source, tool: cfg.tool, mcpMs: Date.now() - started, totalMs: Date.now() - started },
+    }, 200, env);
+  } catch (e) {
+    clearTimeout(timer);
+    const reason = e.name === "AbortError" ? "timeout " + timeoutMs + "ms" : String(e).slice(0, 160);
+    return json({ fallback: true, reason }, 200, env);
+  }
+}
+
 function parseRefs(references) {
   const out = [];
   for (const r of references || []) {
@@ -88,6 +181,18 @@ export default {
     }
     if (request.method !== "POST") return json({ error: "POST only" }, 405, env);
 
+    let question, npc;
+    try {
+      ({ question, npc } = await request.json());
+    } catch {
+      return json({ error: "bad body" }, 400, env);
+    }
+    if (!question) return json({ error: "question required" }, 400, env);
+
+    // Scholar/engineer NPCs answer from their own public MCP server (no Azure, no key).
+    if (npc && MCP_NPCS[npc]) return mcpAsk(npc, question, env);
+
+    // --- default (taxi driver): Azure AI Search KB → live GitHub MCP ---
     const endpoint = env.SEARCH_ENDPOINT;
     const key = env.SEARCH_API_KEY;
     const kb = env.SEARCH_KB_NAME;
@@ -101,14 +206,6 @@ export default {
     if (!endpoint || !key || !kb) {
       return json({ fallback: true, reason: "grounding not configured" }, 200, env);
     }
-
-    let question;
-    try {
-      ({ question } = await request.json());
-    } catch {
-      return json({ error: "bad body" }, 400, env);
-    }
-    if (!question) return json({ error: "question required" }, 400, env);
 
     const url = `${endpoint.replace(/\/$/, "")}/knowledgebases/${kb}/retrieve?api-version=${apiVersion}`;
     const payload = {

@@ -435,7 +435,16 @@ const I18N = {
     modeGroundedMsg:'🛰️ AI Foundry Live 모드예요. GitHub을 실시간으로 찾아 안내해요! (Azure AI Search + MCP)',
     groundedSearching:'MS Foundry MCP KS로 GitHub 찾아볼게요 🔍',
     groundedPromptUrl:'AI Foundry Live API URL을 입력하세요 (없으면 비워두세요 → 키 없이 로컬검색으로 동작)\n예: https://your-app.vercel.app/api/taxi-grounded',
-    traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceRefs:'참조 레포',
+    traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceRefs:'참조',
+    npcTaxi:'택시기사', npcEng:'MS Docs 엔지니어', engTitle:'📘 MS Docs 엔지니어',
+    engThanks:'도움이 됐다니 기뻐요! 📘 더 궁금한 게 있으면 물어보세요.', engBye:'또 궁금한 게 생기면 찾아오세요! 📘', engHow:'저야 늘 문서 읽느라 바쁘죠 😄 어떤 Microsoft 기술이 궁금하세요?', engWho:'저는 <b>MS Docs 엔지니어</b>예요 📘 Microsoft Learn 공식 문서에서 답을 찾아드려요. 무엇이 궁금하세요?', engHelp:'Azure·.NET·Copilot 같은 Microsoft 기술을 물어보세요 📘 <b>공식 문서</b>에서 실시간으로 찾아드려요. 예: “Azure AI Foundry 에이전트”', engNice:'감사해요! 😊 더 찾아드릴 게 있을까요?',
+    engGreet:'안녕하세요! 📘 저는 <b>Microsoft Docs 엔지니어</b>예요. Azure·.NET·Copilot 같은 <b>Microsoft Learn 공식 문서</b>를 실시간으로 찾아드려요. 무엇이 궁금하세요? 예: <b>Azure AI Foundry 에이전트</b>, <b>Azure AI Search</b>',
+    engPh:'무엇이 궁금하세요? 예: Azure AI Foundry 에이전트',
+    engSearching:'Microsoft Learn 문서를 찾아볼게요 📘🔍',
+    engIntro:'Microsoft Learn 공식 문서에서 찾았어요 📘',
+    engNone:'관련 문서를 못 찾았어요. 조금 다르게 물어봐 주실래요?',
+    engErr:'문서를 찾는 중 문제가 생겼어요 😅 잠시 후 다시 시도해 주세요.',
+    engNoBackend:'문서 검색 백엔드(MCP)가 연결돼 있지 않아요. 라이브 사이트에서 사용해 주세요 📘',
     taxiStand:'택시 정류장',
     libName:'기여 도서관', libSign:'LIBRARY 도서관',
     libReached:'에 도착! <span class="key">Enter</span> 또는 클릭으로 입장',
@@ -494,6 +503,15 @@ const I18N = {
     groundedSearching:'Searching GitHub via the MS Foundry MCP KS 🔍',
     groundedPromptUrl:'Enter your AI Foundry Live API URL (or leave blank → keyless Local search)\ne.g. https://your-app.vercel.app/api/taxi-grounded',
     traceTitle:'🔎 How I found this', traceKs:'Knowledge source', traceTool:'MCP tool', traceRefs:'References',
+    npcTaxi:'Taxi driver', npcEng:'MS Docs Engineer', engTitle:'📘 MS Docs Engineer',
+    engThanks:"Glad it helped! 📘 Ask me anything else.", engBye:"Come back whenever you have a question! 📘", engHow:"Always busy reading docs 😄 What Microsoft tech can I help with?", engWho:"I'm the <b>MS Docs engineer</b> 📘 I find answers in the official Microsoft Learn docs. What do you need?", engHelp:'Ask about Azure, .NET, Copilot and other Microsoft tech 📘 I search the <b>official docs</b> in real time. e.g. “Azure AI Foundry agent”', engNice:"Thank you! 😊 Anything else I can look up?",
+    engGreet:"Hi! 📘 I'm the <b>Microsoft Docs engineer</b>. I search the <b>official Microsoft Learn docs</b> (Azure, .NET, Copilot…) in real time. What do you need? e.g. <b>Azure AI Foundry agent</b>, <b>Azure AI Search</b>",
+    engPh:'What do you need? e.g. Azure AI Foundry agent',
+    engSearching:'Searching Microsoft Learn docs 📘🔍',
+    engIntro:'From the official Microsoft Learn docs 📘',
+    engNone:"Couldn't find relevant docs. Want to rephrase?",
+    engErr:'Something went wrong searching the docs 😅 Please try again.',
+    engNoBackend:"The docs backend (MCP) isn't connected. Try it on the live site 📘",
     taxiStand:'TAXI STAND',
     libName:'Contribution Library', libSign:'LIBRARY 도서관',
     libReached:' reached! <span class="key">Enter</span> or click to enter',
@@ -1875,6 +1893,35 @@ const driver=new THREE.Group(); driver.position.set(TAXI_POS.x-1.7,0,TAXI_POS.z+
 })();
 driver.rotation.y=-2.2; scene.add(driver);
 
+/* ---- town NPCs you can walk up to and talk to; each chat is wired to its own knowledge source ---- */
+const NPCS=[];
+NPCS.push({ group:driver, pos:driver.position.clone(), kind:'taxi', reach:4.6 });
+
+// 📘 Microsoft Docs engineer — answers from the live Microsoft Learn MCP server (official docs)
+const engineer=new THREE.Group(); engineer.position.set(-10.5,0,0);
+(function buildEngineer(){
+  const SH=0x1f6feb, SK=0xf0c79a, HR=0x2b2118, PANT=0x2a3346;
+  const tb=capsule(0.42,0.46,SH); tb.position.y=1.3; tb.scale.z=0.82; outline(tb,0.04); engineer.add(tb);
+  const col=rbox(0.34,0.1,0.16,0xeef3fb,0.02); col.position.set(0,1.62,0.34); engineer.add(col);            // tidy shirt collar
+  const hd=ball(0.5,SK,18); hd.position.y=2.1; hd.scale.set(1.0,0.98,0.96); outline(hd,0.04); engineer.add(hd);
+  const hair=ball(0.54,HR,16); hair.position.set(0,2.34,-0.02); hair.scale.set(1.04,0.6,1.06); outline(hair,0.03); engineer.add(hair);
+  [[-0.2],[0.2]].forEach(([ex])=>{
+    const e=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,10), basic(0x2a2320)); e.position.set(ex,2.1,0.46); e.scale.z=0.5; engineer.add(e);
+    const hl=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6), basic(0xffffff)); hl.position.set(ex+0.035,2.14,0.5); engineer.add(hl); });
+  [[-0.2],[0.2]].forEach(([ex])=>{ const r=new THREE.Mesh(new THREE.TorusGeometry(0.13,0.022,8,18), basic(0x33373d)); r.position.set(ex,2.1,0.47); engineer.add(r); });  // glasses — the engineer tell
+  const br=rbox(0.12,0.03,0.03,0x33373d,0.01); br.position.set(0,2.1,0.49); engineer.add(br);
+  { const m=new THREE.Mesh(new THREE.TorusGeometry(0.09,0.024,8,16,Math.PI), basic(0x8a4f44)); m.position.set(0,1.9,0.47); m.rotation.z=Math.PI; engineer.add(m); }   // smile
+  const al=capsule(0.14,0.4,SH); al.position.set(-0.52,1.36,0); outline(al,0.03); engineer.add(al);
+  const ar=al.clone(); ar.position.x=0.52; engineer.add(ar);
+  const ll=capsule(0.17,0.4,PANT); ll.position.set(-0.2,0.5,0); outline(ll,0.03); engineer.add(ll);
+  const lr=ll.clone(); lr.position.x=0.2; engineer.add(lr);
+  const book=rbox(0.42,0.52,0.1,0xeaf1fb,0.03); book.position.set(0.5,1.18,0.3); book.rotation.set(-0.5,0,0.1); engineer.add(book);   // docs tablet
+  const bl=rbox(0.42,0.52,0.02,0x9fc0ec,0.01); bl.position.set(0.5,1.2,0.36); bl.rotation.set(-0.5,0,0.1); engineer.add(bl);
+  engineer._head=hd; npcFaces.add(hd.material);
+})();
+engineer.rotation.y=Math.PI/2; scene.add(engineer);
+NPCS.push({ group:engineer, pos:engineer.position.clone(), kind:'msdocs', reach:4.6 });
+
 /* ---- character (chibi, cute — soft rounded forms, no hard boxes) ---- */
 const player=new THREE.Group(); const model=new THREE.Group(); player.add(model);
 const SHIRT=0xf4f4f0, SKIN=0xf3cda3, HAIR=0x231b16, PANTS=0x26262c, SOCK=0x20202a, SHOE=0xf2f2f0;
@@ -1936,7 +1983,7 @@ const keys={};
 const isTyping=()=>{ const a=document.activeElement; return a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
 addEventListener('keydown',e=>{ if(isTyping()) return; keys[e.code]=true;
   if(e.code==='Space') e.preventDefault();
-  if(e.code==='Enter'&&!modalOpen){ if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+  if(e.code==='Enter'&&!modalOpen){ doAct(); }
   if(e.code==='Escape'){ closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ if(isTyping()) return; keys[e.code]=false; });
 
@@ -1954,7 +2001,7 @@ addEventListener('pointermove',e=>{ if(e.pointerType==='touch') return; if(!drag
   camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005));
   if(dragBtn===2){ model.rotation.y=camYaw+Math.PI; freeLook=false; }  // right drag = mouselook: steer character with the view
   else freeLook=true; });                                             // left drag = free look: camera holds its angle
-addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&dragBtn===0&&!modalOpen){ if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+addEventListener('pointerup',()=>{ if(dragging&&!dragMoved&&dragBtn===0&&!modalOpen){ doAct(); }
   dragging=false; dom.style.cursor=''; document.body.style.cursor=''; });
 dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
 
@@ -1997,16 +2044,16 @@ function endTouch(e){
   if(e.pointerId===moveTid){
     // a tap on the move half (no joystick drag) opens the building you're standing at,
     // mirroring the look half — so tapping the house works wherever it renders on screen
-    if(!moveMoved && !modalOpen){ if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+    if(!moveMoved && !modalOpen){ doAct(); }
     moveTid=null; stickVec={x:0,y:0}; joy.style.display='none';
   }
-  else if(e.pointerId===lookTid){ if(!lookMoved&&!modalOpen){ if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); } lookTid=null; }
+  else if(e.pointerId===lookTid){ if(!lookMoved&&!modalOpen){ doAct(); } lookTid=null; }
 }
 dom.addEventListener('pointerup',endTouch);
 dom.addEventListener('pointercancel',endTouch);
 /* round action button (bottom-right): open the repo you're standing at (mobile substitute for Enter) */
 const actBtn=document.getElementById('actBtn');
-actBtn.addEventListener('click',()=>{ if(modalOpen) return; if(sitting) standUp(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); });
+actBtn.addEventListener('click',()=>{ if(modalOpen) return; doAct(); });
 
 /* ====================== UI ====================== */
 document.getElementById('totalCount').textContent=REPOS.length;
@@ -2044,7 +2091,7 @@ function setLang(l){ if(l!==LANG){ LANG=l; localStorage.setItem('repolisLang',LA
   // refresh the taxi chat so no stale-language messages linger after a switch
   if(typeof chatLog!=='undefined' && chatLog){ const wasOpen=!chatEl.classList.contains('hidden');
     chatLog.innerHTML=''; chatGreeted=false;
-    if(wasOpen){ chatGreeted=true; addMsg('bot',t('greeterHtml')); } } }
+    if(wasOpen){ chatGreeted=true; applyNpcChrome(activeNpc); addMsg('bot', npcGreet(activeNpc)); } } }
 langBtn.onclick=()=> setLang(LANG==='ko'?'en':'ko');
 document.querySelectorAll('#introLang button').forEach(b=> b.onclick=()=> setLang(b.dataset.lang));
 applyLang();
@@ -2129,8 +2176,12 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
   document.getElementById('visitCount').textContent=visited; repo._row.classList.add('visited');
   repo._ring.material.color.set(0x2f9d6a); }
 
-const promptEl=document.getElementById('prompt'); let nearest=null;
+const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
+/* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
+function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+function npcPrompt(n){ const nm=(n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi');
+  return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
 function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; player.position.set(seat.x,0,seat.z); model.rotation.y=seat.rot; camYaw=seat.rot+Math.PI; walk=0; }
 function standUp(){ sitting=null; }
 document.getElementById('startBtn').onclick=()=> document.getElementById('intro').classList.add('hidden');
@@ -2169,9 +2220,16 @@ function buildTracePanel(tr){
     body.appendChild(rl); }
   d.appendChild(body); return d;
 }
-function openChat(){ chatEl.classList.remove('hidden');
-  if(!chatGreeted){ chatGreeted=true;
-    addMsg('bot',t('greeterHtml')); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
+function npcGreet(n){ return (n&&n.kind==='msdocs')? t('engGreet') : t('greeterHtml'); }
+function applyNpcChrome(n){ const eng=n&&n.kind==='msdocs';
+  if(chatHeadTtl) chatHeadTtl.innerHTML = eng? t('engTitle') : t('taxiTitle');
+  modeSel.style.display = eng?'none':''; chatText.placeholder = eng? t('engPh') : t('chatPh'); }
+function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); chatEl.classList.remove('hidden');
+  if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; }           // switching NPC resets the thread
+  applyNpcChrome(npc);
+  if(!chatGreeted){ chatGreeted=true; addMsg('bot', npcGreet(npc)); }
   setTimeout(()=>chatText.focus(),60); }
 function closeChat(){ chatEl.classList.add('hidden'); }
 
@@ -2215,14 +2273,14 @@ const M=o=>{ if(o) o._metric=true; return o; };   // tag generic metric-sort int
 function smalltalk(q){
   const ql=q.toLowerCase();
   const g=ql.trim().replace(/[!?.~ㅋㅎ\s]+$/,'').trim();
-  if(/^(안녕(하세요|하십니까|하셔요|들)?|안뇽\S*|하이\S*|헬[로루]\S*|반가\S*|반갑\S*|여보세요|저기요?|이봐\S*|야+|헤이\S*|ㅎㅇ|hi+|hello+|hey+|heya|hiya|yo+|howdy|sup|wassup|what'?s? ?up|good ?(morning|afternoon|evening|day)|morning|evening|greetings|gm|gn)( ?(there|driver|기사님?|택시|taxi|아저씨|선생님?))?$/i.test(g)) return t('greetReply');
-  if(/^(고+마+워?요?|고맙[습다]\S*|감사\S*|ㄳ\S*|ㄱㅅ|thank ?(you|u)?\S*|thanks\S*|thx|ty|appreciate\S*)( ?(so ?much|very ?much|it|this|기사님?|driver))?$/i.test(g)) return t('stThanks');
-  if(/^(잘 ?가\S*|잘 ?있어\S*|안녕히 ?(가|계)\S*|또 ?(봐\S*|와\S*|만나\S*|올게\S*|뵈\S*)|들어가\S*|수고\S*|이만.*|bye+|goodbye\S*|see ?(you|ya)\S*|cya|later|gotta ?go|그만\S*|끝)( ?(기사님?|driver))?$/i.test(g)) return t('stBye');
+  if(/^(안녕(하세요|하십니까|하셔요|들)?|안뇽\S*|하이\S*|헬[로루]\S*|반가\S*|반갑\S*|여보세요|저기요?|이봐\S*|야+|헤이\S*|ㅎㅇ|hi+|hello+|hey+|heya|hiya|yo+|howdy|sup|wassup|what'?s? ?up|good ?(morning|afternoon|evening|day)|morning|evening|greetings|gm|gn)( ?(there|driver|기사님?|택시|taxi|아저씨|선생님?))?$/i.test(g)) return 'greetReply';
+  if(/^(고+마+워?요?|고맙[습다]\S*|감사\S*|ㄳ\S*|ㄱㅅ|thank ?(you|u)?\S*|thanks\S*|thx|ty|appreciate\S*)( ?(so ?much|very ?much|it|this|기사님?|driver))?$/i.test(g)) return 'stThanks';
+  if(/^(잘 ?가\S*|잘 ?있어\S*|안녕히 ?(가|계)\S*|또 ?(봐\S*|와\S*|만나\S*|올게\S*|뵈\S*)|들어가\S*|수고\S*|이만.*|bye+|goodbye\S*|see ?(you|ya)\S*|cya|later|gotta ?go|그만\S*|끝)( ?(기사님?|driver))?$/i.test(g)) return 'stBye';
   if(searchCandidates(q,8).strong) return null;   // a real repo matched → not small talk; let it search
-  if(/^.*(어떻게 ?지내|잘 ?지내|잘 ?지냈|잘 ?있었|별일 ?없|요즘 ?어때|오늘 ?어때|기분 ?어때|컨디션 ?어때).*$|^(뭐\s*해\S*|뭐\s*하(고\s*있|니|는|냐)\S*|how ?are ?you\S*|how'?s? ?(it ?going|things|your ?day|life)\S*|hru|wyd)$/i.test(g)) return t('stHow');
-  if(/^.*((너|넌|당신|네|니|자네) ?(는 )?누구|누구(세요|야|니|냐|예요|에요)|정체 ?(가 )?(뭐|무엇)|(너|넌|당신) ?(는 )?뭐(야|니|예요|에요)|이름 ?(이 )?(뭐|무엇)|네 ?이름).*$|^((너|네) ?소개\S*|소개 ?좀\S*|who ?are ?you\S*|what ?are ?you\S*|your ?name\S*|introduce ?yourself\S*)$/i.test(g)) return t('stWho');
-  if(/^.*((뭘?|무엇을?) ?할 ?수 ?있|뭐 ?(해줄|할 ?줄 ?알|하는 ?거)|어떻게 ?(써|쓰|사용)|사용 ?법|쓰는 ?법|기능 ?(이 )?(뭐|무엇)).*$|^(도움말|도와줘\S*|help\S*|what ?can ?you ?do\S*|how ?(do|to) ?(i )?use\S*|how ?does ?(this|it) ?work\S*|명령어\S*)$/i.test(g)) return t('stHelp');
-  if(/^(멋[지져]+\S*|좋[다네아][요]?\S*|최고\S*|짱\S*|굿\S*|귀[엽여]\S*|대단\S*|훌륭\S*|nice\S*|cool\S*|awesome\S*|great\S*|amazing\S*|wonderful\S*|love ?(it|this|you)\S*|good ?(job|work|boy)\S*|lol|lmao|haha+|hehe+|ㅋㅋ+\S*|ㅎㅎ+\S*|👍+)$/i.test(g)) return t('stNice');
+  if(/^.*(어떻게 ?지내|잘 ?지내|잘 ?지냈|잘 ?있었|별일 ?없|요즘 ?어때|오늘 ?어때|기분 ?어때|컨디션 ?어때).*$|^(뭐\s*해\S*|뭐\s*하(고\s*있|니|는|냐)\S*|how ?are ?you\S*|how'?s? ?(it ?going|things|your ?day|life)\S*|hru|wyd)$/i.test(g)) return 'stHow';
+  if(/^.*((너|넌|당신|네|니|자네) ?(는 )?누구|누구(세요|야|니|냐|예요|에요)|정체 ?(가 )?(뭐|무엇)|(너|넌|당신) ?(는 )?뭐(야|니|예요|에요)|이름 ?(이 )?(뭐|무엇)|네 ?이름).*$|^((너|네) ?소개\S*|소개 ?좀\S*|who ?are ?you\S*|what ?are ?you\S*|your ?name\S*|introduce ?yourself\S*)$/i.test(g)) return 'stWho';
+  if(/^.*((뭘?|무엇을?) ?할 ?수 ?있|뭐 ?(해줄|할 ?줄 ?알|하는 ?거)|어떻게 ?(써|쓰|사용)|사용 ?법|쓰는 ?법|기능 ?(이 )?(뭐|무엇)).*$|^(도움말|도와줘\S*|help\S*|what ?can ?you ?do\S*|how ?(do|to) ?(i )?use\S*|how ?does ?(this|it) ?work\S*|명령어\S*)$/i.test(g)) return 'stHelp';
+  if(/^(멋[지져]+\S*|좋[다네아][요]?\S*|최고\S*|짱\S*|굿\S*|귀[엽여]\S*|대단\S*|훌륭\S*|nice\S*|cool\S*|awesome\S*|great\S*|amazing\S*|wonderful\S*|love ?(it|this|you)\S*|good ?(job|work|boy)\S*|lol|lmao|haha+|hehe+|ㅋㅋ+\S*|ㅎㅎ+\S*|👍+)$/i.test(g)) return 'stNice';
   return null;
 }
 /* does this query actually call for a repo search (→ the KS), or is it general chat? */
@@ -2232,7 +2290,7 @@ function needsSearch(q){
 }
 function _coreIntent(q){
   const ql=q.toLowerCase();
-  const st=smalltalk(q); if(st) return { repo:null, message:st, alts:[] };
+  const st=smalltalk(q); if(st) return { repo:null, message:t(st), alts:[] };
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
   if(/인기|제일|최고|많이|핫|\bpopular\b|\bbest\b|\btop\b|\bhot\b/.test(ql)){ const a=byRank(); return M(pick(a[0],t('leadPopular'),a.slice(1,4))); }
   if(/아무|랜덤|골라|추천만|\brandom\b/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
@@ -2354,7 +2412,29 @@ async function groundedAsk(q){
   }catch(e){ clearTimeout(to); sb.remove(); const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); }   // timeout/error → silent local fallback
 }
 
+const ENG_SM={ greetReply:'engGreet', stThanks:'engThanks', stBye:'engBye', stHow:'engHow', stWho:'engWho', stHelp:'engHelp', stNice:'engNice' };
+async function askScholar(q, npc){
+  const sm=smalltalk(q); if(sm){ addMsg('bot', t(ENG_SM[sm]||sm)); return; }    // greet/thanks in the engineer's voice, no MCP call
+  const url=groundedUrl();
+  if(!url){ addMsg('bot', t('engNoBackend')); return; }                // self-hosted clone without the worker
+  const sb=addMsg('bot', t('engSearching')); sb.classList.add('typing');
+  const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||12000;
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),tmo);
+  try{
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,npc}),signal:ctrl.signal});
+    clearTimeout(to); if(!res.ok) throw new Error('http '+res.status);
+    const data=await res.json(); sb.remove();
+    if(data.fallback||!data.items||!data.items.length){ addMsg('bot', t('engNone')); return; }
+    const top=data.items[0]; let msg=t('engIntro');
+    if(top.title) msg+='<br><br><b>'+esc(top.title)+'</b>';
+    if(top.snippet) msg+='<br>'+esc(top.snippet);
+    const tr=data.trace||{};
+    const trace={ ks:tr.source, tools:[tr.tool].filter(Boolean), refs:(data.items||[]).map(i=>({name:i.title,url:i.url})), mcpMs:tr.mcpMs };
+    addMsg('bot', msg, { trace });                                     // reuses the taxi's 'how I found this' panel
+  }catch(e){ clearTimeout(to); sb.remove(); addMsg('bot', t('engErr')); }
+}
 async function askDriver(q){
+  if(activeNpc&&activeNpc.kind==='msdocs') return askScholar(q, activeNpc.kind);
   if(llmMode==='grounded') return groundedAsk(q);                     // self-manages its own 2-phase messaging
   const tb=addMsg('bot','…'); tb.classList.add('typing');
   let r; try{ r = llmMode==='webllm'?await webllmAsk(q) : llmMode==='proxy'?await proxyAsk(q) : localIntent(q); }
@@ -2381,7 +2461,7 @@ function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visib
   setTimeout(()=>openCard(repo),500); }
 
 /* ---- wiring ---- */
-taxiBtn.onclick=()=> chatEl.classList.contains('hidden')?openChat():closeChat();
+taxiBtn.onclick=()=> chatEl.classList.contains('hidden')?openChat(NPCS.find(n=>n.kind==='taxi')):closeChat();
 document.getElementById('chatClose').onclick=closeChat;
 document.getElementById('chatSend').onclick=sendChat;
 chatText.addEventListener('keydown',e=>{ if(e.code==='Enter'&&!e.isComposing&&e.keyCode!==229){ e.preventDefault(); sendChat(); } e.stopPropagation(); });
@@ -2474,9 +2554,11 @@ function animate(){
     const reach=Math.min(b._cw||3,10)+4.8;
     if(d<reach && d<nd){ nd=d; nearest=b; }
   }
+  nearNpc=null; { let nnd=Infinity; for(const n of NPCS){ const d=player.position.distanceTo(n.pos); if(d<(n.reach||4.6) && d<nnd){ nnd=d; nearNpc=n; } } }
   nearestSeat=null;
   if(!sitting && !nearest){ let sd=2.5; for(const s of SEATS){ const d=player.position.distanceTo(s.pos); if(d<sd){ sd=d; nearestSeat=s; } } }
   if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
+  else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
@@ -2624,6 +2706,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__pos=()=>({x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2)});
   window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)});
   window.__near=()=>nearest?(nearest._isLibrary?'__LIB__':nearest.repo):null;
+  window.__npc=()=>({count:NPCS.length, kinds:NPCS.map(n=>n.kind), near:nearNpc?nearNpc.kind:null, active:activeNpc?activeNpc.kind:null, btn:document.getElementById('actBtn').textContent});
+  window.__npcPos=()=>NPCS.map(n=>({kind:n.kind,x:+n.pos.x.toFixed(1),z:+n.pos.z.toFixed(1)}));
+  window.__talk=(kind)=>{ const n=NPCS.find(x=>x.kind===kind); if(!n) return null; openChat(n); return {active:activeNpc?activeNpc.kind:null, title:chatHeadTtl?chatHeadTtl.textContent:null, modeHidden:modeSel.style.display==='none', ph:chatText.placeholder}; };
   window.__chows=()=>({n:CHOWS.length, wld:CHOWS.filter(c=>c.userData.wld).length, tail:!!(CHOWS[0]&&CHOWS[0].userData.tail), sample:CHOWS.filter(c=>c.userData.wld).slice(0,4).map(c=>[+c.position.x.toFixed(2),+c.position.z.toFixed(2)])});
   window.__seat=()=>({near:nearestSeat?[+nearestSeat.x.toFixed(1),+nearestSeat.z.toFixed(1)]:null, sitting:!!sitting, seats:SEATS.length});
   window.__sit=()=>{ if(nearestSeat){ sitDown(nearestSeat); return true; } return false; };

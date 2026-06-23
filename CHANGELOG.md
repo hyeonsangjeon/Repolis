@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.4.0] — 2026-06-23
+
+### 📘 Knowledge NPCs — talk to MCP‑grounded experts (NPC = MCP)
+- New **MS Docs engineer NPC** in the plaza: walk up and ask about Azure, .NET or Copilot, and it answers from the **official Microsoft Learn docs in real time** via the hosted **Microsoft Learn MCP server** (`learn.microsoft.com/api/mcp`) — **keyless and free** (this NPC needs no Azure and no key). Each answer shows a **trace panel** linking the source docs.
+- Generalized the town into an **NPC = MCP** system — the taxi driver and the engineer are both NPCs you walk up to and chat with, and **each NPC activates only its own MCP knowledge source**. The Cloudflare Worker gained an MCP allowlist (`MCP_NPCS`) and a small streamable‑HTTP MCP client that routes `{question, npc}` to the right server, falling back to the Azure KB taxi path otherwise.
+- The engineer greets and small‑talks **in character** (no taxi lines leaking through), fully localized in **English / 한국어**.
+
 ## [1.3.0] — 2026-06-23
 
 ### 🛰️ AI Foundry Live — grounded taxi mode
