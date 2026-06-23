@@ -75,21 +75,59 @@
       }
     },
 
-    /* —— 아직 소환되지 않은 현자들 (밤하늘에 별자리 좌표만 예약) —— */
     {
-      id: 'rigel', kind: 'deepwiki', active: false, emoji: '🧩',
+      id: 'rigel', kind: 'deepwiki', active: true, emoji: '🗺️',
       star: 'RIGEL', epithetEn: 'the Cartographer', epithetKo: '지도제작자',
       mythEn: 'Ariadne', mythKo: '아리아드네',
-      color: 0xbcd0ff, auraColor: 0x9fb8ff,
-      domainKo: '레포의 내부 구조', domainEn: 'a repo\'s inner structure',
-      ks: '(deepwiki-mcp-ks)', kb: '',
+      color: 0x7fe3da, auraColor: 0x57ccc2,
+      domainKo: '레포의 내부 구조', domainEn: 'a repo\'s inner architecture',
+      ks: 'deepwiki-mcp-ks', kb: 'repolis-deepwiki-kb',
       constellation: { // 오리온자리(Orion) — RIGEL은 발끝의 청백색 별
         az: 5.60, el: 0.50,
         nodes: [[0, 0], [0.052, 0.085], [0.104, 0.150], [0.040, 0.066], [0.078, 0.066], [0.118, 0.066], [0.135, 0.150], [-0.010, -0.020], [0.160, 0.044]],
         edges: [[0, 3], [3, 1], [1, 2], [2, 6], [6, 8], [8, 5], [5, 4], [4, 3], [4, 7]],
         primary: 0
+      },
+      persona: {
+        ko: {
+          greet: '별빛 지도를 펼치며 인사드려요 🗺️ 저는 <b>RIGEL</b> · 지도제작자, 아리아드네의 실을 풀어 어떤 코드의 미궁이든 그 안의 길을 비춰드리는 현자예요. 어떤 레포의 미궁을 함께 그려볼까요? <b>owner/repo</b>로 알려주세요. 예: <b>facebook/react</b>의 재조정 원리, <b>langchain-ai/langchain</b>의 구조',
+          who: '저는 <b>RIGEL</b> · the Cartographer 🗺️ 미궁에 실을 드리운 <i>아리아드네</i>의 혼을 품은, 오리온자리 발끝의 청백색 별이에요. ' + OWNER_KO + '(' + OWNER + ')님의 도시 <b>Repolis</b>에서, <b>DeepWiki</b> 신탁으로 세상 어떤 공개 레포든 그 내부 아키텍처를 읽어 지도처럼 펼쳐드려요. 어떤 코드의 미궁이 궁금하세요?',
+          help: '레포를 <b>owner/repo</b> 형식으로 알려주세요 🗺️ DeepWiki 신탁이 미리 탐사해 둔 레포라면, 내부 구조·아키텍처·동작 원리를 지도처럼 풀어드려요. 예: “<b>facebook/react</b> 재조정은 어떻게 동작해?”, “<b>vercel/next.js</b> 라우팅 구조”. 아직 탐사되지 않은 레포는 deepwiki.com에서 인덱싱하면 제가 읽을 수 있어요.',
+          title: '🗺️ RIGEL · 지도제작자',
+          ph: '어떤 레포의 구조가 궁금하세요? 예: facebook/react',
+          searching: '아리아드네의 실을 따라 레포의 미궁을 그려볼게요 🗺️🧵',
+          none: '그 레포는 아직 DeepWiki에 탐사되지 않았나 봐요 🗺️ <b>owner/repo</b> 형식이 맞는지 확인해 주시거나, deepwiki.com에서 인덱싱해 주세요.',
+          err: '미궁을 그리는 중 실이 엉켰어요 😅 잠시 후 다시 시도해 주세요.',
+          noBackend: '레포 탐사 백엔드(DeepWiki MCP)가 연결돼 있지 않아요. 라이브 사이트에서 사용해 주세요 🗺️',
+          ask: '어떤 레포의 미궁을 그려드릴까요? <b>owner/repo</b> 형식으로 알려주세요 🗺️ 예: <b>facebook/react</b>, <b>vercel/next.js</b>',
+          thanks: '미궁을 무사히 빠져나오셨다니 기뻐요 🗺️ 또 그릴 지도가 있으면 불러주세요.',
+          bye: '좋은 항해 되세요 🗺️ 길을 잃으면 언제든 실타래를 들고 찾아올게요.',
+          how: '저는 늘 새 미궁의 지도를 그리고 있죠 🗺️ 어떤 레포의 구조가 궁금하세요? <b>owner/repo</b>로 알려주세요.',
+          nice: '별빛에 비춰주셔서 고마워요 😊 또 어떤 레포를 그려드릴까요?'
+        },
+        en: {
+          greet: 'Unrolling a map of starlight 🗺️ I\'m <b>RIGEL</b> · the Cartographer — the scholar who lights the way through any code-labyrinth by unspooling Ariadne\'s thread. Which repo\'s maze shall we chart? Name it as <b>owner/repo</b>. e.g. <b>facebook/react</b>\'s reconciliation, <b>langchain-ai/langchain</b>\'s architecture',
+          who: 'I\'m <b>RIGEL</b> · the Cartographer 🗺️ the blue-white star at Orion\'s foot, carrying the spirit of <i>Ariadne</i> who strung the thread through the labyrinth. In ' + OWNER_EN + '\'s (' + OWNER + ') city, <b>Repolis</b>, I read the inner architecture of any public repo through the <b>DeepWiki</b> oracle and chart it like a map. Which code-maze are you curious about?',
+          help: 'Name a repo as <b>owner/repo</b> 🗺️ If the DeepWiki oracle has already surveyed it, I\'ll unfold its inner structure, architecture and how it works — like a map. e.g. “how does <b>facebook/react</b> reconciliation work?”, “<b>vercel/next.js</b> routing structure”. A repo that isn\'t surveyed yet can be indexed at deepwiki.com so I can read it.',
+          title: '🗺️ RIGEL · the Cartographer',
+          ph: 'Which repo\'s structure? e.g. facebook/react',
+          searching: 'Following Ariadne\'s thread through the repo\'s labyrinth 🗺️🧵',
+          none: 'That repo doesn\'t seem to be surveyed on DeepWiki yet 🗺️ Check the <b>owner/repo</b> spelling, or index it at deepwiki.com.',
+          err: 'The thread tangled while charting the maze 😅 Please try again.',
+          noBackend: 'The repo-survey backend (DeepWiki MCP) isn\'t connected. Try it on the live site 🗺️',
+          ask: 'Which repo\'s maze shall I chart? Name it as <b>owner/repo</b> 🗺️ e.g. <b>facebook/react</b>, <b>vercel/next.js</b>',
+          thanks: 'Glad you made it out of the maze 🗺️ Call me whenever there\'s another to chart.',
+          bye: 'Fair voyage 🗺️ If you ever lose the way, I\'ll be here with the thread.',
+          how: 'Always charting some new labyrinth 🗺️ Which repo\'s structure are you curious about? Name it as <b>owner/repo</b>.',
+          nice: 'Thank you for the starlight 😊 Which repo shall I chart next?'
+        }
+      },
+      backstory: {
+        ko: OWNER_KO + '님의 도시 Repolis 광장의 지도제작자. 오리온자리 발끝의 청백색 별 RIGEL의 빛과 아리아드네의 실타래로, deepwiki-mcp-ks 신탁을 통해 어떤 공개 GitHub 레포든 그 내부 구조·아키텍처를 실시간으로 읽어 지도처럼 펼쳐 설명한다.',
+        en: 'The cartographer in the plaza of ' + OWNER_EN + '\'s Repolis. By the light of Orion\'s blue-white star RIGEL and Ariadne\'s thread, reads the inner structure and architecture of any public GitHub repo in real time through the deepwiki-mcp-ks oracle, charting it like a map.'
       }
     },
+    /* —— 아직 소환되지 않은 현자들 (밤하늘에 별자리 좌표만 예약) —— */
     {
       id: 'mira', kind: 'context7', active: false, emoji: '⏳',
       star: 'MIRA', epithetEn: 'the Timekeeper', epithetKo: '시간지기',

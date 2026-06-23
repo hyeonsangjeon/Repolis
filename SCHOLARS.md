@@ -45,6 +45,7 @@ ever spending a Knowledge‑Source call.
 |---------|-------|--------|------------|------|-------------|------------------|----------------|--------|
 | 🚕 **POLARIS** · the Wayfinder<br><sub>_Hermes · Ursa Minor_</sub> | Taxi driver | The owner's GitHub repos | [GitHub MCP](https://api.githubcopilot.com/mcp/readonly) | `storedHeaders` (PAT, server‑side) | `search_repositories`, `get_file_contents`, `list_commits`, `list_issues` | `github-repos-mcp-ks` | `repolis-github-kb` | ✅ live |
 | 📘 **VEGA** · the Archivist<br><sub>_Daidalos · Lyra_</sub> | MS Docs engineer | Microsoft · Azure · .NET docs | [Microsoft Learn MCP](https://learn.microsoft.com/api/mcp) | keyless (no auth) | `microsoft_docs_search` | `microsoft-learn-mcp-ks` | `repolis-mslearn-kb` | ✅ live |
+| 🗺️ **RIGEL** · the Cartographer<br><sub>_Ariadne · Orion_</sub> | DeepWiki cartographer | Any public repo's inner architecture | [DeepWiki MCP](https://mcp.deepwiki.com/mcp) | keyless (no auth) | `ask_question` | _direct MCP — no KS_ | _direct MCP — no KB_ | ✅ live |
 
 ---
 

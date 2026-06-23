@@ -1983,6 +1983,52 @@ const engineer=new THREE.Group(); engineer.position.set(-10.5,0,0);
 engineer.rotation.y=Math.PI/2; scene.add(engineer);
 NPCS.push({ group:engineer, pos:engineer.position.clone(), kind:'msdocs', reach:4.6 });
 
+// 🗺️ RIGEL the Cartographer — DeepWiki oracle: maps the inner architecture of any indexed public repo
+const rigel=new THREE.Group(); rigel.position.set(6.5,0,-9.5);
+(function buildRigel(){
+  const ROBE=0x123a3c, DEEP=0x0b2a2b, CAPE=0x081f20, SK=0xf0c79a, HR=0x2b2118, STARC=0x7fe3da, BRIGHT=0xbdeee6, GOLD=0xe8c87a;
+  // floor-length teal cartographer robe (cone skirt + bean torso)
+  const skirt=new THREE.Mesh(new THREE.ConeGeometry(0.62,1.18,20), toon(DEEP)); skirt.position.y=0.62; skirt.castShadow=true; rigel.add(skirt);
+  const tb=capsule(0.44,0.48,ROBE); tb.position.y=1.34; tb.scale.z=0.84; outline(tb,0.04); rigel.add(tb);
+  const sash=new THREE.Mesh(new THREE.TorusGeometry(0.4,0.055,8,22), toon(STARC)); sash.position.set(0,1.14,0); sash.rotation.x=Math.PI/2; sash.scale.set(1,0.82,1); rigel.add(sash);   // teal sash
+  const col=rbox(0.34,0.1,0.16,0x0a2426,0.02); col.position.set(0,1.66,0.32); rigel.add(col);
+  // head + face (npcFaces → night glow, like the other scholars)
+  const hd=ball(0.5,SK,18); hd.position.y=2.12; hd.scale.set(1.0,0.98,0.96); outline(hd,0.04); rigel.add(hd);
+  [[-0.2],[0.2]].forEach(([ex])=>{
+    const e=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,10), basic(0x2a2320)); e.position.set(ex,2.12,0.46); e.scale.z=0.5; rigel.add(e);
+    const hl=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6), basic(0xffffff)); hl.position.set(ex+0.035,2.16,0.5); rigel.add(hl); });
+  [[-0.2,1],[0.2,-1]].forEach(([ex,s])=>{ const b=new THREE.Mesh(new THREE.CapsuleGeometry(0.016,0.1,3,6), toon(HR)); b.rotation.z=Math.PI/2+s*0.12; b.position.set(ex,2.26,0.46); rigel.add(b); });   // brows
+  { const m=new THREE.Mesh(new THREE.TorusGeometry(0.085,0.022,8,16,Math.PI), basic(0x8a4f44)); m.position.set(0,1.92,0.46); m.rotation.z=Math.PI; rigel.add(m); }   // smile
+  // hair + swept-back astronomer hood (rounded cowl — distinct from VEGA's pointed wizard hat)
+  const hair=ball(0.52,HR,16); hair.position.set(0,2.34,-0.04); hair.scale.set(1.04,0.56,1.06); outline(hair,0.03); rigel.add(hair);
+  const hood=new THREE.Mesh(new THREE.SphereGeometry(0.6,20,16,0,Math.PI*2,0,Math.PI*0.62), toon(DEEP)); hood.position.set(0,2.5,-0.16); hood.scale.set(1.08,1.0,1.14); rigel.add(hood);
+  const hbrim=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.05,8,24), toon(ROBE)); hbrim.position.set(0,2.36,-0.02); hbrim.rotation.x=Math.PI/2; rigel.add(hbrim);
+  const hband=rbox(0.2,0.06,0.05,STARC,0.01); hband.position.set(0,2.42,0.4); rigel.add(hband);
+  { const hs=new THREE.Sprite(new THREE.SpriteMaterial({map:GLINT_TEX,color:STARC,transparent:true,opacity:0.95,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); hs.scale.set(0.5,0.5,1); hs.position.set(0,2.8,0.04); rigel.add(hs); }   // RIGEL star at the brow
+  // star cape with Orion runes
+  const cape=new THREE.Mesh(new THREE.ConeGeometry(0.6,1.42,18,1,true), toon(CAPE)); cape.material.side=THREE.DoubleSide; cape.position.set(0,1.44,-0.18); rigel.add(cape);
+  [[-0.22,1.5,0.36,0.14],[0.2,1.3,0.34,0.12],[-0.04,1.12,0.34,0.1]].forEach(([rx,ry,rz,s])=>{ const r=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:BRIGHT,transparent:true,opacity:0.82,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); r.scale.set(s,s,1); r.position.set(rx,ry,rz); rigel.add(r); });
+  // arms + (mostly hidden) legs
+  const al=capsule(0.14,0.4,ROBE); al.position.set(-0.54,1.4,0); outline(al,0.03); rigel.add(al);
+  const ar=al.clone(); ar.position.x=0.54; rigel.add(ar);
+  const ll=capsule(0.16,0.3,0x0a2426); ll.position.set(-0.18,0.5,0); rigel.add(ll);
+  const lr=ll.clone(); lr.position.x=0.18; rigel.add(lr);
+  // PROP 1: an unrolled chart of the labyrinth, held in front — Ariadne's route drawn in teal
+  const mapG=new THREE.Group(); mapG.position.set(0,1.12,0.44); mapG.rotation.x=-0.95;
+  const sheet=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.5), basic(0xe9e1c6)); sheet.material.side=THREE.DoubleSide; mapG.add(sheet);
+  const rod1=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.58,10), toon(0x5a4632)); rod1.rotation.z=Math.PI/2; rod1.position.set(-0.38,0,0); mapG.add(rod1);
+  const rod2=rod1.clone(); rod2.position.set(0.38,0,0); mapG.add(rod2);
+  const route=new THREE.Mesh(new THREE.TorusGeometry(0.13,0.013,6,20), basic(0x2aa39a)); route.position.set(-0.04,0,0.01); route.scale.set(1,0.7,1); mapG.add(route);
+  const dot=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6), basic(GOLD)); dot.position.set(0.18,0.04,0.02); mapG.add(dot);
+  rigel.add(mapG);
+  // PROP 2: Ariadne's thread — a glowing teal yarn ball at the hip
+  const yarn=ball(0.12,STARC,12); yarn.position.set(-0.5,1.04,0.2); rigel.add(yarn);
+  { const ys=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:STARC,transparent:true,opacity:0.5,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); ys.scale.set(0.5,0.5,1); ys.position.copy(yarn.position); rigel.add(ys); }
+  rigel._head=hd; npcFaces.add(hd.material);
+})();
+rigel.rotation.y=-0.6; scene.add(rigel);
+NPCS.push({ group:rigel, pos:rigel.position.clone(), kind:'deepwiki', reach:4.6 });
+
 /* ---- floating ✦ star-nameplate + soft pulsing aura over each active scholar NPC ---- */
 const auraPulse=[];
 (function dressScholars(){
@@ -2327,9 +2373,9 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
 function scholarPersona(kind, slot){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(sc&&sc.active&&sc.persona){ const p=sc.persona[LANG]||sc.persona.ko; if(p&&p[slot]) return p[slot]; } return null; }
 function npcGreet(n){ const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
-function applyNpcChrome(n){ const eng=n&&n.kind==='msdocs';
-  if(chatHeadTtl) chatHeadTtl.innerHTML = eng? t('engTitle') : t('taxiTitle');
-  modeSel.style.display = eng?'none':''; chatText.placeholder = eng? t('engPh') : t('chatPh'); }
+function applyNpcChrome(n){ const scholar = n && n.kind!=='taxi';
+  if(chatHeadTtl) chatHeadTtl.innerHTML = scholar ? (scholarPersona(n.kind,'title')||t('engTitle')) : t('taxiTitle');
+  modeSel.style.display = scholar?'none':''; chatText.placeholder = scholar ? (scholarPersona(n.kind,'ph')||t('engPh')) : t('chatPh'); }
 function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); chatEl.classList.remove('hidden');
   if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; chatHistory=[]; }   // switching NPC resets the thread + memory
   applyNpcChrome(npc);
@@ -2430,19 +2476,19 @@ function townLore(q, kind){
     return LANG==='ko'
       ? `이 도시 <b>Repolis</b>는 <b>${O.ko}</b>(${O.id})님의 GitHub 세계예요. 그분의 모든 레포가 이곳에 집으로 서 있고, 저희 현자들은 그 세계를 지키는 별이랍니다 ✨`
       : `This city <b>Repolis</b> is <b>${O.en}</b>'s (${O.id}) GitHub world. Every one of their repos stands here as a house, and we scholars are the stars that watch over it ✨`;
-  // town — what / where is this place
-  if(/이 ?(마을|도시|동네)|여(기|긴).{0,3}어디|이곳[은는이가]? ?(뭐|무엇|어디)|레폴리스 ?(가|는|란|이란)? ?(뭐|무엇|어디|소개)|repolis ?(is|가|는)? ?(뭐|뭔|무엇|what)|where ?am ?i|what ?is ?(this ?place|repolis)|tell ?me ?about ?(this ?(city|town|place)|repolis)/.test(ql))
-    return LANG==='ko'
-      ? `여긴 <b>Repolis</b> — ${O.ko}님의 레포들이 사는 밤하늘의 도시예요 🌃 건물 하나하나가 GitHub 레포이고, 광장의 현자들에게 물어보면 별빛으로 길을 밝혀드려요.`
-      : `This is <b>Repolis</b> — a night-sky city where ${O.en}'s repos live 🌃 Every building is a GitHub repo, and the plaza's scholars light your way by starlight.`;
-  // roster — who else is here
-  if(/(다른|또 ?다른|어떤|무슨|누구).{0,8}(현자|학자|npc|주민|사람|캐릭터)|(현자|학자|npc|주민|캐릭터).{0,8}(누구|누가|있|살)|who.{0,14}(scholars?|npcs?|else|here|around|live)|other ?(scholars?|npcs?)|(마을|광장|동네).{0,8}(누가|누구)/.test(ql)){
+  // roster — who else is here (checked before town so "이 마을에 다른 현자 누구있어?" isn't swallowed by the town branch)
+  if(/(다른|또 ?다른|어떤|무슨|누구).{0,8}(현자|학자|npc|주민|사람|캐릭터)|(현자|학자|npc|주민|캐릭터).{0,8}(누구|누가|있|살|만나|소개)|who.{0,14}(scholars?|npcs?|else|here|around|live)|other ?(scholars?|npcs?|sages?)|(마을|광장|동네).{0,8}(누가|누구)/.test(ql)){
     const act=(window.activeScholars&&window.activeScholars())||[];
     if(act.length){ const list=act.map(s=>`<b>${s.star}</b> · ${LANG==='ko'?s.epithetKo:s.epithetEn}`).join(', ');
       return LANG==='ko'
         ? `이 광장에는 ${list} 가 별빛 아래 있어요 ✨ 저마다 다른 지식의 신탁에 연결된 현자들이죠. 누구와 이야기해 볼까요?`
         : `Here in the plaza you'll find ${list} under the starlight ✨ each a scholar bound to a different oracle of knowledge. Who would you like to talk to?`; }
   }
+  // town — what / where is this place
+  if(/이 ?(마을|도시|동네)|여(기|긴).{0,3}어디|이곳[은는이가]? ?(뭐|무엇|어디)|레폴리스 ?(가|는|란|이란)? ?(뭐|무엇|어디|소개)|repolis ?(is|가|는)? ?(뭐|뭔|무엇|what)|where ?am ?i|what ?is ?(this ?place|repolis)|tell ?me ?about ?(this ?(city|town|place)|repolis)/.test(ql))
+    return LANG==='ko'
+      ? `여긴 <b>Repolis</b> — ${O.ko}님의 레포들이 사는 밤하늘의 도시예요 🌃 건물 하나하나가 GitHub 레포이고, 광장의 현자들에게 물어보면 별빛으로 길을 밝혀드려요.`
+      : `This is <b>Repolis</b> — a night-sky city where ${O.en}'s repos live 🌃 Every building is a GitHub repo, and the plaza's scholars light your way by starlight.`;
   return null;
 }
 /* engineer "what are you / how do you work / which MCP·model" → self-description, no MCP call */
@@ -2583,25 +2629,47 @@ async function groundedAsk(q){
 }
 
 const ENG_SM={ greetReply:'engGreet', stThanks:'engThanks', stBye:'engBye', stHow:'engHow', stWho:'engWho', stHelp:'engHelp', stNice:'engNice' };
+const SM_SLOT={ greetReply:'greet', stWho:'who', stHelp:'help', stThanks:'thanks', stBye:'bye', stHow:'how', stNice:'nice' };
+// Famous public repos RIGEL (DeepWiki) can map — alias common library names to their owner/repo.
+const REPO_ALIASES={ react:'facebook/react','next.js':'vercel/next.js',nextjs:'vercel/next.js',next:'vercel/next.js',vue:'vuejs/core','vue.js':'vuejs/core',svelte:'sveltejs/svelte',angular:'angular/angular',solid:'solidjs/solid',
+  langchain:'langchain-ai/langchain',langgraph:'langchain-ai/langgraph',llamaindex:'run-llama/llama_index',transformers:'huggingface/transformers',diffusers:'huggingface/diffusers',pytorch:'pytorch/pytorch',tensorflow:'tensorflow/tensorflow',ollama:'ollama/ollama',
+  fastapi:'fastapi/fastapi',django:'django/django',flask:'pallets/flask',express:'expressjs/express',nestjs:'nestjs/nest',
+  three:'mrdoob/three.js','three.js':'mrdoob/three.js',threejs:'mrdoob/three.js',vite:'vitejs/vite',webpack:'webpack/webpack',node:'nodejs/node',nodejs:'nodejs/node',deno:'denoland/deno',bun:'oven-sh/bun',tailwind:'tailwindlabs/tailwindcss',tailwindcss:'tailwindlabs/tailwindcss',axios:'axios/axios',redux:'reduxjs/redux' };
+function extractRepoName(q){
+  const s=String(q||'');
+  const m=s.match(/\b([A-Za-z0-9][\w.\-]*)\/([A-Za-z0-9][\w.\-]+)\b/);              // explicit owner/repo (most precise)
+  if(m && !/^https?$/i.test(m[1])) return m[1]+'/'+m[2];
+  const ql=' '+s.toLowerCase().replace(/[^a-z0-9.\s/_-]/g,' ')+' ';
+  for(const k in REPO_ALIASES){ const kk=k.replace(/[.]/g,'\\.'); if(new RegExp('[^a-z0-9.]'+kk+'[^a-z0-9.]').test(ql)) return REPO_ALIASES[k]; }
+  return null;
+}
 async function askScholar(q, npc){
-  const lore=townLore(q,'msdocs'); if(lore){ addMsg('bot', lore); return; }      // town / owner / roster → instant, no MCP call
-  const sm=smalltalk(q); if(sm){ const p=(sm==='stWho'?scholarPersona('msdocs','who'):sm==='stHelp'?scholarPersona('msdocs','help'):null); addMsg('bot', p||t(ENG_SM[sm]||sm)); return; }    // greet/thanks/who/help in the engineer's voice, no MCP call
-  const meta=engMeta(q)||townMeta(q); if(meta){ addMsg('bot', meta); return; }  // "what are you / how many scholars" → instant, no MCP call
+  let repoName = (npc==='deepwiki') ? extractRepoName(q) : null;
+  const explicitRepo = npc==='deepwiki' && /\b[A-Za-z0-9][\w.\-]*\/[A-Za-z0-9][\w.\-]+\b/.test(q);   // explicit owner/repo → unambiguous repo request (don't let owner-name routing swallow it)
+  if(!explicitRepo){
+    const lore=townLore(q,npc); if(lore){ addMsg('bot', lore); return; }      // town / owner / roster → instant, no MCP call
+    const sm=smalltalk(q); if(sm){ const p=scholarPersona(npc, SM_SLOT[sm]||''); addMsg('bot', p||t(ENG_SM[sm]||sm)); return; }   // greet/thanks/who/help in the scholar's own voice, no MCP
+    const meta=(npc==='msdocs'?engMeta(q):null)||townMeta(q); if(meta){ addMsg('bot', meta); return; }   // "what are you / how many scholars" → instant
+  }
+  if(npc==='deepwiki' && !repoName){ addMsg('bot', scholarPersona(npc,'ask')||t('engNone')); return; }   // RIGEL needs a target repo; ask if none, skip MCP
   const url=groundedUrl();
-  if(!url){ addMsg('bot', t('engNoBackend')); return; }                // self-hosted clone without the worker
-  const sb=addMsg('bot', t('engSearching'), {noHist:true}); sb.classList.add('typing');
-  const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||30000;   // KB synthesis (search+GPT) can take ~5–20s
+  if(!url){ addMsg('bot', scholarPersona(npc,'noBackend')||t('engNoBackend')); return; }                // self-hosted clone without the worker
+  const sb=addMsg('bot', scholarPersona(npc,'searching')||t('engSearching'), {noHist:true}); sb.classList.add('typing');
+  const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||30000;   // KB synthesis / DeepWiki can take ~5–20s
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),tmo);
   try{
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,npc,history:priorHist(),lang:LANG}),signal:ctrl.signal});
+    const body={question:q,npc,history:priorHist(),lang:LANG}; if(repoName) body.repoName=repoName;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});
     clearTimeout(to); if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json(); sb.remove();
-    if(data.message){                                                 // grounded KB synthesis (preferred): answer already in the user's language
+    if(data.needRepo){ addMsg('bot', scholarPersona(npc,'ask')||t('engNone')); return; }    // worker safety-net: no repo target
+    if(data.notFound){ addMsg('bot', scholarPersona(npc,'none')||t('engNone')); return; }   // repo not indexed on DeepWiki
+    if(data.message){                                                 // grounded synthesis / DeepWiki prose: answer already shaped
       const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
-      addMsg('bot', msg, { trace:data.trace });                       // reuses the taxi's 'how I found this' panel (refs = doc links)
+      addMsg('bot', msg, { trace:data.trace });                       // reuses the 'how I found this' panel
       return;
     }
-    if(data.items&&data.items.length){                                // direct-MCP fallback shape (KB unconfigured clone)
+    if(data.items&&data.items.length){                                // direct-MCP doc-list shape (MS Learn clone path)
       const top=data.items[0]; let msg=t('engIntro');
       if(top.title) msg+='<br><br><b>'+esc(top.title)+'</b>';
       if(top.snippet) msg+='<br>'+esc(top.snippet);
@@ -2609,11 +2677,11 @@ async function askScholar(q, npc){
       const trace={ ks:tr.source, tools:[tr.tool].filter(Boolean), refs:(data.items||[]).map(i=>({name:i.title,url:i.url})), mcpMs:tr.mcpMs };
       addMsg('bot', msg, { trace }); return;
     }
-    addMsg('bot', t('engNone'));
-  }catch(e){ clearTimeout(to); sb.remove(); addMsg('bot', t('engErr')); }
+    addMsg('bot', scholarPersona(npc,'none')||t('engNone'));
+  }catch(e){ clearTimeout(to); sb.remove(); addMsg('bot', scholarPersona(npc,'err')||t('engErr')); }
 }
 async function askDriver(q){
-  if(activeNpc&&activeNpc.kind==='msdocs') return askScholar(q, activeNpc.kind);
+  if(activeNpc&&activeNpc.kind!=='taxi') return askScholar(q, activeNpc.kind);   // any non-taxi scholar → its own MCP knowledge source
   if(llmMode==='grounded') return groundedAsk(q);                     // self-manages its own 2-phase messaging
   const tb=addMsg('bot','…',{noHist:true}); tb.classList.add('typing');
   let r; try{ r = llmMode==='webllm'?await webllmAsk(q) : llmMode==='proxy'?await proxyAsk(q) : localIntent(q); }

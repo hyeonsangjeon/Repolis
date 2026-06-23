@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.7.0] — 2026-06-23
+
+### 🗺️ RIGEL · the Cartographer — a third scholar (DeepWiki)
+- **A new named scholar joins the plaza: 🗺️ RIGEL · the Cartographer**, carrying the spirit of *Ariadne* and shining as the blue‑white star at the foot of **Orion**. Walk up and RIGEL maps the **inner architecture of any DeepWiki‑indexed public repo** — ask `facebook/react`'s reconciliation, `langchain-ai/langchain`'s structure, and it unspools "Ariadne's thread" through the labyrinth of the code. Like the other scholars it gets a floating ✦ star‑nameplate, a pulsing teal aura, its own Orion constellation on the night dome, and astronomer‑cartographer robes (teal hooded robe, an unrolled star‑map, and a ball of Ariadne's yarn).
+- **Keyless & clone‑friendly.** RIGEL answers through the **DeepWiki MCP** (`mcp.deepwiki.com/mcp`, `ask_question`) directly — **no Azure KB, no key required** — so it works in a fresh clone out of the box. The Cloudflare Worker routes `{question, npc:'deepwiki', repoName}` straight to DeepWiki and returns grounded prose + a "how I found this" trace.
+- **Smart repo targeting** — RIGEL needs a target repo. The chat extracts an explicit `owner/repo` from your question, or resolves ~35 famous library aliases (`react` → `facebook/react`, `langchain` → `langchain-ai/langchain`, …). If none is found it asks for `owner/repo`; if the repo isn't indexed on DeepWiki it says so and points to deepwiki.com. An explicit `owner/repo` is always treated as a repo request, so owner‑name routing can't swallow it.
+- **🐛 Roster vs. town** — *"이 마을에 다른 현자 누구 있어?"* now correctly lists the scholars (the roster check runs before the town‑description check). The roster names all three: **POLARIS · 길잡이**, **VEGA · 기록보관자**, **RIGEL · 지도제작자**.
+
 ## [1.6.0] — 2026-06-23
 
 ### ✨ Named night‑sky scholars

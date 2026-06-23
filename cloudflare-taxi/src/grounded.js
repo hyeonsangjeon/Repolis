@@ -36,6 +36,17 @@ const MCP_NPCS = {
     arg: "query",
     source: "Microsoft Learn (MCP)",
   },
+  // RIGEL the Cartographer → DeepWiki. Stateless (no mcp-session-id), and `ask_question`
+  // needs TWO args (repoName + question). It answers only PRE-INDEXED public repos and
+  // returns free-form markdown prose (the answer itself), not a results[] array.
+  deepwiki: {
+    url: "https://mcp.deepwiki.com/mcp",
+    tool: "ask_question",
+    source: "DeepWiki (MCP)",
+    needsRepo: true,
+    prose: true,
+    args: (q, x) => ({ repoName: x.repoName, question: String(q).slice(0, 500) }),
+  },
 };
 
 // One town NPC → one grounded Knowledge Base (+ its MCP Knowledge Source). Every scholar
@@ -54,14 +65,23 @@ function scholarConfig(npc, env) {
       ks: env.MSDOCS_KS_NAME || "microsoft-learn-mcp-ks",
       ride: false,
     },
+    // RIGEL (DeepWiki). kb empty by default → skip the Azure KB and answer via the keyless
+    // DeepWiki MCP directly (clone-friendly, no Azure registration). Set DEEPWIKI_KB_NAME to
+    // route it through the shared KB pipeline (GPT synthesis in the user's language) instead.
+    deepwiki: {
+      kb: env.DEEPWIKI_KB_NAME || "",
+      ks: env.DEEPWIKI_KS_NAME || "deepwiki-mcp-ks",
+      ride: false,
+    },
   };
   return reg[npc] || null;
 }
 
-// Streamable-HTTP MCP responses come back as SSE ("data: {json}" lines).
+// Streamable-HTTP MCP responses come back as SSE ("data: {json}" lines). Some servers
+// (DeepWiki) use CRLF line breaks, so split on \r?\n — otherwise a trailing \r breaks the regex.
 function parseSSE(text) {
   const out = [];
-  for (const line of String(text || "").split("\n")) {
+  for (const line of String(text || "").split(/\r?\n/)) {
     const m = line.match(/^data:\s?(.*)$/);
     if (m) { try { out.push(JSON.parse(m[1])); } catch { /* skip keep-alives */ } }
   }
@@ -96,9 +116,31 @@ function cleanDoc(s) {
     .trim();
 }
 
-// Talk to a public MCP server (initialize → tools/call) and shape the top docs for the chat.
-async function mcpAsk(npc, question, env) {
+// Lighter cleaner for DeepWiki's free-form markdown answer → a readable chat paragraph.
+// Keeps identifiers (drops the backticks) and section breaks; strips code fences/links/images.
+function cleanProse(s) {
+  return String(s || "")
+    .replace(/```[\s\S]*?```/g, " ")            // fenced code blocks
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")        // images
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")      // links → text
+    .replace(/^\s{0,3}#{1,6}\s*/gm, "")            // header markers (keep the heading text)
+    .replace(/\s*\[\^?\d+\]/g, "")                 // footnote-ish refs
+    .replace(/`([^`]+)`/g, "$1")                   // inline code → plain identifier
+    .replace(/[*_>]+/g, "")                        // bold/italic/quote markers
+    .replace(/\r/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
+// Talk to a public MCP server (initialize → tools/call) and shape the answer for the chat.
+// `extra` carries scholar-specific args (e.g. DeepWiki's repoName).
+async function mcpAsk(npc, question, env, extra = {}) {
   const cfg = MCP_NPCS[npc];
+  // DeepWiki-style scholars target a specific repo; ask for one if the client didn't supply it.
+  if (cfg.needsRepo && !extra.repoName) {
+    return json({ kind: "docs", needRepo: true, items: [], trace: { source: cfg.source, tool: cfg.tool } }, 200, env);
+  }
   const timeoutMs = Number(env.MCP_TIMEOUT_MS || 20000);
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -107,15 +149,36 @@ async function mcpAsk(npc, question, env) {
     const init = await mcpRpc(cfg.url, "initialize",
       { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "repolis-taxi", version: "1.0" } },
       null, false, ctrl.signal);
-    const sid = init.sid;
+    const sid = init.sid;                                 // DeepWiki is stateless → no sid (guarded below)
     if (sid) await mcpRpc(cfg.url, "notifications/initialized", null, sid, true, ctrl.signal);
-    const call = await mcpRpc(cfg.url, "tools/call",
-      { name: cfg.tool, arguments: { [cfg.arg]: String(question).slice(0, 500) } },
-      sid, false, ctrl.signal);
+    const args = cfg.args ? cfg.args(question, extra) : { [cfg.arg]: String(question).slice(0, 500) };
+    const call = await mcpRpc(cfg.url, "tools/call", { name: cfg.tool, arguments: args }, sid, false, ctrl.signal);
     clearTimeout(timer);
 
     const res = call.data.find((d) => d.result)?.result;
     const textBlock = (res?.content || []).find((b) => b.type === "text")?.text || "";
+
+    // DeepWiki-style: the text block IS the answer (free-form markdown prose).
+    if (cfg.prose) {
+      if (!textBlock) return json({ fallback: true, reason: "empty mcp" }, 200, env);
+      // DeepWiki returns isError:false even when the repo isn't indexed — detect that text.
+      if (/Repository not found|to index it|not been indexed|isn'?t indexed/i.test(textBlock)) {
+        return json({ kind: "docs", notFound: true, repoName: extra.repoName, items: [],
+          trace: { source: cfg.source, tool: cfg.tool, repo: extra.repoName } }, 200, env);
+      }
+      const prose = cleanProse(textBlock).slice(0, 1500);
+      if (!prose) return json({ fallback: true, reason: "empty prose" }, 200, env);
+      const url = "https://deepwiki.com/" + extra.repoName;
+      return json({
+        kind: "docs",
+        message: prose,
+        repoName: extra.repoName,
+        items: [{ title: extra.repoName, url, snippet: prose }],
+        trace: { source: cfg.source, tool: cfg.tool, repo: extra.repoName, mcpMs: Date.now() - started, totalMs: Date.now() - started },
+      }, 200, env);
+    }
+
+    // MS-Learn-style: a JSON results[] array of doc snippets.
     let results = [];
     try { results = JSON.parse(textBlock).results || []; }
     catch { if (textBlock) results = [{ title: "", content: textBlock, contentUrl: "" }]; }
@@ -297,9 +360,9 @@ export default {
     }
     if (request.method !== "POST") return json({ error: "POST only" }, 405, env);
 
-    let question, npc, history;
+    let question, npc, history, repoName;
     try {
-      ({ question, npc, history } = await request.json());
+      ({ question, npc, history, repoName } = await request.json());
     } catch {
       return json({ error: "bad body" }, 400, env);
     }
@@ -316,7 +379,7 @@ export default {
     // KB unreachable / slow / unconfigured / empty. A scholar with its own public MCP falls
     // back to a direct keyless call (clone-friendly); the taxi tells the client to use Local.
     if (out.fallback || (!out.answer && !(out.data?.references || []).length)) {
-      if (MCP_NPCS[who]) return mcpAsk(who, question, env);
+      if (MCP_NPCS[who]) return mcpAsk(who, question, env, { repoName });
       return json({ fallback: true, reason: out.reason || "empty grounding", detail: out.detail }, 200, env);
     }
 
