@@ -5,6 +5,11 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 
 ## [1.2.0] — 2026-06-23
 
+### 🌿 Provençal village
+- **Warm southern‑France palette** — every house now wears terracotta‑clay roof tiles over warm ochre, cream and limestone walls, with pastel **lavender, sage and Provence‑blue shutters** for contrast. The language palette was re‑tuned so the whole town reads as one sun‑washed Provençal village while keeping subtle per‑language neighbourhood tints.
+- **Lavender, cypress, olive & sunflowers** — lavender clumps bloom in every yard and frame the plaza fountain, while the outer ring is planted with tall cypress spires, silvery olive trees and sunflower patches.
+- **Azure sky & golden light** — a deeper cobalt‑azure sky, warmer golden sun and a soft warm haze give the village that bright, sun‑drenched Mediterranean feel (daytime; the starry galaxy night is unchanged).
+
 ### 🎨 Procedural texture detail
 - **3D‑beveled surfaces** — the category‑themed wall textures (brick · siding · panel · stone · stucco) and shingled roofs now have per‑brick/plank/stone colour variation, highlight + shadow edges, recessed mortar and panel bolts, so flat patterns read as raised masonry. Still 100% procedural canvas textures, zero image assets.
 - **Detailed ground** — directional grass blades on the lawn, gravel speckle + jagged cracks on asphalt, and fine grain on dirt/sand, all seamless (9‑tile wrap) and deterministic.

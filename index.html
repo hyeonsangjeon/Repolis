@@ -349,20 +349,23 @@ let REPOS = [];
 try { REPOS = await fetch('repos.json', { cache:'no-cache' }).then(r=>r.json()); }
 catch(e){ console.error('repos.json load failed', e); }
 
-/* language → palette (wall / roof / accent) — gives neighborhood color */
+/* language → palette (wall / roof / accent) — Provençal village:
+   warm ochre/cream/apricot/limestone walls · terracotta-tile roofs ·
+   lavender / sage / Provence-blue / olive pastel accents (shutters & signage).
+   Subtle per-language variation keeps neighborhoods distinct under one warm theme. */
 const LANG_PALETTE = {
-  'Python':{wall:0xf0dbb0,roof:0x4f7cc2,accent:0x3a6fb0},
-  'Jupyter Notebook':{wall:0xf3d9bf,roof:0xd2752f,accent:0xe0742a},
-  'JavaScript':{wall:0xf6ecc0,roof:0xd9b730,accent:0xcaa916},
-  'TypeScript':{wall:0xd9e6f2,roof:0x3a76c0,accent:0x2f6fc0},
-  'Java':{wall:0xf0d9cf,roof:0xb5532f,accent:0xc05a33},
-  'Shell':{wall:0xd6ead2,roof:0x4f9a52,accent:0x59a85c},
-  'Dockerfile':{wall:0xd4e4ee,roof:0x2f80b3,accent:0x2f9bd0},
-  'HTML':{wall:0xf2ddc8,roof:0xd2562f,accent:0xe06a3a},
-  'PHP':{wall:0xe2dcf0,roof:0x6f5aa8,accent:0x7d68c0},
-  'PowerShell':{wall:0xd4dcee,roof:0x35509a,accent:0x3a5cc0},
-  'CSS':{wall:0xf0d8e6,roof:0xc04f8f,accent:0xd05fa0},
-  'Other':{wall:0xe7ddca,roof:0x8a7a5c,accent:0x9a875f}
+  'Python':{wall:0xecdcae,roof:0xc0653a,accent:0x5d8fbd},
+  'Jupyter Notebook':{wall:0xe6c084,roof:0xc8773a,accent:0x8f7cc0},
+  'JavaScript':{wall:0xe8c47e,roof:0xb35633,accent:0x6f9ec6},
+  'TypeScript':{wall:0xeee4c4,roof:0xbb5e34,accent:0x6b9bc4},
+  'Java':{wall:0xe6c79a,roof:0xa85636,accent:0x7f9468},
+  'Shell':{wall:0xdcd8b2,roof:0xc06e3a,accent:0x8d934e},
+  'Dockerfile':{wall:0xece0bb,roof:0xb95e36,accent:0x5d8fbd},
+  'HTML':{wall:0xeccaa0,roof:0xc0653a,accent:0x9b8bc9},
+  'PHP':{wall:0xddb29a,roof:0xb35a35,accent:0x8f7cc0},
+  'PowerShell':{wall:0xe8dcb8,roof:0xa85636,accent:0x6b9bc4},
+  'CSS':{wall:0xe6c4ac,roof:0xbb5e34,accent:0x9b8bc9},
+  'Other':{wall:0xead2a8,roof:0xb35a35,accent:0x8a9a70}
 };
 const pal = l => LANG_PALETTE[l] || LANG_PALETTE.Other;
 const hexstr = n => '#'+(n>>>0).toString(16).padStart(6,'0');
@@ -469,7 +472,7 @@ const _now = Date.now();
 REPOS.forEach(repo=>{
   const p = pal(repo.lang);
   repo.label = labelOf(repo.repo);
-  repo.wall = p.wall; repo.roof = p.roof; repo.color = hexstr(p.accent);
+  repo.wall = p.wall; repo.roof = p.roof; repo.accent = p.accent; repo.color = hexstr(p.accent);
   repo.live = repo.home || ''; repo.vuniq = repo.visitors;
   const lv = Math.log1p(repo.visitors||0), lc = Math.log1p(repo.clones||0);
   repo._bright = Math.min(1, lv/Math.log1p(_maxVis));
@@ -502,7 +505,7 @@ app.appendChild(renderer.domElement);
 const MAXANISO = renderer.capabilities.getMaxAnisotropy();
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0xcfe7da, 150, 460);
+scene.fog = new THREE.Fog(0xd9e4c8, 150, 460);
 const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, 0.1, 760);
 
 /* toon gradient + material factory */
@@ -637,7 +640,7 @@ scene.add(sun);
 
 /* ---- sky dome (teal→warm horizon) ---- */
 const skyMat = new THREE.ShaderMaterial({ side:THREE.BackSide,
-    uniforms:{ top:{value:new THREE.Color(0x4fb4c2)}, mid:{value:new THREE.Color(0xbfe9e2)}, bot:{value:new THREE.Color(0xfbe8c8)} },
+    uniforms:{ top:{value:new THREE.Color(0x3f93d6)}, mid:{value:new THREE.Color(0xa9d4ea)}, bot:{value:new THREE.Color(0xf8e4bf)} },
     vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
     fragmentShader:`uniform vec3 top; uniform vec3 mid; uniform vec3 bot; varying vec3 vP;
       void main(){ float h=normalize(vP).y*0.5+0.5;
@@ -971,8 +974,9 @@ rim.rotation.x=-Math.PI/2; rim.position.y=0.025; scene.add(rim);
   // soft glow lighting the fountain at night
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xbfe0ff,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
   glow.scale.set(5,5,1); glow.position.y=fy+0.7; glow._n=0.42; scene.add(glow); NIGHT_GLOWS.push(glow);
-  // flower ring (kept)
+  // flower ring (kept) + Provençal lavender framing the fountain
   for(let i=0;i<8;i++){ const a=i/8*Math.PI*2; flowerPatch(Math.cos(a)*4.4, Math.sin(a)*4.4); }
+  for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+0.4; lavenderClump(scene, Math.cos(a)*6.7, Math.sin(a)*6.7, 1.0); }
 })();
 
 /* ---- clouds ---- */
@@ -1014,12 +1018,55 @@ function flowerPatch(x,z){
     f.position.set(x+(Math.random()-.5)*1.6, 0.18, z+(Math.random()-.5)*1.6); scene.add(f);
   }
 }
-for(let i=0;i<96;i++){ const a=Math.random()*Math.PI*2, r=172+Math.random()*52;
+// ---- Provençal flora: cypress spires, silvery olive, lavender rows, sunflowers ----
+function makeCypress(x,z,s=1){
+  const g=new THREE.Group();
+  const trunk=rbox(0.26*s,0.7*s,0.26*s,0x6b5436,0.08); trunk.position.y=0.35*s; g.add(trunk);
+  const greens=[0x39603f,0x34563a,0x426a48];
+  for(let i=0;i<3;i++){ const c=new THREE.Mesh(new THREE.ConeGeometry((0.82-i*0.16)*s,(2.4-i*0.2)*s,8), toon(greens[i]));
+    c.position.y=(1.1+i*1.5)*s; c.castShadow=true; outline(c,0.04*s); g.add(c); }
+  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); return g;
+}
+function makeOlive(x,z,s=1){
+  const g=new THREE.Group();
+  const trunk=rbox(0.32*s,1.2*s,0.32*s,0x8a7a5e,0.16); trunk.position.y=0.6*s; outline(trunk,0.04*s); g.add(trunk);
+  const olives=[0x9aa882,0x8f9d76,0xa6b38c];
+  for(let i=0;i<4;i++){ const a=i/4*Math.PI*2;
+    const cr=new THREE.Mesh(new THREE.SphereGeometry((0.66+Math.random()*0.2)*s,8,7), toon(olives[i%3]));
+    cr.position.set(Math.cos(a)*0.46*s,(1.5+Math.random()*0.3)*s,Math.sin(a)*0.46*s); cr.scale.y=0.82; cr.castShadow=true; outline(cr,0.03*s); g.add(cr); }
+  const cap=new THREE.Mesh(new THREE.SphereGeometry(0.78*s,8,7), toon(olives[1])); cap.position.y=1.85*s; cap.scale.y=0.78; g.add(cap);
+  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); return g;
+}
+function addLavenderRow(x,z,rows){
+  const g=new THREE.Group(); rows=rows||(2+(Math.random()*2|0)); const purples=[0x8a6fc0,0x9b7fd0,0x7d63b0];
+  for(let r=0;r<rows;r++){ for(let i=0;i<6;i++){ const lx=(i-2.5)*0.5, lz=(r-(rows-1)/2)*0.6;
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.03,0.4,4), toon(0x70875a)); stem.position.set(lx,0.2,lz); g.add(stem);
+    const sp=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.44,6), toon(purples[(i+r)%3])); sp.position.set(lx,0.56,lz); g.add(sp); } }
+  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); return g;
+}
+function sunflowerPatch(x,z){
+  for(let i=0;i<4;i++){ const px=x+(Math.random()-.5)*1.8, pz=z+(Math.random()-.5)*1.8;
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.0,5), toon(0x5f8a3a)); stem.position.set(px,0.5,pz); scene.add(stem);
+    const head=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.06,12), basic(0xf2b51e)); head.position.set(px,1.02,pz); scene.add(head);
+    const ctr=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,0.07,10), toon(0x6b4a2a)); ctr.position.set(px,1.05,pz); scene.add(ctr); }
+}
+// compact lavender clump for close-up yards/plaza (adds to a given parent at local x,z)
+function lavenderClump(parent,lx,lz,s=1){
+  const purples=[0x8a6fc0,0x9b7fd0,0x7d63b0]; const g=new THREE.Group();
+  for(let i=0;i<7;i++){ const a=Math.random()*6.2832, rr=Math.random()*0.5*s, px=Math.cos(a)*rr, pz=Math.sin(a)*rr;
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.03,0.34*s,4), toon(0x70875a)); stem.position.set(px,0.17*s,pz); g.add(stem);
+    const sp=new THREE.Mesh(new THREE.ConeGeometry(0.07*s,0.4*s,6), toon(purples[i%3])); sp.position.set(px,0.46*s,pz); g.add(sp); }
+  g.position.set(lx,0,lz); parent.add(g); return g;
+}
+for(let i=0;i<104;i++){ const a=Math.random()*Math.PI*2, r=168+Math.random()*58;
   const x=Math.cos(a)*r, z=Math.sin(a)*r;
   const t=Math.random();
-  if(t<0.7) makeTree(x,z,0.8+Math.random()*1.3);
-  else if(t<0.88) makeRock(x,z,0.7+Math.random()*1.3);
-  else flowerPatch(x,z);
+  if(t<0.28) makeCypress(x,z,0.85+Math.random()*0.7);
+  else if(t<0.50) makeOlive(x,z,0.85+Math.random()*0.5);
+  else if(t<0.64) makeTree(x,z,0.8+Math.random()*1.0);
+  else if(t<0.78) makeRock(x,z,0.7+Math.random()*1.1);
+  else if(t<0.92) addLavenderRow(x,z);
+  else sunflowerPatch(x,z);
 }
 
 /* ---- sign texture ---- */
@@ -1425,6 +1472,9 @@ function makeBuilding(repo){
     const trunk=new THREE.Mesh(GEO_TRUNK,MAT_TRUNK); trunk.position.set(Math.cos(a)*rr,0.45,Math.sin(a)*rr); trunk.castShadow=true; g.add(trunk);
     const crown=new THREE.Mesh(GEO_CROWN,MAT_CROWN); crown.position.set(Math.cos(a)*rr,1.32,Math.sin(a)*rr); crown.scale.y=1.1; crown.castShadow=true; g.add(crown); }
   if(rich>0.5){ const dog=makeChow(); const a=Math.random()*Math.PI*2; dog.position.set(Math.cos(a)*yr*0.5,0,Math.sin(a)*yr*0.5); dog.rotation.y=-a+Math.PI/2; dog.scale.setScalar(0.85); dog.userData.ph=Math.random()*9; g.add(dog); CHOWS.push(dog); }
+  // Provençal lavender accents in the yard (close-up signature of the village)
+  { const nL=repo._downtown?1:2; for(let i=0;i<nL;i++){ const a=(i/Math.max(1,nL))*Math.PI*2+Math.random()*1.6, rr=yr*(0.55+Math.random()*0.32);
+    lavenderClump(g, Math.cos(a)*rr, Math.sin(a)*rr, 0.85+Math.random()*0.4); } }
   // a koi pond for lively/active repos, a driveway garage for well-starred/forked ones
   if(repo.stars>=8 || repo._activity>0.7) addPond(g,yr);
   if(repo.stars>=11 || (repo.forks||0)>=4) addGarage(g,w,d,yr,repo.roof);
@@ -1474,8 +1524,8 @@ function makeBuilding(repo){
     const sill=rbox(1.32,0.16,0.30,0xe0d2b4,0.04); sill.position.set(wx,wy-0.74,d/2+0.10); g.add(sill);
     const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.96,1.06), new THREE.MeshBasicMaterial({map:_winTex,transparent:true,color:DAY_GLASS}));
     gl.position.set(wx,wy,d/2+0.11); gl.userData={ lit: Math.random()<(0.3+0.55*repo._activity), j:0.82+Math.random()*0.32 }; g.add(gl); repo._windows.push(gl);
-    // operable shutters flank windows on traditional pitched-roof homes
-    if(typ.tier>=2 && typ.roof!=='flat' && typ.roof!=='shed' && kind!=='tower'){ const shCol=shade(repo.roof,-14), off=0.72;
+    // operable shutters flank windows on traditional pitched-roof homes — Provence pastel (lavender/sage/blue)
+    if(typ.tier>=2 && typ.roof!=='flat' && typ.roof!=='shed' && kind!=='tower'){ const shCol=shade(repo.accent,-6), off=0.72;
       [-1,1].forEach(s=>{ const sx=wx+s*off; if(Math.abs(sx)+0.16 > w*0.5-0.05) return;
         const sh=rbox(0.30,1.30,0.12, shCol, 0.03); sh.position.set(sx,wy,d/2+0.04); outline(sh,0.025); g.add(sh); }); }
     if(typ.tier>=3){ const fb=new THREE.Mesh(new THREE.BoxGeometry(0.62,0.16,0.2), toon(0x9c6f4a)); fb.position.set(wx,wy-0.6,d/2+0.2); g.add(fb);
@@ -1694,12 +1744,12 @@ const npcFaces=new Set();           // driver + peer head materials — given a 
 const _cDark=new THREE.Color(0x140a03), _cWarm=new THREE.Color(0xffcf86), _cRoom=new THREE.Color(0xfff1d6);
 function setTimeOfDay(night){
   isNight=night;
-  skyMat.uniforms.top.value.setHex(night?0x0a1030:0x4fb4c2);
-  skyMat.uniforms.mid.value.setHex(night?0x1b2348:0xbfe9e2);
-  skyMat.uniforms.bot.value.setHex(night?0x3a3354:0xfbe8c8);
-  sun.intensity = night?0.26:1.45; sun.color.setHex(night?0xaec2ff:0xffe2b0);
-  hemi.intensity = night?0.55:0.85; hemi.color.setHex(night?0x3b4c86:0xcfeee8); hemi.groundColor.setHex(night?0x1b2030:0x86996a);
-  scene.fog.color.setHex(night?0x18203c:0xcfe7da);
+  skyMat.uniforms.top.value.setHex(night?0x0a1030:0x3f93d6);
+  skyMat.uniforms.mid.value.setHex(night?0x1b2348:0xa9d4ea);
+  skyMat.uniforms.bot.value.setHex(night?0x3a3354:0xf8e4bf);
+  sun.intensity = night?0.26:1.5; sun.color.setHex(night?0xaec2ff:0xffd89a);
+  hemi.intensity = night?0.55:0.85; hemi.color.setHex(night?0x3b4c86:0xe0ecda); hemi.groundColor.setHex(night?0x1b2030:0x8e9a66);
+  scene.fog.color.setHex(night?0x18203c:0xd9e4c8);
   renderer.toneMappingExposure = night?1.05:1.08;
   RIM.color.value.setHex(night?0x9fb6ff:0xcfeaff); RIM.strength.value=night?0.34:0.16; RIM.power.value=night?2.2:2.8;
   moon.visible=night; starsGroup.visible=night; fireflyGroup.visible=night;
