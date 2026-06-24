@@ -3,6 +3,11 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.10.1] — 2026-06-24
+
+### 🐛 Grounded mode now routes general chat the same as every other mode
+- **POLARIS answers a general question in 🛰️ AI Foundry Live mode instead of funneling it into the repo search.** The grounded path used a repo‑biased gate (`needsSearch`, which counts *"알려줘 / tell me / 소개 / show"* as a repo signal), so *"오리온자리에 대해 알려줘"* was sent to the repo Knowledge Base — which found nothing and silently fell back to Local search, never giving a real answer. Every other mode (Local / WebLLM) already used the precise `isGeneralChat()` gate. `groundedAsk()` now uses that **same** gate, so a general/small‑talk question goes straight to the starlit general model (`chat:true` → in‑persona `gpt-5.4-mini`) while a genuine repo query (*"STT 레포 알려줘"*) still rides to the Knowledge Base. One routing rule, all modes.
+
 ## [1.10.0] — 2026-06-24
 
 ### 🐕 Chow‑chows — clean shape, three coats

@@ -2799,8 +2799,7 @@ const taxiChat=(q)=>generalChat(q,'taxi');   // POLARIS general chat (back-compa
 async function groundedAsk(q){
   const det=_coreIntent(q);                                          // greeting/library/metric/town-meta → instant local; everything else (repo Qs, follow-ups, ambiguous) goes to the live LLM
   if(det){ addMsg('bot', det.message, { repo:det.repo, alts:det.alts }); return; }
-  const followup = priorHist().length && /다른|또\b|더\b|그건|그거|그게|그럼|그러면|말고|아니|이전|방금|저번|other|another|more|else|instead|what about|how about/i.test(q);
-  if(!needsSearch(q) && !followup){ await taxiChat(q); return; }   // off-topic/smalltalk → POLARIS answers from the model (general persona chat), no repo funneling; mid-thread follow-ups still reach the LLM with history
+  if(isGeneralChat(q)){ await taxiChat(q); return; }               // smalltalk / general question (no strong repo hit, no repo-domain word, not a mid-thread follow-up) → POLARIS general LLM via the worker (chat:true). SAME gate as every other mode, so "오리온자리 알려줘" no longer funnels into the repo KB. Repo Qs & follow-ups fall through to grounding below.
   let url=groundedUrl();
   if(!url){ const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); return; }   // no backend configured → silent Local (mode switch already offered to set a URL; no per-message nag)
   const sb=addMsg('bot', t('groundedSearching'), {noHist:true}); sb.classList.add('typing');   // phase 1: instant "searching" bubble
