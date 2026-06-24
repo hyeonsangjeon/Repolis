@@ -1579,10 +1579,12 @@ function makeRoof(style,w,h,color){
     const wedge=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:w*1.06,bevelEnabled:false}), rmat(2.0,1.3));
     wedge.position.set(0,h+0.02,w*0.53); wedge.castShadow=true; outline(wedge,0.05); grp.add(wedge);
   } else if(style==='barrel'){
-    // rounded barrel vault running front-to-back
-    const v=new THREE.Mesh(new THREE.CylinderGeometry(w*0.58,w*0.58,w*1.06,18,1,false,0,Math.PI), rmat(3.2,1.4));
-    v.rotation.x=Math.PI/2; v.position.y=h+0.04; v.castShadow=true; outline(v,0.05); grp.add(v);
-    [w*0.53,-w*0.53].forEach(z=>{ const cap=new THREE.Mesh(new THREE.CircleGeometry(w*0.58,18,0,Math.PI), toon(shade(color,-12))); cap.position.set(0,h+0.04,z); if(z<0) cap.rotation.y=Math.PI; grp.add(cap); });
+    // rounded barrel vault running front-to-back, clamped to the building footprint
+    const R=w*0.52, L=w*1.02;
+    const sh=new THREE.Shape(); sh.moveTo(-R,0); sh.lineTo(R,0); sh.absarc(0,0,R,0,Math.PI,false);
+    const v=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:L,bevelEnabled:false,steps:1,curveSegments:20}), rmat(3.2,1.4));
+    v.position.set(0,h+0.02,-L/2); v.castShadow=true; outline(v,0.05); grp.add(v);
+    const ridge=rbox(0.16,0.16,L*0.98,shade(color,-26),0.03); ridge.position.set(0,h+R+0.02,0); grp.add(ridge);
   } else {
     const r=new THREE.Mesh(new THREE.ConeGeometry(w*0.95,2.6,4), rmat(4,1.8)); r.position.y=h+1.3; r.rotation.y=Math.PI/4; r.castShadow=true; outline(r,0.06); grp.add(r);
   }
@@ -3313,6 +3315,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__libView=(back=20)=>{ player.position.set(0,0,LIB._z-LIB._cw-back); model.rotation.y=0; camYaw=Math.PI; camPitch=0.34; camDist=42; return {z:+player.position.z.toFixed(1)}; };
   window.__tp=(x,z,yaw=Math.PI,pitch=0.30,dist=24)=>{ player.position.set(x,0,z); model.rotation.y=Math.PI-yaw; camYaw=yaw; camPitch=pitch; camDist=dist; return {x,z}; };
   window.__libInfo=()=>({count:LIBCOUNT, pos:{x:+LIB._pos.x.toFixed(1),z:+LIB._pos.z.toFixed(1)}, cats:LIBDATA.length});
+  window.__roofs=(style)=>REPOS.map(r=>{const t=typology(r);return {repo:r.repo,roof:t.roof,kind:t.kind,tier:t.tier,x:+(r._x||0).toFixed(1),z:+(r._z||0).toFixed(1)};}).filter(r=>!style||r.roof===style);
+  window.__roofOf=(name)=>{const r=REPOS.find(x=>x.repo===name);return r?{...typology(r),x:+(r._x||0).toFixed(1),z:+(r._z||0).toFixed(1)}:null;};
   window.__cand=(q)=>{ const sc=searchCandidates(q,8); return {strong:sc.strong, list:sc.list.map(r=>r.repo)}; };
   window.__intent=(q)=>{ const r=localIntent(q); return { repo:(r.repo&&(r.repo.repo||r.repo.label))||null, isLib:!!(r.repo&&r.repo._isLibrary), alts:(r.alts||[]).map(a=>a.label) }; };
   window.__det=(q)=>{ const d=deterministicIntent(q); return d?{repo:(d.repo&&(d.repo.repo||d.repo.label))||null, isLib:!!(d.repo&&d.repo._isLibrary), alts:(d.alts||[]).map(a=>a.label)}:null; };

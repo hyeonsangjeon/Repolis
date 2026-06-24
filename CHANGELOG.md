@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.12.1] — 2026-06-25
+
+### 🏠 Fixed the oversized barrel-vault roof on villa buildings
+- **Five tier-3 villa buildings had a giant brown dome floating above (and behind) them.** Any repo whose typology rolled a *barrel* roof — **AIsketcher**, **pronunciation-mapper**, **Hyeonsang-AI-Contributions**, **FSI-Gameday-General-Immersion-Day**, **aws-korea-2023-coding-school** — rendered a huge half-cylinder that ignored the building footprint and curved off to one side instead of sitting on the roof.
+- **Root cause:** the old barrel was a half-`CylinderGeometry(w*0.58,…,w*1.06,…,0,π)` laid down with a single `rotation.x = π/2`. That rotation left the **rounded face pointing sideways (+x) rather than up**, and the `w*0.58` radius / `w*1.06` length overshot the footprint — so the curved sheet and its circular end-cap read as an oversized floating dome, very pronounced on tall, slender villas.
+- **The vault is now a real arch clamped to the footprint.** It's rebuilt from an `ExtrudeGeometry` of a flat-bottomed semicircle (`R = w*0.52`) extruded **front-to-back** (`L = w*1.02`), so the round face always points up, the ends are closed automatically, and it can never exceed the building width regardless of how tall the villa is. A slim ridge beam was added along the crown. Verified headless on all affected buildings, **day and night, with no clipping and 0 console errors**.
+- Added `__roofs(style?)` / `__roofOf(name)` debug hooks (under `?dbg` only) that report each repo's typology + position, used to locate every barrel building during the fix.
+
 ## [1.12.0] — 2026-06-25
 
 ### 👋 Click-to-greet — wave at other visitors in real time
