@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.11.1] — 2026-06-25
+
+### 🔗 Tappable, copyable reference links in "How I found this"
+- **The scholars' source citations are now mobile-friendly.** In VEGA / RIGEL / POLARIS answers, the *"🔎 How I found this"* panel already rendered each reference as a real `<a target="_blank">`, but on a phone the link was a tiny one-line tap target and a long-press to copy was swallowed by the town's global right-click/context-menu suppression. Each reference is now a **full-width 40px tap target** with an external-link affordance (`↗`) plus a dedicated **📋 copy button** beside it.
+- **Copy works everywhere.** The copy button uses the async Clipboard API with a `document.execCommand` textarea fallback for self-hosted `file://` clones, and flips to a green **✓ / "Copied"** state for a moment so the tap is confirmed.
+- **Hardened against bad URLs.** A new `safeHref()` only lets **http/https** references become clickable — `javascript:` / `data:` and other non-web URLs are rendered as plain, non-clickable text (and get no copy button), closing a small XSS surface. Links now carry `rel="noopener noreferrer"`.
+- **No new event leaks.** The chat is a DOM overlay above the WebGL canvas and all camera/touch controls are bound to the canvas only, so link/button taps never reach the player controls; the copy button also `stopPropagation`s for good measure. Verified KO/EN, desktop + mobile widths, 0 console errors.
+
 ## [1.11.0] — 2026-06-25
 
 ### 🛂 Explorer Passport — collect stamps as you explore the town

@@ -256,10 +256,22 @@
   .msg .trace[open] summary::before { content: '▾ '; }
   .msg .traceBody { margin-top: 6px; padding: 8px 10px; background: #efe6cf; border-radius: 9px; color: #5a4326;
     display: flex; flex-direction: column; gap: 4px; }
-  .msg .traceRefs { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
-  .msg .traceRef { color: #3a6fb0; text-decoration: none; }
+  .msg .traceRefs { display: flex; flex-direction: column; gap: 5px; margin-top: 2px; }
+  .msg .traceRefRow { display: flex; align-items: stretch; gap: 6px; }
+  .msg .traceRef { flex: 1; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 7px 9px;
+    color: #3a6fb0; text-decoration: none; background: #f6efe0; border-radius: 9px; word-break: break-word;
+    -webkit-tap-highlight-color: rgba(58,111,176,.15); }
+  .msg .traceRef .extlink { margin-left: auto; opacity: .5; font-size: 12px; flex: 0 0 auto; }
   .msg .traceRef code { background: #e0d5bb; padding: 1px 5px; border-radius: 5px; }
-  .msg .traceRef:hover { text-decoration: underline; }
+  .msg .traceRef:hover { background: #efe4cd; }
+  .msg .traceRef:active { background: #e7d9bd; }
+  .msg .traceRef.noLink { color: #6a5436; background: transparent; min-height: 0; padding: 2px 0; }
+  .msg .traceCopy { flex: 0 0 auto; min-width: 40px; min-height: 40px; border: none; cursor: pointer;
+    background: #e7eef8; color: #3a6fb0; border-radius: 9px; font-size: 14px; line-height: 1;
+    -webkit-tap-highlight-color: rgba(58,111,176,.2); }
+  .msg .traceCopy:hover { background: #dde8f6; }
+  .msg .traceCopy:active { background: #d2e0f2; }
+  .msg .traceCopy.ok { background: #d8f0e2; color: #2f7d5b; }
   .msg.typing { color: #b29a78; font-style: italic; }
   .chatIn { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #f0e2c6; }
   .chatIn input { flex: 1; border: 1px solid #ecdcc4; background: #fffdf8; border-radius: 12px;
@@ -480,6 +492,7 @@ const I18N = {
     taxiThinking:'별빛에 비춰 잠깐 헤아려볼게요 ✦',
     groundedPromptUrl:'AI Foundry Live API URL을 입력하세요 (없으면 비워두세요 → 키 없이 로컬검색으로 동작)\n예: https://repolis-taxi.<you>.workers.dev/ (권장 · Cloudflare Worker)  또는  https://your-app.vercel.app/api/taxi-grounded',
     traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceRefs:'참조',
+    traceCopy:'링크 복사', traceCopied:'복사됨', traceOpen:'열기',
     traceGenTitle:'✦ 어떻게 답했나', traceGeneral:'별빛에 깃든 일반 지식에서 답했어요',
     npcTaxi:'택시기사', npcEng:'MS Docs 엔지니어', engTitle:'📘 MS Docs 엔지니어',
     engThanks:'도움이 됐다니 기뻐요! 📘 더 궁금한 게 있으면 물어보세요.', engBye:'또 궁금한 게 생기면 찾아오세요! 📘', engHow:'저야 늘 문서 읽느라 바쁘죠 😄 어떤 Microsoft 기술이 궁금하세요?', engWho:'저는 <b>MS Docs 엔지니어</b>예요 📘 Microsoft Learn 공식 문서에서 답을 찾아드려요. 무엇이 궁금하세요?', engHelp:'Azure·.NET·Copilot 같은 Microsoft 기술을 물어보세요 📘 <b>공식 문서</b>에서 실시간으로 찾아드려요. 예: “Azure AI Foundry 에이전트”', engNice:'감사해요! 😊 더 찾아드릴 게 있을까요?',
@@ -555,6 +568,7 @@ const I18N = {
     taxiThinking:'Let me reckon by the starlight ✦',
     groundedPromptUrl:'Enter your AI Foundry Live API URL (or leave blank → keyless Local search)\ne.g. https://repolis-taxi.<you>.workers.dev/ (recommended · Cloudflare Worker)  or  https://your-app.vercel.app/api/taxi-grounded',
     traceTitle:'🔎 How I found this', traceKs:'Knowledge source', traceTool:'MCP tool', traceRefs:'References',
+    traceCopy:'Copy link', traceCopied:'Copied', traceOpen:'Open',
     traceGenTitle:'✦ How I answered', traceGeneral:'Answered from general starlit knowledge',
     npcTaxi:'Taxi driver', npcEng:'MS Docs Engineer', engTitle:'📘 MS Docs Engineer',
     engThanks:"Glad it helped! 📘 Ask me anything else.", engBye:"Come back whenever you have a question! 📘", engHow:"Always busy reading docs 😄 What Microsoft tech can I help with?", engWho:"I'm the <b>MS Docs engineer</b> 📘 I find answers in the official Microsoft Learn docs. What do you need?", engHelp:'Ask about Azure, .NET, Copilot and other Microsoft tech 📘 I search the <b>official docs</b> in real time. e.g. “Azure AI Foundry agent”', engNice:"Thank you! 😊 Anything else I can look up?",
@@ -2618,12 +2632,32 @@ function buildTracePanel(tr){
   body.appendChild(ks); body.appendChild(tool);
   if(tr.refs&&tr.refs.length){ const rl=document.createElement('div'); rl.className='traceRefs';
     rl.innerHTML='<b>'+t('traceRefs')+':</b>';
-    tr.refs.forEach(r=>{ const a=document.createElement('a'); a.className='traceRef'; a.href=r.url||'#'; a.target='_blank'; a.rel='noopener';
-      a.innerHTML='<code>'+String(r.name).replace(/</g,'&lt;')+'</code>'+(r.stars!=null?(' ★'+r.stars):'')+(r.lang?(' · '+String(r.lang).replace(/</g,'&lt;')):''); rl.appendChild(a); });
+    tr.refs.forEach(r=>{ const href=safeHref(r.url);
+      const label='<code>'+esc(r.name)+'</code>'+(r.stars!=null?(' ★'+r.stars):'')+(r.lang?(' · '+esc(r.lang)):'');
+      const row=document.createElement('div'); row.className='traceRefRow';
+      if(href){ const a=document.createElement('a'); a.className='traceRef'; a.href=href; a.target='_blank'; a.rel='noopener noreferrer';
+          a.innerHTML=label+'<span class="extlink" aria-hidden="true">↗</span>';
+          const cp=document.createElement('button'); cp.type='button'; cp.className='traceCopy'; cp.textContent='📋';
+          cp.title=t('traceCopy'); cp.setAttribute('aria-label',t('traceCopy'));
+          cp.onclick=ev=>{ ev.preventDefault(); ev.stopPropagation(); copyLink(href,cp); };
+          row.appendChild(a); row.appendChild(cp);
+      } else { const span=document.createElement('span'); span.className='traceRef noLink'; span.innerHTML=label; row.appendChild(span); }
+      rl.appendChild(row); });
     body.appendChild(rl); }
   d.appendChild(body); return d;
 }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+/* only allow http/https refs to become clickable — blocks javascript:/data: and other XSS vectors */
+function safeHref(u){ if(!u) return null; try{ const x=new URL(String(u), location.href); return (x.protocol==='http:'||x.protocol==='https:') ? x.href : null; }catch(_){ return null; } }
+function copyLink(url, btn){
+  const ok=()=>{ if(!btn) return; const o=btn.textContent; btn.textContent='✓'; btn.classList.add('ok'); btn.title=t('traceCopied');
+    clearTimeout(btn._t); btn._t=setTimeout(()=>{ btn.textContent=o; btn.classList.remove('ok'); btn.title=t('traceCopy'); },1200); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok).catch(()=>fallbackCopy(url,ok)); }
+  else fallbackCopy(url,ok);
+}
+function fallbackCopy(url, ok){ try{ const ta=document.createElement('textarea'); ta.value=url; ta.setAttribute('readonly','');
+  ta.style.position='fixed'; ta.style.top='-9999px'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+  document.execCommand('copy'); document.body.removeChild(ta); ok&&ok(); }catch(_){ } }
 const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
 function scholarPersona(kind, slot){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(sc&&sc.active&&sc.persona){ const p=sc.persona[LANG]||sc.persona.ko; if(p&&p[slot]) return p[slot]; } return null; }
 function npcGreet(n){ const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
@@ -3272,6 +3306,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__npc=()=>({count:NPCS.length, kinds:NPCS.map(n=>n.kind), near:nearNpc?nearNpc.kind:null, active:activeNpc?activeNpc.kind:null, btn:document.getElementById('actBtn').textContent});
   window.__npcPos=()=>NPCS.map(n=>({kind:n.kind,x:+n.pos.x.toFixed(1),z:+n.pos.z.toFixed(1)}));
   window.__talk=(kind)=>{ const n=NPCS.find(x=>x.kind===kind); if(!n) return null; openChat(n); return {active:activeNpc?activeNpc.kind:null, title:chatHeadTtl?chatHeadTtl.textContent:null, modeHidden:modeSel.style.display==='none', ph:chatText.placeholder}; };
+  window.__trace=(refs)=>{ const n=NPCS.find(x=>x.kind==='msdocs'); if(n) openChat(n);
+    refs=refs||[{name:'Azure AI Search docs',url:'https://learn.microsoft.com/azure/search/'},{name:'evil',url:'javascript:alert(1)'},{name:'no-url ref'}];
+    const m=addMsg('bot', t('engIntro'), { trace:{ ks:'Azure AI Search KB', tools:['mcp.search'], mcpMs:1234, refs } });
+    const d=m.querySelector('.trace'); if(d) d.open=true; const a=m.querySelector('a.traceRef');
+    return { rows:m.querySelectorAll('.traceRefRow').length, links:m.querySelectorAll('a.traceRef').length, copyBtns:m.querySelectorAll('.traceCopy').length, noLink:m.querySelectorAll('.traceRef.noLink').length, firstHref:a?a.getAttribute('href'):null, rel:a?a.getAttribute('rel'):null, target:a?a.getAttribute('target'):null }; };
   window.__chows=()=>({n:CHOWS.length, wld:CHOWS.filter(c=>c.userData.wld).length, tail:!!(CHOWS[0]&&CHOWS[0].userData.tail), sample:CHOWS.filter(c=>c.userData.wld).slice(0,4).map(c=>[+c.position.x.toFixed(2),+c.position.z.toFixed(2)])});
   window.__seat=()=>({near:nearestSeat?[+nearestSeat.x.toFixed(1),+nearestSeat.z.toFixed(1)]:null, sitting:!!sitting, seats:SEATS.length});
   window.__sit=()=>{ if(nearestSeat){ sitDown(nearestSeat); return true; } return false; };
