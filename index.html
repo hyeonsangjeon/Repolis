@@ -1410,6 +1410,9 @@ function makeCanalNook(x,z,rot){   // ✦ a quiet Petite-Venise pocket: cel-wate
 function placeColmar(){   // invoked after the shared garden geo (GEO_FLOWER) is defined, below
   const D=Math.PI/180;
   makeCanalNook(Math.cos(45*D)*23, Math.sin(45*D)*23, 45*D+Math.PI/2);
+  // 🛶 Petite-Venise canals threading the mid-map inter-ring gaps (Colmar·Riquewihr), 30° off every avenue & clear of the rest pavilions
+  [[47,90],[47,270],[74,210],[103,150],[134,330]].forEach(([rr,deg])=>{ const a=deg*D;
+    makeCanalNook(Math.cos(a)*rr, Math.sin(a)*rr, -a); });   // rot=-θ keeps each canal tangential (parallel to the ring road), hugging the gap with a tiny radial footprint
   // market cluster (315°)
   (function(){ const a=315*D, cx=Math.cos(a)*22, cz=Math.sin(a)*22, n=Math.atan2(cz,cx);
     makeStall(cx,cz,n+Math.PI,0xd23b3b,0xfff0f0);
@@ -1526,34 +1529,25 @@ const GEO_STEM=new THREE.CylinderGeometry(0.03,0.03,0.42,5), GEO_FLOWER=new THRE
       GEO_TRUNK=new THREE.CylinderGeometry(0.12,0.16,0.9,6), GEO_CROWN=new THREE.SphereGeometry(0.7,10,8);
 const MAT_STEM=toon(0x5aa048), MAT_TRUNK=toon(0x7a5230), MAT_CROWN=toon(0x5aa048);
 const FLOWER_MATS=[0xff6f91,0xffd23f,0xff8c42,0xb06fe0,0xffffff].map(c=>basic(c));
-const GEO_TUFT=new THREE.SphereGeometry(0.17,8,6);   // shared fluffy fur puff (cheap, no shadow)
-// 🐾 fluffy chow-chow — thick double-coat, lion mane ruff, poofy curled tail (복슬복슬)
-function makeChow(){
+// 🐕 chow-chow — clean rounded shape in 3 coat colors (아이보리 / 갈색 / 검정)
+const CHOW_COATS=[
+  { fur:0xe9dcc0, fur2:0xd6c2a0, snout:0xfff3e0, nose:0x2a2018, eye:0x2a2018 },   // ivory
+  { fur:0xb06a38, fur2:0x8f5328, snout:0xe9c89c, nose:0x2b1c12, eye:0x2b1c12 },   // brown
+  { fur:0x34333b, fur2:0x262530, snout:0x4c4a54, nose:0x141318, eye:0x7a6442 },   // black
+];
+function makeChow(coat){
+  coat=coat||CHOW_COATS[0]; const fur=coat.fur, fur2=coat.fur2;
   const c=new THREE.Group();
-  const fur=0xe2a567, fur2=0xd0904c, fur3=0xf2cd9c;   // warm ginger coat shades
-  const MF=toon(fur), MF2=toon(fur2), MF3=toon(fur3);
-  const body=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,10), MF); body.position.y=0.54; body.scale.set(1.1,0.98,1.32); body.castShadow=true; c.add(body);
-  // poofy coat tufts billowing over the back & flanks
-  [[0,0.94,-0.16,1.3],[-0.34,0.78,-0.1,1.18],[0.34,0.78,-0.1,1.18],[-0.3,0.62,0.28,1.05],[0.3,0.62,0.28,1.05],[0,0.9,0.1,1.2],[-0.22,0.84,-0.46,1.08],[0.22,0.84,-0.46,1.08]]
-    .forEach(([x,y,z,s],i)=>{ const t=new THREE.Mesh(GEO_TUFT, i%2?MF3:MF2); t.position.set(x,y,z); t.scale.setScalar(s); c.add(t); });
-  // lion mane ruff — a thick fluffy collar around the neck/shoulders
-  for(let i=0;i<10;i++){ const a=i/10*Math.PI*2; const t=new THREE.Mesh(GEO_TUFT, i%2?MF2:MF);
-    t.position.set(Math.cos(a)*0.5, 0.8+Math.sin(a)*0.27, 0.34+Math.cos(a)*0.05); t.scale.setScalar(1.36); c.add(t); }
-  const head=new THREE.Mesh(new THREE.SphereGeometry(0.32,12,10), MF); head.position.set(0,0.84,0.6); head.castShadow=true; c.add(head);
-  [-0.27,0.27].forEach(x=>{ const ch=new THREE.Mesh(GEO_TUFT,MF3); ch.position.set(x,0.76,0.58); c.add(ch); });   // fuzzy cheeks
-  const snout=new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), toon(0xf3ddc0)); snout.position.set(0,0.74,0.88); c.add(snout);
-  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), basic(0x2b1c12)); nose.position.set(0,0.77,1.0); c.add(nose);
-  [-0.14,0.14].forEach(x=>{ const ear=new THREE.Mesh(new THREE.ConeGeometry(0.14,0.2,7), MF2); ear.position.set(x,1.1,0.5); ear.rotation.z=-x*0.3; c.add(ear);
-    const efl=new THREE.Mesh(GEO_TUFT,MF3); efl.position.set(x,1.0,0.5); efl.scale.setScalar(0.66); c.add(efl);
-    const eye=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,8), basic(0x241910)); eye.position.set(x*0.62,0.87,0.85); c.add(eye); });
-  // fluffy curled tail arching over the back
-  const tail=new THREE.Group(); tail.position.set(0,0.86,-0.5);
-  for(let i=0;i<4;i++){ const t=new THREE.Mesh(GEO_TUFT, i%2?MF2:MF3); t.position.set(0,i*0.17,-0.03-i*0.11); t.scale.setScalar(1.24-i*0.13); tail.add(t); }
-  c.add(tail);
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,10), toon(fur)); body.position.y=0.5; body.scale.set(1.15,0.95,1.35); body.castShadow=true; c.add(body);
+  const mane=new THREE.Mesh(new THREE.SphereGeometry(0.44,12,10), toon(fur2)); mane.position.set(0,0.62,0.4); c.add(mane);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.33,12,10), toon(fur)); head.position.set(0,0.74,0.6); head.castShadow=true; c.add(head);
+  const snout=new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), toon(coat.snout)); snout.position.set(0,0.66,0.86); c.add(snout);
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), basic(coat.nose)); nose.position.set(0,0.69,0.99); c.add(nose);
+  [-0.16,0.16].forEach(x=>{ const ear=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.22,7), toon(fur2)); ear.position.set(x,0.99,0.52); c.add(ear);
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,8), basic(coat.eye)); eye.position.set(x*0.7,0.79,0.84); c.add(eye); });
+  const tail=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8), toon(fur2)); tail.position.set(0,0.78,-0.46); tail.scale.set(0.8,1.15,0.8); tail.rotation.x=0.5; c.add(tail);
   const legs=[];
-  [[-0.26,0.38],[0.26,0.38],[-0.26,-0.3],[0.26,-0.3]].forEach(([x,z])=>{
-    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.12,0.32,7), MF); leg.position.set(x,0.16,z); c.add(leg);
-    const paw=new THREE.Mesh(GEO_TUFT,MF2); paw.position.set(x,0.06,z+0.03); paw.scale.setScalar(0.62); c.add(paw); legs.push(leg); });
+  [[-0.27,0.4],[0.27,0.4],[-0.27,-0.33],[0.27,-0.33]].forEach(([x,z])=>{ const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.34,7), toon(fur)); leg.position.set(x,0.17,z); c.add(leg); legs.push(leg); });
   c.userData.tail=tail; c.userData.legs=legs;
   return c;
 }
@@ -1578,7 +1572,7 @@ function updateChows(t,dt){
     } else { d.position.y=Math.abs(Math.sin(t*5+(u.ph||0)))*0.05; }        // garden dog idle hop
   }
 }
-for(let i=0;i<4;i++){ const d=makeChow(); const a=(i/4)*Math.PI*2, rr=14+Math.random()*12;
+for(let i=0;i<4;i++){ const d=makeChow(CHOW_COATS[i%3]); const a=(i/4)*Math.PI*2, rr=14+Math.random()*12;
   d.position.set(Math.cos(a)*rr,0,Math.sin(a)*rr); d.scale.setScalar(0.92);
   d.userData.wld=true; d.userData.spd=1.5+Math.random()*0.9; d.userData.ph=Math.random()*9; pickChowTarget(d); scene.add(d); CHOWS.push(d); }
 placeColmar();   // 🌸 Colmar charms — defined above, run here so GEO_FLOWER/bloom() exist
@@ -1748,7 +1742,7 @@ function makeBuilding(repo){
   for(let i=0;i<nt;i++){ const a=Math.random()*Math.PI*2, rr=yr*(0.62+Math.random()*0.28);
     const trunk=new THREE.Mesh(GEO_TRUNK,MAT_TRUNK); trunk.position.set(Math.cos(a)*rr,0.45,Math.sin(a)*rr); trunk.castShadow=true; g.add(trunk);
     const crown=new THREE.Mesh(GEO_CROWN,MAT_CROWN); crown.position.set(Math.cos(a)*rr,1.32,Math.sin(a)*rr); crown.scale.y=1.1; crown.castShadow=true; g.add(crown); }
-  if(rich>0.5){ const dog=makeChow(); const a=Math.random()*Math.PI*2; dog.position.set(Math.cos(a)*yr*0.5,0,Math.sin(a)*yr*0.5); dog.rotation.y=-a+Math.PI/2; dog.scale.setScalar(0.85); dog.userData.ph=Math.random()*9; g.add(dog); CHOWS.push(dog); }
+  if(rich>0.5){ const dog=makeChow(CHOW_COATS[Math.floor(Math.random()*3)]); const a=Math.random()*Math.PI*2; dog.position.set(Math.cos(a)*yr*0.5,0,Math.sin(a)*yr*0.5); dog.rotation.y=-a+Math.PI/2; dog.scale.setScalar(0.85); dog.userData.ph=Math.random()*9; g.add(dog); CHOWS.push(dog); }
   // Provençal lavender accents in the yard (close-up signature of the village)
   { const nL=repo._downtown?1:2; for(let i=0;i<nL;i++){ const a=(i/Math.max(1,nL))*Math.PI*2+Math.random()*1.6, rr=yr*(0.55+Math.random()*0.32);
     lavenderClump(g, Math.cos(a)*rr, Math.sin(a)*rr, 0.85+Math.random()*0.4); } }
@@ -3199,7 +3193,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     // drop the player on b's footprint edge as the collider would, approaching from the city centre
     const ux=Math.cos(fromAngle), uz=Math.sin(fromAngle), r=(b._cw||3);
     player.position.set(b._x+ux*r, 0, b._z+uz*r); camYaw=Math.atan2(b._x-player.position.x,b._z-player.position.z); camPitch=0.32; camDist=20;
-    return {x:+player.position.x.toFixed(2), z:+player.position.z.toFixed(2), d:+player.position.distanceTo(b._pos).toFixed(2), cw:+r.toFixed(2)}; }; }
+    return {x:+player.position.x.toFixed(2), z:+player.position.z.toFixed(2), d:+player.position.distanceTo(b._pos).toFixed(2), cw:+r.toFixed(2)}; };
+}
 </script>
 </body>
 </html>

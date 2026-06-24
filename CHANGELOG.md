@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.10.0] — 2026-06-24
+
+### 🐕 Chow‑chows — clean shape, three coats
+- **The poofy fur experiment is rolled back to a clean, rounded chow.** The layered fur‑tuft coat read as *balloon‑lumpy* rather than fluffy, so each dog returns to the original soft, rounded silhouette (body · mane ruff · head · snout · curled tail · four legs).
+- **Now in three coats instead of one ginger.** Every chow is built from a `CHOW_COATS` palette — **🤍 ivory · 🤎 brown · 🖤 black** — cycled across the plaza pack and picked at random for garden dogs (the black coat uses a warm‑amber eye so the face still reads on dark fur). All chows still wander, wag and trot.
+
+### 🛶 Petite‑Venise canals thread the whole map
+- **Five more canals now run through the mid‑map inter‑ring gaps**, not just the plaza — so a walk out toward the suburbs keeps passing little Colmar/Riquewihr water pockets (cel‑water, flower‑box banks, a humpbacked flower bridge, a moored boat, cypress framing).
+- **Tangential placement keeps them tidy.** Each canal sits 30° off every avenue and is rotated **parallel to its ring road**, so it hugs the green gap with a tiny radial footprint and never overlaps a building.
+
 ## [1.9.1] — 2026-06-24
 
 ### 🐛 General chat now works in every mode
