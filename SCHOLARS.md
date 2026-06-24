@@ -137,7 +137,11 @@ Each scholar gets its **own** KB so its voice and retrieval rules don't bleed in
 
 ## 🔐 Secrets
 
-KS/KB definitions hold the GitHub PAT and the Azure OpenAI key **server‑side on Azure** —
-never in this repo or the browser. The Cloudflare Worker only ever holds the Azure AI
-**Search** key (`wrangler secret put SEARCH_API_KEY`). Real endpoint/key values live in the
-git‑ignored `cloudflare-taxi/SECRETS.local.md`.
+KS/KB definitions hold the GitHub PAT and the KB answer‑synthesis model access
+**server‑side on Azure** — never in this repo or the browser. The Cloudflare Worker
+holds two things: the Azure AI **Search** key (`wrangler secret put SEARCH_API_KEY`)
+for KB retrieval, and an **Entra ID service‑principal secret** (`AAD_CLIENT_SECRET`)
+that lets it call Azure OpenAI **keyless** for the in‑persona general‑chat fallback —
+no Azure OpenAI api‑key ever lives on the Worker. Real endpoint/key values live in the
+git‑ignored `cloudflare-taxi/SECRETS.local.md`; the full secret list + the one‑line
+`az ad sp create-for-rbac` setup are in [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md).

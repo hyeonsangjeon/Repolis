@@ -1,3 +1,20 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// ⚠️ OPTIONAL ALTERNATIVE BACKEND — NOT what powers the live Repolis site.
+//
+// The LIVE deployment is served by the Cloudflare Worker in ../cloudflare-taxi/.
+// Prefer that Worker: Cloudflare bills CPU time (not wall-clock awaiting a slow
+// subrequest), so it doesn't hit Vercel Hobby's ~10s wall that silently drops slow
+// KB answers to Local fallback. The Worker is also a SUPERSET of this function —
+// it additionally answers off-KB / general / small-talk questions IN PERSONA via a
+// keyless Entra service principal, and serves multiple scholar NPCs (see SCHOLARS.md).
+//
+// THIS Vercel function does grounded KB retrieval ONLY. It does NOT do the
+// in-persona general chat — a `chat:true` / off-topic question here just returns
+// { fallback:true } and the client shows a canned reply. Deploy it only if you
+// specifically want Vercel instead of Cloudflare. See ../cloudflare-taxi/README.md
+// and README "AI Foundry Live (grounded)".
+// ─────────────────────────────────────────────────────────────────────────────
+//
 // Repolis taxi → Azure AI Search Knowledge Base (live GitHub MCP grounding).
 //
 // "🛰️ 라이브" mode routes free-form / live questions about my repos through an

@@ -125,7 +125,7 @@ Why it matters: *"take me to the library"* is a **navigation** intent, not a rep
 |---|---|---|---|
 | **Local** | synonym + metric search | none | **default** · instant · fully offline — *what every fresh clone ships with* |
 | **WebLLM** | in‑browser LLM (WebGPU) | none | downloads ~1 GB once; picks from the index shortlist |
-| **🛰️ AI Foundry Live** | Vercel → Azure AI Search KB → GitHub MCP | server‑side | optional · live, grounded repo Q&A. **Unconfigured → silent Local fallback** |
+| **🛰️ AI Foundry Live** | Cloudflare Worker → Azure AI Search KB → GitHub MCP | server‑side | optional · live, grounded repo Q&A **+ in‑persona general chat**. **Unconfigured → silent Local fallback** |
 
 > 🔌 **No backend required.** A fresh clone runs entirely in the browser: **Local** is the default and needs no key, and **WebLLM** runs on‑device. **AI Foundry Live** is 100% optional — if you don't deploy it, selecting that mode just **falls back to Local search** (no errors, no setup). Deploy to GitHub Pages and everything works. _(A simpler `api/taxi.js` Azure‑OpenAI proxy is also available — see below.)_
 
@@ -174,7 +174,7 @@ Both backends are **opt‑in** — the city is fully usable without them. All co
 
 #### 🛰️ AI Foundry Live (grounded) — live answers about your repos
 
-`api/taxi-grounded.js` routes a free‑text question through an **Azure AI Search Knowledge Base** whose **MCP Knowledge Source** calls **GitHub's hosted MCP server**, then synthesises the answer with a small model — all server‑side. The serverless function only ever holds a **Search key**; your Azure OpenAI key and GitHub PAT stay inside the Knowledge Source on Azure (never in the browser, never in this function). The chat shows a live **trace panel** — knowledge source · MCP tools · reference repos — for each grounded answer.
+**The live site is powered by the Cloudflare Worker in [`cloudflare-taxi/`](cloudflare-taxi/)** (the recommended path — see below); [`api/taxi-grounded.js`](api/taxi-grounded.js) is the equivalent **Vercel** function. Either one routes a free‑text question through an **Azure AI Search Knowledge Base** whose **MCP Knowledge Source** calls **GitHub's hosted MCP server**, then synthesises the answer with a small model — all server‑side. The **Vercel** function only ever holds a **Search key** (your Azure OpenAI key and GitHub PAT stay inside the Knowledge Source on Azure, never in the browser). The **Worker** additionally uses a **keyless Entra ID service principal** to answer off‑KB questions **in the scholar's persona** (general chat / small talk) — a superset the Vercel function doesn't have. The chat shows a live **trace panel** — knowledge source · MCP tools · reference repos — for each grounded answer.
 
 1. **Azure AI Search** — create a service, then a **Knowledge Base** (e.g. `repolis-github-kb`) with a **Knowledge Source** of kind *MCP server* pointing at GitHub's hosted MCP (`https://api.githubcopilot.com/mcp/`, with a **read‑only** PAT in its header). Give the search service a **managed identity** with access to an Azure OpenAI deployment for answer synthesis.
 2. **Deploy** `api/taxi-grounded.js` to Vercel (import the repo → you get `/api/taxi-grounded`).
@@ -183,7 +183,7 @@ Both backends are **opt‑in** — the city is fully usable without them. All co
 
 > ⏱️ **Vercel Hobby caveat:** the KB can take 6–21 s on cold/complex queries, but Hobby caps a function at ~10 s. `GROUNDED_TIMEOUT_MS` (9000) aborts just before that and the taxi **silently falls back to Local** — so it never hangs, but slow queries won't show grounded results. For consistently grounded answers, deploy on **Vercel Pro** and raise `maxDuration` (and `localStorage.taxiGroundedTimeoutMs` in the browser).
 
-> ☁️ **Recommended — Cloudflare Workers (no ~10 s wall).** Workers bill *CPU time*, not the wall‑clock spent awaiting a subrequest, so the slow KB call finishes instead of being cut off — far fewer Local fallbacks, on the **free** plan (no card). A ready‑to‑deploy port lives in [`cloudflare-taxi/`](cloudflare-taxi/): `wrangler secret put SEARCH_ENDPOINT && wrangler secret put SEARCH_API_KEY && wrangler deploy`. Paste the resulting Worker URL into the taxi, or into **`GROUNDED_DEFAULT`** in `index.html` to enable grounding for **every visitor**. See [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md).
+> ☁️ **Recommended — and what the live site actually runs — Cloudflare Workers (no ~10 s wall).** Workers bill *CPU time*, not the wall‑clock spent awaiting a subrequest, so the slow KB call finishes instead of being cut off — far fewer Local fallbacks, on the **free** plan (no card). It's also a **superset** of the Vercel function: the same grounding **plus** in‑persona general chat (keyless Entra service principal → Azure OpenAI) and multiple scholar NPCs. The ready‑to‑deploy Worker lives in [`cloudflare-taxi/`](cloudflare-taxi/): `wrangler secret put SEARCH_ENDPOINT && wrangler secret put SEARCH_API_KEY && wrangler deploy` (add the Entra SP secrets for general chat). Paste the resulting Worker URL into the taxi, or into **`GROUNDED_DEFAULT`** in `index.html` to enable it for **every visitor**. Full setup + the secret list: [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md).
 
 #### 🌐 AI proxy (simple) — one Azure OpenAI call
 

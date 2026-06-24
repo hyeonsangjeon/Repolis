@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.10.2] — 2026-06-24
+
+### 📚 Backend docs cleansing — clear story for clone/fork
+- **The live backend is now unambiguous everywhere.** Several docs still said the Cloudflare Worker *"only ever holds a Search key"* — true before the keyless in‑persona general‑chat feature, but stale now. The Worker actually holds **two** secrets: the Azure AI **Search** key (KB retrieval) **and** an **Entra ID service‑principal secret** (`AAD_CLIENT_SECRET`) used to call Azure OpenAI **keyless** for off‑KB / small‑talk answers in the scholar's voice. Corrected in `cloudflare-taxi/README.md`, `SCHOLARS.md`, and both READMEs.
+- **`cloudflare-taxi/README.md` rewritten to match the real Worker** — it now documents both jobs (grounded repo Q&A **+** in‑persona general chat), the multi‑scholar pipeline, the full secret/var list with the one‑line `az ad sp create-for-rbac` setup, the `.dev.vars` for local dev, and the actual request/response shapes (`chat:true`, `general:true`, `kind:"docs"`, `fallback:true`).
+- **Vercel functions clearly labeled OPTIONAL alternatives.** `api/taxi.js` (simple Azure‑OpenAI repo picker, not in the mode dropdown) and `api/taxi-grounded.js` (grounded retrieval only — *no* in‑persona general chat) each get a header banner pointing to the Cloudflare Worker as the live path, so an MS AI GBB engineer who clones/forks isn't confused about what runs production.
+- **README (EN/KO) precedence fixed:** the modes table engine cell now reads *Cloudflare Worker → Azure AI Search KB → GitHub MCP* (was "Vercel"), the grounded section distinguishes Worker (superset: grounding + general chat) from the Vercel function, and the grounded‑mode URL prompt now suggests the Worker URL first. `.env.example` gained a "which backend?" callout. No code‑logic changes.
+
 ## [1.10.1] — 2026-06-24
 
 ### 🐛 Grounded mode now routes general chat the same as every other mode

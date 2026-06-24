@@ -125,7 +125,7 @@ GTM_DIR=data python3 scripts/build_repos.py   # repos.json 재생성
 |---|---|---|---|
 | **로컬** | 동의어 + 지표 검색 | 없음 | **기본** · 즉시 · 완전 오프라인 — *모든 클론이 그대로 쓰는 모드* |
 | **WebLLM** | 브라우저 내 LLM(WebGPU) | 없음 | 최초 1회 ~1GB 다운로드, 후보 중 선택 |
-| **🛰️ AI Foundry Live** | Vercel → Azure AI Search KB → GitHub MCP | 서버측 | 선택 · 라이브 grounded 레포 Q&A. **미설정 시 조용히 로컬로 폴백** |
+| **🛰️ AI Foundry Live** | Cloudflare Worker → Azure AI Search KB → GitHub MCP | 서버측 | 선택 · 라이브 grounded 레포 Q&A **+ 페르소나 일반 대화**. **미설정 시 조용히 로컬로 폴백** |
 
 > 🔌 **백엔드 없이도 동작.** 갓 클론한 사이트는 전부 브라우저 안에서 돌아가요: **로컬**이 기본이라 키가 필요 없고 **WebLLM**도 기기 안에서 실행돼요. **AI Foundry Live**는 100% 선택 — 배포하지 않으면 그 모드를 골라도 그냥 **로컬검색으로 폴백**합니다(에러도 설정도 없음). GitHub Pages에 올리면 전부 동작해요. _(더 단순한 `api/taxi.js` Azure OpenAI 프록시도 있어요 — 아래 참고.)_
 
@@ -174,7 +174,7 @@ export default async function handler(req, res) {
 
 #### 🛰️ AI Foundry Live (grounded) — 내 레포에 대한 라이브 응답
 
-`api/taxi-grounded.js`는 자유 문장 질문을 **Azure AI Search 지식 베이스**로 보내고, 그 **MCP 지식 소스**가 **GitHub 호스티드 MCP 서버**를 호출한 뒤 작은 모델로 답을 합성해요 — 전부 서버측에서. 이 서버리스 함수는 **Search 키**만 들고 있고, Azure OpenAI 키와 GitHub PAT는 Azure의 지식 소스 안에 머물러요(브라우저에도, 이 함수에도 노출 안 됨). 채팅엔 답마다 **트레이스 패널**(지식 소스 · MCP 도구 · 참조 레포)이 떠요.
+**라이브 사이트는 [`cloudflare-taxi/`](cloudflare-taxi/)의 Cloudflare Worker가 돌려요**(권장 경로 — 아래 참고). [`api/taxi-grounded.js`](api/taxi-grounded.js)는 동일 기능의 **Vercel** 함수예요. 둘 다 자유 문장 질문을 **Azure AI Search 지식 베이스**로 보내고, 그 **MCP 지식 소스**가 **GitHub 호스티드 MCP 서버**를 호출한 뒤 작은 모델로 답을 합성해요 — 전부 서버측에서. **Vercel** 함수는 **Search 키**만 들고 있어요(Azure OpenAI 키와 GitHub PAT는 Azure의 지식 소스 안에 머물러 브라우저엔 노출 안 됨). **Worker**는 여기에 더해 **키리스 Entra ID 서비스 주체**로 KB 밖 질문을 **현자 페르소나로** 답해요(일반 대화 · 스몰톡) — Vercel 함수엔 없는 상위집합이에요. 채팅엔 답마다 **트레이스 패널**(지식 소스 · MCP 도구 · 참조 레포)이 떠요.
 
 1. **Azure AI Search** — 서비스를 만들고, **지식 베이스**(예: `repolis-github-kb`)에 *MCP server* 종류의 **지식 소스**를 추가해 GitHub 호스티드 MCP(`https://api.githubcopilot.com/mcp/`, 헤더에 **읽기 전용** PAT)를 가리키게 하세요. 검색 서비스엔 **관리 ID**를 줘서 답 합성용 Azure OpenAI 배포에 접근하게 합니다.
 2. `api/taxi-grounded.js`를 **Vercel에 배포**(레포 Import → `/api/taxi-grounded` 생성).
@@ -183,7 +183,7 @@ export default async function handler(req, res) {
 
 > ⏱️ **Vercel Hobby 주의:** KB는 콜드/복잡 쿼리에서 6~21초가 걸리는데 Hobby는 함수를 ~10초로 끊어요. `GROUNDED_TIMEOUT_MS`(9000)가 그 직전에 중단시키고 택시는 **조용히 로컬로 폴백**합니다 — 그래서 멈추진 않지만 느린 쿼리는 grounded 결과가 안 떠요. 항상 grounded로 받으려면 **Vercel Pro**에서 `maxDuration`을 올리고 브라우저 `localStorage.taxiGroundedTimeoutMs`도 키우세요.
 
-> ☁️ **권장 — Cloudflare Workers (~10초 벽 없음).** Workers는 서브리퀘스트 대기 시간이 아니라 *CPU 시간*으로 과금해서, 느린 KB 호출이 끊기지 않고 끝까지 완료돼요 — 로컬 폴백이 훨씬 줄고, **무료** 플랜이라 카드도 필요 없어요. 바로 배포 가능한 포트가 [`cloudflare-taxi/`](cloudflare-taxi/)에 있어요: `wrangler secret put SEARCH_ENDPOINT && wrangler secret put SEARCH_API_KEY && wrangler deploy`. 나온 Worker URL을 택시에 붙여넣거나, `index.html`의 **`GROUNDED_DEFAULT`**에 박으면 **모든 방문자**에게 grounding이 켜져요. [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md) 참고.
+> ☁️ **권장 — 그리고 라이브 사이트가 실제로 돌리는 것 — Cloudflare Workers (~10초 벽 없음).** Workers는 서브리퀘스트 대기 시간이 아니라 *CPU 시간*으로 과금해서, 느린 KB 호출이 끊기지 않고 끝까지 완료돼요 — 로컬 폴백이 훨씬 줄고, **무료** 플랜이라 카드도 필요 없어요. Vercel 함수의 **상위집합**이기도 해요: 같은 grounding에 더해 페르소나 일반 대화(키리스 Entra 서비스 주체 → Azure OpenAI)와 여러 현자 NPC까지. 바로 배포 가능한 Worker가 [`cloudflare-taxi/`](cloudflare-taxi/)에 있어요: `wrangler secret put SEARCH_ENDPOINT && wrangler secret put SEARCH_API_KEY && wrangler deploy`(일반 대화는 Entra SP 시크릿 추가). 나온 Worker URL을 택시에 붙여넣거나, `index.html`의 **`GROUNDED_DEFAULT`**에 박으면 **모든 방문자**에게 켜져요. 전체 셋업 + 시크릿 목록: [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md) 참고.
 
 #### 🌐 AI 프록시 (단순) — Azure OpenAI 한 번 호출
 

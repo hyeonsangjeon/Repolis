@@ -1,7 +1,23 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// ⚠️ OPTIONAL ALTERNATIVE BACKEND — NOT what powers the live Repolis site.
+//
+// The LIVE deployment (https://hyeonsangjeon.github.io/Repolis/) is served by the
+// Cloudflare Worker in ../cloudflare-taxi/ (grounded Azure AI Search KB + GitHub MCP,
+// PLUS in-persona general/small-talk chat via a keyless Entra service principal).
+// That Worker is the recommended backend — see ../cloudflare-taxi/README.md.
+//
+// THIS file is a tiny, self-contained Vercel alternative: a single Azure OpenAI call
+// that just picks one repo from the shortlist the browser already retrieved (no KB,
+// no grounding, no general chat). It is NOT listed in the mode dropdown by default;
+// it stays here as a minimal reference for forks that prefer one serverless call
+// over the full Worker. Uses a direct Azure OpenAI api-key (the Worker is keyless).
+// See README "AI proxy (simple)".
+// ─────────────────────────────────────────────────────────────────────────────
+//
 // Repolis taxi → Azure OpenAI proxy (Vercel serverless function).
 //
-// The public Repolis site (GitHub Pages) cannot hold a secret key, so "AI 프록시"
-// mode (Mode C) calls this tiny function instead. It forwards the visitor's
+// The public Repolis site (GitHub Pages) cannot hold a secret key, so the optional
+// "AI 프록시" proxy mode calls this tiny function instead. It forwards the visitor's
 // question + the public repo catalog to Azure OpenAI and returns a repo pick.
 //
 // Required environment variables (set in Vercel project settings):
