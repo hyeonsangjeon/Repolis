@@ -3,6 +3,12 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.9.1] — 2026-06-24
+
+### 🐛 General chat now works in every mode
+- **Small‑talk / general questions reach the starlit LLM from any search mode.** Previously, asking POLARIS a general question while in **Local search** mode (the default) just returned the canned *"하하, 그건 저도 잘 모르겠어요 😅"* — the worker's in‑persona general chat was only wired into **AI Foundry Live** mode. A new `isGeneralChat()` gate routes any non‑repo, non‑metric question to `generalChat()` in **Local / WebLLM / Foundry** alike, so *"오리온자리에 대해 알려줘"* gets a real `gpt-5.4-mini` answer in the scholar's own voice — while a genuine repo query (*"STT 레포 알려줘"*) still rides to the building.
+- **RIGEL answers general questions instead of nagging for a repo.** Ask the Cartographer something with no `owner/repo` and it now replies as a general question in‑persona (LLM), rather than always repeating *"어떤 레포의 미궁을 그려드릴까요? owner/repo…"*. An explicit `owner/repo` (or a known alias) still routes straight to the DeepWiki map.
+
 ## [1.9.0] — 2026-06-24
 
 ### 🏘️ Colmar — an Alsace‑village makeover for the plaza

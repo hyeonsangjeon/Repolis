@@ -2784,20 +2784,24 @@ function groundedUrl(){
   if(saved && /(localhost|127\.0\.0\.1)/.test(saved) && !/(localhost|127\.0\.0\.1)/.test(location.hostname)) return GROUNDED_DEFAULT;   // a saved dev URL is dead on the live site → use prod
   return saved||GROUNDED_DEFAULT;
 }
-async function taxiChat(q){   // POLARIS general chat: smalltalk/off-topic answered by the model in persona, no KB, no repo push
+// Worker general-persona chat — no KB, no repo push. POLARIS *and* every scholar use this so
+// smalltalk / general questions get a real in-character LLM answer in ANY search mode (not just grounded).
+async function generalChat(q, npc){
+  npc = npc || 'taxi';
   const url=groundedUrl();
   if(!url){ addMsg('bot', t('stOfftopic')); return; }            // no backend → plain friendly reply
   const sb=addMsg('bot', t('taxiThinking'), {noHist:true}); sb.classList.add('typing');
   const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||20000;
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),tmo);
   try{
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,npc:'taxi',chat:true,history:priorHist(),lang:LANG}),signal:ctrl.signal});
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,npc,chat:true,history:priorHist(),lang:LANG}),signal:ctrl.signal});
     clearTimeout(to); if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json(); sb.remove();
     if(data.message){ addMsg('bot', esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>'), { trace:data.trace }); return; }
     addMsg('bot', t('stOfftopic'));
   }catch(e){ clearTimeout(to); sb.remove(); addMsg('bot', t('stOfftopic')); }
 }
+const taxiChat=(q)=>generalChat(q,'taxi');   // POLARIS general chat (back-compat alias)
 async function groundedAsk(q){
   const det=_coreIntent(q);                                          // greeting/library/metric/town-meta → instant local; everything else (repo Qs, follow-ups, ambiguous) goes to the live LLM
   if(det){ addMsg('bot', det.message, { repo:det.repo, alts:det.alts }); return; }
@@ -2848,7 +2852,7 @@ async function askScholar(q, npc){
     const sm=smalltalk(q); if(sm){ const p=scholarPersona(npc, SM_SLOT[sm]||''); addMsg('bot', p||t(ENG_SM[sm]||sm)); return; }   // greet/thanks/who/help in the scholar's own voice, no MCP
     const meta=(npc==='msdocs'?engMeta(q):null)||townMeta(q); if(meta){ addMsg('bot', meta); return; }   // "what are you / how many scholars" → instant
   }
-  if(npc==='deepwiki' && !repoName){ addMsg('bot', scholarPersona(npc,'ask')||t('engNone')); return; }   // RIGEL needs a target repo; ask if none, skip MCP
+  if(npc==='deepwiki' && !repoName){ return generalChat(q, npc); }   // no repo named → answer as a general question in RIGEL's own voice (LLM), instead of the canned "give me a repo"
   const url=groundedUrl();
   if(!url){ addMsg('bot', scholarPersona(npc,'noBackend')||t('engNoBackend')); return; }                // self-hosted clone without the worker
   const sb=addMsg('bot', scholarPersona(npc,'searching')||t('engSearching'), {noHist:true}); sb.classList.add('typing');
@@ -2877,9 +2881,22 @@ async function askScholar(q, npc){
     addMsg('bot', scholarPersona(npc,'none')||t('engNone'));
   }catch(e){ clearTimeout(to); sb.remove(); addMsg('bot', scholarPersona(npc,'err')||t('engErr')); }
 }
+// Is this a *general* question (→ LLM persona chat) rather than a repo lookup? True when it isn't a
+// known local intent (greeting / metric / town-meta), has NO strong repo match, names no repo-domain
+// word, and isn't a mid-thread follow-up. "오리온자리 알려줘" → general; "STT 레포 알려줘" → search.
+function isGeneralChat(q){
+  if(_coreIntent(q)) return false;                                  // greeting / metric / town-meta → handled locally
+  if(searchCandidates(q,8).strong) return false;                    // a confident repo hit → it's a search
+  if(/레포|repo\b|저장소|프로젝트|project|코드|커밋|commit|푸시|push|이슈|issue|readme|라이브러리|library|fork|포크|clone|클론|데모|demo|github|깃헙|깃허브|스타\b|\bstars?\b|버전|version|토픽|topic|길찾|데려다|인기|제일|최고|핫\b|\bhot\b|랜덤|\brandom\b|최근|\brecent\b|\blatest\b|\bnew\b|방문|\btraffic\b|forks?\b|popular|best\b|top\b/i.test(q)) return false;
+  const followup = priorHist().length && /다른|또\b|더\b|그건|그거|그게|그럼|그러면|말고|아니|이전|방금|저번|other|another|more|else|instead|what about|how about/i.test(q);
+  return !followup;
+}
 async function askDriver(q){
   if(activeNpc&&activeNpc.kind!=='taxi') return askScholar(q, activeNpc.kind);   // any non-taxi scholar → its own MCP knowledge source
   if(llmMode==='grounded') return groundedAsk(q);                     // self-manages its own 2-phase messaging
+  // local / webllm / proxy: a real repo hit stays in-mode, but a general / off-topic question still
+  // gets a real in-character LLM answer via the worker's general chat — smalltalk works in EVERY mode.
+  if(isGeneralChat(q)){ await generalChat(q,'taxi'); return; }
   const tb=addMsg('bot','…',{noHist:true}); tb.classList.add('typing');
   let r; try{ r = llmMode==='webllm'?await webllmAsk(q) : llmMode==='proxy'?await proxyAsk(q) : localIntent(q); }
   finally{ tb.remove(); }
