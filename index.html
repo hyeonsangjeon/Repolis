@@ -70,6 +70,33 @@
   .secHead .ct { font-weight: 600; color: #c9ab84; }
   .noHit { padding: 14px 8px; font-size: 12px; color: #b29a78; text-align: center; }
 
+  /* 🛂 Explorer Passport — visit-stamp popup (reuses #panel look) */
+  #passport { position: fixed; z-index: 12; top: 70px; right: 14px; width: 300px; max-width: calc(100vw - 28px);
+    background: rgba(255,251,242,.96); backdrop-filter: blur(10px); border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(70,40,15,.26); padding: 14px; transform-origin: top right;
+    transition: opacity .18s ease, transform .18s ease; }
+  #passport.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #passport h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
+    padding: 2px 2px 4px; display: flex; align-items: center; gap: 6px; }
+  #passport .psub { font-size: 11px; color: #ab8a66; padding: 0 2px 10px; }
+  .stampGrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+  .stamp { position: relative; border-radius: 13px; padding: 9px 4px 8px; text-align: center; border: 1.5px dashed #e3d2b6;
+    background: #fffdf8; transition: transform .14s ease; }
+  .stamp .ico { font-size: 21px; line-height: 1.1; filter: grayscale(1) opacity(.34); }
+  .stamp .nm { font-size: 9.5px; font-weight: 700; color: #bfa782; margin-top: 3px; line-height: 1.2; }
+  .stamp.got { border-style: solid; border-color: #79c6a0; background: #eef9f2;
+    box-shadow: 0 3px 10px rgba(47,157,106,.16); }
+  .stamp.got .ico { filter: none; }
+  .stamp.got .nm { color: #2f7d5b; }
+  .stamp.got::after { content: "✓"; position: absolute; top: 4px; right: 6px; font-size: 10px; font-weight: 800; color: #2f9d6a; }
+  .pRow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+    padding: 8px 2px 2px; font-size: 12px; color: #6b5034; }
+  .pRow b { color: #d2622f; font-size: 13px; }
+  .pZones { font-size: 11px; color: #ab8a66; padding: 6px 2px 2px; line-height: 1.5; }
+  .pZones .z { color: #c98a4a; font-weight: 700; }
+  .pHint { font-size: 10.5px; color: #c2ab88; padding: 9px 2px 0; text-align: center; }
+  #passBtn.glow { box-shadow: 0 0 0 2px #79c6a0, 0 4px 14px rgba(47,157,106,.3); }
+
   #prompt { position: fixed; z-index: 11; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
     background: rgba(60,40,24,.9); color: #fff; padding: 12px 20px; border-radius: 14px; font-weight: 600;
     font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: 0; transition: all .2s ease;
@@ -258,6 +285,7 @@
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
   <button id="dayBtn" class="badge" title="day / night" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
   <div class="badge"><span data-i18n="visited">방문</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
+  <button id="passBtn" class="badge" title="Explorer Passport" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🛂 <span data-i18n="passport">여권</span></button>
   <div class="badge" id="liveBadge" title="online now · today · all-time unique visitors">🟢 <b id="liveCount">1</b><span id="todayWrap" style="display:none;"> · <span data-i18n="todayWord">오늘</span> <b id="todayCount">0</b></span><span id="allWrap" style="display:none;"> · <span data-i18n="totalWord">누적</span> <b id="allCount">0</b></span></div>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
 </div>
@@ -267,6 +295,15 @@
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
   <input id="repoSearch" type="text" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" autocomplete="off" />
   <div id="repoList"></div>
+</div>
+
+<div id="passport" class="hidden">
+  <h3>🛂 <span data-i18n="passportTitle">탐험 여권</span></h3>
+  <div class="psub" data-i18n="passportSub">마을을 거닐며 스탬프를 모아요.</div>
+  <div class="stampGrid" id="stampGrid"></div>
+  <div class="pRow"><span data-i18n="passportRepos">방문한 레포</span> <b><span id="pRepoN">0</span>/<span id="pRepoT">0</span></b></div>
+  <div class="pZones" id="pZones"></div>
+  <div class="pHint" data-i18n="passportHint">현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.</div>
 </div>
 
 <div id="prompt"></div>
@@ -390,6 +427,11 @@ const I18N = {
   ko:{
     loading:'레포 도시를 짓는 중…',
     visited:'방문', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
+    passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프를 모아요.',
+    passportRepos:'방문한 레포', passportHint:'현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.',
+    passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
+    lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
+    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
@@ -460,6 +502,11 @@ const I18N = {
   en:{
     loading:'Building Repolis…',
     visited:'Visited', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
+    passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps.',
+    passportRepos:'Repos visited', passportHint:'Walk up to a scholar, the library, a canal or the plaza to earn a stamp.',
+    passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
+    lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
+    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
@@ -537,6 +584,7 @@ function applyLang(){
   const lb=document.getElementById('langBtn'); if(lb) lb.textContent = LANG==='ko' ? '🌐 EN' : '🌐 한국어';
   document.querySelectorAll('#introLang button').forEach(b=> b.classList.toggle('active', b.dataset.lang===LANG));
   if(typeof renderList==='function') renderList(document.getElementById('repoSearch').value||'');
+  if(typeof renderPassport==='function' && !document.getElementById('passport').classList.contains('hidden')) renderPassport();
 }
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
@@ -1298,6 +1346,7 @@ function makePavilion(px,pz){
 
 /* ---- 🌸 Colmar village charms: flower carts, market stalls, a stone well, rose arches, wine barrels, planters, guild lanterns + a Petite-Venise canal & flower bridge ---- */
 const EXTRA_COLLIDERS=[];   // big props get a soft collider (merged into COLLIDERS after the building pass)
+const CANAL_PTS=[];         // ⛵ Petite-Venise canal centres (auto-collected) → Explorer Passport "canal" stamp proximity
 const BLOOM_MATS=[0xff5d8f,0xffd23f,0xff8a3d,0xb06fe0,0xfff0f5,0xff3b6e,0xff7eb0,0xffe08a,0xe6486e].map(basic);
 function bloom(parent,x,y,z,spread=0.5,n=10,s=1){   // a colorful mound of blossoms (shared geo+mats)
   for(let i=0;i<n;i++){ const a=Math.random()*6.2832, rr=Math.random()*spread;
@@ -1385,6 +1434,7 @@ function makeGuildLantern(x,z){
   EXTRA_COLLIDERS.push({x,z,r:0.5});
 }
 function makeCanalNook(x,z,rot){   // ✦ a quiet Petite-Venise pocket: cel-water canal, flower-box banks, a humpbacked flower bridge & a moored boat
+  CANAL_PTS.push({x,z});
   const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot; scene.add(g);
   const W=2.4, L=6.6;
   const water=makeWater(L*0.5,8); water.geometry.dispose(); water.geometry=new THREE.PlaneGeometry(W,L); water.position.y=0.07; g.add(water);
@@ -2356,6 +2406,43 @@ actBtn.addEventListener('click',()=>{ if(modalOpen) return; doAct(); });
 document.getElementById('totalCount').textContent=REPOS.length;
 const panel=document.getElementById('panel');
 document.getElementById('menuBtn').onclick=()=> panel.classList.toggle('hidden');
+
+/* ───────── 🛂 Explorer Passport — local-only visit stamps (no server, no PII) ───────── */
+const PASSPORT_KEY='repolisPassport';
+const PASS_LANDMARKS=[
+  {id:'scholar:taxi',     ico:'🧭', key:'lmPolaris'},
+  {id:'scholar:msdocs',   ico:'📘', key:'lmVega'},
+  {id:'scholar:deepwiki', ico:'🗺️', key:'lmRigel'},
+  {id:'library',          ico:'📚', key:'lmLibrary'},
+  {id:'plaza',            ico:'⛲', key:'lmPlaza'},
+  {id:'canal',            ico:'🛶', key:'lmCanal'},
+];
+let visited=0;
+let passport=loadPassport();
+function loadPassport(){ try{ const p=JSON.parse(localStorage.getItem(PASSPORT_KEY)); if(p&&typeof p==='object') return {repos:Array.isArray(p.repos)?p.repos:[], stamps:Array.isArray(p.stamps)?p.stamps:[], first:p.first||0, last:p.last||0}; }catch(e){} return {repos:[], stamps:[], first:0, last:0}; }
+function savePassport(){ passport.last=Date.now(); if(!passport.first) passport.first=passport.last; try{ localStorage.setItem(PASSPORT_KEY, JSON.stringify(passport)); }catch(e){} }
+function passHasStamp(id){ return passport.stamps.indexOf(id)>=0; }
+const passportEl=document.getElementById('passport');
+function flashPassport(){ const b=document.getElementById('passBtn'); if(!b) return; b.classList.add('glow'); clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('glow'),2200); }
+function addStamp(id){ if(passHasStamp(id)) return false; passport.stamps.push(id); savePassport(); flashPassport(); if(!passportEl.classList.contains('hidden')) renderPassport(); return true; }
+function addRepoVisit(name){ if(!name || passport.repos.indexOf(name)>=0) return; passport.repos.push(name); savePassport(); if(!passportEl.classList.contains('hidden')) renderPassport(); }
+function restorePassport(){ if(!passport.repos.length) return;
+  for(const r of REPOS){ if(passport.repos.indexOf(r.repo)>=0 && !r._visited){ r._visited=true; visited++;
+    if(r._row) r._row.classList.add('visited'); if(r._ring) r._ring.material.color.set(0x2f9d6a); } }
+  document.getElementById('visitCount').textContent=visited; }
+function renderPassport(){ const grid=document.getElementById('stampGrid'); if(!grid) return;
+  grid.innerHTML='';
+  for(const lm of PASS_LANDMARKS){ const got=passHasStamp(lm.id);
+    const d=document.createElement('div'); d.className='stamp'+(got?' got':'');
+    d.innerHTML=`<div class="ico">${lm.ico}</div><div class="nm">${t(lm.key)}</div>`; grid.appendChild(d); }
+  document.getElementById('pRepoN').textContent=passport.repos.length;
+  document.getElementById('pRepoT').textContent=REPOS.length;
+  const missing=PASS_LANDMARKS.filter(l=>!passHasStamp(l.id));
+  document.getElementById('pZones').innerHTML = missing.length
+    ? (t('passportZonesLeft')+missing.map(l=>`<span class="z">${t(l.key).split(' · ')[0]}</span>`).join(', '))
+    : t('passportAllZones'); }
+document.getElementById('passBtn').onclick=()=>{ const hidden=passportEl.classList.toggle('hidden'); if(!hidden){ panel.classList.add('hidden'); renderPassport(); } };
+document.getElementById('menuBtn').addEventListener('click',()=> passportEl.classList.add('hidden'));
 const repoList=document.getElementById('repoList');
 function buildRow(repo){
   const row=document.createElement('div'); row.className='repoRow'; repo._row=row;
@@ -2381,6 +2468,7 @@ function renderList(q=''){
   if(!down.length && !home.length){ const n=document.createElement('div'); n.className='noHit'; n.textContent=t('noResults'); repoList.appendChild(n); }
 }
 renderList();
+restorePassport();
 document.getElementById('repoSearch').addEventListener('input',e=>renderList(e.target.value));
 const langBtn=document.getElementById('langBtn');
 function setLang(l){ if(l!==LANG){ LANG=l; localStorage.setItem('repolisLang',LANG); }
@@ -2468,10 +2556,9 @@ function closeLibrary(){ modalOpen=false; libModal.classList.remove('show'); }
 document.getElementById('libClose').onclick=closeLibrary;
 libModal.addEventListener('click',e=>{ if(e.target===libModal) closeLibrary(); });
 
-let visited=0;
 function markVisited(repo){ if(repo._visited) return; repo._visited=true; visited++;
   document.getElementById('visitCount').textContent=visited; repo._row.classList.add('visited');
-  repo._ring.material.color.set(0x2f9d6a); }
+  repo._ring.material.color.set(0x2f9d6a); addRepoVisit(repo.repo); }
 
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
@@ -3016,6 +3103,12 @@ function animate(){
   nearNpc=null; { let nnd=Infinity; for(const n of NPCS){ const d=player.position.distanceTo(n.pos); if(d<(n.reach||4.6) && d<nnd){ nnd=d; nearNpc=n; } } }
   nearestSeat=null;
   if(!sitting && !nearest){ let sd=2.5; for(const s of SEATS){ const d=player.position.distanceTo(s.pos); if(d<sd){ sd=d; nearestSeat=s; } } }
+  // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes)
+  if(nearNpc) addStamp('scholar:'+nearNpc.kind);
+  if(nearest && nearest._isLibrary) addStamp('library');
+  { const px=player.position.x, pz=player.position.z;
+    if(!passHasStamp('plaza') && px*px+pz*pz < 196) addStamp('plaza');
+    if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ addStamp('canal'); break; } } } }
   if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary

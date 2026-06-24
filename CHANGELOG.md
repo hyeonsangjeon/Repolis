@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.11.0] — 2026-06-25
+
+### 🛂 Explorer Passport — collect stamps as you explore the town
+- **A local-only visit passport.** A new 🛂 button in the HUD opens a passport popup that tracks where you've been: a six-stamp grid for the town's landmarks — **POLARIS · Wayfinder**, **VEGA · Archivist**, **RIGEL · Cartographer**, the **Contribution Library**, the **Town Square**, and the **Petite-Venise Canal** — plus a **repos-visited** counter and a *"not yet visited"* list of zones still to discover.
+- **Stamps are earned by walking up to a place.** The existing per-frame proximity loop now also awards a stamp the first time you get close to a scholar, the library, the plaza, or any canal nook (canal centres are auto-collected as the world builds). Each award early-outs once earned, so there are **no per-frame writes**.
+- **Everything persists across visits.** The passport (stamps + visited repos + first/last timestamp) is saved to `localStorage['repolisPassport']`. On reload it's restored — your repo **visit counter**, the green *visited* rings, and the highlighted repo rows all come back, so progress survives a refresh (previously the visit count reset to 0 every load). **Local-only, no server, no PII.**
+- **Bilingual + mobile-safe.** All passport copy is KO/EN and re-renders on language switch; the popup reuses the `#panel` look (frosted card, `max-width: calc(100vw − 28px)`) and the HUD bar wraps, so the new button is safe on phones. Pure DOM HUD — the 3D scene, camera, and renderer are untouched.
+
 ## [1.10.2] — 2026-06-24
 
 ### 📚 Backend docs cleansing — clear story for clone/fork
