@@ -1119,12 +1119,12 @@ const RUNE_MATS=[];
     runeCircle.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat)); RUNE_MATS.push({m:mat,base:op}); }
   star(8.2,6.0,12,0.34); star(7.2,4.2,6,0.22);   // 12-pt + 6-pt starlight polygons woven between rings
 })();
-// floating star-dust drifting over the plaza (magic motes)
-const starDust=(function(){ const N=96, pos=[], base=[], ph=[];
+// floating star-dust drifting over the plaza (magic motes — kept light so the square breathes)
+const starDust=(function(){ const N=54, pos=[], base=[], ph=[];
   for(let i=0;i<N;i++){ const a=Math.random()*Math.PI*2, r=Math.random()*8.6, y=0.4+Math.random()*3.6;
     pos.push(Math.cos(a)*r,y,Math.sin(a)*r); base.push(Math.cos(a)*r,y,Math.sin(a)*r); ph.push(Math.random()*6.28); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
-  const m=new THREE.PointsMaterial({size:0.17,map:STAR_TEX,color:0xffe9c0,transparent:true,opacity:0.28,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+  const m=new THREE.PointsMaterial({size:0.17,map:STAR_TEX,color:0xffe9c0,transparent:true,opacity:0.20,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
   const p=new THREE.Points(g,m); p._base=base; p._ph=ph; scene.add(p); return p; })();
 // plaza rim
 const rim = new THREE.Mesh(new THREE.RingGeometry(9.5,10.2,40), basic(0xc3ad7c));
@@ -1409,9 +1409,9 @@ function makeWell(x,z){
 function makeRoseArch(x,z,rot){
   const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot; scene.add(g);
   const W=2.6;
-  [-W/2,W/2].forEach(px=>{ const p=rbox(0.12,2.4,0.12,0xeae0cc,0.03); p.position.set(px,1.2,0); outline(p,0.03); g.add(p); bloom(g,px,1.5,0,0.18,8,0.85); });
+  [-W/2,W/2].forEach(px=>{ const p=rbox(0.12,2.4,0.12,0xeae0cc,0.03); p.position.set(px,1.2,0); outline(p,0.03); g.add(p); bloom(g,px,1.55,0,0.15,5,0.7); });
   const arch=new THREE.Mesh(new THREE.TorusGeometry(W/2,0.1,8,20,Math.PI), toon(0xeae0cc)); arch.position.y=2.4; g.add(arch);
-  for(let i=0;i<=6;i++){ const a=i/6*Math.PI; bloom(g, Math.cos(a)*W/2, 2.4+Math.sin(a)*W/2, 0, 0.16,5,0.8); }
+  for(let i=0;i<=4;i++){ const a=i/4*Math.PI; bloom(g, Math.cos(a)*W/2, 2.4+Math.sin(a)*W/2, 0, 0.13,3,0.65); }
 }
 function makeBarrel(x,z,flowers){
   const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
@@ -1471,6 +1471,36 @@ function makeCanalNook(x,z,rot){   // ✦ a quiet Petite-Venise pocket: cel-wate
   EXTRA_COLLIDERS.push({x:x+Math.cos(rot+Math.PI/2)*1.7, z:z+Math.sin(rot+Math.PI/2)*1.7, r:1.4});
   EXTRA_COLLIDERS.push({x:x-Math.cos(rot+Math.PI/2)*1.7, z:z-Math.sin(rot+Math.PI/2)*1.7, r:1.4});
 }
+function makePark(cx, cz){   // 🌳 a calm rest park set off the plaza — gravel stroll path, sittable benches, shade trees, a low flower bed, a lantern & a signpost (no flashy balloons/particles)
+  const toPlaza=Math.atan2(-cz,-cx);
+  const g=new THREE.Group(); g.position.set(cx,0,cz); scene.add(g);
+  // circular gravel stroll path laid on the lawn
+  const path=new THREE.Mesh(new THREE.RingGeometry(2.9,3.8,44), texMat(SAND_TEX,3,3)); path.rotation.x=-Math.PI/2; path.position.y=0.03; path.receiveShadow=true; g.add(path);
+  // low central flower bed: soil disc + stone rim + Provençal lavender (calm, low — not a balloon mound)
+  const soil=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.5,0.18,20), toon(0x6e513a)); soil.position.y=0.09; g.add(soil);
+  const bedrim=new THREE.Mesh(new THREE.TorusGeometry(1.46,0.1,6,24), toon(0x9c958a)); bedrim.rotation.x=Math.PI/2; bedrim.position.y=0.18; g.add(bedrim);
+  for(let i=0;i<5;i++){ const a=i/5*Math.PI*2; lavenderClump(g, Math.cos(a)*0.78, Math.sin(a)*0.78, 0.9); }
+  EXTRA_COLLIDERS.push({x:cx,z:cz,r:1.7});
+  // sittable benches on the far side, facing the flower bed
+  for(let i=0;i<3;i++){ const a=toPlaza+Math.PI+(i-1)*1.15, bx=cx+Math.cos(a)*4.25, bz=cz+Math.sin(a)*4.25;
+    makeBench(bx, bz, Math.atan2(-Math.cos(a),-Math.sin(a))); }
+  // shade trees framing the outer edge (mixed Provençal: leafy · cypress · olive)
+  [[0.5,'t'],[1.55,'c'],[2.6,'o'],[4.1,'t'],[5.2,'c']].forEach(([off,kind])=>{ const a=toPlaza+off, tx=cx+Math.cos(a)*5.2, tz=cz+Math.sin(a)*5.2;
+    if(kind==='c') makeCypress(tx,tz,1.0); else if(kind==='o') makeOlive(tx,tz,0.95); else makeTree(tx,tz,0.95);
+    EXTRA_COLLIDERS.push({x:tx,z:tz,r:0.7}); });
+  // low flower patches + a rock for natural calm
+  flowerPatch(cx+Math.cos(toPlaza+1.7)*4.6, cz+Math.sin(toPlaza+1.7)*4.6);
+  flowerPatch(cx+Math.cos(toPlaza-1.6)*4.6, cz+Math.sin(toPlaza-1.6)*4.6);
+  makeRock(cx+Math.cos(toPlaza+2.6)*4.4, cz+Math.sin(toPlaza+2.6)*4.4, 0.9);
+  // evening lighting (night-aware guild lantern)
+  makeGuildLantern(cx+Math.cos(toPlaza-0.7)*4.6, cz+Math.sin(toPlaza-0.7)*4.6);
+  // wooden signpost at the plaza-facing entrance
+  const signG=new THREE.Group(); signG.position.set(cx+Math.cos(toPlaza)*4.7, 0, cz+Math.sin(toPlaza)*4.7); signG.rotation.y=Math.PI/2-toPlaza; scene.add(signG);
+  const post=rbox(0.16,2.1,0.16,0x7a5230,0.03); post.position.y=1.05; outline(post,0.03); signG.add(post);
+  const arm=rbox(0.16,0.16,0.5,0x7a5230,0.03); arm.position.set(0,1.9,0.18); signG.add(arm);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.62), new THREE.MeshBasicMaterial({map:signTexture('Park · 공원',0x6fbf73),transparent:true})); board.position.set(0,1.78,0.1); signG.add(board);
+  EXTRA_COLLIDERS.push({x:signG.position.x,z:signG.position.z,r:0.4});
+}
 function placeColmar(){   // invoked after the shared garden geo (GEO_FLOWER) is defined, below
   const D=Math.PI/180;
   makeCanalNook(Math.cos(45*D)*23, Math.sin(45*D)*23, 45*D+Math.PI/2);
@@ -1490,11 +1520,11 @@ function placeColmar(){   // invoked after the shared garden geo (GEO_FLOWER) is
   makeFlowerCart(Math.cos(255*D)*22, Math.sin(255*D)*22, 255*D+1);
   makeGuildLantern(Math.cos(135*D)*19, Math.sin(135*D)*19);
   makeGuildLantern(Math.cos(225*D)*19, Math.sin(225*D)*19);
-  // rose arches framing the 6 avenue mouths + planters flanking them
-  for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, nx=Math.cos(ang+Math.PI/2), nz=Math.sin(ang+Math.PI/2);
-    makeRoseArch(Math.cos(ang)*13.5, Math.sin(ang)*13.5, ang+Math.PI/2);
-    makePlanter(Math.cos(ang)*12.4+nx*1.9, Math.sin(ang)*12.4+nz*1.9, 1.1);
-    makePlanter(Math.cos(ang)*12.4-nx*1.9, Math.sin(ang)*12.4-nz*1.9, 1.1); }
+  // 🌳 a calm rest park set off the plaza (SW lawn pocket, between the ring streets) to distribute the focal points
+  makePark(-43,-15);
+  // rose arches gently framing the 6 avenue mouths (planters relocated off-plaza to a calm park pocket)
+  for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2;
+    makeRoseArch(Math.cos(ang)*13.5, Math.sin(ang)*13.5, ang+Math.PI/2); }
   // gentle scatter of small charms across the lawns (마을 중간중간), away from rings & pavilions
   const scR=[44,70,99,126];
   scR.forEach((rr,ri)=>{ for(let k=0;k<5;k++){ const ang=(k/5*Math.PI*2)+(22*D)+(ri*13*D);

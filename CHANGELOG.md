@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.13.0] — 2026-06-25
+
+### 🌳 Let the plaza breathe + a calm park pocket off the square
+- **Decluttered the central plaza.** Feedback was that the square felt too busy. The **12 flower planters that ringed the plaza are gone**, the **6 rose arches at the avenue mouths were de-ballooned** (far fewer, smaller blooms on the poles and crown so they read as elegant arches, not bouquets), and the floating star-dust was thinned (96 → 54 motes, lower opacity). The fountain, glowing rune circle, four benches and the fountain's low flower ring are untouched — so sightlines across the square and the movement paths down each avenue are open again, on desktop and mobile.
+- **Added a separate "Park · 공원" rest pocket on the south-west lawn** (set off the plaza, tucked between the ring streets), to spread the visual focal points instead of piling everything in the centre. It's intentionally calm: a circular gravel stroll path, a low lavender flower bed with a stone rim, **three benches you can actually sit on** facing the bed, mixed Provençal shade trees (leafy · cypress · olive), a couple of low flower patches and a rock, one **night-aware guild lantern** that lights the path after dark, and a little wooden **signpost** at the plaza-facing entrance. No flashy balloons, particles or VFX — just somewhere to slow down between repo visits.
+- **Cheap and safe.** The park reuses existing shared geometry/materials and the established lantern night-glow system (no new lights, minimal extra draw calls); benches register with the same `SEATS` sit system, and the bed/trees/signpost push to `EXTRA_COLLIDERS` so you walk around them. The Passport / scholar / taxi / library / canal flows are all untouched. Verified day + night + mobile width with **0 console errors**.
+
 ## [1.12.1] — 2026-06-25
 
 ### 🏠 Fixed the oversized barrel-vault roof on villa buildings
