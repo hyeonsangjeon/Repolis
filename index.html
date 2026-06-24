@@ -139,6 +139,26 @@
   #libModal { position: fixed; inset: 0; z-index: 22; display: none; align-items: center; justify-content: center;
     background: rgba(24,14,6,.55); backdrop-filter: blur(5px); padding: 18px; }
   #libModal.show { display: flex; }
+  #chronoModal { position: fixed; inset: 0; z-index: 22; display: none; align-items: center; justify-content: center;
+    background: rgba(10,8,20,.6); backdrop-filter: blur(5px); padding: 18px; }
+  #chronoModal.show { display: flex; }
+  #chronoModal .libhead { background: linear-gradient(135deg,#3c3560 0%,#191530 100%); }
+  #chronoModal .libhead .cnt { background:#e8c45a; color:#2a2340; }
+  .chronoPhilo { font-size:12.5px; font-style:italic; color:#7a6a3a; padding:9px 12px 4px; }
+  .chronoCases { padding:4px 8px 8px; display:flex; flex-wrap:wrap; gap:2px; }
+  .chronoCase { display:inline-flex; align-items:center; gap:6px; margin:3px 4px 3px 0; padding:7px 12px; border-radius:999px;
+    border:1.5px solid #e3d4ae; background:#fbf3e4; color:#5a4326; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .chronoCase.on { background:#3c3560; color:#fff; border-color:#3c3560; }
+  .chronoQ { font-size:13.5px; font-weight:800; color:#43321f; padding:6px 12px 2px; }
+  .chronoTurn { display:flex; gap:9px; padding:7px 12px; }
+  .chronoTurn .em { flex:0 0 auto; font-size:18px; line-height:1.3; }
+  .chronoTurn .bd { flex:1; min-width:0; }
+  .chronoTurn .nm { font-size:11px; font-weight:800; letter-spacing:.02em; }
+  .chronoTurn .tx { font-size:13px; color:#3a2c1a; line-height:1.5; margin-top:1px; }
+  .chronoTurn.verdict { background:#fbf6e6; border-radius:12px; border:1px solid #ecd9a3; margin:7px 10px 2px; }
+  .chronoSig { font-size:13px; font-weight:800; color:#7a5a12; margin-top:5px; }
+  .chronoVerdictVal { display:inline-block; margin-top:5px; padding:3px 11px; border-radius:8px; background:#2f9d6a; color:#fff; font-weight:800; font-size:13px; }
+  .chronoLive { margin:9px 12px 4px; padding:9px 12px; border-radius:11px; background:#f3ead7; color:#8a6a3a; font-size:12px; border:1px dashed #d9c39a; line-height:1.5; }
   .libcard { background: #fbf3e4; border-radius: 22px; width: 680px; max-width: 100%; max-height: 88vh;
     display: flex; flex-direction: column; overflow: hidden; position: relative;
     box-shadow: 0 26px 80px rgba(30,16,4,.5); animation: pop .24s cubic-bezier(.2,.9,.3,1.3); }
@@ -351,6 +371,20 @@
   </div>
 </div>
 
+<div id="chronoModal">
+  <div class="libcard">
+    <div class="libhead">
+      <button class="x" id="chronoClose" aria-label="close">✕</button>
+      <div class="ic">⏳</div>
+      <h2 data-i18n="chronoTitle">크로노폴리스 · 시간의 회의</h2>
+      <div class="sub" data-i18n="chronoSub">세 현자가 문서 대 코드로 다투면, 의장 크로노스가 시간에게 판정을 맡깁니다.</div>
+      <div class="cnt" id="chronoCnt" data-i18n="chronoStage">⏳ Ambient · 비용 0의 무대</div>
+    </div>
+    <div class="libbody" id="chronoBody"></div>
+    <div class="libfoot" id="chronoFoot"></div>
+  </div>
+</div>
+
 <div id="intro">
   <div class="inner">
     <div class="langsel" id="introLang">
@@ -393,6 +427,8 @@
 </div>
 
 <script src="scholars.js"></script>
+<script src="council/engine.js"></script>
+<script src="council/fixtures.js"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -409,6 +445,11 @@ const OWNER = 'hyeonsangjeon';
 let REPOS = [];
 try { REPOS = await fetch('repos.json', { cache:'no-cache' }).then(r=>r.json()); }
 catch(e){ console.error('repos.json load failed', e); }
+
+/* Chronopolis council config (sages/chair/ambient) — optional; chamber uses an inline fallback if missing */
+let CHRONO_CFG=null;
+try { CHRONO_CFG = await fetch('council/council.config.json', { cache:'no-cache' }).then(r=>r.json()); }
+catch(e){ /* config optional */ }
 
 /* language → palette (wall / roof / accent) — Provençal village:
    warm ochre/cream/apricot/limestone walls · terracotta-tile roofs ·
@@ -443,7 +484,12 @@ const I18N = {
     passportRepos:'방문한 레포', passportHint:'현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
-    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하',
+    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의',
+    chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
+    chronoSub:'세 현자가 문서 대 코드로 다투면, 의장 크로노스가 시간(가장 최신·살아있는 소스)에게 판정을 맡깁니다.',
+    chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'안건을 골라 보세요', chronoStage:'⏳ Ambient · 비용 0의 무대',
+    chronoLive:'⚡ 라이브 토론(LLM)은 예산 가드 뒤에 잠겨 있어요 — 지금은 비용 0의 결정적 무대(Ambient)만 상영 중.',
+    chronoConsensus:'만장일치', chronoVerdict:'시간의 판정', chronoSummon:'소집', chronoRecord:'기록 봉인',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
@@ -519,7 +565,12 @@ const I18N = {
     passportRepos:'Repos visited', passportHint:'Walk up to a scholar, the library, a canal or the plaza to earn a stamp.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
-    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal',
+    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time',
+    chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
+    chronoSub:'Three sages argue docs vs code; the Chair KRONOS lets Time — the newest, living source — deliver the verdict.',
+    chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick a case', chronoStage:'⏳ Ambient · zero-cost stage',
+    chronoLive:'⚡ Live LLM debate is locked behind budget guards — for now only the zero-cost deterministic stage (Ambient) is playing.',
+    chronoConsensus:'Consensus', chronoVerdict:'Verdict of Time', chronoSummon:'Convocation', chronoRecord:'Record sealed',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
@@ -2105,6 +2156,194 @@ const COLLIDERS = buildings.map(b=>({x:b._x, z:b._z, r:b._cw||3}));
 if(LIB){ COLLIDERS.push({x:0,z:LIB._z-14,r:13}); COLLIDERS.push({x:0,z:LIB._z+14,r:14}); }
 if(typeof EXTRA_COLLIDERS!=='undefined') COLLIDERS.push(...EXTRA_COLLIDERS);   // Colmar charms (carts/stalls/well/canal) get soft colliders
 
+/* ======================================================================
+   ⏳ CHRONOPOLIS — the Council of Time (a far-corner open-air tribunal)
+   Three sages argue docs-vs-code; the Chair KRONOS lets TIME (the newest,
+   living source) deliver the verdict. Ambient stage = 0 LLM, deterministic
+   (council/engine.js). Live LLM debate stays locked behind budget guards.
+   ====================================================================== */
+const CE = window.CouncilEngine || null;          // deterministic adjudication engine (classic script, loaded above)
+const CF = window.CouncilFixtures || null;         // 5 seeded debate cases
+const CHRONO_POS = new THREE.Vector3(-70, 0, -193);   // far south clearing (r≈205 < player clamp 215), opposite the north library, clear of all repo cottages
+let CHRONO=null, nearChrono=null, chronoHourGlow=null, chronoSand=null;
+/* sage display info — config-injected (CHRONO_CFG) with an inline fallback so the chamber renders even if the config is missing */
+const SAGE_INFO = (()=>{ const m={};
+  const fb=[ {id:'olddoc',emoji:'📜',nameKo:'올드독',nameEn:'Olddoc',color:'#c79a5b'},
+             {id:'livewire',emoji:'🌿',nameKo:'코드짱',nameEn:'Livewire',color:'#5bbf73'},
+             {id:'hearsay',emoji:'🌀',nameKo:'썰풀이',nameEn:'Hearsay',color:'#7aa7d8'} ];
+  const sages=(CHRONO_CFG&&Array.isArray(CHRONO_CFG.sages)&&CHRONO_CFG.sages.length)?CHRONO_CFG.sages:fb;
+  sages.forEach(s=>{ m[s.id]={emoji:s.emoji, ko:s.nameKo, en:s.nameEn, color:s.color}; });
+  const ch=(CHRONO_CFG&&CHRONO_CFG.chair)||{emoji:'⏳',nameKo:'크로노스',nameEn:'KRONOS',color:'#e8c45a'};
+  m.kronos={emoji:ch.emoji, ko:ch.nameKo, en:ch.nameEn, color:ch.color};
+  return m; })();
+
+(function buildChronopolis(){
+  const cg=new THREE.Group(); cg.position.copy(CHRONO_POS);
+  cg.rotation.y=Math.atan2(-CHRONO_POS.x, -CHRONO_POS.z);   // local +Z faces the town centre (where the player arrives)
+  scene.add(cg);
+  const MARBLE=0xe9e3d4, STONE=0xcfc6b2, GOLD='#e8c45a';
+  // ---- stylobate: 3 concentric steps ----
+  [[17,0.4],[15.8,0.75],[14.7,1.05]].forEach(([r,y],i)=>{
+    const step=new THREE.Mesh(new THREE.CylinderGeometry(r,r+0.5,i===0?0.4:0.36,48), toon(i?MARBLE:STONE));
+    step.position.y=y-0.2; step.receiveShadow=true; cg.add(step);
+  });
+  // ---- sundial floor medallion (gnomon + 12 ticks) ----
+  const disc=new THREE.Mesh(new THREE.CircleGeometry(9.4,48), toon(0xddd3bd)); disc.rotation.x=-Math.PI/2; disc.position.y=1.07; cg.add(disc);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(8.4,9.2,56), new THREE.MeshBasicMaterial({color:0xbfa45e,side:THREE.DoubleSide})); ring.rotation.x=-Math.PI/2; ring.position.y=1.075; cg.add(ring);
+  for(let i=0;i<12;i++){ const a=i/12*Math.PI*2; const tick=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.05,i%3===0?1.3:0.7), toon(0x9c854a));
+    tick.position.set(Math.sin(a)*7.7,1.085,Math.cos(a)*7.7); tick.rotation.y=a; cg.add(tick); }
+  const gno=new THREE.Mesh(new THREE.ConeGeometry(0.45,3.4,4), toon(0xb8a05c)); gno.position.set(0,2.7,0); gno.rotation.y=Math.PI/4; cg.add(gno); outline(gno,0.03);
+  // ---- column ring + architrave (open centre → sky/constellations show through) ----
+  const NCOL=14, CR=13.6;
+  for(let i=0;i<NCOL;i++){ const a=i/NCOL*Math.PI*2, x=Math.cos(a)*CR, z=Math.sin(a)*CR;
+    const sh=new THREE.Mesh(new THREE.CylinderGeometry(0.52,0.6,6.6,16), toon(MARBLE)); sh.position.set(x,4.4,z); sh.castShadow=true; cg.add(sh);
+    const cap=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.5,1.5), toon(0xf1ecdf)); cap.position.set(x,7.85,z); cg.add(cap);
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(0.78,0.86,0.5,16), toon(0xe2dccb)); base.position.set(x,1.35,z); cg.add(base);
+    COLLIDERS.push({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z, r:1.0});
+  }
+  const arch=new THREE.Mesh(new THREE.TorusGeometry(CR,0.62,10,52), toon(0xf1ecdf)); arch.rotation.x=Math.PI/2; arch.position.y=8.35; cg.add(arch);
+  const frieze=new THREE.Mesh(new THREE.CylinderGeometry(CR+0.5,CR+0.5,0.9,52,1,true), toon(0xe6dfcc)); frieze.position.y=8.9; cg.add(frieze);
+  // ---- KRONOS dais at the head (−Z back), facing the entrance ----
+  const dais=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.6,0.7,32), toon(0xd9cdae)); dais.position.set(0,1.4,-8.4); cg.add(dais);
+  // sage chibi builder
+  function chronoFig(hex, scale, prop){ const g=new THREE.Group();
+    const robe=capsule(0.6,1.4,hex); robe.position.y=1.95; g.add(robe); outline(robe,0.04);
+    const sash=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.66,0.2,16), toon(shade(hex,-20))); sash.position.y=2.3; g.add(sash);
+    const head=ball(0.4,0xf3d9b0); head.position.y=3.15; g.add(head); outline(head,0.04);
+    const eye=x=>{ const e=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6), new THREE.MeshBasicMaterial({color:0x2a2018})); e.position.set(x,3.18,0.34); g.add(e); };
+    eye(-0.13); eye(0.13);
+    if(prop==='scroll'){ const s=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.8,12), toon(0xece0c6)); s.rotation.z=Math.PI/2; s.position.set(0.62,2.2,0.5); g.add(s); }
+    else if(prop==='tablet'){ const tb=rbox(0.52,0.66,0.08,0x1f2c40,0.05); tb.position.set(0.66,2.35,0.4); g.add(tb);
+      const sc=new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.54), new THREE.MeshBasicMaterial({color:0x86e6a6,transparent:true,opacity:0.92})); sc.position.set(0.7,2.36,0.45); g.add(sc); }
+    else if(prop==='swirl'){ const sw=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.07,8,18), toon(shade(hex,14))); sw.position.set(0.64,2.35,0.42); g.add(sw); }
+    g.scale.setScalar(scale||1); return g;
+  }
+  // 3 debaters in a shallow arc facing +Z (player), olddoc / livewire / hearsay
+  const seats=[ ['olddoc','scroll',-5.6,-1.5], ['livewire','tablet',0,0.6], ['hearsay','swirl',5.6,-1.5] ];
+  seats.forEach(([id,prop,x,z])=>{ const c=SAGE_INFO[id]||{color:'#bbb'}; const f=chronoFig(c.color,1,prop); f.position.set(x,0,z); cg.add(f);
+    COLLIDERS.push({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z, r:1.0}); });
+  // KRONOS — tall, gold, hooded, presiding on the dais
+  const kron=chronoFig(GOLD,1.32,null); kron.position.set(0,1.75,-8.4); cg.add(kron);
+  const hood=new THREE.Mesh(new THREE.ConeGeometry(0.62,0.9,18), toon(shade(GOLD,-14))); hood.position.set(0,1.75+3.7,-8.4); cg.add(hood);
+  const star=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:0xfff0c0,transparent:true,opacity:0.95,depthWrite:false,blending:THREE.AdditiveBlending})); star.scale.set(1.5,1.5,1); star.position.set(0,1.75+4.6,-8.4); cg.add(star);
+  // ---- hourglass sculpture beside the Chair ----
+  (function hourglass(){ const g=new THREE.Group(); g.position.set(0,1.75,-11.0); cg.add(g);
+    const glass=new THREE.MeshBasicMaterial({color:0xcdeaff,transparent:true,opacity:0.3,depthWrite:false,side:THREE.DoubleSide});
+    const top=new THREE.Mesh(new THREE.ConeGeometry(1.0,1.55,22,1,true), glass); top.position.y=2.35; top.rotation.x=Math.PI; g.add(top);
+    const bot=new THREE.Mesh(new THREE.ConeGeometry(1.0,1.55,22,1,true), glass); bot.position.y=0.85; g.add(bot);
+    const capT=new THREE.Mesh(new THREE.CylinderGeometry(1.08,1.08,0.18,22), toon(0x8a6a2a)); capT.position.y=3.12;
+    const capB=new THREE.Mesh(new THREE.CylinderGeometry(1.08,1.08,0.18,22), toon(0x8a6a2a)); capB.position.y=0.08; g.add(capT,capB);
+    for(let i=0;i<3;i++){ const a=i/3*Math.PI*2; const p=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,3.05,8), toon(0x9c7a32)); p.position.set(Math.cos(a)*1.0,1.6,Math.sin(a)*1.0); g.add(p); }
+    const sandTop=new THREE.Mesh(new THREE.ConeGeometry(0.85,0.7,18), new THREE.MeshBasicMaterial({color:0xe8c45a})); sandTop.position.y=2.05; sandTop.rotation.x=Math.PI; g.add(sandTop);
+    const sandBot=new THREE.Mesh(new THREE.ConeGeometry(0.6,0.45,18), new THREE.MeshBasicMaterial({color:0xe8c45a})); sandBot.position.y=0.95; g.add(sandBot);
+    // glowing waist (added to NIGHT_GLOWS so day/night handles it)
+    const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffd98a,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
+    glow.scale.set(3.4,3.4,1); glow.position.y=1.6; glow._n=0.9; g.add(glow); NIGHT_GLOWS.push(glow); chronoHourGlow=glow;
+    // a thin falling-sand stream (animated when near)
+    const N=14, pos=new Float32Array(N*3), ph=new Float32Array(N);
+    for(let i=0;i<N;i++){ ph[i]=Math.random(); pos[i*3]=(Math.random()-0.5)*0.12; pos[i*3+1]=1.6-ph[i]*0.8; pos[i*3+2]=(Math.random()-0.5)*0.12; }
+    const sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    chronoSand=new THREE.Points(sg, new THREE.PointsMaterial({color:0xf3d98a,size:0.12,transparent:true,opacity:0.9,depthWrite:false})); chronoSand._ph=ph; g.add(chronoSand);
+  })();
+  // ---- entrance sign (town-facing) + flanking lanterns + cypress framing ----
+  const signTex=signTexture('CHRONOPOLIS', '#e8c45a');
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(7.6,1.9), new THREE.MeshBasicMaterial({map:signTex,transparent:true})); sign.position.set(0,3.0,15.2); cg.add(sign);
+  [[-3.5,15.4],[3.5,15.4]].forEach(([x,z])=>{ const post=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.2,4.0,12), toon(0x6b5836)); post.position.set(x,2.0,z); cg.add(post); });
+  // lanterns + cypress in absolute world coords (reuse town helpers w/ built-in night handling)
+  const W=(x,z)=>({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z});
+  [[-13.5,13.5],[13.5,13.5],[-13.5,-13.5],[13.5,-13.5]].forEach(([x,z])=>{ const w=W(x,z); if(typeof makeGuildLantern==='function') makeGuildLantern(w.x,w.z); });
+  [[-17,9],[17,9],[-17,-9],[17,-9]].forEach(([x,z])=>{ const w=W(x,z); if(typeof makeCypress==='function') makeCypress(w.x,w.z,1.1); });
+  // soft central night glow on the sundial
+  const cglow=new THREE.Mesh(new THREE.CircleGeometry(9,32), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0xffe0a0,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  cglow.rotation.x=-Math.PI/2; cglow.position.y=1.1; cglow._n=0.5; cg.add(cglow); NIGHT_GLOWS.push(cglow);
+  // landmark anchor + arrival point (town-facing entrance)
+  cg.updateMatrixWorld(true);
+  CHRONO={ _isChrono:true, _pos:cg.localToWorld(new THREE.Vector3(0,0,18.5)) };
+  COLLIDERS.push({x:CHRONO_POS.x,z:CHRONO_POS.z, r:2.2});   // KRONOS dais core (centre stays walkable around it)
+})();
+
+/* ---- ambient debate: one reused world bubble cycles through the deterministic transcript (0 LLM) ---- */
+const chronoBubble=(function(){ const cv=document.createElement('canvas'); cv.width=512; cv.height=260; const ctx=cv.getContext('2d');
+  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+  sp.scale.set(17,8.6,1); sp.position.set(CHRONO_POS.x, 10.5, CHRONO_POS.z); sp.visible=false; sp.renderOrder=20; scene.add(sp);
+  function wrap(t,max){ const words=String(t).split(' '), lines=[]; let cur='';
+    for(const w of words){ const tn=cur?cur+' '+w:w; if(ctx.measureText(tn).width>max && cur){ lines.push(cur); cur=w; } else cur=tn; } if(cur) lines.push(cur); return lines.slice(0,4); }
+  function draw(name, text, col, gold){ ctx.clearRect(0,0,512,260);
+    ctx.fillStyle=gold?'rgba(42,35,64,0.93)':'rgba(255,251,242,0.95)'; const r=26;
+    ctx.beginPath(); ctx.moveTo(r,8); ctx.arcTo(504,8,504,252,r); ctx.arcTo(504,252,8,252,r); ctx.arcTo(8,252,8,8,r); ctx.arcTo(8,8,504,8,r); ctx.fill();
+    ctx.lineWidth=5; ctx.strokeStyle=col||'#caa'; ctx.stroke();
+    ctx.font='800 30px system-ui,sans-serif'; ctx.fillStyle=col||'#666'; ctx.fillText(name, 28, 50);
+    ctx.font='600 28px system-ui,sans-serif'; ctx.fillStyle=gold?'#fff':'#33271a';
+    const lines=wrap(text, 452); lines.forEach((ln,i)=>ctx.fillText(ln, 28, 96+i*38));
+    tex.needsUpdate=true; }
+  return { sprite:sp, draw };
+})();
+let chronoSeq=[], chronoIdx=0, chronoT=0, chronoSeqLang=null;
+function buildChronoSequence(){ chronoSeq=[]; chronoSeqLang=LANG; if(!CE||!CF||!CF.list) return;
+  for(const fx of CF.list()){ let r; try{ r=CE.councilAsk(fx,{withTranscript:true,lang:LANG}); }catch(e){ continue; }
+    const k=SAGE_INFO.kronos; chronoSeq.push({name:k.emoji+' '+k[LANG], text:'“'+r.question+'”', col:k.color, gold:true});
+    for(const ev of r.transcript){
+      if(ev.phase==='testimony'){ const s=SAGE_INFO[ev.sage]||{}; chronoSeq.push({name:(s.emoji||'')+' '+(s[LANG]||ev.sage), text:ev.claim+(ev.provenance?(' — '+ev.provenance):''), col:s.color}); }
+      else if(ev.phase==='cross'){ const s=SAGE_INFO[ev.sage]||{}; chronoSeq.push({name:(s.emoji||'')+' '+(s[LANG]||ev.sage), text:ev.text, col:s.color}); }
+      else if(ev.phase==='verdict'){ const sig=(r.signature&&r.signature[LANG])||''; const val=ev.no_answer?'—':ev.verdict;
+        chronoSeq.push({name:k.emoji+' '+k[LANG], text:(LANG==='ko'?'시간의 판정: ':'Verdict of Time: ')+val+' · ⏳ '+sig, col:k.color, gold:true, hold:true}); }
+    }
+  }
+}
+function updateChrono(dt){ if(!CHRONO) return;
+  if(chronoHourGlow){ const base=isNight?0.9:0.42; chronoHourGlow.material.opacity=base*(0.72+0.28*Math.sin(clock.elapsedTime*2.1)); }
+  const near = player.position.distanceToSquared(CHRONO_POS) < 64*64;
+  if(chronoSand && near){ const a=chronoSand.geometry.attributes.position.array, ph=chronoSand._ph;
+    for(let i=0;i<ph.length;i++){ ph[i]+=dt*0.5; if(ph[i]>1) ph[i]-=1; a[i*3+1]=1.6-ph[i]*0.85; } chronoSand.geometry.attributes.position.needsUpdate=true; }
+  if(!near){ if(chronoBubble.sprite.visible) chronoBubble.sprite.visible=false; return; }
+  if(chronoSeqLang!==LANG){ buildChronoSequence(); chronoIdx=0; chronoT=0; }
+  if(!chronoSeq.length){ chronoBubble.sprite.visible=false; return; }
+  chronoT-=dt;
+  if(chronoT<=0 || !chronoBubble.sprite.visible){ const b=chronoSeq[chronoIdx%chronoSeq.length]; chronoIdx++;
+    chronoBubble.draw(b.name, b.text, b.col, b.gold); chronoBubble.sprite.visible=true; chronoT=b.hold?4.6:2.7; }
+  chronoBubble.sprite.position.y=10.5+Math.sin(clock.elapsedTime*1.4)*0.25;
+}
+
+/* ---- Chronopolis modal (deterministic transcript + verdict + signature, KO/EN, Live shown as gated) ---- */
+const chronoModal=document.getElementById('chronoModal');
+let chronoModalLang=null, chronoCaseId=null;
+const _esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function chronoTurn(sageId,text){ const s=SAGE_INFO[sageId]||{emoji:'•',color:'#888'}; const nm=s[LANG]||sageId;
+  return `<div class="chronoTurn"><div class="em">${s.emoji||'•'}</div><div class="bd"><div class="nm" style="color:${s.color||'#777'}">${_esc(nm)}</div><div class="tx">${_esc(text)}</div></div></div>`; }
+function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementById('chronoBody'); body.innerHTML='';
+  const philo=document.createElement('div'); philo.className='chronoPhilo'; philo.textContent='“'+t('chronoPhilo')+'”'; body.appendChild(philo);
+  const cases=document.createElement('div'); cases.className='chronoCases';
+  const list=(CF&&CF.list)?CF.list():[];
+  list.forEach(fx=>{ const b=document.createElement('button'); b.className='chronoCase'+(fx.id===id?' on':''); b.textContent=fx.topic; b.onclick=()=>renderChronoCase(fx.id); cases.appendChild(b); });
+  body.appendChild(cases);
+  const fx=(CF&&CF.get)?CF.get(id):null;
+  if(!CE||!fx){ const w=document.createElement('div'); w.className='chronoQ'; w.textContent='⏳ engine offline'; body.appendChild(w);
+    const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv); return; }
+  let r; try{ r=CE.councilAsk(fx,{withTranscript:true,lang:LANG}); }catch(e){ return; }
+  const q=document.createElement('div'); q.className='chronoQ'; q.textContent='“'+r.question+'”'; body.appendChild(q);
+  let html='';
+  for(const ev of r.transcript){
+    if(ev.phase==='testimony') html+=chronoTurn(ev.sage, ev.claim+(ev.provenance?(' — '+ev.provenance):''));
+    else if(ev.phase==='cross') html+=chronoTurn(ev.sage, ev.text);
+    else if(ev.phase==='verdict'){ const k=SAGE_INFO.kronos; const sig=(r.signature&&r.signature[LANG])||'';
+      const head=ev.consensus?t('chronoConsensus'):t('chronoVerdict');
+      html+=`<div class="chronoTurn verdict"><div class="em">${k.emoji}</div><div class="bd"><div class="nm" style="color:${k.color}">${_esc(k[LANG])} · ${LANG==='ko'?'시간의 의장':'the Chair of Time'}</div>`
+        + (ev.no_answer?`<div class="tx">${LANG==='ko'?'증언이 부족해 — 다음 기일로 미룬다.':'Insufficient testimony — adjourned.'}</div>`
+            : `<div class="tx">${_esc(head)}</div><div class="chronoVerdictVal">${_esc(ev.verdict)}</div><div class="chronoSig">⏳ ${_esc(sig)}</div>`)
+        + `</div></div>`; }
+  }
+  const turns=document.createElement('div'); turns.innerHTML=html; body.appendChild(turns);
+  const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv);
+}
+function openChrono(){ modalOpen=true; chronoModal.classList.add('show');
+  if(chronoModalLang!==LANG || !chronoCaseId){ chronoCaseId=(CF&&CF.ORDER&&CF.ORDER[0])||'pydantic_dict'; renderChronoCase(chronoCaseId);
+    document.getElementById('chronoFoot').innerHTML=`<button class="close" id="chronoCloseB">${t('close')}</button>`;
+    document.getElementById('chronoCloseB').onclick=closeChrono; chronoModalLang=LANG; }
+  document.getElementById('chronoBody').scrollTop=0; }
+function closeChrono(){ modalOpen=false; chronoModal.classList.remove('show'); }
+document.getElementById('chronoClose').onclick=closeChrono;
+chronoModal.addEventListener('click',e=>{ if(e.target===chronoModal) closeChrono(); });
+
 /* ---- day / night (night: window glow brightness = repo activity) ---- */
 let isNight=false;
 let lastAct=performance.now(), lastFrame=0, frame=0;   // perf: adaptive frame-rate (idle→~30fps) + frame counter for VFX throttling
@@ -2462,6 +2701,7 @@ const PASS_LANDMARKS=[
   {id:'library',          ico:'📚', key:'lmLibrary'},
   {id:'plaza',            ico:'⛲', key:'lmPlaza'},
   {id:'canal',            ico:'🛶', key:'lmCanal'},
+  {id:'chrono',           ico:'⏳', key:'lmChrono'},
 ];
 let visited=0;
 let passport=loadPassport();
@@ -2609,7 +2849,7 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -3170,14 +3410,17 @@ function animate(){
   nearNpc=null; { let nnd=Infinity; for(const n of NPCS){ const d=player.position.distanceTo(n.pos); if(d<(n.reach||4.6) && d<nnd){ nnd=d; nearNpc=n; } } }
   nearestSeat=null;
   if(!sitting && !nearest){ let sd=2.5; for(const s of SEATS){ const d=player.position.distanceTo(s.pos); if(d<sd){ sd=d; nearestSeat=s; } } }
+  nearChrono = (CHRONO && player.position.distanceTo(CHRONO._pos) < 8.5) ? CHRONO : null;
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes)
   if(nearNpc) addStamp('scholar:'+nearNpc.kind);
   if(nearest && nearest._isLibrary) addStamp('library');
   { const px=player.position.x, pz=player.position.z;
     if(!passHasStamp('plaza') && px*px+pz*pz < 196) addStamp('plaza');
+    if(nearChrono && !passHasStamp('chrono')) addStamp('chrono');
     if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ addStamp('canal'); break; } } } }
   if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
+  else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
@@ -3195,6 +3438,7 @@ function animate(){
   updateFountains(dt);
   updateSmoke(clock.elapsedTime);
   updateChows(clock.elapsedTime,dt);
+  updateChrono(dt);
   if(!isNight){ updateBirds(clock.elapsedTime); updateButterflies(clock.elapsedTime); }
   if(isNight){ bigStars.material.opacity=0.62+Math.sin(clock.elapsedTime*2.6)*0.38; starsGroup.rotation.y+=dt*0.0016; updateFireflies(clock.elapsedTime);
     for(let i=0;i<scholarStars.length;i++) scholarStars[i].mat.opacity=0.55+Math.sin(clock.elapsedTime*2.1+i*1.9)*0.45; }
@@ -3367,6 +3611,14 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__sit=()=>{ if(nearestSeat){ sitDown(nearestSeat); return true; } return false; };
   window.__stand=()=>{ standUp(); return true; };
   window.__tpSeat=(i=0)=>{ const s=SEATS[i]; player.position.set(s.x,0,s.z); model.rotation.y=s.rot; camYaw=s.rot+Math.PI; camPitch=0.28; camDist=11; return {x:+s.x.toFixed(1),z:+s.z.toFixed(1),legY:+legL.rotation.x.toFixed(2)}; };
+  window.__tpChrono=(back=4)=>{ if(!CHRONO) return null; const d=CHRONO._pos.clone().sub(CHRONO_POS).normalize(); const p=CHRONO._pos.clone().add(d.multiplyScalar(back)); player.position.set(p.x,0,p.z); const yaw=Math.atan2(CHRONO_POS.x-p.x,CHRONO_POS.z-p.z); camYaw=yaw; camPitch=0.18; camDist=30; model.rotation.y=Math.PI-yaw; return {x:+p.x.toFixed(1),z:+p.z.toFixed(1)}; };
+  window.__chrono=()=>({ has:!!CHRONO, engine:!!CE, fixtures:!!CF, pos:CHRONO?{x:+CHRONO._pos.x.toFixed(1),z:+CHRONO._pos.z.toFixed(1)}:null, near:!!nearChrono, dist:+player.position.distanceTo(CHRONO_POS).toFixed(1), seqLang:chronoSeqLang, hourGlow:!!chronoHourGlow });
+  window.__chronoSeq=()=>{ if(chronoSeqLang!==LANG) buildChronoSequence(); return { len:chronoSeq.length, first:chronoSeq[0]&&chronoSeq[0].name, lang:chronoSeqLang }; };
+  window.__chronoOpen=(id)=>{ if(id) chronoModalLang=null; openChrono(); if(id) renderChronoCase(id);
+    const body=document.getElementById('chronoBody'); return { show:document.getElementById('chronoModal').classList.contains('show'), turns:body.querySelectorAll('.chronoTurn').length, cases:body.querySelectorAll('.chronoCase').length, verdict:(body.querySelector('.chronoVerdictVal')||{}).textContent||null, sig:(body.querySelector('.chronoSig')||{}).textContent||null, q:(body.querySelector('.chronoQ')||{}).textContent||null }; };
+  window.__chronoClose=()=>{ closeChrono(); return !document.getElementById('chronoModal').classList.contains('show'); };
+  window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
+
   window.__feat=()=>({pond:buildings.filter(b=>b.stars>=8||b._activity>0.7).length, garage:buildings.filter(b=>b.stars>=11||(b.forks||0)>=4).length, buildings:buildings.length});
   window.__act=()=>({prompt:document.getElementById('prompt').classList.contains('show'), btn:document.getElementById('actBtn').classList.contains('avail')});
   window.__cw=(name)=>{ const b=buildings.find(x=>x.repo===name); return b?+(b._cw||3).toFixed(2):null; };

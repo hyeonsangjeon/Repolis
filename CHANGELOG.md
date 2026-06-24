@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.14.0] — 2026-06-25
+
+### ⏳ Chronopolis — the Council of Time (a deterministic "docs vs code" debate chamber)
+- **A new landmark in the far-south clearing: the Kronos Council.** A 3D Doric rotunda — three-step stylobate, a 14-column ring, architrave, a raised dais and a working sundial — where **three new debate-sages** argue an eternal software question: *"is it the docs or the code that's right?"* **📜 Olddoc / 올드독** (the Keeper of Old Pages) defends the documentation, **🌿 Livewire / 코드짱** (the Reader of Living Source) cites the running source, and **🌀 Hearsay / 썰풀이** (the Echo of the Crowd) repeats what the community says. Above them, golden **⏳ KRONOS / 크로노스** (the Chair of Time) lets the verdict be decided not by who shouts loudest but by **which source is newest** — *"세 표가 갈려도, 시간은 하나를 가리킨다."*
+- **Philosophy: ambient is free, only the live debate would cost.** The chamber runs an **ambient debate bubble** over the rotunda that cycles seeded debate lines at **0 LLM cost**, and an interaction modal that adjudicates **five seeded cases** (pydantic dict, OpenAI SDK, pandas append, request timeout, CSS centering) with a deterministic engine — *"토론은 쇼, 판정은 계산."* Each case renders a distinct, correct verdict and a one-line hourglass signature. **The money-spending Live LLM path is intentionally OFF** (`LIVE_ENABLED: false`); a documented budget gate (\$500–700 / month cap, auto-killswitch at 90%) sits behind it for a future, opt-in Live phase.
+- **Fully wired into the existing town.** A **⏳ passport stamp** is earned when you walk up to the council entrance (a 7th landmark for the Explorer Passport), the proximity prompt + action button open the modal, and everything renders in **KO / EN**. The deterministic council core ships as a small `council/` module (`engine.js` + seeded `fixtures.js` + `council.config.json`, validated by `council/test.mjs` — **52 checks green**).
+- **Two bugs fixed during verification.** The passport stamp gate was using a center-radius check the player could never satisfy (the player stands at the *entrance*, ~22u from center) → it now gates on the same entrance-reach check as the scholar/library stamps. And the chamber's original south-west diagonal placement collided with a repo cottage (a red-roofed house sat inside the columns) → the rotunda was relocated to a genuinely clear far-south clearing (no buildings within 55u), opposite the north library for axial balance. Verified day + night, all five fixtures + EN, with **0 console errors**.
+
 ## [1.13.0] — 2026-06-25
 
 ### 🌳 Let the plaza breathe + a calm park pocket off the square
