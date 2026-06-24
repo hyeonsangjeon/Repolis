@@ -85,6 +85,10 @@ export class RepolisRoom {
         if (!p) return;
         p.x = +m.x || 0; p.z = +m.z || 0; p.yaw = +m.yaw || 0;
         this.broadcast({ t: "pos", id: p.id, x: p.x, z: p.z, yaw: p.yaw }, ws);
+      } else if (m.t === "wave") {
+        const p = this.sessions.get(ws);
+        if (!p) return;
+        this.broadcast({ t: "wave", id: p.id, to: String(m.to || "").slice(0, 40) }, ws);
       }
     });
 

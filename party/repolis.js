@@ -68,6 +68,13 @@ export default class Repolis {
         JSON.stringify({ t: "pos", id: p.id, x: p.x, z: p.z, yaw: p.yaw }),
         [sender.id]
       );
+    } else if (m.t === "wave") {
+      const p = this.peers.get(sender.id);
+      if (!p) return;
+      this.room.broadcast(
+        JSON.stringify({ t: "wave", id: p.id, to: String(m.to || "").slice(0, 40) }),
+        [sender.id]
+      );
     }
   }
 

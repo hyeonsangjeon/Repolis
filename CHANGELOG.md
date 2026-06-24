@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.12.0] — 2026-06-25
+
+### 👋 Click-to-greet — wave at other visitors in real time
+- **Tap another player to wave at them.** When the town has more than one live visitor, clicking (or tapping on mobile) directly on another player's avatar now makes **your** character raise a hand and wave. The greeting is fully networked: the person you waved at — and everyone else in the world — sees your avatar wave, and the recipient gets a friendly toast (*"○○님이 인사했어요 👋"* / *"○○ waved at you 👋"*). A little 👋 bubble floats up over the target and fades.
+- **Real raycast picking, proximity untouched.** A new `THREE.Raycaster` resolves the tapped screen point to the nearest peer avatar; if the tap doesn't hit a peer it falls straight through to the existing proximity action (enter a building, talk to a scholar, sit), so nothing about walking up to places changes. Peer arms were rebuilt as shoulder-pivot groups so the wave pivots at the shoulder (the rest pose is pixel-identical).
+- **Server relay is additive + free.** The realtime Worker (`repolis-rt`) now relays a `{t:"wave",id,to}` message to everyone except the sender; old clients simply ignore it. The initiator animates locally and is **not** echoed, so there's no double-wave. Verified end-to-end against the live Worker (`wss://repolis-rt.workers.dev`) with two clients — the recipient receives the wave, the sender gets no self-echo — plus 0-console-error headless checks of the local + peer arm animation, bubble, and toast. **Local-only identity, no PII.**
+
 ## [1.11.1] — 2026-06-25
 
 ### 🔗 Tappable, copyable reference links in "How I found this"

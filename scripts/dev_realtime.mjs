@@ -13,9 +13,11 @@
 // Protocol:
 //   client -> { t:'join', id, name, x, z, yaw, color }
 //   client -> { t:'pos',  id, x, z, yaw }
+//   client -> { t:'wave', id, to }
 //   server -> { t:'welcome', peers:[...], live, today, total }
 //   server -> { t:'join', peer, live, today, total }
 //   server -> { t:'pos', id, x, z, yaw }
+//   server -> { t:'wave', id, to }
 //   server -> { t:'leave', id, live }
 
 import { WebSocketServer } from "ws";
@@ -61,6 +63,10 @@ wss.on("connection", (ws) => {
       if (!p) return;
       p.x = +m.x || 0; p.z = +m.z || 0; p.yaw = +m.yaw || 0;
       broadcast({ t: "pos", id: p.id, x: p.x, z: p.z, yaw: p.yaw }, ws);
+    } else if (m.t === "wave") {
+      const p = peers.get(ws);
+      if (!p) return;
+      broadcast({ t: "wave", id: p.id, to: String(m.to || "").slice(0, 40) }, ws);
     }
   });
   ws.on("close", () => {
