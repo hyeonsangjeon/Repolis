@@ -2206,22 +2206,62 @@ const SAGE_INFO = (()=>{ const m={};
   const frieze=new THREE.Mesh(new THREE.CylinderGeometry(CR+0.5,CR+0.5,0.9,52,1,true), toon(0xe6dfcc)); frieze.position.y=8.9; cg.add(frieze);
   // ---- KRONOS dais at the head (−Z back), facing the entrance ----
   const dais=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.6,0.7,32), toon(0xd9cdae)); dais.position.set(0,1.4,-8.4); cg.add(dais);
-  // sage chibi builder
-  function chronoFig(hex, scale, prop){ const g=new THREE.Group();
-    const robe=capsule(0.6,1.4,hex); robe.position.y=1.95; g.add(robe); outline(robe,0.04);
-    const sash=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.66,0.2,16), toon(shade(hex,-20))); sash.position.y=2.3; g.add(sash);
+  // sage chibi builder — KRONOS keeps the mythic robe; the 3 debaters are hip AI/dev characters
+  function chronoFig(hex, scale, prop, style){ const g=new THREE.Group();
+    const body=capsule(0.6,1.4,hex); body.position.y=1.95; g.add(body); outline(body,0.04);
     const head=ball(0.4,0xf3d9b0); head.position.y=3.15; g.add(head); outline(head,0.04);
     const eye=x=>{ const e=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6), new THREE.MeshBasicMaterial({color:0x2a2018})); e.position.set(x,3.18,0.34); g.add(e); };
     eye(-0.13); eye(0.13);
-    if(prop==='scroll'){ const s=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.8,12), toon(0xece0c6)); s.rotation.z=Math.PI/2; s.position.set(0.62,2.2,0.5); g.add(s); }
-    else if(prop==='tablet'){ const tb=rbox(0.52,0.66,0.08,0x1f2c40,0.05); tb.position.set(0.66,2.35,0.4); g.add(tb);
-      const sc=new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.54), new THREE.MeshBasicMaterial({color:0x86e6a6,transparent:true,opacity:0.92})); sc.position.set(0.7,2.36,0.45); g.add(sc); }
-    else if(prop==='swirl'){ const sw=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.07,8,18), toon(shade(hex,14))); sw.position.set(0.64,2.35,0.42); g.add(sw); }
+    if(!style){
+      // KRONOS / legacy — plain robe + sash (mythic, no street wear)
+      const sash=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.66,0.2,16), toon(shade(hex,-20))); sash.position.y=2.3; g.add(sash);
+    } else {
+      // ---- hip AI/dev debaters: a face + a distinct silhouette each ----
+      const brow=(x,tilt)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.035,0.04), toon(0x4a3a2a)); b.position.set(x,3.31,0.345); b.rotation.z=tilt; g.add(b); };
+      const mouth=(w,y)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(w,0.03,0.03), toon(0x9c5a4a)); m.position.set(0,y,0.36); g.add(m); };
+      if(style==='doc'){
+        brow(-0.13,0.05); brow(0.13,-0.05); mouth(0.14,3.02);
+        // cardigan shirt-collar V
+        const cL=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.5,0.04), toon(0xf0ead8)); cL.position.set(-0.1,2.4,0.52); cL.rotation.z=0.34; g.add(cL);
+        const cR=cL.clone(); cR.position.x=0.1; cR.rotation.z=-0.34; g.add(cR);
+        // chunky horn-rimmed glasses
+        const gl=c=>{ const r=new THREE.Mesh(new THREE.TorusGeometry(0.12,0.028,8,16), new THREE.MeshBasicMaterial({color:0x33271c})); r.position.set(c,3.18,0.355); g.add(r); };
+        gl(-0.13); gl(0.13);
+        const br=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.028,0.02), new THREE.MeshBasicMaterial({color:0x33271c})); br.position.set(0,3.18,0.37); g.add(br);
+        // silver side hair
+        [-0.34,0.34].forEach(x=>{ const h=new THREE.Mesh(new THREE.CapsuleGeometry(0.1,0.26,4,8), toon(0xb9b3a8)); h.position.set(x,3.16,-0.02); g.add(h); });
+        // coffee mug in hand + steam
+        const mug=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.13,0.22,12), toon(0xe9dfce)); mug.position.set(0.62,2.2,0.52); g.add(mug);
+        const hd=new THREE.Mesh(new THREE.TorusGeometry(0.08,0.025,6,10), toon(0xe9dfce)); hd.position.set(0.75,2.2,0.52); hd.rotation.y=Math.PI/2; g.add(hd);
+        const steam=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffffff,transparent:true,opacity:0.16,depthWrite:false})); steam.scale.set(0.45,0.65,1); steam.position.set(0.62,2.55,0.52); g.add(steam);
+      } else if(style==='hacker'){
+        brow(-0.13,-0.18); brow(0.13,0.04); mouth(0.12,3.0);   // cocky smirk
+        // hoodie hood slumped behind the neck + drawstrings
+        const hood=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12,0,Math.PI*2,0,Math.PI*0.55), toon(shade(hex,-18))); hood.position.set(0,2.74,-0.2); hood.scale.set(1.05,0.72,1.15); hood.rotation.x=-0.35; g.add(hood);
+        [-0.12,0.12].forEach(c=>{ const s=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.42,6), toon(0xf2f6f2)); s.position.set(c,2.5,0.5); g.add(s); });
+        // headphones over the head
+        const band=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.05,8,20,Math.PI), new THREE.MeshBasicMaterial({color:0x1c2326})); band.position.set(0,3.4,0); g.add(band);
+        [-0.4,0.4].forEach(x=>{ const cup=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.1,14), toon(shade(hex,22))); cup.rotation.z=Math.PI/2; cup.position.set(x,3.12,0); g.add(cup); });
+        // laptop on the lap, glowing code screen
+        const lp=rbox(0.72,0.46,0.05,0x18324a,0.04); lp.position.set(0,2.06,0.52); lp.rotation.x=-0.32; g.add(lp);
+        const scr=new THREE.Mesh(new THREE.PlaneGeometry(0.6,0.36), new THREE.MeshBasicMaterial({color:0x7df6b0,transparent:true,opacity:0.92})); scr.position.set(0,2.1,0.555); scr.rotation.x=-0.32; g.add(scr);
+      } else if(style==='streamer'){
+        brow(-0.13,0.05); brow(0.13,-0.05); mouth(0.18,3.0);   // big grin
+        // beanie + folded cuff + pom-pom
+        const bn=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.44,0.36,16), toon(shade(hex,-10))); bn.position.set(0,3.46,0); g.add(bn);
+        const cuff=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.07,8,18), toon(shade(hex,12))); cuff.rotation.x=Math.PI/2; cuff.position.set(0,3.3,0); g.add(cuff);
+        const pom=ball(0.1,0xf2f6ff); pom.position.set(0,3.72,0); g.add(pom);
+        // mic in hand + "on air" glow
+        const stick=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.5,10), toon(0x2a2e33)); stick.position.set(0.55,2.32,0.5); stick.rotation.z=-0.5; g.add(stick);
+        const ballm=new THREE.Mesh(new THREE.SphereGeometry(0.13,12,10), toon(0x44494f)); ballm.position.set(0.7,2.56,0.56); g.add(ballm);
+        const air=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xff6a8a,transparent:true,opacity:0.5,depthWrite:false,blending:THREE.AdditiveBlending})); air.scale.set(0.5,0.5,1); air.position.set(0.7,2.56,0.56); g.add(air);
+      }
+    }
     g.scale.setScalar(scale||1); return g;
   }
-  // 3 debaters in a shallow arc facing +Z (player), olddoc / livewire / hearsay
-  const seats=[ ['olddoc','scroll',-5.6,-1.5], ['livewire','tablet',0,0.6], ['hearsay','swirl',5.6,-1.5] ];
-  seats.forEach(([id,prop,x,z])=>{ const c=SAGE_INFO[id]||{color:'#bbb'}; const f=chronoFig(c.color,1,prop); f.position.set(x,0,z); cg.add(f);
+  // 3 debaters in a shallow arc facing +Z (player): olddoc=vintage senior dev · livewire=hacker · hearsay=streamer
+  const seats=[ ['olddoc',-5.6,-1.5,'doc'], ['livewire',0,0.6,'hacker'], ['hearsay',5.6,-1.5,'streamer'] ];
+  seats.forEach(([id,x,z,style])=>{ const c=SAGE_INFO[id]||{color:'#bbb'}; const f=chronoFig(c.color,1,null,style); f.position.set(x,0,z); cg.add(f);
     COLLIDERS.push({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z, r:0.7}); });
   // KRONOS — tall, gold, hooded, presiding on the dais
   const kron=chronoFig(GOLD,1.32,null); kron.position.set(0,1.75,-8.4); cg.add(kron);
