@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.26.0] — 2026-06-28
+
+### 🌅 A living day — continuous time-of-day with dawn, dusk & an arcing sun
+- **The day↔night button is now a full time-of-day cycle.** The old toggle flipped a single `isNight` boolean between two hard-coded skies. The sky is now driven by a **continuous `t∈[0,1)` clock** (0 = midnight · 0.25 = sunrise · 0.5 = noon · 0.75 = sunset) interpolated between four keyframes, so the world passes through **golden dawn and amber dusk** — not just "day" and "night". Sky gradient, sun/hemisphere light colour & intensity, fog, tone-mapping exposure, and the toon **rim-light** all blend together along the curve.
+- **A real sun now crosses the sky.** Added a visual **sun disc** (core + additive glow + halo) that arcs along a celestial path — low and amber near the horizon at dawn/dusk, high and bright at noon, and gone below the horizon at night — while the directional light rakes low at dawn/dusk (long shadows) and moves overhead at noon. It fades out as night falls, leaving the existing moon/stars to take over.
+- **Smooth, eased transitions instead of an instant flip.** Tapping the button now **eases** from the current time to the target with a smoothstep curve (≈a couple of seconds), advancing *forward* through time (day → dusk → night → dawn → day) so it always reads as a natural cycle. The stepper does **zero work once settled**, preserving the adaptive idle-FPS perf budget. A debug auto-cycle (`?dbg` `__skyCycle()`) drifts the clock continuously.
+- **The button cycles four phases.** `dayBtn` now rotates **☀️ day → 🌆 dusk → 🌙 night → 🌅 dawn**, its icon tracking the phase. Every existing night-dependent system is untouched — the discrete night assets (moon, stars, fireflies, lit windows whose brightness still tracks repo activity, lamps, glows) flip on a single threshold deep in the night band, so dawn/dusk stay day-ish. Verified on real GPU, desktop + 390 px mobile: all four phases visually distinct, transition sampled smooth, sun disc arc + fade, **0 console errors**; back-compat `__night(bool)` and the initial paint snap instantly as before.
+
 ## [1.25.2] — 2026-06-28
 
 ### 📐 Docs — the Kronos Council pattern, written down
