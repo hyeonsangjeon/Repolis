@@ -585,9 +585,9 @@ const I18N = {
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
     lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
-    chronoSub:'세 현자가 문서 대 코드로 다투면, 의장 크로노스가 시간(가장 최신·살아있는 소스)에게 판정을 맡깁니다.',
-    chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'안건을 골라 보세요', chronoStage:'⏳ Ambient · 비용 0의 무대',
-    chronoLive:'⚡ 라이브 토론(LLM)은 예산 가드 뒤에 잠겨 있어요 — 지금은 비용 0의 결정적 무대(Ambient)만 상영 중.',
+    chronoSub:'주제를 입력하면 세 현자(옹호·회의·분석)가 실시간으로 토론하고, 시간의 의장 크로노스가 결론을 내립니다.',
+    chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'예시 주제를 골라 채워 보세요', chronoStage:'⚡ 라이브 AI 토론',
+    chronoLive:'⚡ 주제를 입력하고 시작하면, 세 현자가 약 2분간 실시간으로 토론하고 시간의 의장이 결론을 내려요. (AI 추론 · 출처 미검증)',
     chronoConsensus:'만장일치', chronoVerdict:'시간의 판정', chronoSummon:'소집', chronoRecord:'기록 봉인',
     chronoConvene:'⚖️ 회의 소집 (라이브)', chronoConvening:'⏳ 회의장에 소집하는 중…',
     chronoTopicPh:'토론 주제를 입력하세요… (예: 모놀리식 vs 마이크로서비스)', chronoStartLive:'⚡ 라이브 토론 시작', chronoTopicEmpty:'먼저 토론 주제를 입력해 주세요.',
@@ -681,9 +681,9 @@ const I18N = {
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
     lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
-    chronoSub:'Three sages argue docs vs code; the Chair KRONOS lets Time — the newest, living source — deliver the verdict.',
-    chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick a case', chronoStage:'⏳ Ambient · zero-cost stage',
-    chronoLive:'⚡ Live LLM debate is locked behind budget guards — for now only the zero-cost deterministic stage (Ambient) is playing.',
+    chronoSub:'Type a topic and three sages (advocate · skeptic · analyst) debate it live; the Chair of Time, KRONOS, delivers the verdict.',
+    chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick an example to fill the box', chronoStage:'⚡ Live AI debate',
+    chronoLive:'⚡ Enter a topic and press Start — three sages debate it live for ~2 min, then the Chair of Time rules. (AI inference · unverified)',
     chronoConsensus:'Consensus', chronoVerdict:'Verdict of Time', chronoSummon:'Convocation', chronoRecord:'Record sealed',
     chronoConvene:'⚖️ Convene the council (Live)', chronoConvening:'⏳ Convening the chamber…',
     chronoTopicPh:'Enter a debate topic… (e.g. monolith vs microservices)', chronoStartLive:'⚡ Start live debate', chronoTopicEmpty:'Please enter a debate topic first.',
@@ -779,6 +779,7 @@ function applyLang(){
   document.querySelectorAll('#introLang button').forEach(b=> b.classList.toggle('active', b.dataset.lang===LANG));
   if(typeof renderList==='function') renderList(document.getElementById('repoSearch').value||'');
   if(typeof renderPassport==='function' && !document.getElementById('passport').classList.contains('hidden')) renderPassport();
+  if(typeof renderChronoCase==='function' && chronoModal && chronoModal.classList.contains('show') && chronoCaseId){ renderChronoCase(chronoCaseId); chronoModalLang=LANG; }
 }
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
@@ -2571,6 +2572,7 @@ function chronoTimeline(testi,verdictVal,noAnswer){
     nodes+=`<div class="ctNode${win?' win':''}"><div class="ce">${s.emoji||'•'}</div><div class="cd">${_esc(x.date||'—')}</div><div class="cv">${_esc(x.claim||'')}</div>${win?`<span class="wtag">⏳ ${_esc(t('chronoTimeWin'))}</span>`:''}</div>`; }
   return `<div class="chronoTimeline"><div class="ctCap"><span>${_esc(t('chronoTimeCap'))}</span><span class="ax">${_esc(t('chronoTimeOld'))} → ${_esc(t('chronoTimeNew'))}</span></div><div class="ctTrack">${nodes}</div></div>`;
 }
+function fxQuestion(fx){ if(!fx) return ''; const q=fx.question; if(q) return q[LANG]||q.ko||q.en||''; return fx.topic||''; }
 function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementById('chronoBody'); body.innerHTML='';
   const philo=document.createElement('div'); philo.className='chronoPhilo'; philo.textContent='“'+t('chronoPhilo')+'”'; body.appendChild(philo);
   // Phase 39 — free-topic LIVE debate. Type any topic; the 3 sages debate it live (SSE) for ~2 min
@@ -2588,27 +2590,11 @@ function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementBy
   body.appendChild(tw);
   const cases=document.createElement('div'); cases.className='chronoCases';
   const list=(CF&&CF.list)?CF.list():[];
-  list.forEach(fx=>{ const b=document.createElement('button'); b.className='chronoCase'+(fx.id===id?' on':''); b.textContent=fx.topic; b.onclick=()=>{ chronoTopicDraft=fx.topic; renderChronoCase(fx.id); }; cases.appendChild(b); });
+  list.forEach(fx=>{ const b=document.createElement('button'); b.className='chronoCase'+(fx.id===id?' on':''); b.textContent=fx.topic; b.onclick=()=>{ chronoTopicDraft=fxQuestion(fx); renderChronoCase(fx.id); }; cases.appendChild(b); });
   body.appendChild(cases);
-  const fx=(CF&&CF.get)?CF.get(id):null;
-  if(!CE||!fx){ const w=document.createElement('div'); w.className='chronoQ'; w.textContent='⏳ engine offline'; body.appendChild(w);
-    const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv); return; }
-  let r; try{ r=CE.councilAsk(fx,{withTranscript:true,lang:LANG}); }catch(e){ return; }
-  const q=document.createElement('div'); q.className='chronoQ'; q.textContent='“'+r.question+'”'; body.appendChild(q);
-  let html=''; const testi=[]; let verdictVal=null, noAnswer=false;
-  for(const ev of r.transcript){
-    if(ev.phase==='testimony'){ testi.push({sage:ev.sage, date:ev.date||'', claim:ev.claim}); html+=chronoTurn(ev.sage, ev.text||(ev.claim+(ev.provenance?(' — '+ev.provenance):''))); }
-    else if(ev.phase==='cross') html+=chronoTurn(ev.sage, ev.text);
-    else if(ev.phase==='verdict'){ const k=SAGE_INFO.kronos; const sig=(r.signature&&r.signature[LANG])||'';
-      verdictVal=ev.verdict; noAnswer=!!ev.no_answer;
-      const head=ev.consensus?t('chronoConsensus'):t('chronoVerdict');
-      html+=`<div class="chronoTurn verdict"><div class="em">${k.emoji}</div><div class="bd"><div class="nm" style="color:${k.color}">${_esc(k[LANG])} · ${LANG==='ko'?'시간의 의장':'the Chair of Time'}</div>`
-        + (ev.no_answer?`<div class="tx">${LANG==='ko'?'증언이 부족해 — 다음 기일로 미룬다.':'Insufficient testimony — adjourned.'}</div>`
-            : `<div class="tx">${_esc(head)}</div><div class="chronoVerdictVal">${_esc(ev.verdict)}</div><div class="chronoSig">⏳ ${_esc(sig)}</div>`)
-        + `</div></div>`; }
-  }
-  html+=chronoTimeline(testi, verdictVal, noAnswer);
-  const turns=document.createElement('div'); turns.innerHTML=html; body.appendChild(turns);
+  // Live-only modal: no canned transcript/verdict is rendered here anymore.
+  // Picking an example chip just fills the topic box above; pressing Start runs
+  // a real live debate in the 3D chamber where the Chair of Time rules.
   const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv);
 }
 

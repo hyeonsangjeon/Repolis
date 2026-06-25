@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.25.1] — 2026-06-28
+
+### ⚡ Chronopolis — the Convene modal is now a clean live-debate launcher (no canned dialogue)
+- **Removed the scripted simulation transcript from the popup.** The Convene modal used to render a full **pre-scripted "sage conversation" + verdict + timeline** below the topic box (Olddoc/Livewire/Hearsay canned lines, a fake judgment, and a recency timeline). On general topics this read like a fixed simulation and buried the actual call-to-action. The modal is now a **pure launcher**: a topic box, six example chips, and a one-line live notice — *all the real debate happens live in the 3D chamber*, where the three sages argue your topic over SSE and the Chair of Time rules. The deterministic transcript/verdict/timeline are gone from the popup entirely (`renderChronoCase` no longer calls `councilAsk`/`chronoTurn`/`chronoTimeline`).
+- **Example chips now pre-fill a real question.** Tapping a chip (label stays the short topic — `Pydantic`, `CSS`…) fills the box with the **full question** in the active language (e.g. "Pydantic 모델 인스턴스를 dict로 직렬화하는 올바른 메서드는?") instead of the bare two-word label, so a chip-launched live debate gets a meaningful prompt.
+- **Refreshed the modal copy for the live era.** The header subtitle, the gold badge (`⚡ 라이브 AI 토론` / `⚡ Live AI debate`), and the footer notice no longer say live debate is "locked behind budget guards / Ambient only" — they now describe the real flow (type a topic → three sages debate live ~2 min → the Chair rules, *AI inference · unverified*). Switching language while the modal is open now re-renders it so the dynamic notice re-translates too. Verified on real GPU, KO + EN: 0 transcript rows, chip→question pre-fill, empty-input guard, language re-translation, **0 console errors**.
+
 ## [1.25.0] — 2026-06-28
 
 ### ⚡ Chronopolis — live debates you can actually read, with real debate roles
