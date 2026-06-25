@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.22.0] — 2026-06-27
+
+### ⏳ Chronopolis — the sages are dev geeks now, and they argue with their hands
+- The four council figures were reading as **hooded monks/priests** (a long robe-like capsule with no legs and no arms, half-sunk into the chamber floor). They've been rebuilt as **dev-geek chibis** — big head, hoodie torso, **visible legs + shoes**, and **articulated shoulder-pivot arms** — each with their own persona: **올드독/Olddoc** (silver hair, glasses, cardigan, coffee mug), **코드짱/Livewire** (messy hair, slung hood, **headphones**, glowing phone), **썰풀이/Hearsay** (beanie + pom-pom, mic), and **⏳크로노스/KRONOS** — the gold chair — who **lost the priest cone-hood** and is now a visor-capped tech-lead with a glowing tablet.
+- **They debate with gestures.** When you're near the chamber the three debaters **raise and point their free arm to make their case** (the held prop stays in the rest hand), sway their torso, and bob their heads — phase-offset so it reads as a live back-and-forth — while KRONOS calmly *weighs time* with alternating hands. Arms settle to a neutral rest pose once you leave (gesture loop is near-gated for performance).
+- **Engine untouched, still byte-equal & zero-cost.** This is purely the 3D figures + an animation block; the council logic, fixtures, tiki-taka banter, and verdict timeline are unchanged (tests stay green 62 + 28). Verified on real GPU desktop + 390 px mobile: dev-geek silhouettes with planted feet, arms animating, council modal + verdict timeline intact, **0 console errors**.
+
 ## [1.21.0] — 2026-06-27
 
 ### 📱 Mobile tap-target polish — every control is thumb-friendly
