@@ -25,6 +25,23 @@
 //   GROUNDED_TIMEOUT_MS    optional fetch abort ms (default 25000; CF has no 10 s wall)
 //   GROUNDED_MAX_RUNTIME_S optional KB runtime budget seconds (default 30; KB requires 11–599)
 //   ALLOW_ORIGIN           optional, e.g. https://<you>.github.io (default *)
+//
+// Chronopolis Kronos Council (POST {action:"council"}) — see councilHandler near the bottom.
+//   COUNCIL_LIVE_ENABLED   "true" turns on the money-spending Live debate. DEFAULT OFF: every
+//                          other value (incl. unset) keeps the chamber Ambient at $0, so a
+//                          clone with no Azure still works and never spends. The verdict ALWAYS
+//                          comes from the deterministic core engine, debate or not (§G).
+//   COUNCIL_MONTH_CAP_USD / COUNCIL_DAY_CAP_USD   budget walls (USD) — env only, never committed.
+//   COUNCIL_SALT           optional salt for the privacy-preserving rate-limit key.
+
+// The Council brain is shared with the client (council/*.js, UMD). esbuild/wrangler bundles
+// these CommonJS modules into the Worker. engine = deterministic verdict, guards = L1–L5 cost
+// walls, live = the AMBIENT→…→VERDICT state machine, fixtures/config = the debate data + dials.
+import CouncilEngine from "../../council/engine.js";
+import CouncilGuards from "../../council/guards.js";
+import CouncilLive from "../../council/live.js";
+import CouncilFixtures from "../../council/fixtures.js";
+import COUNCIL_CFG from "../../council/council.config.json";
 
 // --- Direct-MCP fallback for scholar NPCs. Used ONLY when the scholar's Azure Knowledge
 // Base is unreachable/unconfigured (clone-friendly, keyless). Normally scholars go through
@@ -459,6 +476,78 @@ async function groundedRetrieve(cfg, messages, env) {
   }
 }
 
+// ── Chronopolis Kronos Council ──────────────────────────────────────────────
+// One module-scope memory store per Worker isolate. Live is OFF this release, so
+// no real spend is ever recorded; when Live is turned on, swap this for a D1/KV/DO
+// adapter exposing the same method shape (§N) so guards survive isolate recycling.
+const COUNCIL_STORE = CouncilGuards.makeMemStore();
+
+function councilNum(v) { const n = Number(v); return Number.isFinite(n) ? n : undefined; }
+function clientIp(request) {
+  return request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For") || "0.0.0.0";
+}
+
+// The Live LLM client (persona testimony). Wired but ONLY constructed when
+// COUNCIL_LIVE_ENABLED==='true' (golden rule). Reuses the keyless Entra→AOAI path;
+// returns {text,usageIn,usageOut} so guards can price the debate (L5/C8).
+function makeCouncilLLM(env) {
+  return async function ({ system, user, maxTokens, signal }) {
+    if (!env.AAD_CLIENT_ID || !env.AAD_CLIENT_SECRET || !env.AAD_TENANT || !env.AOAI_ENDPOINT) {
+      return { text: "", usageIn: 0, usageOut: 0 }; // no-key → empty turn (debate degrades, verdict still core)
+    }
+    const token = await aadToken(env);
+    const dep = env.COUNCIL_DEPLOYMENT || env.AOAI_DEPLOYMENT || "gpt-4o-mini";
+    const ver = env.AOAI_API_VERSION || "2025-04-01-preview";
+    const url = `${env.AOAI_ENDPOINT.replace(/\/$/, "")}/openai/deployments/${dep}/chat/completions?api-version=${ver}`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({
+        messages: [{ role: "system", content: system }, { role: "user", content: user }],
+        max_completion_tokens: Math.min(Number(maxTokens) || 160, 200),
+      }),
+      signal,
+    });
+    if (!r.ok) throw new Error("council llm " + r.status);
+    const j = await r.json();
+    return {
+      text: (j.choices?.[0]?.message?.content || "").trim(),
+      usageIn: j.usage?.prompt_tokens || 0,
+      usageOut: j.usage?.completion_tokens || 0,
+    };
+  };
+}
+
+async function councilHandler(body, request, env) {
+  const lang = body.lang === "en" ? "en" : "ko";
+  const topic = body.topic || body.fixture || body.id;
+  const fixture = topic ? CouncilFixtures.get(topic) : null;
+  if (!fixture) return json({ error: "unknown topic", topics: CouncilFixtures.ORDER }, 400, env);
+
+  const liveOn = env.COUNCIL_LIVE_ENABLED === "true";
+  const dials = Object.assign({}, COUNCIL_CFG.dials, { LIVE_ENABLED: liveOn });
+  const sages = COUNCIL_CFG.sages.filter((s) => s.active);
+
+  const r = await CouncilLive.councilLive({
+    fixture, sages, lang,
+    engine: CouncilEngine, guards: CouncilGuards, dials,
+    price: COUNCIL_CFG.price,
+    caps: { monthCap: councilNum(env.COUNCIL_MONTH_CAP_USD), dayCap: councilNum(env.COUNCIL_DAY_CAP_USD) },
+    budgetGateRatio: COUNCIL_CFG.budget?.gate_ratio ?? 0.9,
+    salt: env.COUNCIL_SALT || "repolis",
+    signals: { ip: clientIp(request), fp: body.fp, cookie: body.cookie },
+    store: COUNCIL_STORE,
+    llm: liveOn ? makeCouncilLLM(env) : null, // golden rule: null unless Live is explicitly on
+  });
+
+  return json({
+    topic: fixture.id,
+    state: r.state, live: r.live, reason: r.reason || null, notice: r.notice || "",
+    verdict: r.verdict, signature: r.signature, transcript: r.transcript,
+    endedBy: r.endedBy || null, cost: r.cost,
+  }, 200, env);
+}
+
 export default {
   async fetch(request, env) {
     const headers = corsHeaders(env);
@@ -468,12 +557,17 @@ export default {
     }
     if (request.method !== "POST") return json({ error: "POST only" }, 405, env);
 
-    let question, npc, history, repoName, lang, chat;
+    let question, npc, history, repoName, lang, chat, body;
     try {
-      ({ question, npc, history, repoName, lang, chat } = await request.json());
+      body = await request.json();
+      ({ question, npc, history, repoName, lang, chat } = body);
     } catch {
       return json({ error: "bad body" }, 400, env);
     }
+
+    // Chronopolis Kronos Council — its own action (no `question` required; uses `topic`).
+    if (body && body.action === "council") return councilHandler(body, request, env);
+
     if (!question) return json({ error: "question required" }, 400, env);
 
     // Route to a scholar config (taxi by default). Every scholar shares the KB pipeline;

@@ -159,6 +159,14 @@
   .chronoSig { font-size:13px; font-weight:800; color:#7a5a12; margin-top:5px; }
   .chronoVerdictVal { display:inline-block; margin-top:5px; padding:3px 11px; border-radius:8px; background:#2f9d6a; color:#fff; font-weight:800; font-size:13px; }
   .chronoLive { margin:9px 12px 4px; padding:9px 12px; border-radius:11px; background:#f3ead7; color:#8a6a3a; font-size:12px; border:1px dashed #d9c39a; line-height:1.5; }
+  .chronoConvene { display:flex; justify-content:center; padding:6px 12px 12px; }
+  .chronoConveneBtn { min-height:44px; padding:11px 20px; border-radius:999px; border:0; cursor:pointer; font-size:13px; font-weight:700;
+    color:#2a2340; background:linear-gradient(135deg,#f0d678 0%,#e8c45a 100%); box-shadow:0 2px 8px rgba(60,53,96,.28); }
+  .chronoConveneBtn:disabled { opacity:.6; cursor:default; }
+  .chronoState { margin:0 12px 12px; padding:10px 13px; border-radius:11px; font-size:12.5px; line-height:1.55;
+    background:#eee8f6; color:#4a3f6b; border:1px solid #d6ccec; }
+  .chronoState.budget, .chronoState.full, .chronoState.cooldown, .chronoState.burst { background:#f6ecdc; color:#8a6a3a; border-color:#e3d2aa; }
+  .chronoState.live { background:#e7f5ec; color:#2f6d45; border-color:#bfe3cc; }
   .libcard { background: #fbf3e4; border-radius: 22px; width: 680px; max-width: 100%; max-height: 88vh;
     display: flex; flex-direction: column; overflow: hidden; position: relative;
     box-shadow: 0 26px 80px rgba(30,16,4,.5); animation: pop .24s cubic-bezier(.2,.9,.3,1.3); }
@@ -490,6 +498,8 @@ const I18N = {
     chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'안건을 골라 보세요', chronoStage:'⏳ Ambient · 비용 0의 무대',
     chronoLive:'⚡ 라이브 토론(LLM)은 예산 가드 뒤에 잠겨 있어요 — 지금은 비용 0의 결정적 무대(Ambient)만 상영 중.',
     chronoConsensus:'만장일치', chronoVerdict:'시간의 판정', chronoSummon:'소집', chronoRecord:'기록 봉인',
+    chronoConvene:'⚖️ 회의 소집 (라이브)', chronoConvening:'⏳ 회의장에 소집하는 중…',
+    chronoOffline:'지금은 회의장이 조용해요 — 위 결정적 기록(Ambient)을 감상하세요 👀',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
@@ -571,6 +581,8 @@ const I18N = {
     chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick a case', chronoStage:'⏳ Ambient · zero-cost stage',
     chronoLive:'⚡ Live LLM debate is locked behind budget guards — for now only the zero-cost deterministic stage (Ambient) is playing.',
     chronoConsensus:'Consensus', chronoVerdict:'Verdict of Time', chronoSummon:'Convocation', chronoRecord:'Record sealed',
+    chronoConvene:'⚖️ Convene the council (Live)', chronoConvening:'⏳ Convening the chamber…',
+    chronoOffline:'The chamber is quiet right now — enjoy the deterministic record (Ambient) above 👀',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
@@ -2375,6 +2387,31 @@ function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementBy
   }
   const turns=document.createElement('div'); turns.innerHTML=html; body.appendChild(turns);
   const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv);
+  // Convene (Live) — asks the Worker state machine to seat a live debate. Live is gated behind
+  // budget guards server-side; when it's off (default) the Worker returns a spectator notice and
+  // the deterministic record above IS the verdict. Errors/offline gracefully keep Ambient.
+  const cw=document.createElement('div'); cw.className='chronoConvene';
+  const btn=document.createElement('button'); btn.className='chronoConveneBtn'; btn.textContent=t('chronoConvene');
+  const st=document.createElement('div'); st.className='chronoState'; st.style.display='none';
+  btn.onclick=()=>convene(id,btn,st); cw.appendChild(btn); body.appendChild(cw); body.appendChild(st);
+}
+let _convening=false;
+async function convene(topic,btn,st){
+  if(_convening) return; _convening=true; const orig=btn.textContent;
+  btn.disabled=true; btn.textContent=t('chronoConvening');
+  st.style.display=''; st.className='chronoState'; st.textContent=t('chronoConvening');
+  try{
+    const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),12000);
+    const res=await fetch(groundedUrl(),{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'council',topic,lang:LANG,fp:guestId()}),signal:ctrl.signal});
+    clearTimeout(to);
+    const j=await res.json().catch(()=>null);
+    if(j&&j.live&&j.state==='verdict'){ st.className='chronoState live';
+      st.textContent=(LANG==='ko'?'⚡ 라이브 토론 종료 · ':'⚡ Live debate finished · ')+(j.verdict||''); }
+    else if(j&&j.notice){ st.className='chronoState '+(j.reason||'spectator'); st.textContent=j.notice; }
+    else { st.className='chronoState'; st.textContent=t('chronoOffline'); }
+  }catch(e){ st.className='chronoState'; st.textContent=t('chronoOffline'); }
+  finally{ _convening=false; btn.disabled=false; btn.textContent=orig; }
 }
 function openChrono(){ modalOpen=true; chronoModal.classList.add('show');
   if(chronoModalLang!==LANG || !chronoCaseId){ chronoCaseId=(CF&&CF.ORDER&&CF.ORDER[0])||'pydantic_dict'; renderChronoCase(chronoCaseId);
@@ -3659,6 +3696,10 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     const body=document.getElementById('chronoBody'); return { show:document.getElementById('chronoModal').classList.contains('show'), turns:body.querySelectorAll('.chronoTurn').length, cases:body.querySelectorAll('.chronoCase').length, verdict:(body.querySelector('.chronoVerdictVal')||{}).textContent||null, sig:(body.querySelector('.chronoSig')||{}).textContent||null, q:(body.querySelector('.chronoQ')||{}).textContent||null }; };
   window.__chronoClose=()=>{ closeChrono(); return !document.getElementById('chronoModal').classList.contains('show'); };
   window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
+  window.__chronoConvene=async(id)=>{ if(id) chronoModalLang=null; openChrono(); if(id) renderChronoCase(id||chronoCaseId);
+    const body=document.getElementById('chronoBody'); const btn=body.querySelector('.chronoConveneBtn'); const st=body.querySelector('.chronoState');
+    if(!btn) return {err:'no convene btn'}; await convene(chronoCaseId,btn,st);
+    return { btn:btn.textContent, busy:_convening, state:st.className, text:(st.textContent||'').slice(0,80), visible:st.style.display!=='none' }; };
 
   window.__feat=()=>({pond:buildings.filter(b=>b.stars>=8||b._activity>0.7).length, garage:buildings.filter(b=>b.stars>=11||(b.forks||0)>=4).length, buildings:buildings.length});
   window.__act=()=>({prompt:document.getElementById('prompt').classList.contains('show'), btn:document.getElementById('actBtn').classList.contains('avail')});

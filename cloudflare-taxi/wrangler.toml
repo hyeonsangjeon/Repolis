@@ -43,3 +43,14 @@ AOAI_API_VERSION = "2025-04-01-preview"
 
 # (Optional) lock CORS to your Pages origin so only your site can call it. Default is "*".
 # ALLOW_ORIGIN = "https://<you>.github.io"
+
+# ── Chronopolis Kronos Council (POST {action:"council"}) ──────────────────────
+# The chamber is Ambient (deterministic, $0) by DEFAULT — a clone works with none of
+# the below. Turning Live on spends real LLM money, so it is gated behind an explicit
+# "true" plus the budget caps. The final verdict ALWAYS comes from the deterministic
+# core engine regardless of the debate (§G), and guards L1–L5 wall off abuse (§I).
+# COUNCIL_LIVE_ENABLED = "false"   # anything but "true" keeps Live OFF (the safe default)
+# COUNCIL_MONTH_CAP_USD = "600"    # budget walls — env only, keep OUT of git if account-specific
+# COUNCIL_DAY_CAP_USD = "24"
+# COUNCIL_DEPLOYMENT = "gpt-4o-mini"   # optional: debate model (falls back to AOAI_DEPLOYMENT)
+# COUNCIL_SALT = "<random>"        # optional salt for the privacy-preserving rate-limit key
