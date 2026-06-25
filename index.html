@@ -158,6 +158,17 @@
   .chronoTurn.verdict { background:#fbf6e6; border-radius:12px; border:1px solid #ecd9a3; margin:7px 10px 2px; }
   .chronoSig { font-size:13px; font-weight:800; color:#7a5a12; margin-top:5px; }
   .chronoVerdictVal { display:inline-block; margin-top:5px; padding:3px 11px; border-radius:8px; background:#2f9d6a; color:#fff; font-weight:800; font-size:13px; }
+  .chronoTimeline { margin:8px 12px 2px; padding:9px 12px 9px; border-radius:11px; background:#f6f1e0; border:1px solid #ecdcb0; }
+  .chronoTimeline .ctCap { font-size:11px; font-weight:800; color:#8a6a2e; letter-spacing:.02em; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .chronoTimeline .ctCap .ax { font-size:10px; color:#a98c4e; font-weight:700; white-space:nowrap; }
+  .ctTrack { display:flex; gap:6px; }
+  .ctNode { flex:1 1 0; min-width:0; text-align:center; padding:7px 4px 6px; border-radius:9px; background:#fff; border:1.5px solid #e6d8b4; }
+  .ctNode .ce { font-size:16px; line-height:1.1; }
+  .ctNode .cd { font-size:10.5px; font-weight:800; color:#6a5630; margin-top:2px; }
+  .ctNode .cv { font-size:10px; color:#7a6a48; margin-top:1px; word-break:break-word; line-height:1.25; }
+  .ctNode.win { background:#eafaf0; border-color:#2f9d6a; box-shadow:0 0 0 2px rgba(47,157,106,.18); }
+  .ctNode.win .cd { color:#2f6d45; }
+  .ctNode .wtag { display:block; margin-top:3px; font-size:9.5px; font-weight:800; color:#2f9d6a; }
   .chronoLive { margin:9px 12px 4px; padding:9px 12px; border-radius:11px; background:#f3ead7; color:#8a6a3a; font-size:12px; border:1px dashed #d9c39a; line-height:1.5; }
   .chronoConvene { display:flex; justify-content:center; padding:6px 12px 12px; }
   .chronoConveneBtn { min-height:44px; padding:11px 20px; border-radius:999px; border:0; cursor:pointer; font-size:13px; font-weight:700;
@@ -526,6 +537,8 @@ const I18N = {
     chronoConsensus:'만장일치', chronoVerdict:'시간의 판정', chronoSummon:'소집', chronoRecord:'기록 봉인',
     chronoConvene:'⚖️ 회의 소집 (라이브)', chronoConvening:'⏳ 회의장에 소집하는 중…',
     chronoOffline:'지금은 회의장이 조용해요 — 위 결정적 기록(Ambient)을 감상하세요 👀',
+    chronoTimeCap:'⏳ 시간의 저울 — 출처를 최신·생존순으로',
+    chronoTimeOld:'오래됨', chronoTimeNew:'최신', chronoTimeWin:'시간이 가리킴',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
@@ -618,6 +631,8 @@ const I18N = {
     chronoConsensus:'Consensus', chronoVerdict:'Verdict of Time', chronoSummon:'Convocation', chronoRecord:'Record sealed',
     chronoConvene:'⚖️ Convene the council (Live)', chronoConvening:'⏳ Convening the chamber…',
     chronoOffline:'The chamber is quiet right now — enjoy the deterministic record (Ambient) above 👀',
+    chronoTimeCap:"⏳ Time's scale — sources by recency & liveness",
+    chronoTimeOld:'older', chronoTimeNew:'newer', chronoTimeWin:'Time points here',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
@@ -2425,6 +2440,19 @@ let chronoModalLang=null, chronoCaseId=null;
 const _esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function chronoTurn(sageId,text){ const s=SAGE_INFO[sageId]||{emoji:'•',color:'#888'}; const nm=s[LANG]||sageId;
   return `<div class="chronoTurn"><div class="em">${s.emoji||'•'}</div><div class="bd"><div class="nm" style="color:${s.color||'#777'}">${_esc(nm)}</div><div class="tx">${_esc(text)}</div></div></div>`; }
+// recency timeline — visualises why Time picked the verdict: sources laid old→new, the living/newest winner glows
+function chronoTimeline(testi,verdictVal,noAnswer){
+  if(noAnswer||!testi||testi.length<2) return '';
+  const norm=v=>{ try{ return (CE&&CE.normalizeValue)?CE.normalizeValue(v):String(v||'').trim().toLowerCase(); }catch(e){ return String(v||'').trim().toLowerCase(); } };
+  const order=testi.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const vnorm=norm(verdictVal);
+  const matches=order.filter(x=>norm(x.claim)===vnorm);
+  const winner=matches.length?matches[matches.length-1]:order[order.length-1];
+  let nodes='';
+  for(const x of order){ const s=SAGE_INFO[x.sage]||{emoji:'•'}; const win=(x===winner);
+    nodes+=`<div class="ctNode${win?' win':''}"><div class="ce">${s.emoji||'•'}</div><div class="cd">${_esc(x.date||'—')}</div><div class="cv">${_esc(x.claim||'')}</div>${win?`<span class="wtag">⏳ ${_esc(t('chronoTimeWin'))}</span>`:''}</div>`; }
+  return `<div class="chronoTimeline"><div class="ctCap"><span>${_esc(t('chronoTimeCap'))}</span><span class="ax">${_esc(t('chronoTimeOld'))} → ${_esc(t('chronoTimeNew'))}</span></div><div class="ctTrack">${nodes}</div></div>`;
+}
 function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementById('chronoBody'); body.innerHTML='';
   const philo=document.createElement('div'); philo.className='chronoPhilo'; philo.textContent='“'+t('chronoPhilo')+'”'; body.appendChild(philo);
   const cases=document.createElement('div'); cases.className='chronoCases';
@@ -2436,17 +2464,19 @@ function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementBy
     const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv); return; }
   let r; try{ r=CE.councilAsk(fx,{withTranscript:true,lang:LANG}); }catch(e){ return; }
   const q=document.createElement('div'); q.className='chronoQ'; q.textContent='“'+r.question+'”'; body.appendChild(q);
-  let html='';
+  let html=''; const testi=[]; let verdictVal=null, noAnswer=false;
   for(const ev of r.transcript){
-    if(ev.phase==='testimony') html+=chronoTurn(ev.sage, ev.text||(ev.claim+(ev.provenance?(' — '+ev.provenance):'')));
+    if(ev.phase==='testimony'){ testi.push({sage:ev.sage, date:ev.date||'', claim:ev.claim}); html+=chronoTurn(ev.sage, ev.text||(ev.claim+(ev.provenance?(' — '+ev.provenance):''))); }
     else if(ev.phase==='cross') html+=chronoTurn(ev.sage, ev.text);
     else if(ev.phase==='verdict'){ const k=SAGE_INFO.kronos; const sig=(r.signature&&r.signature[LANG])||'';
+      verdictVal=ev.verdict; noAnswer=!!ev.no_answer;
       const head=ev.consensus?t('chronoConsensus'):t('chronoVerdict');
       html+=`<div class="chronoTurn verdict"><div class="em">${k.emoji}</div><div class="bd"><div class="nm" style="color:${k.color}">${_esc(k[LANG])} · ${LANG==='ko'?'시간의 의장':'the Chair of Time'}</div>`
         + (ev.no_answer?`<div class="tx">${LANG==='ko'?'증언이 부족해 — 다음 기일로 미룬다.':'Insufficient testimony — adjourned.'}</div>`
             : `<div class="tx">${_esc(head)}</div><div class="chronoVerdictVal">${_esc(ev.verdict)}</div><div class="chronoSig">⏳ ${_esc(sig)}</div>`)
         + `</div></div>`; }
   }
+  html+=chronoTimeline(testi, verdictVal, noAnswer);
   const turns=document.createElement('div'); turns.innerHTML=html; body.appendChild(turns);
   const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv);
   // Convene (Live) — asks the Worker state machine to seat a live debate. Live is gated behind
@@ -3801,7 +3831,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__chrono=()=>({ has:!!CHRONO, engine:!!CE, fixtures:!!CF, pos:CHRONO?{x:+CHRONO._pos.x.toFixed(1),z:+CHRONO._pos.z.toFixed(1)}:null, near:!!nearChrono, dist:+player.position.distanceTo(CHRONO_POS).toFixed(1), seqLang:chronoSeqLang, hourGlow:!!chronoHourGlow });
   window.__chronoSeq=()=>{ if(chronoSeqLang!==LANG) buildChronoSequence(); return { len:chronoSeq.length, first:chronoSeq[0]&&chronoSeq[0].name, lang:chronoSeqLang }; };
   window.__chronoOpen=(id)=>{ if(id) chronoModalLang=null; openChrono(); if(id) renderChronoCase(id);
-    const body=document.getElementById('chronoBody'); return { show:document.getElementById('chronoModal').classList.contains('show'), turns:body.querySelectorAll('.chronoTurn').length, cases:body.querySelectorAll('.chronoCase').length, verdict:(body.querySelector('.chronoVerdictVal')||{}).textContent||null, sig:(body.querySelector('.chronoSig')||{}).textContent||null, q:(body.querySelector('.chronoQ')||{}).textContent||null }; };
+    const body=document.getElementById('chronoBody'); return { show:document.getElementById('chronoModal').classList.contains('show'), turns:body.querySelectorAll('.chronoTurn').length, cases:body.querySelectorAll('.chronoCase').length, verdict:(body.querySelector('.chronoVerdictVal')||{}).textContent||null, sig:(body.querySelector('.chronoSig')||{}).textContent||null, q:(body.querySelector('.chronoQ')||{}).textContent||null, tl:body.querySelectorAll('.chronoTimeline .ctNode').length, tlWin:(body.querySelector('.ctNode.win .cv')||{}).textContent||null, tlWinDate:(body.querySelector('.ctNode.win .cd')||{}).textContent||null }; };
   window.__chronoClose=()=>{ closeChrono(); return !document.getElementById('chronoModal').classList.contains('show'); };
   window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
   window.__chronoConvene=async(id)=>{ if(id) chronoModalLang=null; openChrono(); if(id) renderChronoCase(id||chronoCaseId);

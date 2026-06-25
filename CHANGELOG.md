@@ -3,6 +3,12 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.20.0] — 2026-06-27
+
+### ⏳ Chronopolis — the Verdict of Time, made visible
+- When you convene the Kronos Council, the verdict now comes with a **recency timeline** that shows *why* Time decided the way it did. The three sages' sources are laid out on a single axis — **older → newer** — each as a card with its emoji, date, and claim, and the one Time points to (the newest, living source) **glows green** with a "⏳ Time points here" tag. The abstract principle "the debate is theater; the verdict is computed — Time is the judge" is now something you can *see* at a glance, for every one of the six cases (Pydantic, Transformers, OpenAI SDK, HTTP client, LangChain, CSS), in both Korean and English.
+- **Engine untouched, still byte-equal & zero-cost.** The timeline is pure presentation built from the deterministic transcript the council already produces — no new LLM calls, no new fixtures, no change to the adjudication logic. All council tests stay green (62 + 28). Mobile-safe: three cards fit a 390 px viewport with no overflow.
+
 ## [1.19.0] — 2026-06-27
 
 ### 🌳 Wind in the trees — the whole town breathes
