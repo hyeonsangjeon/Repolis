@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.16.0] — 2026-06-27
+
+### 🛣️ Chronopolis is now reachable — an approach road + "take me there" taxi nav
+- **A spur road out to the Council.** The town grid was all concentric ring roads (very Paris), which left **Chronopolis marooned on the lawn** with no way in. There's now a **radial approach avenue** — a dirt sidewalk apron + dashed asphalt lane — running straight from the outer ring (r≈150) down the entrance corridor to the rotunda steps, finishing in a **half-round forecourt** that blends the straight lane into the round stylobate. You can now walk or drive right up to the doors.
+- **Tell the taxi a landmark and it drives you.** Ask POLARIS *"크로노폴리스로 가자" / "take me to Chronopolis"* (or the canal, the town square, the rest park) and the cab now offers a **ride straight to that landmark** — following the new road for Chronopolis — instead of treating it as a repo search. **Chronopolis is a proper noun**, so just naming it is enough; generic spots (운하 / canal, 광장 / plaza, 공원 / park) need a "go" verb so idle chatter about a canal doesn't hail a taxi. On arrival at Chronopolis the **Council opens automatically**; the other landmarks just drop you off with a welcome line. Works in **every taxi mode** (Local / WebLLM / Foundry Live) because it resolves inside the shared intent core, and in **KO / EN**.
+- Repo search is untouched — *"제일 인기있는 레포"* still ranks `youtube-dl-nas` with alternates. Verified end-to-end in both languages (drive message → ride button → taxi drives the route → arrival → Council) with **0 console errors**.
+
 ## [1.15.0] — 2026-06-26
 
 ### 🎨 Chronopolis: the three debate-sages got a hip AI/dev redesign

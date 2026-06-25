@@ -566,7 +566,16 @@ const I18N = {
     libSub:'전현상의 논문 · 발표 · 오픈소스 기여 · 수상 아카이브',
     libIntro:'핀 6개에는 다 담기지 않는 그동안의 글·강연·오픈소스 기여를 한곳에 모았어요. 제목을 누르면 원문으로 이동합니다.',
     libRepoBtn:'GitHub에서 전체 보기 ↗', libCountWord:'개',
-    libDriver:'📚 <b>기여 도서관</b>으로 모실게요! 논문·발표·오픈소스 기여·수상이 전시되어 있어요.'
+    libDriver:'📚 <b>기여 도서관</b>으로 모실게요! 논문·발표·오픈소스 기여·수상이 전시되어 있어요.',
+    lmPark:'쉼터 공원',
+    lmDriveChrono:'⏳ <b>크로노폴리스</b> 회의장으로 모실게요! 시간의 의장 크로노스와 세 현자가 진실을 두고 토론하는 곳이에요. 새로 난 길을 따라 달려요 🚕',
+    lmDriveCanal:'🛶 <b>쁘띠베니스 운하</b>로 모실게요! 물길과 꽃다리가 있는 콜마르풍 골목이에요.',
+    lmDrivePlaza:'⛲ <b>중앙 광장</b>으로 모실게요! 분수와 별빛 룬서클이 있는 마을 한가운데예요.',
+    lmDrivePark:'🌳 <b>쉼터 공원</b>으로 모실게요! 벤치와 라벤더 꽃밭이 있는 조용한 산책 구역이에요.',
+    lmArriveChrono:'🚕 <b>크로노폴리스</b>에 도착했어요! 회의장 문을 열어드릴게요 ⏳',
+    lmArriveCanal:'🚕 <b>쁘띠베니스 운하</b>에 도착했어요! 물길을 따라 천천히 둘러보세요 🛶',
+    lmArrivePlaza:'🚕 <b>중앙 광장</b>에 도착했어요! 분수 곁에서 쉬어 가세요 ⛲',
+    lmArrivePark:'🚕 <b>쉼터 공원</b>에 도착했어요! 벤치에 앉아 한숨 돌리세요 🌳'
   },
   en:{
     loading:'Building Repolis…',
@@ -649,7 +658,16 @@ const I18N = {
     libSub:"Hyeonsang Jeon's papers · talks · open-source contributions · awards",
     libIntro:"Everything that doesn't fit in six pins — articles, talks and open-source work, gathered in one hall. Tap a title to open the source.",
     libRepoBtn:'View all on GitHub ↗', libCountWord:'',
-    libDriver:"📚 Let me take you to the <b>Contribution Library</b> — papers, talks, open-source work and awards are on display."
+    libDriver:"📚 Let me take you to the <b>Contribution Library</b> — papers, talks, open-source work and awards are on display.",
+    lmPark:'Rest Park',
+    lmDriveChrono:"⏳ Let me take you to the <b>Chronopolis</b> council! Chair KRONOS and three sages argue the truth of time there. We'll follow the new road 🚕",
+    lmDriveCanal:"🛶 Let me take you to the <b>Petite-Venise Canal</b> — a Colmar-style nook with water lanes and a flower bridge.",
+    lmDrivePlaza:"⛲ Let me take you to the <b>Town Square</b> — the fountain and the starlit rune circle at the heart of town.",
+    lmDrivePark:"🌳 Let me take you to the <b>Rest Park</b> — a quiet stroll with benches and lavender beds.",
+    lmArriveChrono:"🚕 We've arrived at <b>Chronopolis</b>! Opening the council doors for you ⏳",
+    lmArriveCanal:"🚕 We've arrived at the <b>Petite-Venise Canal</b>! Wander the water lanes 🛶",
+    lmArrivePlaza:"🚕 We've arrived at the <b>Town Square</b>! Rest by the fountain ⛲",
+    lmArrivePark:"🚕 We've arrived at the <b>Rest Park</b>! Take a breather on a bench 🌳"
   }
 };
 const t = k => (I18N[LANG] && I18N[LANG][k]!=null) ? I18N[LANG][k] : (I18N.en[k]!=null ? I18N.en[k] : k);
@@ -2193,6 +2211,19 @@ const SAGE_INFO = (()=>{ const m={};
   const cg=new THREE.Group(); cg.position.copy(CHRONO_POS);
   cg.rotation.y=Math.atan2(-CHRONO_POS.x, -CHRONO_POS.z);   // local +Z faces the town centre (where the player arrives)
   scene.add(cg);
+  /* ---- approach avenue: a spur road from the outer ring out to the Council steps. The town
+     grid was all concentric rings (Paris-like), leaving Chronopolis marooned on the lawn; this
+     radial lane points straight down the entrance corridor so you can walk/taxi right up. ---- */
+  (function chronoApproach(){
+    const ang=Math.atan2(CHRONO_POS.z, CHRONO_POS.x);                 // centre → Chronopolis bearing (== the open entrance side)
+    const rIn=147, rOut=189, len=rOut-rIn, midR=(rIn+rOut)/2, rep=Math.max(6,Math.round(len/6));   // ring(150) → outer step(~188)
+    const lay=(mesh,r,y)=>{ mesh.rotation.x=-Math.PI/2; mesh.rotation.z=-ang; mesh.position.set(Math.cos(ang)*r,y,Math.sin(ang)*r); mesh.receiveShadow=true; scene.add(mesh); };
+    lay(new THREE.Mesh(new THREE.PlaneGeometry(6.6,len), texMat(DIRT_TEX,1,rep)), midR, 0.009);      // dirt sidewalk apron
+    lay(new THREE.Mesh(new THREE.PlaneGeometry(4.0,len), texMat(ASPHALT_TEX,0.7,rep)), midR, 0.012);  // asphalt lane
+    for(let rr=rIn+4; rr<rOut-3; rr+=5){ const dd=new THREE.Mesh(new THREE.PlaneGeometry(0.32,1.8), basic(LANE)); dd.rotation.x=-Math.PI/2; dd.rotation.z=-ang; dd.position.set(Math.cos(ang)*rr,0.014,Math.sin(ang)*rr); scene.add(dd); }
+    const fan=new THREE.Mesh(new THREE.CircleGeometry(8.2,32,0,Math.PI), texMat(DIRT_TEX,1,2));       // half-round forecourt blending the straight lane into the round steps
+    fan.rotation.x=-Math.PI/2; fan.rotation.z=-ang+Math.PI/2; fan.position.set(Math.cos(ang)*(rOut-1),0.0085,Math.sin(ang)*(rOut-1)); fan.receiveShadow=true; scene.add(fan);
+  })();
   const MARBLE=0xe9e3d4, STONE=0xcfc6b2, GOLD='#e8c45a';
   // ---- stylobate: 3 concentric steps ----
   [[17,0.4],[15.8,0.75],[14.7,1.05]].forEach(([r,y],i)=>{
@@ -3138,11 +3169,27 @@ function engMeta(q){
     return t('engAbout');
   return null;
 }
+// 🗺️ landmarkNav — "크로노폴리스로 가자" / "take me to the canal" → POLARIS offers a ride to a town landmark (works in every mode: it runs inside _coreIntent, shared by local/grounded/webllm/proxy)
+function landmarkNav(q){
+  const go=/가자|가줘|가고|가 ?볼|갈래|데려|모셔|모시|안내|이동|길.?찾|길.?안내|구경|가는 ?길|로 ?가|으로 ?가|에 ?가|\bgo\b|take me|navigate|drive|walk me|guide me|bring me|head to|let'?s go|way to/i;
+  const mk=(key,label,pos,kind)=>({ repo:{ label:label, _landmark:kind, _pos:pos }, message:t(key), alts:[] });
+  // Chronopolis is a proper noun — no verb needed (its name is the intent)
+  if(/크로노폴리스|크로노스|chronopolis|kronos/i.test(q) || (/(시간의 ?(회의|의장)|council of time)/i.test(q) && go.test(q)))
+    return CHRONO ? mk('lmDriveChrono', t('lmChrono'), CHRONO._pos, 'chrono') : null;
+  // generic landmarks need a "go" verb so plain chatter about a canal/plaza doesn't hail a taxi
+  if(go.test(q)){
+    if(/쁘띠 ?베니스|petite[- ]?venise|운하|canal/i.test(q) && CANAL_PTS.length) return mk('lmDriveCanal', t('lmCanal'), new THREE.Vector3(CANAL_PTS[0].x,0,CANAL_PTS[0].z), 'canal');
+    if(/중앙 ?광장|광장|분수|town ?square|plaza|fountain/i.test(q)) return mk('lmDrivePlaza', t('lmPlaza'), new THREE.Vector3(0,0,0), 'plaza');
+    if(/공원|산책로|쉼터|\bpark\b/i.test(q)) return mk('lmDrivePark', t('lmPark'), new THREE.Vector3(-43,0,-15), 'park');
+  }
+  return null;
+}
 function _coreIntent(q){
   const ql=q.toLowerCase();
   const lore=townLore(q,'taxi'); if(lore) return { repo:null, message:lore, alts:[] };
   const st=smalltalk(q); if(st){ const p=(st==='stWho'?scholarPersona('taxi','who'):st==='stHelp'?scholarPersona('taxi','help'):null); return { repo:null, message:p||t(st), alts:[] }; }
   const meta=townMeta(q); if(meta) return { repo:null, message:meta, alts:[] };
+  const lm=landmarkNav(q); if(lm) return lm;
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
   // ✦ night-sky / cosmic small talk shares words with our metrics (별 = star, 하늘 보다…). Don't let
   //   "밤하늘 별 보는 거 좋아해?" become a star-count sort — fall through to general chat, unless the
@@ -3382,6 +3429,12 @@ function taxiTo(repo){ standUp(); ride={repo, phase:'coming', t:0}; setNav(repo)
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
 function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; openChat();
+  if(repo._landmark){
+    const k=repo._landmark, key='lmArrive'+k.charAt(0).toUpperCase()+k.slice(1);
+    addMsg('bot', t(key)||(LANG==='ko'?`🚕 <b>${repo.label}</b>에 도착했어요!`:`🚕 We've arrived at <b>${repo.label}</b>!`), {noHist:true});
+    if(k==='chrono') setTimeout(()=>{ try{ openChrono(); }catch(e){} }, 700);
+    return;
+  }
   addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
   setTimeout(()=>openCard(repo),500); }
 
@@ -3431,7 +3484,7 @@ function animate(){
       } else if(ride.phase==='boarding'){
         if(ride.t>0.55){ model.visible=false; ride.phase='riding'; ride.t=0; }
       } else if(ride.phase==='riding'){
-        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z, ride.repo._isLibrary?44:26, dt,6.0);
+        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z, (ride.repo._isLibrary||ride.repo._landmark==='chrono')?44:26, dt,6.0);
         player.position.set(taxi.position.x,0,taxi.position.z);
         const fx=Math.cos(taxi.rotation.y), fz=-Math.sin(taxi.rotation.y);
         camYaw=lerpA(camYaw,Math.atan2(fx,fz)+Math.PI,0.05);
