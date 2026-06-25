@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.25.2] — 2026-06-28
+
+### 📐 Docs — the Kronos Council pattern, written down
+- **New concept doc: horizontal multi-agent deliberation.** Added `COUNCIL_PATTERN.md` (+ Korean `COUNCIL_PATTERN.ko.md`) explaining the pattern Chronopolis implements — peer agents debate *as equals* (advocate / skeptic / analyst), a separate **chair** aggregates the whole transcript and rules — with the **golden rule** that curated cases are deterministic/**verified** while free topics are chair-LLM/**unverified**. Covers why roles create productive disagreement, reading-speed pacing as a UX rule, the cost/safety guards, the lineage (Multi-Agent Debate · Mixture-of-Agents · LLM-as-a-Judge · Society of Mind), and a file-by-file code map.
+- **New diagram (EN + KO).** `assets/council-pattern.svg` / `assets/council-pattern.ko.svg` — a night-sky figure: a topic fans out to three peer role-agents (tiki-taka arrows + a round loop), down to the KRONOS chair, then out to the two verdict modes (deterministic-verified vs. chair-unverified). Rendered and verified in both languages.
+- **README sections.** Both `README.md` and `README.ko.md` gain a *"the pattern behind it"* section that embeds the diagram and links the deep-dive, right after the deterministic Kronos-Council section.
+
 ## [1.25.1] — 2026-06-28
 
 ### ⚡ Chronopolis — the Convene modal is now a clean live-debate launcher (no canned dialogue)

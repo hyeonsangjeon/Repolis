@@ -80,6 +80,15 @@ Talk to any scholar and your question forks two ways. A **repo / docs question**
 In a domed rotunda on the edge of town, three debate‑sages argue **docs vs. code** — 📜 **Olddoc** quotes the manual, 🌿 **Livewire** trusts the running source, 🌀 **Hearsay** echoes the crowd. The Chair, ⏳ **KRONOS**, weighs every claim by **source × recency** and lets **Time** — the newest living source — deliver the verdict. The banter is theater; the verdict is **always the deterministic engine** (byte‑identical, 52 tests green). **Ambient** (walk up & watch) is free and runs 0 LLM; **Live** debate is an optional, guarded paid LLM (`LIVE_ENABLED=false` by default, silent fallback when no key is set).
 
 
+### 🧠 The pattern behind it — horizontal multi‑agent deliberation
+
+Type *any* topic — even a single noun like `reasoning ratio` — and three **peer** sages debate it **live** over SSE: 🌿 **Livewire** the *advocate*, 📜 **Olddoc** the *skeptic*, 🌀 **Hearsay** the *analyst*, reacting and rebutting each other **by name** across rounds, **paced to human reading speed** so you can actually follow it. Then the **Chair of Time** reads the whole transcript and rules. Free‑topic verdicts are **AI inference**, so they always wear a **⚡ unverified** badge — while the six curated cases keep their **deterministic** math verdict. It's a small, honest take on the *multi‑agent debate → judge* pattern.
+
+![Horizontal multi-agent deliberation — three equal role agents debate as peers and a chair agent aggregates the whole transcript into a verdict](assets/council-pattern.svg)
+
+**→ Deep‑dive: [`COUNCIL_PATTERN.md`](COUNCIL_PATTERN.md)** — the diagram, the roles, the golden rule (verified vs. unverified), and the pattern's lineage (Multi‑Agent Debate · Mixture‑of‑Agents · LLM‑as‑a‑Judge · Society of Mind).
+
+
 ## 🚀 Run your own
 
 1. **Fork / copy this repo.** You also need a daily traffic source — keep a collector like [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor) running.

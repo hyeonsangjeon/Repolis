@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" width="1200" height="820" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Noto Sans KR',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="수평적 멀티 에이전트 심의: 하나의 주제를 동등한 세 역할 에이전트(옹호가·회의가·분석가)가 여러 라운드에 걸쳐 서로 반응하고 반박하며 토론한 뒤, 의장 에이전트 크로노스가 전체 기록을 취합해 판정을 내린다. 큐레이트 사례는 결정적으로 판정(검증됨)되고, 자유 주제는 의장 LLM이 판정(미검증)한다.">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#060b1c"/>
+      <stop offset="0.55" stop-color="#0c1430"/>
+      <stop offset="1" stop-color="#131d40"/>
+    </linearGradient>
+    <radialGradient id="milky" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6e7bd8" stop-opacity="0.30"/>
+      <stop offset="0.5" stop-color="#3a4790" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#0c1430" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="topicFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d2a52"/><stop offset="1" stop-color="#142043"/>
+    </linearGradient>
+    <linearGradient id="advFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16331f"/><stop offset="1" stop-color="#102617"/>
+    </linearGradient>
+    <linearGradient id="skpFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#33291699"/><stop offset="1" stop-color="#2a200f"/>
+    </linearGradient>
+    <linearGradient id="anaFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16244e"/><stop offset="1" stop-color="#101b3c"/>
+    </linearGradient>
+    <linearGradient id="goldFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c2538"/><stop offset="1" stop-color="#171a30"/>
+    </linearGradient>
+    <radialGradient id="starGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="0.4" stop-color="#ffe6a8" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffe6a8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <marker id="arrG" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#ffd89a"/></marker>
+    <marker id="arrW" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#9fb0d8"/></marker>
+    <marker id="arrV" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#7fe39a"/></marker>
+    <marker id="arrTk" markerWidth="10" markerHeight="10" refX="6.8" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c0b6e0"/></marker>
+  </defs>
+
+  <rect width="1200" height="820" fill="url(#sky)"/>
+  <g transform="rotate(-24 600 300)" opacity="0.9"><ellipse cx="600" cy="280" rx="760" ry="120" fill="url(#milky)"/></g>
+
+  <!-- stars -->
+  <g fill="#fff">
+    <circle cx="80" cy="70" r="1.4" opacity="0.8"/><circle cx="170" cy="130" r="1" opacity="0.6"/>
+    <circle cx="300" cy="60" r="1.2" opacity="0.7"/><circle cx="430" cy="110" r="0.9" opacity="0.5"/>
+    <circle cx="560" cy="70" r="1.5" opacity="0.85"/><circle cx="690" cy="120" r="1" opacity="0.6"/>
+    <circle cx="820" cy="60" r="1.2" opacity="0.7"/><circle cx="960" cy="100" r="1.4" opacity="0.8"/>
+    <circle cx="1080" cy="64" r="1" opacity="0.6"/><circle cx="1140" cy="150" r="1.3" opacity="0.75"/>
+    <circle cx="40" cy="240" r="1.1" opacity="0.6"/><circle cx="150" cy="330" r="1.3" opacity="0.7"/>
+    <circle cx="1160" cy="320" r="1.2" opacity="0.7"/><circle cx="1100" cy="430" r="1" opacity="0.55"/>
+    <circle cx="60" cy="520" r="1.3" opacity="0.7"/><circle cx="1175" cy="560" r="1.1" opacity="0.6"/>
+    <circle cx="36" cy="700" r="1.2" opacity="0.65"/><circle cx="1168" cy="700" r="0.9" opacity="0.5"/>
+    <circle cx="30" cy="430" r="1" opacity="0.55"/><circle cx="1150" cy="240" r="1.1" opacity="0.6"/>
+  </g>
+  <g>
+    <circle cx="220" cy="92" r="20" fill="url(#starGlow)"/><circle cx="220" cy="92" r="1.7" fill="#fff"/>
+    <circle cx="1000" cy="86" r="18" fill="url(#starGlow)"/><circle cx="1000" cy="86" r="1.5" fill="#fff"/>
+  </g>
+
+  <!-- title -->
+  <text x="600" y="50" text-anchor="middle" fill="#eaf0ff" font-size="30" font-weight="800">⏳ 수평적 멀티 에이전트 심의</text>
+  <text x="600" y="80" text-anchor="middle" fill="#9fb0d8" font-size="16">세 에이전트가 동등한 동료로 토론하고 · 의장 에이전트가 전체 기록을 취합해 판정한다</text>
+  <text x="600" y="103" text-anchor="middle" fill="#6b7aa6" font-size="13.5">Repolis · 크로노폴리스 — 크로노스 의회에 적용된 방식</text>
+
+  <!-- topic -->
+  <g filter="url(#soft)">
+    <rect x="440" y="126" width="320" height="56" rx="28" fill="url(#topicFill)" stroke="#3a4d86" stroke-width="1.5"/>
+  </g>
+  <text x="600" y="151" text-anchor="middle" fill="#cdd9ff" font-size="14.5" font-weight="700">① 주제가 의회에 들어온다</text>
+  <text x="600" y="171" text-anchor="middle" fill="#8fa0c8" font-size="12.5">자유 텍스트 — 단어 하나라도 ("reasoning ratio")</text>
+
+  <!-- topic -> agents fan -->
+  <g fill="none" stroke="#5566a0" stroke-width="2" marker-end="url(#arrW)" opacity="0.85">
+    <path d="M600,182 C420,206 300,210 250,250"/>
+    <path d="M600,182 L600,250"/>
+    <path d="M600,182 C780,206 900,210 950,250"/>
+  </g>
+
+  <!-- ===== agents row (peers) ===== -->
+  <text x="600" y="228" text-anchor="middle" fill="#c0b6e0" font-size="13" font-weight="700">② 패널이 동등하게 논쟁한다 — 각 자리에 역할을 부여하고, 서로 반응하고 반박한다</text>
+
+  <!-- advocate -->
+  <g filter="url(#soft)">
+    <rect x="120" y="252" width="260" height="150" rx="16" fill="url(#advFill)" stroke="#5bbf73" stroke-width="2"/>
+  </g>
+  <text x="250" y="290" text-anchor="middle" font-size="30">🌿</text>
+  <text x="250" y="320" text-anchor="middle" fill="#bff0c8" font-size="17" font-weight="800">코드짱 · 옹호가</text>
+  <text x="250" y="345" text-anchor="middle" fill="#9fd8ab" font-size="12.5">장점·이점·실용적</text>
+  <text x="250" y="362" text-anchor="middle" fill="#9fd8ab" font-size="12.5">가치를 옹호한다</text>
+  <text x="250" y="386" text-anchor="middle" fill="#7fae8a" font-size="11.5" font-style="italic">"이게 되는 이유는…"</text>
+
+  <!-- skeptic -->
+  <g filter="url(#soft)">
+    <rect x="470" y="252" width="260" height="150" rx="16" fill="url(#skpFill)" stroke="#c79a5b" stroke-width="2"/>
+  </g>
+  <text x="600" y="290" text-anchor="middle" font-size="30">📜</text>
+  <text x="600" y="320" text-anchor="middle" fill="#f0dcbf" font-size="17" font-weight="800">올드독 · 회의가</text>
+  <text x="600" y="345" text-anchor="middle" fill="#d8bd9a" font-size="12.5">위험·함정·과장·</text>
+  <text x="600" y="362" text-anchor="middle" fill="#d8bd9a" font-size="12.5">반례를 캐묻는다</text>
+  <text x="600" y="386" text-anchor="middle" fill="#ae967f" font-size="11.5" font-style="italic">"정말 그럴까?"</text>
+
+  <!-- analyst -->
+  <g filter="url(#soft)">
+    <rect x="820" y="252" width="260" height="150" rx="16" fill="url(#anaFill)" stroke="#7aa7d8" stroke-width="2"/>
+  </g>
+  <text x="950" y="290" text-anchor="middle" font-size="30">🌀</text>
+  <text x="950" y="320" text-anchor="middle" fill="#cfe0ff" font-size="17" font-weight="800">썰풀이 · 분석가</text>
+  <text x="950" y="345" text-anchor="middle" fill="#a8c2e8" font-size="12.5">맥락·조건·</text>
+  <text x="950" y="362" text-anchor="middle" fill="#a8c2e8" font-size="12.5">트레이드오프를 따진다</text>
+  <text x="950" y="386" text-anchor="middle" fill="#8298bd" font-size="11.5" font-style="italic">"상황에 따라 다르지 — 핵심은…"</text>
+
+  <!-- tiki-taka arrows between peers -->
+  <g fill="none" stroke="#c0b6e0" stroke-width="2" marker-end="url(#arrTk)" opacity="0.9">
+    <path d="M382,318 C420,304 432,304 466,318"/>
+    <path d="M466,352 C432,366 420,366 384,352"/>
+    <path d="M732,318 C770,304 782,304 816,318"/>
+    <path d="M816,352 C782,366 770,366 734,352"/>
+  </g>
+  <!-- round loop -->
+  <g fill="none" stroke="#8f86c0" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arrTk)" opacity="0.8">
+    <path d="M250,402 C250,452 950,452 950,406"/>
+  </g>
+  <text x="600" y="446" text-anchor="middle" fill="#b3a8df" font-size="12.5" font-weight="700">↻ 여러 라운드 — 각 에이전트가 진행 중인 기록을 읽고 서로의 이름을 부르며 답한다</text>
+
+  <!-- agents -> chair -->
+  <g fill="none" stroke="#5b6aa6" stroke-width="2" marker-end="url(#arrW)" opacity="0.85">
+    <path d="M250,460 C250,500 470,500 520,512"/>
+    <path d="M600,460 L600,506"/>
+    <path d="M950,460 C950,500 730,500 680,512"/>
+  </g>
+
+  <!-- ===== chair ===== -->
+  <g filter="url(#glow)">
+    <rect x="410" y="510" width="380" height="118" rx="18" fill="url(#goldFill)" stroke="#e8c45a" stroke-width="2.5"/>
+  </g>
+  <text x="600" y="548" text-anchor="middle" font-size="28">⏳</text>
+  <text x="600" y="576" text-anchor="middle" fill="#ffe6a8" font-size="18" font-weight="800">크로노스 · 의장</text>
+  <text x="600" y="599" text-anchor="middle" fill="#e8d3a0" font-size="12.5">③ 토론 전체를 읽고 · 옹호가 + 회의가 + 분석가를 종합한다</text>
+  <text x="600" y="617" text-anchor="middle" fill="#e8d3a0" font-size="12.5">논거의 힘으로 결정 — 한쪽을 택하거나, 조건부 절충안을 명시한다</text>
+
+  <!-- chair -> verdicts -->
+  <g fill="none" stroke="#7fe39a" stroke-width="2.2" marker-end="url(#arrV)">
+    <path d="M520,628 C460,656 400,656 360,676"/>
+    <path d="M680,628 C740,656 800,656 840,676"/>
+  </g>
+
+  <!-- verdict: curated -->
+  <g filter="url(#soft)">
+    <rect x="120" y="678" width="430" height="98" rx="14" fill="#10241a" stroke="#4bbf7a" stroke-width="2"/>
+  </g>
+  <text x="146" y="710" fill="#9af0c0" font-size="15" font-weight="800">✅ 큐레이트 사례 → 결정적</text>
+  <text x="146" y="733" fill="#bfe8cf" font-size="12.5">직접 작성한 6개 사례는 고정된 규칙으로 판정</text>
+  <text x="146" y="751" fill="#bfe8cf" font-size="12.5">(가장 최신의 살아있는 소스가 이긴다). 같은 입력 → 같은 판정.</text>
+  <text x="146" y="769" fill="#7fae8a" font-size="11.5" font-style="italic">검증됨 · 재현 가능 · $0</text>
+
+  <!-- verdict: free -->
+  <g filter="url(#soft)">
+    <rect x="650" y="678" width="430" height="98" rx="14" fill="#2a2440" stroke="#b89cf0" stroke-width="2"/>
+  </g>
+  <text x="676" y="710" fill="#d9c8ff" font-size="15" font-weight="800">⚡ 자유 주제 → 의장 LLM</text>
+  <text x="676" y="733" fill="#ccbff0" font-size="12.5">어떤 주제든 의장 모델이 실시간으로 판정한다.</text>
+  <text x="676" y="751" fill="#ccbff0" font-size="12.5">계산된 사실이 아니라 AI 추론이므로 —</text>
+  <text x="676" y="769" fill="#a594d0" font-size="11.5" font-style="italic">항상 "미검증" 라벨 · 가드·미터링됨</text>
+
+  <!-- footer lineage -->
+  <text x="600" y="804" text-anchor="middle" fill="#6b7aa6" font-size="12.5">패턴 계보: Multi-Agent Debate · Mixture-of-Agents · LLM-as-a-Judge · Society of Minds — "토론은 연극, 판정은 심판의 몫"</text>
+</svg>
