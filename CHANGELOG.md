@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.25.0] — 2026-06-28
+
+### ⚡ Chronopolis — live debates you can actually read, with real debate roles
+- **No more 7-second blur.** The previous build drew each sage's line the instant it arrived over SSE, so a two-minute debate flashed past in seconds and the bubbles were unreadable. The client now runs a **producer/consumer pacing queue**: streamed turns are buffered, **split into sentence-sized bubbles**, and shown one at a time at **human reading speed** (≈2.4–7.2 s per bubble, auto-catching-up only when the worker races far ahead). Long rebuttals that overflowed a single bubble are now **wrapped and shown in sequence** — you read the whole argument, then the next sage reacts. The verdict is **held until the queue drains**, so it never appears before you've read the debate.
+- **Real roles, not canned lines.** The free-topic sages used to share the curated docs/source/community personas, which rang hollow on general subjects and *looked like a fixed simulation*. Each seat now gets a genuine **debate role** — 📜 Olddoc the **skeptic/critic**, 🌿 Livewire the **advocate**, 🌀 Hearsay the **analyst** — that works for **any topic, even a single noun** like "reasoning ratio" (they first frame the concept, then take a stance). They **name each other and push back** ("Olddoc, I agree the ratio shouldn't be maxed blindly, but…"), and the bubble nameplates now show a **role chip** (`📜 올드독 · 회의가` / `🌀 Hearsay · Analyst`) so spectators can follow the clash.
+- **The chair aggregates, then judges.** KRONOS no longer just "picks the newest source" — for free topics it now **synthesises all three positions** (advocate / skeptic / analyst) and delivers **its own reasoned verdict** with a one-line *basis* explaining how it weighed them, in the user's language. Per-turn and chair **token budgets were raised** (context window `slice(-8)`, clamp 600 chars, chair 1400 tokens) so arguments and verdicts are fuller. Pacing is owned entirely by the client, so the worker streams turns with **zero artificial gap**.
+- **Sim-leak fixed for good.** While the live HUD is open, the ambient (free, scripted) sequence can no longer overwrite the live verdict — the `updateChrono` gate now also checks `_hudShown()`, so the gold verdict bubble persists until you close the HUD, and the ambient loop only resumes afterward. Verified end-to-end on real GPU: KO (vitamin-C megadose) + EN single-noun ("reasoning ratio") — role chips correct in both languages, long turns split across bubbles, verdict held until the queue drained, **0 console errors** on desktop + mobile. The six curated cases keep their deterministic math verdict; only free topics use the chair LLM (always **⚡ unverified**-labelled).
+
 ## [1.24.0] — 2026-06-28
 
 ### ⚡ Chronopolis — free-topic live debates you watch unfold in 3D

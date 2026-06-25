@@ -2310,6 +2310,9 @@ const SAGE_INFO = (()=>{ const m={};
   const ch=(CHRONO_CFG&&CHRONO_CFG.chair)||{emoji:'⏳',nameKo:'크로노스',nameEn:'KRONOS',color:'#e8c45a'};
   m.kronos={emoji:ch.emoji, ko:ch.nameKo, en:ch.nameEn, color:ch.color};
   return m; })();
+// Phase 40: each free-topic debater plays a fixed ROLE (works for any topic incl. single nouns).
+// Shown as a chip on the live bubble nameplate so spectators instantly read who argues what.
+const ROLE_LABELS={ olddoc:{ko:'회의가',en:'Skeptic'}, livewire:{ko:'옹호가',en:'Advocate'}, hearsay:{ko:'분석가',en:'Analyst'}, kronos:{ko:'시간의 의장',en:'Chair'} };
 
 (function buildChronopolis(){
   const cg=new THREE.Group(); cg.position.copy(CHRONO_POS);
@@ -2476,23 +2479,29 @@ const SAGE_INFO = (()=>{ const m={};
 })();
 
 /* ---- ambient debate: one reused world bubble cycles through the deterministic transcript (0 LLM) ---- */
-const chronoBubble=(function(){ const cv=document.createElement('canvas'); cv.width=512; cv.height=260; const ctx=cv.getContext('2d');
+const chronoBubble=(function(){ const cv=document.createElement('canvas'); cv.width=600; cv.height=340; const ctx=cv.getContext('2d');
   const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
-  sp.scale.set(17,8.6,1); sp.position.set(CHRONO_POS.x, 10.5, CHRONO_POS.z); sp.visible=false; sp.renderOrder=20; scene.add(sp);
-  function wrap(t,max){ const words=String(t).split(' '), lines=[]; let cur='';
-    for(const w of words){ const tn=cur?cur+' '+w:w; if(ctx.measureText(tn).width>max && cur){ lines.push(cur); cur=w; } else cur=tn; } if(cur) lines.push(cur); return lines.slice(0,4); }
-  function draw(name, text, col, gold){ ctx.clearRect(0,0,512,260);
-    ctx.fillStyle=gold?'rgba(42,35,64,0.93)':'rgba(255,251,242,0.95)'; const r=26;
-    ctx.beginPath(); ctx.moveTo(r,8); ctx.arcTo(504,8,504,252,r); ctx.arcTo(504,252,8,252,r); ctx.arcTo(8,252,8,8,r); ctx.arcTo(8,8,504,8,r); ctx.fill();
+  sp.scale.set(18,10.2,1); sp.position.set(CHRONO_POS.x, 10.5, CHRONO_POS.z); sp.visible=false; sp.renderOrder=20; scene.add(sp);
+  function wrap(t,max,maxLines){ const words=String(t).split(' '), lines=[]; let cur='';
+    for(const w of words){ const tn=cur?cur+' '+w:w; if(ctx.measureText(tn).width>max && cur){ lines.push(cur); cur=w; } else cur=tn; } if(cur) lines.push(cur); return lines.slice(0,maxLines||6); }
+  function draw(name, text, col, gold, role){ ctx.clearRect(0,0,600,340);
+    ctx.fillStyle=gold?'rgba(42,35,64,0.94)':'rgba(255,251,242,0.96)'; const r=28;
+    ctx.beginPath(); ctx.moveTo(r,8); ctx.arcTo(592,8,592,332,r); ctx.arcTo(592,332,8,332,r); ctx.arcTo(8,332,8,8,r); ctx.arcTo(8,8,592,8,r); ctx.fill();
     ctx.lineWidth=5; ctx.strokeStyle=col||'#caa'; ctx.stroke();
-    ctx.font='800 30px system-ui,sans-serif'; ctx.fillStyle=col||'#666'; ctx.fillText(name, 28, 50);
-    ctx.font='600 28px system-ui,sans-serif'; ctx.fillStyle=gold?'#fff':'#33271a';
-    const lines=wrap(text, 452); lines.forEach((ln,i)=>ctx.fillText(ln, 28, 96+i*38));
+    ctx.textBaseline='alphabetic';
+    ctx.font='800 31px system-ui,sans-serif'; ctx.fillStyle=col||'#666'; ctx.fillText(name, 30, 54);
+    if(role){ const nw=ctx.measureText(name).width; ctx.font='700 21px system-ui,sans-serif';
+      ctx.fillStyle=gold?'rgba(240,217,138,0.85)':'rgba(60,46,30,0.5)'; ctx.fillText('· '+role, 30+nw+12, 52); }
+    ctx.font='600 27px system-ui,sans-serif'; ctx.fillStyle=gold?'#fff':'#33271a';
+    const lines=wrap(text, 536, 6); lines.forEach((ln,i)=>ctx.fillText(ln, 30, 102+i*37));
+    sp.userData.last={name:name, text:text, role:role||'', gold:!!gold};
     tex.needsUpdate=true; }
   return { sprite:sp, draw };
 })();
 let chronoSeq=[], chronoIdx=0, chronoT=0, chronoSeqLang=null;
-let liveDebate={active:false, reader:null, abort:null, t0:0, dur:120, rounds:0};
+let liveDebate={active:false, streaming:false, reader:null, abort:null, t0:0, dur:120, rounds:0,
+  queue:[], frag:[], verdict:null, consuming:false, btimer:0};
+function _hudShown(){ const h=document.getElementById('chronoLiveHud'); return !!(h&&h.classList.contains('show')); }
 function buildChronoSequence(){ chronoSeq=[]; chronoSeqLang=LANG; if(!CE||!CF||!CF.list) return;
   for(const fx of CF.list()){ let r; try{ r=CE.councilAsk(fx,{withTranscript:true,lang:LANG}); }catch(e){ continue; }
     const k=SAGE_INFO.kronos; chronoSeq.push({name:k.emoji+' '+k[LANG], text:'“'+r.question+'”', col:k.color, gold:true});
@@ -2506,7 +2515,7 @@ function buildChronoSequence(){ chronoSeq=[]; chronoSeqLang=LANG; if(!CE||!CF||!
 }
 function updateChrono(dt){ if(!CHRONO) return;
   if(chronoHourGlow){ const base=isNight?0.9:0.42; chronoHourGlow.material.opacity=base*(0.72+0.28*Math.sin(clock.elapsedTime*2.1)); }
-  const near = liveDebate.active || player.position.distanceToSquared(CHRONO_POS) < 64*64;
+  const near = liveDebate.active || _hudShown() || player.position.distanceToSquared(CHRONO_POS) < 64*64;
   if(chronoSand && near){ const a=chronoSand.geometry.attributes.position.array, ph=chronoSand._ph;
     for(let i=0;i<ph.length;i++){ ph[i]+=dt*0.5; if(ph[i]>1) ph[i]-=1; a[i*3+1]=1.6-ph[i]*0.85; } chronoSand.geometry.attributes.position.needsUpdate=true; }
   // ---- debate gestures: the sages argue with one another (arms point/raise, torso sway, head bob),
@@ -2534,7 +2543,7 @@ function updateChrono(dt){ if(!CHRONO) return;
     }
   }
   if(!near){ if(chronoBubble.sprite.visible) chronoBubble.sprite.visible=false; return; }
-  if(liveDebate.active) return;   // live debate drives the bubble sprite directly (showSageBubble/showKronosVerdict)
+  if(liveDebate.active || _hudShown()) return;   // live debate / lingering verdict drives the bubble directly — never let ambient overwrite it (sim-leak fix)
   if(chronoSeqLang!==LANG){ buildChronoSequence(); chronoIdx=0; chronoT=0; }
   if(!chronoSeq.length){ chronoBubble.sprite.visible=false; return; }
   chronoT-=dt;
@@ -2626,14 +2635,16 @@ function showLiveHud(topic){ const h=_hudEl('chronoLiveHud'); if(!h) return;
   _hudRaf=requestAnimationFrame(tick);
 }
 function hideLiveHud(){ const h=_hudEl('chronoLiveHud'); if(h) h.classList.remove('show'); cancelAnimationFrame(_hudRaf); }
-function closeLiveHud(){ liveDebate.active=false; try{ liveDebate.abort&&liveDebate.abort.abort(); }catch(e){} hideLiveHud(); if(chronoBubble) chronoBubble.sprite.visible=false; }
+function closeLiveHud(){ liveDebate.active=false; liveDebate.streaming=false; liveDebate.consuming=false; clearTimeout(liveDebate.btimer); try{ liveDebate.abort&&liveDebate.abort.abort(); }catch(e){} hideLiveHud(); if(chronoBubble) chronoBubble.sprite.visible=false; }
 
 function conveneLive(topicText){ const topic=(topicText||'').trim();
   if(!topic){ const inp=document.getElementById('chronoTopicInput'); if(inp){ inp.placeholder=t('chronoTopicEmpty'); inp.focus(); } return; }
   if(liveDebate.active) return;
   chronoTopicDraft=topic;
   closeChrono();                       // popup closes — you watch the debate unfold in the 3D chamber
-  liveDebate.active=true; liveDebate.rounds=0;
+  liveDebate.active=true; liveDebate.streaming=true; liveDebate.rounds=0;
+  liveDebate.queue=[]; liveDebate.frag=[]; liveDebate.verdict=null; liveDebate.consuming=false;
+  clearTimeout(liveDebate.btimer);
   showLiveHud(topic);
   streamDebate(topic);
 }
@@ -2648,7 +2659,7 @@ async function streamDebate(topic){
     if(!res.ok || !res.body){ clearTimeout(idleTo); return ambientFallback('chronoLiveErr'); }
     const reader=res.body.getReader(); liveDebate.reader=reader;
     const dec=new TextDecoder(); let buf='';
-    while(liveDebate.active){
+    while(liveDebate.streaming){
       const {value,done}=await reader.read(); if(done) break; armIdle();
       buf+=dec.decode(value,{stream:true}); let idx;
       while((idx=buf.indexOf('\n\n'))>=0){ const chunk=buf.slice(0,idx); buf=buf.slice(idx+2);
@@ -2658,39 +2669,77 @@ async function streamDebate(topic){
         handleDebateEvent(ev);
       }
     }
-    clearTimeout(idleTo);
-    if(liveDebate.active){ liveDebate.active=false; cancelAnimationFrame(_hudRaf);   // stream ended without an explicit 'done'
-      const v=_hudEl('clhVerdict');
-      if(v&&v.classList.contains('show')){ _hudEl('clhFill').style.width='100%'; _hudEl('clhBadge').textContent=t('chronoLiveDone'); }
-      else ambientFallback('chronoLiveErr'); }
-  }catch(e){ clearTimeout(idleTo); if(liveDebate.active) ambientFallback('chronoLiveErr'); }
+    clearTimeout(idleTo); liveDebate.streaming=false;
+    // stream closed — if nothing ever queued and no verdict pending, fall back; else let the consumer drain
+    if(liveDebate.active && !liveDebate.consuming && !liveDebate.queue.length && !liveDebate.frag.length && !liveDebate.verdict){
+      if(_hudEl('clhVerdict').classList.contains('show')) finishLive(); else ambientFallback('chronoLiveErr');
+    } else { startConsumer(); }
+  }catch(e){ clearTimeout(idleTo); liveDebate.streaming=false;
+    if(liveDebate.active && !liveDebate.consuming && !liveDebate.queue.length && !liveDebate.frag.length && !liveDebate.verdict) ambientFallback('chronoLiveErr');
+    else startConsumer(); }
 }
 
 function handleDebateEvent(ev){ if(!ev||!ev.phase) return;
   if(ev.phase==='convocation'){ if(ev.topic) _hudEl('clhTopic').textContent=ev.topic; }
   else if(ev.phase==='turn'){ if(ev.round) liveDebate.rounds=ev.round;
-    _hudEl('clhRound').textContent=t('chronoLiveRound')+' '+(liveDebate.rounds||1);
-    showSageBubble(ev.sage, ev.text); }
-  else if(ev.phase==='verdict'){ showKronosVerdict(ev.verdict, ev.signature, ev.confidence, ev.unverified); }
+    liveDebate.queue.push({sage:ev.sage, text:ev.text, round:ev.round||liveDebate.rounds||1}); startConsumer(); }
+  else if(ev.phase==='verdict'){ liveDebate.verdict={verdict:ev.verdict, signature:ev.signature, basis:ev.basis, confidence:ev.confidence, unverified:ev.unverified}; startConsumer(); }
   else if(ev.phase==='notice'){ if(ev.notice) _hudEl('clhRound').textContent=ev.notice; }
-  else if(ev.phase==='done'){ liveDebate.active=false; cancelAnimationFrame(_hudRaf);
-    _hudEl('clhFill').style.width='100%'; _hudEl('clhBadge').textContent=t('chronoLiveDone'); }
-  else if(ev.phase==='error'){ ambientFallback('chronoLiveErr'); }
+  else if(ev.phase==='done'){ liveDebate.streaming=false; startConsumer(); }
+  else if(ev.phase==='error'){ liveDebate.streaming=false;
+    if(!liveDebate.queue.length && !liveDebate.frag.length && !liveDebate.verdict) ambientFallback('chronoLiveErr'); }
 }
+
+// Phase 40 client pacing — SSE turns arrive in a burst (~2s each), far faster than a human can
+// read, and a long rebuttal won't fit one bubble. So we QUEUE every turn, split it into
+// sentence-sized bubbles, and reveal each at reading speed; the verdict is held until the whole
+// queue has been read out. This keeps the debate legible no matter how fast the worker streams.
+function splitIntoBubbles(text){ const s=String(text||'').trim(); if(!s) return [];
+  const parts=s.match(/[^.!?…。]+[.!?…。]*/g)||[s]; const out=[]; let cur='';
+  for(let p of parts){ p=p.trim(); if(!p) continue;
+    if(!cur) cur=p; else if((cur+' '+p).length<=120) cur=cur+' '+p; else { out.push(cur); cur=p; }
+    while(cur.length>168){ let cut=cur.lastIndexOf(' ',168); if(cut<90) cut=168; out.push(cur.slice(0,cut).trim()); cur=cur.slice(cut).trim(); }
+  }
+  if(cur) out.push(cur); return out;
+}
+function startConsumer(){ if(liveDebate.consuming) return; liveDebate.consuming=true; pumpBubbles(); }
+function pumpBubbles(){ clearTimeout(liveDebate.btimer);
+  if(!liveDebate.active){ liveDebate.consuming=false; return; }
+  if(!liveDebate.frag.length && liveDebate.queue.length){ const turn=liveDebate.queue.shift();
+    if(turn.round){ liveDebate.rounds=turn.round; _hudEl('clhRound').textContent=t('chronoLiveRound')+' '+turn.round; }
+    liveDebate.frag=splitIntoBubbles(turn.text).map(tx=>({sage:turn.sage, text:tx})); }
+  if(liveDebate.frag.length){ const piece=liveDebate.frag.shift();
+    showSageBubble(piece.sage, piece.text);
+    const backlog=liveDebate.queue.length + liveDebate.frag.length;     // catch up if the worker raced ahead
+    const speed=backlog>9?0.55:backlog>5?0.75:1;
+    const dur=Math.max(2400, Math.min(7200, piece.text.length*82))*speed;
+    liveDebate.btimer=setTimeout(pumpBubbles, dur); return; }
+  if(liveDebate.verdict){ const vv=liveDebate.verdict; liveDebate.verdict=null;   // all turns read → reveal the verdict
+    showKronosVerdict(vv.verdict, vv.signature, vv.confidence, vv.unverified, vv.basis);
+    liveDebate.consuming=false; finishLive(); return; }
+  if(!liveDebate.streaming){ liveDebate.consuming=false;
+    if(!_hudEl('clhVerdict').classList.contains('show')) finishLive(); return; }
+  liveDebate.btimer=setTimeout(pumpBubbles, 420);   // queue momentarily empty, more turns still streaming
+}
+function finishLive(){ liveDebate.active=false; liveDebate.streaming=false; liveDebate.consuming=false; cancelAnimationFrame(_hudRaf);
+  const fill=_hudEl('clhFill'); if(fill) fill.style.width='100%';
+  const b=_hudEl('clhBadge'); if(b) b.textContent=t('chronoLiveDone'); }
 
 function showSageBubble(sageId, text){ if(!text || !chronoBubble) return;
   const s=CHRONO_SAGES.find(x=>x.id===sageId), info=SAGE_INFO[sageId]||{};
   const col=info.color||'#d8c9a0', nm=info[LANG]||info.ko||sageId;
+  const role=(ROLE_LABELS[sageId]&&ROLE_LABELS[sageId][LANG])||'';
   if(s&&s.grp){ const wp=new THREE.Vector3(); s.grp.getWorldPosition(wp); chronoBubble.sprite.position.set(wp.x, wp.y+2.7, wp.z); }
   else chronoBubble.sprite.position.set(CHRONO_POS.x, 10.5, CHRONO_POS.z);
-  chronoBubble.draw((info.emoji?info.emoji+' ':'')+nm, text, col, false);
+  chronoBubble.draw((info.emoji?info.emoji+' ':'')+nm, text, col, false, role);
   chronoBubble.sprite.visible=true;
 }
 
-function showKronosVerdict(verdict, signature, confidence, unverified){ const k=SAGE_INFO.kronos||{};
+function showKronosVerdict(verdict, signature, confidence, unverified, basis){ const k=SAGE_INFO.kronos||{};
   if(chronoBubble){ const sg=CHRONO_SAGES.find(x=>x.id==='kronos');
     if(sg&&sg.grp){ const wp=new THREE.Vector3(); sg.grp.getWorldPosition(wp); chronoBubble.sprite.position.set(wp.x, wp.y+2.4, wp.z); }
-    chronoBubble.draw((k.emoji||'⏳')+' '+(k[LANG]||'KRONOS'), verdict||'', k.color||'#f0d98a', true);
+    const role=(ROLE_LABELS.kronos&&ROLE_LABELS.kronos[LANG])||'';
+    chronoBubble.draw((k.emoji||'⏳')+' '+(k[LANG]||'KRONOS'), verdict||'', k.color||'#f0d98a', true, role);
     chronoBubble.sprite.visible=true; }
   const v=_hudEl('clhVerdict'); if(v){ v.classList.add('show');
     _hudEl('clhUnverified').style.display=(unverified===false)?'none':'';
@@ -2698,9 +2747,11 @@ function showKronosVerdict(verdict, signature, confidence, unverified){ const k=
     _hudEl('clhSig').textContent=signature?('⏳ '+signature):''; }
 }
 
-function ambientFallback(key){ liveDebate.active=false; cancelAnimationFrame(_hudRaf);
+function ambientFallback(key){ liveDebate.streaming=false; liveDebate.consuming=false; clearTimeout(liveDebate.btimer); cancelAnimationFrame(_hudRaf);
   const r=_hudEl('clhRound'); if(r) r.textContent=t(key||'chronoLiveErr');
   const b=_hudEl('clhBadge'); if(b) b.textContent=t('chronoLiveLabel');
+  // show the error briefly, then close the HUD so the deterministic ambient stage resumes
+  setTimeout(()=>{ if(!liveDebate.streaming && !liveDebate.consuming) closeLiveHud(); }, 2800);
 }
 (function(){ const c=document.getElementById('clhClose'); if(c) c.onclick=closeLiveHud; })();
 function openChrono(){ modalOpen=true; chronoModal.classList.add('show');
@@ -4046,8 +4097,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
       roundTx:(document.getElementById('clhRound')||{}).textContent, bubble:!!(chronoBubble&&chronoBubble.sprite.visible),
       verdictShown:v?v.classList.contains('show'):false, verdictTx:(document.getElementById('clhVerdictTx')||{}).textContent||null,
       unverified:(document.getElementById('clhUnverified')||{}).style.display!=='none', sig:(document.getElementById('clhSig')||{}).textContent||null }; };
-  window.__liveState=()=>({ active:liveDebate.active, rounds:liveDebate.rounds, dur:liveDebate.dur,
-    hud:document.getElementById('chronoLiveHud').classList.contains('show'), fill:(document.getElementById('clhFill')||{}).style.width }); 
+  window.__liveState=()=>({ active:liveDebate.active, streaming:liveDebate.streaming, consuming:liveDebate.consuming,
+    qlen:liveDebate.queue.length, fraglen:liveDebate.frag.length, pendVerdict:!!liveDebate.verdict, rounds:liveDebate.rounds, dur:liveDebate.dur,
+    hud:document.getElementById('chronoLiveHud').classList.contains('show'), fill:(document.getElementById('clhFill')||{}).style.width,
+    bubbleVisible:!!(chronoBubble&&chronoBubble.sprite.visible), bubble:(chronoBubble&&chronoBubble.sprite.userData.last)||null,
+    verdictTx:(document.getElementById('clhVerdictTx')||{}).textContent||null, sig:(document.getElementById('clhSig')||{}).textContent||null });
   window.__liveClose=()=>{ closeLiveHud(); return { active:liveDebate.active, hud:document.getElementById('chronoLiveHud').classList.contains('show') }; };
 
   window.__feat=()=>({pond:buildings.filter(b=>b.stars>=8||b._activity>0.7).length, garage:buildings.filter(b=>b.stars>=11||(b.forks||0)>=4).length, buildings:buildings.length});

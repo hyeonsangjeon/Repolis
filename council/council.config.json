@@ -119,14 +119,15 @@
     "TOKENS_PER_TURN_MAX": 160
   },
 
-  "_comment_live_free": "Phase 39 자유주제 라이브 토론 전용 다이얼(6 curated fixture와 분리). 현상님 확정: 2분 토론·토큰 상향·의장 gpt-5.4+reasoning. env로 즉시 조정.",
+  "_comment_live_free": "Phase 40 자유주제 라이브 토론 전용 다이얼(6 curated fixture와 분리). 역할기반 토론(옹호/회의/분석)·컨텍스트 상향·의장 gpt-5.4+reasoning. 페이싱은 클라가 큐로 제어하므로 워커는 즉시 stream. env로 즉시 조정.",
   "live_free": {
     "ENABLED": false,
     "DEBATE_TIMEOUT_SEC": 120,
-    "MAX_ROUNDS": 4,
-    "TOKENS_PER_TURN_MAX": 220,
-    "TURN_GAP_MS": 1200,
-    "CHAIR_MAXTOK": 700,
+    "MAX_ROUNDS": 3,
+    "TOKENS_PER_TURN_MAX": 300,
+    "CLAMP_CHARS": 600,
+    "TURN_GAP_MS": 0,
+    "CHAIR_MAXTOK": 1400,
     "CHAIR_REASONING": "high",
     "LABEL_UNVERIFIED": true
   },

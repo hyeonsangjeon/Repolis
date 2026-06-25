@@ -80,6 +80,29 @@
   }
 
   // ---- persona + grounding prompts (used ONLY on the real LLM path) -----------
+  // ---- free-topic debate ROLES (Phase 40) ------------------------------------
+  // The 6 curated fixtures use the doc/source/community personas above; FREE topics
+  // instead assign each seat a general DEBATE ROLE so any subject — even a single
+  // noun like "reasoning ratio" — gets a real advocate / skeptic / analyst clash.
+  var FREE_ROLES = {
+    olddoc: {
+      ko: { stance: '신중한 회의주의 비판가', guide: '주제의 위험·함정·과장·반례를 파고든다. 근거 없는 낙관과 유행을 경계하며 "정말 그런가? 부작용·예외는?"을 끈질기게 따진다. 오래 지켜본 시니어의 보수적 시선으로 약점을 짚는다.' },
+      en: { stance: 'cautious skeptic and critic', guide: 'Probe the risks, traps, hype and counter-examples. Distrust ungrounded optimism and fashion; keep asking "is that really so? what about the side-effects and edge cases?" Point at weaknesses with a seasoned senior\'s conservative eye.' }
+    },
+    livewire: {
+      ko: { stance: '적극적인 옹호가', guide: '주제의 가능성·이점·실용적 가치를 구체적 근거를 들어 밀어붙인다. 새로운 시도에 열려 있고 "이래서 좋다, 이렇게 쓰면 된다"며 회의론에 맞선다. 자신만만한 실전파의 목소리.' },
+      en: { stance: 'energetic advocate', guide: 'Push the upside, benefits and practical value with concrete reasons. Stay open to new ideas; answer skepticism with "here is why it works, here is how to use it." A confident hands-on builder.' }
+    },
+    hearsay: {
+      ko: { stance: '균형잡힌 분석가', guide: '양쪽 주장을 인정하면서 맥락·조건·트레이드오프로 쟁점을 정리한다. "경우에 따라 다르다, 진짜 변수는 이것"이라며 감정보다 구조를 본다. 차분한 중재자.' },
+      en: { stance: 'balanced analyst', guide: 'Acknowledge both sides and organize the issue by context, conditions and trade-offs. "It depends — the real variable is this." Sees structure over emotion; a calm mediator.' }
+    },
+    _default: {
+      ko: { stance: '토론자', guide: '주제에 대해 네 관점에서 입장을 밝히고 앞 발언에 반응한다.' },
+      en: { stance: 'panelist', guide: 'State your view on the topic and react to the others.' }
+    }
+  };
+
   function personaSystem(sage, lang, ground) {
     var v = (sage.voice && sage.voice[lang === 'en' ? 'en' : 'ko']) || {};
     var tone = v.tone || '';
@@ -209,30 +232,49 @@
 
     var transcript = [];
     var events = [];
+    var NAME_BY_ID = {};
+    sages.forEach(function (s) { NAME_BY_ID[s.id] = { ko: s.nameKo || s.id, en: s.nameEn || s.id }; });
     var tokensIn = 0, tokensOut = 0, chairIn = 0, chairOut = 0;
     var endedBy = 'rounds', rounds = 0;
     function pushEvt(e) { events.push(e); try { emit(e); } catch (_) {} }
 
+    function roleOf(sage) {
+      var rr = (FREE_ROLES[sage.id] || FREE_ROLES._default);
+      return rr[lang] || rr.ko;
+    }
     function freePersona(sage) {
-      var v = (sage.voice && sage.voice[lang]) || {};
-      var tics = (v.tics || []).join(' / ');
-      return [v.tone || '', tics ? ('말버릇: ' + tics) : '',
-        (lang === 'en'
-          ? 'Debate the topic IN CHARACTER — one short spoken line, react to the others. No markdown. You may be wrong; the Chair judges at the end.'
-          : '주제에 대해 캐릭터 말투로 한 문장만. 앞 발언에 반응해라. 마크다운 금지. 틀려도 된다 — 마지막에 의장이 판정한다.')]
-        .filter(Boolean).join('\n');
+      var role = roleOf(sage);
+      var nm = (lang === 'en' ? (sage.nameEn || sage.id) : (sage.nameKo || sage.id));
+      if (lang === 'en') {
+        return [
+          'You are "' + nm + '", the ' + role.stance + ' on a 3-seat panel debating a free topic.',
+          role.guide,
+          'If the topic is a single word or bare concept (e.g. "reasoning ratio"), first frame what it means from your angle, then take your stance.',
+          'Rules: speak ONE or TWO short spoken sentences, in your own natural voice. Name a previous speaker and react to them (agree, sharpen, or push back) once others have spoken. No markdown, no emoji, no quotation marks, no lists. You may be wrong — KRONOS the Chair weighs everyone at the end.'
+        ].join('\n');
+      }
+      return [
+        '너는 자유주제를 토론하는 3인 패널의 "' + nm + '" — ' + role.stance + '다.',
+        role.guide,
+        '주제가 한 단어나 개념이면(예: "reasoning ratio"), 먼저 그게 무엇을 뜻하는지 네 관점에서 한 번 짚고 입장을 밝혀라.',
+        '규칙: 짧은 구어체 1~2문장. 네 고유한 말투로. 앞사람이 말했으면 그 사람 이름을 거론하며 반응해라(동의·날카롭게·반박). 마크다운·이모지·따옴표·목록 금지. 틀려도 된다 — 마지막에 의장 크로노스가 모두를 저울질한다.'
+      ].join('\n');
     }
     function freePrompt(sage) {
-      var recent = transcript.slice(-5).map(function (t) { return t.sage + ': ' + t.text; }).join('\n');
+      var nm = (lang === 'en' ? (sage.nameEn || sage.id) : (sage.nameKo || sage.id));
+      var hist = transcript.slice(-8).map(function (t) {
+        var who = (NAME_BY_ID[t.sage] && NAME_BY_ID[t.sage][lang]) || t.sage;
+        return who + ': ' + t.text;
+      }).join('\n');
       return (lang === 'en'
-        ? 'Topic: ' + topic + '\nSo far:\n' + (recent || '(opening statements)') + '\nYour turn, ' + (sage.nameEn || sage.id) + ':'
-        : '주제: ' + topic + '\n지금까지:\n' + (recent || '(개회)') + '\n' + (sage.nameKo || sage.id) + ' 차례:');
+        ? 'Topic to debate: ' + topic + '\n\nDebate so far:\n' + (hist || '(you open the debate)') + '\n\nYour turn now, ' + nm + ':'
+        : '토론 주제: ' + topic + '\n\n지금까지의 토론:\n' + (hist || '(네가 토론을 연다)') + '\n\n이제 ' + nm + ' 차례:');
     }
     async function speak(sage) {
       var turn = await ctx.llm({ system: freePersona(sage), user: freePrompt(sage), maxTokens: maxTurnTokens, signal: ctx.signal });
       tokensIn += (turn && turn.usageIn) || 0;
       tokensOut += (turn && turn.usageOut) || 0;
-      var text = clampText(turn && turn.text, 180);
+      var text = clampText(turn && turn.text, (f.CLAMP_CHARS || 280));
       transcript.push({ sage: sage.id, text: text });
       return text;
     }

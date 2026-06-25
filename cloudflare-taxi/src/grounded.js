@@ -504,7 +504,7 @@ function makeCouncilLLM(env) {
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify({
         messages: [{ role: "system", content: system }, { role: "user", content: user }],
-        max_completion_tokens: Math.min(Number(maxTokens) || 160, 200),
+        max_completion_tokens: Math.min(Number(maxTokens) || 320, 600),
       }),
       signal,
     });
@@ -525,14 +525,14 @@ function makeCouncilLLM(env) {
 // AI inference (no math ground truth) → the client labels them "⚡ unverified".
 function chairSystem(lang) {
   return lang === "en"
-    ? 'You are KRONOS, the Chair of Time, presiding over a 3-sage debate. Read the whole debate and decide which side rests on the MOST RECENT and MOST AUTHORITATIVE source — newer, well-sourced claims beat older lore. Output STRICT JSON ONLY: {"verdict":"one decisive sentence naming the winning side","signature":"a short aphorism about time judging truth","confidence":0.0-1.0,"basis":"which testimony/source won and why, one sentence"}. This is an AI inference for entertainment, not verified fact. No markdown, JSON object only.'
-    : '너는 3현자 토론을 주재하는 시간의 의장 KRONOS다. 토론 전체를 읽고 가장 최신·권위 있는 출처에 근거한 쪽을 가린다 — 출처 있는 최신 주장이 오래된 통설을 이긴다. 엄격한 JSON만 출력: {"verdict":"승자를 명시한 결정적인 한 문장","signature":"시간이 진실을 가린다는 짧은 경구","confidence":0.0~1.0,"basis":"어떤 증언·출처가 왜 이겼는지 한 문장"}. 이것은 오락용 AI 추론이며 검증된 사실이 아니다. 마크다운 금지, JSON 객체만.';
+    ? 'You are KRONOS, the Chair of Time, presiding over a free-topic debate between three panellists: an ADVOCATE (argues the upside), a SKEPTIC (argues the risks) and an ANALYST (weighs trade-offs). Read the WHOLE debate, fairly synthesise all three positions, then deliver YOUR OWN reasoned judgement — pick a side, or a clearly-stated conditional middle ground. Decide by force of argument, not by who spoke loudest or newest. Output STRICT JSON ONLY: {"verdict":"one or two sentences with the decisive conclusion in the user\'s language","basis":"one or two sentences on how you weighed the advocate, skeptic and analyst","signature":"a short aphorism about time and judgement","confidence":0.0-1.0}. This is an AI inference for entertainment, not verified fact. No markdown, JSON object only.'
+    : '너는 자유주제 토론을 주재하는 시간의 의장 KRONOS다. 토론자는 셋 — 옹호가(이점을 주장), 회의가(위험을 주장), 분석가(트레이드오프를 저울질). 토론 전체를 읽고 세 입장을 공정히 종합한 뒤, 네 스스로 논리적인 판단을 내려라 — 한쪽 손을 들거나, 조건을 명시한 절충안을 제시한다. 목소리가 크거나 최신이라서가 아니라 논거의 설득력으로 가린다. 엄격한 JSON만 출력: {"verdict":"사용자 언어로 결정적 결론을 담은 한두 문장","basis":"옹호·회의·분석을 어떻게 저울질했는지 한두 문장","signature":"시간과 판단에 관한 짧은 경구","confidence":0.0~1.0}. 이것은 오락용 AI 추론이며 검증된 사실이 아니다. 마크다운 금지, JSON 객체만.';
 }
 function verdictPrompt(topic, transcript, lang) {
   const full = (transcript || []).map((t) => `${t.sage}: ${t.text}`).join("\n");
   return lang === "en"
-    ? `Topic: ${topic}\nDebate transcript:\n${full}\n\nDeliver your verdict as a strict JSON object.`
-    : `주제: ${topic}\n토론 전문:\n${full}\n\nJSON 객체로 선고하라.`;
+    ? `Topic under debate: ${topic}\n\nFull transcript (advocate=livewire, skeptic=olddoc, analyst=hearsay):\n${full}\n\nSynthesise the three positions, then deliver your reasoned verdict as a strict JSON object.`
+    : `토론 주제: ${topic}\n\n토론 전문(옹호=livewire, 회의=olddoc, 분석=hearsay):\n${full}\n\n세 입장을 종합한 뒤, 네 판단을 엄격한 JSON 객체로 선고하라.`;
 }
 function parseVerdict(text) {
   const out = { verdict: "", signature: "", basis: "", confidence: 0.6 };
