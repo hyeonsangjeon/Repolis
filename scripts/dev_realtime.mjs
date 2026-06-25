@@ -67,6 +67,10 @@ wss.on("connection", (ws) => {
       const p = peers.get(ws);
       if (!p) return;
       broadcast({ t: "wave", id: p.id, to: String(m.to || "").slice(0, 40) }, ws);
+    } else if (m.t === "emote") {
+      const p = peers.get(ws);
+      if (!p) return;
+      broadcast({ t: "emote", id: p.id, kind: String(m.kind || "").slice(0, 16) }, ws);
     }
   });
   ws.on("close", () => {

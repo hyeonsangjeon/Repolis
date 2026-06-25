@@ -89,6 +89,10 @@ export class RepolisRoom {
         const p = this.sessions.get(ws);
         if (!p) return;
         this.broadcast({ t: "wave", id: p.id, to: String(m.to || "").slice(0, 40) }, ws);
+      } else if (m.t === "emote") {
+        const p = this.sessions.get(ws);
+        if (!p) return;
+        this.broadcast({ t: "emote", id: p.id, kind: String(m.kind || "").slice(0, 16) }, ws);
       }
     });
 

@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.18.0] — 2026-06-27
+
+### 👋 Multiplayer emotes — wave, clap, cheer, dance, heart
+- The click-to-greet wave grew into a small **emote wheel**. A new 😊 button (above the taxi button, on the right) opens a row of five one-tap emotes — **👋 wave · 👏 clap · 🙌 cheer · 🕺 dance · 💖 heart** — each with its own shoulder-pivot animation on your avatar plus a floating emoji bubble. Tap one and **everyone else in the town sees it too**: the emote is relayed over the realtime backend (a new `emote` message broadcast to all peers) and replayed on your avatar in their world.
+- **The peer wave/greet still works exactly as before** — tapping a nearby visitor waves at them specifically (targeted), while the emote bar broadcasts to the room. Peers gained a second shoulder pivot (`_armL`) so two-armed emotes (clap/cheer/dance/heart) animate correctly on other players, not just your own avatar.
+- **Mobile-first UI.** The emote bar uses 46 px tap targets, wraps inside a 390 px viewport with no overflow, never overlaps the taxi/action buttons, and carries `aria-label`s for every emote. Tapping anywhere outside closes it.
+- The realtime worker (`repolis-rt` on Cloudflare) was redeployed with the new `emote` relay case; verified end-to-end on production (a second client receives `{t:'emote',kind:'dance'}` and the legacy `{t:'wave',to}`), with **0 console errors** on desktop and mobile.
+
 ## [1.17.0] — 2026-06-27
 
 ### ⏳ Chronopolis: every topic now argues in its own words + slower, readable bubbles

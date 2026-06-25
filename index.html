@@ -255,6 +255,24 @@
   @media (hover: none) and (pointer: coarse) {
     #taxiBtn { right: 30px; bottom: 116px; }
   }
+  /* ---- emote wheel ---- */
+  #emoteBtn { position: fixed; z-index: 13; right: 18px; bottom: 86px; width: 52px; height: 52px;
+    border: none; border-radius: 50%; cursor: pointer; font-size: 24px; background: #fff; color: #c2702f;
+    box-shadow: 0 8px 22px rgba(60,30,10,.28); transition: transform .14s; display: flex;
+    align-items: center; justify-content: center; }
+  #emoteBtn:active { transform: scale(.9); }
+  #emoteBar { position: fixed; z-index: 13; right: 80px; bottom: 88px; display: flex; gap: 7px;
+    background: rgba(255,251,242,.97); backdrop-filter: blur(10px); padding: 7px 9px; border-radius: 30px;
+    box-shadow: 0 12px 34px rgba(70,40,15,.3); transform-origin: right center; transition: opacity .16s ease, transform .16s ease; }
+  #emoteBar.hidden { opacity: 0; transform: scale(.88) translateX(10px); pointer-events: none; }
+  #emoteBar button { width: 46px; height: 46px; flex: 0 0 auto; border: none; border-radius: 50%; background: #fff4d6;
+    font-size: 23px; cursor: pointer; transition: transform .12s, background .12s; line-height: 1; }
+  #emoteBar button:hover { background: #ffe9b0; }
+  #emoteBar button:active { transform: scale(.88); }
+  @media (hover: none) and (pointer: coarse) {
+    #emoteBtn { right: 32px; bottom: 188px; }
+    #emoteBar { right: 94px; bottom: 190px; }
+  }
   #chat { position: fixed; z-index: 14; right: 14px; bottom: 88px; width: 360px; max-width: calc(100vw - 28px);
     background: rgba(255,251,242,.97); backdrop-filter: blur(12px); border-radius: 20px;
     box-shadow: 0 16px 48px rgba(70,40,15,.32); display: flex; flex-direction: column; overflow: hidden;
@@ -417,6 +435,14 @@
 <div id="drivebar"><span data-i18n="drivePre">🚕 </span><span id="driveName"></span><span data-i18n="drivePost"> (으)로 가는 중…</span> <span class="cancel" id="driveCancel"><span class="fill"></span><span class="lbl" data-i18n="stop">멈추기</span></span></div>
 
 <button id="taxiBtn">🚕<span class="pulse"></span></button>
+<button id="emoteBtn" title="Emotes" aria-label="Emotes">😊</button>
+<div id="emoteBar" class="hidden" role="group" aria-label="Emotes">
+  <button data-emote="wave" title="Wave" aria-label="Wave">👋</button>
+  <button data-emote="clap" title="Clap" aria-label="Clap">👏</button>
+  <button data-emote="cheer" title="Cheer" aria-label="Cheer">🙌</button>
+  <button data-emote="dance" title="Dance" aria-label="Dance">🕺</button>
+  <button data-emote="heart" title="Heart" aria-label="Heart">💖</button>
+</div>
 <div id="chat" class="hidden">
   <div class="chatHead">
     <span class="ttl" data-i18n="taxiTitle">🚕 레포 택시기사</span>
@@ -3458,7 +3484,17 @@ modeSel.onchange=e=>{ llmMode=e.target.value; localStorage.setItem('taxiMode',ll
 
 /* ====================== LOOP ====================== */
 const clock=new THREE.Clock(); const up=new THREE.Vector3(0,1,0);
-const tF=new THREE.Vector3(), tR=new THREE.Vector3(), mv=new THREE.Vector3(); let walk=0; const WAVE_DUR=1.5; let waveT=0;
+const tF=new THREE.Vector3(), tR=new THREE.Vector3(), mv=new THREE.Vector3(); let walk=0;
+// Emote set — shared by the player avatar and peers. anim(el, armL, armR, group):
+//   el = seconds elapsed, armL/armR = shoulder-pivot Groups, group = the avatar root.
+const EMOTES={
+  wave:{emoji:'👋',dur:1.5,anim:(el,aL,aR)=>{ const w=Math.sin(el*16); aR.rotation.set(-2.3,0,-0.5+w*0.45); }},
+  clap:{emoji:'👏',dur:1.5,anim:(el,aL,aR)=>{ const c=Math.abs(Math.sin(el*20))*0.32; aL.rotation.set(-1.35,0,0.7-c); aR.rotation.set(-1.35,0,-0.7+c); }},
+  cheer:{emoji:'🙌',dur:1.6,anim:(el,aL,aR,g)=>{ aL.rotation.set(-2.7,0,0.3); aR.rotation.set(-2.7,0,-0.3); if(g) g.position.y=Math.abs(Math.sin(el*7))*0.16; }},
+  dance:{emoji:'🕺',dur:2.4,anim:(el,aL,aR,g)=>{ const s=Math.sin(el*9); aL.rotation.set(-2.2+s*0.6,0,0.2); aR.rotation.set(-2.2-s*0.6,0,-0.2); if(g){ g.rotation.z=s*0.16; g.position.y=Math.abs(s)*0.1; } }},
+  heart:{emoji:'💖',dur:1.8,anim:(el,aL,aR)=>{ const p=Math.sin(el*5)*0.15; aL.rotation.set(-2.5,0,0.62-p); aR.rotation.set(-2.5,0,-0.62+p); }},
+};
+let emoteT=0, emoteKind='wave';
 function lerpA(a,b,t){ let d=((b-a+Math.PI)%(Math.PI*2))-Math.PI; if(d<-Math.PI)d+=Math.PI*2; return a+d*t; }
 
 function animate(){
@@ -3521,7 +3557,7 @@ function animate(){
     model.position.y=Math.abs(Math.sin(walk))*0.14;
     model.rotation.z=Math.sin(walk)*0.035;
   }
-  if(waveT>0){ waveT-=dt; const w=Math.sin((WAVE_DUR-waveT)*16); armR.rotation.x=-2.3; armR.rotation.z=-0.5+w*0.45; armR.rotation.y=0; }
+  if(emoteT>0){ emoteT-=dt; const E=EMOTES[emoteKind]||EMOTES.wave; E.anim(E.dur-emoteT, armL, armR, model); }
 
   if(!dragging&&moving&&!freeLook) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,0.04);
   const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist, oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist, oy=Math.sin(camPitch)*camDist;
@@ -3638,7 +3674,7 @@ function makePeerAvatar(name,color){
   { const m=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.026,8,16,Math.PI), basic(0x8a4f44)); m.position.set(0,2.04,0.49); m.rotation.z=Math.PI; g.add(m); }
   const aL=new THREE.Group(); aL.position.set(-0.48,1.7,0); { const a=capsule(0.13,0.36,color); a.position.y=-0.32; aL.add(a); } g.add(aL);
   const aR=new THREE.Group(); aR.position.set(0.48,1.7,0); { const a=capsule(0.13,0.36,color); a.position.y=-0.32; aR.add(a); } g.add(aR);
-  g._armR=aR;
+  g._armL=aL; g._armR=aR;
   const lL=capsule(0.16,0.4,0x33406e); lL.position.set(-0.2,0.46,0); g.add(lL);
   const lR=lL.clone(); lR.position.x=0.2; g.add(lR);
   g._faceMat=h.material; npcFaces.add(h.material);
@@ -3652,15 +3688,18 @@ function addPeer(p){ if(!p||p.id===guestId()||peers.has(p.id)) return;
   const color=p.color!=null?p.color:PEER_COLORS[hashStr(p.id)%PEER_COLORS.length];
   const g=makePeerAvatar(p.name,color); g.position.set(p.x||0,0,p.z||0); g.rotation.y=p.yaw||0; scene.add(g);
   if(isNight&&g._faceMat) g._faceMat.emissive.setHex(0x4a3a24);
-  peers.set(p.id,{group:g,name:p.name||'Guest',tx:p.x||0,tz:p.z||0,tyaw:p.yaw||0,waveT:0}); }
+  peers.set(p.id,{group:g,name:p.name||'Guest',tx:p.x||0,tz:p.z||0,tyaw:p.yaw||0,emoteT:0,emoteKind:'wave'}); }
 function removePeer(id){ const p=peers.get(id); if(p){ if(p.group._faceMat) npcFaces.delete(p.group._faceMat); scene.remove(p.group); peers.delete(id); } }
 function clearPeers(){ for(const id of [...peers.keys()]) removePeer(id); }
 /* ---- click-to-greet: tap a nearby visitor → wave; relayed so they (and everyone) see it ---- */
-const WAVE_TEX=(()=>{ const cv=document.createElement('canvas'); cv.width=cv.height=128; const x=cv.getContext('2d'); x.font='100px serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('👋',64,76); return new THREE.CanvasTexture(cv); })();
-function waveBubble(group){ if(!group) return; const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:WAVE_TEX,transparent:true,depthTest:false})); sp.scale.set(1.2,1.2,1); sp.position.y=3.9; group.add(sp); let t=0; (function fade(){ t+=0.016; sp.position.y=3.9+t*0.7; sp.material.opacity=Math.max(0,1-t/1.4); if(t<1.4) requestAnimationFrame(fade); else { group.remove(sp); sp.material.dispose(); } })(); }
+/* ---- emotes & click-to-greet: tap a nearby visitor → wave; emote bar → broadcast emote; relayed so everyone sees it ---- */
+const EMOJI_TEX={};
+function emojiTex(emoji){ if(EMOJI_TEX[emoji]) return EMOJI_TEX[emoji]; const cv=document.createElement('canvas'); cv.width=cv.height=128; const x=cv.getContext('2d'); x.font='100px serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(emoji,64,76); return EMOJI_TEX[emoji]=new THREE.CanvasTexture(cv); }
+function emoteBubble(group,kind){ if(!group) return; const E=EMOTES[kind]||EMOTES.wave; const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTex(E.emoji),transparent:true,depthTest:false})); sp.scale.set(1.2,1.2,1); sp.position.y=3.9; group.add(sp); let t=0; (function fade(){ t+=0.016; sp.position.y=3.9+t*0.7; sp.material.opacity=Math.max(0,1-t/1.4); if(t<1.4) requestAnimationFrame(fade); else { group.remove(sp); sp.material.dispose(); } })(); }
+function playEmote(kind){ const E=EMOTES[kind]; if(!E||emoteT>0.3) return; emoteT=E.dur; emoteKind=kind; emoteBubble(model,kind); rtSend({t:'emote',id:guestId(),kind}); }
 const _ray=new THREE.Raycaster(), _ndc=new THREE.Vector2();
 function peerAtScreen(cx,cy){ if(!peers.size) return null; const r=dom.getBoundingClientRect(); _ndc.x=((cx-r.left)/r.width)*2-1; _ndc.y=-((cy-r.top)/r.height)*2+1; _ray.setFromCamera(_ndc,camera); let best=null,bd=Infinity; for(const [id,p] of peers){ const hit=_ray.intersectObject(p.group,true); if(hit.length&&hit[0].distance<bd){ bd=hit[0].distance; best={id,p}; } } return best; }
-function greetPeer(id,p){ waveT=WAVE_DUR; if(p) waveBubble(p.group); rtSend({t:'wave',id:guestId(),to:id}); showWave(LANG==='ko'?`${(p&&p.name)||'방문자'}에게 인사했어요 👋`:`Waved at ${(p&&p.name)||'visitor'} 👋`); }
+function greetPeer(id,p){ emoteT=EMOTES.wave.dur; emoteKind='wave'; if(p) emoteBubble(p.group,'wave'); rtSend({t:'wave',id:guestId(),to:id}); showWave(LANG==='ko'?`${(p&&p.name)||'방문자'}에게 인사했어요 👋`:`Waved at ${(p&&p.name)||'visitor'} 👋`); }
 function tapAt(cx,cy){ const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return; } doAct(); }
 const greetToast=document.createElement('div'); greetToast.style.cssText='position:fixed;left:50%;top:13%;transform:translateX(-50%);background:rgba(38,28,18,.86);color:#fff7ec;padding:9px 16px;border-radius:14px;font:600 14px system-ui,sans-serif;z-index:30;pointer-events:none;opacity:0;transition:opacity .25s;max-width:80vw;text-align:center'; document.body.appendChild(greetToast); let greetTid=0;
 function showWave(msg){ greetToast.textContent=msg; greetToast.style.opacity='1'; clearTimeout(greetTid); greetTid=setTimeout(()=>{ greetToast.style.opacity='0'; },1900); }
@@ -3671,7 +3710,8 @@ function rtHandle(m){
   else if(m.t==='pos'){ const p=peers.get(m.id); if(p){ p.tx=m.x; p.tz=m.z; p.tyaw=m.yaw; } }
   else if(m.t==='leave'){ removePeer(m.id); if(m.live!=null) setLive(m.live); }
   else if(m.t==='stats'){ if(m.live!=null) setLive(m.live); if(m.today!=null) setToday(m.today); if(m.total!=null) setTotal(m.total); }
-  else if(m.t==='wave'){ const p=peers.get(m.id); if(p){ p.waveT=WAVE_DUR; waveBubble(p.group); if(m.to===guestId()) showWave(LANG==='ko'?`${p.name} 님이 인사했어요 👋`:`${p.name} waved at you 👋`); } }
+  else if(m.t==='wave'){ const p=peers.get(m.id); if(p){ p.emoteT=EMOTES.wave.dur; p.emoteKind='wave'; emoteBubble(p.group,'wave'); if(m.to===guestId()) showWave(LANG==='ko'?`${p.name} 님이 인사했어요 👋`:`${p.name} waved at you 👋`); } }
+  else if(m.t==='emote'){ const p=peers.get(m.id); if(p){ const E=EMOTES[m.kind]; if(E){ p.emoteT=E.dur; p.emoteKind=m.kind; emoteBubble(p.group,m.kind); } } }
 }
 function rtConnect(){
   if(!RT_URL){ setLive(1); return; }
@@ -3690,8 +3730,8 @@ function rtTick(dt){
     p.group.rotation.y=lerpA(p.group.rotation.y,p.tyaw,0.18);
     const d=Math.hypot(p.tx-p.group.position.x,p.tz-p.group.position.z);
     p.group.position.y=d>0.05?Math.abs(Math.sin(clock.elapsedTime*9))*0.12:0;
-    if(p.waveT>0){ p.waveT-=dt; const w=Math.sin((WAVE_DUR-p.waveT)*16); if(p.group._armR){ p.group._armR.rotation.x=-2.3; p.group._armR.rotation.z=-0.5+w*0.45; } }
-    else if(p.group._armR&&p.group._armR.rotation.x){ p.group._armR.rotation.set(0,0,0); }
+    if(p.emoteT>0){ p.emoteT-=dt; const E=EMOTES[p.emoteKind]||EMOTES.wave; if(p.group._armR) E.anim(E.dur-p.emoteT, p.group._armL, p.group._armR, p.group); }
+    else if(p.group._armR&&(p.group._armR.rotation.x||p.group._armL.rotation.x||p.group.rotation.z)){ p.group._armR.rotation.set(0,0,0); p.group._armL.rotation.set(0,0,0); p.group.rotation.z=0; }
   }
   rtSendT+=dt;
   if(rtSock&&rtSock.readyState===1&&rtSendT>0.1){ rtSendT=0;
@@ -3703,6 +3743,12 @@ function rtTick(dt){
 }
 rtConnect();
 
+/* ---- emote bar wiring (works on desktop click + mobile tap) ---- */
+const emoteBtn=document.getElementById('emoteBtn'), emoteBar=document.getElementById('emoteBar');
+emoteBtn.addEventListener('click',e=>{ e.stopPropagation(); emoteBar.classList.toggle('hidden'); });
+emoteBar.querySelectorAll('button').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); playEmote(b.dataset.emote); emoteBar.classList.add('hidden'); }));
+document.addEventListener('pointerdown',e=>{ if(emoteBar.classList.contains('hidden')) return; if(!emoteBar.contains(e.target)&&e.target!==emoteBtn) emoteBar.classList.add('hidden'); });
+
 if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:model.rotation.y,freeLook,dragBtn});
   window.__ride=()=>ride?ride.phase:null; window.__taxiPos=()=>({x:+taxi.position.x.toFixed(1),z:+taxi.position.z.toFixed(1),vis:model.visible});
   window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; };
@@ -3712,8 +3758,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__modal=()=>modalOpen;
   window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, total:allCountEl.textContent, ws:rtSock?rtSock.readyState:-1});
   window.__peerSim=(x=4,z=-2)=>{ rtHandle({t:'join',peer:{id:'gSIM',name:'Tester',x,z,yaw:0,color:0x6fa8ef}}); const p=peers.get('gSIM'); p.group.updateMatrixWorld(true); const v=new THREE.Vector3(0,2.2,0).applyMatrix4(p.group.matrixWorld).project(camera); return {sx:Math.round((v.x*0.5+0.5)*innerWidth), sy:Math.round((-v.y*0.5+0.5)*innerHeight), armR:!!p.group._armR}; };
-  window.__greet=(cx,cy)=>{ const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return {id:g.id, myWaveT:+waveT.toFixed(2)}; } return null; };
-  window.__wave=(id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'wave',id:t,to:guestId()}); return {by:t, peerWaveT:+(peers.get(t)?.waveT||0).toFixed(2), toast:greetToast.textContent}; };
+  window.__greet=(cx,cy)=>{ const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return {id:g.id, myEmoteT:+emoteT.toFixed(2), kind:emoteKind}; } return null; };
+  window.__wave=(id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'wave',id:t,to:guestId()}); return {by:t, peerEmoteT:+(peers.get(t)?.emoteT||0).toFixed(2), toast:greetToast.textContent}; };
+  window.__emote=(kind='clap')=>{ playEmote(kind); return {emoteT:+emoteT.toFixed(2), kind:emoteKind}; };
+  window.__peerEmote=(kind='dance',id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'emote',id:t,kind}); const p=peers.get(t); return {by:t, emoteT:+(p?.emoteT||0).toFixed(2), kind:p?.emoteKind, armL:!!p?.group._armL}; };
+  window.__emotes=()=>Object.keys(EMOTES);
   window.__meteor=(az)=>{ spawnMeteor(az); return true; };
   window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; };
   window.__lib=()=>{ openCard(LIB); return true; };
