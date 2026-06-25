@@ -22,6 +22,7 @@
       domainKo: '레포 세계의 길', domainEn: 'the roads of the repo-world',
       ks: 'github-repos-mcp-ks', kb: 'repolis-github-kb',
       constellation: { // 작은곰자리(Ursa Minor) — POLARIS는 꼬리 끝의 북극성
+        nameKo: '작은곰자리', nameEn: 'Ursa Minor',
         az: 0.0, el: 1.18,
         nodes: [[0, 0], [0.045, 0.030], [0.092, 0.052], [0.150, 0.044], [0.165, -0.012], [0.118, -0.040], [0.073, -0.018]],
         edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 1]],
@@ -52,6 +53,7 @@
       domainKo: 'Microsoft의 지식', domainEn: 'the knowledge of Microsoft',
       ks: 'microsoft-learn-mcp-ks', kb: 'repolis-mslearn-kb',
       constellation: { // 거문고자리(Lyra) — VEGA가 으뜸별(직녀성)
+        nameKo: '거문고자리', nameEn: 'Lyra',
         az: 1.55, el: 0.78,
         nodes: [[0, 0], [0.028, -0.052], [0.069, -0.036], [0.060, -0.092], [0.020, -0.100]],
         edges: [[0, 1], [0, 2], [1, 2], [1, 4], [2, 3], [3, 4]],
@@ -83,6 +85,7 @@
       domainKo: '레포의 내부 구조', domainEn: 'a repo\'s inner architecture',
       ks: 'deepwiki-mcp-ks', kb: 'repolis-deepwiki-kb',
       constellation: { // 오리온자리(Orion) — RIGEL은 발끝의 청백색 별
+        nameKo: '오리온자리', nameEn: 'Orion',
         az: 5.60, el: 0.50,
         nodes: [[0, 0], [0.052, 0.085], [0.104, 0.150], [0.040, 0.066], [0.078, 0.066], [0.118, 0.066], [0.135, 0.150], [-0.010, -0.020], [0.160, 0.044]],
         edges: [[0, 3], [3, 1], [1, 2], [2, 6], [6, 8], [8, 5], [5, 4], [4, 3], [4, 7]],

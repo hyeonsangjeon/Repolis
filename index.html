@@ -144,6 +144,20 @@
   #chronoModal.show { display: flex; }
   #chronoModal .libhead { background: linear-gradient(135deg,#3c3560 0%,#191530 100%); }
   #chronoModal .libhead .cnt { background:#e8c45a; color:#2a2340; }
+  #obsModal { position: fixed; inset: 0; z-index: 22; display: none; align-items: center; justify-content: center;
+    background: rgba(8,10,24,.62); backdrop-filter: blur(5px); padding: 18px; }
+  #obsModal.show { display: flex; }
+  #obsModal .libhead { background: linear-gradient(135deg,#26345e 0%,#10122a 100%); }
+  #obsModal .libhead .cnt { background:#bcd0ff; color:#1a2240; }
+  .obsCard { display:flex; gap:12px; padding:13px 15px; border-radius:14px; background:#f6f3ec; border:1px solid #e6e0d4; margin-bottom:11px; }
+  .obsCard .badge { flex:none; width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:25px;
+    background:radial-gradient(circle at 50% 38%, #1a2347, #0a0e22); box-shadow:0 0 0 2px var(--ac,#9fc0ff) inset, 0 2px 8px rgba(0,0,0,.18); }
+  .obsCard .meta { flex:1; min-width:0; }
+  .obsCard .star { font-weight:800; font-size:15px; color:#1c2a4a; letter-spacing:.02em; }
+  .obsCard .epi { font-size:12px; color:#6a6356; margin-left:4px; font-weight:600; }
+  .obsCard .tags { font-size:11.5px; color:#48506a; margin:3px 0 6px; display:flex; flex-wrap:wrap; gap:5px; }
+  .obsCard .tags span { background:#e7ecf8; border-radius:999px; padding:2px 8px; }
+  .obsCard .bs { font-size:12.5px; color:#4a4438; line-height:1.55; }
   .chronoPhilo { font-size:12.5px; font-style:italic; color:#7a6a3a; padding:9px 12px 4px; }
   .chronoCases { padding:4px 8px 8px; display:flex; flex-wrap:wrap; gap:2px; }
   .chronoCase { display:inline-flex; align-items:center; gap:6px; margin:3px 4px 3px 0; padding:7px 12px; border-radius:999px;
@@ -461,6 +475,19 @@
   </div>
 </div>
 
+<div id="obsModal">
+  <div class="libcard">
+    <div class="libhead">
+      <button class="x" id="obsClose" aria-label="close">✕</button>
+      <div class="ic">🔭</div>
+      <h2 data-i18n="obsTitle">🔭 별빛 전망대</h2>
+      <div class="sub" data-i18n="obsSub">밤하늘 현자들의 별자리를 한자리에서.</div>
+      <div class="cnt" id="obsHintEl" data-i18n="obsHint">밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾</div>
+    </div>
+    <div class="libbody" id="obsBody"></div>
+  </div>
+</div>
+
 <div id="chronoLiveHud">
   <div class="clhTop">
     <span class="clhBadge" id="clhBadge">⚡ Live debate</span>
@@ -583,7 +610,7 @@ const I18N = {
     passportRepos:'방문한 레포', passportHint:'현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
-    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의',
+    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
     chronoSub:'주제를 입력하면 세 현자(옹호·회의·분석)가 실시간으로 토론하고, 시간의 의장 크로노스가 결론을 내립니다.',
     chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'예시 주제를 골라 채워 보세요', chronoStage:'⚡ 라이브 AI 토론',
@@ -595,6 +622,10 @@ const I18N = {
     chronoOffline:'지금은 회의장이 조용해요 — 위 결정적 기록(Ambient)을 감상하세요 👀',
     chronoTimeCap:'⏳ 시간의 저울 — 출처를 최신·생존순으로',
     chronoTimeOld:'오래됨', chronoTimeNew:'최신', chronoTimeWin:'시간이 가리킴',
+    obsName:'별빛 전망대', obsReached:' — 별빛 전망대. <span class="key">Enter</span> 또는 클릭으로 올라가기',
+    obsTitle:'🔭 별빛 전망대', obsSub:'밤하늘 현자들의 별자리를 한자리에서.', obsHint:'밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾',
+    obsSign:'OBSERVATORY', obsStar:'으뜸별', obsConstel:'별자리', obsMyth:'신화', obsClose:'닫기',
+    lmObs:'별빛 전망대로 모실게요 🔭 별과 현자들을 만나러 가요.', lmDriveObs:'별빛 전망대로 갑니다… 🔭✨', lmArriveObs:'별빛 전망대에 도착했어요. 하늘을 올려다보세요 🔭',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
@@ -679,7 +710,7 @@ const I18N = {
     passportRepos:'Repos visited', passportHint:'Walk up to a scholar, the library, a canal or the plaza to earn a stamp.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
-    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time',
+    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
     chronoSub:'Type a topic and three sages (advocate · skeptic · analyst) debate it live; the Chair of Time, KRONOS, delivers the verdict.',
     chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick an example to fill the box', chronoStage:'⚡ Live AI debate',
@@ -691,6 +722,10 @@ const I18N = {
     chronoOffline:'The chamber is quiet right now — enjoy the deterministic record (Ambient) above 👀',
     chronoTimeCap:"⏳ Time's scale — sources by recency & liveness",
     chronoTimeOld:'older', chronoTimeNew:'newer', chronoTimeWin:'Time points here',
+    obsName:'Stargazer\'s Observatory', obsReached:' — the Stargazer\'s Observatory. <span class="key">Enter</span> or click to climb up',
+    obsTitle:'🔭 Stargazer\'s Observatory', obsSub:'The night-sky scholars\' constellations, all in one place.', obsHint:'Climb up at night to see the scholars\' constellations at their brightest. ☾',
+    obsSign:'OBSERVATORY', obsStar:'Star', obsConstel:'Constellation', obsMyth:'Myth', obsClose:'Close',
+    lmObs:'Off to the Stargazer\'s Observatory 🔭 to meet the stars and the scholars.', lmDriveObs:'Driving to the Observatory… 🔭✨', lmArriveObs:'We\'ve reached the Observatory. Look up at the sky 🔭',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
@@ -780,6 +815,7 @@ function applyLang(){
   if(typeof renderList==='function') renderList(document.getElementById('repoSearch').value||'');
   if(typeof renderPassport==='function' && !document.getElementById('passport').classList.contains('hidden')) renderPassport();
   if(typeof renderChronoCase==='function' && chronoModal && chronoModal.classList.contains('show') && chronoCaseId){ renderChronoCase(chronoCaseId); chronoModalLang=LANG; }
+  if(typeof renderObservatory==='function' && typeof obsModal!=='undefined' && obsModal && obsModal.classList.contains('show')) renderObservatory();
 }
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
@@ -2487,6 +2523,65 @@ const ROLE_LABELS={ olddoc:{ko:'회의가',en:'Skeptic'}, livewire:{ko:'옹호�
   COLLIDERS.push({x:CHRONO_POS.x,z:CHRONO_POS.z, r:1.0});   // just the sundial gnomon — the rest of the floor stays freely walkable
 })();
 
+/* ───────── 🔭 Stargazer's Observatory — a view-deck landmark; climb it to meet the night-sky scholars & their constellations (best after dark) ───────── */
+const OBS_POS = new THREE.Vector3(203, 0, 22);   // east clearing (r≈204 < player clamp 215); library is north (+z), Chronopolis south
+let OBS=null, nearObs=null, obsScope=null;
+(function buildObservatory(){
+  const og=new THREE.Group(); og.position.copy(OBS_POS);
+  og.rotation.y=Math.atan2(-OBS_POS.x,-OBS_POS.z);   // local +Z faces the town centre (the arrival side)
+  scene.add(og);
+  const WX=(x,z)=>({x:OBS_POS.x+Math.cos(og.rotation.y)*x-Math.sin(og.rotation.y)*z, z:OBS_POS.z+Math.sin(og.rotation.y)*x+Math.cos(og.rotation.y)*z});
+  const MARBLE=0xe6dcc6, STONE=0xb8ad95, DARK=0x5f5848;
+  // a small inlaid star-map for the deck
+  function obsRose(){ const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d'), C=128;
+    x.fillStyle='#2a2f48'; x.beginPath(); x.arc(C,C,124,0,7); x.fill();
+    x.strokeStyle='rgba(150,180,235,.5)'; x.lineWidth=2; [40,78,116].forEach(r=>{ x.beginPath(); x.arc(C,C,r,0,7); x.stroke(); });
+    x.strokeStyle='rgba(150,180,235,.32)'; for(let i=0;i<8;i++){ const a=i/8*6.283; x.beginPath(); x.moveTo(C,C); x.lineTo(C+Math.cos(a)*116,C+Math.sin(a)*116); x.stroke(); }
+    x.fillStyle='#cfe0ff'; for(let i=0;i<64;i++){ const a=Math.random()*6.3, r=Math.random()*112, s=Math.random()*1.6+0.4; x.globalAlpha=Math.random()*0.6+0.4; x.beginPath(); x.arc(C+Math.cos(a)*r,C+Math.sin(a)*r,s,0,7); x.fill(); }
+    x.globalAlpha=1; x.fillStyle='#ffe9a8'; x.beginPath(); x.arc(C,C,4,0,7); x.fill();   // pole star at centre
+    const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; }
+  // 3-tier circular stylobate — a hill of stone you climb to reach the sky
+  const tiers=[[7.8,0.55],[6.7,0.55],[5.6,0.5]]; let ty=0;
+  tiers.forEach(([r,h],i)=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r+0.3,h,44), toon(i===1?STONE:MARBLE)); c.position.y=ty+h/2; c.castShadow=c.receiveShadow=true; outline(c,0.025); og.add(c); ty+=h; });
+  const DECK_Y=ty;
+  const deck=new THREE.Mesh(new THREE.CylinderGeometry(5.5,5.5,0.3,44), toon(DARK)); deck.position.y=DECK_Y+0.15; deck.receiveShadow=true; og.add(deck);
+  const rose=new THREE.Mesh(new THREE.CircleGeometry(5.0,44), new THREE.MeshBasicMaterial({map:obsRose(),transparent:true})); rose.rotation.x=-Math.PI/2; rose.position.y=DECK_Y+0.31; og.add(rose);
+  // balustrade — posts + ring rail (gap toward town for the stair)
+  for(let i=0;i<18;i++){ const a=i/18*6.283; if(Math.abs(a-Math.PI)<0.5) continue; const p=rbox(0.22,0.9,0.22,MARBLE,0.03); p.position.set(Math.cos(a)*5.3,DECK_Y+0.6,Math.sin(a)*5.3); og.add(p); }
+  const rail=new THREE.Mesh(new THREE.TorusGeometry(5.3,0.09,8,48), toon(STONE)); rail.rotation.x=Math.PI/2; rail.position.y=DECK_Y+1.05; og.add(rail);
+  // entrance stair toward town (local +Z), rising from ground to deck
+  for(let i=0;i<4;i++){ const s=new THREE.Mesh(new THREE.BoxGeometry(3.4,0.4,1.0), toon(i%2?STONE:MARBLE)); s.position.set(0,0.2+i*0.4,8.5-i*0.85); outline(s,0.02); og.add(s); }
+  // ── the giant telescope (points up at the sky) ──
+  const scope=new THREE.Group(); scope.position.set(0,DECK_Y+0.3,-0.4); og.add(scope); obsScope=scope;
+  const ped=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.9,1.3,18), toon(0x4a4640)); ped.position.y=0.65; outline(ped,0.03); scope.add(ped);
+  const yoke=new THREE.Mesh(new THREE.TorusGeometry(0.72,0.12,8,20,Math.PI), toon(0x7a756a)); yoke.position.y=1.35; yoke.rotation.x=Math.PI/2; scope.add(yoke);
+  const tube=new THREE.Group(); tube.position.y=1.4; tube.rotation.x=-Math.PI*0.34; scope.add(tube);   // local +y = toward the sky
+  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.44,0.52,4.6,22), toon(0x2c3454)); outline(barrel,0.03); tube.add(barrel);
+  [-1.7,-0.4,0.9].forEach(o=>{ const b=new THREE.Mesh(new THREE.TorusGeometry(0.5,0.07,7,18), toon(0xcaa64e)); b.rotation.x=Math.PI/2; b.position.y=o; tube.add(b); });
+  const lens=new THREE.Mesh(new THREE.CircleGeometry(0.44,22), new THREE.MeshBasicMaterial({color:0xbfe0ff})); lens.position.y=2.35; lens.rotation.x=-Math.PI/2; tube.add(lens);
+  const eye=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.5,12), toon(0x33384e)); eye.position.y=-2.45; tube.add(eye);
+  const lglow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0x9fd0ff,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
+  lglow.scale.set(2.2,2.2,1); lglow.position.y=2.4; lglow._nightOp=0.85; tube.add(lglow); LAMP_GLOWS.push(lglow);   // objective lens glints at night (auto-toggled)
+  // armillary-sphere ornament on the deck
+  const arm=new THREE.Group(); arm.position.set(3.4,DECK_Y+0.3,2.7); og.add(arm);
+  const aBase=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.15,0.7,10), toon(0x6e6a60)); aBase.position.y=0.35; arm.add(aBase);
+  [[0,0,0],[Math.PI/2,0,0],[0,0,Math.PI/2]].forEach(r=>{ const ring=new THREE.Mesh(new THREE.TorusGeometry(0.6,0.045,7,28), toon(0xc9a24a)); ring.position.y=1.0; ring.rotation.set(r[0],r[1],r[2]); arm.add(ring); });
+  const aCore=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,12), new THREE.MeshBasicMaterial({color:0xffe9a8})); aCore.position.y=1.0; arm.add(aCore);
+  // engraved sign by the stair
+  const slab=new THREE.Group(); slab.position.set(-4.6,0,6.0); slab.rotation.y=0.45; og.add(slab);
+  const post2=rbox(0.3,2.2,0.3,STONE,0.04); post2.position.y=1.1; slab.add(post2);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(3.0,1.0), new THREE.MeshBasicMaterial({map:signTexture(t('obsSign'),0x9fc0ff),transparent:true})); board.position.set(0,2.2,0.17); slab.add(board);
+  const board2=board.clone(); board2.rotation.y=Math.PI; board2.position.z=-0.17; slab.add(board2);
+  // cypress framing + night lanterns (world-space helpers)
+  [[-7.8,-7.8],[7.8,-7.8],[-9.4,5.4],[9.4,5.4]].forEach(([lx,lz])=>{ const w=WX(lx,lz); makeCypress(w.x,w.z,1.15); });
+  [[-5.6,7.8],[5.6,7.8]].forEach(([lx,lz])=>{ const w=WX(lx,lz); makeGuildLantern(w.x,w.z); });
+  // golden arrival ring (taxi destination marker), just off the stair
+  const ring=new THREE.Mesh(new THREE.RingGeometry(2.0,2.5,32), new THREE.MeshBasicMaterial({color:0xffd98a,transparent:true,opacity:0.5,side:THREE.DoubleSide})); ring.rotation.x=-Math.PI/2; ring.position.set(0,0.05,9.6); og.add(ring);
+  const ap=WX(0,9.6);
+  OBS={ _isObs:true, _pos:new THREE.Vector3(ap.x,0,ap.z), label:t('obsName') };
+  COLLIDERS.push({x:OBS_POS.x,z:OBS_POS.z, r:7.2});   // the stylobate base is solid; the player meets it from the stair side
+})();
+
 /* ---- ambient debate: one reused world bubble cycles through the deterministic transcript (0 LLM) ---- */
 const chronoBubble=(function(){ const cv=document.createElement('canvas'); cv.width=600; cv.height=340; const ctx=cv.getContext('2d');
   const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
@@ -2756,6 +2851,26 @@ function openChrono(){ modalOpen=true; chronoModal.classList.add('show');
 function closeChrono(){ modalOpen=false; chronoModal.classList.remove('show'); }
 document.getElementById('chronoClose').onclick=closeChrono;
 chronoModal.addEventListener('click',e=>{ if(e.target===chronoModal) closeChrono(); });
+
+/* ---- 🔭 Observatory modal: the active night-sky scholars, their stars, constellations & myths (deterministic, 0 KS) ---- */
+const obsModal=document.getElementById('obsModal');
+function renderObservatory(){ const body=document.getElementById('obsBody'); if(!body) return; const ko=LANG==='ko';
+  const list=(window.SCHOLARS||[]).filter(s=>s.active);
+  body.innerHTML = list.map(s=>{
+    const epi=ko?(s.epithetKo||''):(s.epithetEn||''), myth=ko?(s.mythKo||''):(s.mythEn||'');
+    const con=s.constellation?(ko?(s.constellation.nameKo||''):(s.constellation.nameEn||'')):'';
+    const bs=s.backstory?(s.backstory[ko?'ko':'en']||''):'';
+    const ac='#'+(((s.auraColor||s.color||0x9fc0ff)>>>0)&0xffffff).toString(16).padStart(6,'0');
+    return `<div class="obsCard" style="--ac:${ac}"><div class="badge">${s.emoji||'✦'}</div><div class="meta">`
+      +`<div><span class="star">✦ ${_esc(s.star||'')}</span><span class="epi">· ${_esc(epi)}</span></div>`
+      +`<div class="tags"><span>🌌 ${t('obsConstel')}: ${_esc(con)}</span><span>📖 ${t('obsMyth')}: ${_esc(myth)}</span></div>`
+      +`<div class="bs">${_esc(bs)}</div></div></div>`;
+  }).join('');
+}
+function openObservatory(){ modalOpen=true; obsModal.classList.add('show'); renderObservatory(); document.getElementById('obsBody').scrollTop=0; }
+function closeObservatory(){ modalOpen=false; obsModal.classList.remove('show'); }
+document.getElementById('obsClose').onclick=closeObservatory;
+obsModal.addEventListener('click',e=>{ if(e.target===obsModal) closeObservatory(); });
 
 /* ---- day / night cycle: continuous time-of-day (dawn · noon · dusk · night) with smooth transitions ---- */
 let isNight=false, _nightState=null;          // _nightState=null → first setNightState() always applies
@@ -3160,6 +3275,7 @@ const PASS_LANDMARKS=[
   {id:'plaza',            ico:'⛲', key:'lmPlaza'},
   {id:'canal',            ico:'🛶', key:'lmCanal'},
   {id:'chrono',           ico:'⏳', key:'lmChrono'},
+  {id:'observatory',      ico:'🔭', key:'lmObservatory'},
 ];
 let visited=0;
 let passport=loadPassport();
@@ -3307,7 +3423,7 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -3525,6 +3641,9 @@ function landmarkNav(q){
   // Chronopolis is a proper noun — no verb needed (its name is the intent)
   if(/크로노폴리스|크로노스|chronopolis|kronos/i.test(q) || (/(시간의 ?(회의|의장)|council of time)/i.test(q) && go.test(q)))
     return CHRONO ? mk('lmDriveChrono', t('lmChrono'), CHRONO._pos, 'chrono') : null;
+  // the Observatory is a proper noun too — its name carries the intent
+  if(/별빛 ?전망대|전망대|천문대|observatory|stargazer|planetarium/i.test(q) || (/(별자리|constellation|night ?sky|밤하늘)/i.test(q) && go.test(q)))
+    return OBS ? mk('lmDriveObs', t('obsName'), OBS._pos, 'obs') : null;
   // generic landmarks need a "go" verb so plain chatter about a canal/plaza doesn't hail a taxi
   if(go.test(q)){
     if(/쁘띠 ?베니스|petite[- ]?venise|운하|canal/i.test(q) && CANAL_PTS.length) return mk('lmDriveCanal', t('lmCanal'), new THREE.Vector3(CANAL_PTS[0].x,0,CANAL_PTS[0].z), 'canal');
@@ -3782,6 +3901,7 @@ function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visib
     const k=repo._landmark, key='lmArrive'+k.charAt(0).toUpperCase()+k.slice(1);
     addMsg('bot', t(key)||(LANG==='ko'?`🚕 <b>${repo.label}</b>에 도착했어요!`:`🚕 We've arrived at <b>${repo.label}</b>!`), {noHist:true});
     if(k==='chrono') setTimeout(()=>{ try{ openChrono(); }catch(e){} }, 700);
+    if(k==='obs') setTimeout(()=>{ try{ openObservatory(); }catch(e){} }, 700);
     return;
   }
   addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
@@ -3843,7 +3963,7 @@ function animate(){
       } else if(ride.phase==='boarding'){
         if(ride.t>0.55){ model.visible=false; ride.phase='riding'; ride.t=0; }
       } else if(ride.phase==='riding'){
-        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z, (ride.repo._isLibrary||ride.repo._landmark==='chrono')?44:26, dt,6.0);
+        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z, (ride.repo._isLibrary||ride.repo._landmark==='chrono'||ride.repo._landmark==='obs')?44:26, dt,6.0);
         player.position.set(taxi.position.x,0,taxi.position.z);
         const fx=Math.cos(taxi.rotation.y), fz=-Math.sin(taxi.rotation.y);
         camYaw=lerpA(camYaw,Math.atan2(fx,fz)+Math.PI,0.05);
@@ -3901,16 +4021,19 @@ function animate(){
   nearestSeat=null;
   if(!sitting && !nearest){ let sd=2.5; for(const s of SEATS){ const d=player.position.distanceTo(s.pos); if(d<sd){ sd=d; nearestSeat=s; } } }
   nearChrono = (CHRONO && player.position.distanceTo(CHRONO._pos) < 8.5) ? CHRONO : null;
+  nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes)
   if(nearNpc) addStamp('scholar:'+nearNpc.kind);
   if(nearest && nearest._isLibrary) addStamp('library');
   { const px=player.position.x, pz=player.position.z;
     if(!passHasStamp('plaza') && px*px+pz*pz < 196) addStamp('plaza');
     if(nearChrono && !passHasStamp('chrono')) addStamp('chrono');
+    if(nearObs && !passHasStamp('observatory')) addStamp('observatory');
     if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ addStamp('canal'); break; } } } }
   if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
+  else if(nearObs&&!modalOpen){ promptEl.innerHTML=`<b>${t('obsName')}</b>${t('obsReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🔭'; }
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
@@ -3931,6 +4054,7 @@ function animate(){
   updateSway(clock.elapsedTime);
   updateChows(clock.elapsedTime,dt);
   updateChrono(dt);
+  if(obsScope) obsScope.rotation.y+=dt*0.05;   // the great telescope slowly sweeps the sky
   if(!isNight){ updateBirds(clock.elapsedTime); updateButterflies(clock.elapsedTime); }
   if(isNight){ bigStars.material.opacity=0.62+Math.sin(clock.elapsedTime*2.6)*0.38; starsGroup.rotation.y+=dt*0.0016; updateFireflies(clock.elapsedTime);
     for(let i=0;i<scholarStars.length;i++) scholarStars[i].mat.opacity=0.55+Math.sin(clock.elapsedTime*2.1+i*1.9)*0.45; }
@@ -4130,6 +4254,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     const body=document.getElementById('chronoBody'); return { show:document.getElementById('chronoModal').classList.contains('show'), turns:body.querySelectorAll('.chronoTurn').length, cases:body.querySelectorAll('.chronoCase').length, verdict:(body.querySelector('.chronoVerdictVal')||{}).textContent||null, sig:(body.querySelector('.chronoSig')||{}).textContent||null, q:(body.querySelector('.chronoQ')||{}).textContent||null, tl:body.querySelectorAll('.chronoTimeline .ctNode').length, tlWin:(body.querySelector('.ctNode.win .cv')||{}).textContent||null, tlWinDate:(body.querySelector('.ctNode.win .cd')||{}).textContent||null }; };
   window.__chronoClose=()=>{ closeChrono(); return !document.getElementById('chronoModal').classList.contains('show'); };
   window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
+  window.__tpObs=(back=4)=>{ if(!OBS) return null; const d=OBS._pos.clone().sub(OBS_POS).normalize(); const p=OBS._pos.clone().add(d.multiplyScalar(back)); player.position.set(p.x,0,p.z); const yaw=Math.atan2(OBS_POS.x-p.x,OBS_POS.z-p.z); camYaw=yaw; camPitch=0.16; camDist=32; model.rotation.y=Math.PI-yaw; return {x:+p.x.toFixed(1),z:+p.z.toFixed(1)}; };
+  window.__obs=()=>({ has:!!OBS, pos:OBS?{x:+OBS._pos.x.toFixed(1),z:+OBS._pos.z.toFixed(1)}:null, near:!!nearObs, dist:+player.position.distanceTo(OBS._pos).toFixed(1), scope:!!obsScope, stamp:passHasStamp('observatory') });
+  window.__obsOpen=()=>{ openObservatory(); const body=document.getElementById('obsBody'); return { show:obsModal.classList.contains('show'), cards:body.querySelectorAll('.obsCard').length, stars:[...body.querySelectorAll('.obsCard .star')].map(e=>e.textContent.trim()), tags:[...body.querySelectorAll('.obsCard .tags span')].map(e=>e.textContent.trim()) }; };
+  window.__obsClose=()=>{ closeObservatory(); return !obsModal.classList.contains('show'); };
+  window.__obsScan=()=>{ let mind=Infinity,who=null; for(const b of buildings){ const dx=(b._x!=null?b._x:b.position.x)-OBS_POS.x, dz=(b._z!=null?b._z:b.position.z)-OBS_POS.z; const edge=Math.hypot(dx,dz)-(b._cw||3); if(edge<mind){ mind=edge; who=b.repo; } } return { obsCenterR:+Math.hypot(OBS_POS.x,OBS_POS.z).toFixed(1), nearestBld:who, nearestEdge:+mind.toFixed(1), baseR:7.8 }; };
   window.__chronoConvene=(topic)=>{ conveneLive(topic||'monolith vs microservices');
     return { active:liveDebate.active, hud:document.getElementById('chronoLiveHud').classList.contains('show'),
       topic:(document.getElementById('clhTopic')||{}).textContent||null,

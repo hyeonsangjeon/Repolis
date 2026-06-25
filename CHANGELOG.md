@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.27.0] — 2026-06-28
+
+### 🔭 The Stargazer's Observatory — a new landmark for the night-sky scholars
+- **A giant observatory now stands in the eastern clearing.** A three-tier stone stylobate carries a circular view-deck inlaid with an engraved **star-map** (concentric rings + scattered stars), wrapped by a balustrade with an entrance stair. At its centre is a **great brass-banded telescope** on a pedestal-and-yoke mount (it slowly tracks the sky), beside an ornamental **armillary sphere** of golden rings around a glowing core, a carved `OBSERVATORY` sign, four flanking cypress and two guild lanterns, and a golden arrival ring.
+- **It comes alive at night.** The telescope's lens **glows** after dark (wired into the shared lamp-glow set, so the existing time-of-day clock toggles it for free), the lanterns light up, and the deck's star-map reads against the starfield — turning the observatory into a beacon on the eastern edge.
+- **A passport stamp + a modal that gathers the scholars' constellations.** Walking up earns the 🔭 **Observatory** passport stamp and opens a modal collecting all three named scholars in one place — **POLARIS** (Ursa Minor · Hermes), **VEGA** (Lyra · Daidalos) and **RIGEL** (Orion · Ariadne) — each with its star, constellation, myth and backstory, fully bilingual (KO/EN) and re-rendered on language switch. Constellation names live in `scholars.js` as the single source of truth.
+- **The taxi knows the way.** "전망대로 가자" / "take me to the observatory" routes the taxi to the landmark (a proper noun — no verb needed), drives you there with the library/Chronopolis speed boost, and auto-opens the modal on arrival. Verified on real GPU, desktop + 390 px mobile: 3D landmark day & night, placement clear of the nearest building (edge ≈30 u), proximity stamp, modal KO/EN, full taxi e2e (route → arrive → modal), no mobile overflow, **0 console errors**.
+
 ## [1.26.0] — 2026-06-28
 
 ### 🌅 A living day — continuous time-of-day with dawn, dusk & an arcing sun
