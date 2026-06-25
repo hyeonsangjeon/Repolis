@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.28.0] — 2026-06-28
+
+### 🎆 The milestone festival — aurora over the city & fireworks for every milestone
+- **The night sky now shimmers with an aurora borealis.** A tall open cylindrical shell wraps the city with a custom shader — drifting hash-noise curtains, vertical streaks and a height envelope blend a teal→violet glow that ripples across the upper sky. It's an ambient part of the night (data-independent), riding the `starsGroup` night-visibility toggle for free, and fades in smoothly as the time-of-day clock crosses into night.
+- **Reaching a milestone sets off real fireworks.** Rising shells streak up from around you, burst into 70-particle spheres in seven festive colours, then fall under gravity with drag and fade — all additive, sharing the existing star/glow textures, queued so a big show launches over several seconds. While fireworks are in the air the aurora **boosts** to full brightness, so the whole sky celebrates with you.
+- **The festival is earned, not ambient.** Collecting a **passport landmark stamp** pops a small burst (and a 🎆 toast + a 20-shell finale when you complete *all* landmarks), and **visiting repos** lights the sky at the 5th / 15th / 30th / final repo. The idle-FPS budget is preserved — the world still drops to ~30 fps when truly idle, but holds full 60 fps whenever fireworks are active. Verified on real GPU, desktop + 390 px mobile, day & night: aurora night-visible (opacity → 1.0 on festival boost), fireworks reach steady-state on screen, milestone triggers check length *after* push (no off-by-one), no mobile overflow, **0 console errors**.
+
 ## [1.27.0] — 2026-06-28
 
 ### 🔭 The Stargazer's Observatory — a new landmark for the night-sky scholars
