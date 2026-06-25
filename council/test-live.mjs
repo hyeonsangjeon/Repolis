@@ -213,6 +213,93 @@ await (async function () {
     ok(store.getConcurrency() === 0, 'active concurrency back to 0 after success + error');
   }
 
+  /* ── C12: free-topic debate (Phase 39) — fixture-less, Chair LLM verdict ── */
+  group('C12 free-topic debate → tiki-taka rounds + Chair verdict (unverified)');
+  {
+    const FD = CFG.live_free;
+    const PRICE2 = CFG.price;
+    let dn = 0;
+    const debateLLM = async () => { dn++; return { text: '자유발언 ' + dn, usageIn: 30, usageOut: 50 }; };
+    const chairLLM = async () => ({ verdict: '코드짱 승', signature: '시간은 살아있는 소스 편', basis: '실측', confidence: 0.82, usageIn: 400, usageOut: 300 });
+    const base = { topic: '탭 vs 스페이스', sages: SAGES, lang: 'ko', guards: Guards, price: PRICE2, freeDials: FD, now: T0 };
+
+    // 1) happy path: streamed events + tiki-taka rounds + Chair verdict
+    const seen = [];
+    const r = await Live.runFreeDebate(Object.assign({}, base, { llm: debateLLM, chairLLM }), e => seen.push(e.phase));
+    ok(seen[0] === 'convocation', 'first streamed event is convocation');
+    ok(seen[seen.length - 1] === 'done', 'last streamed event is done');
+    ok(seen.includes('verdict'), 'a verdict event is streamed');
+    ok(r.rounds === FD.MAX_ROUNDS, 'runs MAX_ROUNDS rounds when within the deadline');
+    ok(r.transcript.length === FD.MAX_ROUNDS * SAGES.length, 'one turn per sage per round (free tiki-taka)');
+    ok(r.verdict === '코드짱 승' && r.signature.length > 0, 'verdict + signature come from the Chair LLM');
+    ok(r.unverified === true, 'free-topic verdict is labelled unverified (no math ground truth)');
+    ok(r.endedBy === 'rounds', 'ended by rounds when the deadline is not reached');
+
+    // 2) cost is split: debate(price) + chair(chairPrice), and the strong Chair dominates
+    const turns = FD.MAX_ROUNDS * SAGES.length;
+    const expectDebate = (turns * 30 / 1000) * PRICE2.inPer1k + (turns * 50 / 1000) * PRICE2.outPer1k;
+    const expectChair = (400 / 1000) * PRICE2.chairInPer1k + (300 / 1000) * PRICE2.chairOutPer1k;
+    ok(Math.abs(r.estCost - (expectDebate + expectChair)) < 1e-9, 'estCost = debate(price) + chair(chairPrice), priced separately');
+    ok(expectChair > expectDebate, 'the strong Chair dominates the cost (gpt-5.4 out $15/1M)');
+
+    // 3) deadline → timeout cuts the debate short (clock jumps past the 2-min wall)
+    let tk = T0; const fastClock = () => (tk += 999999);
+    const r2 = await Live.runFreeDebate(Object.assign({}, base, { llm: debateLLM, chairLLM, clock: fastClock }));
+    ok(r2.endedBy === 'timeout', 'deadline reached → endedBy timeout');
+    ok(r2.rounds < FD.MAX_ROUNDS, 'timeout cuts the rounds short');
+
+    // 4) no Chair injected → graceful: debate still runs, verdict empty, no throw
+    const r3 = await Live.runFreeDebate(Object.assign({}, base, { llm: debateLLM, chairLLM: null }));
+    ok(r3.verdict === '' && r3.endedBy === 'rounds', 'no Chair → empty verdict, debate still completes');
+
+    // 5) Chair throws → chair_error + partial, transcript preserved
+    const r4 = await Live.runFreeDebate(Object.assign({}, base, { llm: debateLLM, chairLLM: async () => { throw new Error('chair down'); } }));
+    ok(r4.endedBy === 'chair_error' && r4.partial === true, 'Chair error → chair_error + partial');
+    ok(r4.transcript.length > 0, 'partial keeps the debate transcript even if the Chair fails');
+  }
+
+  /* ── C13: councilLiveFree — free-topic guard state machine + Chair verdict ── */
+  group('C13 councilLiveFree → guards gate the free debate (spectator/live/daily)');
+  {
+    const FD = CFG.live_free;
+    const PRICE2 = CFG.price;
+    const debateLLM = async () => ({ text: '한 줄', usageIn: 30, usageOut: 50 });
+    const chairLLM = async () => ({ verdict: 'V', signature: 'S', basis: 'B', confidence: 0.7, usageIn: 400, usageOut: 300 });
+    function freeCtx(over) {
+      return Object.assign({
+        topic: '탭 vs 스페이스', sages: SAGES, lang: 'ko',
+        guards: Guards, price: PRICE2, freeDials: FD,
+        dials: dials({ LIVE_ENABLED: true }),
+        caps: { monthCap: 600, dayCap: 24 }, dayLiveMax: 100, budgetGateRatio: 0.9,
+        salt: 'repolis', signals: { ip: '5.5.5.5', fp: 'FREE1' },
+        llm: debateLLM, chairLLM, now: T0,
+      }, over || {});
+    }
+
+    // spectator: LIVE_ENABLED false → blocked, no debate turns, spectator notice
+    const evs = [];
+    const rs = await Live.councilLiveFree(freeCtx({ dials: dials({ LIVE_ENABLED: false }) }), e => evs.push(e));
+    ok(rs.blocked === true && rs.reason === 'spectator', 'LIVE off → blocked spectator (golden rule)');
+    ok(evs.some(e => e.phase === 'notice' && e.reason === 'spectator'), 'streams a spectator notice when blocked');
+    ok(!evs.some(e => e.phase === 'turn'), 'no debate turns are streamed when blocked (0 cost)');
+
+    // live on + within caps → runs, live:true, streams the full arc + Chair verdict
+    const ev2 = [];
+    const r2 = await Live.councilLiveFree(freeCtx({ store: Guards.makeMemStore() }), e => ev2.push(e));
+    ok(r2.live === true && r2.blocked === false, 'live on + within caps → free debate runs');
+    ok(ev2[0].phase === 'convocation' && ev2[ev2.length - 1].phase === 'done', 'streams convocation … done');
+    ok(r2.verdict === 'V' && r2.unverified === true, 'verdict comes from the Chair LLM, labelled unverified');
+
+    // daily-count cap: on a fresh store, exactly dayLiveMax grants, then blocked
+    const store = Guards.makeMemStore();
+    let granted = 0;
+    for (let k = 0; k < 4; k++) {
+      const rr = await Live.councilLiveFree(freeCtx({ store, dayLiveMax: 3, signals: { ip: '5.5.5.' + k, fp: 'D' + k } }));
+      if (rr.live) granted++;
+    }
+    ok(granted === 3, 'exactly dayLiveMax(3) live debates are granted; the 4th is blocked');
+  }
+
   // ── summary ──
   console.log('\n' + (fail === 0 ? '✅' : '❌') + ' live crosschecks: ' + pass + ' passed, ' + fail + ' failed');
   if (fail) { console.log('FAILURES:\n  - ' + fails.join('\n  - ')); process.exit(1); }

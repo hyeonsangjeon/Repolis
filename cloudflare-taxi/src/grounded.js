@@ -518,6 +518,74 @@ function makeCouncilLLM(env) {
   };
 }
 
+// The KRONOS Chair LLM — a STRONGER model (gpt-5.4) + reasoning, used ONLY for the
+// free-topic verdict (the 6 curated fixtures keep the deterministic math verdict).
+// runFreeDebate calls it as chairLLM({topic,transcript,lang,maxTokens}) and expects
+// {verdict,signature,basis,confidence,usageIn,usageOut}. Free-topic verdicts are an
+// AI inference (no math ground truth) → the client labels them "⚡ unverified".
+function chairSystem(lang) {
+  return lang === "en"
+    ? 'You are KRONOS, the Chair of Time, presiding over a 3-sage debate. Read the whole debate and decide which side rests on the MOST RECENT and MOST AUTHORITATIVE source — newer, well-sourced claims beat older lore. Output STRICT JSON ONLY: {"verdict":"one decisive sentence naming the winning side","signature":"a short aphorism about time judging truth","confidence":0.0-1.0,"basis":"which testimony/source won and why, one sentence"}. This is an AI inference for entertainment, not verified fact. No markdown, JSON object only.'
+    : '너는 3현자 토론을 주재하는 시간의 의장 KRONOS다. 토론 전체를 읽고 가장 최신·권위 있는 출처에 근거한 쪽을 가린다 — 출처 있는 최신 주장이 오래된 통설을 이긴다. 엄격한 JSON만 출력: {"verdict":"승자를 명시한 결정적인 한 문장","signature":"시간이 진실을 가린다는 짧은 경구","confidence":0.0~1.0,"basis":"어떤 증언·출처가 왜 이겼는지 한 문장"}. 이것은 오락용 AI 추론이며 검증된 사실이 아니다. 마크다운 금지, JSON 객체만.';
+}
+function verdictPrompt(topic, transcript, lang) {
+  const full = (transcript || []).map((t) => `${t.sage}: ${t.text}`).join("\n");
+  return lang === "en"
+    ? `Topic: ${topic}\nDebate transcript:\n${full}\n\nDeliver your verdict as a strict JSON object.`
+    : `주제: ${topic}\n토론 전문:\n${full}\n\nJSON 객체로 선고하라.`;
+}
+function parseVerdict(text) {
+  const out = { verdict: "", signature: "", basis: "", confidence: 0.6 };
+  if (!text) return out;
+  let s = String(text).replace(/^```(?:json)?/i, "").replace(/```\s*$/, "").trim();
+  const m = s.match(/\{[\s\S]*\}/);
+  if (m) {
+    try {
+      const j = JSON.parse(m[0]);
+      out.verdict = String(j.verdict || j.summary || "").trim();
+      out.signature = String(j.signature || "").trim();
+      out.basis = String(j.basis || "").trim();
+      if (j.confidence != null && isFinite(Number(j.confidence))) out.confidence = Number(j.confidence);
+    } catch { /* fall through */ }
+  }
+  if (!out.verdict) out.verdict = s.slice(0, 220);
+  return out;
+}
+function makeChairLLM(env) {
+  return async function ({ topic, transcript, lang, maxTokens, signal }) {
+    if (!env.AAD_CLIENT_ID || !env.AAD_CLIENT_SECRET || !env.AAD_TENANT || !env.AOAI_ENDPOINT) {
+      return { verdict: "", signature: "", basis: "", confidence: null, usageIn: 0, usageOut: 0 };
+    }
+    const token = await aadToken(env);
+    const dep = env.COUNCIL_CHAIR_DEPLOYMENT || "gpt-5.4-chair";
+    const ver = env.AOAI_API_VERSION || "2025-04-01-preview";
+    const url = `${env.AOAI_ENDPOINT.replace(/\/$/, "")}/openai/deployments/${dep}/chat/completions?api-version=${ver}`;
+    const reqBody = {
+      messages: [
+        { role: "system", content: chairSystem(lang) },
+        { role: "user", content: verdictPrompt(topic, transcript, lang) },
+      ],
+      max_completion_tokens: Number(maxTokens) || Number(env.COUNCIL_CHAIR_MAXTOK) || 700,
+    };
+    const effort = env.COUNCIL_CHAIR_REASONING || "high";
+    if (effort && effort !== "none") reqBody.reasoning_effort = effort;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify(reqBody),
+      signal,
+    });
+    if (!r.ok) throw new Error("chair llm " + r.status);
+    const j = await r.json();
+    const p = parseVerdict((j.choices?.[0]?.message?.content || "").trim());
+    return {
+      verdict: p.verdict, signature: p.signature, basis: p.basis, confidence: p.confidence,
+      usageIn: j.usage?.prompt_tokens || 0,
+      usageOut: j.usage?.completion_tokens || 0,
+    };
+  };
+}
+
 async function councilHandler(body, request, env) {
   const lang = body.lang === "en" ? "en" : "ko";
   const topic = body.topic || body.fixture || body.id;
@@ -549,6 +617,55 @@ async function councilHandler(body, request, env) {
   }, 200, env);
 }
 
+// Free-topic LIVE debate, streamed as Server-Sent Events (text/event-stream).
+// The client opens this with POST {action:"councilLive", topic, lang, fp}, closes
+// the popup, and watches the 3 sages debate the free topic line-by-line in 3D,
+// then KRONOS (gpt-5.4 + reasoning) delivers an UNVERIFIED verdict. Guards (same
+// state machine as councilHandler) run inside councilLiveFree; a block streams a
+// single notice + done(blocked). LLMs are only built when Live is on (golden rule).
+async function councilStreamHandler(body, request, env) {
+  const lang = body.lang === "en" ? "en" : "ko";
+  const topic = String(body.topic || "").replace(/\s+/g, " ").trim().slice(0, 300);
+  const headers = corsHeaders(env);
+  if (!topic) return json({ error: "topic required" }, 400, env);
+
+  const liveOn = env.COUNCIL_LIVE_ENABLED === "true";
+  const dials = Object.assign({}, COUNCIL_CFG.dials, COUNCIL_CFG.live_free, { LIVE_ENABLED: liveOn });
+  const sages = COUNCIL_CFG.sages.filter((s) => s.active);
+
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  const enc = new TextEncoder();
+  const send = (o) => writer.write(enc.encode("data: " + JSON.stringify(o) + "\n\n"));
+
+  (async () => {
+    try {
+      await CouncilLive.councilLiveFree({
+        topic, sages, lang,
+        guards: CouncilGuards, dials,
+        freeDials: COUNCIL_CFG.live_free,
+        price: COUNCIL_CFG.price,
+        caps: { monthCap: councilNum(env.COUNCIL_MONTH_CAP_USD), dayCap: councilNum(env.COUNCIL_DAY_CAP_USD) },
+        dayLiveMax: councilNum(env.COUNCIL_DAY_LIVE_MAX) ?? COUNCIL_CFG.live_free?.DAY_LIVE_MAX ?? COUNCIL_CFG.budget?.day_live_max,
+        budgetGateRatio: COUNCIL_CFG.budget?.gate_ratio ?? 0.9,
+        salt: env.COUNCIL_SALT || "repolis",
+        signals: { ip: clientIp(request), fp: body.fp, cookie: body.cookie },
+        store: COUNCIL_STORE,
+        llm: liveOn ? makeCouncilLLM(env) : null,        // golden rule: built only when Live is on
+        chairLLM: liveOn ? makeChairLLM(env) : null,
+      }, send);
+    } catch (e) {
+      try { send({ phase: "error", message: String(e).slice(0, 160) }); } catch { /* closed */ }
+    } finally {
+      try { await writer.close(); } catch { /* already closed */ }
+    }
+  })();
+
+  return new Response(readable, {
+    headers: { ...headers, "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" },
+  });
+}
+
 export default {
   async fetch(request, env) {
     const headers = corsHeaders(env);
@@ -568,6 +685,8 @@ export default {
 
     // Chronopolis Kronos Council — its own action (no `question` required; uses `topic`).
     if (body && body.action === "council") return councilHandler(body, request, env);
+    // Free-topic LIVE debate streamed as SSE (popup closes, watch in 3D, KRONOS verdict).
+    if (body && body.action === "councilLive") return councilStreamHandler(body, request, env);
 
     if (!question) return json({ error: "question required" }, 400, env);
 

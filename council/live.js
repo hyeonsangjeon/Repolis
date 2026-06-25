@@ -186,6 +186,113 @@
     return { events: events, endedBy: endedBy, rounds: rounds, tokensIn: tokensIn, tokensOut: tokensOut, estCost: estCost, partial: endedBy === 'error' || endedBy === 'timeout' };
   }
 
+  // ---- free-topic Live debate (Phase 39): no fixture, no core-engine verdict ---
+  // The 6 curated fixtures keep the deterministic core verdict (runDebate above).
+  // A FREE topic has no ground truth, so each sage argues freely from persona with
+  // the running transcript as context (real tiki-taka), bounded by a deadline +
+  // MAX_ROUNDS; then the strong CHAIR LLM (gpt-5.4 + reasoning) delivers the verdict.
+  // Because there is no math to fall back on, the verdict MUST be labelled
+  // "AI inference · unverified". `onEvent(evt)` streams each event for live viewing;
+  // it is optional — tests pass a collector, the worker pipes it to SSE.
+  async function runFreeDebate(ctx, onEvent) {
+    var guards = ctx.guards || G_default;
+    var lang = ctx.lang === 'en' ? 'en' : 'ko';
+    var sages = ctx.sages || [];
+    var f = ctx.freeDials || {};
+    var emit = (typeof onEvent === 'function') ? onEvent : function () {};
+    var clock = ctx.clock || (ctx.now != null ? function () { return ctx.now; } : function () { return Date.now(); });
+    var startedAt = (ctx.now != null ? ctx.now : clock());
+    var deadline = startedAt + (f.DEBATE_TIMEOUT_SEC || 120) * 1000;
+    var maxRounds = f.MAX_ROUNDS || 4;
+    var maxTurnTokens = f.TOKENS_PER_TURN_MAX || 220;
+    var topic = String(ctx.topic == null ? '' : ctx.topic).replace(/\s+/g, ' ').trim().slice(0, 300);
+
+    var transcript = [];
+    var events = [];
+    var tokensIn = 0, tokensOut = 0, chairIn = 0, chairOut = 0;
+    var endedBy = 'rounds', rounds = 0;
+    function pushEvt(e) { events.push(e); try { emit(e); } catch (_) {} }
+
+    function freePersona(sage) {
+      var v = (sage.voice && sage.voice[lang]) || {};
+      var tics = (v.tics || []).join(' / ');
+      return [v.tone || '', tics ? ('말버릇: ' + tics) : '',
+        (lang === 'en'
+          ? 'Debate the topic IN CHARACTER — one short spoken line, react to the others. No markdown. You may be wrong; the Chair judges at the end.'
+          : '주제에 대해 캐릭터 말투로 한 문장만. 앞 발언에 반응해라. 마크다운 금지. 틀려도 된다 — 마지막에 의장이 판정한다.')]
+        .filter(Boolean).join('\n');
+    }
+    function freePrompt(sage) {
+      var recent = transcript.slice(-5).map(function (t) { return t.sage + ': ' + t.text; }).join('\n');
+      return (lang === 'en'
+        ? 'Topic: ' + topic + '\nSo far:\n' + (recent || '(opening statements)') + '\nYour turn, ' + (sage.nameEn || sage.id) + ':'
+        : '주제: ' + topic + '\n지금까지:\n' + (recent || '(개회)') + '\n' + (sage.nameKo || sage.id) + ' 차례:');
+    }
+    async function speak(sage) {
+      var turn = await ctx.llm({ system: freePersona(sage), user: freePrompt(sage), maxTokens: maxTurnTokens, signal: ctx.signal });
+      tokensIn += (turn && turn.usageIn) || 0;
+      tokensOut += (turn && turn.usageOut) || 0;
+      var text = clampText(turn && turn.text, 180);
+      transcript.push({ sage: sage.id, text: text });
+      return text;
+    }
+
+    try {
+      pushEvt({ phase: 'convocation', topic: topic, summoned: sages.map(function (s) { return s.id; }) });
+      for (var r = 0; r < maxRounds; r++) {
+        if (clock() > deadline) { endedBy = 'timeout'; break; }
+        for (var i = 0; i < sages.length; i++) {
+          if (clock() > deadline) { endedBy = 'timeout'; break; }
+          var text = await speak(sages[i]);
+          pushEvt({ phase: 'turn', round: r + 1, sage: sages[i].id, text: text });
+        }
+        rounds = r + 1;
+      }
+    } catch (e) {
+      endedBy = 'error';
+    }
+
+    // VERDICT — strong Chair LLM (no math fallback for free topics → must be unverified-labelled)
+    var verdict = '', signature = '', basis = '', confidence = null;
+    if (ctx.chairLLM && transcript.length) {
+      try {
+        var vr = await ctx.chairLLM({ topic: topic, transcript: transcript, lang: lang, maxTokens: (f.CHAIR_MAXTOK || 700), signal: ctx.signal });
+        chairIn = (vr && vr.usageIn) || 0;
+        chairOut = (vr && vr.usageOut) || 0;
+        verdict = (vr && vr.verdict) || '';
+        signature = (vr && vr.signature) || '';
+        basis = (vr && vr.basis) || '';
+        confidence = (vr && vr.confidence != null) ? vr.confidence : null;
+      } catch (e) {
+        if (endedBy !== 'error' && endedBy !== 'timeout') endedBy = 'chair_error';
+      }
+    }
+    // Graceful fallback: a Chair was expected but returned nothing (model cold-start or a
+    // transient empty completion) → never stream a blank verdict to the spectator.
+    if (ctx.chairLLM && transcript.length && !verdict) {
+      verdict = (lang === 'en')
+        ? 'The Chair finds the debate finely balanced — no single source proved decisive.'
+        : '의장은 토론이 팽팽하다 보았다 — 어느 한쪽도 결정적이지 못했다.';
+      if (!signature) signature = (lang === 'en') ? 'Time keeps its counsel.' : '시간은 아직 말을 아낀다.';
+      if (confidence == null) confidence = 0.5;
+    }
+    pushEvt({ phase: 'verdict', verdict: verdict, signature: signature, basis: basis, confidence: confidence, unverified: true });
+
+    var price = ctx.price || {};
+    var debateCost = guards.estimateCost(tokensIn, tokensOut, price);
+    var chairCost = (chairIn / 1000) * (price.chairInPer1k || 0.0025) + (chairOut / 1000) * (price.chairOutPer1k || 0.015);
+    var estCost = debateCost + chairCost;
+
+    pushEvt({ phase: 'done', endedBy: endedBy, rounds: rounds, tokensIn: tokensIn + chairIn, tokensOut: tokensOut + chairOut, cost: estCost });
+    return {
+      events: events, transcript: transcript,
+      verdict: verdict, signature: signature, basis: basis, confidence: confidence, unverified: true,
+      endedBy: endedBy, rounds: rounds,
+      tokensIn: tokensIn, tokensOut: tokensOut, chairIn: chairIn, chairOut: chairOut,
+      estCost: estCost, partial: (endedBy === 'error' || endedBy === 'timeout' || endedBy === 'chair_error'),
+    };
+  }
+
   // ---- the state machine (§M) -----------------------------------------------
   // ctx: { fixture, sages, dials, lang, now, signals, store, salt, caps, price,
   //        budgetGateRatio, dayLiveMax, llm, engine, guards, clock, signal }
@@ -274,9 +381,70 @@
     };
   }
 
+  // ---- free-topic Live: the SAME guard state machine as councilLive, but the
+  // debate is fixture-less (runFreeDebate) and the verdict is the Chair LLM's
+  // (unverified-labelled) — a free topic has no math ground truth (§1d golden-rule
+  // relaxation). Streams convocation/turn/verdict/done via onEvent. On a guard
+  // block it streams one notice + done(blocked) and returns early (0 cost).
+  async function councilLiveFree(ctx, onEvent) {
+    var guards = ctx.guards || G_default;
+    ctx.guards = guards;
+    var dials = ctx.dials || {};
+    var freeDials = ctx.freeDials || {};
+    var store = ctx.store || guards.makeMemStore();
+    var now = (ctx.now != null ? ctx.now : Date.now());
+    var sages = ctx.sages || [];
+    var lang = ctx.lang === 'en' ? 'en' : 'ko';
+    var emit = (typeof onEvent === 'function') ? onEvent : function () {};
+
+    function blocked(reason, extra) {
+      var text = noticeFor(reason, lang, extra);
+      emit({ phase: 'notice', reason: reason, text: text });
+      emit({ phase: 'done', endedBy: 'blocked', reason: reason, rounds: 0, cost: 0 });
+      return { state: 'ambient', live: false, blocked: true, reason: reason, notice: text, cost: 0 };
+    }
+
+    // 0. KILLSWITCH / LIVE_ENABLED — the whole town stays Ambient, 0 cost.
+    if (!dials.LIVE_ENABLED) return blocked('spectator');
+    // L3 burst guard
+    var ipC = guards.coarseIp(ctx.signals && ctx.signals.ip);
+    var burst = guards.checkBurst(store, ipC, now, dials.BURST_THRESHOLD_PER_MIN || 20, 60);
+    if (!burst.ok) return blocked('burst', burst);
+    // L5 hard cap + L4 budget — price a free debate (bounded debate tokens + the
+    // dominant Chair) so the budget wall sees the real (chair-heavy) cost.
+    var capDials = { TOKENS_PER_TURN_MAX: freeDials.TOKENS_PER_TURN_MAX || 220, CROSS_ROUNDS_MAX: (freeDials.MAX_ROUNDS || 4) - 1 };
+    var hardCap = guards.debateHardCap(capDials, sages.length, ctx.price);
+    var chairEst = ((freeDials.CHAIR_MAXTOK || 700) / 1000) * ((ctx.price && ctx.price.chairOutPer1k) || 0.015);
+    var bud = guards.checkBudget(store, hardCap.estCost + chairEst, ctx.caps, ctx.budgetGateRatio, now);
+    if (!bud.ok) return blocked('budget', bud);
+    // L4b daily live-count hard cap
+    var dayCnt = guards.checkDailyCount(store, ctx.dayLiveMax, now);
+    if (!dayCnt.ok) return blocked('daily_count', dayCnt);
+    // L1 personal rate-limit
+    var key = guards.compositeKey(ctx.signals, ctx.salt);
+    var rate = guards.checkRate(store, key, now, dials.PERSONAL_COOLDOWN_SEC || 3600);
+    if (!rate.ok) return blocked('cooldown', rate);
+    // L2 concurrency (atomic acquire)
+    var conc = guards.acquireConcurrency(store, dials.LIVE_CONCURRENCY_MAX || 2);
+    if (!conc.ok) return blocked('full', conc);
+
+    // ---- LIVE ----
+    try {
+      guards.recordLive(store, key, now);
+      guards.recordLiveCount(store, now);
+      var out = await runFreeDebate(ctx, onEvent);
+      guards.recordSpend(store, out.estCost, now);
+      return Object.assign({ state: 'verdict', live: true, blocked: false }, out);
+    } finally {
+      guards.releaseConcurrency(store);
+    }
+  }
+
   var mod = {
     councilLive: councilLive,
+    councilLiveFree: councilLiveFree,
     runDebate: runDebate,
+    runFreeDebate: runFreeDebate,
     ambient: ambient,
     noticeFor: noticeFor,
     NOTICES: NOTICES,

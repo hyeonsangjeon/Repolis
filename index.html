@@ -178,6 +178,33 @@
     background:#eee8f6; color:#4a3f6b; border:1px solid #d6ccec; }
   .chronoState.budget, .chronoState.full, .chronoState.cooldown, .chronoState.burst { background:#f6ecdc; color:#8a6a3a; border-color:#e3d2aa; }
   .chronoState.live { background:#e7f5ec; color:#2f6d45; border-color:#bfe3cc; }
+  /* Phase 39 — free-topic input row */
+  .chronoTopicWrap { padding:2px 12px 8px; }
+  .chronoTopicRow { display:flex; gap:8px; flex-wrap:wrap; }
+  #chronoTopicInput { flex:1; min-width:150px; min-height:44px; padding:10px 14px; border-radius:12px; border:1.5px solid #d6ccec; background:#fff; color:#33271a; font-size:15px; }
+  #chronoTopicInput:focus { outline:none; border-color:#e8c45a; }
+  .chronoTopicHint { font-size:11.5px; color:#9a8aaa; padding:6px 2px 0; }
+  /* Phase 39 — live debate HUD overlay (watch the 3D chamber) */
+  #chronoLiveHud { position:fixed; left:50%; transform:translateX(-50%); bottom:18px; z-index:24; width:min(560px,calc(100vw - 24px));
+    background:linear-gradient(135deg,rgba(34,28,56,.96),rgba(20,16,40,.96)); color:#f3eedf; border:1px solid #4a3f6b; border-radius:16px;
+    box-shadow:0 8px 30px rgba(0,0,0,.4); padding:13px 16px; display:none; }
+  #chronoLiveHud.show { display:block; }
+  .clhTop { display:flex; align-items:center; gap:9px; }
+  .clhBadge { font-size:12px; font-weight:800; color:#ffe08a; white-space:nowrap; }
+  .clhTopic { font-size:13px; font-weight:700; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .clhRound { font-size:11.5px; color:#bdb0d8; white-space:nowrap; }
+  .clhClose { min-width:34px; min-height:34px; border:0; background:transparent; color:#cfc4e6; font-size:18px; cursor:pointer; line-height:1; }
+  .clhBar { height:5px; border-radius:99px; background:rgba(255,255,255,.14); margin:9px 0 0; overflow:hidden; }
+  .clhFill { height:100%; width:0; border-radius:99px; background:linear-gradient(90deg,#e8c45a,#f0d678); transition:width .5s linear; }
+  .clhVerdict { margin-top:11px; padding:11px 13px; border-radius:12px; background:rgba(232,196,90,.12); border:1px solid rgba(232,196,90,.4); display:none; }
+  .clhVerdict.show { display:block; }
+  .clhUnverified { display:inline-block; font-size:10.5px; font-weight:800; color:#2a2340; background:#f0d678; border-radius:99px; padding:3px 9px; margin-bottom:7px; }
+  .clhVerdictTx { font-size:13.5px; font-weight:700; line-height:1.5; color:#fff; }
+  .clhSig { font-size:12px; color:#e8c45a; margin-top:6px; font-style:italic; }
+  .clhActions { display:flex; gap:8px; margin-top:10px; }
+  .clhBtn { min-height:40px; padding:8px 15px; border-radius:99px; border:0; cursor:pointer; font-size:12.5px; font-weight:700; color:#2a2340; background:#e8c45a; }
+  .clhBtn.ghost { background:transparent; color:#cfc4e6; border:1px solid #4a3f6b; }
+  @media (hover:none) and (pointer:coarse){ #chronoLiveHud{ bottom:auto; top:54px; } .clhClose{min-width:44px;min-height:44px;} .clhBtn{min-height:44px;} }
   .libcard { background: #fbf3e4; border-radius: 22px; width: 680px; max-width: 100%; max-height: 88vh;
     display: flex; flex-direction: column; overflow: hidden; position: relative;
     box-shadow: 0 26px 80px rgba(30,16,4,.5); animation: pop .24s cubic-bezier(.2,.9,.3,1.3); }
@@ -434,6 +461,21 @@
   </div>
 </div>
 
+<div id="chronoLiveHud">
+  <div class="clhTop">
+    <span class="clhBadge" id="clhBadge">⚡ Live debate</span>
+    <span class="clhTopic" id="clhTopic"></span>
+    <span class="clhRound" id="clhRound"></span>
+    <button class="clhClose" id="clhClose" aria-label="close">✕</button>
+  </div>
+  <div class="clhBar"><div class="clhFill" id="clhFill"></div></div>
+  <div class="clhVerdict" id="clhVerdict">
+    <span class="clhUnverified" id="clhUnverified">⚡ Live AI inference · source unverified</span>
+    <div class="clhVerdictTx" id="clhVerdictTx"></div>
+    <div class="clhSig" id="clhSig"></div>
+  </div>
+</div>
+
 <div id="intro">
   <div class="inner">
     <div class="langsel" id="introLang">
@@ -548,6 +590,8 @@ const I18N = {
     chronoLive:'⚡ 라이브 토론(LLM)은 예산 가드 뒤에 잠겨 있어요 — 지금은 비용 0의 결정적 무대(Ambient)만 상영 중.',
     chronoConsensus:'만장일치', chronoVerdict:'시간의 판정', chronoSummon:'소집', chronoRecord:'기록 봉인',
     chronoConvene:'⚖️ 회의 소집 (라이브)', chronoConvening:'⏳ 회의장에 소집하는 중…',
+    chronoTopicPh:'토론 주제를 입력하세요… (예: 모놀리식 vs 마이크로서비스)', chronoStartLive:'⚡ 라이브 토론 시작', chronoTopicEmpty:'먼저 토론 주제를 입력해 주세요.',
+    chronoLiveStart:'⚡ 라이브 토론을 소집하는 중…', chronoLiveLabel:'⚡ 라이브 토론', chronoLiveRound:'라운드', chronoLiveVerdictH:'⏳ 시간의 판정', chronoUnverified:'⚡ AI 라이브 추론 · 출처 미검증', chronoLiveDone:'⚡ 라이브 토론 종료', chronoLiveErr:'회의장이 응답하지 않아요 — 위 결정적 기록(Ambient)으로 대신합니다 👀', chronoSkipVerdict:'결론 바로 보기', chronoHudClose:'닫기', chronoConveneWait:'토론이 이미 진행 중이에요…',
     chronoOffline:'지금은 회의장이 조용해요 — 위 결정적 기록(Ambient)을 감상하세요 👀',
     chronoTimeCap:'⏳ 시간의 저울 — 출처를 최신·생존순으로',
     chronoTimeOld:'오래됨', chronoTimeNew:'최신', chronoTimeWin:'시간이 가리킴',
@@ -642,6 +686,8 @@ const I18N = {
     chronoLive:'⚡ Live LLM debate is locked behind budget guards — for now only the zero-cost deterministic stage (Ambient) is playing.',
     chronoConsensus:'Consensus', chronoVerdict:'Verdict of Time', chronoSummon:'Convocation', chronoRecord:'Record sealed',
     chronoConvene:'⚖️ Convene the council (Live)', chronoConvening:'⏳ Convening the chamber…',
+    chronoTopicPh:'Enter a debate topic… (e.g. monolith vs microservices)', chronoStartLive:'⚡ Start live debate', chronoTopicEmpty:'Please enter a debate topic first.',
+    chronoLiveStart:'⚡ Convening a live debate…', chronoLiveLabel:'⚡ Live debate', chronoLiveRound:'Round', chronoLiveVerdictH:'⏳ Verdict of Time', chronoUnverified:'⚡ Live AI inference · source unverified', chronoLiveDone:'⚡ Live debate finished', chronoLiveErr:'The chamber did not respond — showing the deterministic record (Ambient) instead 👀', chronoSkipVerdict:'Skip to verdict', chronoHudClose:'Close', chronoConveneWait:'A debate is already in progress…',
     chronoOffline:'The chamber is quiet right now — enjoy the deterministic record (Ambient) above 👀',
     chronoTimeCap:"⏳ Time's scale — sources by recency & liveness",
     chronoTimeOld:'older', chronoTimeNew:'newer', chronoTimeWin:'Time points here',
@@ -2387,11 +2433,11 @@ const SAGE_INFO = (()=>{ const m={};
   const seats=[ ['olddoc',-5.6,-1.2,'doc',0.26], ['livewire',0,0.8,'hacker',0], ['hearsay',5.6,-1.2,'streamer',-0.26] ];
   CHRONO_SAGES=[];
   seats.forEach(([id,x,z,style,yaw],i)=>{ const c=SAGE_INFO[id]||{color:'#bbb'}; const f=chronoFig(c.color,1,null,style); f.position.set(x,1.0,z); f.rotation.y=yaw; cg.add(f);
-    CHRONO_SAGES.push({grp:f, head:f._head, gArm:f._gArm, gZ:f._gZ||1, chair:false, ph:i*1.7, spd:1.45+i*0.22});
+    CHRONO_SAGES.push({id:id, grp:f, head:f._head, gArm:f._gArm, gZ:f._gZ||1, chair:false, ph:i*1.7, spd:1.45+i*0.22});
     COLLIDERS.push({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z, r:0.7}); });
   // KRONOS — tall gold tech-lead presiding on the dais (geek, not priest); a quiet star floats above
   const kron=chronoFig(GOLD,1.34,null); kron.position.set(0,1.66,-8.4); cg.add(kron);
-  CHRONO_SAGES.push({grp:kron, head:kron._head, gArm:kron._armR, gZ:1, chair:true, ph:0, spd:0.7});
+  CHRONO_SAGES.push({id:'kronos', grp:kron, head:kron._head, gArm:kron._armR, gZ:1, chair:true, ph:0, spd:0.7});
   const star=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:0xfff0c0,transparent:true,opacity:0.9,depthWrite:false,blending:THREE.AdditiveBlending})); star.scale.set(1.3,1.3,1); star.position.set(0,1.66+4.5,-8.4); cg.add(star);
   // ---- hourglass sculpture beside the Chair ----
   (function hourglass(){ const g=new THREE.Group(); g.position.set(0,1.75,-11.0); cg.add(g);
@@ -2446,6 +2492,7 @@ const chronoBubble=(function(){ const cv=document.createElement('canvas'); cv.wi
   return { sprite:sp, draw };
 })();
 let chronoSeq=[], chronoIdx=0, chronoT=0, chronoSeqLang=null;
+let liveDebate={active:false, reader:null, abort:null, t0:0, dur:120, rounds:0};
 function buildChronoSequence(){ chronoSeq=[]; chronoSeqLang=LANG; if(!CE||!CF||!CF.list) return;
   for(const fx of CF.list()){ let r; try{ r=CE.councilAsk(fx,{withTranscript:true,lang:LANG}); }catch(e){ continue; }
     const k=SAGE_INFO.kronos; chronoSeq.push({name:k.emoji+' '+k[LANG], text:'“'+r.question+'”', col:k.color, gold:true});
@@ -2459,7 +2506,7 @@ function buildChronoSequence(){ chronoSeq=[]; chronoSeqLang=LANG; if(!CE||!CF||!
 }
 function updateChrono(dt){ if(!CHRONO) return;
   if(chronoHourGlow){ const base=isNight?0.9:0.42; chronoHourGlow.material.opacity=base*(0.72+0.28*Math.sin(clock.elapsedTime*2.1)); }
-  const near = player.position.distanceToSquared(CHRONO_POS) < 64*64;
+  const near = liveDebate.active || player.position.distanceToSquared(CHRONO_POS) < 64*64;
   if(chronoSand && near){ const a=chronoSand.geometry.attributes.position.array, ph=chronoSand._ph;
     for(let i=0;i<ph.length;i++){ ph[i]+=dt*0.5; if(ph[i]>1) ph[i]-=1; a[i*3+1]=1.6-ph[i]*0.85; } chronoSand.geometry.attributes.position.needsUpdate=true; }
   // ---- debate gestures: the sages argue with one another (arms point/raise, torso sway, head bob),
@@ -2487,6 +2534,7 @@ function updateChrono(dt){ if(!CHRONO) return;
     }
   }
   if(!near){ if(chronoBubble.sprite.visible) chronoBubble.sprite.visible=false; return; }
+  if(liveDebate.active) return;   // live debate drives the bubble sprite directly (showSageBubble/showKronosVerdict)
   if(chronoSeqLang!==LANG){ buildChronoSequence(); chronoIdx=0; chronoT=0; }
   if(!chronoSeq.length){ chronoBubble.sprite.visible=false; return; }
   chronoT-=dt;
@@ -2497,7 +2545,7 @@ function updateChrono(dt){ if(!CHRONO) return;
 
 /* ---- Chronopolis modal (deterministic transcript + verdict + signature, KO/EN, Live shown as gated) ---- */
 const chronoModal=document.getElementById('chronoModal');
-let chronoModalLang=null, chronoCaseId=null;
+let chronoModalLang=null, chronoCaseId=null, chronoTopicDraft='';
 const _esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function chronoTurn(sageId,text){ const s=SAGE_INFO[sageId]||{emoji:'•',color:'#888'}; const nm=s[LANG]||sageId;
   return `<div class="chronoTurn"><div class="em">${s.emoji||'•'}</div><div class="bd"><div class="nm" style="color:${s.color||'#777'}">${_esc(nm)}</div><div class="tx">${_esc(text)}</div></div></div>`; }
@@ -2516,9 +2564,22 @@ function chronoTimeline(testi,verdictVal,noAnswer){
 }
 function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementById('chronoBody'); body.innerHTML='';
   const philo=document.createElement('div'); philo.className='chronoPhilo'; philo.textContent='“'+t('chronoPhilo')+'”'; body.appendChild(philo);
+  // Phase 39 — free-topic LIVE debate. Type any topic; the 3 sages debate it live (SSE) for ~2 min
+  // in the 3D chamber, then the Chair (gpt-5.4) rules. The chips below are quick examples that fill this box.
+  const tw=document.createElement('div'); tw.className='chronoTopicWrap';
+  const row=document.createElement('div'); row.className='chronoTopicRow';
+  const inp=document.createElement('input'); inp.id='chronoTopicInput'; inp.type='text'; inp.autocomplete='off';
+  inp.placeholder=t('chronoTopicPh'); inp.value=chronoTopicDraft||'';
+  inp.addEventListener('input',()=>{ chronoTopicDraft=inp.value; });
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){ e.preventDefault(); conveneLive(inp.value); } });
+  const go=document.createElement('button'); go.className='chronoConveneBtn'; go.textContent=t('chronoStartLive');
+  go.onclick=()=>conveneLive(inp.value);
+  row.appendChild(inp); row.appendChild(go); tw.appendChild(row);
+  const hint=document.createElement('div'); hint.className='chronoTopicHint'; hint.textContent=t('chronoCases'); tw.appendChild(hint);
+  body.appendChild(tw);
   const cases=document.createElement('div'); cases.className='chronoCases';
   const list=(CF&&CF.list)?CF.list():[];
-  list.forEach(fx=>{ const b=document.createElement('button'); b.className='chronoCase'+(fx.id===id?' on':''); b.textContent=fx.topic; b.onclick=()=>renderChronoCase(fx.id); cases.appendChild(b); });
+  list.forEach(fx=>{ const b=document.createElement('button'); b.className='chronoCase'+(fx.id===id?' on':''); b.textContent=fx.topic; b.onclick=()=>{ chronoTopicDraft=fx.topic; renderChronoCase(fx.id); }; cases.appendChild(b); });
   body.appendChild(cases);
   const fx=(CF&&CF.get)?CF.get(id):null;
   if(!CE||!fx){ const w=document.createElement('div'); w.className='chronoQ'; w.textContent='⏳ engine offline'; body.appendChild(w);
@@ -2540,32 +2601,108 @@ function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementBy
   html+=chronoTimeline(testi, verdictVal, noAnswer);
   const turns=document.createElement('div'); turns.innerHTML=html; body.appendChild(turns);
   const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv);
-  // Convene (Live) — asks the Worker state machine to seat a live debate. Live is gated behind
-  // budget guards server-side; when it's off (default) the Worker returns a spectator notice and
-  // the deterministic record above IS the verdict. Errors/offline gracefully keep Ambient.
-  const cw=document.createElement('div'); cw.className='chronoConvene';
-  const btn=document.createElement('button'); btn.className='chronoConveneBtn'; btn.textContent=t('chronoConvene');
-  const st=document.createElement('div'); st.className='chronoState'; st.style.display='none';
-  btn.onclick=()=>convene(id,btn,st); cw.appendChild(btn); body.appendChild(cw); body.appendChild(st);
 }
-let _convening=false;
-async function convene(topic,btn,st){
-  if(_convening) return; _convening=true; const orig=btn.textContent;
-  btn.disabled=true; btn.textContent=t('chronoConvening');
-  st.style.display=''; st.className='chronoState'; st.textContent=t('chronoConvening');
+
+// ===== Phase 39: free-topic LIVE debate over SSE =====
+// conveneLive() closes the popup and streams a real 3-sage debate into the 3D chamber for ~2 min,
+// then the Chair (gpt-5.4 + reasoning) rules. Free-topic verdicts are AI inference → the HUD always
+// carries an "unverified" badge. Any failure gracefully falls back to the ambient (deterministic) stage.
+let _hudRaf=0;
+function _hudEl(id){ return document.getElementById(id); }
+function showLiveHud(topic){ const h=_hudEl('chronoLiveHud'); if(!h) return;
+  _hudEl('clhBadge').textContent=t('chronoLiveLabel');
+  _hudEl('clhTopic').textContent=topic;
+  _hudEl('clhRound').textContent='';
+  _hudEl('clhClose').setAttribute('aria-label', t('chronoHudClose'));
+  _hudEl('clhVerdict').classList.remove('show');
+  _hudEl('clhUnverified').style.display=''; _hudEl('clhUnverified').textContent=t('chronoUnverified');
+  _hudEl('clhVerdictTx').textContent=''; _hudEl('clhSig').textContent='';
+  _hudEl('clhFill').style.width='0%';
+  h.classList.add('show');
+  liveDebate.t0=performance.now(); cancelAnimationFrame(_hudRaf);
+  const tick=()=>{ if(!liveDebate.active) return;
+    const el=(performance.now()-liveDebate.t0)/1000, pct=Math.min(100,(el/liveDebate.dur)*100);
+    _hudEl('clhFill').style.width=pct.toFixed(1)+'%'; _hudRaf=requestAnimationFrame(tick); };
+  _hudRaf=requestAnimationFrame(tick);
+}
+function hideLiveHud(){ const h=_hudEl('chronoLiveHud'); if(h) h.classList.remove('show'); cancelAnimationFrame(_hudRaf); }
+function closeLiveHud(){ liveDebate.active=false; try{ liveDebate.abort&&liveDebate.abort.abort(); }catch(e){} hideLiveHud(); if(chronoBubble) chronoBubble.sprite.visible=false; }
+
+function conveneLive(topicText){ const topic=(topicText||'').trim();
+  if(!topic){ const inp=document.getElementById('chronoTopicInput'); if(inp){ inp.placeholder=t('chronoTopicEmpty'); inp.focus(); } return; }
+  if(liveDebate.active) return;
+  chronoTopicDraft=topic;
+  closeChrono();                       // popup closes — you watch the debate unfold in the 3D chamber
+  liveDebate.active=true; liveDebate.rounds=0;
+  showLiveHud(topic);
+  streamDebate(topic);
+}
+
+async function streamDebate(topic){
+  const ctrl=new AbortController(); liveDebate.abort=ctrl;
+  let idleTo=0; const armIdle=()=>{ clearTimeout(idleTo); idleTo=setTimeout(()=>{ try{ctrl.abort();}catch(e){} }, 35000); };
   try{
-    const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),12000);
+    armIdle();
     const res=await fetch(groundedUrl(),{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({action:'council',topic,lang:LANG,fp:guestId()}),signal:ctrl.signal});
-    clearTimeout(to);
-    const j=await res.json().catch(()=>null);
-    if(j&&j.live&&j.state==='verdict'){ st.className='chronoState live';
-      st.textContent=(LANG==='ko'?'⚡ 라이브 토론 종료 · ':'⚡ Live debate finished · ')+(j.verdict||''); }
-    else if(j&&j.notice){ st.className='chronoState '+(j.reason||'spectator'); st.textContent=j.notice; }
-    else { st.className='chronoState'; st.textContent=t('chronoOffline'); }
-  }catch(e){ st.className='chronoState'; st.textContent=t('chronoOffline'); }
-  finally{ _convening=false; btn.disabled=false; btn.textContent=orig; }
+      body:JSON.stringify({action:'councilLive', topic, lang:LANG, fp:guestId()}), signal:ctrl.signal});
+    if(!res.ok || !res.body){ clearTimeout(idleTo); return ambientFallback('chronoLiveErr'); }
+    const reader=res.body.getReader(); liveDebate.reader=reader;
+    const dec=new TextDecoder(); let buf='';
+    while(liveDebate.active){
+      const {value,done}=await reader.read(); if(done) break; armIdle();
+      buf+=dec.decode(value,{stream:true}); let idx;
+      while((idx=buf.indexOf('\n\n'))>=0){ const chunk=buf.slice(0,idx); buf=buf.slice(idx+2);
+        const line=chunk.split('\n').find(l=>l.startsWith('data:')); if(!line) continue;
+        const payload=line.slice(5).trim(); if(!payload || payload==='[DONE]') continue;
+        let ev; try{ ev=JSON.parse(payload); }catch(e){ continue; }
+        handleDebateEvent(ev);
+      }
+    }
+    clearTimeout(idleTo);
+    if(liveDebate.active){ liveDebate.active=false; cancelAnimationFrame(_hudRaf);   // stream ended without an explicit 'done'
+      const v=_hudEl('clhVerdict');
+      if(v&&v.classList.contains('show')){ _hudEl('clhFill').style.width='100%'; _hudEl('clhBadge').textContent=t('chronoLiveDone'); }
+      else ambientFallback('chronoLiveErr'); }
+  }catch(e){ clearTimeout(idleTo); if(liveDebate.active) ambientFallback('chronoLiveErr'); }
 }
+
+function handleDebateEvent(ev){ if(!ev||!ev.phase) return;
+  if(ev.phase==='convocation'){ if(ev.topic) _hudEl('clhTopic').textContent=ev.topic; }
+  else if(ev.phase==='turn'){ if(ev.round) liveDebate.rounds=ev.round;
+    _hudEl('clhRound').textContent=t('chronoLiveRound')+' '+(liveDebate.rounds||1);
+    showSageBubble(ev.sage, ev.text); }
+  else if(ev.phase==='verdict'){ showKronosVerdict(ev.verdict, ev.signature, ev.confidence, ev.unverified); }
+  else if(ev.phase==='notice'){ if(ev.notice) _hudEl('clhRound').textContent=ev.notice; }
+  else if(ev.phase==='done'){ liveDebate.active=false; cancelAnimationFrame(_hudRaf);
+    _hudEl('clhFill').style.width='100%'; _hudEl('clhBadge').textContent=t('chronoLiveDone'); }
+  else if(ev.phase==='error'){ ambientFallback('chronoLiveErr'); }
+}
+
+function showSageBubble(sageId, text){ if(!text || !chronoBubble) return;
+  const s=CHRONO_SAGES.find(x=>x.id===sageId), info=SAGE_INFO[sageId]||{};
+  const col=info.color||'#d8c9a0', nm=info[LANG]||info.ko||sageId;
+  if(s&&s.grp){ const wp=new THREE.Vector3(); s.grp.getWorldPosition(wp); chronoBubble.sprite.position.set(wp.x, wp.y+2.7, wp.z); }
+  else chronoBubble.sprite.position.set(CHRONO_POS.x, 10.5, CHRONO_POS.z);
+  chronoBubble.draw((info.emoji?info.emoji+' ':'')+nm, text, col, false);
+  chronoBubble.sprite.visible=true;
+}
+
+function showKronosVerdict(verdict, signature, confidence, unverified){ const k=SAGE_INFO.kronos||{};
+  if(chronoBubble){ const sg=CHRONO_SAGES.find(x=>x.id==='kronos');
+    if(sg&&sg.grp){ const wp=new THREE.Vector3(); sg.grp.getWorldPosition(wp); chronoBubble.sprite.position.set(wp.x, wp.y+2.4, wp.z); }
+    chronoBubble.draw((k.emoji||'⏳')+' '+(k[LANG]||'KRONOS'), verdict||'', k.color||'#f0d98a', true);
+    chronoBubble.sprite.visible=true; }
+  const v=_hudEl('clhVerdict'); if(v){ v.classList.add('show');
+    _hudEl('clhUnverified').style.display=(unverified===false)?'none':'';
+    _hudEl('clhVerdictTx').textContent=verdict||'';
+    _hudEl('clhSig').textContent=signature?('⏳ '+signature):''; }
+}
+
+function ambientFallback(key){ liveDebate.active=false; cancelAnimationFrame(_hudRaf);
+  const r=_hudEl('clhRound'); if(r) r.textContent=t(key||'chronoLiveErr');
+  const b=_hudEl('clhBadge'); if(b) b.textContent=t('chronoLiveLabel');
+}
+(function(){ const c=document.getElementById('clhClose'); if(c) c.onclick=closeLiveHud; })();
 function openChrono(){ modalOpen=true; chronoModal.classList.add('show');
   if(chronoModalLang!==LANG || !chronoCaseId){ chronoCaseId=(CF&&CF.ORDER&&CF.ORDER[0])||'pydantic_dict'; renderChronoCase(chronoCaseId);
     document.getElementById('chronoFoot').innerHTML=`<button class="close" id="chronoCloseB">${t('close')}</button>`;
@@ -3900,10 +4037,18 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     const body=document.getElementById('chronoBody'); return { show:document.getElementById('chronoModal').classList.contains('show'), turns:body.querySelectorAll('.chronoTurn').length, cases:body.querySelectorAll('.chronoCase').length, verdict:(body.querySelector('.chronoVerdictVal')||{}).textContent||null, sig:(body.querySelector('.chronoSig')||{}).textContent||null, q:(body.querySelector('.chronoQ')||{}).textContent||null, tl:body.querySelectorAll('.chronoTimeline .ctNode').length, tlWin:(body.querySelector('.ctNode.win .cv')||{}).textContent||null, tlWinDate:(body.querySelector('.ctNode.win .cd')||{}).textContent||null }; };
   window.__chronoClose=()=>{ closeChrono(); return !document.getElementById('chronoModal').classList.contains('show'); };
   window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
-  window.__chronoConvene=async(id)=>{ if(id) chronoModalLang=null; openChrono(); if(id) renderChronoCase(id||chronoCaseId);
-    const body=document.getElementById('chronoBody'); const btn=body.querySelector('.chronoConveneBtn'); const st=body.querySelector('.chronoState');
-    if(!btn) return {err:'no convene btn'}; await convene(chronoCaseId,btn,st);
-    return { btn:btn.textContent, busy:_convening, state:st.className, text:(st.textContent||'').slice(0,80), visible:st.style.display!=='none' }; };
+  window.__chronoConvene=(topic)=>{ conveneLive(topic||'monolith vs microservices');
+    return { active:liveDebate.active, hud:document.getElementById('chronoLiveHud').classList.contains('show'),
+      topic:(document.getElementById('clhTopic')||{}).textContent||null,
+      modalClosed:!document.getElementById('chronoModal').classList.contains('show') }; };
+  window.__liveEvt=(ev)=>{ handleDebateEvent(ev); const v=document.getElementById('clhVerdict');
+    return { round:liveDebate.rounds, active:liveDebate.active, badge:(document.getElementById('clhBadge')||{}).textContent,
+      roundTx:(document.getElementById('clhRound')||{}).textContent, bubble:!!(chronoBubble&&chronoBubble.sprite.visible),
+      verdictShown:v?v.classList.contains('show'):false, verdictTx:(document.getElementById('clhVerdictTx')||{}).textContent||null,
+      unverified:(document.getElementById('clhUnverified')||{}).style.display!=='none', sig:(document.getElementById('clhSig')||{}).textContent||null }; };
+  window.__liveState=()=>({ active:liveDebate.active, rounds:liveDebate.rounds, dur:liveDebate.dur,
+    hud:document.getElementById('chronoLiveHud').classList.contains('show'), fill:(document.getElementById('clhFill')||{}).style.width }); 
+  window.__liveClose=()=>{ closeLiveHud(); return { active:liveDebate.active, hud:document.getElementById('chronoLiveHud').classList.contains('show') }; };
 
   window.__feat=()=>({pond:buildings.filter(b=>b.stars>=8||b._activity>0.7).length, garage:buildings.filter(b=>b.stars>=11||(b.forks||0)>=4).length, buildings:buildings.length});
   window.__act=()=>({prompt:document.getElementById('prompt').classList.contains('show'), btn:document.getElementById('actBtn').classList.contains('avail')});

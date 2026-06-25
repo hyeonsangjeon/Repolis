@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.24.0] — 2026-06-28
+
+### ⚡ Chronopolis — free-topic live debates you watch unfold in 3D
+- **Type any topic and the council argues it for real.** The Convene modal now has a free-text box (the six curated cases pre-fill it, but you can ask anything — "monorepo vs many repos", "REST냐 GraphQL이냐"). Pressing **⚡ 라이브 토론 시작** sends the topic to the worker's new **Server-Sent Events** endpoint (`action:"councilLive"`), and the three sages debate it **live for up to two minutes** — `gpt-5.4-mini` tiki-taka streamed turn-by-turn ("Did you read the source?" / "소스 까봤냐?").
+- **The popup closes and you watch in the chamber.** Convene dismisses the modal and drops you into the 3D rotunda with a live **HUD overlay** — a debate badge, the topic, a round counter, and a **progress bar** that fills over the two minutes — while each sage's line pops as a speech bubble over their own head in real time. A close button (44 px, mobile-safe) bails out any time.
+- **A stronger chair, and an honest label.** Free topics are judged by a stronger chair model — **`gpt-5.4-chair` with reasoning `high`** and a raised token budget — whose verdict streams into a gold verdict card. Because a free-topic verdict is *AI inference, not computed from a curated source*, it **always carries an "⚡ AI 라이브 추론 · 출처 미검증 / unverified" badge**. The six curated cases keep their deterministic math verdict ("debate is theatre, the verdict is math") — only free topics use the chair LLM.
+- **Safe by construction.** The client gracefully falls back to the zero-cost Ambient stage if the worker can't stream (offline, capped, or error) — never an error screen. The new **L4b daily live-count cap is lowered to 100/day** for the pricier free-topic path, on top of the existing five-layer cost guards. Production-verified KO + EN: full SSE flow (convocation → 12 turns → verdict → done), verdict populated in the user's language, `unverified:true`, **~$0.007–0.011/debate**, 0 console errors on desktop + 390 px mobile.
+
 ## [1.23.0] — 2026-06-27
 
 ### ⚡ Chronopolis — the Kronos Council goes Live (real LLM, with a hard daily ceiling)

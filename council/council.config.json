@@ -83,9 +83,19 @@
   "_comment_models": "Phase 3(Live)에서만 사용. config 교체만으로 전환(하드코딩 금지). 크레딧 여유 있을 때만 고급 모델.",
   "models": {
     "provider": "azure-ai-foundry",
-    "debate": "gpt-4o-mini",
-    "adjudicator": "gpt-4o-mini",
-    "_alts": ["gpt-4o", "claude-3-5-sonnet"]
+    "debate": "gpt-5.4-mini",
+    "adjudicator": "gpt-5.4-mini",
+    "chair": "gpt-5.4",
+    "_comment_chair": "자유주제(free-topic) 판정은 강한 의장 gpt-5.4 + reasoning. 6 curated fixture는 결정적 코어 verdict 유지.",
+    "_alts": ["gpt-5.5", "o4-mini"]
+  },
+
+  "_comment_price": "USD per 1k tokens. debate=gpt-5.4-mini, chair=gpt-5.4(in $2.5/1M, out $15/1M). 실 단가는 변동 가능 — USD/횟수 cap이 하드 천장. guards.estimateCost는 in/outPer1k만 사용, chair는 워커가 chair*Per1k로 별도 계산.",
+  "price": {
+    "inPer1k": 0.00015,
+    "outPer1k": 0.0006,
+    "chairInPer1k": 0.0025,
+    "chairOutPer1k": 0.015
   },
 
   "_comment_budget": "전역 예산 게이트(L4) — 최후의 벽. 누적 추정비용이 상한 비율에 닿으면 Live 전면 OFF, Ambient만 유지. 실제 상한 금액은 공개 config가 아니라 배포 환경변수/서버측에서만 주입한다(하드코딩·커밋 금지).",
@@ -107,6 +117,18 @@
     "DEBATE_TIMEOUT_SEC": 180,
     "CROSS_ROUNDS_MAX": 2,
     "TOKENS_PER_TURN_MAX": 160
+  },
+
+  "_comment_live_free": "Phase 39 자유주제 라이브 토론 전용 다이얼(6 curated fixture와 분리). 현상님 확정: 2분 토론·토큰 상향·의장 gpt-5.4+reasoning. env로 즉시 조정.",
+  "live_free": {
+    "ENABLED": false,
+    "DEBATE_TIMEOUT_SEC": 120,
+    "MAX_ROUNDS": 4,
+    "TOKENS_PER_TURN_MAX": 220,
+    "TURN_GAP_MS": 1200,
+    "CHAIR_MAXTOK": 700,
+    "CHAIR_REASONING": "high",
+    "LABEL_UNVERIFIED": true
   },
 
   "ambient": {
