@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" width="1200" height="760" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="How the Kronos Council decides: three sages testify and cross-examine, the Chair KRONOS lets time deliver the verdict; Ambient is free and deterministic, Live debate is a guarded paid LLM">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#060b1c"/>
+      <stop offset="0.55" stop-color="#0c1430"/>
+      <stop offset="1" stop-color="#131d40"/>
+    </linearGradient>
+    <radialGradient id="milky" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6e7bd8" stop-opacity="0.30"/>
+      <stop offset="0.5" stop-color="#3a4790" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#0c1430" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="kbFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16244e"/><stop offset="1" stop-color="#101b3c"/>
+    </linearGradient>
+    <linearGradient id="genFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2440"/><stop offset="1" stop-color="#1a1733"/>
+    </linearGradient>
+    <linearGradient id="goldFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241f33"/><stop offset="1" stop-color="#15182f"/>
+    </linearGradient>
+    <radialGradient id="starGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="0.4" stop-color="#ffe6a8" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffe6a8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <marker id="arrG" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#ffd89a"/></marker>
+    <marker id="arrW" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#cfe0ff"/></marker>
+    <marker id="arrV" markerWidth="11" markerHeight="11" refX="7.5" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 Z" fill="#7fe39a"/></marker>
+  </defs>
+
+  <rect width="1200" height="760" fill="url(#sky)"/>
+  <!-- milky way band -->
+  <g transform="rotate(-24 600 300)" opacity="0.9"><ellipse cx="600" cy="300" rx="760" ry="120" fill="url(#milky)"/></g>
+
+  <!-- stars -->
+  <g fill="#fff">
+    <circle cx="80" cy="70" r="1.4" opacity="0.8"/><circle cx="170" cy="130" r="1" opacity="0.6"/>
+    <circle cx="300" cy="60" r="1.2" opacity="0.7"/><circle cx="430" cy="110" r="0.9" opacity="0.5"/>
+    <circle cx="560" cy="70" r="1.5" opacity="0.85"/><circle cx="690" cy="120" r="1" opacity="0.6"/>
+    <circle cx="820" cy="60" r="1.2" opacity="0.7"/><circle cx="960" cy="100" r="1.4" opacity="0.8"/>
+    <circle cx="1080" cy="64" r="1" opacity="0.6"/><circle cx="1140" cy="150" r="1.3" opacity="0.75"/>
+    <circle cx="40" cy="240" r="1.1" opacity="0.6"/><circle cx="150" cy="330" r="1.3" opacity="0.7"/>
+    <circle cx="1160" cy="320" r="1.2" opacity="0.7"/><circle cx="1100" cy="430" r="1" opacity="0.55"/>
+    <circle cx="60" cy="520" r="1.3" opacity="0.7"/><circle cx="200" cy="640" r="1.1" opacity="0.6"/>
+    <circle cx="360" cy="700" r="1.2" opacity="0.65"/><circle cx="520" cy="680" r="0.9" opacity="0.5"/>
+    <circle cx="700" cy="710" r="1.3" opacity="0.7"/><circle cx="880" cy="690" r="1" opacity="0.55"/>
+    <circle cx="1030" cy="700" r="1.2" opacity="0.65"/><circle cx="1150" cy="640" r="1.1" opacity="0.6"/>
+    <circle cx="1170" cy="500" r="1" opacity="0.55"/><circle cx="30" cy="430" r="1" opacity="0.55"/>
+  </g>
+  <!-- glint stars -->
+  <g>
+    <circle cx="240" cy="92" r="22" fill="url(#starGlow)"/><circle cx="240" cy="92" r="1.8" fill="#fff"/>
+    <circle cx="1012" cy="118" r="20" fill="url(#starGlow)"/><circle cx="1012" cy="118" r="1.6" fill="#fff"/>
+    <circle cx="118" cy="612" r="18" fill="url(#starGlow)"/><circle cx="118" cy="612" r="1.5" fill="#fff"/>
+    <circle cx="804" cy="652" r="20" fill="url(#starGlow)"/><circle cx="804" cy="652" r="1.6" fill="#fff"/>
+  </g>
+
+  <!-- header -->
+  <text x="60" y="58" fill="#f3f7ff" font-size="32" font-weight="700">⏳ How the Kronos Council Decides</text>
+  <text x="60" y="90" fill="#9fb0d0" font-size="16">Three sages argue <tspan fill="#8fe0a0">docs‑vs‑code</tspan> — the Chair <tspan fill="#ffe2ad">KRONOS</tspan> lets <tspan fill="#ffd89a">Time</tspan>, the newest living source, deliver the verdict</text>
+  <text x="1140" y="58" text-anchor="end" fill="#5f6f96" font-size="14" font-style="italic">Repolis · Chronopolis</text>
+
+  <!-- ===== Question ===== -->
+  <g filter="url(#soft)">
+    <rect x="44" y="180" width="168" height="150" rx="16" fill="#131d3d" stroke="#cfe0ff" stroke-width="1.5" stroke-opacity="0.5"/>
+  </g>
+  <text x="128" y="228" text-anchor="middle" font-size="28">⚖️</text>
+  <text x="128" y="262" text-anchor="middle" fill="#eaf1ff" font-size="16" font-weight="600">A question</text>
+  <text x="128" y="283" text-anchor="middle" fill="#9fb0d0" font-size="12">dev or AI · docs vs code</text>
+  <rect x="54" y="296" width="148" height="26" rx="8" fill="#1d2747" stroke="#3a4a72" stroke-opacity="0.6"/>
+  <text x="128" y="313" text-anchor="middle" fill="#b9c6e8" font-size="10.5">.dict() → .model_dump()?</text>
+
+  <!-- ===== The Council (3 sages) ===== -->
+  <g filter="url(#soft)">
+    <rect x="252" y="150" width="332" height="210" rx="18" fill="url(#genFill)" stroke="#b9a6d8" stroke-width="1.7" stroke-opacity="0.6"/>
+  </g>
+  <text x="272" y="187" font-size="20">🏛️</text>
+  <text x="302" y="187" fill="#efeaff" font-size="17" font-weight="700">The Council</text>
+  <text x="272" y="210" fill="#b3a9cf" font-size="12.5">3 sages testify, then cross‑examine ⚔️</text>
+  <g font-weight="600">
+    <!-- Olddoc -->
+    <rect x="258" y="228" width="104" height="122" rx="11" fill="#241d33" stroke="#c79a5b" stroke-opacity="0.7"/>
+    <text x="310" y="258" text-anchor="middle" font-size="18">📜</text>
+    <text x="310" y="279" text-anchor="middle" fill="#e0c190" font-size="11.5">Olddoc</text>
+    <text x="310" y="294" text-anchor="middle" fill="#9a8fb5" font-weight="400" font-size="9.5">stale doc</text>
+    <line x1="270" y1="304" x2="350" y2="304" stroke="#c79a5b" stroke-opacity="0.3"/>
+    <text x="310" y="322" text-anchor="middle" fill="#cdbfa0" font-weight="400" font-size="10.5">.dict()</text>
+    <text x="310" y="339" text-anchor="middle" fill="#8a7fa5" font-weight="400" font-size="9.5">2025 · "always was"</text>
+    <!-- Livewire -->
+    <rect x="366" y="228" width="104" height="122" rx="11" fill="#1b2c25" stroke="#5bbf73" stroke-opacity="0.75"/>
+    <text x="418" y="258" text-anchor="middle" font-size="18">🌿</text>
+    <text x="418" y="279" text-anchor="middle" fill="#8fe0a0" font-size="11.5">Livewire</text>
+    <text x="418" y="294" text-anchor="middle" fill="#86b596" font-weight="400" font-size="9.5">live source</text>
+    <line x1="378" y1="304" x2="458" y2="304" stroke="#5bbf73" stroke-opacity="0.3"/>
+    <text x="418" y="322" text-anchor="middle" fill="#bfe9c8" font-weight="400" font-size="10.5">.model_dump()</text>
+    <text x="418" y="339" text-anchor="middle" fill="#7fa98c" font-weight="400" font-size="9.5">2026 · src line</text>
+    <!-- Hearsay -->
+    <rect x="474" y="228" width="104" height="122" rx="11" fill="#1b2540" stroke="#7aa7d8" stroke-opacity="0.7"/>
+    <text x="526" y="258" text-anchor="middle" font-size="18">🌀</text>
+    <text x="526" y="279" text-anchor="middle" fill="#a8c8f0" font-size="11.5">Hearsay</text>
+    <text x="526" y="294" text-anchor="middle" fill="#8f9fc0" font-weight="400" font-size="9.5">community</text>
+    <line x1="486" y1="304" x2="566" y2="304" stroke="#7aa7d8" stroke-opacity="0.3"/>
+    <text x="526" y="322" text-anchor="middle" fill="#bcd0ee" font-weight="400" font-size="10.5">echoes crowd</text>
+    <text x="526" y="339" text-anchor="middle" fill="#7f8fb5" font-weight="400" font-size="9.5">often sides w/ docs</text>
+  </g>
+
+  <!-- ===== KRONOS weighs time ===== -->
+  <g filter="url(#soft)">
+    <rect x="644" y="150" width="238" height="210" rx="18" fill="url(#goldFill)" stroke="#e8c45a" stroke-width="1.8" stroke-opacity="0.75"/>
+  </g>
+  <text x="664" y="190" font-size="22" filter="url(#glow)">⏳</text>
+  <text x="696" y="187" fill="#ffe9c4" font-size="17" font-weight="700">KRONOS</text>
+  <text x="664" y="211" fill="#d8cfa0" font-size="12">Weighs each claim by source × recency:</text>
+  <!-- priority bars -->
+  <g font-size="10.5">
+    <text x="664" y="250" font-size="13">🌿</text>
+    <text x="684" y="250" fill="#8fe0a0" font-weight="600">live source</text>
+    <rect x="772" y="241" width="84" height="9" rx="4.5" fill="#5bbf73"/>
+    <text x="664" y="278" font-size="13">📜</text>
+    <text x="684" y="278" fill="#e0c190" font-weight="600">stale doc</text>
+    <rect x="772" y="269" width="42" height="9" rx="4.5" fill="#c79a5b"/>
+    <text x="664" y="306" font-size="13">🌀</text>
+    <text x="684" y="306" fill="#a8c8f0" font-weight="600">community</text>
+    <rect x="772" y="297" width="28" height="9" rx="4.5" fill="#7aa7d8"/>
+  </g>
+  <text x="664" y="334" fill="#ffd89a" font-size="11" font-style="italic">↳ the newest living source wins —</text>
+  <text x="664" y="349" fill="#ffd89a" font-size="11" font-style="italic">even over the majority vote.</text>
+
+  <!-- ===== Verdict + signature ===== -->
+  <g filter="url(#soft)">
+    <rect x="930" y="150" width="226" height="210" rx="18" fill="url(#goldFill)" stroke="#e8c45a" stroke-width="2.2" stroke-opacity="0.85"/>
+  </g>
+  <text x="950" y="190" font-size="20">✅</text>
+  <text x="982" y="187" fill="#ffe9c4" font-size="17" font-weight="700">Verdict</text>
+  <text x="1043" y="234" text-anchor="middle" fill="#8fe0a0" font-size="20" font-weight="700">.model_dump()</text>
+  <text x="1043" y="258" text-anchor="middle" fill="#9fb0d0" font-size="12.5">confidence 0.85 · overrides majority</text>
+  <line x1="948" y1="276" x2="1138" y2="276" stroke="#e8c45a" stroke-opacity="0.3"/>
+  <text x="1043" y="304" text-anchor="middle" fill="#ffe2ad" font-size="13" font-style="italic">"Three votes, but time</text>
+  <text x="1043" y="322" text-anchor="middle" fill="#ffe2ad" font-size="13" font-style="italic">points to one."</text>
+  <text x="1043" y="344" text-anchor="middle" fill="#8a7fa5" font-size="10">⏳ signature S1 · one of S1–S9</text>
+
+  <!-- arrows: Question -> Council -> KRONOS -> Verdict -->
+  <path d="M212,255 L250,255" fill="none" stroke="#cfe0ff" stroke-width="2.2" marker-end="url(#arrW)"/>
+  <text x="231" y="246" text-anchor="middle" fill="#cfe0ff" font-size="11">asks</text>
+  <path d="M584,255 L642,255" fill="none" stroke="#cfe0ff" stroke-width="2.2" marker-end="url(#arrW)"/>
+  <text x="613" y="246" text-anchor="middle" fill="#cfe0ff" font-size="10.5">testify</text>
+  <path d="M882,255 L928,255" fill="none" stroke="#ffd89a" stroke-width="2.4" marker-end="url(#arrV)"/>
+  <text x="905" y="246" text-anchor="middle" fill="#ffd89a" font-size="10.5">decides</text>
+
+  <!-- ===== emphasis strip ===== -->
+  <rect x="44" y="392" width="1112" height="40" rx="12" fill="#0f1736" stroke="#2a3a6a" stroke-opacity="0.55"/>
+  <text x="600" y="417" text-anchor="middle" fill="#cfd9f0" font-size="15" font-weight="600">🎭 The debate is theater &#160;·&#160; ⚖️ the verdict is always math — <tspan fill="#8fe0a0">deterministic</tspan>, <tspan fill="#ffe2ad">byte‑equal</tspan>, auditable</text>
+
+  <!-- ===== Ambient (free) ===== -->
+  <g filter="url(#soft)">
+    <rect x="44" y="452" width="548" height="156" rx="18" fill="url(#kbFill)" stroke="#8fb6ff" stroke-width="1.8" stroke-opacity="0.7"/>
+  </g>
+  <text x="66" y="490" font-size="20">👁️</text>
+  <text x="96" y="490" fill="#dce8ff" font-size="16.5" font-weight="700">Ambient — walk up &amp; watch</text>
+  <text x="66" y="516" fill="#9fb0d0" font-size="13">Free · 0 LLM · fully deterministic · always on.</text>
+  <text x="66" y="537" fill="#9fb0d0" font-size="13">The debate bubble you see in town is pre‑computed by</text>
+  <text x="66" y="556" fill="#9fb0d0" font-size="13">the engine — same fixture → byte‑identical every time.</text>
+  <g font-size="11" font-weight="600">
+    <rect x="66" y="572" width="78" height="24" rx="8" fill="#1a2950" stroke="#8fb6ff" stroke-opacity="0.45"/>
+    <text x="105" y="588" text-anchor="middle" fill="#bcd2ff">$0 cost</text>
+    <rect x="150" y="572" width="118" height="24" rx="8" fill="#1a2950" stroke="#8fb6ff" stroke-opacity="0.45"/>
+    <text x="209" y="588" text-anchor="middle" fill="#bcd2ff">52 tests green</text>
+    <rect x="274" y="572" width="98" height="24" rx="8" fill="#1a2950" stroke="#8fb6ff" stroke-opacity="0.45"/>
+    <text x="323" y="588" text-anchor="middle" fill="#bcd2ff">no network</text>
+  </g>
+
+  <!-- ===== Live (paid, guarded) ===== -->
+  <g filter="url(#soft)">
+    <rect x="612" y="452" width="544" height="156" rx="18" fill="url(#genFill)" stroke="#ffd89a" stroke-width="1.8" stroke-opacity="0.75"/>
+  </g>
+  <text x="634" y="490" font-size="18">🔴</text>
+  <text x="664" y="490" fill="#ffe9c4" font-size="16.5" font-weight="700">Live debate — real LLM</text>
+  <text x="634" y="516" fill="#bdb3d6" font-size="13">Paid · the model writes the banter, in persona.</text>
+  <text x="634" y="537" fill="#bdb3d6" font-size="13">Guarded behind L1–L5 · <tspan fill="#ffd89a">LIVE_ENABLED=false</tspan> by default.</text>
+  <text x="634" y="556" fill="#bdb3d6" font-size="13">No key → silent fallback to Ambient. Verdict stays engine‑computed.</text>
+  <g font-size="11" font-weight="600">
+    <rect x="634" y="572" width="104" height="24" rx="8" fill="#322a4c" stroke="#ffd89a" stroke-opacity="0.45"/>
+    <text x="686" y="588" text-anchor="middle" fill="#ffe2ad">L1–L5 guards</text>
+    <rect x="744" y="572" width="128" height="24" rx="8" fill="#322a4c" stroke="#ffd89a" stroke-opacity="0.45"/>
+    <text x="808" y="588" text-anchor="middle" fill="#ffe2ad">budget killswitch 90%</text>
+    <rect x="878" y="572" width="126" height="24" rx="8" fill="#322a4c" stroke="#d6b8ff" stroke-opacity="0.45"/>
+    <text x="941" y="588" text-anchor="middle" fill="#e2d0ff">cooldown · burst</text>
+  </g>
+
+  <!-- footer legend -->
+  <g font-size="12.5">
+    <circle cx="64" cy="712" r="6" fill="#5bbf73"/>
+    <text x="78" y="716" fill="#9fb0d0">Time priority — <tspan fill="#8fe0a0">live source</tspan> &gt; <tspan fill="#e0c190">stale docs</tspan> &gt; <tspan fill="#a8c8f0">crowd</tspan>; newest wins</text>
+    <circle cx="560" cy="712" r="6" fill="#e8c45a"/>
+    <text x="574" y="716" fill="#9fb0d0">Verdict &amp; S1–S9 signature are always deterministic</text>
+    <text x="1140" y="716" text-anchor="end" fill="#5f6f96">0‑cost default · guards L1–L5</text>
+  </g>
+</svg>

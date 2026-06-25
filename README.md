@@ -73,6 +73,12 @@ github-traffic-monitor (private)          Repolis (public)
 
 Talk to any scholar and your question forks two ways. A **repo / docs question** runs **KB retrieval** through that scholar's MCP knowledge source (MS Learn · DeepWiki · Azure AI Search) and comes back **grounded, with references**. An **off‑topic / small‑talk question** — or a knowledge‑base miss — is answered **in persona** by **Azure AI Foundry `gpt-5.4-mini`**: _starlit_ general knowledge, no repo pushed. Every reply carries a trace panel (🔎 _how I found this_ / ✦ _how I answered_) so you can see which path it took.
 
+### ⏳ How the Kronos Council decides — debate as theater, verdict as math
+
+![How the Kronos Council decides — three sages testify and cross-examine, the Chair KRONOS lets the newest living source deliver a deterministic verdict](assets/chrono-council.svg)
+
+In a domed rotunda on the edge of town, three debate‑sages argue **docs vs. code** — 📜 **Olddoc** quotes the manual, 🌿 **Livewire** trusts the running source, 🌀 **Hearsay** echoes the crowd. The Chair, ⏳ **KRONOS**, weighs every claim by **source × recency** and lets **Time** — the newest living source — deliver the verdict. The banter is theater; the verdict is **always the deterministic engine** (byte‑identical, 52 tests green). **Ambient** (walk up & watch) is free and runs 0 LLM; **Live** debate is an optional, guarded paid LLM (`LIVE_ENABLED=false` by default, silent fallback when no key is set).
+
 
 ## 🚀 Run your own
 
