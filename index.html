@@ -2199,7 +2199,8 @@ const SAGE_INFO = (()=>{ const m={};
     const sh=new THREE.Mesh(new THREE.CylinderGeometry(0.52,0.6,6.6,16), toon(MARBLE)); sh.position.set(x,4.4,z); sh.castShadow=true; cg.add(sh);
     const cap=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.5,1.5), toon(0xf1ecdf)); cap.position.set(x,7.85,z); cg.add(cap);
     const base=new THREE.Mesh(new THREE.CylinderGeometry(0.78,0.86,0.5,16), toon(0xe2dccb)); base.position.set(x,1.35,z); cg.add(base);
-    COLLIDERS.push({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z, r:1.0});
+    // skip the 2 town-facing pillars (local +Z) → a clear, wide entry corridor; slimmer r widens every gap so mobile players never wedge between columns
+    if(!(z>11 && Math.abs(x)<5)) COLLIDERS.push({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z, r:0.62});
   }
   const arch=new THREE.Mesh(new THREE.TorusGeometry(CR,0.62,10,52), toon(0xf1ecdf)); arch.rotation.x=Math.PI/2; arch.position.y=8.35; cg.add(arch);
   const frieze=new THREE.Mesh(new THREE.CylinderGeometry(CR+0.5,CR+0.5,0.9,52,1,true), toon(0xe6dfcc)); frieze.position.y=8.9; cg.add(frieze);
@@ -2221,7 +2222,7 @@ const SAGE_INFO = (()=>{ const m={};
   // 3 debaters in a shallow arc facing +Z (player), olddoc / livewire / hearsay
   const seats=[ ['olddoc','scroll',-5.6,-1.5], ['livewire','tablet',0,0.6], ['hearsay','swirl',5.6,-1.5] ];
   seats.forEach(([id,prop,x,z])=>{ const c=SAGE_INFO[id]||{color:'#bbb'}; const f=chronoFig(c.color,1,prop); f.position.set(x,0,z); cg.add(f);
-    COLLIDERS.push({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z, r:1.0}); });
+    COLLIDERS.push({x:CHRONO_POS.x+Math.cos(cg.rotation.y)*x-Math.sin(cg.rotation.y)*z, z:CHRONO_POS.z+Math.sin(cg.rotation.y)*x+Math.cos(cg.rotation.y)*z, r:0.7}); });
   // KRONOS — tall, gold, hooded, presiding on the dais
   const kron=chronoFig(GOLD,1.32,null); kron.position.set(0,1.75,-8.4); cg.add(kron);
   const hood=new THREE.Mesh(new THREE.ConeGeometry(0.62,0.9,18), toon(shade(GOLD,-14))); hood.position.set(0,1.75+3.7,-8.4); cg.add(hood);
@@ -2259,7 +2260,7 @@ const SAGE_INFO = (()=>{ const m={};
   // landmark anchor + arrival point (town-facing entrance)
   cg.updateMatrixWorld(true);
   CHRONO={ _isChrono:true, _pos:cg.localToWorld(new THREE.Vector3(0,0,18.5)) };
-  COLLIDERS.push({x:CHRONO_POS.x,z:CHRONO_POS.z, r:2.2});   // KRONOS dais core (centre stays walkable around it)
+  COLLIDERS.push({x:CHRONO_POS.x,z:CHRONO_POS.z, r:1.0});   // just the sundial gnomon — the rest of the floor stays freely walkable
 })();
 
 /* ---- ambient debate: one reused world bubble cycles through the deterministic transcript (0 LLM) ---- */

@@ -3,6 +3,11 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.14.1] — 2026-06-25
+
+### ⏳ Fix: don't get wedged inside the Kronos Council on mobile
+- Real-device feedback showed players getting **trapped between the council's columns** on mobile. The 14-pillar ring used `r:1.0` colliders that left gaps too narrow to find, and the dais core (`r:2.2`) crowded the centre. Now the **two town-facing pillars are collider-free** (a clear, wide entry corridor), every column collider is **slimmed to `r:0.62`** so all gaps widen, the three sages' colliders go `1.0 → 0.7`, and the centre is just the **sundial gnomon (`r:1.0`)** instead of a `2.2` dais core — the rest of the floor stays freely walkable. Verified with frame-by-frame walk sims: from inside the ring a straight line out is now monotonic (dist 11.5 → 55.7, no snag at the column radius), and from dead-centre the player never pins to a point. 0 console errors.
+
 ## [1.14.0] — 2026-06-25
 
 ### ⏳ Chronopolis — the Council of Time (a deterministic "docs vs code" debate chamber)
