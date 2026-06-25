@@ -83,19 +83,15 @@
   "_comment_models": "Phase 3(Live)에서만 사용. config 교체만으로 전환(하드코딩 금지). 크레딧 여유 있을 때만 고급 모델.",
   "models": {
     "provider": "azure-ai-foundry",
-    "tenant": "external-ms",
     "debate": "gpt-4o-mini",
     "adjudicator": "gpt-4o-mini",
     "_alts": ["gpt-4o", "claude-3-5-sonnet"]
   },
 
-  "_comment_budget": "전역 예산 게이트(L4) — 최후의 벽. 외부 테넌트 리소스그룹 비용이 상한에 닿으면 Live 전면 OFF, Ambient만 유지. 사용자 지정 범위 $500~700.",
+  "_comment_budget": "전역 예산 게이트(L4) — 최후의 벽. 누적 추정비용이 상한 비율에 닿으면 Live 전면 OFF, Ambient만 유지. 실제 상한 금액은 공개 config가 아니라 배포 환경변수/서버측에서만 주입한다(하드코딩·커밋 금지).",
   "budget": {
     "currency": "USD",
-    "month_cap": 600,
-    "month_cap_range": [500, 700],
     "gate_ratio": 0.9,
-    "day_cap": 24,
     "auto_killswitch_at_ratio": 0.9
   },
 

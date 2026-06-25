@@ -29,7 +29,7 @@
 // return { fallback:true } and the client silently falls back to Local search.
 //
 // Required environment variables (set in Vercel project settings):
-//   SEARCH_ENDPOINT        e.g. https://srch-repolis-grounding-ext.search.windows.net
+//   SEARCH_ENDPOINT        e.g. https://<your-search>.search.windows.net
 //   SEARCH_API_KEY         Search admin or query key (data-plane retrieve)
 //   SEARCH_KB_NAME         knowledge base name (e.g. repolis-github-kb)
 //   SEARCH_KS_NAME         comma-separated knowledge source name(s) — attach more MCPs

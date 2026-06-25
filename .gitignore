@@ -7,3 +7,9 @@ cloudflare-taxi/.wrangler/
 .dev.vars
 # Local-only notes that record real keys/secrets (kept out of git on purpose)
 *.local.md
+# Internal design / agent-working docs — kept local, not published to the public repo
+CHRONOPOLIS_SPEC.md
+CLAUDE.md
+AGENTS.md
+__pycache__/
+*.pyc
