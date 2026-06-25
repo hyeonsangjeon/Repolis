@@ -294,7 +294,9 @@
   .chatHead .ttl { font-weight: 800; font-size: 14px; color: #6a4a22; flex: 1; }
   .chatHead select { font-size: 11px; border: 1px solid #e8d4b2; border-radius: 9px; padding: 4px 6px;
     background: #fffdf8; color: #6a4a22; outline: none; }
-  .chatHead .x { border: none; background: none; font-size: 20px; color: #b08a5e; cursor: pointer; line-height: 1; }
+  .chatHead .x { border: none; background: none; font-size: 20px; color: #b08a5e; cursor: pointer; line-height: 1;
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+    flex: 0 0 auto; padding: 0; }
   #chatLog { padding: 12px; display: flex; flex-direction: column; gap: 9px; height: 320px; overflow-y: auto; }
   #chatLog::-webkit-scrollbar { width: 7px; } #chatLog::-webkit-scrollbar-thumb { background: #e6d3b8; border-radius: 6px; }
   .msg { max-width: 84%; padding: 9px 12px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
@@ -335,7 +337,7 @@
     padding: 10px 12px; font-size: 13px; color: #4a2f1e; outline: none; }
   .chatIn input:focus { border-color: #e0b07a; }
   .chatIn button { border: none; background: #5bbcb0; color: #fff; font-weight: 800; border-radius: 12px;
-    padding: 0 16px; font-size: 14px; cursor: pointer; }
+    padding: 0 16px; font-size: 14px; cursor: pointer; min-height: 40px; }
   #drivebar { position: fixed; z-index: 13; left: 50%; top: 64px; transform: translateX(-50%);
     background: rgba(74,47,30,.9); color: #fff; font-size: 13px; font-weight: 700; padding: 9px 18px;
     border-radius: 14px; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 22px rgba(0,0,0,.25); }
@@ -343,6 +345,16 @@
   #drivebar .cancel .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(231,76,60,.9); }
   #drivebar .cancel.holding .fill { width: 100%; transition: width 1s linear; }
   #drivebar .cancel .lbl { position: relative; z-index: 1; }
+  /* ---- mobile tap-target a11y (Phase 36) — placed last so it overrides base rules ---- */
+  @media (hover: none) and (pointer: coarse) {
+    #langBtn, #dayBtn, #passBtn { min-height: 44px; display: inline-flex; align-items: center; }
+    .chatHead .x { width: 44px; height: 44px; font-size: 24px; margin-right: -6px; }
+    .chatIn input, #repoSearch { font-size: 16px; }
+    .chatIn button { min-width: 48px; min-height: 44px; }
+    .msg .ride { min-height: 38px; }
+    .msg .alt { display: inline-flex; align-items: center; min-height: 32px; }
+    #intro .langsel button { min-height: 44px; padding: 10px 22px; }
+  }
 </style>
 </head>
 <body>

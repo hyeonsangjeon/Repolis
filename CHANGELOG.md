@@ -3,6 +3,12 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.21.0] — 2026-06-27
+
+### 📱 Mobile tap-target polish — every control is thumb-friendly
+- A focused accessibility pass over the **touch UI**: the chat **close (×)** button — previously a tiny 11×18 hit area that was easy to miss — is now a full **44×44** tap target, and the **send (▶)** button, topbar buttons (**🌐 language · 🌙 day/night · 🛂 passport**), and the intro language toggle all meet the **44 px** minimum on touch devices. The taxi/scholar **chat input now uses 16 px** on mobile so iOS Safari no longer zooms the whole page when you tap to type. In-chat **"ride" and alternate-repo chips** got taller hit areas too.
+- **Surgical & desktop-safe.** Everything new lives behind a single `(hover: none) and (pointer: coarse)` media block placed last in the stylesheet, so the desktop layout is byte-for-byte unchanged (verified `pointer: coarse` is false on desktop, input stays 13 px). No 3D, camera, or render code touched. Verified on a 390 px viewport: **no horizontal overflow, every interactive control ≥ 44 px, 0 console errors**, and Phases 33–35 (emotes, tree sway, council timeline) all still intact.
+
 ## [1.20.0] — 2026-06-27
 
 ### ⏳ Chronopolis — the Verdict of Time, made visible
