@@ -3,6 +3,12 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.19.0] — 2026-06-27
+
+### 🌳 Wind in the trees — the whole town breathes
+- Every tree in Repolis now **sways gently in the wind**. Leafy shade trees, Provençal cypress spires, and silvery olives all lean and rock from their base on a soft, per-tree rhythm, modulated by a slow town-wide gust so the canopy ripples instead of swaying in lockstep. Combined with the birds gliding overhead, butterflies fluttering through the gardens, drifting clouds, and chimney smoke that were already there, the village finally feels like it's *alive* and lived-in — somewhere you want to walk and linger.
+- **Featherweight & mobile-safe.** The effect is a tiny base-pivot tilt per tree (no geometry work, no extra draw calls, no new objects) — 81 trees updated per frame with two cheap trig calls each. Day and night alike. Central plaza stays open and uncluttered; nothing was added, only motion. Verified with **0 console errors** on desktop and mobile.
+
 ## [1.18.0] — 2026-06-27
 
 ### 👋 Multiplayer emotes — wave, clap, cheer, dance, heart

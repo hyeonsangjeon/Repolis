@@ -1285,6 +1285,11 @@ for(let i=0;i<16;i++){
 }
 
 /* ---- trees / rocks / flowers ---- */
+// ---- wind sway: trees gently lean from their base (cheap group-tilt, day & night) ----
+const SWAY=[];
+function regSway(g,amp){ g.userData.sway={sp:0.5+Math.random()*0.5, ph:Math.random()*6.2832, amp:amp*(0.7+Math.random()*0.6)}; SWAY.push(g); }
+function updateSway(t){ const gust=0.72+0.28*Math.sin(t*0.27); for(const g of SWAY){ const u=g.userData.sway;
+  g.rotation.z=Math.sin(t*u.sp+u.ph)*u.amp*gust; g.rotation.x=Math.cos(t*u.sp*0.83+u.ph*1.3)*u.amp*0.55*gust; } }
 function makeTree(x,z,s=1,big=false){
   const g=new THREE.Group();
   const trunk=rbox(0.5*s,1.8*s,0.5*s,0x7a5230,0.18); trunk.position.y=0.9*s; outline(trunk,0.045*s); g.add(trunk);
@@ -1294,7 +1299,7 @@ function makeTree(x,z,s=1,big=false){
     const c=new THREE.Mesh(new THREE.ConeGeometry((1.6-i*0.3)*s,1.6*s,7), toon(greens[i%3]));
     c.position.y=(1.8+i*0.85)*s; c.castShadow=true; outline(c,0.05*s); g.add(c);
   }
-  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); return g;
+  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); regSway(g,0.03); return g;
 }
 function makeRock(x,z,s=1){
   const r=new THREE.Mesh(new THREE.DodecahedronGeometry(0.6*s,0), toon(0x9a978d));
@@ -1315,7 +1320,7 @@ function makeCypress(x,z,s=1){
   const greens=[0x39603f,0x34563a,0x426a48];
   for(let i=0;i<3;i++){ const c=new THREE.Mesh(new THREE.ConeGeometry((0.82-i*0.16)*s,(2.4-i*0.2)*s,8), toon(greens[i]));
     c.position.y=(1.1+i*1.5)*s; c.castShadow=true; outline(c,0.04*s); g.add(c); }
-  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); return g;
+  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); regSway(g,0.014); return g;
 }
 function makeOlive(x,z,s=1){
   const g=new THREE.Group();
@@ -1325,7 +1330,7 @@ function makeOlive(x,z,s=1){
     const cr=new THREE.Mesh(new THREE.SphereGeometry((0.66+Math.random()*0.2)*s,8,7), toon(olives[i%3]));
     cr.position.set(Math.cos(a)*0.46*s,(1.5+Math.random()*0.3)*s,Math.sin(a)*0.46*s); cr.scale.y=0.82; cr.castShadow=true; outline(cr,0.03*s); g.add(cr); }
   const cap=new THREE.Mesh(new THREE.SphereGeometry(0.78*s,8,7), toon(olives[1])); cap.position.y=1.85*s; cap.scale.y=0.78; g.add(cap);
-  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); return g;
+  g.position.set(x,0,z); g.rotation.y=Math.random()*Math.PI; scene.add(g); regSway(g,0.024); return g;
 }
 function addLavenderRow(x,z,rows){
   const g=new THREE.Group(); rows=rows||(2+(Math.random()*2|0)); const purples=[0x8a6fc0,0x9b7fd0,0x7d63b0];
@@ -3604,6 +3609,7 @@ function animate(){
   updateKoi(clock.elapsedTime);
   updateFountains(dt);
   updateSmoke(clock.elapsedTime);
+  updateSway(clock.elapsedTime);
   updateChows(clock.elapsedTime,dt);
   updateChrono(dt);
   if(!isNight){ updateBirds(clock.elapsedTime); updateButterflies(clock.elapsedTime); }
@@ -3762,8 +3768,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__wave=(id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'wave',id:t,to:guestId()}); return {by:t, peerEmoteT:+(peers.get(t)?.emoteT||0).toFixed(2), toast:greetToast.textContent}; };
   window.__emote=(kind='clap')=>{ playEmote(kind); return {emoteT:+emoteT.toFixed(2), kind:emoteKind}; };
   window.__peerEmote=(kind='dance',id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'emote',id:t,kind}); const p=peers.get(t); return {by:t, emoteT:+(p?.emoteT||0).toFixed(2), kind:p?.emoteKind, armL:!!p?.group._armL}; };
-  window.__emotes=()=>Object.keys(EMOTES);
-  window.__meteor=(az)=>{ spawnMeteor(az); return true; };
+  window.__emotes=()=>Object.keys(EMOTES);  window.__meteor=(az)=>{ spawnMeteor(az); return true; };
   window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; };
   window.__lib=()=>{ openCard(LIB); return true; };
   window.__libView=(back=20)=>{ player.position.set(0,0,LIB._z-LIB._cw-back); model.rotation.y=0; camYaw=Math.PI; camPitch=0.34; camDist=42; return {z:+player.position.z.toFixed(1)}; };
@@ -3787,6 +3792,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     const d=m.querySelector('.trace'); if(d) d.open=true; const a=m.querySelector('a.traceRef');
     return { rows:m.querySelectorAll('.traceRefRow').length, links:m.querySelectorAll('a.traceRef').length, copyBtns:m.querySelectorAll('.traceCopy').length, noLink:m.querySelectorAll('.traceRef.noLink').length, firstHref:a?a.getAttribute('href'):null, rel:a?a.getAttribute('rel'):null, target:a?a.getAttribute('target'):null }; };
   window.__chows=()=>({n:CHOWS.length, wld:CHOWS.filter(c=>c.userData.wld).length, tail:!!(CHOWS[0]&&CHOWS[0].userData.tail), sample:CHOWS.filter(c=>c.userData.wld).slice(0,4).map(c=>[+c.position.x.toFixed(2),+c.position.z.toFixed(2)])});
+  window.__sway=()=>({n:SWAY.length, rz:SWAY.slice(0,3).map(g=>+g.rotation.z.toFixed(4)), rx:SWAY.slice(0,3).map(g=>+g.rotation.x.toFixed(4))});
   window.__seat=()=>({near:nearestSeat?[+nearestSeat.x.toFixed(1),+nearestSeat.z.toFixed(1)]:null, sitting:!!sitting, seats:SEATS.length});
   window.__sit=()=>{ if(nearestSeat){ sitDown(nearestSeat); return true; } return false; };
   window.__stand=()=>{ standUp(); return true; };
