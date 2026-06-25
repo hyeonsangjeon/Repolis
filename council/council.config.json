@@ -92,7 +92,9 @@
   "budget": {
     "currency": "USD",
     "gate_ratio": 0.9,
-    "auto_killswitch_at_ratio": 0.9
+    "auto_killswitch_at_ratio": 0.9,
+    "_comment_day_live_max": "L4b 하루 라이브 토론 횟수 하드 cap(비용 cap 위의 직관적 상한). env COUNCIL_DAY_LIVE_MAX로 즉시 override. 1회 토론 토큰은 L5로 bounded → 사실상 하루 토큰 천장.",
+    "day_live_max": 300
   },
 
   "_comment_dials": "Phase 3 출시 다이얼 — 환경변수로 즉시 조정(배포 없이). 런치 당일은 보수적으로 시작.",

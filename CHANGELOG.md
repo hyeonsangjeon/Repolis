@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.23.0] — 2026-06-27
+
+### ⚡ Chronopolis — the Kronos Council goes Live (real LLM, with a hard daily ceiling)
+- **Convene now runs a real debate.** With the worker's `COUNCIL_LIVE_ENABLED` switch on, pressing **⚖️ 회의 소집 (라이브)** sends the three sages into an actual `gpt-5.4-mini` argument — the testimony/cross-examination lines you read are now LLM-generated tiki-taka ("소스 까봤냐?" / "블로그에서 봤는데…"), not a fixed script. **The verdict is still pure math:** it always comes from the deterministic core engine, never from the debate ("debate is theatre, the verdict is math"). Live-verified on the public site: `live:true`, real `cost`, core verdict, **0 console errors**.
+- **New L4b guard — a daily live-count hard cap.** On top of the existing five-layer cost guards (rate / concurrency / burst / USD budget / per-debate token cap), there's now a blunt, intuitive ceiling: **at most N Live debates per UTC day** (`COUNCIL_DAY_LIVE_MAX`, default 300). Because each debate's tokens are already bounded by L5, "N debates/day" is effectively a hard daily *token* ceiling that's easy to reason about. Once it's hit, Convene silently falls back to the zero-cost Ambient stage with a friendly notice — never an error screen. It reuses the budget store under a `cnt:` bucket, so any KV/D1 adapter supports it for free.
+- **Caps in effect:** month $600 · day $24 · 300 live/day. (The store is in-memory, so caps are best-effort per worker isolate; L1–L3 frequency throttles keep runaway impossible, and L5 bounds every single debate.)
+- **Deterministic-time fix.** `runDebate` now pins its deadline clock to an injected `now` when one is provided (tests/replay), so the live-path crosschecks (cost > 0, error → partial) are reproducible regardless of wall-clock. Production injects neither `now` nor `clock`, so it still uses real `Date.now()` — no behavior change. Tests stay green: engine **62** + live crosschecks **34** (incl. the new daily-count cap C11).
+
 ## [1.22.0] — 2026-06-27
 
 ### ⏳ Chronopolis — the sages are dev geeks now, and they argue with their hands

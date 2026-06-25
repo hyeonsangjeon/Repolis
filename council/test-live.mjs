@@ -185,6 +185,25 @@ await (async function () {
     ok(tr.endedBy === 'timeout' || tr.partial === true || tr.state === 'verdict', 'timeout ends gracefully with a verdict');
   }
 
+  /* ── C11: daily live-count hard cap (L4b) → blocked after N today, resets next day ── */
+  group('C11 daily live-count cap → blocked after N debates today, resets next day');
+  {
+    const store = Guards.makeMemStore();
+    const MAX = 3;
+    // MAX live debates from DIFFERENT devices (so L1 cooldown never trips) on one day
+    for (let i = 0; i < MAX; i++) {
+      let r = await Live.councilLive(ctx({ store, dayLiveMax: MAX, signals: { ip: '12.0.0.' + i, fp: 'DC_' + i } }));
+      ok(r.live === true, 'live #' + (i + 1) + ' under the daily count cap runs');
+    }
+    // the next fresh device is stopped by the COUNT cap, not by cooldown/budget
+    let over = await Live.councilLive(ctx({ store, dayLiveMax: MAX, signals: { ip: '12.0.0.50', fp: 'DC_OVER' } }));
+    ok(over.state === 'ambient' && over.reason === 'daily_count', 'over the daily count → daily_count notice (not cooldown)');
+    ok(over.live === false && over.transcript.length > 0, 'still shows a past council at $0 when the day is full');
+    // next UTC day → the count bucket resets
+    let tomorrow = await Live.councilLive(ctx({ store, dayLiveMax: MAX, signals: { ip: '12.0.0.0', fp: 'DC_0' }, now: T0 + DAY }));
+    ok(tomorrow.live === true, 'next day → count bucket resets, live runs again');
+  }
+
   /* ── concurrency is always released (finally) ── */
   group('L2 concurrency is released after every live (even on error)');
   {

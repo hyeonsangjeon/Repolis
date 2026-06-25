@@ -533,6 +533,7 @@ async function councilHandler(body, request, env) {
     engine: CouncilEngine, guards: CouncilGuards, dials,
     price: COUNCIL_CFG.price,
     caps: { monthCap: councilNum(env.COUNCIL_MONTH_CAP_USD), dayCap: councilNum(env.COUNCIL_DAY_CAP_USD) },
+    dayLiveMax: councilNum(env.COUNCIL_DAY_LIVE_MAX) ?? COUNCIL_CFG.budget?.day_live_max,
     budgetGateRatio: COUNCIL_CFG.budget?.gate_ratio ?? 0.9,
     salt: env.COUNCIL_SALT || "repolis",
     signals: { ip: clientIp(request), fp: body.fp, cookie: body.cookie },

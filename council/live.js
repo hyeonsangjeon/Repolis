@@ -42,6 +42,10 @@
       ko: '오늘 회의 정원이 모두 찼어요. 지난 명회의들을 감상하세요 👀',
       en: "Today's councils are all booked. Enjoy past councils 👀",
     },
+    daily_count: {
+      ko: '오늘 라이브 토론 정원이 모두 찼어요. 지난 명회의들을 감상하세요 👀',
+      en: "Today's live debates are all used up. Enjoy past councils 👀",
+    },
     burst: {
       ko: '잠시 후 다시 시도해 주세요. 그동안 명회의를 구경할 수 있어요 👀',
       en: 'Please try again shortly — you can watch past councils meanwhile 👀',
@@ -119,7 +123,10 @@
     // ---- real LLM debate (only reached when LIVE_ENABLED && llm present) ------
     var dials = ctx.dials || {};
     var sages = ctx.sages || [];
-    var clock = ctx.clock || function () { return Date.now(); };
+    // Deterministic-time rule: if a fixed `now` is injected (tests, replay) but no
+    // explicit clock, pin the clock to that `now` so the deadline math is reproducible
+    // regardless of wall-clock. Production injects neither → real Date.now() as before.
+    var clock = ctx.clock || (ctx.now != null ? function () { return ctx.now; } : function () { return Date.now(); });
     var startedAt = (ctx.now != null ? ctx.now : clock());
     var deadline = startedAt + (dials.DEBATE_TIMEOUT_SEC || 180) * 1000;
     var maxTurnTokens = dials.TOKENS_PER_TURN_MAX || 160;
@@ -181,7 +188,7 @@
 
   // ---- the state machine (§M) -----------------------------------------------
   // ctx: { fixture, sages, dials, lang, now, signals, store, salt, caps, price,
-  //        budgetGateRatio, llm, engine, guards, clock, signal }
+  //        budgetGateRatio, dayLiveMax, llm, engine, guards, clock, signal }
   async function councilLive(ctx) {
     var guards = ctx.guards || G_default;
     var engine = ctx.engine || E_default;
@@ -204,6 +211,12 @@
     var bud = guards.checkBudget(store, hardCap.estCost, ctx.caps, ctx.budgetGateRatio, now);
     if (!bud.ok) return ambient(ctx, 'budget', bud);
 
+    // L4b daily live-count hard cap — a blunt, intuitive ceiling on top of the USD
+    // gate ("at most N live debates/day"). Because L5 bounds one debate's tokens,
+    // this is effectively a hard daily token ceiling. dayLiveMax == null → off.
+    var dayCnt = guards.checkDailyCount(store, ctx.dayLiveMax, now);
+    if (!dayCnt.ok) return ambient(ctx, 'daily_count', dayCnt);
+
     // L1 personal rate-limit
     var key = guards.compositeKey(ctx.signals, ctx.salt);
     var rate = guards.checkRate(store, key, now, dials.PERSONAL_COOLDOWN_SEC || 3600);
@@ -216,6 +229,7 @@
     // ---- LIVE ----
     try {
       guards.recordLive(store, key, now);
+      guards.recordLiveCount(store, now);   // count this live toward the daily count cap (L4b)
       var debate = await runDebate(ctx, hardCap);
       // VERDICT is ALWAYS the core engine's, independent of the debate (§G).
       var core = engine.councilAsk(ctx.fixture, { withTranscript: true, lang: ctx.lang });

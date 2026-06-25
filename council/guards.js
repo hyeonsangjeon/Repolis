@@ -192,6 +192,24 @@
     store.addBudget('d:' + dayBucket(now), cost);
   }
 
+  // ---- [L4b] daily live-count hard cap --------------------------------------
+  // A blunt, intuitive ceiling layered ON TOP of the USD budget gate: at most
+  // dayMax Live debates per UTC day, no matter how cheap each one is. Because one
+  // debate's tokens are already bounded by L5, "N debates/day" is effectively a
+  // hard daily TOKEN ceiling that's easy to reason about. Reuses the budget store
+  // under a 'cnt:' bucket so no new store method is needed (any KV/D1 adapter that
+  // implements addBudget/getBudget supports it for free). dayMax == null → off.
+  function checkDailyCount(store, dayMax, now) {
+    if (dayMax == null) return { ok: true, layer: 'L4', count: 0 };
+    var n = store.getBudget('cnt:' + dayBucket(now));
+    if (n >= dayMax) return { ok: false, layer: 'L4', reason: 'daily_count', count: n, dayMax: dayMax };
+    return { ok: true, layer: 'L4', count: n };
+  }
+  // count one granted Live against today's bucket (call only after a Live starts).
+  function recordLiveCount(store, now) {
+    return store.addBudget('cnt:' + dayBucket(now), 1);
+  }
+
   var mod = {
     fnv1a64: fnv1a64,
     compositeKey: compositeKey,
@@ -208,6 +226,8 @@
     estimateCost: estimateCost,
     checkBudget: checkBudget,
     recordSpend: recordSpend,
+    checkDailyCount: checkDailyCount,
+    recordLiveCount: recordLiveCount,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = mod;
   if (typeof globalThis !== 'undefined') globalThis.CouncilGuards = mod;
