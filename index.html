@@ -2384,7 +2384,7 @@ function updateChrono(dt){ if(!CHRONO) return;
   if(!chronoSeq.length){ chronoBubble.sprite.visible=false; return; }
   chronoT-=dt;
   if(chronoT<=0 || !chronoBubble.sprite.visible){ const b=chronoSeq[chronoIdx%chronoSeq.length]; chronoIdx++;
-    chronoBubble.draw(b.name, b.text, b.col, b.gold); chronoBubble.sprite.visible=true; chronoT=b.hold?4.6:2.7; }
+    chronoBubble.draw(b.name, b.text, b.col, b.gold); chronoBubble.sprite.visible=true; chronoT=b.hold?6.5:Math.max(3.8,Math.min(8,2.2+(b.text?b.text.length:40)*0.05)); }
   chronoBubble.sprite.position.y=10.5+Math.sin(clock.elapsedTime*1.4)*0.25;
 }
 

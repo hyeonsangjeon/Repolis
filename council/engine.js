@@ -249,59 +249,148 @@
     return reason.map(function (r) { return M[r] || r; }).join(lang === 'ko' ? ' · ' : ' · ');
   }
 
-  function bubble(verdict, claims, adj, lang) {
+  /* ----- deterministic variant picker: same fixture → same phrasing (byte-equal),
+   *       different fixtures → different phrasing (so the six topics don't all read alike). ----- */
+  function hashSeed(s) { let h = 2166136261 >>> 0; s = String(s == null ? '' : s); for (let i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0; } return h; }
+  function pickV(arr, seed) { return arr[(seed >>> 0) % arr.length]; }
+
+  function bubble(verdict, claims, adj, lang, seedStr) {
     // deterministic spoken banter, interpolated from fixture data (no LLM).
     // tiki-taka: every sage gets to jab back, in character. byte-equal on repeat.
+    // a per-fixture seed rotates through phrasing pools so each topic sounds different.
     const byId = {}; claims.forEach(function (c) { byId[c.sage] = c; });
     const live = byId.livewire, doc = byId.olddoc, crowd = byId.hearsay;
     const ko = lang === 'ko';
     const lines = [];
-    const docNorm = doc && doc.norm;
     const crowdSidesLive = crowd && live && crowd.norm === live.norm;
     const docSidesLive = doc && live && doc.norm === live.norm;
     const closed = adj.loser_type === 'deprecated_api';
+    const seed = hashSeed(seedStr || (doc && doc.value) || verdict || '');
+    const dv = doc ? doc.value : '', lv = live ? live.value : '', cv = crowd ? crowd.value : '';
+    const dd = (doc && doc.date) || (ko ? '옛날' : 'the old days');
+    const pvl = live ? prov(live, lang) : '';
 
     /* ── testimony: spoken, in character ── */
     if (doc) lines.push({ phase: 'testimony', sage: 'olddoc', tone: 'assert',
-      text: ko ? '에헴, 문서엔 분명 ' + doc.value + '라고 적혀 있네. 난 이걸 십 년을 봐왔어.'
-               : 'Ahem — the docs plainly say ' + doc.value + '. I have watched this for ten years.' });
+      text: ko ? pickV([
+                 '에헴, 문서엔 분명 ' + dv + '라고 적혀 있네. 난 이걸 십 년을 봐왔어.',
+                 '내 오래된 매뉴얼엔 ' + dv + '. 이게 정석이야, 암.',
+                 '예로부터 ' + dv + '라 했지. 검증된 길이 안전한 법이야.'
+               ], seed)
+               : pickV([
+                 'Ahem — the docs plainly say ' + dv + '. I have watched this for ten years.',
+                 'My old manual says ' + dv + '. That is the canonical way, trust me.',
+                 'Since the old days it has been ' + dv + '. A proven road is a safe road.'
+               ], seed) });
     if (live) lines.push({ phase: 'testimony', sage: 'livewire', tone: 'snark',
-      text: ko ? (docSidesLive ? '소스 까보면 ' + live.value + '. 이건 형 말이 맞네요. ' + prov(live, 'ko')
-                               : '십 년 전 문서겠죠 ㅋㅋ 소스 까보면 ' + live.value + '예요. ' + prov(live, 'ko'))
-               : (docSidesLive ? 'Read the source: ' + live.value + '. You got this one right. ' + prov(live, 'en')
-                               : 'Ten-year-old docs, sure. Read the source: ' + live.value + '. ' + prov(live, 'en')) });
+      text: ko ? (docSidesLive ? pickV([
+                   '소스 까보면 ' + lv + '. 이건 형 말이 맞네요. ' + pvl,
+                   '어 이번엔 형이 맞아요, 소스도 ' + lv + '. ' + pvl
+                 ], seed) : pickV([
+                   '십 년 전 문서겠죠 ㅋㅋ 소스 까보면 ' + lv + '예요. ' + pvl,
+                   '그 문서 박물관에 있던데요 ㅋㅋ 소스는 ' + lv + '. ' + pvl,
+                   '문서 말고 소스를 봐야죠. 지금은 ' + lv + '예요. ' + pvl
+                 ], seed))
+               : (docSidesLive ? pickV([
+                   'Read the source: ' + lv + '. You got this one right. ' + pvl,
+                   'Huh, you are right this time — source says ' + lv + ' too. ' + pvl
+                 ], seed) : pickV([
+                   'Ten-year-old docs, sure. Read the source: ' + lv + '. ' + pvl,
+                   'That manual belongs in a museum, heh. Source says ' + lv + '. ' + pvl,
+                   'Forget the docs — read the source, it is ' + lv + ' now. ' + pvl
+                 ], seed)) });
     if (crowd) lines.push({ phase: 'testimony', sage: 'hearsay', tone: 'unsure',
-      text: ko ? (crowdSidesLive ? '아 요즘은 ' + crowd.value + ' 쓰던데? 그건 나도 봤어요.'
-                                 : '어, 나도 ' + crowd.value + ' 블로그에서 본 거 같은데…')
-               : (crowdSidesLive ? 'Oh, folks use ' + crowd.value + ' these days — saw that too.'
-                                 : 'Uh, I think I saw ' + crowd.value + ' on a blog too…') });
+      text: ko ? (crowdSidesLive ? pickV([
+                   '아 요즘은 ' + cv + ' 쓰던데? 그건 나도 봤어요.',
+                   '맞아 맞아, 요즘 ' + cv + '로 가던데요.'
+                 ], seed) : pickV([
+                   '어, 나도 ' + cv + ' 블로그에서 본 거 같은데…',
+                   '음, 어디서 ' + cv + ' 봤던 거 같기도 하고…',
+                   '나 ' + cv + ' 쓰는 글 본 적 있는데, 맞나…?'
+                 ], seed))
+               : (crowdSidesLive ? pickV([
+                   'Oh, folks use ' + cv + ' these days — saw that too.',
+                   'Right, right, everyone is on ' + cv + ' lately.'
+                 ], seed) : pickV([
+                   'Uh, I think I saw ' + cv + ' on a blog too…',
+                   'Hmm, pretty sure I read ' + cv + ' somewhere…',
+                   'I have seen posts using ' + cv + ', I think…?'
+                 ], seed)) });
 
     /* ── cross-examination: tiki-taka jabs ── */
     if (adj.overrode_majority && live && doc) {
       // the crowd backed the stale answer → live calls it, doc digs in, crowd wobbles
       lines.push({ phase: 'cross', sage: 'livewire', target: 'olddoc', tone: 'challenge',
-        text: ko ? '형, 그거 ' + (doc.date || '옛날') + ' 문서잖아요. ' + (closed ? '지금 돌리면 경고 떠요. ' : '') + '정답은 ' + verdict + '.'
-                 : 'Old-timer, that is a ' + (doc.date || 'dated') + ' doc. ' + (closed ? "Run it now and you'll get a warning. " : '') + 'The answer is ' + verdict + '.' });
+        text: ko ? pickV([
+                   '형, 그거 ' + dd + ' 문서잖아요. ' + (closed ? '지금 돌리면 경고 떠요. ' : '') + '정답은 ' + verdict + '.',
+                   '그 ' + dd + ' 문서론 안 돼요. ' + (closed ? '돌리면 경고 떠요. ' : '') + '지금 정답은 ' + verdict + '예요.'
+                 ], seed)
+                 : pickV([
+                   'Old-timer, that is a ' + dd + ' doc. ' + (closed ? "Run it now and you'll get a warning. " : '') + 'The answer is ' + verdict + '.',
+                   'That ' + dd + " doc won't fly. " + (closed ? 'It warns if you run it. ' : '') + 'The answer now is ' + verdict + '.'
+                 ], seed) });
       lines.push({ phase: 'cross', sage: 'olddoc', target: 'livewire', tone: 'defend',
-        text: ko ? '허 참, 요즘 젊은 친구들은 성급해. 검증된 길이 안전한 거야.'
-                 : 'Hmph. Kids these days, always in a hurry. The proven road is the safe one.' });
+        text: ko ? pickV([
+                   '허 참, 요즘 젊은 친구들은 성급해. 검증된 길이 안전한 거야.',
+                   '쯧, 급하기는. 오래 버틴 게 괜히 버틴 줄 아나.'
+                 ], seed)
+                 : pickV([
+                   'Hmph. Kids these days, always in a hurry. The proven road is the safe one.',
+                   'Tsk. So impatient. What lasts, lasts for a reason.'
+                 ], seed) });
       if (crowd) lines.push({ phase: 'cross', sage: 'hearsay', target: 'olddoc', tone: 'concede',
-        text: ko ? '어… 잠깐, 그럼 내가 본 게 옛날 블로그였나? 😅'
-                 : 'Wait… was the blog I read that old? 😅' });
+        text: ko ? pickV([
+                   '어… 잠깐, 그럼 내가 본 게 옛날 블로그였나? 😅',
+                   '엇… 내가 본 글이 구버전이었나 봐요 😅'
+                 ], seed)
+                 : pickV([
+                   'Wait… was the blog I read that old? 😅',
+                   'Oops… guess my post was an old one 😅'
+                 ], seed) });
       if (crowd) lines.push({ phase: 'cross', sage: 'livewire', target: 'hearsay', tone: 'snark',
-        text: ko ? '거 봐요, 둘이 같은 박물관 다녀왔네 ㅋㅋ' : 'See? You two toured the same museum, heh.' });
+        text: ko ? pickV([
+                   '거 봐요, 둘이 같은 박물관 다녀왔네 ㅋㅋ',
+                   '두 분 같은 옛날 책 보셨구나 ㅋㅋ'
+                 ], seed)
+                 : pickV([
+                   'See? You two toured the same museum, heh.',
+                   'Ha, you both read the same old book.'
+                 ], seed) });
     } else if (live && doc) {
       // majority is right; the stale/closed road loses — crowd piles on, doc grumbles
       lines.push({ phase: 'cross', sage: 'livewire', target: 'olddoc', tone: 'challenge',
-        text: ko ? (closed ? '형, 그건 ' + (doc.date || '옛날') + '에 막혔어요. 돌리면 에러나요.'
-                           : '형, ' + doc.value + '는 ' + (doc.date || '옛날') + ' 기준이라 outdated예요. 지금은 ' + verdict + '.')
-                 : (closed ? 'Old-timer, that was closed off back in ' + (doc.date || 'the old days') + ' — it errors now.'
-                           : doc.value + ' is from ' + (doc.date || 'back then') + ' — outdated. Now it is ' + verdict + '.') });
+        text: ko ? (closed ? pickV([
+                     '형, 그건 ' + dd + '에 막혔어요. 돌리면 에러나요.',
+                     '그거 ' + dd + '에 닫혔어요. 지금 돌리면 에러예요.'
+                   ], seed) : pickV([
+                     '형, ' + dv + '는 ' + dd + ' 기준이라 outdated예요. 지금은 ' + verdict + '.',
+                     '형, ' + dv + '는 ' + dd + '꺼라 옛날이에요. 요즘은 ' + verdict + '.'
+                   ], seed))
+                 : (closed ? pickV([
+                     'Old-timer, that was closed off back in ' + dd + ' — it errors now.',
+                     'That one was shut in ' + dd + ' — it just errors today.'
+                   ], seed) : pickV([
+                     dv + ' is from ' + dd + ' — outdated. Now it is ' + verdict + '.',
+                     dv + ' dates to ' + dd + '. These days it is ' + verdict + '.'
+                   ], seed)) });
       if (crowd && crowdSidesLive) lines.push({ phase: 'cross', sage: 'hearsay', target: 'olddoc', tone: 'pileon',
-        text: ko ? '아 맞다, 나도 요즘 ' + verdict + ' 써요. 형만 옛날 버전이네 ㅋㅋ'
-                 : 'Yeah, I use ' + verdict + ' now too. You are the only one on the old build, heh.' });
+        text: ko ? pickV([
+                   '아 맞다, 나도 요즘 ' + verdict + ' 써요. 형만 옛날 버전이네 ㅋㅋ',
+                   '저도 ' + verdict + ' 쓰는데 ㅋㅋ 형만 옛날 빌드네요.'
+                 ], seed)
+                 : pickV([
+                   'Yeah, I use ' + verdict + ' now too. You are the only one on the old build, heh.',
+                   'I am on ' + verdict + ' as well — only you are stuck back there, heh.'
+                 ], seed) });
       lines.push({ phase: 'cross', sage: 'olddoc', target: null, tone: 'grumble',
-        text: ko ? '흠… 내 문서엔 아직 ' + doc.value + '라고 돼 있는데…' : 'Hmm… my docs still say ' + doc.value + '…' });
+        text: ko ? pickV([
+                   '흠… 내 문서엔 아직 ' + dv + '라고 돼 있는데…',
+                   '허… 내 책엔 여태 ' + dv + '인데 말이지…'
+                 ], seed)
+                 : pickV([
+                   'Hmm… my docs still say ' + dv + '…',
+                   'Hmph… my book still reads ' + dv + '…'
+                 ], seed) });
     }
     return lines;
   }
@@ -379,7 +468,7 @@
 
     if (result.conflicts.length) {
       const adj = adjudicate(fixture, claims);
-      const lines = bubble(result.conflicts[0].verdict, claims, adj, lang);
+      const lines = bubble(result.conflicts[0].verdict, claims, adj, lang, fixture.id);
       // attach testimony bubble text
       lines.filter(function (l) { return l.phase === 'testimony'; }).forEach(function (l) {
         const e = ev.find(function (x) { return x.phase === 'testimony' && x.sage === l.sage; });

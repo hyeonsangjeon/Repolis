@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.17.0] — 2026-06-27
+
+### ⏳ Chronopolis: every topic now argues in its own words + slower, readable bubbles
+- **"맨트가 전부 같아" — fixed.** The six council debates used one shared template, so every topic read with the *same* sentences (only the interpolated value changed). Each sage now draws from a **per-topic phrasing pool**, picked by a **deterministic seed hashed from the fixture id** — so Pydantic opens *"내 오래된 매뉴얼엔 .dict()…"* while Transformers opens *"예로부터 max_length라 했지…"* and OpenAI SDK opens *"에헴, 문서엔 분명…"*. Testimony, the cross-examination jabs, the defend/concede/pile-on lines — all of them rotate, in **KO and EN**, so walking past the rotunda six times sounds like six different arguments instead of one on repeat.
+- **Still 100% deterministic, still \$0.** Because the variant is chosen from a stable hash of the fixture id (not randomness), each topic is **byte-equal on repeat** — the same guarantee the tests assert. `council/test.mjs` **62 checks** + `council/test-live.mjs` **28 checks** stay green.
+- **The ambient bubbles slowed down.** "말풍선 속도가 너무 빨라" — the floating debate bubble over Chronopolis advanced every flat **2.7 s**, too fast to read a full line. It now holds for a **length-scaled 3.8–8 s** (longer lines linger longer; the verdict line holds 6.5 s), so you can actually read each jab before the next one lands.
+
 ## [1.16.0] — 2026-06-27
 
 ### 🛣️ Chronopolis is now reachable — an approach road + "take me there" taxi nav
