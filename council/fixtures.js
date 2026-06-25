@@ -56,22 +56,23 @@
       ]
     },
 
-    /* ── 또 하나의 역전 → S1 ──
-       pandas 2.0에서 df.append()는 제거, pd.concat()가 정답. 문서·블로그 다수는 아직 append. */
-    pandas_append: {
-      id: 'pandas_append', topic: 'pandas', sline: 'S1',
-      question: { ko: 'pandas에서 두 DataFrame을 이어붙이는 올바른 방법은?',
-                  en: 'What is the correct way to append two DataFrames in pandas?' },
-      attribute: 'dataframe_append',
-      attributeLabel: { ko: 'DataFrame 이어붙이기', en: 'DataFrame append' },
+    /* ── AI/ML 역전 케이스 → S1 ──
+       HF transformers .generate()에서 max_length(프롬프트+출력 전체)는 혼란의 근원,
+       max_new_tokens(새 토큰만)가 의도대로. 옛 예제·블로그 다수는 아직 max_length. */
+    transformers_generate: {
+      id: 'transformers_generate', topic: 'Transformers', sline: 'S1',
+      question: { ko: 'HF Transformers의 .generate()로 출력 길이를 제어하는 올바른 인자는?',
+                  en: 'Which argument correctly controls output length in HF Transformers .generate()?' },
+      attribute: 'generation_length_arg',
+      attributeLabel: { ko: '생성 길이 인자', en: 'generation length arg' },
       answers: [
-        { sage: 'olddoc', value: 'df.append(other)', date: '2024-11',
-          provenance: { ko: '구버전 튜토리얼', en: 'pre-2.0 tutorial' }, signals: [] },
-        { sage: 'livewire', value: 'pd.concat([df, other])', date: '2026-03',
-          provenance: { ko: 'pandas src · 2.0에서 DataFrame.append 제거됨', en: 'pandas src · DataFrame.append removed in 2.0' },
-          signals: ['live_source', 'alt_removed'] },
-        { sage: 'hearsay', value: 'df.append(other)', date: '2025-02',
-          provenance: { ko: '오래된 블로그 예제', en: 'old blog example' }, signals: ['echoes:olddoc'] }
+        { sage: 'olddoc', value: 'max_length', date: '2025-07',
+          provenance: { ko: '옛 generate() 예제 · max_length=50', en: 'old generate() example · max_length=50' }, signals: [] },
+        { sage: 'livewire', value: 'max_new_tokens', date: '2026-05',
+          provenance: { ko: 'transformers src generation/utils.py · max_length는 프롬프트까지 셈', en: 'transformers src generation/utils.py · max_length counts the prompt too' },
+          signals: ['live_source'] },
+        { sage: 'hearsay', value: 'max_length', date: '2025-10',
+          provenance: { ko: '튜토리얼 블로그', en: 'tutorial blog' }, signals: ['echoes:olddoc'] }
       ]
     },
 
@@ -111,10 +112,30 @@
         { sage: 'hearsay', value: 'flexbox', date: '2026-01',
           provenance: { ko: '커뮤니티 합의', en: 'community consensus' }, signals: ['echoes'] }
       ]
+    },
+
+    /* ── AI/ML deprecation drift → S2 ──
+       LangChain의 LLMChain은 @deprecated, LCEL 파이프(prompt | llm)가 정답.
+       커뮤니티는 이미 LCEL로 이동(다수 정답), 올드독만 옛 체인을 변호. */
+    langchain_lcel: {
+      id: 'langchain_lcel', topic: 'LangChain', sline: 'S2',
+      question: { ko: 'LangChain에서 프롬프트와 LLM을 연결하는 현재 권장 방식은?',
+                  en: 'What is the current recommended way to compose a prompt with an LLM in LangChain?' },
+      attribute: 'chain_composition',
+      attributeLabel: { ko: '체인 구성', en: 'chain composition' },
+      answers: [
+        { sage: 'olddoc', value: 'LLMChain(llm=llm, prompt=prompt)', date: '2025-04',
+          provenance: { ko: '구 LangChain 튜토리얼', en: 'old LangChain tutorial' }, signals: ['deprecated'] },
+        { sage: 'livewire', value: 'prompt | llm', date: '2026-04',
+          provenance: { ko: 'langchain src · LLMChain은 @deprecated · LCEL 권장', en: 'langchain src · LLMChain is @deprecated · use LCEL' },
+          signals: ['live_source', 'alt_deprecated'] },
+        { sage: 'hearsay', value: 'chain = prompt | llm', date: '2026-01',
+          provenance: { ko: '최근 SO 답변(따라잡음)', en: 'recent SO answer (caught up)' }, signals: ['echoes:livewire'] }
+      ]
     }
   };
 
-  const ORDER = ['pydantic_dict', 'openai_sdk', 'pandas_append', 'request_timeout', 'css_center'];
+  const ORDER = ['pydantic_dict', 'transformers_generate', 'request_timeout', 'openai_sdk', 'langchain_lcel', 'css_center'];
 
   function list() { return ORDER.map(function (id) { return FIXTURES[id]; }); }
   function get(id) { return FIXTURES[id] || null; }

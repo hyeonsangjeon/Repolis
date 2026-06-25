@@ -110,6 +110,6 @@
   "ambient": {
     "loop": true,
     "shuffle": true,
-    "fixtures": ["pydantic_dict", "openai_sdk", "pandas_append", "request_timeout", "css_center"]
+    "fixtures": ["pydantic_dict", "transformers_generate", "request_timeout", "openai_sdk", "langchain_lcel", "css_center"]
   }
 }

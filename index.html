@@ -2284,7 +2284,7 @@ function buildChronoSequence(){ chronoSeq=[]; chronoSeqLang=LANG; if(!CE||!CF||!
   for(const fx of CF.list()){ let r; try{ r=CE.councilAsk(fx,{withTranscript:true,lang:LANG}); }catch(e){ continue; }
     const k=SAGE_INFO.kronos; chronoSeq.push({name:k.emoji+' '+k[LANG], text:'“'+r.question+'”', col:k.color, gold:true});
     for(const ev of r.transcript){
-      if(ev.phase==='testimony'){ const s=SAGE_INFO[ev.sage]||{}; chronoSeq.push({name:(s.emoji||'')+' '+(s[LANG]||ev.sage), text:ev.claim+(ev.provenance?(' — '+ev.provenance):''), col:s.color}); }
+      if(ev.phase==='testimony'){ const s=SAGE_INFO[ev.sage]||{}; chronoSeq.push({name:(s.emoji||'')+' '+(s[LANG]||ev.sage), text:ev.text||(ev.claim+(ev.provenance?(' — '+ev.provenance):'')), col:s.color}); }
       else if(ev.phase==='cross'){ const s=SAGE_INFO[ev.sage]||{}; chronoSeq.push({name:(s.emoji||'')+' '+(s[LANG]||ev.sage), text:ev.text, col:s.color}); }
       else if(ev.phase==='verdict'){ const sig=(r.signature&&r.signature[LANG])||''; const val=ev.no_answer?'—':ev.verdict;
         chronoSeq.push({name:k.emoji+' '+k[LANG], text:(LANG==='ko'?'시간의 판정: ':'Verdict of Time: ')+val+' · ⏳ '+sig, col:k.color, gold:true, hold:true}); }
@@ -2324,7 +2324,7 @@ function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementBy
   const q=document.createElement('div'); q.className='chronoQ'; q.textContent='“'+r.question+'”'; body.appendChild(q);
   let html='';
   for(const ev of r.transcript){
-    if(ev.phase==='testimony') html+=chronoTurn(ev.sage, ev.claim+(ev.provenance?(' — '+ev.provenance):''));
+    if(ev.phase==='testimony') html+=chronoTurn(ev.sage, ev.text||(ev.claim+(ev.provenance?(' — '+ev.provenance):'')));
     else if(ev.phase==='cross') html+=chronoTurn(ev.sage, ev.text);
     else if(ev.phase==='verdict'){ const k=SAGE_INFO.kronos; const sig=(r.signature&&r.signature[LANG])||'';
       const head=ev.consensus?t('chronoConsensus'):t('chronoVerdict');

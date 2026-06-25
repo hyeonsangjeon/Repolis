@@ -17,8 +17,8 @@ function eq(a, b, msg) { ok(JSON.stringify(a) === JSON.stringify(b), msg + ' (go
 function group(name) { console.log('\n• ' + name); }
 
 /* ── 1) 시그니처 라인 S1~S9 가 의도대로 발사되는가 ── */
-group('signature lines fire as intended (S1/S2/S1/S3/S8)');
-const expectSig = { pydantic_dict: 'S1', openai_sdk: 'S2', pandas_append: 'S1', request_timeout: 'S3', css_center: 'S8' };
+group('signature lines fire as intended (S1/S1/S3/S2/S2/S8)');
+const expectSig = { pydantic_dict: 'S1', transformers_generate: 'S1', request_timeout: 'S3', openai_sdk: 'S2', langchain_lcel: 'S2', css_center: 'S8' };
 Fixtures.list().forEach(function (fx) {
   const r = Engine.councilAsk(fx, { lang: 'ko' });
   eq(r.signature.id, expectSig[fx.id], fx.id + ' → ' + expectSig[fx.id]);
@@ -42,6 +42,12 @@ ok(tmo.conflicts[0].loser_type === 'stale_doc', 'timeout loser_type=stale_doc');
 const oai = Engine.councilAsk(Fixtures.get('openai_sdk'), { lang: 'ko' });
 ok(oai.conflicts[0].overrode_majority === false, 'openai overrode_majority=false (community caught up)');
 ok(oai.conflicts[0].loser_type === 'deprecated_api', 'openai loser_type=deprecated_api (removed road)');
+const lcel = Engine.councilAsk(Fixtures.get('langchain_lcel'), { lang: 'ko' });
+ok(lcel.conflicts[0].overrode_majority === false, 'langchain overrode_majority=false (community caught up)');
+ok(lcel.conflicts[0].loser_type === 'deprecated_api', 'langchain loser_type=deprecated_api (LLMChain deprecated)');
+const trf = Engine.councilAsk(Fixtures.get('transformers_generate'), { lang: 'ko' });
+ok(trf.conflicts[0].overrode_majority === true, 'transformers overrode_majority=true (majority on max_length is stale)');
+ok(trf.conflicts[0].verdict === 'max_new_tokens', 'transformers verdict picks max_new_tokens');
 
 /* ── 4) 완전 합의: conflicts=[] (거짓 경보 0) ── */
 group('full consensus → zero false alarms');

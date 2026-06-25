@@ -3,7 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
-## [1.14.1] — 2026-06-25
+## [1.15.0] — 2026-06-26
+
+### ⏳ Chronopolis: six debate topics (3 dev + 3 AI/ML) + the sages actually talk
+- **Six curated cases now, split evenly between dev and AI/ML.** The council debates **three dev questions** — Pydantic `.dict()` → `.model_dump()`, the recommended request timeout, modern CSS centering — and **three AI/ML questions** — the OpenAI SDK `ChatCompletion.create` → `client.chat.completions.create`, HF Transformers `max_length` → `max_new_tokens`, and LangChain `LLMChain` → LCEL `prompt | llm`. (`pandas_append` retired to keep the set tight.) Each is a real, famous version-drift so nothing is fabricated, and the deterministic engine still fires the right hourglass signature for each (S1/S1/S3/S2/S2/S8).
+- **The sages stopped narrating and started bickering.** Testimony and cross-examination are now **spoken, in-character tiki-taka** instead of dry statements: 📜 Olddoc digs in *("에헴, 문서엔 분명…"/"Ahem — the docs plainly say…")*, 🌿 Livewire snarks back with a line number *("십 년 전 문서겠죠 ㅋㅋ 소스 까보면…")*, and 🌀 Hearsay wobbles or piles on *("어… 잠깐, 그럼 내가 본 게 옛날 블로그였나? 😅", "형만 옛날 버전이네 ㅋㅋ")*. **All three now jab back** (previously only Livewire cross-examined); when there's a real consensus they good-naturedly agree instead. No profanity — just character. Both the ambient bubble over the rotunda and the interaction modal show the banter, in KO / EN.
+- **Still 100% deterministic, still \$0.** Every line is interpolated from fixture data with no randomness, so transcripts stay byte-equal on repeat and the verdict is always math. `council/test.mjs` updated for six fixtures — **62 checks green**.
+
+
 
 ### ⏳ Fix: don't get wedged inside the Kronos Council on mobile
 - Real-device feedback showed players getting **trapped between the council's columns** on mobile. The 14-pillar ring used `r:1.0` colliders that left gaps too narrow to find, and the dais core (`r:2.2`) crowded the centre. Now the **two town-facing pillars are collider-free** (a clear, wide entry corridor), every column collider is **slimmed to `r:0.62`** so all gaps widen, the three sages' colliders go `1.0 → 0.7`, and the centre is just the **sundial gnomon (`r:1.0`)** instead of a `2.2` dais core — the rest of the floor stays freely walkable. Verified with frame-by-frame walk sims: from inside the ring a straight line out is now monotonic (dist 11.5 → 55.7, no snag at the column radius), and from dead-centre the player never pins to a point. 0 console errors.

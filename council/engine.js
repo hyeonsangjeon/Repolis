@@ -250,31 +250,58 @@
   }
 
   function bubble(verdict, claims, adj, lang) {
-    // deterministic character lines, interpolated from fixture data (no LLM)
+    // deterministic spoken banter, interpolated from fixture data (no LLM).
+    // tiki-taka: every sage gets to jab back, in character. byte-equal on repeat.
     const byId = {}; claims.forEach(function (c) { byId[c.sage] = c; });
     const live = byId.livewire, doc = byId.olddoc, crowd = byId.hearsay;
     const ko = lang === 'ko';
     const lines = [];
-    if (doc) lines.push({ phase: 'testimony', sage: 'olddoc', tone: 'neutral',
-      text: ko ? '문서엔 ' + doc.value + ' 라고 똑똑히 적혀 있다네. 난 이걸 봐왔어.'
-               : 'The docs clearly say ' + doc.value + '. I have watched this for years.' });
-    if (live) lines.push({ phase: 'testimony', sage: 'livewire', tone: 'neutral',
-      text: ko ? '소스 까보면 ' + live.value + '. ' + prov(live, 'ko')
-               : 'Read the source: ' + live.value + '. ' + prov(live, 'en') });
-    if (crowd) lines.push({ phase: 'testimony', sage: 'hearsay', tone: 'neutral',
-      text: ko ? '어, 블로그에서 ' + crowd.value + ' 본 거 같은데… (' + (crowd.norm === (doc && doc.norm) ? '올드독 편듦' : '갸웃') + ')'
-               : 'Hmm, saw ' + crowd.value + ' on a blog… (' + (crowd.norm === (doc && doc.norm) ? 'sides with Olddoc' : 'unsure') + ')' });
+    const docNorm = doc && doc.norm;
+    const crowdSidesLive = crowd && live && crowd.norm === live.norm;
+    const docSidesLive = doc && live && doc.norm === live.norm;
+    const closed = adj.loser_type === 'deprecated_api';
 
+    /* ── testimony: spoken, in character ── */
+    if (doc) lines.push({ phase: 'testimony', sage: 'olddoc', tone: 'assert',
+      text: ko ? '에헴, 문서엔 분명 ' + doc.value + '라고 적혀 있네. 난 이걸 십 년을 봐왔어.'
+               : 'Ahem — the docs plainly say ' + doc.value + '. I have watched this for ten years.' });
+    if (live) lines.push({ phase: 'testimony', sage: 'livewire', tone: 'snark',
+      text: ko ? (docSidesLive ? '소스 까보면 ' + live.value + '. 이건 형 말이 맞네요. ' + prov(live, 'ko')
+                               : '십 년 전 문서겠죠 ㅋㅋ 소스 까보면 ' + live.value + '예요. ' + prov(live, 'ko'))
+               : (docSidesLive ? 'Read the source: ' + live.value + '. You got this one right. ' + prov(live, 'en')
+                               : 'Ten-year-old docs, sure. Read the source: ' + live.value + '. ' + prov(live, 'en')) });
+    if (crowd) lines.push({ phase: 'testimony', sage: 'hearsay', tone: 'unsure',
+      text: ko ? (crowdSidesLive ? '아 요즘은 ' + crowd.value + ' 쓰던데? 그건 나도 봤어요.'
+                                 : '어, 나도 ' + crowd.value + ' 블로그에서 본 거 같은데…')
+               : (crowdSidesLive ? 'Oh, folks use ' + crowd.value + ' these days — saw that too.'
+                                 : 'Uh, I think I saw ' + crowd.value + ' on a blog too…') });
+
+    /* ── cross-examination: tiki-taka jabs ── */
     if (adj.overrode_majority && live && doc) {
+      // the crowd backed the stale answer → live calls it, doc digs in, crowd wobbles
       lines.push({ phase: 'cross', sage: 'livewire', target: 'olddoc', tone: 'challenge',
-        text: ko ? '형 그거 ' + (doc.date || '옛날') + ' 문서잖아요. ' + (adj.loser_type === 'deprecated_api' ? '지금은 막혀서 경고 떠요. ' : '') + '돌려보면 ' + verdict + ' 써야 해요.'
-                 : 'That is a ' + (doc.date || 'dated') + ' doc. ' + (adj.loser_type === 'deprecated_api' ? "It's gated now — you'll get a warning. " : '') + 'Run it and you must use ' + verdict + '.' });
-      if (crowd) lines.push({ phase: 'cross', sage: 'livewire', target: 'hearsay', tone: 'challenge',
-        text: ko ? '그러니까 둘 다 옛날 거 본 거잖아요 ㅋㅋ' : 'So you both read the old one, heh.' });
+        text: ko ? '형, 그거 ' + (doc.date || '옛날') + ' 문서잖아요. ' + (closed ? '지금 돌리면 경고 떠요. ' : '') + '정답은 ' + verdict + '.'
+                 : 'Old-timer, that is a ' + (doc.date || 'dated') + ' doc. ' + (closed ? "Run it now and you'll get a warning. " : '') + 'The answer is ' + verdict + '.' });
+      lines.push({ phase: 'cross', sage: 'olddoc', target: 'livewire', tone: 'defend',
+        text: ko ? '허 참, 요즘 젊은 친구들은 성급해. 검증된 길이 안전한 거야.'
+                 : 'Hmph. Kids these days, always in a hurry. The proven road is the safe one.' });
+      if (crowd) lines.push({ phase: 'cross', sage: 'hearsay', target: 'olddoc', tone: 'concede',
+        text: ko ? '어… 잠깐, 그럼 내가 본 게 옛날 블로그였나? 😅'
+                 : 'Wait… was the blog I read that old? 😅' });
+      if (crowd) lines.push({ phase: 'cross', sage: 'livewire', target: 'hearsay', tone: 'snark',
+        text: ko ? '거 봐요, 둘이 같은 박물관 다녀왔네 ㅋㅋ' : 'See? You two toured the same museum, heh.' });
     } else if (live && doc) {
+      // majority is right; the stale/closed road loses — crowd piles on, doc grumbles
       lines.push({ phase: 'cross', sage: 'livewire', target: 'olddoc', tone: 'challenge',
-        text: ko ? '다수는 맞는데, 형 ' + doc.value + '는 ' + (doc.date || '옛날') + ' 기준이라 outdated예요.'
-                 : 'The majority is right, but ' + doc.value + ' is outdated (' + (doc.date || 'old') + ').' });
+        text: ko ? (closed ? '형, 그건 ' + (doc.date || '옛날') + '에 막혔어요. 돌리면 에러나요.'
+                           : '형, ' + doc.value + '는 ' + (doc.date || '옛날') + ' 기준이라 outdated예요. 지금은 ' + verdict + '.')
+                 : (closed ? 'Old-timer, that was closed off back in ' + (doc.date || 'the old days') + ' — it errors now.'
+                           : doc.value + ' is from ' + (doc.date || 'back then') + ' — outdated. Now it is ' + verdict + '.') });
+      if (crowd && crowdSidesLive) lines.push({ phase: 'cross', sage: 'hearsay', target: 'olddoc', tone: 'pileon',
+        text: ko ? '아 맞다, 나도 요즘 ' + verdict + ' 써요. 형만 옛날 버전이네 ㅋㅋ'
+                 : 'Yeah, I use ' + verdict + ' now too. You are the only one on the old build, heh.' });
+      lines.push({ phase: 'cross', sage: 'olddoc', target: null, tone: 'grumble',
+        text: ko ? '흠… 내 문서엔 아직 ' + doc.value + '라고 돼 있는데…' : 'Hmm… my docs still say ' + doc.value + '…' });
     }
     return lines;
   }
@@ -370,9 +397,15 @@
         signature: result.signature,
         line: (ko ? '채택 ' : 'Adopted ') + c0.verdict + (ko ? ' · 근거: ' : ' · reason: ') + c0.reason + (ko ? ' · 신뢰도 ' : ' · confidence ') + c0.confidence });
     } else if (result.consensus.length) {
+      const ccv = result.consensus[0].value;
+      const cText = {
+        olddoc:   ko ? '이건 나도 인정하네 — ' + ccv + '.'          : 'On this, even I agree — ' + ccv + '.',
+        livewire: ko ? '어, 이건 형 말이 맞아요. ' + ccv + '.'      : 'Yeah, you got this one right. ' + ccv + '.',
+        hearsay:  ko ? '오 셋이 같은 거 처음이네 ㅋㅋ ' + ccv + '!' : 'Whoa, all three of us agree? First time, heh — ' + ccv + '!'
+      };
       claims.forEach(function (c) {
         const e = ev.find(function (x) { return x.phase === 'testimony' && x.sage === c.sage; });
-        if (e) e.text = (ko ? '저는 ' : 'I say ') + c.value + (ko ? ' 입니다.' : '.');
+        if (e) e.text = cText[c.sage] || ((ko ? '저는 ' : 'I say ') + c.value + (ko ? ' 입니다.' : '.'));
       });
       const cc = result.consensus[0];
       ev.push({ phase: 'verdict', attribute: cc.attribute, verdict: cc.value, consensus: true,
