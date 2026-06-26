@@ -89,6 +89,63 @@
   .stamp.got .ico { filter: none; }
   .stamp.got .nm { color: #2f7d5b; }
   .stamp.got::after { content: "✓"; position: absolute; top: 4px; right: 6px; font-size: 10px; font-weight: 800; color: #2f9d6a; }
+  /* 🚉 GitHub Station — travel to another user's town */
+  #station { position: fixed; z-index: 13; top: 70px; right: 14px; width: 320px; max-width: calc(100vw - 28px);
+    background: rgba(255,251,242,.97); backdrop-filter: blur(10px); border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(70,40,15,.28); padding: 16px; transform-origin: top right;
+    transition: opacity .18s ease, transform .18s ease; }
+  #station.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #station h3 { font-size: 13px; letter-spacing: .03em; color: #9a6e1e; padding: 2px 2px 4px;
+    display: flex; align-items: center; gap: 6px; }
+  #station .ssub { font-size: 11.5px; color: #ab8a66; padding: 0 2px 10px; line-height: 1.45; }
+  #station .scur { font-size: 11px; color: #8a6f4e; padding: 0 2px 9px; }
+  #station .scur b { color: #4a2f1e; }
+  #station .srow { display: flex; gap: 7px; }
+  #station #stationInput { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 9px 11px;
+    border-radius: 11px; border: 1.5px solid #e3d2b6; background: #fffdf8; color: #4a2f1e; outline: none; }
+  #station #stationInput:focus { border-color: #d98f2e; }
+  #station #stationGo { font: inherit; font-size: 12.5px; font-weight: 700; white-space: nowrap; cursor: pointer;
+    padding: 9px 12px; border-radius: 11px; border: none; color: #fff; background: linear-gradient(150deg,#e8b34a,#d98f2e); }
+  #station #stationGo:active { transform: translateY(1px); }
+  #station .sex { font-size: 10.5px; color: #bfa782; padding: 8px 2px 0; }
+  #station .serr { font-size: 11.5px; color: #c0563b; padding: 8px 2px 0; line-height: 1.4; }
+  #station .squick { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 0 0; }
+  #station .squick button { font: inherit; font-size: 11px; cursor: pointer; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid #e3d2b6; background: #fffdf8; color: #8a6f4e; }
+  #station .squick button:active { background: #f3e6cf; }
+  #station .shome { padding: 11px 0 0; }
+  #station .shome button { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; width: 100%;
+    padding: 9px; border-radius: 11px; border: 1.5px solid #79c6a0; background: #eef9f2; color: #2f7d5b; }
+  #station .sshare { padding: 11px 0 0; margin-top: 9px; border-top: 1px solid #efe2cb; }
+  #station .sshare button { font: inherit; font-size: 12px; cursor: pointer; width: 100%; padding: 8px;
+    border-radius: 11px; border: 1px solid #e3d2b6; background: #fffdf8; color: #8a6f4e; }
+  #station .sshare button.ok { border-color: #79c6a0; background: #eef9f2; color: #2f7d5b; }
+  /* 🚆 Train travel overlay */
+  #trainOverlay { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
+    background: radial-gradient(120% 90% at 50% 38%, #1a2740 0%, #0c1322 70%, #060a14 100%); overflow: hidden; }
+  #trainOverlay.show { display: flex; }
+  #trainOverlay .trainScene { position: relative; width: 100%; max-width: 560px; text-align: center; padding: 0 22px; }
+  #trainOverlay .rail { position: absolute; left: 0; right: 0; top: 54%; height: 3px; border-radius: 2px;
+    background: repeating-linear-gradient(90deg,#3a4a6a 0 18px,transparent 18px 30px); opacity: .7;
+    animation: railrun .5s linear infinite; }
+  @keyframes railrun { to { background-position: 30px 0; } }
+  #trainOverlay .train { font-size: 64px; line-height: 1; transform: translateZ(0); animation: trainbob .9s ease-in-out infinite; }
+  @keyframes trainbob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  #trainOverlay .tmsg { color: #eaf1ff; font-size: 18px; font-weight: 800; margin-top: 22px; letter-spacing: .01em; }
+  #trainOverlay .tsub { color: #9fb2d4; font-size: 13px; margin-top: 8px; }
+  /* 🚉 City error / empty overlay */
+  #cityError { position: fixed; inset: 0; z-index: 41; display: flex; align-items: center; justify-content: center;
+    background: rgba(10,14,24,.82); backdrop-filter: blur(4px); padding: 22px; transition: opacity .2s ease; }
+  #cityError.hidden { opacity: 0; pointer-events: none; }
+  #cityError .ceCard { width: 100%; max-width: 380px; background: rgba(255,251,242,.98); border-radius: 20px;
+    box-shadow: 0 18px 56px rgba(0,0,0,.4); padding: 24px 22px; text-align: center; }
+  #cityError .ceCard h2 { font-size: 19px; color: #4a2f1e; margin-bottom: 9px; }
+  #cityError .ceCard p { font-size: 13px; color: #8a6f4e; line-height: 1.5; margin-bottom: 18px; }
+  #cityError .ceActions { display: flex; flex-direction: column; gap: 9px; }
+  #cityError .ceActions button { font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; padding: 11px;
+    border-radius: 12px; border: none; color: #fff; background: linear-gradient(150deg,#e8b34a,#d98f2e); }
+  #cityError .ceActions button.alt { color: #8a6f4e; background: #fffdf8; border: 1.5px solid #e3d2b6; }
+  #townLabel { background: rgba(217,143,46,.16) !important; color: #9a5e16 !important; }
   /* 🗺️ Daily course — today's recommended 3-stop route (sits atop the passport) */
   .courseBox { border-radius: 14px; padding: 10px 11px 11px; margin: 0 0 11px;
     background: linear-gradient(150deg,#fff6e2 0%,#fbeccb 100%); border: 1px solid #ecd49a; }
@@ -439,6 +496,10 @@
     #langBtn, #dayBtn, #passBtn { min-height: 44px; display: inline-flex; align-items: center; }
     .chatHead .x { width: 44px; height: 44px; font-size: 24px; margin-right: -6px; }
     .chatIn input, #repoSearch { font-size: 16px; }
+    #station #stationInput { font-size: 16px; }
+    #station #stationGo { min-height: 44px; }
+    #stationBtn { min-height: 44px; display: inline-flex; align-items: center; }
+    #station .squick button { min-height: 36px; }
     .chatIn button { min-width: 48px; min-height: 44px; }
     .msg .ride { min-height: 38px; }
     .msg .alt { display: inline-flex; align-items: center; min-height: 32px; }
@@ -453,6 +514,8 @@
 
 <div id="topbar" class="hud">
   <div class="badge">🏙️ Repolis</div>
+  <div class="badge" id="townLabel" style="display:none;font-weight:700;"></div>
+  <button id="stationBtn" class="badge" title="Travel to another GitHub town" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;" data-i18n="stationBtn">🚉 역</button>
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
   <button id="dayBtn" class="badge" title="day / night" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
   <div class="badge"><span data-i18n="visited">방문</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
@@ -478,6 +541,38 @@
   <div class="pHint" data-i18n="passportHint">현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.</div>
 </div>
 
+<div id="station" class="hidden">
+  <h3>🚉 <span data-i18n="stationTitle">다른 GitHub 마을로 이동</span></h3>
+  <div class="ssub" data-i18n="stationSub">GitHub username을 입력하면 그 사람의 공개 레포 마을로 기차가 데려다줘요.</div>
+  <div class="scur"><span data-i18n="stationCurrent">현재 마을</span>: <b id="stationCurName">—</b></div>
+  <div class="srow">
+    <input id="stationInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="39" placeholder="GitHub username 입력" data-i18n-ph="stationUserPh" />
+    <button id="stationGo" data-i18n="stationGo">🚆 기차 타고 이동</button>
+  </div>
+  <div class="sex" data-i18n="stationExamples">예: mrdoob, torvalds, karpathy, vercel</div>
+  <div class="serr" id="stationErr" style="display:none;"></div>
+  <div class="squick" id="stationQuick"></div>
+  <div class="shome" id="stationHome" style="display:none;"></div>
+  <div class="sshare"><button id="shareBtn" data-i18n="copyLink">🔗 링크 복사</button></div>
+</div>
+
+<div id="trainOverlay">
+  <div class="trainScene">
+    <div class="rail"></div>
+    <div class="train">🚆</div>
+    <div class="tmsg" id="trainMsg"></div>
+    <div class="tsub" id="trainSub"></div>
+  </div>
+</div>
+
+<div id="cityError" class="hidden">
+  <div class="ceCard">
+    <h2 id="ceTitle"></h2>
+    <p id="ceMsg"></p>
+    <div class="ceActions" id="ceActions"></div>
+  </div>
+</div>
+
 <div id="prompt"></div>
 
 <div id="modal">
@@ -492,7 +587,7 @@
     <div class="chips" id="cardChips"></div>
     <div class="since" id="cardSince"></div>
     <div class="body"><p id="cardDesc"></p></div>
-    <div class="metricnote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).</div>
+    <div class="metricnote" id="cardMetricNote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).</div>
     <div class="actions" id="cardActions"></div>
   </div>
 </div>
@@ -618,11 +713,112 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-/* ====================== REPO DATA (loaded from repos.json, traffic-driven) ====================== */
+/* ====================== REPO DATA + CITY MODE ======================
+   Owner mode (default) loads the full CI-built repos.json — unchanged.
+   Public mode (?user=someone) builds a town from any GitHub user's PUBLIC
+   repo metadata (derived metrics only — never claims real traffic).
+   The owner city stays the premium / full-data experience. ================ */
 const OWNER = 'hyeonsangjeon';
 let REPOS = [];
-try { REPOS = await fetch('repos.json', { cache:'no-cache' }).then(r=>r.json()); }
-catch(e){ console.error('repos.json load failed', e); }
+
+/* --- which town are we in? --- */
+const GH_LOGIN_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
+const _reqUser = (new URLSearchParams(location.search).get('user') || '').trim();
+let currentUser = OWNER;
+let cityMode = 'owner';            // 'owner' | 'public'
+let dataSource = 'owner-ci';       // 'owner-ci' | 'github-public' | 'cache' | 'stale-cache'
+let cityError = null;              // { status, reason } when a public town can't load
+if(_reqUser && GH_LOGIN_RE.test(_reqUser) && _reqUser.toLowerCase() !== OWNER.toLowerCase()){
+  currentUser = _reqUser; cityMode = 'public'; dataSource = 'github-public';
+}
+
+/* --- lightweight, non-blocking analytics. Default sink = in-memory (+ console under ?dbg).
+   No network unless ANALYTICS_ENDPOINT is set. No tokens, no raw taxi queries. --- */
+const ANALYTICS_ENDPOINT = null;
+const _DBG = location.search.includes('dbg');
+const SESSION_ID = (()=>{ try{ return (crypto.randomUUID && crypto.randomUUID()) || (Date.now()+'-'+Math.random().toString(36).slice(2)); }
+  catch(e){ return Date.now()+'-'+Math.random().toString(36).slice(2); } })();
+const recentAnalyticsEvents = [];
+function track(eventName, payload){
+  try{
+    const ev = Object.assign({ ev:eventName, cityUser:currentUser, cityMode,
+      repoCount:(REPOS && REPOS.length) || 0, source:dataSource, sessionId:SESSION_ID, ts:Date.now() }, payload||{});
+    recentAnalyticsEvents.push(ev); if(recentAnalyticsEvents.length > 150) recentAnalyticsEvents.shift();
+    if(_DBG) console.debug('[track]', eventName, ev);
+    if(ANALYTICS_ENDPOINT && navigator.sendBeacon){ try{ navigator.sendBeacon(ANALYTICS_ENDPOINT, JSON.stringify(ev)); }catch(e){} }
+  }catch(e){ /* analytics must never break the app */ }
+}
+
+/* --- public town: normalize GitHub REST repo objects into Repolis' internal repo shape.
+   Metrics are DERIVED from public signals (stars/forks/recency) — clearly not real traffic. --- */
+function _normPublicRepos(raw, user){
+  const now = Date.now();
+  const list = (Array.isArray(raw) ? raw : []).filter(r => r && !r.private && !r.disabled).map(r=>{
+    const stars = r.stargazers_count||0, forks = r.forks_count||0;
+    const pushedAt = r.pushed_at || r.updated_at || r.created_at || null;
+    const ageDays = pushedAt ? Math.max(0,(now - new Date(pushedAt).getTime())/86400000) : 3650;
+    const recency = Math.max(0, 1 - Math.min(ageDays,365)/365);
+    const visitors = Math.round(Math.log1p(stars+1)*12 + recency*24);   // derived "liveliness" → building height
+    const views    = Math.round(stars*8 + forks*12 + recency*40);       // derived → yard size
+    const clones   = Math.round(forks*1.5);                             // derived → fanciness (never a real clone count)
+    const lic = (r.license && r.license.spdx_id && r.license.spdx_id!=='NOASSERTION') ? r.license.spdx_id : '';
+    return {
+      repo:r.name, desc:r.description||'', lang:r.language||'Other',
+      topics: Array.isArray(r.topics) ? r.topics.slice(0,24) : [],
+      url: r.html_url || ('https://github.com/'+user+'/'+r.name), home: r.homepage||'',
+      stars, forks, fork:!!r.fork, views, visitors, clones,
+      size:r.size||0, open_issues:r.open_issues_count||0, license:lic,
+      archived:!!r.archived, default_branch:r.default_branch||'main',
+      release_tag:'', release_date:null,
+      created:r.created_at||'', pushed:pushedAt||'', updated:r.updated_at||'',
+      first_seen:'', social:'', social_custom:'',
+      _owner:user, public_mode:true, _recency:recency
+    };
+  });
+  // client-side score + rank so the existing rank-driven layout / "popular" queries work
+  list.forEach(r=>{ r.score = Math.log1p(r.stars)*3 + Math.log1p(r.forks)*1.6 + r._recency*2.4 + Math.log1p(r.open_issues)*0.3; });
+  list.sort((a,b)=> (b.score-a.score) || (b.stars-a.stars) || a.repo.localeCompare(b.repo));
+  list.forEach((r,i)=> r.rank=i);
+  return list;
+}
+function _publicCacheKey(u){ return 'repolis:public-user:'+u.toLowerCase()+':v1'; }
+async function _loadPublicCity(user){
+  const key=_publicCacheKey(user), TTL=6*3600*1000;       // 6h fresh window
+  let cached=null; try{ cached=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
+  if(cached && Array.isArray(cached.repos) && (Date.now()-(cached.fetchedAt||0) < TTL))
+    return { repos:_normPublicRepos(cached.repos,user), source:'cache' };
+  track('city_data_load_start', { targetUser:user });
+  try{
+    const res = await fetch('https://api.github.com/users/'+encodeURIComponent(user)+'/repos?per_page=100&sort=pushed',
+      { headers:{ 'Accept':'application/vnd.github+json' } });
+    if(!res.ok){
+      if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache' };
+      const reason = res.status===404 ? 'not_found' : (res.status===403 ? 'rate_limit' : 'http');
+      return { repos:[], source:'github-public', error:{ status:res.status, reason } };
+    }
+    const raw = await res.json();
+    try{ localStorage.setItem(key, JSON.stringify({ username:user, fetchedAt:Date.now(), repos:raw, source:'github-public' })); }catch(e){}
+    return { repos:_normPublicRepos(raw,user), source:'github-public' };
+  }catch(e){
+    if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache' };
+    return { repos:[], source:'github-public', error:{ status:0, reason:'network' } };
+  }
+}
+
+track('page_load');
+
+if(cityMode === 'owner'){
+  try { REPOS = await fetch('repos.json', { cache:'no-cache' }).then(r=>r.json()); }
+  catch(e){ console.error('repos.json load failed', e); }
+  track(REPOS.length ? 'city_data_load_success' : 'city_data_load_fail', { repoCount:REPOS.length });
+} else {
+  try{ const _l = (function(){ let l=localStorage.getItem('repolisLang'); if(l!=='ko'&&l!=='en') l=(navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; return l; })();
+    const le=document.getElementById('loading'); if(le) le.textContent = _l==='ko' ? (currentUser+' 님의 레포를 불러오는 중…') : ('Fetching '+currentUser+"'s repos…"); }catch(e){}
+  const pub = await _loadPublicCity(currentUser);
+  REPOS = pub.repos || []; dataSource = pub.source || 'github-public'; cityError = pub.error || null;
+  track(cityError ? 'city_data_load_fail' : 'city_data_load_success',
+    { targetUser:currentUser, repoCount:REPOS.length, reason: cityError ? cityError.reason : undefined });
+}
 
 /* Chronopolis council config (sages/chair/ambient) — optional; chamber uses an inline fallback if missing */
 let CHRONO_CFG=null;
@@ -691,8 +887,27 @@ const I18N = {
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
+    introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
     enterTown:'마을 입장 →',
+    // --- GitHub Station · 다른 마을로 기차 여행 ---
+    modeOwnerLabel:'풀 트래픽 시티', modePublicLabel:'공개 GitHub 마을',
+    townOf:'{user} 님의 마을', myCity:'내 도시',
+    stationBtn:'🚉 역', stationLm:'GitHub 역',
+    stationTitle:'다른 GitHub 마을로 이동', stationSub:'GitHub username을 입력하면 그 사람의 공개 레포 마을로 기차가 데려다줘요.',
+    stationCurrent:'현재 마을', stationUserPh:'GitHub username 입력', stationGo:'🚆 기차 타고 이동',
+    stationExamples:'예: mrdoob, torvalds, karpathy, vercel', stationHome:'← {user} 님의 도시로',
+    stationInvalid:'올바른 GitHub username을 입력해 주세요.',
+    stationReached:' — 다른 GitHub 사용자의 레포 마을로 떠나는 기차역. <span class="key">Enter</span> 또는 클릭으로 매표소 열기',
+    trainDepart:'🚆 {user} 님의 마을로 출발…', fetchingRepos:'{user} 님의 레포를 불러오는 중…',
+    arrived:'🚉 {user} 님의 GitHub 마을에 도착했어요!',
+    publicBadge:'공개 메타데이터 기반', publicMetricNote:'🏙️ 공개 레포 메타데이터로 지은 마을이에요 — 건물 크기는 ★ stars · ⑂ forks · 최근 업데이트로 정해져요. (실제 트래픽 수치가 아니에요)',
+    publicEmptyTitle:'🚉 텅 빈 마을', publicEmptyMsg:'{user} 님은 마을을 지을 공개 레포가 없어요.',
+    publicNotFound:'🚉 길을 잃었어요', publicNotFoundMsg:'GitHub에서 {user} 님을 찾지 못했어요. username을 확인해 주세요.',
+    publicRateMsg:'GitHub API 요청 한도에 걸렸어요. 잠시 후 다시 시도해 주세요.',
+    publicNetMsg:'마을을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
+    stationRetry:'🚉 다른 마을 가기', goOwnerCity:'🏙️ {user} 님의 도시 가기',
+    shareTown:'이 마을 공유', copyLink:'🔗 링크 복사', copied:'복사됨!',
     hint:'집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기',
     drivePre:'🚕 ', drivePost:' (으)로 가는 중…', stop:'🛑 꾹 눌러 내리기',
     taxiTitle:'🚕 레포 택시기사',
@@ -801,8 +1016,27 @@ const I18N = {
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
+    introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
     enterTown:'Enter the town →',
+    // --- GitHub Station · train travel to other towns ---
+    modeOwnerLabel:'Full Traffic City', modePublicLabel:'Public GitHub Town',
+    townOf:"{user}'s town", myCity:'My city',
+    stationBtn:'🚉 Station', stationLm:'GitHub Station',
+    stationTitle:'Travel to another GitHub town', stationSub:"Enter a GitHub username and the train will take you to that person's public-repo town.",
+    stationCurrent:'Current town', stationUserPh:'Enter GitHub username', stationGo:'🚆 Take the train',
+    stationExamples:'e.g. mrdoob, torvalds, karpathy, vercel', stationHome:"← Back to {user}'s city",
+    stationInvalid:'Please enter a valid GitHub username.',
+    stationReached:" — board a train to another GitHub user's repo town. Press <span class=\"key\">Enter</span> or click to open the ticket office",
+    trainDepart:"🚆 Departing for {user}'s town…", fetchingRepos:"Fetching {user}'s repos…",
+    arrived:"🚉 Arrived at {user}'s GitHub town!",
+    publicBadge:'From public metadata', publicMetricNote:'🏙️ This town is built from public repo metadata — building size comes from ★ stars · ⑂ forks · recent activity. (Not real traffic numbers.)',
+    publicEmptyTitle:'🚉 An empty town', publicEmptyMsg:'{user} has no public repos to build a town from.',
+    publicNotFound:'🚉 Lost the way', publicNotFoundMsg:"Couldn't find {user} on GitHub. Please check the username.",
+    publicRateMsg:'Hit the GitHub API rate limit. Please try again in a bit.',
+    publicNetMsg:"Couldn't load the town. Check your connection and try again.",
+    stationRetry:'🚉 Visit another town', goOwnerCity:"🏙️ Visit {user}'s city",
+    shareTown:'Share this town', copyLink:'🔗 Copy link', copied:'Copied!',
     hint:'Walk up to a house (repo) · ☰ Wayfinding · 🚕 Ask the taxi driver',
     drivePre:'🚕 Driving to ', drivePost:'…', stop:'🛑 Hold to get off',
     taxiTitle:'🚕 Repo Taxi Driver',
@@ -877,6 +1111,7 @@ const I18N = {
   }
 };
 const t = k => (I18N[LANG] && I18N[LANG][k]!=null) ? I18N[LANG][k] : (I18N.en[k]!=null ? I18N.en[k] : k);
+const tf = (k,vars) => { let s=String(t(k)); if(vars) for(const kk in vars) s=s.split('{'+kk+'}').join(vars[kk]); return s; };
 function applyLang(){
   document.documentElement.lang = LANG;
   document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.dataset.i18n); if(v!=null) el.textContent=v; });
@@ -888,6 +1123,7 @@ function applyLang(){
   if(typeof renderPassport==='function' && !document.getElementById('passport').classList.contains('hidden')) renderPassport();
   if(typeof renderChronoCase==='function' && chronoModal && chronoModal.classList.contains('show') && chronoCaseId){ renderChronoCase(chronoCaseId); chronoModalLang=LANG; }
   if(typeof renderObservatory==='function' && typeof obsModal!=='undefined' && obsModal && obsModal.classList.contains('show')) renderObservatory();
+  if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
 }
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
@@ -2765,6 +3001,8 @@ const ROLE_LABELS={ olddoc:{ko:'회의가',en:'Skeptic'}, livewire:{ko:'옹호�
 /* ───────── 🔭 Stargazer's Observatory — a view-deck landmark; climb it to meet the night-sky scholars & their constellations (best after dark) ───────── */
 const OBS_POS = new THREE.Vector3(203, 0, 22);   // east clearing (r≈204 < player clamp 215); library is north (+z), Chronopolis south
 let OBS=null, nearObs=null, obsScope=null;
+/* ───────── 🚉 GitHub Station — civic landmark beside the taxi stand; board a train to any public user's town (visual-only prop, non-colliding) ───────── */
+let STATION=null, nearStation=null, openStationModal=()=>{};
 (function buildObservatory(){
   const og=new THREE.Group(); og.position.copy(OBS_POS);
   og.rotation.y=Math.atan2(-OBS_POS.x,-OBS_POS.z);   // local +Z faces the town centre (the arrival side)
@@ -3306,6 +3544,30 @@ driver.rotation.y=-2.2; scene.add(driver);
 const NPCS=[];
 NPCS.push({ group:driver, pos:driver.position.clone(), kind:'taxi', reach:4.6 });
 
+/* ---- 🚉 GitHub Station — a civic landmark beside the taxi stand; board a "train" to any public GitHub user's town.
+   Visual-only (non-colliding) so it never affects movement near the busy plaza; the topbar 🚉 button is the shortcut. ---- */
+(function buildStation(){
+  const SP=new THREE.Vector3(18,0,14);
+  const g=new THREE.Group(); g.position.copy(SP); g.rotation.y=-2.2; scene.add(g);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(2.3,2.5,0.3,24), toon(0xcdbfa6)); base.position.y=0.15; base.receiveShadow=true; g.add(base);
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(2.3,0.12,8,30), toon(0x8f8676)); rim.rotation.x=-Math.PI/2; rim.position.y=0.3; g.add(rim);
+  [-1.5,1.5].forEach(px=>{ const post=rbox(0.18,3.1,0.18,0x6b4a2e,0.03); post.position.set(px,1.6,0); outline(post,0.03); g.add(post); });
+  const canopy=rbox(3.7,0.24,1.6,0x9c4f3a,0.05); canopy.position.y=3.25; outline(canopy,0.03); g.add(canopy);
+  const ridge=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,3.7,8), toon(0xc8773a)); ridge.rotation.z=Math.PI/2; ridge.position.set(0,3.42,0); g.add(ridge);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(2.7,0.92), new THREE.MeshBasicMaterial({map:signTexture(t('stationLm'),0x3b6ea5),transparent:true})); board.position.set(0,2.32,0.82); g.add(board);
+  const board2=board.clone(); board2.position.z=-0.82; board2.rotation.y=Math.PI; g.add(board2);
+  // 🚉 emoji billboard atop the canopy
+  const cv=document.createElement('canvas'); cv.width=cv.height=128; const cx=cv.getContext('2d'); cx.font='96px serif'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText('🚉',64,72);
+  const et=new THREE.CanvasTexture(cv); et.colorSpace=THREE.SRGBColorSpace; et.needsUpdate=true;
+  const em=new THREE.Sprite(new THREE.SpriteMaterial({map:et,transparent:true,depthWrite:false})); em.scale.set(1.5,1.5,1); em.position.set(0,4.35,0); g.add(em);
+  // warm lantern glow (night-aware, shares the existing lamp-glow pass)
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffe0a8,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  halo.scale.set(3.4,3.4,1); halo.position.set(0,2.5,0); halo._nightOp=0.7; g.add(halo); LAMP_GLOWS.push(halo);
+  // gold destination ring on the ground (matches the other landmarks)
+  const ring=new THREE.Mesh(new THREE.RingGeometry(2.5,2.8,32), new THREE.MeshBasicMaterial({color:0xe8c061,transparent:true,opacity:0.5,side:THREE.DoubleSide})); ring.rotation.x=-Math.PI/2; ring.position.y=0.06; g.add(ring);
+  STATION={ _isStation:true, _pos:SP.clone(), label:t('stationLm'), _group:g };
+})();
+
 // 📘 Microsoft Docs engineer — answers from the live Microsoft Learn MCP server (official docs)
 const engineer=new THREE.Group(); engineer.position.set(-10.5,0,0);
 (function buildEngineer(){
@@ -3768,16 +4030,20 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   img.style.display='block'; if(sbadge) sbadge.style.display='none';
   img.onerror=()=>{ img.style.display='none'; if(sbadge) sbadge.style.display='none'; };
   img.onload=()=>{ if(sbadge) sbadge.style.display = repo.social_custom ? 'inline-flex' : 'none'; };
-  img.src = repo.social || ('https://opengraph.githubassets.com/'+repo.repo+'/'+OWNER+'/'+repo.repo);
+  img.src = repo.social || ('https://opengraph.githubassets.com/'+repo.repo+'/'+(repo._owner||OWNER)+'/'+repo.repo);
   document.getElementById('cardChips').innerHTML=
     `<span class="chip">★ <b>${repo.stars}</b> stars</span>`+
     `<span class="chip">⑂ <b>${repo.forks}</b> forks</span>`+
-    `<span class="chip">👁 <b>${repo.vuniq}</b> visitors</span>`+
-    `<span class="chip">⬇ <b>${repo.clones}</b> clones</span>`+
+    (cityMode==='public'
+      ? (repo.lang&&repo.lang!=='—'?`<span class="chip">⌨ <b>${repo.lang}</b></span>`:'')
+      : `<span class="chip">👁 <b>${repo.vuniq}</b> visitors</span>`+
+        `<span class="chip">⬇ <b>${repo.clones}</b> clones</span>`)+
     (repo.open_issues?`<span class="chip">◎ <b>${repo.open_issues}</b> issues</span>`:'')+
     (repo.license?`<span class="chip">⚖ <b>${repo.license}</b></span>`:'')+
     (repo.release_tag?`<span class="chip" title="${repo.release_date||''}">🏷 <b>${repo.release_tag}</b></span>`:'')+
     (repo.archived?`<span class="chip">📦 ${LANG==='ko'?'보관됨':'archived'}</span>`:'');
+  const mnote=document.getElementById('cardMetricNote');
+  if(mnote) mnote.textContent = cityMode==='public' ? t('publicMetricNote') : t('metricNote');
   const since=document.getElementById('cardSince');
   if(repo.first_seen){ since.style.display='block';
     since.innerHTML = LANG==='ko'
@@ -3795,6 +4061,9 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
     +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
   document.getElementById('closeBtn').onclick=closeCard;
   if(relId){ document.getElementById('relChronoBtn').onclick=()=>{ closeCard(); openChrono(relId); }; }
+  const ghBtn=act.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>track('github_click',{repo:repo.repo});
+  const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
+  track('repo_card_open',{repo:repo.repo});
   markVisited(repo); }
 function closeCard(){ modalOpen=false; modal.classList.remove('show'); }
 modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
@@ -3849,7 +4118,7 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -3862,11 +4131,105 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
 document.getElementById('loading').style.display='none';
 
+/* ====================== 🚉 GITHUB STATION (city mode: travel to public towns) ====================== */
+(function(){
+  const stationEl=document.getElementById('station');
+  const townLabel=document.getElementById('townLabel');
+  const stationBtn=document.getElementById('stationBtn');
+  const trainOv=document.getElementById('trainOverlay');
+  const errEl=document.getElementById('cityError');
+  const inp=document.getElementById('stationInput');
+  const goBtn=document.getElementById('stationGo');
+  const errLine=document.getElementById('stationErr');
+  const quick=document.getElementById('stationQuick');
+  const homeWrap=document.getElementById('stationHome');
+  const shareBtn=document.getElementById('shareBtn');
+  const curName=document.getElementById('stationCurName');
+  const EXAMPLES=['mrdoob','torvalds','karpathy','vercel','sindresorhus'];
+  const baseUrl=()=>location.origin+location.pathname;
+  const townName=()=> cityMode==='public' ? tf('townOf',{user:currentUser}) : t('myCity');
+
+  function depart(user){
+    user=String(user||'').trim().replace(/^@+/,'');
+    if(!GH_LOGIN_RE.test(user)){ errLine.style.display='block'; errLine.textContent=t('stationInvalid'); track('travel_fail',{reason:'invalid'}); return; }
+    errLine.style.display='none'; track('travel_submit',{user});
+    document.getElementById('trainMsg').textContent=tf('trainDepart',{user});
+    document.getElementById('trainSub').textContent=tf('fetchingRepos',{user});
+    trainOv.classList.add('show');
+    const isOwner = user.toLowerCase()===String(OWNER).toLowerCase();
+    const url = isOwner ? baseUrl() : (baseUrl()+'?user='+encodeURIComponent(user));
+    setTimeout(()=>{ location.href=url; }, 950);
+  }
+  function goHome(){ track('travel_home');
+    document.getElementById('trainMsg').textContent=tf('trainDepart',{user:OWNER}); document.getElementById('trainSub').textContent='';
+    trainOv.classList.add('show'); setTimeout(()=>{ location.href=baseUrl(); }, 750); }
+
+  function renderStation(){
+    curName.textContent=townName();
+    quick.innerHTML=''; EXAMPLES.forEach(u=>{ const b=document.createElement('button'); b.textContent=u; b.onclick=()=>{ inp.value=u; depart(u); }; quick.appendChild(b); });
+    if(cityMode==='public'){ homeWrap.style.display='block'; homeWrap.innerHTML='<button id="goHomeBtn"></button>'; const hb=document.getElementById('goHomeBtn'); hb.textContent=tf('stationHome',{user:OWNER}); hb.onclick=goHome; }
+    else homeWrap.style.display='none';
+    shareBtn.textContent=t('copyLink'); shareBtn.classList.remove('ok');
+  }
+  function openStation(){ panel.classList.add('hidden'); passportEl.classList.add('hidden'); stationEl.classList.remove('hidden'); renderStation(); track('station_open'); setTimeout(()=>{ try{ inp.focus(); }catch(e){} },80); }
+  function closeStation(){ stationEl.classList.add('hidden'); }
+  openStationModal=openStation;   // let the spatial station prop (walk-up) open the same ticket office
+  if(stationBtn) stationBtn.onclick=()=>{ if(stationEl.classList.contains('hidden')) openStation(); else closeStation(); };
+  document.getElementById('menuBtn').addEventListener('click',closeStation);
+  goBtn.onclick=()=>depart(inp.value);
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){ e.preventDefault(); depart(inp.value); } });
+
+  shareBtn.onclick=async()=>{ const link = cityMode==='public' ? (baseUrl()+'?user='+encodeURIComponent(currentUser)) : baseUrl(); track('share_click');
+    let ok=false; try{ await navigator.clipboard.writeText(link); ok=true; }
+    catch(e){ try{ const ta=document.createElement('textarea'); ta.value=link; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); document.body.removeChild(ta); }catch(_){ } }
+    shareBtn.textContent = ok ? t('copied') : link; shareBtn.classList.toggle('ok',ok);
+    setTimeout(()=>{ shareBtn.textContent=t('copyLink'); shareBtn.classList.remove('ok'); },1600); };
+
+  // effective error reason: real load error OR public town with zero public repos ('empty')
+  const effErr = cityError ? (cityError.reason||'http') : ((cityMode==='public' && !REPOS.length) ? 'empty' : null);
+  function showCityError(){
+    let title,msg;
+    if(effErr==='empty'){ title=t('publicEmptyTitle'); msg=tf('publicEmptyMsg',{user:currentUser}); }
+    else if(effErr==='rate_limit'){ title=t('publicNotFound'); msg=t('publicRateMsg'); }
+    else if(effErr==='network'){ title=t('publicNotFound'); msg=t('publicNetMsg'); }
+    else if(effErr==='not_found'){ title=t('publicNotFound'); msg=tf('publicNotFoundMsg',{user:currentUser}); }
+    else { title=t('publicNotFound'); msg=t('publicNetMsg'); }
+    document.getElementById('ceTitle').textContent=title; document.getElementById('ceMsg').textContent=msg;
+    const a=document.getElementById('ceActions'); a.innerHTML='';
+    const retry=document.createElement('button'); retry.textContent=t('stationRetry'); retry.onclick=()=>{ errEl.classList.add('hidden'); openStation(); }; a.appendChild(retry);
+    const home=document.createElement('button'); home.className='alt'; home.textContent=tf('goOwnerCity',{user:OWNER}); home.onclick=goHome; a.appendChild(home);
+    const intro=document.getElementById('intro'); if(intro) intro.classList.add('hidden');
+    errEl.classList.remove('hidden');
+  }
+
+  window.__cityLangRefresh=()=>{
+    if(cityMode==='public'){ townLabel.style.display=''; townLabel.textContent='🚉 '+tf('townOf',{user:currentUser});
+      const isub=document.querySelector('#intro .sub'); if(isub) isub.innerHTML=tf('introSubPublic',{user:currentUser}); }
+    else townLabel.style.display='none';
+    if(!stationEl.classList.contains('hidden')) renderStation();
+    if(!errEl.classList.contains('hidden')) showCityError();
+  };
+  window.__station=()=>({ mode:cityMode, user:currentUser, source:dataSource, error:effErr, repoCount:REPOS.length, open:!stationEl.classList.contains('hidden') });
+  window.__city=()=>({ mode:cityMode, user:currentUser, source:dataSource, repoCount:REPOS.length, error:cityError });
+  window.__events=()=>recentAnalyticsEvents.slice();
+  window.__depart=depart; window.__goHome=goHome;
+
+  // --- init city-mode visuals ---
+  if(cityMode==='public'){ townLabel.style.display=''; townLabel.textContent='🚉 '+tf('townOf',{user:currentUser});
+    const isub=document.querySelector('#intro .sub'); if(isub) isub.innerHTML=tf('introSubPublic',{user:currentUser});
+    const ms=document.getElementById('modeSel'); if(ms){ ms.value='local'; ms.style.display='none'; } }
+  else townLabel.style.display='none';
+  if(effErr){ showCityError(); }
+  else if(cityMode==='public' && REPOS.length){ setTimeout(()=>{ try{ showWave(tf('arrived',{user:currentUser}),3600); }catch(e){} }, 1200); }
+  setTimeout(()=>track('session_10s'),10000);
+  setTimeout(()=>track('session_60s'),60000);
+})();
+
 /* ====================== LLM TAXI DRIVER ====================== */
 const chatEl=document.getElementById('chat'), chatLog=document.getElementById('chatLog'), chatText=document.getElementById('chatText');
 const taxiBtn=document.getElementById('taxiBtn'), modeSel=document.getElementById('modeSel');
 const driveBar=document.getElementById('drivebar'), driveNameEl=document.getElementById('driveName');
-let llmMode=localStorage.getItem('taxiMode')||'local', chatGreeted=false, busy=false; modeSel.value=llmMode;
+let llmMode=(cityMode==='public')?'local':(localStorage.getItem('taxiMode')||'local'), chatGreeted=false, busy=false; modeSel.value=llmMode;
 
 function scrollChat(){ chatLog.scrollTop=chatLog.scrollHeight; }
 /* ---- multi-turn memory: thread recent Q&A so follow-ups keep context ---- */
@@ -4453,6 +4816,7 @@ function animate(){
   if(!sitting && !nearest){ let sd=2.5; for(const s of SEATS){ const d=player.position.distanceTo(s.pos); if(d<sd){ sd=d; nearestSeat=s; } } }
   nearChrono = (CHRONO && player.position.distanceTo(CHRONO._pos) < 8.5) ? CHRONO : null;
   nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
+  nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
   // 🏠 first walk-up to a house → a gentle sparkle + acknowledge bob (landmarks get their own reactions below; skip while a taxi drives you past many houses)
   if(nearest && !nearest._isLibrary && !ride) greetBuilding(nearest);
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes) + a localized sparkle on first stamp
@@ -4467,6 +4831,7 @@ function animate(){
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
   else if(nearObs&&!modalOpen){ promptEl.innerHTML=`<b>${t('obsName')}</b>${t('obsReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🔭'; }
+  else if(nearStation&&!modalOpen){ promptEl.innerHTML=`<b>${t('stationLm')}</b>${t('stationReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚉'; }
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }

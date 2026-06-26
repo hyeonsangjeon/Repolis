@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.36.0] — 2026-06-30
+
+### 🚉 Shareable GitHub towns — "take the train" to anyone's public repos
+- **Repolis is now a town generator for any public GitHub user.** Append `?user=<login>` (e.g. `?user=mrdoob`) and the city rebuilds itself from that person's public repos — same layout engine, same metrics-driven buildings, ranked by a derived score. A visitor can stroll `mrdoob`'s town, `torvalds`' town, or their own, and share the link. **My own town is 100% unchanged** — public mode only activates for a *valid* username that *isn't* the owner; the bare URL always loads the owner city byte-for-byte (62 repos, identical ranks).
+- **🚉 Station landmark + ticket office.** A new non-colliding train-station prop stands beside the taxi stand (stone platform, canopy, bilingual sign, 🚉 billboard, night lantern glow). Walk up to it (or tap the top-bar 🚉 button) to open the **ticket office** modal: type any GitHub username and "take the train". The station is a civic landmark — it never blocks movement (intentionally not added to `COLLIDERS`).
+- **🚆 Train travel transition.** Departing shows a train overlay ("🚆 heading to *user*'s town…") then navigates to the new town. A **"go home"** button always returns to the owner city. The intro subtitle adapts in public mode ("A city built from *user*'s public repos…") in both KO/EN, and survives language toggles.
+- **Resilient + cached.** Public towns are cached in `localStorage` (with stale fallback). Friendly overlays cover every failure: invalid username (validation), unknown user (404 "길을 잃었어요" + retry/go-home), rate-limit, and empty (0 public repos) — each with distinct copy, never a dead screen.
+- **Mobile-polished.** Station input is 16px (no iOS zoom-on-focus), Go / station / quick buttons are ≥44px tap targets, and the modal fits a 390px viewport with no overflow. The taxi is forced local + hidden in public towns (no cross-town driving).
+- Verified on real GPU: owner mode byte-identical (62 repos, `owner-ci`, 0 errors), `mrdoob` (58) / `torvalds` (12) render with correct town labels, train transition + 404 + go-home all work, KO/EN intros correct and toggle-safe, **0 console errors**. 130 engine + 56 live checks still green (feature doesn't touch `council/`).
+
 ## [1.35.0] — 2026-06-29
 
 ### 🎉 Data-driven town events — a recent release throws a party, open issues fire up the workshop
