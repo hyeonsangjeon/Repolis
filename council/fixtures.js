@@ -76,6 +76,27 @@
       ]
     },
 
+    /* ── 데이터/ML 영웅 케이스: 다수가 아직 옛 길 → S1 ──
+       pandas 2.0(2023-04)에서 DataFrame.append는 '제거'됨. 정답은 pd.concat.
+       옛 튜토리얼과 SO 답변 다수는 아직 df.append → 다수결(2표)이 박제된 옛 API,
+       살아있는 소스만 concat을 가리킨다. 다수결이 틀리는 순간(S1). */
+    pandas_concat: {
+      id: 'pandas_concat', topic: 'pandas', sline: 'S1',
+      question: { ko: '두 DataFrame을 행 방향으로 이어 붙이는 올바른 방법은?',
+                  en: 'What is the correct way to concatenate two DataFrames row-wise?' },
+      attribute: 'dataframe_concat',
+      attributeLabel: { ko: '데이터프레임 연결', en: 'dataframe concatenation' },
+      answers: [
+        { sage: 'olddoc', value: 'df.append(df2)', date: '2025-06',
+          provenance: { ko: '옛 pandas 튜토리얼 · DataFrame.append', en: 'old pandas tutorial · DataFrame.append' }, signals: ['removed'] },
+        { sage: 'livewire', value: 'pd.concat([df1, df2])', date: '2026-05',
+          provenance: { ko: 'pandas src · DataFrame.append는 2.0에서 제거됨 · concat 사용', en: 'pandas src · DataFrame.append removed in 2.0 · use concat' },
+          signals: ['live_source', 'alt_removed'] },
+        { sage: 'hearsay', value: 'df.append([row])', date: '2025-10',
+          provenance: { ko: 'SO 상위 답변(옛 패턴)', en: 'top SO answer (old pattern)' }, signals: ['echoes:olddoc'] }
+      ]
+    },
+
     /* ── 다수결이 '맞는' 케이스 → S3 ──
        기본 timeout 값. live와 커뮤니티가 30으로 합의, 옛 문서만 60.
        Council이 무조건 소수 편드는 청개구리가 아님을 증명(근거 기반 판정). */
@@ -135,7 +156,7 @@
     }
   };
 
-  const ORDER = ['pydantic_dict', 'transformers_generate', 'request_timeout', 'openai_sdk', 'langchain_lcel', 'css_center'];
+  const ORDER = ['pydantic_dict', 'transformers_generate', 'pandas_concat', 'request_timeout', 'openai_sdk', 'langchain_lcel', 'css_center'];
 
   function list() { return ORDER.map(function (id) { return FIXTURES[id]; }); }
   function get(id) { return FIXTURES[id] || null; }

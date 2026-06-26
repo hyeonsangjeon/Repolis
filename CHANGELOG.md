@@ -3,6 +3,12 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.28.1] — 2026-06-28
+
+### 📜 A new Council of Time case — pandas `df.append()` → `pd.concat()`
+- **A new curated debate joins Chronopolis: how to concatenate two DataFrames.** pandas 2.0 **removed** `DataFrame.append`, yet a huge body of old tutorials and Stack Overflow answers still reach for `df.append(...)` — so the **majority is wrong**. The live source says `pd.concat([df1, df2])`, and the deterministic Council overrides the majority on **recency**: verdict `pd.concat([df1, df2])`, signature **S1** ("표는 둘이나, 시간은 하나를 가리킨다" / *the table is split two-to-one, but time points to one*), `overrode_majority=true`, the removed-API loser boosting confidence. It's the data/ML-flavoured companion to the existing pydantic & transformers S1 cases — the dramatic "time topples the majority" verdict the engine was built for.
+- **Wired everywhere the other cases are.** It appears as the 7th example chip in the Convene modal (`pandas`), pre-fills the live-debate box with its question in the active language (KO *"두 DataFrame을 행 방향으로 이어 붙이는 올바른 방법은?"* / EN *"What is the correct way to concatenate two DataFrames row-wise?"*), and auto-joins the ambient world-bubble debate cycle. `council/test.mjs` adds 7 assertions for it and stays green (**74 checks**). Stale "5/6 curated cases" comments corrected to 7. Verified in-browser desktop + KO/EN: chip selects + fills the box, modal renders clean, **0 console errors**. (Golden rule intact — the curated verdict is deterministic math; the gold "unverified" LLM path is only for free-form topics.)
+
 ## [1.28.0] — 2026-06-28
 
 ### 🎆 The milestone festival — aurora over the city & fireworks for every milestone

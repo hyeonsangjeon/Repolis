@@ -81,7 +81,7 @@
 
   // ---- persona + grounding prompts (used ONLY on the real LLM path) -----------
   // ---- free-topic debate ROLES (Phase 40) ------------------------------------
-  // The 6 curated fixtures use the doc/source/community personas above; FREE topics
+  // The 7 curated fixtures use the doc/source/community personas above; FREE topics
   // instead assign each seat a general DEBATE ROLE so any subject — even a single
   // noun like "reasoning ratio" — gets a real advocate / skeptic / analyst clash.
   var FREE_ROLES = {
@@ -210,7 +210,7 @@
   }
 
   // ---- free-topic Live debate (Phase 39): no fixture, no core-engine verdict ---
-  // The 6 curated fixtures keep the deterministic core verdict (runDebate above).
+  // The 7 curated fixtures keep the deterministic core verdict (runDebate above).
   // A FREE topic has no ground truth, so each sage argues freely from persona with
   // the running transcript as context (real tiki-taka), bounded by a deadline +
   // MAX_ROUNDS; then the strong CHAIR LLM (gpt-5.4 + reasoning) delivers the verdict.
