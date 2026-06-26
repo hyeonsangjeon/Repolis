@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%98%EF%B8%8F%3C/text%3E%3C/svg%3E" />
 <title>Repolis · 레포들의 도시 · hyeonsangjeon</title>
 <meta name="description" content="Your GitHub isn't a 6-pin grid — it's a 3D city you can walk, and a taxi drives you to any repo you name." />
@@ -28,13 +28,13 @@
   canvas { display: block; }
 
   .hud { position: fixed; z-index: 10; color: #4a2f1e; }
-  #topbar { top: 14px; left: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  #topbar { top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .badge { background: rgba(255,251,242,.86); backdrop-filter: blur(6px);
     border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: 13px;
     box-shadow: 0 4px 14px rgba(80,50,20,.16); }
   .badge b { color: #d2622f; }
 
-  #menuBtn { top: 14px; right: 14px; width: 46px; height: 46px; border: none; cursor: pointer;
+  #menuBtn { top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); width: 46px; height: 46px; border: none; cursor: pointer;
     border-radius: 14px; background: rgba(255,251,242,.9); box-shadow: 0 4px 14px rgba(80,50,20,.2);
     font-size: 20px; display: flex; align-items: center; justify-content: center; position: fixed; z-index: 13; }
   #menuBtn .dot { position: absolute; top: 8px; right: 8px; width: 9px; height: 9px;
@@ -282,7 +282,7 @@
     transform: translate(-50%,-50%); border-radius: 50%;
     background: radial-gradient(circle at 38% 32%, #fff, rgba(255,255,255,.82) 70%);
     box-shadow: 0 4px 12px rgba(0,0,0,.24); }
-  #actBtn { position: fixed; z-index: 12; right: 24px; bottom: 30px;
+  #actBtn { position: fixed; z-index: 12; right: calc(24px + env(safe-area-inset-right, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px));
     width: 74px; height: 74px; border-radius: 50%; border: none; cursor: pointer; font-size: 30px;
     align-items: center; justify-content: center; background: #fff; color: #c2702f;
     box-shadow: 0 8px 22px rgba(60,30,10,.3); display: none; transition: transform .12s; }
@@ -305,7 +305,7 @@
     animation: tpulse 2s ease-out infinite; pointer-events: none; }
   @keyframes tpulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
   @media (hover: none) and (pointer: coarse) {
-    #taxiBtn { right: 30px; bottom: 116px; }
+    #taxiBtn { right: calc(30px + env(safe-area-inset-right, 0px)); bottom: calc(116px + env(safe-area-inset-bottom, 0px)); }
   }
   /* ---- emote wheel ---- */
   #emoteBtn { position: fixed; z-index: 13; right: 18px; bottom: 86px; width: 52px; height: 52px;
@@ -322,8 +322,8 @@
   #emoteBar button:hover { background: #ffe9b0; }
   #emoteBar button:active { transform: scale(.88); }
   @media (hover: none) and (pointer: coarse) {
-    #emoteBtn { right: 32px; bottom: 188px; }
-    #emoteBar { right: 94px; bottom: 190px; }
+    #emoteBtn { right: calc(32px + env(safe-area-inset-right, 0px)); bottom: calc(188px + env(safe-area-inset-bottom, 0px)); }
+    #emoteBar { right: calc(94px + env(safe-area-inset-right, 0px)); bottom: calc(190px + env(safe-area-inset-bottom, 0px)); }
   }
   #chat { position: fixed; z-index: 14; right: 14px; bottom: 88px; width: 360px; max-width: calc(100vw - 28px);
     background: rgba(255,251,242,.97); backdrop-filter: blur(12px); border-radius: 20px;
@@ -1225,6 +1225,34 @@ function updateFireworks(dt){
   }
 }
 
+/* ---- visit reactions: a gentle sparkle pop + a quick "acknowledge" bob the first time you reach a house or landmark ---- */
+const VISIT_FX=[], BOBS=[];
+function popSparkle(x,y,z,color){
+  const N=16, pos=new Float32Array(N*3), vel=[];
+  for(let i=0;i<N;i++){ pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+    const th=Math.random()*Math.PI*2, sr=0.5+Math.random()*1.0;
+    vel.push(new THREE.Vector3(Math.cos(th)*sr*2.6, 2.2+Math.random()*2.6, Math.sin(th)*sr*2.6)); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const m=new THREE.PointsMaterial({size:1.5,map:STAR_TEX,color:color||0xfff0b0,transparent:true,opacity:1,depthWrite:false,fog:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+  const p=new THREE.Points(g,m); scene.add(p); VISIT_FX.push({o:p,vel,age:0,life:0.85}); lastAct=performance.now();
+}
+function bobBuilding(g){ if(!g||g._bobbing) return; g._bobbing=true; BOBS.push({g,t:0,dur:0.5,bx:g.scale.x,by:g.scale.y,bz:g.scale.z}); }
+function greetBuilding(b){ if(!b||b._greeted) return; b._greeted=true;
+  // pop the sparkle in the open air on the side facing the player, so the building wall never occludes it
+  const dx=player.position.x-b._pos.x, dz=player.position.z-b._pos.z, dl=Math.hypot(dx,dz)||1, off=Math.min((b._cw||3)+1.6, dl*0.6);
+  popSparkle(b._pos.x+dx/dl*off, 3.6, b._pos.z+dz/dl*off, 0xfff0b0); bobBuilding(b._group); }
+function updateVisitFx(dt){
+  for(let i=VISIT_FX.length-1;i>=0;i--){ const f=VISIT_FX[i]; f.age+=dt; const k=f.age/f.life;
+    const arr=f.o.geometry.attributes.position.array;
+    for(let j=0;j<f.vel.length;j++){ const v=f.vel[j]; arr[j*3]+=v.x*dt; arr[j*3+1]+=v.y*dt; arr[j*3+2]+=v.z*dt; v.y-=4.5*dt; v.multiplyScalar(0.94); }
+    f.o.geometry.attributes.position.needsUpdate=true;
+    f.o.material.opacity=Math.max(0,1-k); f.o.material.size=1.5+k*0.8;
+    if(k>=1){ scene.remove(f.o); f.o.geometry.dispose(); f.o.material.dispose(); VISIT_FX.splice(i,1); } }
+  for(let i=BOBS.length-1;i>=0;i--){ const b=BOBS[i]; b.t+=dt; const k=Math.min(1,b.t/b.dur), s=Math.sin(k*Math.PI);
+    b.g.scale.set(b.bx*(1-s*0.035), b.by*(1+s*0.07), b.bz*(1-s*0.035));
+    if(k>=1){ b.g.scale.set(b.bx,b.by,b.bz); b.g._bobbing=false; BOBS.splice(i,1); } }
+}
+
 /* ---- daytime life: gliding birds, fluttering butterflies, chimney smoke ---- */
 function _birdTex(){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d');
   x.strokeStyle='#2c313c'; x.lineWidth=7; x.lineCap='round'; x.beginPath();
@@ -1449,8 +1477,8 @@ rim.rotation.x=-Math.PI/2; rim.position.y=0.025; scene.add(rim);
   // soft glow lighting the fountain at night
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xbfe0ff,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
   glow.scale.set(5,5,1); glow.position.y=fy+0.7; glow._n=0.42; scene.add(glow); NIGHT_GLOWS.push(glow);
-  // flower ring (kept) + Provençal lavender framing the fountain
-  for(let i=0;i<8;i++){ const a=i/8*Math.PI*2; flowerPatch(Math.cos(a)*4.4, Math.sin(a)*4.4); }
+  // flower ring (slimmed for a breathable plaza) + Provençal lavender framing the fountain
+  for(let i=0;i<4;i++){ const a=i/4*Math.PI*2+0.5; flowerPatch(Math.cos(a)*4.6, Math.sin(a)*4.6); }
   for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+0.4; lavenderClump(scene, Math.cos(a)*6.7, Math.sin(a)*6.7, 1.0); }
 })();
 
@@ -1494,8 +1522,8 @@ function makeRock(x,z,s=1){
 function flowerPatch(x,z){
   const cols=[0xff6b6b,0xffd93d,0xfff0f0,0xff9ec7,0xffffff];
   for(let i=0;i<5;i++){
-    const f=new THREE.Mesh(new THREE.SphereGeometry(0.18,6,5), basic(cols[Math.random()*cols.length|0]));
-    f.position.set(x+(Math.random()-.5)*1.6, 0.18, z+(Math.random()-.5)*1.6); scene.add(f);
+    const f=new THREE.Mesh(new THREE.SphereGeometry(0.15,8,6), basic(cols[Math.random()*cols.length|0]));
+    f.position.set(x+(Math.random()-.5)*1.4, 0.12, z+(Math.random()-.5)*1.4); f.scale.y=0.82; scene.add(f);
   }
 }
 // ---- Provençal flora: cypress spires, silvery olive, lavender rows, sunflowers ----
@@ -1817,8 +1845,10 @@ function placeColmar(){   // invoked after the shared garden geo (GEO_FLOWER) is
   makeFlowerCart(Math.cos(255*D)*22, Math.sin(255*D)*22, 255*D+1);
   makeGuildLantern(Math.cos(135*D)*19, Math.sin(135*D)*19);
   makeGuildLantern(Math.cos(225*D)*19, Math.sin(225*D)*19);
-  // 🌳 a calm rest park set off the plaza (SW lawn pocket, between the ring streets) to distribute the focal points
+  // 🌳 calm rest parks set off the plaza, spread across lawn pockets (SW · N · E) between the ring streets to distribute the focal points
   makePark(-43,-15);
+  makePark(15,48);
+  makePark(55,-12);
   // rose arches gently framing the 6 avenue mouths (planters relocated off-plaza to a calm park pocket)
   for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2;
     makeRoseArch(Math.cos(ang)*13.5, Math.sin(ang)*13.5, ang+Math.PI/2); }
@@ -2401,6 +2431,21 @@ makeLibrary();
 const COLLIDERS = buildings.map(b=>({x:b._x, z:b._z, r:b._cw||3}));
 if(LIB){ COLLIDERS.push({x:0,z:LIB._z-14,r:13}); COLLIDERS.push({x:0,z:LIB._z+14,r:14}); }
 if(typeof EXTRA_COLLIDERS!=='undefined') COLLIDERS.push(...EXTRA_COLLIDERS);   // Colmar charms (carts/stalls/well/canal) get soft colliders
+/* circle-collider resolver — pushes the player (a point) out of every overlapping collider,
+   iterating a few passes so two adjacent props/columns can't wedge them: a single pass would
+   shove them out of one collider straight back into its neighbour and they'd stick. Iterating
+   lets the position settle in the free gap, so you slide along Chronopolis columns instead of
+   getting trapped between them. */
+function resolveColliders(p){
+  for(let pass=0; pass<4; pass++){
+    let hit=false;
+    for(const c of COLLIDERS){
+      const cx=p.x-c.x, cz=p.z-c.z, cd=Math.hypot(cx,cz);
+      if(cd<c.r){ const k=cd<1e-3?1:c.r/cd; p.x=c.x+cx*k; p.z=c.z+cz*k; hit=true; }
+    }
+    if(!hit) break;
+  }
+}
 
 /* ======================================================================
    ⏳ CHRONOPOLIS — the Council of Time (a far-corner open-air tribunal)
@@ -3076,7 +3121,7 @@ const driver=new THREE.Group(); driver.position.set(TAXI_POS.x-1.7,0,TAXI_POS.z+
     const bdot=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:0xffe0a0,transparent:true,opacity:0.95,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); bdot.scale.set(0.34,0.34,1); bdot.position.set(0,1.52,0.47); driver.add(bdot);                 // compass-star chest badge
     const cstar=new THREE.Sprite(new THREE.SpriteMaterial({map:GLINT_TEX,color:0xfff0d6,transparent:true,opacity:0.95,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); cstar.scale.set(0.62,0.62,1); cstar.position.set(0,2.72,0.16); driver.add(cstar);                  // a small pole star over the cap
     const cb=rbox(0.5,0.07,0.04,0xfff0d6,0.01); cb.position.set(0,2.36,0.42); cb.scale.x=0.92; driver.add(cb); }                                                                                                                                                                          // star band on the cap brim
-  driver._head=hd; npcFaces.add(hd.material);
+  driver._head=hd; driver._armL=al; driver._armR=ar; npcFaces.add(hd.material);
 })();
 driver.rotation.y=-2.2; scene.add(driver);
 
@@ -3111,7 +3156,7 @@ const engineer=new THREE.Group(); engineer.position.set(-10.5,0,0);
   const hband=rbox(0.22,0.07,0.05,0xbcd0ff,0.01); hband.position.set(0,2.6,0.45); engineer.add(hband);
   { const hs=new THREE.Sprite(new THREE.SpriteMaterial({map:GLINT_TEX,color:0xbcd0ff,transparent:true,opacity:0.95,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); hs.scale.set(0.62,0.62,1); hs.position.set(0,3.32,-0.02); engineer.add(hs); }                          // glowing star at the hat tip
   [[-0.24,1.5,0.38,0.16],[0.22,1.32,0.36,0.13],[-0.05,1.16,0.36,0.11]].forEach(([rx,ry,rz,s])=>{ const r=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:0xcfe0ff,transparent:true,opacity:0.8,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); r.scale.set(s,s,1); r.position.set(rx,ry,rz); engineer.add(r); });   // star runes on the robe
-  engineer._head=hd; npcFaces.add(hd.material);
+  engineer._head=hd; engineer._armL=al; engineer._armR=ar; npcFaces.add(hd.material);
 })();
 engineer.rotation.y=Math.PI/2; scene.add(engineer);
 NPCS.push({ group:engineer, pos:engineer.position.clone(), kind:'msdocs', reach:4.6 });
@@ -3157,10 +3202,49 @@ const rigel=new THREE.Group(); rigel.position.set(6.5,0,-9.5);
   // PROP 2: Ariadne's thread — a glowing teal yarn ball at the hip
   const yarn=ball(0.12,STARC,12); yarn.position.set(-0.5,1.04,0.2); rigel.add(yarn);
   { const ys=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:STARC,transparent:true,opacity:0.5,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); ys.scale.set(0.5,0.5,1); ys.position.copy(yarn.position); rigel.add(ys); }
-  rigel._head=hd; npcFaces.add(hd.material);
+  rigel._head=hd; rigel._armL=al; rigel._armR=ar; npcFaces.add(hd.material);
 })();
 rigel.rotation.y=-0.6; scene.add(rigel);
 NPCS.push({ group:rigel, pos:rigel.position.clone(), kind:'deepwiki', reach:4.6 });
+
+/* ---- NPCs feel alive: breathing bob, look-around, occasional wave + speech bubble (near-only) ---- */
+const NPC_COL={taxi:'#f0c069',msdocs:'#7fa8ee',deepwiki:'#4fc8bd'};
+const NPC_LINES={
+  taxi:   { ko:['어디로 모실까요? 🚕','레포 이름만 말해요','북극성이 길을 알죠','타세요, 모실게요','제일 인기있는 곳?'],
+            en:['Need a ride? 🚕','Just name a repo','Polaris knows the way','Hop in!','Most popular spot?'] },
+  msdocs: { ko:['문서라면 제게 📘','무엇을 만들어요?','Microsoft Learn 찾아드려요','별빛에 지식이 깃들죠','뭐든 물어보세요'],
+            en:['Ask me the docs 📘','What are you building?','I read Microsoft Learn','Knowledge in starlight','Go ahead, ask'] },
+  deepwiki:{ ko:['레포 미궁? 지도 드려요 🗺️','구조를 그려드려요','owner/repo 말해봐요','길 잃었나요?','어떤 코드가 궁금해요?'],
+            en:['Lost in a repo? 🗺️','I chart its structure','Try owner/repo','Need a map?','Which codebase?'] } };
+function makeNpcBubble(x,z){ const cv=document.createElement('canvas'); cv.width=320; cv.height=140; const c=cv.getContext('2d');
+  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false}));
+  sp.scale.set(5.6,2.45,1); sp.position.set(x,3.55,z); sp.renderOrder=18; scene.add(sp);
+  let life=0;
+  function draw(text,col){ c.clearRect(0,0,320,140); c.fillStyle='rgba(255,251,242,0.96)'; const r=22;
+    c.beginPath(); c.moveTo(r,6); c.arcTo(314,6,314,100,r); c.arcTo(314,100,6,100,r); c.arcTo(6,100,6,6,r); c.arcTo(6,6,314,6,r); c.fill();
+    c.beginPath(); c.moveTo(146,98); c.lineTo(174,98); c.lineTo(150,126); c.closePath(); c.fill();      // little speech tail
+    c.lineWidth=4; c.strokeStyle=col||'#caa'; c.stroke();
+    c.font='700 25px system-ui,sans-serif'; c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle';
+    c.fillText(text,160,54); tex.needsUpdate=true; }
+  return { sprite:sp, say(text,kind){ draw(text,NPC_COL[kind]||'#caa'); life=4.2; },
+    update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0;
+      sp.material.opacity += (want - sp.material.opacity)*0.12;
+      sp.position.y = 3.55 + Math.sin(clock.elapsedTime*1.6)*0.05; } }; }
+for(const n of NPCS){ const g=n.group; g._baseRot=g.rotation.y; g._ph=Math.random()*6.283; g._bt=4+Math.random()*7; g._gt=0;
+  if(g._head) g._head._baseY=g._head.position.y; g._bub=makeNpcBubble(g.position.x,g.position.z); }
+function updateNpcs(dt){ const tt=clock.elapsedTime;
+  for(const n of NPCS){ const g=n.group;
+    const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz);
+    const tgt = d<16 ? Math.atan2(dx,dz) : g._baseRot + Math.sin(tt*0.5+g._ph)*0.18;   // face you when near, else gently look around
+    g.rotation.y=lerpA(g.rotation.y,tgt,0.06);
+    if(g._head) g._head.position.y = g._head._baseY + Math.sin(tt*1.8+g._ph)*0.03;       // breathing
+    g._bt-=dt;
+    if(g._bt<=0){ if(d<42){ const arr=(NPC_LINES[n.kind]||{})[LANG]||['…']; g._bub.say(arr[(Math.random()*arr.length)|0], n.kind); g._gt=2.6; }
+      g._bt=9+Math.random()*9; }
+    g._bub.update(dt);
+    if(g._armL){ if(g._gt>0){ g._gt-=dt; g._armL.rotation.z=1.0-Math.sin(tt*7)*0.3; }    // wave while speaking
+                 else g._armL.rotation.z += (0-g._armL.rotation.z)*0.1; } }
+}
 
 /* ---- floating ✦ star-nameplate + soft pulsing aura over each active scholar NPC ---- */
 const auraPulse=[];
@@ -3488,7 +3572,7 @@ libModal.addEventListener('click',e=>{ if(e.target===libModal) closeLibrary(); }
 
 function markVisited(repo){ if(repo._visited) return; repo._visited=true; visited++;
   document.getElementById('visitCount').textContent=visited; repo._row.classList.add('visited');
-  repo._ring.material.color.set(0x2f9d6a); addRepoVisit(repo.repo); }
+  repo._ring.material.color.set(0x2f9d6a); addRepoVisit(repo.repo); greetBuilding(repo); }
 
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
@@ -4015,7 +4099,7 @@ function animate(){
   frame++;
   const _now=performance.now();
   const _idle=(_now-lastAct)>1200;                 // perf: no input/move >1.2s → idle
-  if(_idle && FW.length===0 && _fwQueue===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival keeps full fps)
+  if(_idle && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops keep full fps)
   lastFrame=_now;
   const dt=Math.min(clock.getDelta(),0.05);
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
@@ -4054,8 +4138,7 @@ function animate(){
     moving=mv.lengthSq()>0.0001;
     if(moving){ mv.normalize(); player.position.addScaledVector(mv,9*dt);
       const r=Math.hypot(player.position.x,player.position.z); if(r>215){ player.position.x*=215/r; player.position.z*=215/r; }
-      for(const c of COLLIDERS){ const cx=player.position.x-c.x, cz=player.position.z-c.z, cd=Math.hypot(cx,cz);
-        if(cd<c.r){ const k=cd<1e-3?1:c.r/cd; player.position.x=c.x+cx*k; player.position.z=c.z+cz*k; } }
+      resolveColliders(player.position);
       model.rotation.y=lerpA(model.rotation.y,Math.atan2(mv.x,mv.z),0.2); walk+=dt*10; }
   }
   if(!moving) walk*=0.85;
@@ -4092,14 +4175,16 @@ function animate(){
   if(!sitting && !nearest){ let sd=2.5; for(const s of SEATS){ const d=player.position.distanceTo(s.pos); if(d<sd){ sd=d; nearestSeat=s; } } }
   nearChrono = (CHRONO && player.position.distanceTo(CHRONO._pos) < 8.5) ? CHRONO : null;
   nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
-  // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes)
-  if(nearNpc) addStamp('scholar:'+nearNpc.kind);
-  if(nearest && nearest._isLibrary) addStamp('library');
+  // 🏠 first walk-up to a house → a gentle sparkle + acknowledge bob (landmarks get their own reactions below; skip while a taxi drives you past many houses)
+  if(nearest && !nearest._isLibrary && !ride) greetBuilding(nearest);
+  // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes) + a localized sparkle on first stamp
+  if(nearNpc && addStamp('scholar:'+nearNpc.kind)) popSparkle(nearNpc.pos.x,3.6,nearNpc.pos.z,0xbfe9ff);
+  if(nearest && nearest._isLibrary && addStamp('library')) popSparkle(0,7,LIB._z,0xffe6a0);
   { const px=player.position.x, pz=player.position.z;
-    if(!passHasStamp('plaza') && px*px+pz*pz < 196) addStamp('plaza');
-    if(nearChrono && !passHasStamp('chrono')) addStamp('chrono');
-    if(nearObs && !passHasStamp('observatory')) addStamp('observatory');
-    if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ addStamp('canal'); break; } } } }
+    if(!passHasStamp('plaza') && px*px+pz*pz < 196){ if(addStamp('plaza')) popSparkle(px,3.0,pz,0xffd0e6); }
+    if(nearChrono && !passHasStamp('chrono')){ if(addStamp('chrono')) popSparkle(CHRONO._pos.x,4,CHRONO._pos.z,0xffd86b); }
+    if(nearObs && !passHasStamp('observatory')){ if(addStamp('observatory')) popSparkle(OBS._pos.x,5,OBS._pos.z,0x9fd0ff); }
+    if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ if(addStamp('canal')) popSparkle(c.x,2.6,c.z,0x7fe3da); break; } } } }
   if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
@@ -4140,10 +4225,8 @@ function animate(){
     for(const r of RUNE_MATS) r.m.opacity=r.base*(isNight?1.5:0.5)*(0.85+0.15*Math.sin(_t*0.8)); }
   updateMeteor(dt);
   updateFireworks(dt);
-  { const dxp=player.position.x-driver.position.x, dzp=player.position.z-driver.position.z;
-    const tgt = Math.hypot(dxp,dzp)<16 ? Math.atan2(dxp,dzp) : (-2.2+Math.sin(clock.elapsedTime*0.7)*0.22);
-    driver.rotation.y=lerpA(driver.rotation.y,tgt,0.07);
-    if(driver._head) driver._head.position.y=2.1+Math.sin(clock.elapsedTime*2)*0.03; }
+  updateVisitFx(dt);
+  updateNpcs(dt);
   rtTick(dt);
   if(userInput||moving||ride||dragging||navTarget) lastAct=_now;   // perf: dynamic state → stay 60fps + refresh shadows next frames
   if(!_idle) renderer.shadowMap.needsUpdate=true;                  // perf: refresh shadow map only while active; frozen when idle
@@ -4307,6 +4390,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__stick=()=>({x:+stickVec.x.toFixed(2),y:+stickVec.y.toFixed(2)});
   window.__near=()=>nearest?(nearest._isLibrary?'__LIB__':nearest.repo):null;
   window.__npc=()=>({count:NPCS.length, kinds:NPCS.map(n=>n.kind), near:nearNpc?nearNpc.kind:null, active:activeNpc?activeNpc.kind:null, btn:document.getElementById('actBtn').textContent});
+  window.__npcAlive=()=>NPCS.map(n=>{ const g=n.group; return {kind:n.kind,
+    rotY:+g.rotation.y.toFixed(3), armL:+(g._armL?g._armL.rotation.z:0).toFixed(3),
+    headY:+(g._head?g._head.position.y:0).toFixed(3), bubOp:+(g._bub?g._bub.sprite.material.opacity:0).toFixed(2),
+    gT:+(g._gt||0).toFixed(2), bT:+(g._bt||0).toFixed(2)}; });
+  window.__npcSay=(k)=>{ const n=NPCS.find(x=>x.kind===k)||NPCS[0]; n.group._bt=0.01; return 'fired '+n.kind; };
   window.__npcPos=()=>NPCS.map(n=>({kind:n.kind,x:+n.pos.x.toFixed(1),z:+n.pos.z.toFixed(1)}));
   window.__talk=(kind)=>{ const n=NPCS.find(x=>x.kind===kind); if(!n) return null; openChat(n); return {active:activeNpc?activeNpc.kind:null, title:chatHeadTtl?chatHeadTtl.textContent:null, modeHidden:modeSel.style.display==='none', ph:chatText.placeholder}; };
   window.__trace=(refs)=>{ const n=NPCS.find(x=>x.kind==='msdocs'); if(n) openChat(n);
@@ -4327,12 +4415,39 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     const body=document.getElementById('chronoBody'); return { show:document.getElementById('chronoModal').classList.contains('show'), turns:body.querySelectorAll('.chronoTurn').length, cases:body.querySelectorAll('.chronoCase').length, verdict:(body.querySelector('.chronoVerdictVal')||{}).textContent||null, sig:(body.querySelector('.chronoSig')||{}).textContent||null, q:(body.querySelector('.chronoQ')||{}).textContent||null, tl:body.querySelectorAll('.chronoTimeline .ctNode').length, tlWin:(body.querySelector('.ctNode.win .cv')||{}).textContent||null, tlWinDate:(body.querySelector('.ctNode.win .cd')||{}).textContent||null }; };
   window.__chronoClose=()=>{ closeChrono(); return !document.getElementById('chronoModal').classList.contains('show'); };
   window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
+  window.__walkSim=(fromX,fromZ,dirX,dirZ,steps=300)=>{
+    // drive the player from a start point along a fixed direction through the REAL collider resolver,
+    // one physics step (9 u/s @60fps) at a time — proves they never wedge (stop while still moving forward)
+    player.position.set(fromX,0,fromZ);
+    const dl=Math.hypot(dirX,dirZ)||1, ux=dirX/dl, uz=dirZ/dl;
+    let prev=player.position.clone(), stuck=0, traveled=0;
+    for(let i=0;i<steps;i++){
+      player.position.x+=ux*9*(1/60); player.position.z+=uz*9*(1/60);
+      resolveColliders(player.position);
+      const moved=Math.hypot(player.position.x-prev.x, player.position.z-prev.z);
+      traveled+=moved; if(moved<0.008) stuck++; prev.copy(player.position);
+    }
+    return { end:{x:+player.position.x.toFixed(1),z:+player.position.z.toFixed(1)}, traveled:+traveled.toFixed(1), stuckFrames:stuck };
+  };
+  window.__chronoEscape=()=>{
+    // start dead centre (on the gnomon) and walk straight out the town-facing entrance;
+    // escaped = cleared the column ring (CR 13.6) → past r16 from the dais without wedging
+    const out=CHRONO._pos.clone().sub(CHRONO_POS).setY(0).normalize();
+    const r=window.__walkSim(CHRONO_POS.x,CHRONO_POS.z,out.x,out.z,300);
+    const dist=Math.hypot(r.end.x-CHRONO_POS.x, r.end.z-CHRONO_POS.z);
+    return { ...r, distFromDais:+dist.toFixed(1), escaped: dist>16 };
+  };
   window.__tpObs=(back=4)=>{ if(!OBS) return null; const d=OBS._pos.clone().sub(OBS_POS).normalize(); const p=OBS._pos.clone().add(d.multiplyScalar(back)); player.position.set(p.x,0,p.z); const yaw=Math.atan2(OBS_POS.x-p.x,OBS_POS.z-p.z); camYaw=yaw; camPitch=0.16; camDist=32; model.rotation.y=Math.PI-yaw; return {x:+p.x.toFixed(1),z:+p.z.toFixed(1)}; };
   window.__obs=()=>({ has:!!OBS, pos:OBS?{x:+OBS._pos.x.toFixed(1),z:+OBS._pos.z.toFixed(1)}:null, near:!!nearObs, dist:+player.position.distanceTo(OBS._pos).toFixed(1), scope:!!obsScope, stamp:passHasStamp('observatory') });
   window.__obsOpen=()=>{ openObservatory(); const body=document.getElementById('obsBody'); return { show:obsModal.classList.contains('show'), cards:body.querySelectorAll('.obsCard').length, stars:[...body.querySelectorAll('.obsCard .star')].map(e=>e.textContent.trim()), tags:[...body.querySelectorAll('.obsCard .tags span')].map(e=>e.textContent.trim()) }; };
   window.__obsClose=()=>{ closeObservatory(); return !obsModal.classList.contains('show'); };
   window.__obsScan=()=>{ let mind=Infinity,who=null; for(const b of buildings){ const dx=(b._x!=null?b._x:b.position.x)-OBS_POS.x, dz=(b._z!=null?b._z:b.position.z)-OBS_POS.z; const edge=Math.hypot(dx,dz)-(b._cw||3); if(edge<mind){ mind=edge; who=b.repo; } } return { obsCenterR:+Math.hypot(OBS_POS.x,OBS_POS.z).toFixed(1), nearestBld:who, nearestEdge:+mind.toFixed(1), baseR:7.8 }; };
+
   window.__fireworks=(n)=>{ fireworksShow(n||10); return { queued:_fwQueue, active:FW.length, auroraBoost:+_auroraBoost.toFixed(1) }; };
+  window.__visitFx=(name)=>{ let b=name?buildings.find(x=>x.repo===name||x.label===name):null;
+    if(!b){ let nd=Infinity; for(const x of buildings){ if(x._isLibrary) continue; const d=player.position.distanceTo(x._pos); if(d<nd){ nd=d; b=x; } } }
+    if(b){ b._greeted=false; greetBuilding(b); }
+    return { greeted:b?b.repo:null, sparkles:VISIT_FX.length, bobs:BOBS.length }; };
   window.__aurora=()=>({ has:starsGroup.children.some(o=>o.material&&o.material.uniforms&&o.material.uniforms.uOp), nightVisible:starsGroup.visible, op:+AURORA_OP.value.toFixed(3), boost:+_auroraBoost.toFixed(1) });
   window.__chronoConvene=(topic)=>{ conveneLive(topic||'monolith vs microservices');
     return { active:liveDebate.active, hud:document.getElementById('chronoLiveHud').classList.contains('show'),

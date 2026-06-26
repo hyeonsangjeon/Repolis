@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.29.0] — 2026-06-28
+
+### 🏘️ Village Alive + Mobile Playability — a town that feels lived-in, smooth to roam
+- **The scholars are alive now.** POLARIS, VEGA and RIGEL no longer stand frozen — they **breathe** (a soft head bob), **look around** when idle and **turn to face you** as you approach, and every so often raise a hand and pop a **speech bubble** with a character-appropriate one-liner (the taxi-finder hawks rides, the docs engineer offers Microsoft Learn, the cartographer offers to chart a repo), fully bilingual (KO/EN). A near-only gate keeps it free when you're elsewhere.
+- **Reaching a place now reacts to you.** The first time you walk up to a **house**, a gentle ✨ **sparkle** pops in the open air on the side facing you and the building gives a quick squash-stretch **"acknowledge" bob** — and landmarks (the three scholars, library, plaza, Chronopolis, Observatory, canals) each pop a colour-matched sparkle the first time you earn their passport stamp. Lightweight additive particles that clean themselves up; the idle-FPS budget is preserved (full 60 fps only while a pop is on screen).
+- **A calmer plaza, with quiet parks set off to the sides.** The fountain's flower ring is slimmed (8 → 4 beds) and the flower blossoms sit lower and rounder, opening up sight-lines and the avenue approaches. Two more **rest parks** join the first — calm pockets in the lawn (SW · N · E) with a gravel path ring, a low lavender bed, benches you can sit on, mixed Provençal trees, a rock and a "Park · 공원" signpost — so activity and focal points spread out instead of crowding the centre.
+- **Smoother to move through.** The player-vs-world collision now runs a **multi-pass resolver**, so you slide along tight rows of Chronopolis columns and Colmar props instead of wedging between two of them — a single pass would shove you out of one collider straight back into its neighbour. (`?dbg` `__walkSim`/`__chronoEscape` prove a straight walk out of the council chamber never sticks.)
+- **Mobile controls respect the notch.** Added `viewport-fit=cover` and `env(safe-area-inset-*)` to the top bar, menu, and the bottom-right action / taxi / emote stack, so on notched phones they lift above the home-indicator and inset from the curved edges (with a `0px` fallback — zero change on non-notched devices and desktop). Verified on real GPU at 390 × 844: touch joystick drives movement, walk-up shows the 🚪 door button + arrival prompt, scholar nameplates + bubbles + gestures render, no overflow, **0 console errors**.
+
 ## [1.28.1] — 2026-06-28
 
 ### 📜 A new Council of Time case — pandas `df.append()` → `pd.concat()`
