@@ -17,8 +17,9 @@ function eq(a, b, msg) { ok(JSON.stringify(a) === JSON.stringify(b), msg + ' (go
 function group(name) { console.log('\n• ' + name); }
 
 /* ── 1) 시그니처 라인 S1~S9 가 의도대로 발사되는가 ── */
-group('signature lines fire as intended (S1/S1/S1/S3/S2/S2/S8)');
-const expectSig = { pydantic_dict: 'S1', transformers_generate: 'S1', pandas_concat: 'S1', request_timeout: 'S3', openai_sdk: 'S2', langchain_lcel: 'S2', css_center: 'S8' };
+group('signature lines fire as intended (S1/S1/S1/S3/S2/S2/S8/S4/S5/S6/S5/S6/S7)');
+const expectSig = { pydantic_dict: 'S1', transformers_generate: 'S1', pandas_concat: 'S1', request_timeout: 'S3', openai_sdk: 'S2', langchain_lcel: 'S2', css_center: 'S8',
+  js_deepcopy: 'S4', react_effect: 'S5', http_created: 'S6', torch_nograd: 'S5', tensor_dtype: 'S6', rag_longctx: 'S7' };
 Fixtures.list().forEach(function (fx) {
   const r = Engine.councilAsk(fx, { lang: 'ko' });
   eq(r.signature.id, expectSig[fx.id], fx.id + ' → ' + expectSig[fx.id]);
@@ -113,6 +114,41 @@ Fixtures.list().forEach(function (fx) {
 group('empty testimony → S9 (adjourn)');
 const empty = Engine.councilAsk({ id: 'empty', attribute: 'x', question: { ko: 'q', en: 'q' }, answers: [] }, { lang: 'ko' });
 ok(empty.signature.id === 'S9', 'no answers → S9');
+
+/* ── 9) 신규 큐레이티드 케이스: 그동안 미사용이던 S4/S5/S6/S7 커버 ── */
+group('new curated cases cover S4 (tie) / S5 (live) / S6 (official) / S7 (tentative)');
+const s4 = Engine.councilAsk(Fixtures.get('js_deepcopy'), { lang: 'ko' });
+ok(s4.signature.id === 'S4', 'js_deepcopy → S4 (no decisive authority, tie)');
+ok(s4.conflicts[0].overrode_majority === false, 'js_deepcopy is not an override (1·1·1 split)');
+ok(Engine.normalizeValue(s4.conflicts[0].verdict) === Engine.normalizeValue('structuredClone(obj)'), 'js_deepcopy verdict = structuredClone (most recent)');
+
+const s5a = Engine.councilAsk(Fixtures.get('react_effect'), { lang: 'ko' });
+ok(s5a.signature.id === 'S5', 'react_effect → S5 (verified by a live source)');
+ok(s5a.conflicts[0].verdict_source === 'livewire', 'react_effect verdict_source = livewire');
+ok(s5a.conflicts[0].loser_type === 'community', 'react_effect loser_type = community');
+const s5b = Engine.councilAsk(Fixtures.get('torch_nograd'), { lang: 'en' });
+ok(s5b.signature.id === 'S5', 'torch_nograd → S5 (verified by a live source)');
+ok(s5b.conflicts[0].verdict_source === 'livewire', 'torch_nograd verdict_source = livewire');
+
+const s6a = Engine.councilAsk(Fixtures.get('http_created'), { lang: 'ko' });
+ok(s6a.signature.id === 'S6', 'http_created → S6 (one origin beats many echoes)');
+ok(s6a.conflicts[0].verdict_source === 'olddoc', 'http_created verdict_source = olddoc (official_doc)');
+ok(s6a.conflicts[0].loser_type === 'community', 'http_created loser_type = community');
+ok(s6a.conflicts[0].overrode_majority === false, 'http_created not an override (official is in the majority)');
+const s6b = Engine.councilAsk(Fixtures.get('tensor_dtype'), { lang: 'en' });
+ok(s6b.signature.id === 'S6', 'tensor_dtype → S6 (one origin beats many echoes)');
+ok(Engine.normalizeValue(s6b.conflicts[0].verdict) === Engine.normalizeValue('torch.float32'), 'tensor_dtype verdict = torch.float32');
+
+const s7 = Engine.councilAsk(Fixtures.get('rag_longctx'), { lang: 'ko' });
+ok(s7.signature.id === 'S7', 'rag_longctx → S7 (tentative, no settled authority)');
+ok(s7.conflicts[0].confidence < 0.6, 'rag_longctx confidence < 0.6 (tentative penalty applied)');
+ok(s7.conflicts[0].reason.indexOf('잠정') >= 0, 'rag_longctx reason flags 잠정 (tentative)');
+const s7en = Engine.councilAsk(Fixtures.get('rag_longctx'), { lang: 'en' });
+ok(s7en.conflicts[0].reason.indexOf('tentative') >= 0, 'rag_longctx (en) reason flags tentative');
+
+/* sourceType override가 기존 케이스를 깨지 않는가(회귀) */
+ok(Engine.councilAsk(Fixtures.get('pydantic_dict'), { lang: 'ko' }).signature.id === 'S1', 'pre-existing pydantic_dict still S1 after sourceType change');
+ok(Engine.councilAsk(Fixtures.get('openai_sdk'), { lang: 'ko' }).signature.id === 'S2', 'pre-existing openai_sdk still S2 after sourceType change');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

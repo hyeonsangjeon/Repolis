@@ -3,7 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
-## [1.30.0] — 2026-06-28
+## [1.31.0] — 2026-06-28
+
+### ⚖️ Kronos Council — six new debates, and a re-viewable verdict you can replay
+- **The Council now argues six fresh cases — and finally exercises every verdict pattern.** Three dev topics (deep-copy in JavaScript, the React mount effect, the HTTP "created" status code) and three AI/ML topics (PyTorch `no_grad` vs `model.eval()`, PyTorch's default tensor dtype, and RAG vs long-context for long documents) join the curated set (now **13** cases). They were hand-built to fire the four signature lines that had never triggered before: **S4** "when the words split, I look at the clock" (a genuine 1·1·1 tie, settled by recency), **S5** "I trust breathing code over embalmed prose" (a live source confirms the docs), **S6** "one origin over many echoes" (a single official spec beats a crowd of community echoes), and **S7** "more time may overturn this; for now it is the best" (an unsettled, tentative verdict with confidence below 0.6).
+- **Verdicts are still pure math.** Two small, surgical engine changes make S6 and S7 reachable without disturbing a single existing case: `extractClaims` now honours an explicit `sourceType` on an answer (so an official spec can be marked official), and a new `tentative` signal applies a small confidence penalty so a still-forming consensus reads as provisional. Every prior fixture stays byte-for-byte identical — the test suite grew **74 → 130 checks, all green** (plus 56 live-pipeline checks).
+- **Replay the verdict, on demand.** Pick any example chip and a **📋 "Replay the verdict"** toggle appears under the launcher. It's **collapsed by default** — opening it shows a clean, facts-only recap: the Chair's one-line signature, the adopted verdict with its confidence, and the **recency timeline** (sources laid old → new with the winner glowing "⏳ Time points here"). No simulated banter, ever — the living tiki-taka stays in the 3D chamber; this is the deterministic record you can re-read any time and get the same answer.
+- Fully bilingual (KO/EN, re-renders on language switch). Mobile-safe — the recap fits inside the modal with **0 horizontal overflow** at 390 px and a 44 px tap-target toggle. The two PyTorch chips are now labelled "PyTorch grad" / "PyTorch dtype" so they're distinguishable. Verified on real GPU, desktop + mobile: all six signatures correct, recap collapsed-by-default then opens with the right verdict + timeline, **0 console errors**.
+
+
 
 ### 🗺️ Repolis Quest — a daily course to follow, and houses that light up when you visit
 - **Today's Course gives you a reason to walk.** Open the 🛂 passport and a new gold **course card** shows three hand-picked stops for the day — one popular repo plus two landmarks — chosen by a **date-seeded deterministic** shuffle (everyone gets the same course on the same day, and it's stable across reloads, stored local-only in `localStorage`). A progress bar and per-stop ✓ track how far you've gone, and each stop is **tappable to summon the taxi** straight there (the cab auto-opens the landmark when it arrives). A "🚕 Guide me" button drives you to the next unvisited stop in one tap; once all three are done it flips to "🎉 Course complete!".

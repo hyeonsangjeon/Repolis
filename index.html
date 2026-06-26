@@ -207,6 +207,14 @@
   .ctNode.win .cd { color:#2f6d45; }
   .ctNode .wtag { display:block; margin-top:3px; font-size:9.5px; font-weight:800; color:#2f9d6a; }
   .chronoLive { margin:9px 12px 4px; padding:9px 12px; border-radius:11px; background:#f3ead7; color:#8a6a3a; font-size:12px; border:1px dashed #d9c39a; line-height:1.5; }
+  .chronoRecapBtn { display:block; width:calc(100% - 24px); margin:8px 12px 0; min-height:40px; padding:9px 12px; border-radius:10px; cursor:pointer;
+    border:1px solid #e3d2a4; background:#f3ead7; color:#7a5f2e; font-size:12.5px; font-weight:800; text-align:left; }
+  .chronoRecapBtn:hover { background:#efe2c4; }
+  .chronoRecap { margin:6px 12px 2px; padding:10px 12px; border-radius:11px; background:#f6f1e0; border:1px solid #ecdcb0; }
+  .chronoRecap .rcSig { font-size:12.5px; font-weight:800; color:#9a6f1e; line-height:1.45; margin-bottom:6px; }
+  .chronoRecap .rcVerdict { font-size:12.5px; color:#5e4f33; line-height:1.5; }
+  .chronoRecap .rcVerdict b { color:#2f7d54; word-break:break-word; }
+  .chronoRecap .rcConf { color:#9a8048; font-size:11px; font-weight:700; }
   .chronoConvene { display:flex; justify-content:center; padding:6px 12px 12px; }
   .chronoConveneBtn { min-height:44px; padding:11px 20px; border-radius:999px; border:0; cursor:pointer; font-size:13px; font-weight:700;
     color:#2a2340; background:linear-gradient(135deg,#f0d678 0%,#e8c45a 100%); box-shadow:0 2px 8px rgba(60,53,96,.28); }
@@ -418,6 +426,7 @@
     .msg .ride { min-height: 38px; }
     .msg .alt { display: inline-flex; align-items: center; min-height: 32px; }
     #intro .langsel button { min-height: 44px; padding: 10px 22px; }
+    .chronoRecapBtn { min-height: 44px; }
   }
 </style>
 </head>
@@ -648,6 +657,7 @@ const I18N = {
     chronoOffline:'지금은 회의장이 조용해요 — 위 결정적 기록(Ambient)을 감상하세요 👀',
     chronoTimeCap:'⏳ 시간의 저울 — 출처를 최신·생존순으로',
     chronoTimeOld:'오래됨', chronoTimeNew:'최신', chronoTimeWin:'시간이 가리킴',
+    chronoRecap:'📋 시간의 판정 다시보기 (결정적)', chronoRecapHide:'🔼 판정 접기', chronoVerdictLbl:'시간의 판정', chronoConfLbl:'신뢰도', chronoRecapNoAns:'판정 보류 — 충분한 증언이 없습니다.', chronoRecapHint:'이 예시는 결정적 판정입니다 — 라이브 토론과 달리 언제 봐도 같은 결론.',
     obsName:'별빛 전망대', obsReached:' — 별빛 전망대. <span class="key">Enter</span> 또는 클릭으로 올라가기',
     obsTitle:'🔭 별빛 전망대', obsSub:'밤하늘 현자들의 별자리를 한자리에서.', obsHint:'밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾',
     obsSign:'OBSERVATORY', obsStar:'으뜸별', obsConstel:'별자리', obsMyth:'신화', obsClose:'닫기',
@@ -751,6 +761,7 @@ const I18N = {
     chronoOffline:'The chamber is quiet right now — enjoy the deterministic record (Ambient) above 👀',
     chronoTimeCap:"⏳ Time's scale — sources by recency & liveness",
     chronoTimeOld:'older', chronoTimeNew:'newer', chronoTimeWin:'Time points here',
+    chronoRecap:'📋 Replay the verdict (deterministic)', chronoRecapHide:'🔼 Hide verdict', chronoVerdictLbl:"Time's verdict", chronoConfLbl:'confidence', chronoRecapNoAns:'Verdict withheld — not enough testimony.', chronoRecapHint:'This example is a deterministic verdict — unlike the live debate, it reads the same every time.',
     obsName:'Stargazer\'s Observatory', obsReached:' — the Stargazer\'s Observatory. <span class="key">Enter</span> or click to climb up',
     obsTitle:'🔭 Stargazer\'s Observatory', obsSub:'The night-sky scholars\' constellations, all in one place.', obsHint:'Climb up at night to see the scholars\' constellations at their brightest. ☾',
     obsSign:'OBSERVATORY', obsStar:'Star', obsConstel:'Constellation', obsMyth:'Myth', obsClose:'Close',
@@ -2816,6 +2827,26 @@ function chronoTimeline(testi,verdictVal,noAnswer){
   return `<div class="chronoTimeline"><div class="ctCap"><span>${_esc(t('chronoTimeCap'))}</span><span class="ax">${_esc(t('chronoTimeOld'))} → ${_esc(t('chronoTimeNew'))}</span></div><div class="ctTrack">${nodes}</div></div>`;
 }
 function fxQuestion(fx){ if(!fx) return ''; const q=fx.question; if(q) return q[LANG]||q.ko||q.en||''; return fx.topic||''; }
+// Deterministic verdict recap for a curated case — facts only (signature + verdict + recency timeline),
+// NO banter/turn dialogue (those live only in the 3D chamber). Collapsed by default; user opts in.
+function chronoRecapData(fx){
+  if(!fx||!CE||!CE.councilAsk) return null;
+  let r; try{ r=CE.councilAsk(fx,{withTranscript:true,lang:LANG}); }catch(e){ return null; }
+  if(!r||!r.signature||!r.transcript) return null;
+  const vEv=r.transcript.find(e=>e.phase==='verdict')||{};
+  const testi=r.transcript.filter(e=>e.phase==='testimony').map(e=>({sage:e.sage,date:e.date,claim:e.claim}));
+  const sig=r.signature?(r.signature[LANG]||r.signature.ko||r.signature.en||''):'';
+  return { sig:sig, verdict:vEv.verdict, conf:vEv.confidence, noAns:!!vEv.no_answer, consensus:!!vEv.consensus, testi };
+}
+function chronoRecapHtml(d){
+  if(!d) return '';
+  const tl=chronoTimeline(d.testi, d.verdict, d.noAns);
+  let vline;
+  if(d.noAns){ vline=`<div class="rcVerdict">${_esc(t('chronoRecapNoAns'))}</div>`; }
+  else { vline=`<div class="rcVerdict">${_esc(t('chronoVerdictLbl'))}: <b>${_esc(d.verdict||'')}</b>`+
+    ((typeof d.conf==='number' && !d.consensus)?` <span class="rcConf">· ${_esc(t('chronoConfLbl'))} ${d.conf}</span>`:'')+`</div>`; }
+  return `<div class="chronoRecap"><div class="rcSig">⏳ ${_esc(d.sig)}</div>${vline}${tl}<div class="rcVerdict" style="margin-top:7px;font-size:11px;color:#9a8048">${_esc(t('chronoRecapHint'))}</div></div>`;
+}
 function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementById('chronoBody'); body.innerHTML='';
   const philo=document.createElement('div'); philo.className='chronoPhilo'; philo.textContent='“'+t('chronoPhilo')+'”'; body.appendChild(philo);
   // Phase 39 — free-topic LIVE debate. Type any topic; the 3 sages debate it live (SSE) for ~2 min
@@ -2839,6 +2870,23 @@ function renderChronoCase(id){ chronoCaseId=id; const body=document.getElementBy
   // Picking an example chip just fills the topic box above; pressing Start runs
   // a real live debate in the 3D chamber where the Chair of Time rules.
   const lv=document.createElement('div'); lv.className='chronoLive'; lv.textContent=t('chronoLive'); body.appendChild(lv);
+  // Re-viewable deterministic recap (collapsed by default) for the selected curated case.
+  // Phase 41 removed the auto-shown simulated banter; this is opt-in, facts-only, no dialogue.
+  const fxOn=(CF&&CF.get)?CF.get(id):null;
+  if(fxOn){
+    const rb=document.createElement('button'); rb.type='button'; rb.className='chronoRecapBtn';
+    const panel=document.createElement('div'); panel.style.display='none';
+    let built=false;
+    const sync=()=>{ rb.textContent=(panel.style.display==='none')?t('chronoRecap'):t('chronoRecapHide'); };
+    rb.onclick=()=>{
+      if(panel.style.display==='none'){
+        if(!built){ panel.innerHTML=chronoRecapHtml(chronoRecapData(fxOn)); built=true; }
+        panel.style.display='block';
+      } else { panel.style.display='none'; }
+      sync();
+    };
+    sync(); body.appendChild(rb); body.appendChild(panel);
+  }
 }
 
 // ===== Phase 39: free-topic LIVE debate over SSE =====
@@ -4504,6 +4552,17 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__chronoOpen=(id)=>{ if(id) chronoModalLang=null; openChrono(); if(id) renderChronoCase(id);
     const body=document.getElementById('chronoBody'); return { show:document.getElementById('chronoModal').classList.contains('show'), turns:body.querySelectorAll('.chronoTurn').length, cases:body.querySelectorAll('.chronoCase').length, verdict:(body.querySelector('.chronoVerdictVal')||{}).textContent||null, sig:(body.querySelector('.chronoSig')||{}).textContent||null, q:(body.querySelector('.chronoQ')||{}).textContent||null, tl:body.querySelectorAll('.chronoTimeline .ctNode').length, tlWin:(body.querySelector('.ctNode.win .cv')||{}).textContent||null, tlWinDate:(body.querySelector('.ctNode.win .cd')||{}).textContent||null }; };
   window.__chronoClose=()=>{ closeChrono(); return !document.getElementById('chronoModal').classList.contains('show'); };
+  window.__chronoRecap=(id)=>{ chronoModalLang=null; openChrono(); if(id) renderChronoCase(id);
+    const body=document.getElementById('chronoBody'); const btn=body.querySelector('.chronoRecapBtn');
+    const before={ btn:btn?btn.textContent:null, panelShown:!!(body.querySelector('.chronoRecap')) };
+    if(btn) btn.click();
+    const d=chronoRecapData((CF&&CF.get)?CF.get(id||chronoCaseId):null);
+    return { hasBtn:!!btn, btnAfter:btn?btn.textContent:null, recapShown:!!(body.querySelector('.chronoRecap')),
+      sig:(body.querySelector('.chronoRecap .rcSig')||{}).textContent||null,
+      verdict:(body.querySelector('.chronoRecap .rcVerdict b')||{}).textContent||null,
+      tl:body.querySelectorAll('.chronoRecap .ctNode').length,
+      tlWin:(body.querySelector('.chronoRecap .ctNode.win .cv')||{}).textContent||null,
+      turns:body.querySelectorAll('.chronoTurn').length, data:d }; };
   window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
   window.__walkSim=(fromX,fromZ,dirX,dirZ,steps=300)=>{
     // drive the player from a start point along a fixed direction through the REAL collider resolver,

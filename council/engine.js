@@ -74,7 +74,7 @@
     return (fixture.answers || []).map(function (a) {
       return {
         sage: a.sage,
-        sourceType: SOURCE_OF[a.sage] || 'community',
+        sourceType: a.sourceType || SOURCE_OF[a.sage] || 'community',
         attribute: fixture.attribute,
         value: a.value,
         norm: normalizeValue(a.value),
@@ -163,6 +163,7 @@
     const gapMonths = loserClaim ? monthsBetween(winnerClaim.ts, loserClaim.ts) : 0;
     if (gapMonths >= 12) confidence += 0.08; else if (gapMonths >= 6) confidence += 0.04;
     if (winner.votes >= 2) confidence += 0.05;
+    if (winnerClaim.signals.indexOf('tentative') >= 0) confidence -= 0.12;
     confidence = Math.max(0, Math.min(0.97, Math.round(confidence * 100) / 100));
 
     const reasonBits = [];
@@ -171,6 +172,7 @@
     if (gapMonths >= 6) reasonBits.push('newest');
     if (loser_type === 'deprecated_api') reasonBits.push(altRemoved ? 'alt_removed' : 'alt_deprecated');
     if (overrode_majority) reasonBits.push('majority_is_stale');
+    if (winnerClaim.signals.indexOf('tentative') >= 0) reasonBits.push('tentative');
 
     return {
       attribute: fixture.attribute,
@@ -243,8 +245,8 @@
   }
 
   function reasonText(reason, lang) {
-    const KO = { live_source: '살아있는 소스', official: '공식 출처', newest: '최신', alt_removed: '구버전 제거됨', alt_deprecated: '대안 deprecated', majority_is_stale: '다수가 박제됨' };
-    const EN = { live_source: 'live source', official: 'official source', newest: 'newest', alt_removed: 'old API removed', alt_deprecated: 'alternative deprecated', majority_is_stale: 'majority is stale' };
+    const KO = { live_source: '살아있는 소스', official: '공식 출처', newest: '최신', alt_removed: '구버전 제거됨', alt_deprecated: '대안 deprecated', majority_is_stale: '다수가 박제됨', tentative: '잠정·미확정' };
+    const EN = { live_source: 'live source', official: 'official source', newest: 'newest', alt_removed: 'old API removed', alt_deprecated: 'alternative deprecated', majority_is_stale: 'majority is stale', tentative: 'tentative · unsettled' };
     const M = lang === 'ko' ? KO : EN;
     return reason.map(function (r) { return M[r] || r; }).join(lang === 'ko' ? ' · ' : ' · ');
   }
@@ -440,7 +442,15 @@
         loser_type: adj.loser_type
       });
       const warn = lang === 'ko' ? '⚠️ ' : '⚠️ ';
-      result.summary = adj.overrode_majority
+      result.summary = adj.tie
+        ? (lang === 'ko'
+            ? '의견이 ' + claims.length + '갈래로 갈렸습니다. 어느 쪽도 결정적 권위가 없어, 가장 최신인 ' + adj.verdict + '를 채택합니다.'
+            : 'Opinions split ' + claims.length + ' ways with no decisive authority; the most recent — ' + adj.verdict + ' — is adopted.')
+        : adj.confidence < 0.6
+        ? (lang === 'ko'
+            ? '확정된 권위가 없어 잠정 판정입니다. 현재로선 ' + adj.verdict + '가 최선이나, 시간이 더 흐르면 뒤집힐 수 있습니다.'
+            : 'No settled authority yet — this is tentative. For now ' + adj.verdict + ' is best, but more time may overturn it.')
+        : adj.overrode_majority
         ? (lang === 'ko'
             ? warn + '다수(' + majorityVotes + '/' + claims.length + ')는 ' + adj.naive_majority + '를 권하지만 박제된 문서입니다. 살아있는 소스 기준 정답은 ' + adj.verdict + '.'
             : warn + 'The majority (' + majorityVotes + '/' + claims.length + ') pushes ' + adj.naive_majority + ', but that is stale. By the living source the answer is ' + adj.verdict + '.')

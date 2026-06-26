@@ -153,10 +153,125 @@
         { sage: 'hearsay', value: 'chain = prompt | llm', date: '2026-01',
           provenance: { ko: '최근 SO 답변(따라잡음)', en: 'recent SO answer (caught up)' }, signals: ['echoes:livewire'] }
       ]
+    },
+
+    /* ── 동점 케이스 → S4 ──
+       JS 깊은 복사: 직렬화 핵 / lodash / 네이티브 structuredClone. 셋 다 권위는 비등(커뮤니티),
+       표는 1·1·1로 갈린다. 결정적 권위가 없을 때 의장은 '시계'(가장 최신 표준)를 본다. */
+    js_deepcopy: {
+      id: 'js_deepcopy', topic: 'JavaScript', sline: 'S4',
+      question: { ko: 'JavaScript에서 객체를 깊은 복사하는 현대적 표준 방법은?',
+                  en: 'What is the modern standard way to deep-copy an object in JavaScript?' },
+      attribute: 'deep_copy_method',
+      attributeLabel: { ko: '깊은 복사', en: 'deep copy' },
+      answers: [
+        { sage: 'olddoc', sourceType: 'community', value: 'JSON.parse(JSON.stringify(obj))', date: '2024-03',
+          provenance: { ko: '옛 블로그의 직렬화 핵', en: 'old blog serialization hack' }, signals: [] },
+        { sage: 'hearsay', sourceType: 'community', value: '_.cloneDeep(obj)', date: '2025-02',
+          provenance: { ko: 'lodash 의존 답변', en: 'lodash-dependent answer' }, signals: [] },
+        { sage: 'livewire', sourceType: 'community', value: 'structuredClone(obj)', date: '2026-03',
+          provenance: { ko: '네이티브 structuredClone(2022+ 베이스라인)', en: 'native structuredClone (2022+ baseline)' }, signals: [] }
+      ]
+    },
+
+    /* ── 살아있는 소스 케이스 → S5 ──
+       React 마운트 부수효과: 문서와 라이브 소스가 useEffect로 일치(다수), 옛 커뮤니티만 클래스 시절
+       componentDidMount를 반복. 박제된 메아리보다 숨 쉬는 코드를 믿는다. */
+    react_effect: {
+      id: 'react_effect', topic: 'React', sline: 'S5',
+      question: { ko: 'React 함수 컴포넌트에서 마운트 직후 부수효과를 실행하는 방법은?',
+                  en: 'How do you run a side effect right after a React function component mounts?' },
+      attribute: 'mount_side_effect',
+      attributeLabel: { ko: '마운트 부수효과', en: 'mount side effect' },
+      answers: [
+        { sage: 'olddoc', value: 'useEffect(fn, [])', date: '2025-05',
+          provenance: { ko: 'React 공식 문서 Effect 가이드', en: 'React docs Effects guide' }, signals: [] },
+        { sage: 'livewire', value: 'useEffect(fn, [])', date: '2026-04',
+          provenance: { ko: 'react src · 함수형 훅', en: 'react src · function hooks' }, signals: ['live_source'] },
+        { sage: 'hearsay', value: 'componentDidMount()', date: '2024-02',
+          provenance: { ko: '옛 클래스 컴포넌트 블로그', en: 'old class-component blog' }, signals: ['echoes:olddoc'] }
+      ]
+    },
+
+    /* ── 공식 원전 케이스 → S6 ──
+       리소스 생성 성공 코드: 공식 표준(RFC)과 그것을 반복한 커뮤니티가 201로 일치(다수),
+       라이브 현자는 이번엔 라이브 코드가 아니라 흔한 구현 습관(200 남용)을 들고 와 패배.
+       여럿의 메아리보다 하나의 원전을. */
+    http_created: {
+      id: 'http_created', topic: 'HTTP', sline: 'S6',
+      question: { ko: 'REST에서 리소스 생성에 성공했을 때 권장 응답 상태 코드는?',
+                  en: 'Which response status code is recommended when a REST resource is created successfully?' },
+      attribute: 'created_status_code',
+      attributeLabel: { ko: '생성 성공 코드', en: 'created status code' },
+      answers: [
+        { sage: 'olddoc', sourceType: 'official_doc', value: '201 Created', date: '2025-09',
+          provenance: { ko: 'RFC 9110 §15.3.2 (공식 표준)', en: 'RFC 9110 §15.3.2 (official standard)' }, signals: [] },
+        { sage: 'hearsay', value: '201 Created', date: '2024-11',
+          provenance: { ko: '커뮤니티 가이드(원전 반복)', en: 'community guide (echoing the spec)' }, signals: ['echoes:olddoc'] },
+        { sage: 'livewire', sourceType: 'community', value: '200 OK', date: '2026-03',
+          provenance: { ko: '흔한 구현 습관(200 남용)', en: 'common impl habit (200 overuse)' }, signals: [] }
+      ]
+    },
+
+    /* ── AI/ML 살아있는 소스 케이스 → S5 ──
+       PyTorch 추론 시 그래디언트 차단: 문서·라이브 소스가 torch.no_grad()로 일치(다수),
+       흔한 오해(model.eval()만으로 grad가 꺼진다)는 커뮤니티 패자. */
+    torch_nograd: {
+      id: 'torch_nograd', topic: 'PyTorch grad', sline: 'S5',
+      question: { ko: 'PyTorch에서 추론 시 그래디언트 계산을 끄는 올바른 방법은?',
+                  en: 'What is the correct way to disable gradient computation during inference in PyTorch?' },
+      attribute: 'disable_grad',
+      attributeLabel: { ko: '그래디언트 비활성화', en: 'disable gradients' },
+      answers: [
+        { sage: 'olddoc', value: 'torch.no_grad()', date: '2025-04',
+          provenance: { ko: 'PyTorch 공식 추론 튜토리얼', en: 'PyTorch inference tutorial' }, signals: [] },
+        { sage: 'livewire', value: 'torch.no_grad()', date: '2026-03',
+          provenance: { ko: 'torch src · autograd 컨텍스트 매니저', en: 'torch src · autograd context manager' }, signals: ['live_source'] },
+        { sage: 'hearsay', value: 'model.eval()', date: '2024-08',
+          provenance: { ko: '흔한 혼동: eval()만으로 grad가 꺼진다는 오해', en: 'common mix-up: eval() alone disables grad' }, signals: ['echoes'] }
+      ]
+    },
+
+    /* ── AI/ML 공식 원전 케이스 → S6 ──
+       PyTorch 기본 부동소수 dtype: 공식 문서와 그 메아리가 float32로 일치(다수),
+       NumPy 습관에서 온 오해(float64)가 패배. 원전이 메아리들을 이긴다. */
+    tensor_dtype: {
+      id: 'tensor_dtype', topic: 'PyTorch dtype', sline: 'S6',
+      question: { ko: 'PyTorch에서 torch.tensor([1.0, 2.0])의 기본 부동소수점 dtype은?',
+                  en: 'What is the default floating-point dtype of torch.tensor([1.0, 2.0]) in PyTorch?' },
+      attribute: 'default_float_dtype',
+      attributeLabel: { ko: '기본 dtype', en: 'default dtype' },
+      answers: [
+        { sage: 'olddoc', sourceType: 'official_doc', value: 'torch.float32', date: '2025-07',
+          provenance: { ko: 'PyTorch 공식 문서 · 기본 dtype', en: 'PyTorch docs · default dtype' }, signals: [] },
+        { sage: 'hearsay', value: 'torch.float32', date: '2024-12',
+          provenance: { ko: '커뮤니티 답변(문서 반복)', en: 'community answer (echoing docs)' }, signals: ['echoes:olddoc'] },
+        { sage: 'livewire', sourceType: 'community', value: 'torch.float64', date: '2026-02',
+          provenance: { ko: 'NumPy 습관에서 온 오해(float64)', en: 'mix-up from NumPy habit (float64)' }, signals: [] }
+      ]
+    },
+
+    /* ── AI/ML 잠정 케이스 → S7 ──
+       장문 처리(RAG vs 롱컨텍스트): 어느 쪽도 확정 권위가 없는 진행형 논쟁이라 셋 다 커뮤니티 의견.
+       최신 흐름(맞으면 직접 주입)이 다수지만 'tentative' 신호로 잠정. 시간이 더 흐르면 뒤집힐 수 있다. */
+    rag_longctx: {
+      id: 'rag_longctx', topic: 'LLM', sline: 'S7',
+      question: { ko: '긴 문서를 LLM에 넣어 질문할 때, RAG 검색과 롱컨텍스트 직접 주입 중 무엇이 권장되나?',
+                  en: 'For querying a long document with an LLM, is retrieval (RAG) or long-context direct injection recommended?' },
+      attribute: 'long_doc_strategy',
+      attributeLabel: { ko: '장문 처리 전략', en: 'long-doc strategy' },
+      answers: [
+        { sage: 'olddoc', sourceType: 'community', value: 'always chunk and retrieve (RAG)', date: '2024-05',
+          provenance: { ko: '2024년 통념: 무조건 청크+검색', en: '2024 conventional wisdom: always chunk + retrieve' }, signals: [] },
+        { sage: 'livewire', sourceType: 'community', value: 'inject the full context when it fits', date: '2026-04',
+          provenance: { ko: '롱컨텍스트 모델 등장 후 최신 흐름(미확정)', en: 'emerging post-long-context view (unsettled)' }, signals: ['tentative'] },
+        { sage: 'hearsay', sourceType: 'community', value: 'inject the full context when it fits', date: '2025-09',
+          provenance: { ko: '최근 실무자 의견', en: 'recent practitioner take' }, signals: [] }
+      ]
     }
   };
 
-  const ORDER = ['pydantic_dict', 'transformers_generate', 'pandas_concat', 'request_timeout', 'openai_sdk', 'langchain_lcel', 'css_center'];
+  const ORDER = ['pydantic_dict', 'transformers_generate', 'pandas_concat', 'request_timeout', 'openai_sdk', 'langchain_lcel', 'css_center', 'js_deepcopy', 'react_effect', 'http_created', 'torch_nograd', 'tensor_dtype', 'rag_longctx'];
 
   function list() { return ORDER.map(function (id) { return FIXTURES[id]; }); }
   function get(id) { return FIXTURES[id] || null; }
