@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.35.0] — 2026-06-29
+
+### 🎉 Data-driven town events — a recent release throws a party, open issues fire up the workshop
+- **The town now reacts to each repo's live GitHub state, not just its traffic.** Two new signals are derived from `repos.json` at load: `_fresh` (a release dated within the last 60 days) and `_busy` (`min(1, open_issues / 12)`). They drive ambient "town events" so a walk through the village reads like a status dashboard — celebrating fresh repos and showing which workshops are hard at work.
+- **🎉 Release party.** A freshly-released repo gets a **festive pennant garland** — a 9-flag bunting arc in six party colours (`FEST_COLS`) draped across its front, hung from a drooping cord, the flags fluttering on a sine wave — plus a **glowing `🎉 v1.8.0` tag badge** above the door (a crisp canvas texture showing the actual `release_tag`). The badge registers with `NIGHT_GLOWS`, so after dark it carries a warm halo and reads as a little beacon. Walking up to a fresh repo for the first time throws **gold confetti** over its roof (two `_fwSpawnBurst` bursts) and tints the visit-sparkle gold.
+- **🏭 Busy workshop.** A repo with open issues smokes harder: chimney smoke scales with `_busy` — **more puffs** (3 → up to 7), a **sootier colour** (lerping cream → grey), a **faster rise** and **higher opacity**. So `youtube-dl-nas` (27 issues, capped at busy = 1.0) billows a thick working-workshop plume while idle repos barely wisp. Busy repos under a flat/A-frame roof (which normally have no chimney) sprout one just so they can smoke too.
+- **Performance-safe.** Garlands share one pennant geometry; the badge/halo/smoke reuse existing shared textures (`GLOW_TEX`) and the existing `NIGHT_GLOWS` / smoke update loops — no new lights, no per-frame allocations. Verified on real GPU, day + night: garland + glowing `1.8.0` badge on `gotty-docker`, thick plume on `youtube-dl-nas`, gold visit confetti, **0 console errors**. 130 engine + 56 live checks still green.
+
 ## [1.34.0] — 2026-06-29
 
 ### ☀️ Softer sun & fluffier clouds — no more dusk "bullseye"

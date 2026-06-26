@@ -913,6 +913,11 @@ REPOS.forEach(repo=>{
   repo._activity = Math.min(1, 0.6*recency
     + 0.3*(Math.log1p(repo.clones||0)/Math.log1p(_maxClones))
     + 0.1*(Math.log1p(repo.views||0)/Math.log1p(_maxViews)));
+  // data-driven town events: a recent release throws a party (garland + confetti); open issues fire up a busy workshop (chimney smoke)
+  repo._relDays = repo.release_date ? Math.max(0,(_now - new Date(repo.release_date).getTime())/86400000) : null;
+  repo._fresh = repo._relDays!=null && repo._relDays<=60;
+  repo._issues = repo.open_issues||0;
+  repo._busy = Math.min(1, repo._issues/12);
 });
 const _maxScore = Math.max(0.001, ...REPOS.map(r=>r.score||0));
 
@@ -1314,7 +1319,10 @@ function bobBuilding(g){ if(!g||g._bobbing) return; g._bobbing=true; BOBS.push({
 function greetBuilding(b){ if(!b||b._greeted) return; b._greeted=true;
   // pop the sparkle in the open air on the side facing the player, so the building wall never occludes it
   const dx=player.position.x-b._pos.x, dz=player.position.z-b._pos.z, dl=Math.hypot(dx,dz)||1, off=Math.min((b._cw||3)+1.6, dl*0.6);
-  popSparkle(b._pos.x+dx/dl*off, 3.6, b._pos.z+dz/dl*off, 0xfff0b0); bobBuilding(b._group); }
+  popSparkle(b._pos.x+dx/dl*off, 3.6, b._pos.z+dz/dl*off, b._fresh?0xffd267:0xfff0b0); bobBuilding(b._group);
+  // visiting a freshly-released repo throws confetti over its roof
+  if(b._fresh){ const h=b._h||6; _fwSpawnBurst(b._pos.x, h+3.4, b._pos.z, FEST_COLS[(Math.random()*FEST_COLS.length)|0]);
+    _fwSpawnBurst(b._pos.x+dx/dl*off*0.6, h+2.4, b._pos.z+dz/dl*off*0.6, FEST_COLS[(Math.random()*FEST_COLS.length)|0]); } }
 function updateVisitFx(dt){
   for(let i=VISIT_FX.length-1;i>=0;i--){ const f=VISIT_FX[i]; f.age+=dt; const k=f.age/f.life;
     const arr=f.o.geometry.attributes.position.array;
@@ -1368,15 +1376,17 @@ function updateButterflies(t){ if(!butterflyGroup.visible) return;
     const f=Math.sin(t*u.fl+u.ph); g._wl.rotation.y=0.3+f*0.95; g._wr.rotation.y=-(0.3+f*0.95); } }
 
 const smokeStacks=[];
-function addSmoke(parent, lx, ly, lz){ const puffs=[];
-  for(let i=0;i<3;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xe9ece8,transparent:true,opacity:0,depthWrite:false}));
-    s.position.set(lx,ly,lz); s.userData={off:i/3}; parent.add(s); puffs.push(s); }
-  smokeStacks.push({puffs,lx,ly,lz}); }
+function addSmoke(parent, lx, ly, lz, busy){ busy=busy||0; const puffs=[];
+  const n=3+Math.round(busy*4);                                   // busier repos (more open issues) → more chimney puffs
+  const col=new THREE.Color(0xe9ece8).lerp(new THREE.Color(0x8f897e), busy);  // and sootier, working-workshop smoke
+  for(let i=0;i<n;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:col.getHex(),transparent:true,opacity:0,depthWrite:false}));
+    s.position.set(lx,ly,lz); s.userData={off:i/n}; parent.add(s); puffs.push(s); }
+  smokeStacks.push({puffs,lx,ly,lz,busy,rate:0.3+busy*0.34,op:0.5+busy*0.32}); }
 function updateSmoke(t){ const day=isNight?0:1;
-  for(const st of smokeStacks){ for(const s of st.puffs){ const p=((t*0.3+s.userData.off)%1);
+  for(const st of smokeStacks){ for(const s of st.puffs){ const p=((t*st.rate+s.userData.off)%1);
     s.position.y=st.ly+p*3.6; s.position.x=st.lx+Math.sin(p*5+s.userData.off*8)*0.4;
     s.scale.setScalar(0.5+p*1.7);
-    s.material.opacity=day*Math.sin(Math.min(1,p)*Math.PI)*0.5; } } }
+    s.material.opacity=day*Math.sin(Math.min(1,p)*Math.PI)*st.op; } } }
 
 /* ---- procedural ground / road textures (seamless tiling noise) ---- */
 function _noiseTex(base, layers, size=256, opts={}){
@@ -1686,6 +1696,43 @@ function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
 const _starShape=(()=>{ const s=new THREE.Shape(); for(let i=0;i<10;i++){ const a=Math.PI/5*i-Math.PI/2; const rr=(i%2?0.21:0.5); const px=Math.cos(a)*rr, py=Math.sin(a)*rr; i?s.lineTo(px,py):s.moveTo(px,py);} s.closePath(); return s; })();
 const STAR_GEO=new THREE.ShapeGeometry(_starShape);
 const STAR_MAT=new THREE.MeshBasicMaterial({color:0xffd23f,side:THREE.DoubleSide});
+
+/* ---- release celebration: a festive pennant garland + glowing tag badge for repos with a recent release ---- */
+const GARLANDS=[]; const FEST_COLS=[0xff5b6e,0xffc24b,0x4fd1c5,0x6fbf73,0xc28bff,0x4fa3ff];
+const _pennShape=(()=>{ const s=new THREE.Shape(); s.moveTo(-0.27,0); s.lineTo(0.27,0); s.lineTo(0,-0.62); s.closePath(); return s; })();
+const GEO_PENNANT=new THREE.ShapeGeometry(_pennShape);
+function releaseBadgeTex(tag){
+  const S=3, W=300, H=92, cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const ctx=cv.getContext('2d'); ctx.scale(S,S);
+  const grad=ctx.createLinearGradient(0,4,0,88); grad.addColorStop(0,'#fff4d2'); grad.addColorStop(1,'#ffd24b');
+  ctx.fillStyle=grad; rr(ctx,6,6,288,80,18); ctx.fill();
+  ctx.lineWidth=6; ctx.strokeStyle='#e0972a'; rr(ctx,6,6,288,80,18); ctx.stroke();
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='800 40px -apple-system, system-ui, sans-serif';
+  const label='🎉 '+(tag||'release');
+  ctx.lineWidth=6; ctx.lineJoin='round'; ctx.strokeStyle='rgba(255,255,255,0.92)'; ctx.strokeText(label,150,48,272);
+  ctx.fillStyle='#5a3a06'; ctx.fillText(label,150,48,272);
+  const t=new THREE.CanvasTexture(cv); t.anisotropy=MAXANISO; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
+  t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
+}
+function addReleaseGarland(g, w, d, topH, repo){
+  const span=Math.min(w*0.46,3.4), z=d/2+0.42, topY=topH+0.5, droop=Math.max(0.7,span*0.42), N=9;
+  const pts=[], penns=[];
+  for(let i=0;i<N;i++){ const u=i/(N-1), x=-span+2*span*u, y=topY-droop*Math.sin(u*Math.PI);
+    pts.push(new THREE.Vector3(x,y,z));
+    const pn=new THREE.Mesh(GEO_PENNANT, basic(FEST_COLS[i%FEST_COLS.length])); pn.material.side=THREE.DoubleSide;
+    pn.position.set(x,y,z); pn.scale.setScalar(0.92+0.12*Math.sin(u*Math.PI)); g.add(pn);
+    penns.push({m:pn, ph:i*0.7, base:pn.rotation.x}); }
+  const cordGeo=new THREE.BufferGeometry().setFromPoints(pts);
+  const cord=new THREE.Line(cordGeo, new THREE.LineBasicMaterial({color:0x6b4a2e})); g.add(cord);
+  // glowing 🎉 tag badge above the door, brighter at night
+  const badge=new THREE.Sprite(new THREE.SpriteMaterial({map:releaseBadgeTex(repo.release_tag),transparent:true,depthWrite:false}));
+  badge.scale.set(3.4,1.04,1); badge.position.set(0,topH+1.55,d/2+0.3); badge.renderOrder=7; g.add(badge);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffd267,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
+  halo.scale.set(4.6,3.0,1); halo.position.copy(badge.position); halo.position.z-=0.05; halo._n=0.6; g.add(halo); NIGHT_GLOWS.push(halo);
+  GARLANDS.push({penns, badge, by:badge.position.y});
+}
+function updateGarlands(t){ for(const gl of GARLANDS){
+  for(const p of gl.penns) p.m.rotation.x=p.base+Math.sin(t*2.0+p.ph)*0.32;
+  gl.badge.position.y=gl.by+Math.sin(t*1.4)*0.06; } }
 
 /* ---- town layout: concentric ring streets, downtown → hometown by rank ---- */
 const buildings=[];
@@ -2268,7 +2315,9 @@ function makeBuilding(repo){
   const roof=makeRoof(typ.roof, topW, topH, repo.roof); g.add(roof);
   const flatTop = (typ.roof==='flat');
   if(typ.roof!=='flat' && typ.roof!=='aframe'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim);
-    if(rich>0.18) addSmoke(g, w*0.32, topH+2.3, d*0.22); }
+    if(rich>0.18 || repo._busy>0) addSmoke(g, w*0.32, topH+2.3, d*0.22, repo._busy); }
+  else if(repo._busy>0){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+0.9,d*0.22); outline(chim,0.04); g.add(chim);
+    addSmoke(g, w*0.32, topH+1.8, d*0.22, repo._busy); }   // busy workshop still smokes even under a flat/aframe roof
   if(kind==='tower'){ const tank=new THREE.Mesh(new THREE.CylinderGeometry(w*0.16,w*0.16,0.9,10), toon(0x8a98a6)); tank.position.set(w*0.2,h+1.0,-d*0.18); outline(tank,0.04); g.add(tank); }
   if(kind==='house' && typ.roof!=='shed' && typ.roof!=='aframe'){ addDormer(g,d,topH+0.55); }
   if(kind==='mansion'){ addCupola(g, topH, repo.roof); }
@@ -2307,6 +2356,8 @@ function makeBuilding(repo){
       const fl=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.64), basic(fc[f%fc.length])); fl.position.set(fx,fy,d/2+0.42); g.add(fl); } }
   // gold roof trim when very fancy
   if(fancy>0.62){ const trim=new THREE.Mesh(new THREE.TorusGeometry(w*0.5,0.07,6,18), basic(0xffd23f)); trim.rotation.x=Math.PI/2; trim.position.y=h+0.06; g.add(trim); }
+  // 🎉 recent release → festive garland + glowing tag badge (data-driven town event)
+  if(repo._fresh){ addReleaseGarland(g, w, d, topH, repo); }
   // gold stars (= stars count, capped)
   const sc=Math.min(repo.stars,6); for(let i=0;i<sc;i++){ const st=new THREE.Mesh(STAR_GEO,STAR_MAT);
     const sx=(sc>1?(i/(sc-1)-0.5):0)*Math.min(w*0.95,3.4); st.position.set(sx,h+3.0,0); st.scale.setScalar(0.95); g.add(st); }
@@ -4433,6 +4484,7 @@ function animate(){
   updateKoi(clock.elapsedTime);
   updateFountains(dt);
   updateSmoke(clock.elapsedTime);
+  updateGarlands(clock.elapsedTime);
   updateSway(clock.elapsedTime);
   updateChows(clock.elapsedTime,dt);
   updateChrono(dt);
