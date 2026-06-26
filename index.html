@@ -750,8 +750,9 @@ const SESSION_ID = (()=>{ try{ return (crypto.randomUUID && crypto.randomUUID())
 const recentAnalyticsEvents = [];
 function track(eventName, payload){
   try{
+    const _now = new Date();
     const ev = Object.assign({ ev:eventName, cityUser:currentUser, cityMode,
-      repoCount:(REPOS && REPOS.length) || 0, source:dataSource, sessionId:SESSION_ID, ts:Date.now() }, payload||{});
+      repoCount:(REPOS && REPOS.length) || 0, source:dataSource, sessionId:SESSION_ID, ts:_now.getTime(), h:_now.getHours(), wd:_now.getDay() }, payload||{});
     recentAnalyticsEvents.push(ev); if(recentAnalyticsEvents.length > 150) recentAnalyticsEvents.shift();
     if(_DBG) console.debug('[track]', eventName, ev);
     if(ANALYTICS_ENDPOINT){ try{
