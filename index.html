@@ -6,6 +6,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%98%EF%B8%8F%3C/text%3E%3C/svg%3E" />
 <title>Repolis · 레포들의 도시 · hyeonsangjeon</title>
 <meta name="description" content="Your GitHub isn't a 6-pin grid — it's a 3D city you can walk, and a taxi drives you to any repo you name." />
+<!-- Optional anonymous-aggregate analytics endpoint. Empty = OFF (no network). Set to your collector URL to enable. -->
+<meta name="repolis-analytics-endpoint" content="" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Repolis" />
 <meta property="og:title" content="Repolis — the City of Repos" />
@@ -368,6 +370,8 @@
   #intro .langsel button.active { background: #fff; color: #c2702f; opacity: 1; box-shadow: 0 3px 10px rgba(60,30,10,.2); }
   #intro h1 { font-size: 27px; line-height: 1.3; margin-bottom: 8px; text-shadow: 0 2px 8px rgba(60,30,10,.25); }
   #intro .sub { font-size: 15px; opacity: .95; margin-bottom: 22px; line-height: 1.5; }
+  #intro .priv { margin-top: 16px; font-size: 11.5px; line-height: 1.5; color: rgba(255,255,255,.74); max-width: 400px; }
+  #intro .priv.hidden { display: none; }
   #intro .ctrls { display: flex; gap: 14px; justify-content: center; margin-bottom: 26px; flex-wrap: wrap; }
   #intro .ctrls div { background: rgba(255,255,255,.18); border-radius: 12px; padding: 12px 16px; font-size: 13px; }
   #intro .ctrls b { display: block; font-size: 16px; margin-bottom: 3px; }
@@ -663,6 +667,7 @@
     </div>
     <button id="startBtn" data-i18n="enterTown">마을 입장 →</button>
     <button id="introTour" data-i18n="tourStart">🎬 가이드 투어로 둘러보기</button>
+    <div class="priv hidden" id="privacyNote" data-i18n="privacyNote">익명 집계 통계만 측정해요 · 개인정보·계정·검색어는 저장하지 않아요.</div>
   </div>
 </div>
 
@@ -734,7 +739,11 @@ if(_reqUser && GH_LOGIN_RE.test(_reqUser) && _reqUser.toLowerCase() !== OWNER.to
 
 /* --- lightweight, non-blocking analytics. Default sink = in-memory (+ console under ?dbg).
    No network unless ANALYTICS_ENDPOINT is set. No tokens, no raw taxi queries. --- */
-const ANALYTICS_ENDPOINT = null;
+const ANALYTICS_ENDPOINT = (function(){
+  try{ const m = document.querySelector('meta[name="repolis-analytics-endpoint"]'); const u = m && m.content && m.content.trim(); return u || null; }
+  catch(e){ return null; }
+})();
+if(ANALYTICS_ENDPOINT){ try{ const _pn = document.getElementById('privacyNote'); if(_pn) _pn.classList.remove('hidden'); }catch(e){} }
 const _DBG = location.search.includes('dbg');
 const SESSION_ID = (()=>{ try{ return (crypto.randomUUID && crypto.randomUUID()) || (Date.now()+'-'+Math.random().toString(36).slice(2)); }
   catch(e){ return Date.now()+'-'+Math.random().toString(36).slice(2); } })();
@@ -745,7 +754,13 @@ function track(eventName, payload){
       repoCount:(REPOS && REPOS.length) || 0, source:dataSource, sessionId:SESSION_ID, ts:Date.now() }, payload||{});
     recentAnalyticsEvents.push(ev); if(recentAnalyticsEvents.length > 150) recentAnalyticsEvents.shift();
     if(_DBG) console.debug('[track]', eventName, ev);
-    if(ANALYTICS_ENDPOINT && navigator.sendBeacon){ try{ navigator.sendBeacon(ANALYTICS_ENDPOINT, JSON.stringify(ev)); }catch(e){} }
+    if(ANALYTICS_ENDPOINT){ try{
+      const body = JSON.stringify(ev);
+      let sent = false;
+      // text/plain keeps this a CORS-safelisted "simple" request (no preflight; sendBeacon can't preflight)
+      if(navigator.sendBeacon){ try{ sent = navigator.sendBeacon(ANALYTICS_ENDPOINT, new Blob([body], {type:'text/plain'})); }catch(e){} }
+      if(!sent && typeof fetch === 'function'){ fetch(ANALYTICS_ENDPOINT, {method:'POST', body, headers:{'content-type':'text/plain'}, keepalive:true}).catch(()=>{}); }
+    }catch(e){} }
   }catch(e){ /* analytics must never break the app */ }
 }
 
@@ -888,6 +903,7 @@ const I18N = {
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
     introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
+    privacyNote:'익명 집계 통계만 측정해요 · 개인정보·계정·검색어는 저장하지 않아요.',
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
     enterTown:'마을 입장 →',
     // --- GitHub Station · 다른 마을로 기차 여행 ---
@@ -1017,6 +1033,7 @@ const I18N = {
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
     introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
+    privacyNote:'Anonymous, aggregate stats only — no personal data, accounts, or search queries are stored.',
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
     enterTown:'Enter the town →',
     // --- GitHub Station · train travel to other towns ---
