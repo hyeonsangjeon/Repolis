@@ -146,6 +146,7 @@
   .btn.gh { background: #2b2420; color: #fff; }
   .btn.live { background: #c2702f; color: #fff; }
   .btn.close { flex: 0 0 auto; min-width: 0; background: #f1e6d6; color: #6a523d; }
+  .btn.chrono { background: linear-gradient(135deg,#4b3b8f,#6b4fb0); color: #fff; }
   .card .hero { width: 100%; aspect-ratio: 2 / 1; height: auto; max-height: 230px; object-fit: cover; display: block;
     background: linear-gradient(135deg,#efe6d3,#e2d4bb); }
   .card .sociallabel { position: absolute; top: 12px; left: 12px; z-index: 3; display: none;
@@ -657,7 +658,7 @@ const I18N = {
     chronoOffline:'지금은 회의장이 조용해요 — 위 결정적 기록(Ambient)을 감상하세요 👀',
     chronoTimeCap:'⏳ 시간의 저울 — 출처를 최신·생존순으로',
     chronoTimeOld:'오래됨', chronoTimeNew:'최신', chronoTimeWin:'시간이 가리킴',
-    chronoRecap:'📋 시간의 판정 다시보기 (결정적)', chronoRecapHide:'🔼 판정 접기', chronoVerdictLbl:'시간의 판정', chronoConfLbl:'신뢰도', chronoRecapNoAns:'판정 보류 — 충분한 증언이 없습니다.', chronoRecapHint:'이 예시는 결정적 판정입니다 — 라이브 토론과 달리 언제 봐도 같은 결론.',
+    chronoRecap:'📋 시간의 판정 다시보기 (결정적)', chronoRecapHide:'🔼 판정 접기', chronoVerdictLbl:'시간의 판정', chronoConfLbl:'신뢰도', chronoRecapNoAns:'판정 보류 — 충분한 증언이 없습니다.',     chronoRecapHint:'이 예시는 결정적 판정입니다 — 라이브 토론과 달리 언제 봐도 같은 결론.', chronoRelated:'⏳ 관련 토론 보기',
     obsName:'별빛 전망대', obsReached:' — 별빛 전망대. <span class="key">Enter</span> 또는 클릭으로 올라가기',
     obsTitle:'🔭 별빛 전망대', obsSub:'밤하늘 현자들의 별자리를 한자리에서.', obsHint:'밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾',
     obsSign:'OBSERVATORY', obsStar:'으뜸별', obsConstel:'별자리', obsMyth:'신화', obsClose:'닫기',
@@ -761,7 +762,7 @@ const I18N = {
     chronoOffline:'The chamber is quiet right now — enjoy the deterministic record (Ambient) above 👀',
     chronoTimeCap:"⏳ Time's scale — sources by recency & liveness",
     chronoTimeOld:'older', chronoTimeNew:'newer', chronoTimeWin:'Time points here',
-    chronoRecap:'📋 Replay the verdict (deterministic)', chronoRecapHide:'🔼 Hide verdict', chronoVerdictLbl:"Time's verdict", chronoConfLbl:'confidence', chronoRecapNoAns:'Verdict withheld — not enough testimony.', chronoRecapHint:'This example is a deterministic verdict — unlike the live debate, it reads the same every time.',
+    chronoRecap:'📋 Replay the verdict (deterministic)', chronoRecapHide:'🔼 Hide verdict', chronoVerdictLbl:"Time's verdict", chronoConfLbl:'confidence', chronoRecapNoAns:'Verdict withheld — not enough testimony.',     chronoRecapHint:'This example is a deterministic verdict — unlike the live debate, it reads the same every time.', chronoRelated:'⏳ Related debate',
     obsName:'Stargazer\'s Observatory', obsReached:' — the Stargazer\'s Observatory. <span class="key">Enter</span> or click to climb up',
     obsTitle:'🔭 Stargazer\'s Observatory', obsSub:'The night-sky scholars\' constellations, all in one place.', obsHint:'Climb up at night to see the scholars\' constellations at their brightest. ☾',
     obsSign:'OBSERVATORY', obsStar:'Star', obsConstel:'Constellation', obsMyth:'Myth', obsClose:'Close',
@@ -2827,6 +2828,17 @@ function chronoTimeline(testi,verdictVal,noAnswer){
   return `<div class="chronoTimeline"><div class="ctCap"><span>${_esc(t('chronoTimeCap'))}</span><span class="ax">${_esc(t('chronoTimeOld'))} → ${_esc(t('chronoTimeNew'))}</span></div><div class="ctTrack">${nodes}</div></div>`;
 }
 function fxQuestion(fx){ if(!fx) return ''; const q=fx.question; if(q) return q[LANG]||q.ko||q.en||''; return fx.topic||''; }
+/* Phase C — link a repo's house to the Chronopolis debate it echoes (match repo topics/name vs fixture tags) */
+function repoChronoTokens(repo){ const s=new Set();
+  ((repo&&repo.topics)||[]).forEach(x=>{ x=String(x).toLowerCase(); if(x) s.add(x); });
+  String((repo&&repo.repo)||'').toLowerCase().split(/[^a-z0-9]+/).forEach(x=>{ if(x) s.add(x); });
+  return s; }
+function chronoMatch(repo){ if(!repo||!CF||!CF.list) return null;
+  const toks=repoChronoTokens(repo); if(!toks.size) return null;
+  let bestId=null, bestScore=0;
+  CF.list().forEach(fx=>{ let sc=0; (fx.tags||[]).forEach(tg=>{ if(toks.has(tg)) sc++; });
+    if(sc>bestScore){ bestScore=sc; bestId=fx.id; } });
+  return bestScore>=1 ? bestId : null; }
 // Deterministic verdict recap for a curated case — facts only (signature + verdict + recency timeline),
 // NO banter/turn dialogue (those live only in the 3D chamber). Collapsed by default; user opts in.
 function chronoRecapData(fx){
@@ -3031,8 +3043,10 @@ function ambientFallback(key){ liveDebate.streaming=false; liveDebate.consuming=
   setTimeout(()=>{ if(!liveDebate.streaming && !liveDebate.consuming) closeLiveHud(); }, 2800);
 }
 (function(){ const c=document.getElementById('clhClose'); if(c) c.onclick=closeLiveHud; })();
-function openChrono(){ modalOpen=true; chronoModal.classList.add('show');
-  if(chronoModalLang!==LANG || !chronoCaseId){ chronoCaseId=(CF&&CF.ORDER&&CF.ORDER[0])||'pydantic_dict'; renderChronoCase(chronoCaseId);
+function openChrono(presetId){ modalOpen=true; chronoModal.classList.add('show');
+  const preset=(presetId && CF && CF.get && CF.get(presetId)) ? presetId : null;
+  if(preset){ chronoCaseId=preset; chronoTopicDraft=fxQuestion(CF.get(preset)); }
+  if(preset || chronoModalLang!==LANG || !chronoCaseId){ chronoCaseId=chronoCaseId||(CF&&CF.ORDER&&CF.ORDER[0])||'pydantic_dict'; renderChronoCase(chronoCaseId);
     document.getElementById('chronoFoot').innerHTML=`<button class="close" id="chronoCloseB">${t('close')}</button>`;
     document.getElementById('chronoCloseB').onclick=closeChrono; chronoModalLang=LANG; }
   document.getElementById('chronoBody').scrollTop=0; }
@@ -3654,10 +3668,14 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   if(repo.desc){ desc.textContent=repo.desc; desc.className=''; }
   else { desc.textContent=t('noDesc'); desc.className='empty'; }
   const act=document.getElementById('cardActions');
+  const relId=chronoMatch(repo);
   act.innerHTML=`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">${t('openGithub')}</a>`
     +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'')
+    +(relId?`<button class="btn chrono" id="relChronoBtn">${t('chronoRelated')}</button>`:'')
     +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
-  document.getElementById('closeBtn').onclick=closeCard; markVisited(repo); }
+  document.getElementById('closeBtn').onclick=closeCard;
+  if(relId){ document.getElementById('relChronoBtn').onclick=()=>{ closeCard(); openChrono(relId); }; }
+  markVisited(repo); }
 function closeCard(){ modalOpen=false; modal.classList.remove('show'); }
 modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
 
@@ -4564,6 +4582,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
       tlWin:(body.querySelector('.chronoRecap .ctNode.win .cv')||{}).textContent||null,
       turns:body.querySelectorAll('.chronoTurn').length, data:d }; };
   window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
+  window.__chronoMatch=(name)=>{ const r=(name&&REPOS.find(x=>x.repo===name||x.label===name))||null; if(!r) return {found:false};
+    const id=chronoMatch(r); return { repo:r.repo, lang:r.lang, topics:(r.topics||[]).length, match:id, sig:(id&&CF&&CF.get)?(CF.get(id).sline):null, question:(id&&CF&&CF.get)?fxQuestion(CF.get(id)):null }; };
+  window.__card=(name)=>{ const r=(name&&REPOS.find(x=>x.repo===name||x.label===name))||null; if(!r) return {found:false}; openCard(r);
+    const b=document.getElementById('relChronoBtn');
+    return { repo:r.repo, cardShown:modal.classList.contains('show'), hasRelBtn:!!b, relText:b?b.textContent:null }; };
   window.__walkSim=(fromX,fromZ,dirX,dirZ,steps=300)=>{
     // drive the player from a start point along a fixed direction through the REAL collider resolver,
     // one physics step (9 u/s @60fps) at a time — proves they never wedge (stop while still moving forward)

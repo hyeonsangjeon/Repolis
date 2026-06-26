@@ -21,6 +21,7 @@
        Pydantic v2에서 .dict()는 deprecated, .model_dump()가 정답. 인터넷 문서 다수는 아직 .dict(). */
     pydantic_dict: {
       id: 'pydantic_dict', topic: 'Pydantic', sline: 'S1',
+      tags: ['pydantic', 'fastapi', 'serialization', 'validation', 'schema'],
       question: { ko: 'Pydantic 모델 인스턴스를 dict로 직렬화하는 올바른 메서드는?',
                   en: 'What is the correct method to serialize a Pydantic model instance to a dict?' },
       attribute: 'serialization_method',
@@ -41,6 +42,7 @@
        올드독만 제거된 옛 호출을 변호. 다수가 맞지만 패자는 '닫힌 길'이라 S2. */
     openai_sdk: {
       id: 'openai_sdk', topic: 'OpenAI SDK', sline: 'S2',
+      tags: ['openai', 'azure-openai', 'gpt', 'gpt-5', 'chatgpt', 'completion'],
       question: { ko: 'OpenAI Python SDK로 채팅 완성을 호출하는 올바른 방법은?',
                   en: 'What is the correct way to call chat completion with the OpenAI Python SDK?' },
       attribute: 'chat_completion_call',
@@ -61,6 +63,7 @@
        max_new_tokens(새 토큰만)가 의도대로. 옛 예제·블로그 다수는 아직 max_length. */
     transformers_generate: {
       id: 'transformers_generate', topic: 'Transformers', sline: 'S1',
+      tags: ['transformers', 'huggingface', 'nlp', 'llm', 'text-generation', 'language-model'],
       question: { ko: 'HF Transformers의 .generate()로 출력 길이를 제어하는 올바른 인자는?',
                   en: 'Which argument correctly controls output length in HF Transformers .generate()?' },
       attribute: 'generation_length_arg',
@@ -82,6 +85,7 @@
        살아있는 소스만 concat을 가리킨다. 다수결이 틀리는 순간(S1). */
     pandas_concat: {
       id: 'pandas_concat', topic: 'pandas', sline: 'S1',
+      tags: ['pandas', 'dataframe', 'data-analysis', 'data-extraction', 'numpy', 'csv'],
       question: { ko: '두 DataFrame을 행 방향으로 이어 붙이는 올바른 방법은?',
                   en: 'What is the correct way to concatenate two DataFrames row-wise?' },
       attribute: 'dataframe_concat',
@@ -102,6 +106,7 @@
        Council이 무조건 소수 편드는 청개구리가 아님을 증명(근거 기반 판정). */
     request_timeout: {
       id: 'request_timeout', topic: 'HTTP client', sline: 'S3',
+      tags: ['requests', 'http', 'timeout', 'scraping', 'crawler', 'queue'],
       question: { ko: '이 클라이언트의 권장 기본 요청 timeout(초)은?',
                   en: 'What is the recommended default request timeout (seconds) for this client?' },
       attribute: 'default_timeout',
@@ -121,6 +126,7 @@
        세 현자 동일 답. conflicts: []. 거짓 경보 0 증명. */
     css_center: {
       id: 'css_center', topic: 'CSS', sline: 'S8',
+      tags: ['css', 'html', 'frontend', 'flexbox', 'layout', 'tailwind', 'bootstrap'],
       question: { ko: '요소를 가로·세로 중앙 정렬하는 현대적 방법은?',
                   en: 'What is the modern way to center an element both horizontally and vertically?' },
       attribute: 'centering_method',
@@ -140,6 +146,7 @@
        커뮤니티는 이미 LCEL로 이동(다수 정답), 올드독만 옛 체인을 변호. */
     langchain_lcel: {
       id: 'langchain_lcel', topic: 'LangChain', sline: 'S2',
+      tags: ['langchain', 'chain', 'agent', 'prompt', 'llmops'],
       question: { ko: 'LangChain에서 프롬프트와 LLM을 연결하는 현재 권장 방식은?',
                   en: 'What is the current recommended way to compose a prompt with an LLM in LangChain?' },
       attribute: 'chain_composition',
@@ -160,6 +167,7 @@
        표는 1·1·1로 갈린다. 결정적 권위가 없을 때 의장은 '시계'(가장 최신 표준)를 본다. */
     js_deepcopy: {
       id: 'js_deepcopy', topic: 'JavaScript', sline: 'S4',
+      tags: ['javascript', 'typescript', 'nodejs', 'clone', 'json'],
       question: { ko: 'JavaScript에서 객체를 깊은 복사하는 현대적 표준 방법은?',
                   en: 'What is the modern standard way to deep-copy an object in JavaScript?' },
       attribute: 'deep_copy_method',
@@ -179,6 +187,7 @@
        componentDidMount를 반복. 박제된 메아리보다 숨 쉬는 코드를 믿는다. */
     react_effect: {
       id: 'react_effect', topic: 'React', sline: 'S5',
+      tags: ['react', 'reactjs', 'frontend', 'hooks', 'jsx', 'nextjs', 'vite'],
       question: { ko: 'React 함수 컴포넌트에서 마운트 직후 부수효과를 실행하는 방법은?',
                   en: 'How do you run a side effect right after a React function component mounts?' },
       attribute: 'mount_side_effect',
@@ -199,6 +208,7 @@
        여럿의 메아리보다 하나의 원전을. */
     http_created: {
       id: 'http_created', topic: 'HTTP', sline: 'S6',
+      tags: ['http', 'rest', 'api', 'backend', 'express', 'bottle', 'flask', 'websocket', 'login-system'],
       question: { ko: 'REST에서 리소스 생성에 성공했을 때 권장 응답 상태 코드는?',
                   en: 'Which response status code is recommended when a REST resource is created successfully?' },
       attribute: 'created_status_code',
@@ -218,6 +228,7 @@
        흔한 오해(model.eval()만으로 grad가 꺼진다)는 커뮤니티 패자. */
     torch_nograd: {
       id: 'torch_nograd', topic: 'PyTorch grad', sline: 'S5',
+      tags: ['pytorch', 'torch', 'inference', 'deep-learning', 'cuda', 'gpu', 'finetuning', 'unsloth', 'distillation'],
       question: { ko: 'PyTorch에서 추론 시 그래디언트 계산을 끄는 올바른 방법은?',
                   en: 'What is the correct way to disable gradient computation during inference in PyTorch?' },
       attribute: 'disable_grad',
@@ -237,6 +248,7 @@
        NumPy 습관에서 온 오해(float64)가 패배. 원전이 메아리들을 이긴다. */
     tensor_dtype: {
       id: 'tensor_dtype', topic: 'PyTorch dtype', sline: 'S6',
+      tags: ['pytorch', 'torch', 'tensor', 'dtype', 'deep-learning'],
       question: { ko: 'PyTorch에서 torch.tensor([1.0, 2.0])의 기본 부동소수점 dtype은?',
                   en: 'What is the default floating-point dtype of torch.tensor([1.0, 2.0]) in PyTorch?' },
       attribute: 'default_float_dtype',
@@ -256,6 +268,7 @@
        최신 흐름(맞으면 직접 주입)이 다수지만 'tentative' 신호로 잠정. 시간이 더 흐르면 뒤집힐 수 있다. */
     rag_longctx: {
       id: 'rag_longctx', topic: 'LLM', sline: 'S7',
+      tags: ['rag', 'retrieval', 'embedding', 'vector', 'knowledge', 'bedrock', 'sagemaker', 'llm'],
       question: { ko: '긴 문서를 LLM에 넣어 질문할 때, RAG 검색과 롱컨텍스트 직접 주입 중 무엇이 권장되나?',
                   en: 'For querying a long document with an LLM, is retrieval (RAG) or long-context direct injection recommended?' },
       attribute: 'long_doc_strategy',

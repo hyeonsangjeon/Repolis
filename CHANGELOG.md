@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.32.0] — 2026-06-28
+
+### 🔗 Town ↔ Council — visit a house, jump straight to the debate it belongs to
+- **Every repo house now knows its related debate.** Reach a house and open its card: if the repo's topics match one of the Council's curated cases, a new **"⏳ 관련 토론 보기 / Related debate"** button appears. Tap it and the card closes, the Chronopolis launcher opens with that exact case selected, and the topic box is **pre-filled with the full question** — ready to convene a live debate. An OpenAI-SDK repo lands on the OpenAI debate, a PyTorch repo on the `no_grad` case, an HTTP/REST repo on the "201 Created" case, and so on.
+- **Matched by meaning, not guesswork.** Each of the 13 fixtures carries a small `tags` keyword set (the single source of truth in `fixtures.js`); a repo's `topics` + name tokens are scored against those tags and the best case wins (ties broken by Council order). Of 62 repos, **29 match a debate and 33 don't** — and when nothing matches, the button simply stays hidden. Language keywords are deliberately excluded so a Python repo doesn't weakly match every Python case.
+- The `tags` are inert metadata — the deterministic engine never reads them, so every verdict stays byte-for-byte identical (130 engine + 56 live checks still green). Fully bilingual (KO/EN button label re-renders on language switch). Mobile-safe: the 4-button card row wraps cleanly with **0 horizontal overflow** at 390 px and a 47 px tap-target. Verified on real GPU, desktop + mobile: matched repos show the button → opens the right case with the full question pre-filled, unmatched repos hide it, **0 console errors**.
+
 ## [1.31.0] — 2026-06-28
 
 ### ⚖️ Kronos Council — six new debates, and a re-viewable verdict you can replay
