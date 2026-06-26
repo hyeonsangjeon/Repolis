@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.34.0] — 2026-06-29
+
+### ☀️ Softer sun & fluffier clouds — no more dusk "bullseye"
+- **The dusk/dawn sun looked like a concentric bullseye.** It was built from three hard-edged, single-colour `CircleGeometry` discs (core + glow + halo) stacked with additive blending — so against a dark dusk sky you saw sharp rings, and because the flat discs weren't billboards they skewed into an oval at grazing angles. The sun is now three **billboard sprites** with **soft radial-gradient textures**: a bright cream core (`SUN_TEX`, a defined edge then a quick falloff) plus two `GLOW_TEX` glow/halo layers. Sprites always face the camera, so the sun is **always perfectly round** (never oval) with a **smooth halo that fades into the sky** — no hard ring. Per-frame opacity was rebalanced (glow ×0.5, halo ×0.2) so the soft falloff reads well at every time of day. (Bonus fix: the sun is now defined *after* the radial textures it needs, instead of before them.)
+- **Clouds looked lumpy and faceted.** Each puff was a low-poly `SphereGeometry(s,10,8)` whose flat triangles were visible up close. Clouds now share one **smoother sphere** (`SphereGeometry(1,20,14)`) and use **more overlapping puffs** (4–6 instead of 2–4) spread a little wider with softer opacity — so the silhouette merges into a **fluffy mass** instead of a faceted blob. Shared geometry keeps the draw cost flat (mobile-safe).
+- Verified on real GPU at dusk: the sun renders as a soft round disc with a clean radial halo over open ground, the clouds are smooth and fluffy, **0 console errors**.
+
 ## [1.33.0] — 2026-06-29
 
 ### 🎬 Guided onboarding tour — a ~30-second self-driving showcase

@@ -1083,19 +1083,23 @@ const moonHalo=new THREE.Mesh(new THREE.CircleGeometry(26,40), new THREE.MeshBas
 moonGlow.position.z=-0.1; moonHalo.position.z=-0.2; moon.add(moonHalo,moonGlow,moonDisc);
 moon.position.set(-150,150,-260); moon.visible=false; scene.add(moon);
 
-/* ---- sun disc: a visual sun that arcs across the sky — high at noon, low & amber at dawn/dusk, set at night ---- */
-const sunSky=new THREE.Group();
-const sunDisc=new THREE.Mesh(new THREE.CircleGeometry(11,40), new THREE.MeshBasicMaterial({color:0xfff4cc,transparent:true,fog:false}));
-const sunGlow=new THREE.Mesh(new THREE.CircleGeometry(23,40), new THREE.MeshBasicMaterial({color:0xffe39a,transparent:true,opacity:0.3,fog:false,depthWrite:false,blending:THREE.AdditiveBlending}));
-const sunHalo=new THREE.Mesh(new THREE.CircleGeometry(48,40), new THREE.MeshBasicMaterial({color:0xffcf7a,transparent:true,opacity:0.1,fog:false,depthWrite:false,blending:THREE.AdditiveBlending}));
-sunGlow.position.z=-0.1; sunHalo.position.z=-0.2; sunSky.add(sunHalo,sunGlow,sunDisc);
-sunSky.position.set(0,361,-118); scene.add(sunSky);
+/* ---- sun disc: defined just below, after the soft radial textures it needs (see SUN_TEX) ---- */
+let sunSky, sunDisc, sunGlow, sunHalo;
 
 // soft round sprite texture → round glowy stars (not squares) + lamp/nebula glows
 function _radialTex(stops){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d');
   const g=x.createRadialGradient(32,32,0,32,32,32); stops.forEach(s=>g.addColorStop(s[0],s[1])); x.fillStyle=g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); }
 const STAR_TEX=_radialTex([[0,'rgba(255,255,255,1)'],[0.28,'rgba(255,255,255,0.7)'],[0.6,'rgba(255,255,255,0.18)'],[1,'rgba(255,255,255,0)']]);
 const GLOW_TEX=_radialTex([[0,'rgba(255,255,255,0.95)'],[0.3,'rgba(255,255,255,0.32)'],[1,'rgba(255,255,255,0)']]);
+// solid-core sun: bright disc that keeps a defined edge, then a quick soft falloff (no hard ring)
+const SUN_TEX=_radialTex([[0,'rgba(255,251,238,1)'],[0.62,'rgba(255,247,228,1)'],[0.82,'rgba(255,238,205,0.55)'],[1,'rgba(255,232,196,0)']]);
+/* ---- sun: soft billboard sprites (always round, never a hard concentric ring) — arcs across the sky, amber & low at dawn/dusk ---- */
+sunSky=new THREE.Group();
+sunHalo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffc77a,transparent:true,opacity:0.18,fog:false,depthWrite:false,blending:THREE.AdditiveBlending}));
+sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffd98f,transparent:true,opacity:0.45,fog:false,depthWrite:false,blending:THREE.AdditiveBlending}));
+sunDisc=new THREE.Sprite(new THREE.SpriteMaterial({map:SUN_TEX,color:0xfff6da,transparent:true,opacity:1,fog:false,depthWrite:false}));
+sunHalo.scale.set(150,150,1); sunGlow.scale.set(74,74,1); sunDisc.scale.set(27,27,1);
+sunSky.add(sunHalo,sunGlow,sunDisc); sunSky.position.set(0,361,-118); scene.add(sunSky);
 // sparkling star with a bright core + 4-point diffraction spikes (hero stars)
 const GLINT_TEX=(function(){ const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d'); const C=64;
   let g=x.createRadialGradient(C,C,0,C,C,30); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.28,'rgba(255,255,255,0.6)'); g.addColorStop(1,'rgba(255,255,255,0)');
@@ -1552,15 +1556,17 @@ rim.rotation.x=-Math.PI/2; rim.position.y=0.025; scene.add(rim);
   for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+0.4; lavenderClump(scene, Math.cos(a)*6.7, Math.sin(a)*6.7, 1.0); }
 })();
 
-/* ---- clouds ---- */
+/* ---- clouds (soft fluffy masses: shared smooth sphere, several overlapping puffs) ---- */
 const clouds=[];
+const CLOUD_GEO=new THREE.SphereGeometry(1,20,14);
 for(let i=0;i<16;i++){
-  const g=new THREE.Group(), n=2+(Math.random()*3|0);
+  const g=new THREE.Group(), n=4+(Math.random()*3|0);
   for(let j=0;j<n;j++){
-    const s=4+Math.random()*5;
-    const m=new THREE.Mesh(new THREE.SphereGeometry(s,10,8),
-      new THREE.MeshBasicMaterial({color:0xfffdf6,transparent:true,opacity:.92}));
-    m.position.set((Math.random()-.5)*11,(Math.random()-.5)*2,(Math.random()-.5)*6); m.scale.y=.6; g.add(m);
+    const s=3.6+Math.random()*4.6;
+    const m=new THREE.Mesh(CLOUD_GEO,
+      new THREE.MeshBasicMaterial({color:0xfffdf6,transparent:true,opacity:.9}));
+    m.position.set((Math.random()-.5)*13,(Math.random()-.5)*2.2,(Math.random()-.5)*6.5);
+    m.scale.set(s,s*0.58,s); g.add(m);
   }
   const a=Math.random()*Math.PI*2, r=150+Math.random()*160;
   g.position.set(Math.cos(a)*r, 48+Math.random()*30, Math.sin(a)*r);
@@ -3140,7 +3146,7 @@ function applySky(t){
   sun.position.set(sh*Math.sin(sA)*60, Math.max(8,sUp*72+10), -sh*Math.cos(sA)*60);   // directional light: raking at dawn/dusk, overhead at noon
   sunSky.visible=sOp>0.02;
   if(sunSky.visible){ sunSky.position.set(380*sh*Math.sin(sA), 380*sUp, -380*sh*Math.cos(sA));
-    sunDisc.material.opacity=sOp; sunGlow.material.opacity=0.3*sOp; sunHalo.material.opacity=0.1*sOp; }
+    sunDisc.material.opacity=sOp; sunGlow.material.opacity=0.5*sOp; sunHalo.material.opacity=0.2*sOp; }
 }
 
 // flip the discrete night assets (stars/moon/fireflies/lit windows/glows) — only when crossing the day↔night threshold
