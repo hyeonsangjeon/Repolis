@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.30.0] — 2026-06-28
+
+### 🗺️ Repolis Quest — a daily course to follow, and houses that light up when you visit
+- **Today's Course gives you a reason to walk.** Open the 🛂 passport and a new gold **course card** shows three hand-picked stops for the day — one popular repo plus two landmarks — chosen by a **date-seeded deterministic** shuffle (everyone gets the same course on the same day, and it's stable across reloads, stored local-only in `localStorage`). A progress bar and per-stop ✓ track how far you've gone, and each stop is **tappable to summon the taxi** straight there (the cab auto-opens the landmark when it arrives). A "🚕 Guide me" button drives you to the next unvisited stop in one tap; once all three are done it flips to "🎉 Course complete!".
+- **Visiting a house leaves a mark — for good.** The first time you reach a repo's house, every window **lights up** and a warm **lantern glow** settles above its roof (an additive halo that reads as "someone's home" by day and genuinely glows at night). It's persistent: come back tomorrow and your visited houses are still lit (restored from the passport on load, and re-painted immediately if you're visiting at night).
+- **Finishing the course is celebrated.** Completing all three stops pops **fireworks** and a "course complete" toast — once per day. The course auto-syncs with the existing stamp/visit system (a repo stop is done when you've visited it; a landmark stop when you've earned its stamp), so there's no separate state to keep.
+- Fully bilingual (KO/EN) — the course card re-renders on language switch. Mobile-safe (the passport is width-capped, **0 horizontal overflow** at 390 px). Verified on real GPU: deterministic course, live progress 2/3 → 3/3, taxi guide starts on tap, house lights + lantern at night, **0 console errors**.
+
 ## [1.29.0] — 2026-06-28
 
 ### 🏘️ Village Alive + Mobile Playability — a town that feels lived-in, smooth to roam

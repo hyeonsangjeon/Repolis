@@ -89,6 +89,29 @@
   .stamp.got .ico { filter: none; }
   .stamp.got .nm { color: #2f7d5b; }
   .stamp.got::after { content: "✓"; position: absolute; top: 4px; right: 6px; font-size: 10px; font-weight: 800; color: #2f9d6a; }
+  /* 🗺️ Daily course — today's recommended 3-stop route (sits atop the passport) */
+  .courseBox { border-radius: 14px; padding: 10px 11px 11px; margin: 0 0 11px;
+    background: linear-gradient(150deg,#fff6e2 0%,#fbeccb 100%); border: 1px solid #ecd49a; }
+  .courseHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .courseHead .ct { font-size: 11px; font-weight: 800; letter-spacing: .03em; color: #9a6e1e; text-transform: uppercase; }
+  .courseHead .cp { font-size: 11px; font-weight: 800; color: #b78327; background: #fff3d6; border: 1px solid #ecd49a; border-radius: 999px; padding: 2px 8px; }
+  .courseBar { height: 5px; border-radius: 3px; background: #efdcb0; overflow: hidden; margin-bottom: 9px; }
+  .courseBar > i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg,#e8b34a,#d98f2e); transition: width .4s ease; }
+  .courseItem { display: flex; align-items: center; gap: 8px; padding: 6px 6px; border-radius: 10px; cursor: pointer;
+    transition: background .14s ease; }
+  .courseItem:hover { background: rgba(216,143,46,.10); }
+  .courseItem .ci { flex: 0 0 auto; width: 26px; height: 26px; display: grid; place-items: center; font-size: 16px;
+    border-radius: 8px; background: #fff7e6; border: 1px solid #eccf93; }
+  .courseItem .cn { flex: 1; min-width: 0; font-size: 12px; font-weight: 700; color: #6f5326; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .courseItem .cs { flex: 0 0 auto; font-size: 11px; font-weight: 800; color: #b88a3a; }
+  .courseItem.done .ci { background: #eef9f2; border-color: #79c6a0; }
+  .courseItem.done .cn { color: #2f7d5b; text-decoration: line-through; text-decoration-color: rgba(47,125,91,.4); }
+  .courseItem.done .cs { color: #2f9d6a; }
+  .courseGo { display: block; width: 100%; margin-top: 9px; min-height: 38px; border: 0; cursor: pointer; border-radius: 10px;
+    font-family: inherit; font-size: 12.5px; font-weight: 800; color: #3a2a08; background: linear-gradient(135deg,#f1c45a,#e09a2f);
+    box-shadow: 0 4px 12px rgba(208,140,40,.28); transition: transform .12s ease, filter .12s ease; }
+  .courseGo:hover { transform: translateY(-1px); filter: brightness(1.04); }
+  .courseGo.alldone { background: linear-gradient(135deg,#8fd6ac,#56b483); color: #133a28; box-shadow: 0 4px 12px rgba(60,150,100,.26); }
   .pRow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
     padding: 8px 2px 2px; font-size: 12px; color: #6b5034; }
   .pRow b { color: #d2622f; font-size: 13px; }
@@ -422,6 +445,7 @@
 <div id="passport" class="hidden">
   <h3>🛂 <span data-i18n="passportTitle">탐험 여권</span></h3>
   <div class="psub" data-i18n="passportSub">마을을 거닐며 스탬프를 모아요.</div>
+  <div class="courseBox" id="courseBox" style="display:none;"></div>
   <div class="stampGrid" id="stampGrid"></div>
   <div class="pRow"><span data-i18n="passportRepos">방문한 레포</span> <b><span id="pRepoN">0</span>/<span id="pRepoT">0</span></b></div>
   <div class="pZones" id="pZones"></div>
@@ -609,6 +633,8 @@ const I18N = {
     passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프를 모아요.',
     passportRepos:'방문한 레포', passportHint:'현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
+    courseTitle:'오늘의 코스', courseGo:'🚕 코스 안내', courseAllDone:'🎉 코스 완주!', courseDone:'✓',
+    courseBanner:'🗺️ 오늘의 추천 코스 3곳이 정해졌어요! 여권 🛂에서 확인하고 따라가 보세요', courseReward:'🎉 오늘의 코스를 완주했어요! 멋진 탐험이었어요 ✨',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
     lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
@@ -710,6 +736,8 @@ const I18N = {
     passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps.',
     passportRepos:'Repos visited', passportHint:'Walk up to a scholar, the library, a canal or the plaza to earn a stamp.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
+    courseTitle:'Today\'s course', courseGo:'🚕 Guide me', courseAllDone:'🎉 Course complete!', courseDone:'✓',
+    courseBanner:'🗺️ Today\'s 3-stop route is ready! Open your Passport 🛂 to follow it', courseReward:'🎉 You completed today\'s course! Lovely exploring ✨',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
     lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
@@ -3437,14 +3465,16 @@ const passportEl=document.getElementById('passport');
 function flashPassport(){ const b=document.getElementById('passBtn'); if(!b) return; b.classList.add('glow'); clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('glow'),2200); }
 function addStamp(id){ if(passHasStamp(id)) return false; passport.stamps.push(id); savePassport(); flashPassport(); if(!passportEl.classList.contains('hidden')) renderPassport();
   if(passport.stamps.length>=PASS_LANDMARKS.length){ fireworksShow(20); showWave(t('festAllStamps'),3400); } else fireworksShow(3);
-  return true; }
+  onCourseProgress(); return true; }
 function addRepoVisit(name){ if(!name || passport.repos.indexOf(name)>=0) return; passport.repos.push(name); savePassport(); if(!passportEl.classList.contains('hidden')) renderPassport();
-  if([5,15,30,REPOS.length].indexOf(passport.repos.length)>=0){ fireworksShow(8); showWave(t('festRepos').replace('{n}',passport.repos.length),3000); } }
+  if([5,15,30,REPOS.length].indexOf(passport.repos.length)>=0){ fireworksShow(8); showWave(t('festRepos').replace('{n}',passport.repos.length),3000); }
+  onCourseProgress(); }
 function restorePassport(){ if(!passport.repos.length) return;
   for(const r of REPOS){ if(passport.repos.indexOf(r.repo)>=0 && !r._visited){ r._visited=true; visited++;
-    if(r._row) r._row.classList.add('visited'); if(r._ring) r._ring.material.color.set(0x2f9d6a); } }
-  document.getElementById('visitCount').textContent=visited; }
-function renderPassport(){ const grid=document.getElementById('stampGrid'); if(!grid) return;
+    if(r._row) r._row.classList.add('visited'); if(r._ring) r._ring.material.color.set(0x2f9d6a); lightVisitedHouse(r,true); } }
+  document.getElementById('visitCount').textContent=visited;
+  if(isNight){ _nightState=null; setNightState(true); } }
+function renderPassport(){ renderCourse(); const grid=document.getElementById('stampGrid'); if(!grid) return;
   grid.innerHTML='';
   for(const lm of PASS_LANDMARKS){ const got=passHasStamp(lm.id);
     const d=document.createElement('div'); d.className='stamp'+(got?' got':'');
@@ -3455,6 +3485,53 @@ function renderPassport(){ const grid=document.getElementById('stampGrid'); if(!
   document.getElementById('pZones').innerHTML = missing.length
     ? (t('passportZonesLeft')+missing.map(l=>`<span class="z">${t(l.key).split(' · ')[0]}</span>`).join(', '))
     : t('passportAllZones'); }
+/* ───────── 🗺️ Daily Course — today's deterministic 3-stop route (local-only, no PII) ───────── */
+const COURSE_KEY='repolisCourse';
+let course=null;
+function _todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function _seedFrom(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function _rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let x=Math.imul(seed^seed>>>15,1|seed); x=x+Math.imul(x^x>>>7,61|x)^x; return ((x^x>>>14)>>>0)/4294967296; }; }
+function _shuffle(arr,rng){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const tmp=a[i]; a[i]=a[j]; a[j]=tmp; } return a; }
+const COURSE_LM=[{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'}];
+function lmCourseDest(id){ switch(id){
+  case 'chrono': return (typeof CHRONO!=='undefined'&&CHRONO)?{label:t('lmChrono'),_pos:CHRONO._pos,_landmark:'chrono'}:null;
+  case 'observatory': return (typeof OBS!=='undefined'&&OBS)?{label:t('obsName'),_pos:OBS._pos,_landmark:'obs'}:null;
+  case 'canal': return CANAL_PTS.length?{label:t('lmCanal'),_pos:new THREE.Vector3(CANAL_PTS[0].x,0,CANAL_PTS[0].z),_landmark:'canal'}:null;
+  case 'plaza': return {label:t('lmPlaza'),_pos:new THREE.Vector3(0,0,0),_landmark:'plaza'};
+  case 'library': return (typeof LIB!=='undefined'&&LIB)?{label:LIB.label,_pos:LIB._pos,_isLibrary:true}:null;
+} return null; }
+function buildCourse(){ const rng=_rng(_seedFrom('course:'+_todayKey()));
+  const lms=_shuffle(COURSE_LM.filter(l=>lmCourseDest(l.id)),rng).slice(0,2);
+  const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.stars||0)).slice(0,12);
+  const repo=pop.length?pop[Math.floor(rng()*pop.length)]:null;
+  let items=[]; if(repo) items.push({type:'repo',id:repo.repo,ico:'🏠'});
+  lms.forEach(l=>items.push({type:'lm',id:l.id,ico:l.ico}));
+  items=_shuffle(items,rng);
+  return {date:_todayKey(), items, rewarded:false}; }
+function getCourse(){ if(course&&course.date===_todayKey()) return course;
+  try{ const c=JSON.parse(localStorage.getItem(COURSE_KEY)); if(c&&c.date===_todayKey()&&Array.isArray(c.items)&&c.items.length){ course=c; return course; } }catch(e){}
+  course=buildCourse(); try{ localStorage.setItem(COURSE_KEY,JSON.stringify(course)); }catch(e){} return course; }
+function courseItemDone(it){ return it.type==='repo'?passport.repos.indexOf(it.id)>=0:passHasStamp(it.id); }
+function courseItemLabel(it){ if(it.type==='repo'){ const r=REPOS.find(x=>x.repo===it.id); return r?r.label:it.id; }
+  const lm=PASS_LANDMARKS.find(l=>l.id===it.id); return lm?t(lm.key).split(' · ')[0]:it.id; }
+function courseProgress(){ const c=getCourse(); let d=0; c.items.forEach(it=>{ if(courseItemDone(it)) d++; }); return {done:d,total:c.items.length}; }
+function courseDestOf(it){ if(it.type==='repo'){ return REPOS.find(x=>x.repo===it.id)||null; } return lmCourseDest(it.id); }
+function courseGuideTo(it){ const d=courseDestOf(it); if(!d) return; passportEl.classList.add('hidden');
+  if(typeof taxiTo==='function') taxiTo(d); else if(typeof setNav==='function') setNav(d); }
+function courseGuideNext(){ const c=getCourse(); const nx=c.items.find(it=>!courseItemDone(it)); if(nx) courseGuideTo(nx); }
+function renderCourse(){ const box=document.getElementById('courseBox'); if(!box) return;
+  if(!REPOS.length){ box.style.display='none'; return; }
+  const c=getCourse(), pr=courseProgress(), all=pr.done>=pr.total&&pr.total>0; box.style.display='';
+  let rows=''; c.items.forEach((it,i)=>{ const done=courseItemDone(it);
+    rows+=`<div class="courseItem${done?' done':''}" data-ci="${i}"><div class="ci">${it.ico}</div><div class="cn">${_esc(courseItemLabel(it))}</div><div class="cs">${done?t('courseDone'):'→'}</div></div>`; });
+  box.innerHTML=`<div class="courseHead"><span class="ct">🗺️ ${_esc(t('courseTitle'))}</span><span class="cp">${pr.done}/${pr.total}</span></div>`
+    +`<div class="courseBar"><i style="width:${pr.total?Math.round(pr.done/pr.total*100):0}%"></i></div>`+rows
+    +`<button class="courseGo${all?' alldone':''}" id="courseGoBtn">${all?_esc(t('courseAllDone')):_esc(t('courseGo'))}</button>`;
+  box.querySelectorAll('.courseItem').forEach(el=>{ el.onclick=()=>courseGuideTo(c.items[+el.dataset.ci]); });
+  const gb=document.getElementById('courseGoBtn'); if(gb) gb.onclick=()=>{ if(all) passportEl.classList.add('hidden'); else courseGuideNext(); }; }
+function onCourseProgress(){ if(!REPOS.length) return; if(!passportEl.classList.contains('hidden')) renderCourse();
+  const pr=courseProgress(); if(pr.total>0&&pr.done>=pr.total&&course&&!course.rewarded){ course.rewarded=true;
+    try{ localStorage.setItem(COURSE_KEY,JSON.stringify(course)); }catch(e){} fireworksShow(12); showWave(t('courseReward'),3400); } }
 document.getElementById('passBtn').onclick=()=>{ const hidden=passportEl.classList.toggle('hidden'); if(!hidden){ panel.classList.add('hidden'); renderPassport(); } };
 document.getElementById('menuBtn').addEventListener('click',()=> passportEl.classList.add('hidden'));
 const repoList=document.getElementById('repoList');
@@ -3570,9 +3647,18 @@ function closeLibrary(){ modalOpen=false; libModal.classList.remove('show'); }
 document.getElementById('libClose').onclick=closeLibrary;
 libModal.addEventListener('click',e=>{ if(e.target===libModal) closeLibrary(); });
 
+/* a visited house lights up for good — every window lit + a warm lantern glow above it (day & night) */
+function lightVisitedHouse(repo, defer){ if(!repo||repo._litVisited) return; repo._litVisited=true;
+  (repo._windows||[]).forEach(w=>{ w.userData.lit=true; });
+  if(repo._group && !repo._visitMark){ const h=repo._h||6;
+    const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.26,12,10), new THREE.MeshBasicMaterial({color:0xffe6b0}));
+    lamp.position.set(0,h+1.25,0); lamp.renderOrder=6;
+    const halo=new THREE.Mesh(new THREE.SphereGeometry(0.92,14,12), new THREE.MeshBasicMaterial({color:0xffd06a,transparent:true,opacity:0.34,depthWrite:false,blending:THREE.AdditiveBlending}));
+    lamp.add(halo); repo._group.add(lamp); repo._visitMark=lamp; }
+  if(isNight && !defer){ _nightState=null; setNightState(true); } }
 function markVisited(repo){ if(repo._visited) return; repo._visited=true; visited++;
   document.getElementById('visitCount').textContent=visited; repo._row.classList.add('visited');
-  repo._ring.material.color.set(0x2f9d6a); addRepoVisit(repo.repo); greetBuilding(repo); }
+  repo._ring.material.color.set(0x2f9d6a); lightVisitedHouse(repo); addRepoVisit(repo.repo); greetBuilding(repo); }
 
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
@@ -3583,7 +3669,8 @@ function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
 function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; player.position.set(seat.x,0,seat.z); model.rotation.y=seat.rot; camYaw=seat.rot+Math.PI; walk=0; }
 function standUp(){ sitting=null; }
-document.getElementById('startBtn').onclick=()=> document.getElementById('intro').classList.add('hidden');
+document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
+  try{ if(REPOS.length){ getCourse(); setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, 1000); } }catch(e){} };
 document.getElementById('loading').style.display='none';
 
 /* ====================== LLM TAXI DRIVER ====================== */
@@ -4368,6 +4455,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__emote=(kind='clap')=>{ playEmote(kind); return {emoteT:+emoteT.toFixed(2), kind:emoteKind}; };
   window.__peerEmote=(kind='dance',id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'emote',id:t,kind}); const p=peers.get(t); return {by:t, emoteT:+(p?.emoteT||0).toFixed(2), kind:p?.emoteKind, armL:!!p?.group._armL}; };
   window.__emotes=()=>Object.keys(EMOTES);  window.__meteor=(az)=>{ spawnMeteor(az); return true; };
+  window.__course=()=>{ const c=getCourse(); return {date:c.date, items:c.items.map(it=>({type:it.type,id:it.id,label:courseItemLabel(it),done:courseItemDone(it)})), prog:courseProgress()}; };
+  window.__courseNext=()=>{ courseGuideNext(); return ride?ride.phase:'idle'; };
+  window.__visitRepo=(name)=>{ const r=(name&&REPOS.find(x=>x.repo===name||x.label===name))||REPOS[0]; if(!r) return null; markVisited(r); return {repo:r.repo, lit:!!r._litVisited, mark:!!r._visitMark, prog:courseProgress()}; };
   window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; };
   window.__sky=(t)=>{ if(t!==undefined){ skyAuto=false; skyT=skyTarget=((t%1)+1)%1; applySky(skyT); const nn=_nightAt(skyT); if(nn!==_nightState) setNightState(nn); } return {skyT:+skyT.toFixed(3),skyTarget:+skyTarget.toFixed(3),isNight,auto:skyAuto,phase:SKY_PHASES[skyPhaseIdx].name,sunVis:sunSky.visible}; };
   window.__skyCycle=()=>{ skyAuto=!skyAuto; lastAct=performance.now(); return skyAuto; };
