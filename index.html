@@ -147,6 +147,22 @@
   .btn.live { background: #c2702f; color: #fff; }
   .btn.close { flex: 0 0 auto; min-width: 0; background: #f1e6d6; color: #6a523d; }
   .btn.chrono { background: linear-gradient(135deg,#4b3b8f,#6b4fb0); color: #fff; }
+  /* Guided tour — caption rail + skip */
+  #tourCap{ position:fixed; left:0; right:0; margin-inline:auto; bottom:calc(22px + env(safe-area-inset-bottom,0px)); z-index:65;
+    width:fit-content; max-width:min(680px,calc(100vw - 26px)); display:flex; gap:11px; align-items:center;
+    background:linear-gradient(135deg,rgba(28,22,46,0.95),rgba(44,32,70,0.95)); color:#f4ecff;
+    border:1px solid #6b4fb0; border-radius:16px; padding:12px 14px; box-shadow:0 12px 36px rgba(0,0,0,0.46);
+    font-size:15px; line-height:1.46; animation:tourPop .35s ease both; }
+  #tourCap.hidden{ display:none; }
+  #tourCap .tcDot{ font-size:24px; flex:0 0 auto; }
+  #tourCap .tcTxt{ flex:1 1 auto; }
+  #tourCap .tcTxt b{ color:#d7c4ff; }
+  #tourCap .tcSkip{ flex:0 0 auto; background:#2b2440; color:#cdbff0; border:1px solid #6b4fb0; border-radius:11px;
+    padding:8px 11px; font-size:13px; cursor:pointer; min-height:40px; white-space:nowrap; }
+  @keyframes tourPop{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+  #introTour{ margin-top:11px; background:transparent; color:#c9b8f2; border:1px solid #7a5fc0; border-radius:12px;
+    padding:11px 18px; font-size:15px; cursor:pointer; transition:background .15s,color .15s; }
+  #introTour:hover{ background:#6b4fb0; color:#fff; }
   .card .hero { width: 100%; aspect-ratio: 2 / 1; height: auto; max-height: 230px; object-fit: cover; display: block;
     background: linear-gradient(135deg,#efe6d3,#e2d4bb); }
   .card .sociallabel { position: absolute; top: 12px; left: 12px; z-index: 3; display: none;
@@ -411,7 +427,7 @@
   .chatIn input:focus { border-color: #e0b07a; }
   .chatIn button { border: none; background: #5bbcb0; color: #fff; font-weight: 800; border-radius: 12px;
     padding: 0 16px; font-size: 14px; cursor: pointer; min-height: 40px; }
-  #drivebar { position: fixed; z-index: 13; left: 50%; top: 64px; transform: translateX(-50%);
+  #drivebar { position: fixed; z-index: 13; left: 0; right: 0; margin-inline: auto; top: 64px; width: fit-content; max-width: min(560px, calc(100vw - 20px));
     background: rgba(74,47,30,.9); color: #fff; font-size: 13px; font-weight: 700; padding: 9px 18px;
     border-radius: 14px; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 22px rgba(0,0,0,.25); }
   #drivebar .cancel { position: relative; overflow: hidden; background: rgba(255,255,255,.22); border-radius: 8px; padding: 3px 10px; font-size: 11px; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none; }
@@ -551,9 +567,11 @@
       <div><b>Enter / 클릭</b><span data-i18n="ctrlOpen">레포 열기</span></div>
     </div>
     <button id="startBtn" data-i18n="enterTown">마을 입장 →</button>
+    <button id="introTour" data-i18n="tourStart">🎬 가이드 투어로 둘러보기</button>
   </div>
 </div>
 
+<div id="tourCap" class="hidden"><span class="tcDot" id="tourDot">✨</span><span class="tcTxt" id="tourTxt"></span><button class="tcSkip" id="tourSkip" data-i18n="tourSkip">건너뛰기 ⏭</button></div>
 <div id="joy"><div class="nub"></div></div>
 <button id="actBtn" title="Open" aria-label="Open">🚪</button>
 <div class="hint" data-i18n-html="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기</div>
@@ -659,6 +677,12 @@ const I18N = {
     chronoTimeCap:'⏳ 시간의 저울 — 출처를 최신·생존순으로',
     chronoTimeOld:'오래됨', chronoTimeNew:'최신', chronoTimeWin:'시간이 가리킴',
     chronoRecap:'📋 시간의 판정 다시보기 (결정적)', chronoRecapHide:'🔼 판정 접기', chronoVerdictLbl:'시간의 판정', chronoConfLbl:'신뢰도', chronoRecapNoAns:'판정 보류 — 충분한 증언이 없습니다.',     chronoRecapHint:'이 예시는 결정적 판정입니다 — 라이브 토론과 달리 언제 봐도 같은 결론.', chronoRelated:'⏳ 관련 토론 보기',
+    tourStart:'🎬 가이드 투어로 둘러보기', tourSkip:'건너뛰기 ⏭', tourReplay:'🎬 가이드 투어',
+    tourCap1:'레포들의 도시에 오신 걸 환영해요! 광장의 현자 <b>POLARIS</b>가 인사를 건네네요. 🚕 그 옆은 택시 정류장이에요.',
+    tourCap2:'🚕 택시기사에게 주제를 말하면 그 레포 집까지 데려다줘요. 도착하면 집에 불이 켜지고 스탬프를 받아요.',
+    tourCap3:'⏳ <b>Chronopolis</b> — 세 현자가 토론하고, <b>시간</b>(가장 최신 출처)이 승부를 가려요.',
+    tourCap4:'🛂 여권에 방문 스탬프를 모으고, <b>오늘의 코스</b> 3곳을 따라가 보세요!',
+    tourEnd:'투어 끝! 이제 자유롭게 마을을 누벼보세요. 🌟',
     obsName:'별빛 전망대', obsReached:' — 별빛 전망대. <span class="key">Enter</span> 또는 클릭으로 올라가기',
     obsTitle:'🔭 별빛 전망대', obsSub:'밤하늘 현자들의 별자리를 한자리에서.', obsHint:'밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾',
     obsSign:'OBSERVATORY', obsStar:'으뜸별', obsConstel:'별자리', obsMyth:'신화', obsClose:'닫기',
@@ -763,6 +787,12 @@ const I18N = {
     chronoTimeCap:"⏳ Time's scale — sources by recency & liveness",
     chronoTimeOld:'older', chronoTimeNew:'newer', chronoTimeWin:'Time points here',
     chronoRecap:'📋 Replay the verdict (deterministic)', chronoRecapHide:'🔼 Hide verdict', chronoVerdictLbl:"Time's verdict", chronoConfLbl:'confidence', chronoRecapNoAns:'Verdict withheld — not enough testimony.',     chronoRecapHint:'This example is a deterministic verdict — unlike the live debate, it reads the same every time.', chronoRelated:'⏳ Related debate',
+    tourStart:'🎬 Take a guided tour', tourSkip:'Skip ⏭', tourReplay:'🎬 Guided tour',
+    tourCap1:'Welcome to the City of Repos! <b>POLARIS</b>, the scholar at the plaza, waves hello. 🚕 The taxi stand is right beside them.',
+    tourCap2:'🚕 Tell the taxi a topic and it drives you to that repo\u2019s house. On arrival the house lights up and you earn a stamp.',
+    tourCap3:'⏳ <b>Chronopolis</b> — three scholars debate, and <b>time</b> (the freshest source) decides who wins.',
+    tourCap4:'🛂 Collect visit stamps in your passport, then follow <b>today\u2019s 3-stop course</b>!',
+    tourEnd:'Tour complete! Now roam the town freely. 🌟',
     obsName:'Stargazer\'s Observatory', obsReached:' — the Stargazer\'s Observatory. <span class="key">Enter</span> or click to climb up',
     obsTitle:'🔭 Stargazer\'s Observatory', obsSub:'The night-sky scholars\' constellations, all in one place.', obsHint:'Climb up at night to see the scholars\' constellations at their brightest. ☾',
     obsSign:'OBSERVATORY', obsStar:'Star', obsConstel:'Constellation', obsMyth:'Myth', obsClose:'Close',
@@ -3581,6 +3611,39 @@ function courseDestOf(it){ if(it.type==='repo'){ return REPOS.find(x=>x.repo===i
 function courseGuideTo(it){ const d=courseDestOf(it); if(!d) return; passportEl.classList.add('hidden');
   if(typeof taxiTo==='function') taxiTo(d); else if(typeof setNav==='function') setNav(d); }
 function courseGuideNext(){ const c=getCourse(); const nx=c.items.find(it=>!courseItemDone(it)); if(nx) courseGuideTo(nx); }
+/* ---- Guided onboarding tour: a ~30s self-driving showcase (welcome → repo house → Chronopolis → passport) ---- */
+let tour=null, _tourBoost=false;
+function tourCap(dot,html){ const e=document.getElementById('tourCap'); if(!e) return;
+  document.getElementById('tourDot').textContent=dot; document.getElementById('tourTxt').innerHTML=html; e.classList.remove('hidden'); }
+function hideTourCap(){ const e=document.getElementById('tourCap'); if(e) e.classList.add('hidden'); }
+function tourCloseModals(){ try{ if(modal.classList.contains('show')) closeCard(); }catch(e){}
+  try{ if(chronoModal.classList.contains('show')) closeChrono(); }catch(e){} try{ passportEl.classList.add('hidden'); }catch(e){} }
+function buildTourSteps(){ const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.stars||0));
+  const repo=pop[0]||REPOS[0]; const steps=[{kind:'welcome',dot:'👋',cap:'tourCap1',dwell:3.2}];
+  if(repo) steps.push({kind:'repo',repo,dot:'🏠',cap:'tourCap2',dwell:3.6});
+  if(typeof CHRONO!=='undefined'&&CHRONO) steps.push({kind:'chrono',dot:'⏳',cap:'tourCap3',dwell:4.4});
+  steps.push({kind:'passport',dot:'🛂',cap:'tourCap4',dwell:3.6}); return steps; }
+function startTour(){ if(!REPOS.length||(tour&&tour.active)) return; tourCloseModals();
+  try{ if(ride) endDrive(); if(sitting) standUp(); }catch(e){}
+  player.position.set(2.6,0,-3.2); model.rotation.y=Math.PI; freeLook=false;
+  const intro=document.getElementById('intro'); if(intro) intro.classList.add('hidden');
+  tour={steps:buildTourSteps(),i:0,active:true,waiting:false,_timer:null}; _tourBoost=true; runTourStep(); }
+function runTourStep(){ if(!tour||!tour.active) return; const s=tour.steps[tour.i]; if(!s){ endTour(true); return; }
+  tourCap(s.dot, t(s.cap));
+  if(s.kind==='welcome'){ const n=NPCS.find(x=>x.kind==='taxi')||NPCS[0];
+    if(n){ camYaw=Math.atan2(n.pos.x-player.position.x, n.pos.z-player.position.z); camPitch=0.20; camDist=18; n.group._bt=0.01; }
+    tourSchedule(s.dwell);
+  } else if(s.kind==='repo'){ tour.waiting=true; try{ taxiTo(s.repo); }catch(e){ tour.waiting=false; tourSchedule(s.dwell); } }
+  else if(s.kind==='chrono'){ const d=lmCourseDest('chrono'); if(d){ tour.waiting=true; try{ taxiTo(d); }catch(e){ tour.waiting=false; tourSchedule(s.dwell); } } else tourSchedule(s.dwell); }
+  else if(s.kind==='passport'){ try{ panel.classList.add('hidden'); passportEl.classList.remove('hidden'); renderPassport(); }catch(e){} tourSchedule(s.dwell); } }
+function tourSchedule(dwell){ if(!tour) return; if(tour._timer) clearTimeout(tour._timer);
+  tour._timer=setTimeout(()=>{ tourCloseModals(); tourNext(); }, Math.max(800,dwell*1000)); }
+function tourOnArrive(){ if(!tour||!tour.active||!tour.waiting) return; tour.waiting=false;
+  const s=tour.steps[tour.i]; tourSchedule(s?s.dwell:3.2); }
+function tourNext(){ if(!tour||!tour.active) return; tour.i++; if(tour.i>=tour.steps.length) endTour(true); else runTourStep(); }
+function endTour(showEnd){ if(!tour) return; if(tour._timer) clearTimeout(tour._timer); tour.active=false; _tourBoost=false;
+  try{ endDrive(); taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; }catch(e){} tourCloseModals();
+  if(showEnd){ tourCap('✨', t('tourEnd')); setTimeout(hideTourCap,3400); } else hideTourCap(); tour=null; }
 function renderCourse(){ const box=document.getElementById('courseBox'); if(!box) return;
   if(!REPOS.length){ box.style.display='none'; return; }
   const c=getCourse(), pr=courseProgress(), all=pr.done>=pr.total&&pr.total>0; box.style.display='';
@@ -3737,6 +3800,9 @@ function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; playe
 function standUp(){ sitting=null; }
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
   try{ if(REPOS.length){ getCourse(); setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, 1000); } }catch(e){} };
+(function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
+    document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
+  const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
 document.getElementById('loading').style.display='none';
 
 /* ====================== LLM TAXI DRIVER ====================== */
@@ -4252,13 +4318,14 @@ function animate(){
   frame++;
   const _now=performance.now();
   const _idle=(_now-lastAct)>1200;                 // perf: no input/move >1.2s → idle
-  if(_idle && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops keep full fps)
+  if(_idle && !(tour&&tour.active) && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour keep full fps)
   lastFrame=_now;
   const dt=Math.min(clock.getDelta(),0.05);
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
   mv.set(0,0,0);
   const userInput = keys['Space']||keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
+  if(tour&&tour.active&&!tour.waiting&&!ride&&userInput){ endTour(false); }
   let moving=false;
   if(ride){
     { // ride no longer auto-cancels on key input — exit only via the hold-to-get-off button
@@ -4270,7 +4337,7 @@ function animate(){
       } else if(ride.phase==='boarding'){
         if(ride.t>0.55){ model.visible=false; ride.phase='riding'; ride.t=0; }
       } else if(ride.phase==='riding'){
-        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z, (ride.repo._isLibrary||ride.repo._landmark==='chrono'||ride.repo._landmark==='obs')?44:26, dt,6.0);
+        const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z, ((ride.repo._isLibrary||ride.repo._landmark==='chrono'||ride.repo._landmark==='obs')?44:26)*(_tourBoost?1.7:1), dt,6.0);
         player.position.set(taxi.position.x,0,taxi.position.z);
         const fx=Math.cos(taxi.rotation.y), fz=-Math.sin(taxi.rotation.y);
         camYaw=lerpA(camYaw,Math.atan2(fx,fz)+Math.PI,0.05);
@@ -4278,6 +4345,7 @@ function animate(){
       } else if(ride.phase==='arriving'){
         model.visible=true; player.position.set(taxi.position.x,0,taxi.position.z);
         const r=ride.repo; arriveTaxi(r);
+        if(tour&&tour.active&&tour.waiting) tourOnArrive();
         setTimeout(()=>{ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; },2500);
       }
     }
@@ -4551,6 +4619,10 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     headY:+(g._head?g._head.position.y:0).toFixed(3), bubOp:+(g._bub?g._bub.sprite.material.opacity:0).toFixed(2),
     gT:+(g._gt||0).toFixed(2), bT:+(g._bt||0).toFixed(2)}; });
   window.__npcSay=(k)=>{ const n=NPCS.find(x=>x.kind===k)||NPCS[0]; n.group._bt=0.01; return 'fired '+n.kind; };
+  window.__tour=()=>tour?{i:tour.i,kind:(tour.steps[tour.i]||{}).kind,active:tour.active,waiting:tour.waiting,boost:_tourBoost,capShown:!document.getElementById('tourCap').classList.contains('hidden'),capTxt:(document.getElementById('tourTxt').textContent||'').slice(0,40)}:{active:false};
+  window.__tourStart=()=>{ startTour(); return window.__tour(); };
+  window.__tourNext=()=>{ tourNext(); return window.__tour(); };
+  window.__tourEnd=()=>{ endTour(false); return window.__tour(); };
   window.__npcPos=()=>NPCS.map(n=>({kind:n.kind,x:+n.pos.x.toFixed(1),z:+n.pos.z.toFixed(1)}));
   window.__talk=(kind)=>{ const n=NPCS.find(x=>x.kind===kind); if(!n) return null; openChat(n); return {active:activeNpc?activeNpc.kind:null, title:chatHeadTtl?chatHeadTtl.textContent:null, modeHidden:modeSel.style.display==='none', ph:chatText.placeholder}; };
   window.__trace=(refs)=>{ const n=NPCS.find(x=>x.kind==='msdocs'); if(n) openChat(n);

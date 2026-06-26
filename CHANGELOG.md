@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.33.0] — 2026-06-29
+
+### 🎬 Guided onboarding tour — a ~30-second self-driving showcase
+- **First-time visitors can now press "🎬 가이드 투어로 둘러보기 / Take a guided tour" on the intro screen** and the town shows itself off, hands-free. The camera turns to greet **POLARIS** at the plaza (welcome), a taxi drives you to the city's top repo house (which lights up + stamps), then on to **Chronopolis** where the debate launcher opens, and finally flips your **🛂 passport** open to point at today's 3-stop course — four captioned beats in about 30 seconds. A floating caption rail narrates each step with a **"건너뛰기 ⏭ / Skip"** button, and any movement key or joystick nudge instantly cancels the tour so you're never trapped.
+- **Consistent every time.** `startTour()` now resets the player to the plaza spawn (ends any ride, stands up from a seat, faces the fountain) before the first beat, so a second consecutive tour starts from the same place — no more "taxi already across town" glitch — and the welcome greet is always framed. During the tour the idle FPS cap is lifted (full 60 fps) and the taxi legs run at a gentle 1.7× so the whole thing fits the ~30 s budget; on tour end the taxi returns to its stand.
+- **Mobile caption fix (and a sibling bug squashed).** The caption rail used `left:50%; width:auto`, which on mobile let shrink-to-fit use only the right half of the screen — squishing the text into a narrow vertical sliver. Switched to `left:0; right:0; margin-inline:auto; width:fit-content` (capped at `min(680px, 100vw−26px)`), so the caption now spans the full width (364 px, text 89→202 px), centered, no overflow. The **taxi drive bar** (`#drivebar`) had the identical `left:50%` bug — it was squishing on every mobile ride, not just the tour — and got the same one-line fix (now 366 px wide, single 42 px line). Verified on real GPU, desktop + mobile (390 px): welcome→repo→chrono→passport→end all advance, EN/KO captions, skip + cancel-on-input work, **0 console errors**. 130 engine + 56 live checks still green.
+
 ## [1.32.0] — 2026-06-28
 
 ### 🔗 Town ↔ Council — visit a house, jump straight to the debate it belongs to
