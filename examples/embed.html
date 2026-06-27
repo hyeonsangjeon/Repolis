@@ -1,0 +1,38 @@
+<!-- examples/embed.html — drop the live Repolis city into any page with one iframe.
+     Open this file in a browser, or copy the <iframe> into your own site / blog / README preview. -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Repolis — embedded</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #0e1116; color: #e6edf3; }
+    header { padding: 14px 18px; }
+    a { color: #58a6ff; }
+    .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; }
+    .frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  </style>
+</head>
+<body>
+  <header>
+    🏙️ <b>Repolis</b> embedded — walk the city below, or open it
+    <a href="https://hyeonsangjeon.github.io/Repolis/" target="_blank" rel="noopener">full-screen</a>.
+  </header>
+
+  <!-- The whole app is one URL. Swap in ?user=<login> to embed anyone's town. -->
+  <div class="frame">
+    <iframe
+      src="https://hyeonsangjeon.github.io/Repolis/"
+      title="Repolis — the city of repos"
+      loading="lazy"
+      allow="fullscreen; autoplay; xr-spatial-tracking"
+      referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </div>
+
+  <!-- Minimal copy-paste version:
+  <iframe src="https://hyeonsangjeon.github.io/Repolis/" width="960" height="540"
+          style="border:0" allow="fullscreen" loading="lazy"></iframe>
+  -->
+</body>
+</html>

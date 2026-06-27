@@ -8,8 +8,8 @@ cloudflare-taxi/.wrangler/
 # Local-only notes that record real keys/secrets (kept out of git on purpose)
 *.local.md
 # Internal design / agent-working docs — kept local, not published to the public repo
+# (AGENTS.md is intentionally NOT here — it's the public agent-onboarding spec.)
 CHRONOPOLIS_SPEC.md
 CLAUDE.md
-AGENTS.md
 __pycache__/
 *.pyc
