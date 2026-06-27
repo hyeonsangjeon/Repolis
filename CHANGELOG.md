@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.38.0] — 2026-06-30
+
+### 📚 Contribution Library is now data-driven (daily batch) + collapsible sources
+- **The library hall no longer hard-codes its catalogue.** The contribution list used to live as a giant `LIBDATA` array inside `index.html`, hand-synced from the `Hyeonsang-AI-Contributions` README. It's now generated once a day by `scripts/build-contribution-library.mjs` (parses the KO + EN markdown) into a static `assets/contribution-library.json`, which `index.html` fetches at runtime and renders per language. A new GitHub Action (`update-contribution-library.yml`) rebuilds the JSON daily and commits only when it changes. If the JSON ever fails to load, the library modal shows a compact fallback ("couldn't load the list — browse on GitHub") and the landmark still opens.
+- **Scholar source references collapse by default again.** The always-visible "📚 참고한 문서 · N / Sources · N" card (1.37.0) turned out to be too tall on mobile, so it's now a collapsed-by-default `<details>` accordion — tap the header to reveal the sources. The no-source / general-knowledge note stays visible as before, and opening links + the 📋 copy button work exactly as before once expanded.
+- Verified locally (desktop + 390px mobile): KO 8 categories / 68 entries and EN 8 / 67 render from the JSON, language toggle rebuilds, a missing JSON degrades to the fallback with **0 JS errors**, the sources accordion is collapsed by default and expands on tap with working links/copy, no horizontal overflow, council tests 130 + 56 green.
+
 ## [1.37.0] — 2026-06-30
 
 ### 📚 Scholar references back, front-and-center (mobile-tappable sources)

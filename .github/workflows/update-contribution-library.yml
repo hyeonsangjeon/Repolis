@@ -1,0 +1,55 @@
+name: Update contribution library
+
+on:
+  schedule:
+    - cron: "37 18 * * *" # daily ~03:37 KST, after the traffic refresh
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-contribution-library
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repolis
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build contribution-library.json
+        env:
+          # The sibling repo is not checked out in CI, so read the markdown from
+          # the public raw URLs (no token required for a public repo).
+          LIB_KO_SRC: https://raw.githubusercontent.com/hyeonsangjeon/Hyeonsang-AI-Contributions/main/README.md
+          LIB_EN_SRC: https://raw.githubusercontent.com/hyeonsangjeon/Hyeonsang-AI-Contributions/main/README-EN.md
+        run: node scripts/build-contribution-library.mjs
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/contribution-library.json
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "chore: refresh contribution library ($(date -u +%F))"
+            # Rebase-and-retry so an overlapping run (manual + scheduled, or the
+            # traffic refresh) never loses a push.
+            for i in 1 2 3 4 5; do
+              if git push; then echo "pushed"; exit 0; fi
+              echo "push rejected (attempt $i) — rebasing on latest main"
+              git pull --rebase --autostash origin main
+            done
+            echo "push failed after retries" >&2
+            exit 1
+          fi
