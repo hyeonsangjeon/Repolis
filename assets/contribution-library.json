@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T13:19:26.573Z",
+  "generatedAt": "2026-06-27T18:57:27.740Z",
   "source": {
     "ko": "https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions/blob/main/README.md",
     "en": "https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions/blob/main/README-EN.md"
@@ -90,11 +90,6 @@
             "title": "감성문장과 뉴스 학습모델을 기반한 주가 예측의 가능성 연구 후기 (Feat. BERT model)",
             "meta": "SK AX 사내 기술 컨퍼런스, SK holdings C&C, 2020.",
             "url": "https://youtu.be/kSZOsFX_KHI?si=6F5TqHFOfquvw4OC"
-          },
-          {
-            "title": "한국어 ASR 벤치마크 다시 보기: 3,922문장과 3개 콜센터 시나리오로 다시 본 한국어 STT 벤치마크",
-            "meta": "2023 공개 실험 재분석 및 작업 회고, 2023.",
-            "url": "https://hyeonsangjeon.github.io/job-transcribe/"
           }
         ]
       },
@@ -482,11 +477,6 @@
             "title": "A Study on the Possibility of Stock Price Prediction Based on Sentiment Analysis and News Classification Models (Feat. BERT Model),",
             "meta": "SK AX Internal Technology Conference, SK Holdings C&C, 2020.",
             "url": "https://youtu.be/kSZOsFX_KHI?si=6F5TqHFOfquvw4OC"
-          },
-          {
-            "title": "Revisiting Korean ASR Benchmarks: 3,922 Sentences and Three Call-Center Scenarios",
-            "meta": "2023 public experiment revisit and work retrospective, 2023.",
-            "url": "https://hyeonsangjeon.github.io/job-transcribe/"
           }
         ]
       },
