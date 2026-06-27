@@ -481,6 +481,19 @@
   .msg .traceCopy:hover { background: #dde8f6; }
   .msg .traceCopy:active { background: #d2e0f2; }
   .msg .traceCopy.ok { background: #d8f0e2; color: #2f7d5b; }
+  .msg .refsBlock { margin-top: 8px; padding: 9px 11px; background: #eef4fb; border: 1px solid #dbe6f5;
+    border-radius: 11px; display: flex; flex-direction: column; gap: 6px; }
+  .msg .refsHead { font-size: 11px; font-weight: 800; color: #2f5d96; letter-spacing: .2px; }
+  .msg .refsHead .cnt { color: #7488a4; font-weight: 700; }
+  .msg .refsBlock .traceRef { background: #fff; color: #2f5d96; border: 1px solid #e1ecf8; }
+  .msg .refsBlock .traceRef:hover { background: #f5f9ff; }
+  .msg .refsBlock .traceRef:active { background: #eef4fd; }
+  .msg .refsBlock .traceRef code { background: #eaf1fb; color: #2f5d96; }
+  .msg .refsBlock .traceRef.noLink { background: transparent; border: none; color: #4a6a92; }
+  .msg .refsNote { margin-top: 8px; padding: 8px 11px; background: #f3ecdb; border-radius: 10px;
+    font-size: 11px; color: #6a5436; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .msg .refsNote code { background: #e0d5bb; padding: 1px 5px; border-radius: 5px; }
+  .msg .traceWrap > .trace { margin-top: 7px; }
   .msg.typing { color: #b29a78; font-style: italic; }
   .chatIn { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #f0e2c6; }
   .chatIn input { flex: 1; border: 1px solid #ecdcc4; background: #fffdf8; border-radius: 12px;
@@ -970,6 +983,7 @@ const I18N = {
     traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceRefs:'참조',
     traceCopy:'링크 복사', traceCopied:'복사됨', traceOpen:'열기',
     traceGenTitle:'✦ 어떻게 답했나', traceGeneral:'별빛에 깃든 일반 지식에서 답했어요',
+    refsTitle:'📚 참고한 문서', refsNone:'참고 문서 없음 · 일반 지식으로 답했어요',
     npcTaxi:'택시기사', npcEng:'MS Docs 엔지니어', engTitle:'📘 MS Docs 엔지니어',
     engThanks:'도움이 됐다니 기뻐요! 📘 더 궁금한 게 있으면 물어보세요.', engBye:'또 궁금한 게 생기면 찾아오세요! 📘', engHow:'저야 늘 문서 읽느라 바쁘죠 😄 어떤 Microsoft 기술이 궁금하세요?', engWho:'저는 <b>MS Docs 엔지니어</b>예요 📘 Microsoft Learn 공식 문서에서 답을 찾아드려요. 무엇이 궁금하세요?', engHelp:'Azure·.NET·Copilot 같은 Microsoft 기술을 물어보세요 📘 <b>공식 문서</b>에서 실시간으로 찾아드려요. 예: “Azure AI Foundry 에이전트”', engNice:'감사해요! 😊 더 찾아드릴 게 있을까요?',
     engGreet:'안녕하세요! 📘 저는 <b>Microsoft Docs 엔지니어</b>예요. Azure·.NET·Copilot 같은 <b>Microsoft Learn 공식 문서</b>를 실시간으로 찾아드려요. 무엇이 궁금하세요? 예: <b>Azure AI Foundry 에이전트</b>, <b>Azure AI Search</b>',
@@ -1100,6 +1114,7 @@ const I18N = {
     traceTitle:'🔎 How I found this', traceKs:'Knowledge source', traceTool:'MCP tool', traceRefs:'References',
     traceCopy:'Copy link', traceCopied:'Copied', traceOpen:'Open',
     traceGenTitle:'✦ How I answered', traceGeneral:'Answered from general starlit knowledge',
+    refsTitle:'📚 Sources', refsNone:'No source docs · answered from general knowledge',
     npcTaxi:'Taxi driver', npcEng:'MS Docs Engineer', engTitle:'📘 MS Docs Engineer',
     engThanks:"Glad it helped! 📘 Ask me anything else.", engBye:"Come back whenever you have a question! 📘", engHow:"Always busy reading docs 😄 What Microsoft tech can I help with?", engWho:"I'm the <b>MS Docs engineer</b> 📘 I find answers in the official Microsoft Learn docs. What do you need?", engHelp:'Ask about Azure, .NET, Copilot and other Microsoft tech 📘 I search the <b>official docs</b> in real time. e.g. “Azure AI Foundry agent”', engNice:"Thank you! 😊 Anything else I can look up?",
     engGreet:"Hi! 📘 I'm the <b>Microsoft Docs engineer</b>. I search the <b>official Microsoft Learn docs</b> (Azure, .NET, Copilot…) in real time. What do you need? e.g. <b>Azure AI Foundry agent</b>, <b>Azure AI Search</b>",
@@ -4273,35 +4288,41 @@ function addMsg(who,html,opts){
   return m;
 }
 function buildTracePanel(tr){
-  const d=document.createElement('details'); d.className='trace';
-  const s=document.createElement('summary'); d.appendChild(s);
-  const body=document.createElement('div'); body.className='traceBody';
-  if(tr.general){
-    s.textContent=t('traceGenTitle');
-    const g=document.createElement('div');
-    g.innerHTML='<b>'+t('traceGeneral')+'</b>'+(tr.model?(' · <code>'+String(tr.model).replace(/</g,'&lt;')+'</code>'):'');
-    body.appendChild(g); d.appendChild(body); return d;
+  const wrap=document.createElement('div'); wrap.className='traceWrap';
+  const refs=(tr.refs||[]).filter(r=>r&&(r.name||r.url));
+  // General / no-source answer → a clear, always-visible note (never hidden in a fold).
+  if(tr.general || !refs.length){
+    const note=document.createElement('div'); note.className='refsNote';
+    note.innerHTML='<b>'+t('refsNone')+'</b>'+(tr.model?(' · <code>'+esc(tr.model)+'</code>'):'');
+    wrap.appendChild(note); return wrap;
   }
-  s.textContent=t('traceTitle');
-  const ks=document.createElement('div'); ks.innerHTML='<b>'+t('traceKs')+':</b> '+(tr.ks||'-');
+  // Grounded answer → references shown up-front, always visible (mobile-friendly).
+  const block=document.createElement('div'); block.className='refsBlock';
+  const head=document.createElement('div'); head.className='refsHead';
+  head.innerHTML=t('refsTitle')+' <span class="cnt">· '+refs.length+'</span>';
+  block.appendChild(head);
+  const rl=document.createElement('div'); rl.className='traceRefs';
+  refs.forEach(r=>{ const href=safeHref(r.url);
+    const label='<code>'+esc(r.name||r.url)+'</code>'+(r.stars!=null?(' ★'+r.stars):'')+(r.lang?(' · '+esc(r.lang)):'');
+    const row=document.createElement('div'); row.className='traceRefRow';
+    if(href){ const a=document.createElement('a'); a.className='traceRef'; a.href=href; a.target='_blank'; a.rel='noopener noreferrer';
+        a.innerHTML=label+'<span class="extlink" aria-hidden="true">↗</span>';
+        const cp=document.createElement('button'); cp.type='button'; cp.className='traceCopy'; cp.textContent='📋';
+        cp.title=t('traceCopy'); cp.setAttribute('aria-label',t('traceCopy'));
+        cp.onclick=ev=>{ ev.preventDefault(); ev.stopPropagation(); copyLink(href,cp); };
+        row.appendChild(a); row.appendChild(cp);
+    } else { const span=document.createElement('span'); span.className='traceRef noLink'; span.innerHTML=label; row.appendChild(span); }
+    rl.appendChild(row); });
+  block.appendChild(rl); wrap.appendChild(block);
+  // Secondary: the technical "how I found this" meta stays in a collapsible fold.
+  const d=document.createElement('details'); d.className='trace';
+  const s=document.createElement('summary'); s.textContent=t('traceTitle'); d.appendChild(s);
+  const body=document.createElement('div'); body.className='traceBody';
+  const ks=document.createElement('div'); ks.innerHTML='<b>'+t('traceKs')+':</b> '+esc(tr.ks||'-');
   const tool=document.createElement('div');
-  tool.innerHTML='<b>'+t('traceTool')+':</b> '+((tr.tools||[]).join(', ')||'-')+(tr.partial?' ⚠️':'')+(tr.mcpMs?(' · '+tr.mcpMs+'ms'):'');
-  body.appendChild(ks); body.appendChild(tool);
-  if(tr.refs&&tr.refs.length){ const rl=document.createElement('div'); rl.className='traceRefs';
-    rl.innerHTML='<b>'+t('traceRefs')+':</b>';
-    tr.refs.forEach(r=>{ const href=safeHref(r.url);
-      const label='<code>'+esc(r.name)+'</code>'+(r.stars!=null?(' ★'+r.stars):'')+(r.lang?(' · '+esc(r.lang)):'');
-      const row=document.createElement('div'); row.className='traceRefRow';
-      if(href){ const a=document.createElement('a'); a.className='traceRef'; a.href=href; a.target='_blank'; a.rel='noopener noreferrer';
-          a.innerHTML=label+'<span class="extlink" aria-hidden="true">↗</span>';
-          const cp=document.createElement('button'); cp.type='button'; cp.className='traceCopy'; cp.textContent='📋';
-          cp.title=t('traceCopy'); cp.setAttribute('aria-label',t('traceCopy'));
-          cp.onclick=ev=>{ ev.preventDefault(); ev.stopPropagation(); copyLink(href,cp); };
-          row.appendChild(a); row.appendChild(cp);
-      } else { const span=document.createElement('span'); span.className='traceRef noLink'; span.innerHTML=label; row.appendChild(span); }
-      rl.appendChild(row); });
-    body.appendChild(rl); }
-  d.appendChild(body); return d;
+  tool.innerHTML='<b>'+t('traceTool')+':</b> '+esc((tr.tools||[]).join(', ')||'-')+(tr.partial?' ⚠️':'')+(tr.mcpMs?(' · '+tr.mcpMs+'ms'):'');
+  body.appendChild(ks); body.appendChild(tool); d.appendChild(body); wrap.appendChild(d);
+  return wrap;
 }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 /* only allow http/https refs to become clickable — blocks javascript:/data: and other XSS vectors */

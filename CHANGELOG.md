@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.37.0] — 2026-06-30
+
+### 📚 Scholar references back, front-and-center (mobile-tappable sources)
+- **The MS Docs engineer (and every scholar) shows its sources again — and they're no longer buried.** References used to render *inside* a collapsed "어떻게 찾았나 / How I found this" fold, so on mobile you'd see only the answer and have to tap to discover there were any sources at all. They're now lifted into an **always-visible "📚 참고한 문서 · N" card** above the answer's technical fold. Each source is a real tappable `learn.microsoft.com` link (`↗`) with a 📋 copy button; only `http/https` URLs become clickable (`javascript:`/`data:` are blocked as plain text). The collapsible fold now holds just the knowledge-source / tool / latency meta.
+- **No more lost grounding.** The grounding Worker previously discarded genuinely-retrieved docs whenever the synthesized answer *hedged* (a broad "couldn't find it" regex would trigger an unsourced general-knowledge fallback even though Microsoft Learn had returned 6 relevant docs). It now falls back to general knowledge **only when the KB truly returns zero documents** — so real sources are always surfaced. When there genuinely are no sources, a clear visible note reads "참고 문서 없음 · 일반 지식으로 답했어요 · `<model>`".
+- Verified end-to-end against the production Worker (mobile 390px): "Azure ai" / "Azure AI Foundry" / "Fabric ontology" each return `docs:true` with 6 live MS Learn links rendered as a visible, tappable, copyable card **without tapping the fold**; the technical fold stays collapsed by default; **0 console errors**. KO/EN both wired.
+
 ## [1.36.0] — 2026-06-30
 
 ### 🚉 Shareable GitHub towns — "take the train" to anyone's public repos

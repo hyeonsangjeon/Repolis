@@ -728,9 +728,10 @@ export default {
 
     // Scholar (e.g. VEGA / MS Docs) → synthesized answer in the user's language + doc links.
     const docs = parseDocs(out.data.references);
-    // KB found nothing relevant (no refs, or a "couldn't find it" answer) → the scholar still
-    // answers the general question from the model's own knowledge, in character & in language.
-    if (!docs.length || isNotFound(out.answer)) {
+    // Only fall back to general knowledge when the KB genuinely returned NO documents. If docs
+    // exist we always surface them as references — even when the synthesized answer hedges —
+    // so the user sees the sources they asked for instead of an unsourced "general" reply.
+    if (!docs.length) {
       const g = await chatLLM(who, history, question, lang, env);
       if (g) return json({
         repo: null, message: g, general: true,
