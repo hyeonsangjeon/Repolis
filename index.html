@@ -491,10 +491,10 @@
   .msg .traceCopy:hover { background: #dde8f6; }
   .msg .traceCopy:active { background: #d2e0f2; }
   .msg .traceCopy.ok { background: #d8f0e2; color: #2f7d5b; }
-  .msg .refsBlock { margin-top: 8px; padding: 9px 11px; background: #eef4fb; border: 1px solid #dbe6f5;
+  .msg .refsBlock { margin-top: 8px; padding: 5px 11px; background: #eef4fb; border: 1px solid #dbe6f5;
     border-radius: 11px; }
   .msg summary.refsHead { font-size: 11px; font-weight: 800; color: #2f5d96; letter-spacing: .2px;
-    cursor: pointer; list-style: none; user-select: none; display: flex; align-items: center; min-height: 22px; }
+    cursor: pointer; list-style: none; user-select: none; display: flex; align-items: center; min-height: 32px; }
   .msg summary.refsHead::-webkit-details-marker { display: none; }
   .msg summary.refsHead::before { content: '▸'; margin-right: 5px; font-size: 9px; opacity: .7; }
   .msg .refsBlock[open] summary.refsHead::before { content: '▾'; }
@@ -550,7 +550,7 @@
   <div class="badge" id="townLabel" style="display:none;font-weight:700;"></div>
   <button id="stationBtn" class="badge" title="Travel to another GitHub town" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;" data-i18n="stationBtn">🚉 역</button>
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
-  <button id="dayBtn" class="badge" title="day / night" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
+  <button id="dayBtn" class="badge" title="Time of day" aria-label="Time of day" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
   <div class="badge"><span data-i18n="visited">방문</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
   <button id="passBtn" class="badge" title="Explorer Passport" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🛂 <span data-i18n="passport">여권</span></button>
   <div class="badge" id="liveBadge" title="online now · today · all-time unique visitors">🟢 <b id="liveCount">1</b><span id="todayWrap" style="display:none;"> · <span data-i18n="todayWord">오늘</span> <b id="todayCount">0</b></span><span id="allWrap" style="display:none;"> · <span data-i18n="totalWord">누적</span> <b id="allCount">0</b></span></div>
@@ -708,7 +708,7 @@
 
 <div id="drivebar"><span data-i18n="drivePre">🚕 </span><span id="driveName"></span><span data-i18n="drivePost"> (으)로 가는 중…</span> <span class="cancel" id="driveCancel"><span class="fill"></span><span class="lbl" data-i18n="stop">멈추기</span></span></div>
 
-<button id="taxiBtn">🚕<span class="pulse"></span></button>
+<button id="taxiBtn" title="Ask the taxi" aria-label="Ask the taxi">🚕<span class="pulse"></span></button>
 <button id="emoteBtn" title="Emotes" aria-label="Emotes">😊</button>
 <div id="emoteBar" class="hidden" role="group" aria-label="Emotes">
   <button data-emote="wave" title="Wave" aria-label="Wave">👋</button>
@@ -871,15 +871,16 @@ let CHRONO_CFG=null;
 try { CHRONO_CFG = await fetch('council/council.config.json', { cache:'no-cache' }).then(r=>r.json()); }
 catch(e){ /* config optional */ }
 
-/* Contribution Library data (generated daily into assets/contribution-library.json). Fetched at
-   runtime so the list is not hard-coded; on failure the library modal shows a compact fallback. */
-let LIBJSON=null;          // { ko:{categories}, en:{categories}, … } or null on load failure
-let libLoadState='idle';   // 'idle' | 'ok' | 'error'
-try {
-  const lib = await fetch('assets/contribution-library.json', { cache:'no-cache' }).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
-  if(lib && (lib.ko || lib.en)){ LIBJSON=lib; libLoadState='ok'; }
-  else { libLoadState='error'; }
-} catch(e){ LIBJSON=null; libLoadState='error'; }
+/* Contribution Library data (generated daily into assets/contribution-library.json). Loaded in the
+   background (no await) so a slow fetch never blocks the city from booting — nothing during boot reads
+   LIBJSON; only the library modal does, when the user opens it (well after the intro gate). On failure
+   the library modal shows a compact fallback. */
+let LIBJSON=null;          // { ko:{categories}, en:{categories}, … } or null until/unless loaded
+let libLoadState='loading';// 'loading' | 'ok' | 'error'
+fetch('assets/contribution-library.json', { cache:'no-cache' })
+  .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(lib=>{ if(lib && (lib.ko || lib.en)){ LIBJSON=lib; libLoadState='ok'; } else { libLoadState='error'; } })
+  .catch(()=>{ LIBJSON=null; libLoadState='error'; });
 
 /* language → palette (wall / roof / accent) — Provençal village:
    warm ochre/cream/apricot/limestone walls · terracotta-tile roofs ·
@@ -4090,9 +4091,9 @@ function buildLibrary(){
   foot.innerHTML=`<a class="gh" href="${libRepoUrl()}" target="_blank" rel="noopener">${t('libRepoBtn')}</a>`
     +`<button class="close" id="libCloseB">${t('close')}</button>`;
   document.getElementById('libCloseB').onclick=closeLibrary;
-  libBuilt=true; libModal._lang=LANG;
+  libBuilt=true; libModal._lang=LANG; libModal._empty=!cats.length;   // _empty → rebuild on reopen once background data arrives
 }
-function openLibrary(){ if(!libBuilt||libModal._lang!==LANG) buildLibrary();
+function openLibrary(){ if(!libBuilt||libModal._lang!==LANG||libModal._empty) buildLibrary();
   modalOpen=true; libModal.classList.add('show'); document.getElementById('libBody').scrollTop=0; }
 function closeLibrary(){ modalOpen=false; libModal.classList.remove('show'); }
 document.getElementById('libClose').onclick=closeLibrary;

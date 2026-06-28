@@ -257,6 +257,15 @@ async function main() {
     en,
   };
 
+  // Deterministic w.r.t. content: if only the timestamp would change, keep the
+  // previous generatedAt so the daily "commit if changed" workflow doesn't churn
+  // a fresh commit every single day when no contribution actually changed.
+  try {
+    const prev = JSON.parse(await readFile(OUT_PATH, 'utf8'));
+    const sansTs = (o) => { const c = { ...o }; delete c.generatedAt; return JSON.stringify(c); };
+    if (sansTs(prev) === sansTs(data)) data.generatedAt = prev.generatedAt;
+  } catch { /* no readable previous output → keep the fresh timestamp */ }
+
   await mkdir(dirname(OUT_PATH), { recursive: true });
   await writeFile(OUT_PATH, JSON.stringify(data, null, 2) + '\n', 'utf8');
   console.log('Wrote ' + OUT_PATH);

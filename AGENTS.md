@@ -33,6 +33,7 @@ CDN import map (Three.js r0.160 via jsDelivr) and three local data/script files.
 | **`scholars.js`** | `window.SCHOLARS` roster (classic script, no build): POLARIS · VEGA · RIGEL. | Adding / editing an NPC scholar. |
 | **`scripts/build_repos.py`** | Rebuilds `repos.json` from `data/logs/*` traffic + `gh api`. | Refreshing the city data locally. |
 | **`.github/workflows/refresh.yml`** | "Refresh Repolis data" — daily Action that regenerates `repos.json` and pushes `chore: refresh`. | CI / data-refresh changes. |
+| **`scripts/build-contribution-library.mjs` + `assets/contribution-library.json`** | Generates the in-app **Contribution Library** JSON from the sibling `Hyeonsang-AI-Contributions` README (KO/EN); `index.html` fetches it at runtime. JSON is **generated — do not hand-edit.** Daily via `.github/workflows/update-contribution-library.yml`. | Changing the library landmark's data/source. |
 | **`cloudflare-taxi/`** | **The live AI backend** — Worker `repolis-taxi` (`src/grounded.js`): grounded repo/docs Q&A + in-persona chat. | Grounding / scholar answer logic. |
 | **`cloudflare/`** | Realtime presence Worker `repolis-rt` (multiplayer avatars + visitor counter). | Realtime/multiplayer changes. |
 | **`party/` + `partykit.json`** | PartyKit realtime server (alternative to `cloudflare/`). | Forks that prefer PartyKit. |
@@ -59,6 +60,9 @@ python3 -m http.server 8000
 # 2) Rebuild repos.json from the owner's repos + committed traffic logs (needs gh CLI, logged in)
 gh auth login
 GTM_DIR=data python3 scripts/build_repos.py     # regenerates repos.json (do not hand-edit)
+
+# 3) Rebuild the Contribution Library JSON from the sibling Hyeonsang-AI-Contributions README (KO/EN)
+node scripts/build-contribution-library.mjs     # regenerates assets/contribution-library.json (deterministic)
 ```
 
 `repos.json` is an **array**; each entry's shape (keys you can rely on):

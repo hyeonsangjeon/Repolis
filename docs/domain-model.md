@@ -107,7 +107,7 @@ summoned into the plaza and drawn in the night sky as their constellation.
 your question
   ├─▶ grounded path  — repo/docs question → KB retrieval via the scholar's MCP source
   │                     → answer synthesized by Azure AI Foundry gpt-5.4-mini, in your language,
-  │                       WITH references (📚 참고한 문서 / Sources, always-visible trace panel)
+  │                       WITH references (📚 참고한 문서 / Sources — a collapsible panel, default-collapsed)
   └─▶ starlit path    — off-topic / small-talk / KB miss → in-persona general chat (keyless Entra SP),
                         no repo pushed, marked "✦ how I answered · general knowledge"
 ```

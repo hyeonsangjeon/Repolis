@@ -38,6 +38,7 @@ entrypoints:
   app: index.html
   scholars: scholars.js
   data_builder: scripts/build_repos.py
+  library_builder: scripts/build-contribution-library.mjs   # → assets/contribution-library.json (generated, daily)
   grounding_worker: cloudflare-taxi/src/grounded.js
   realtime_worker: cloudflare/src
   council_engine: council/engine.js
