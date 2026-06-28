@@ -28,26 +28,79 @@ export class RepolisRoom {
     this.state = state;
     this.sql = state.storage.sql;
     this.sessions = new Map(); // ws -> peer
-    // One unique row per (guest, UTC-day). today = rows for today's date,
-    // total = distinct guests across all days. Idempotent on every startup.
-    this.sql.exec(
-      "CREATE TABLE IF NOT EXISTS seen (gid TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY (gid, day))"
-    );
+    this.ready = false;        // schema + counters initialised?
+    this.ensureSchema();       // guarded — never throws (storage may be over quota)
+  }
+
+  // Create the schema + rollup counter tables and, once, backfill them from any
+  // pre-existing `seen` history. Wrapped so a storage outage (e.g. the free-tier
+  // "rows read / day" limit being exhausted ANYWHERE on the account — it is a
+  // shared pool across all Durable Objects) cannot crash the room: realtime
+  // multiplayer and the in-memory live count keep working, and the persistent
+  // today/total counters simply resume once storage is writable again.
+  ensureSchema() {
+    if (this.ready) return true;
+    try {
+      // One unique row per (guest, UTC-day).
+      this.sql.exec("CREATE TABLE IF NOT EXISTS seen (gid TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY (gid, day))");
+      // O(1) rollups so the hot join path never scans `seen`:
+      //   daily_count.n = unique guests for that UTC-day; stat['total'] = distinct guests all-time.
+      this.sql.exec("CREATE TABLE IF NOT EXISTS daily_count (day TEXT PRIMARY KEY, n INTEGER NOT NULL)");
+      this.sql.exec("CREATE TABLE IF NOT EXISTS stat (k TEXT PRIMARY KEY, v INTEGER NOT NULL)");
+      this.backfillOnce();
+      this.ready = true;
+      return true;
+    } catch (e) {
+      return false; // storage unavailable — degrade gracefully, retry on the next call
+    }
+  }
+
+  // Seed the rollup counters from historical `seen` rows exactly once: the only
+  // remaining full scan, and only on the first healthy startup after this version
+  // ships (afterwards stat['total'] exists, so it is skipped forever).
+  backfillOnce() {
+    if (this.sql.exec("SELECT v FROM stat WHERE k = 'total' LIMIT 1").toArray().length) return;
+    if (!this.sql.exec("SELECT 1 FROM seen LIMIT 1").toArray().length) {
+      this.sql.exec("INSERT OR IGNORE INTO stat (k, v) VALUES ('total', 0)");
+      return;
+    }
+    const total = this.sql.exec("SELECT COUNT(DISTINCT gid) AS n FROM seen").one().n;
+    this.sql.exec("INSERT OR REPLACE INTO stat (k, v) VALUES ('total', ?)", total);
+    for (const r of this.sql.exec("SELECT day, COUNT(*) AS n FROM seen GROUP BY day").toArray())
+      this.sql.exec("INSERT OR REPLACE INTO daily_count (day, n) VALUES (?, ?)", r.day, r.n);
   }
 
   today() {
     return new Date().toISOString().slice(0, 10); // UTC day
   }
 
-  // Record this guest for today + all-time, then return both counts.
+  // Record this guest for today + all-time, then return both counts. O(1): a few
+  // single-row indexed lookups instead of scanning `seen` on every join. The old
+  // `SELECT COUNT(DISTINCT gid) FROM seen` ran a FULL table scan per connection,
+  // which (as the table grew + reconnects accumulated) exhausted the free-tier
+  // rows-read budget and took the room — and the live counter — offline. Returns
+  // null counts when storage is unavailable so the caller can still serve presence.
   counts(gid) {
-    const day = this.today();
-    if (gid) {
-      this.sql.exec("INSERT OR IGNORE INTO seen (gid, day) VALUES (?, ?)", gid, day);
+    if (!this.ensureSchema()) return { today: null, total: null };
+    try {
+      const day = this.today();
+      if (gid) {
+        const seenToday = this.sql.exec("SELECT 1 FROM seen WHERE gid = ? AND day = ? LIMIT 1", gid, day).toArray().length;
+        if (!seenToday) {
+          this.sql.exec("INSERT OR IGNORE INTO seen (gid, day) VALUES (?, ?)", gid, day);
+          this.sql.exec("INSERT INTO daily_count (day, n) VALUES (?, 1) ON CONFLICT(day) DO UPDATE SET n = n + 1", day);
+          // Brand-new guest ever? PK index seeks straight to this gid's rows (0-few), not a scan.
+          const seenEver = this.sql.exec("SELECT 1 FROM seen WHERE gid = ? AND day <> ? LIMIT 1", gid, day).toArray().length;
+          if (!seenEver)
+            this.sql.exec("INSERT INTO stat (k, v) VALUES ('total', 1) ON CONFLICT(k) DO UPDATE SET v = v + 1");
+        }
+      }
+      const today = (this.sql.exec("SELECT n FROM daily_count WHERE day = ?", day).toArray()[0] || {}).n;
+      const total = (this.sql.exec("SELECT v FROM stat WHERE k = 'total'").toArray()[0] || {}).v;
+      return { today: Number(today) || 0, total: Number(total) || 0 };
+    } catch (e) {
+      return { today: null, total: null };
     }
-    const today = this.sql.exec("SELECT COUNT(*) AS n FROM seen WHERE day = ?", day).one().n;
-    const total = this.sql.exec("SELECT COUNT(DISTINCT gid) AS n FROM seen").one().n;
-    return { today, total };
   }
 
   fetch(req) {
@@ -77,9 +130,12 @@ export class RepolisRoom {
         this.sessions.set(ws, peer);
         const { today, total } = this.counts(peer.id);
         const live = this.sessions.size;
+        const stats = { live };
+        if (today != null) stats.today = today;   // omitted while storage is over quota
+        if (total != null) stats.total = total;   // → client keeps its last shown value
         const others = [...this.sessions.values()].filter((p) => p !== peer);
-        ws.send(JSON.stringify({ t: "welcome", peers: others, live, today, total }));
-        this.broadcast({ t: "join", peer, live, today, total }, ws);
+        ws.send(JSON.stringify({ t: "welcome", peers: others, ...stats }));
+        this.broadcast({ t: "join", peer, ...stats }, ws);
       } else if (m.t === "pos") {
         const p = this.sessions.get(ws);
         if (!p) return;
