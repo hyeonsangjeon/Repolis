@@ -97,8 +97,13 @@
     box-shadow: 0 12px 40px rgba(70,40,15,.28); padding: 16px; transform-origin: top right;
     transition: opacity .18s ease, transform .18s ease; }
   #station.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
-  #station h3 { font-size: 13px; letter-spacing: .03em; color: #9a6e1e; padding: 2px 2px 4px;
+  #station h3 { font-size: 13px; letter-spacing: .03em; color: #9a6e1e; padding: 2px 34px 4px 2px;
     display: flex; align-items: center; gap: 6px; }
+  #station .sclose { position: absolute; top: 11px; right: 11px; width: 30px; height: 30px; padding: 0;
+    border: none; border-radius: 999px; background: #f0e3cc; color: #9a6e1e; font-size: 14px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s ease; }
+  #station .sclose:hover { background: #e7d6b6; }
+  #station .sclose:active { transform: translateY(1px); }
   #station .ssub { font-size: 11.5px; color: #ab8a66; padding: 0 2px 10px; line-height: 1.45; }
   #station .scur { font-size: 11px; color: #8a6f4e; padding: 0 2px 9px; }
   #station .scur b { color: #4a2f1e; }
@@ -525,6 +530,7 @@
     .chatIn input, #repoSearch { font-size: 16px; }
     #station #stationInput { font-size: 16px; }
     #station #stationGo { min-height: 44px; }
+    #station .sclose { width: 36px; height: 36px; font-size: 15px; }
     #stationBtn { min-height: 44px; display: inline-flex; align-items: center; }
     #station .squick button { min-height: 36px; }
     .chatIn button { min-width: 48px; min-height: 44px; }
@@ -569,6 +575,7 @@
 </div>
 
 <div id="station" class="hidden">
+  <button class="sclose" id="stationClose" type="button" aria-label="닫기">✕</button>
   <h3>🚉 <span data-i18n="stationTitle">다른 GitHub 마을로 이동</span></h3>
   <div class="ssub" data-i18n="stationSub">GitHub username을 입력하면 그 사람의 공개 레포 마을로 기차가 데려다줘요.</div>
   <div class="scur"><span data-i18n="stationCurrent">현재 마을</span>: <b id="stationCurName">—</b></div>
@@ -3760,7 +3767,7 @@ addEventListener('keydown',e=>{ if(isTyping()) return; keys[e.code]=true;
   if(e.code==='Space') e.preventDefault();
   if(e.code==='Enter'&&!modalOpen){ doAct(); }
   if(e.code==='Escape'){ closeCard(); closeChat(); } });
-addEventListener('keyup',e=>{ if(isTyping()) return; keys[e.code]=false; });
+addEventListener('keyup',e=>{ keys[e.code]=false; });   /* always clear — never let a key stick when focus jumps to an input mid-press */
 
 let camYaw=Math.PI, camPitch=0.42, camDist=13, dragging=false, dragBtn=0, px=0, py=0, dragMoved=false, freeLook=false;
 const dom=renderer.domElement;
@@ -4040,7 +4047,10 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
     +(relId?`<button class="btn chrono" id="relChronoBtn">${t('chronoRelated')}</button>`:'')
     +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
   document.getElementById('closeBtn').onclick=closeCard;
-  if(relId){ document.getElementById('relChronoBtn').onclick=()=>{ closeCard(); openChrono(relId); }; }
+  if(relId){ document.getElementById('relChronoBtn').onclick=()=>{ closeCard();
+    const cd=(typeof lmCourseDest==='function')?lmCourseDest('chrono'):null;
+    if(cd && typeof taxiTo==='function'){ cd._chronoPreset=relId; taxiTo(cd); return; }
+    openChrono(relId); }; }
   const ghBtn=act.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>track('github_click',{repo:repo.repo});
   const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
   track('repo_card_open',{repo:repo.repo});
@@ -4131,6 +4141,7 @@ document.getElementById('loading').style.display='none';
   const homeWrap=document.getElementById('stationHome');
   const shareBtn=document.getElementById('shareBtn');
   const curName=document.getElementById('stationCurName');
+  const stationClose=document.getElementById('stationClose');
   const EXAMPLES=['mrdoob','torvalds','karpathy','vercel','sindresorhus'];
   const baseUrl=()=>location.origin+location.pathname;
   const townName=()=> cityMode==='public' ? tf('townOf',{user:currentUser}) : t('myCity');
@@ -4156,9 +4167,11 @@ document.getElementById('loading').style.display='none';
     if(cityMode==='public'){ homeWrap.style.display='block'; homeWrap.innerHTML='<button id="goHomeBtn"></button>'; const hb=document.getElementById('goHomeBtn'); hb.textContent=tf('stationHome',{user:OWNER}); hb.onclick=goHome; }
     else homeWrap.style.display='none';
     shareBtn.textContent=t('copyLink'); shareBtn.classList.remove('ok');
+    if(stationClose) stationClose.setAttribute('aria-label', t('close'));
   }
   function openStation(){ panel.classList.add('hidden'); passportEl.classList.add('hidden'); stationEl.classList.remove('hidden'); renderStation(); track('station_open'); setTimeout(()=>{ try{ inp.focus(); }catch(e){} },80); }
   function closeStation(){ stationEl.classList.add('hidden'); }
+  if(stationClose) stationClose.onclick=closeStation;
   openStationModal=openStation;   // let the spatial station prop (walk-up) open the same ticket office
   if(stationBtn) stationBtn.onclick=()=>{ if(stationEl.classList.contains('hidden')) openStation(); else closeStation(); };
   document.getElementById('menuBtn').addEventListener('click',closeStation);
@@ -4731,7 +4744,7 @@ function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visib
   if(repo._landmark){
     const k=repo._landmark, key='lmArrive'+k.charAt(0).toUpperCase()+k.slice(1);
     addMsg('bot', t(key)||(LANG==='ko'?`🚕 <b>${repo.label}</b>에 도착했어요!`:`🚕 We've arrived at <b>${repo.label}</b>!`), {noHist:true});
-    if(k==='chrono') setTimeout(()=>{ try{ openChrono(); }catch(e){} }, 700);
+    if(k==='chrono') setTimeout(()=>{ try{ openChrono(repo._chronoPreset||undefined); }catch(e){} }, 700);
     if(k==='obs') setTimeout(()=>{ try{ openObservatory(); }catch(e){} }, 700);
     return;
   }

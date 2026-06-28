@@ -26,9 +26,25 @@
 export class RepolisRoom {
   constructor(state, env) {
     this.state = state;
+    this.env = env;
     this.sql = state.storage.sql;
     this.sessions = new Map(); // ws -> peer
     this.ready = false;        // schema + counters initialised?
+    // Kill switch: a monthly cap on NEW connections so a traffic spike or abuse
+    // can never push the bill past the included Workers Paid allowance. Tunable
+    // from wrangler.toml / the dashboard via REPOLIS_MONTHLY_CAP ("0" disables it).
+    this.cap = Math.max(0, parseInt((env && env.REPOLIS_MONTHLY_CAP) || "", 10) || 5000000);
+    this.reqMonth = this.monthKey();
+    this.reqCount = 0;
+    this.reqDirty = 0;
+    try {
+      this.state.blockConcurrencyWhile(async () => {
+        try {
+          const saved = await this.state.storage.get("reqCount:" + this.reqMonth);
+          if (typeof saved === "number") this.reqCount = saved;
+        } catch (e) { /* storage unavailable — start from 0, cap still enforced in memory */ }
+      });
+    } catch (e) { /* ignore */ }
     this.ensureSchema();       // guarded — never throws (storage may be over quota)
   }
 
@@ -74,6 +90,38 @@ export class RepolisRoom {
     return new Date().toISOString().slice(0, 10); // UTC day
   }
 
+  monthKey() {
+    return new Date().toISOString().slice(0, 7); // YYYY-MM (UTC)
+  }
+
+  // Snapshot of the monthly counter for the /__usage monitor endpoint.
+  usage() {
+    const m = this.monthKey();
+    if (m !== this.reqMonth) { this.reqMonth = m; this.reqCount = 0; this.reqDirty = 0; }
+    return {
+      month: this.reqMonth,
+      count: this.reqCount,
+      cap: this.cap,
+      pct: this.cap ? +((this.reqCount / this.cap) * 100).toFixed(2) : 0,
+      live: this.sessions.size,
+    };
+  }
+
+  // Count one new connection. Returns false once the monthly cap is reached so the
+  // caller can refuse cheaply. O(1): an in-memory counter flushed to storage only
+  // every 500 hits (one row write per 500); the month key resets it for free.
+  allow() {
+    const m = this.monthKey();
+    if (m !== this.reqMonth) { this.reqMonth = m; this.reqCount = 0; this.reqDirty = 0; }
+    if (this.cap && this.reqCount >= this.cap) return false;
+    this.reqCount++;
+    if (++this.reqDirty >= 500) {
+      this.reqDirty = 0;
+      try { this.state.storage.put("reqCount:" + this.reqMonth, this.reqCount); } catch (e) { /* best-effort */ }
+    }
+    return true;
+  }
+
   // Record this guest for today + all-time, then return both counts. O(1): a few
   // single-row indexed lookups instead of scanning `seen` on every join. The old
   // `SELECT COUNT(DISTINCT gid) FROM seen` ran a FULL table scan per connection,
@@ -104,8 +152,19 @@ export class RepolisRoom {
   }
 
   fetch(req) {
+    const url = new URL(req.url);
+    // Lightweight usage monitor — no socket, no table scan. Check spend headroom:
+    //   curl https://repolis-rt.<sub>.workers.dev/__usage
+    if (url.pathname.endsWith("/__usage")) {
+      return new Response(JSON.stringify(this.usage()), { headers: { "content-type": "application/json" } });
+    }
     if (req.headers.get("Upgrade") !== "websocket") {
       return new Response("Repolis realtime OK", { status: 200 });
+    }
+    // Kill switch: once the monthly cap is hit, refuse new sockets cheaply. Already
+    // open sockets keep working; presence/counters are unaffected.
+    if (!this.allow()) {
+      return new Response("Repolis realtime paused — monthly safety cap reached.", { status: 503 });
     }
     const pair = new WebSocketPair();
     const client = pair[0];
@@ -174,11 +233,14 @@ export class RepolisRoom {
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    if (req.headers.get("Upgrade") !== "websocket") {
+    const isWS = req.headers.get("Upgrade") === "websocket";
+    const isUsage = url.pathname.endsWith("/__usage");
+    if (!isWS && !isUsage) {
       return new Response("Repolis realtime server — connect over WebSocket.", { status: 200 });
     }
     // Everyone shares one room; the last path segment names it (default "world").
-    const room = url.pathname.split("/").filter(Boolean).pop() || "world";
+    // /__usage always reports the shared "world" room.
+    const room = isUsage ? "world" : (url.pathname.split("/").filter(Boolean).pop() || "world");
     const id = env.REPOLIS_ROOM.idFromName(room);
     return env.REPOLIS_ROOM.get(id).fetch(req);
   },

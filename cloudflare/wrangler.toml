@@ -5,6 +5,13 @@ compatibility_date = "2025-04-01"
 # workers.dev gives a free public URL: https://repolis-rt.<your-subdomain>.workers.dev
 workers_dev = true
 
+# Kill switch: monthly cap on NEW realtime connections. Once reached, the worker
+# refuses new sockets with a cheap 503 so the bill can never exceed the included
+# Workers Paid allowance. Tune here (string int) or set "0" to disable. Monitor at
+# https://repolis-rt.<your-subdomain>.workers.dev/__usage
+[vars]
+REPOLIS_MONTHLY_CAP = "5000000"
+
 [[durable_objects.bindings]]
 name = "REPOLIS_ROOM"
 class_name = "RepolisRoom"
