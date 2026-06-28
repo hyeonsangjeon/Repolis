@@ -224,9 +224,10 @@
   #tourCap .tcSkip{ flex:0 0 auto; background:#2b2440; color:#cdbff0; border:1px solid #6b4fb0; border-radius:11px;
     padding:8px 11px; font-size:13px; cursor:pointer; min-height:40px; white-space:nowrap; }
   @keyframes tourPop{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
-  #introTour{ margin-top:11px; background:transparent; color:#c9b8f2; border:1px solid #7a5fc0; border-radius:12px;
-    padding:11px 18px; font-size:15px; cursor:pointer; transition:background .15s,color .15s; }
-  #introTour:hover{ background:#6b4fb0; color:#fff; }
+  #introTour{ margin-top:11px; background:rgba(255,255,255,.30); color:#7a3f12; border:2px solid rgba(255,255,255,.92);
+    border-radius:12px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 14px rgba(60,30,10,.18); transition:background .15s,color .15s,border-color .15s; }
+  #introTour:hover{ background:#fff; color:#c2702f; border-color:#fff; }
   .card .hero { width: 100%; aspect-ratio: 2 / 1; height: auto; max-height: 230px; object-fit: cover; display: block;
     background: linear-gradient(135deg,#efe6d3,#e2d4bb); }
   .card .sociallabel { position: absolute; top: 12px; left: 12px; z-index: 3; display: none;
@@ -537,6 +538,7 @@
     .msg .ride { min-height: 38px; }
     .msg .alt { display: inline-flex; align-items: center; min-height: 32px; }
     #intro .langsel button { min-height: 44px; padding: 10px 22px; }
+    #introTour { min-height: 48px; }
     .chronoRecapBtn { min-height: 44px; }
   }
 </style>
