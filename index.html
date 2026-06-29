@@ -3765,16 +3765,22 @@ let navTarget=null;
 
 /* ====================== CONTROLS ====================== */
 const keys={};
+const MOVE=new Set(['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space']);
+const clearKeys=()=>{ for(const k in keys) keys[k]=false; };   /* drop every held key — stops walking instantly when focus/keyup is lost */
 const isTyping=()=>{ const a=document.activeElement; return a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
-addEventListener('keydown',e=>{ if(isTyping()) return; keys[e.code]=true;
+addEventListener('keydown',e=>{ if(isTyping()) return;
+  if(!e.repeat && MOVE.has(e.code) && keys[e.code]){ keys[e.code]=false; if(e.code==='Space') e.preventDefault(); return; }  /* stuck key: a real second press of an already-down move key = stop walking */
+  keys[e.code]=true;
   if(e.code==='Space') e.preventDefault();
   if(e.code==='Enter'&&!modalOpen){ doAct(); }
   if(e.code==='Escape'){ closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ keys[e.code]=false; });   /* always clear — never let a key stick when focus jumps to an input mid-press */
+addEventListener('blur',clearKeys); window.addEventListener('pagehide',clearKeys);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) clearKeys(); });   /* tab/alt-tab away mid-press → don't keep walking */
 
 let camYaw=Math.PI, camPitch=0.42, camDist=13, dragging=false, dragBtn=0, px=0, py=0, dragMoved=false, freeLook=false;
 const dom=renderer.domElement;
-addEventListener('contextmenu',e=>e.preventDefault(),true);          // WoW: suppress the browser right-click menu globally (capture phase, any target — canvas, HUD, overlays)
+addEventListener('contextmenu',e=>{ e.preventDefault(); clearKeys(); },true);   // WoW: suppress browser right-click menu globally (capture phase, any target). Also drop held keys so a misfired right-click never leaves you walking.
 dom.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch') return; if(e.button!==0&&e.button!==2) return;
   dragging=true; dragBtn=e.button; dragMoved=false; px=e.clientX; py=e.clientY;
   if(e.button===2) e.preventDefault();
