@@ -2130,6 +2130,7 @@ function makePavilion(px,pz){
 /* ---- 🌸 Colmar village charms: flower carts, market stalls, a stone well, rose arches, wine barrels, planters, guild lanterns + a Petite-Venise canal & flower bridge ---- */
 const EXTRA_COLLIDERS=[];   // big props get a soft collider (merged into COLLIDERS after the building pass)
 const CANAL_PTS=[];         // ⛵ Petite-Venise canal centres (auto-collected) → Explorer Passport "canal" stamp proximity
+let RIVER_LANDMARK=null;    // 🌊 grand stream's taxi/landmark arrival point (a dry spot on the town-side bank)
 const BLOOM_MATS=[0xff5d8f,0xffd23f,0xff8a3d,0xb06fe0,0xfff0f5,0xff3b6e,0xff7eb0,0xffe08a,0xe6486e].map(basic);
 function bloom(parent,x,y,z,spread=0.5,n=10,s=1){   // a colorful mound of blossoms (shared geo+mats)
   for(let i=0;i<n;i++){ const a=Math.random()*6.2832, rr=Math.random()*spread;
@@ -2240,6 +2241,89 @@ function makeCanalNook(x,z,rot){   // ✦ a quiet Petite-Venise pocket: cel-wate
   EXTRA_COLLIDERS.push({x:x+Math.cos(rot+Math.PI/2)*1.7, z:z+Math.sin(rot+Math.PI/2)*1.7, r:1.4});
   EXTRA_COLLIDERS.push({x:x-Math.cos(rot+Math.PI/2)*1.7, z:z-Math.sin(rot+Math.PI/2)*1.7, r:1.4});
 }
+/* ---- 🌊 the grand Petite-Venise stream: a long meandering canal sweeping a whole flank of town
+        (animated cross-channel water · stone banks · flower bridges · willows · moored boats · towpath lanterns) ---- */
+function makeStreamWater(geom){   // cel-water keyed on the ribbon UV: deep mid-channel, shallow at the banks, day↔night aware
+  const uni={ uTime:WATER_TIME, uNight:WATER_NIGHT,
+    uShal:{value:_wCol(0x79c9d8)}, uDeep:{value:_wCol(0x2f7f9e)}, uGlint:{value:_wCol(0xffffff)},
+    uShalN:{value:_wCol(0x2f6088)}, uDeepN:{value:_wCol(0x16324f)}, uGlintN:{value:_wCol(0xc2d4ff)} };
+  const mat=new THREE.ShaderMaterial({ transparent:true, side:THREE.DoubleSide, fog:false, uniforms:uni,
+    vertexShader:'varying vec2 vUv; varying vec2 vW; void main(){ vUv=uv; vW=position.xz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+    fragmentShader:[
+      'uniform float uTime,uNight; uniform vec3 uShal,uDeep,uGlint,uShalN,uDeepN,uGlintN;',
+      'varying vec2 vUv; varying vec2 vW;',
+      'void main(){',
+      '  float t=uTime;',
+      '  float depth=smoothstep(0.0,1.0,1.0-abs(vUv.y-0.5)*2.0);',                 // 0 at banks → 1 mid-channel
+      '  float w=sin(vW.x*0.9+t*1.6)+sin(vW.y*1.1-t*1.3)+sin((vW.x+vW.y)*0.7+t*0.9)+sin(vUv.x*42.0-t*1.7);',
+      '  w*=0.25;',
+      '  vec3 shal=mix(uShal,uShalN,uNight), deep=mix(uDeep,uDeepN,uNight), glint=mix(uGlint,uGlintN,uNight);',
+      '  vec3 col=mix(shal,deep,depth)+shal*0.16*w;',
+      '  col+=glint*smoothstep(0.6,0.98,w)*depth*(0.42+0.34*(1.0-uNight));',
+      '  gl_FragColor=vec4(col, 0.92-(1.0-depth)*0.16);',
+      '}'
+    ].join('\n')
+  });
+  return new THREE.Mesh(geom,mat);
+}
+function makeRiver(ctrl, opt={}){
+  const half=(opt.width||5.8)/2, N=opt.seg||160;
+  const curve=new THREE.CatmullRomCurve3(ctrl.map(p=>new THREE.Vector3(p[0],0,p[1])), false, 'catmullrom', 0.5);
+  const P=curve.getSpacedPoints(N), T=[], TP=[];
+  const tl=Math.max(4,Math.round(N*0.07));   // taper length: ribbon eases to a point at both ends so it reads as a flowing stream, not a cut slab
+  for(let i=0;i<=N;i++){ T.push(curve.getTangentAt(i/N).setY(0).normalize());
+    const e=Math.min(i, N-i); TP.push(e>=tl?1:THREE.MathUtils.smoothstep(e/tl,0,1)); }
+  const ribbon=(hw,yUp)=>{ const pos=[],uv=[],idx=[];
+    for(let i=0;i<=N;i++){ const p=P[i],t=T[i], nx=-t.z, nz=t.x, u=i/N, w=hw*TP[i];
+      pos.push(p.x+nx*w, yUp, p.z+nz*w,  p.x-nx*w, yUp, p.z-nz*w); uv.push(u,0, u,1); }
+    for(let i=0;i<N;i++){ const a=i*2; idx.push(a,a+2,a+1, a+1,a+2,a+3); }
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx); return g; };
+  const inward=(p,nx,nz)=>(((p.x+nx)**2+(p.z+nz)**2) > p.x*p.x+p.z*p.z) ? -1 : 1;   // sign pushing a bank normal toward town centre
+  // riverbed (opaque base) + animated water surface
+  const bed=new THREE.Mesh(ribbon(half+0.45,0.03), basic(0x1f5066)); bed.renderOrder=0; scene.add(bed);
+  const water=makeStreamWater(ribbon(half,0.075)); water.renderOrder=1; scene.add(water);
+  // bridge sample indices (the middle one spans the avenue the stream crosses)
+  const bridges=(opt.bridges||[0.27,0.5,0.73]).map(f=>Math.round(f*N));
+  const nearBridge=i=>bridges.some(b=>Math.abs(i-b)<=4);
+  // stone banks + Colmar flower boxes + soft colliders (only along the full-width body; skipped at each bridge so the towpath stays crossable)
+  for(let i=tl+1;i<N-tl;i+=4){ if(nearBridge(i)) continue; const p=P[i],t=T[i], nx=-t.z, nz=t.x, ry=Math.atan2(t.x,t.z);
+    [1,-1].forEach(side=>{ const bx=p.x+nx*(half+0.3)*side, bz=p.z+nz*(half+0.3)*side;
+      const curb=rbox(0.5,0.5,4.6,0x9c958a,0.06); curb.position.set(bx,0.25,bz); curb.rotation.y=ry; outline(curb,0.02); scene.add(curb);
+      if(i%8===2){ const fb=rbox(0.42,0.22,1.5,0xb88a52,0.03); fb.position.set(bx,0.6,bz); fb.rotation.y=ry; scene.add(fb); bloom(scene,bx,0.78,bz,0.42,8,0.8); }
+      EXTRA_COLLIDERS.push({x:bx,z:bz,r:1.15}); }); }
+  // willows / cypress / olives shading the banks, alternating sides
+  for(let i=tl+3;i<N-tl;i+=14){ if(nearBridge(i)) continue; const p=P[i],t=T[i], nx=-t.z, nz=t.x, side=(((i/14)|0)%2)?1:-1;
+    const tx=p.x+nx*(half+2.3)*side, tz=p.z+nz*(half+2.3)*side, kind=i%3;
+    if(kind===0) makeCypress(tx,tz,1.05); else if(kind===1) makeOlive(tx,tz,0.95); else makeTree(tx,tz,0.95);
+    EXTRA_COLLIDERS.push({x:tx,z:tz,r:0.7}); }
+  // humpbacked flower bridges across the channel (group local +Z runs bank-to-bank)
+  bridges.forEach(bi=>{ const p=P[bi],t=T[bi], nx=-t.z, nz=t.x;
+    const g=new THREE.Group(); g.position.set(p.x,0,p.z); g.rotation.y=Math.atan2(nx,nz); scene.add(g);
+    const span=half*2+1.9;
+    const deck=new THREE.Mesh(new THREE.BoxGeometry(2.2,0.16,span), toon(0xa9794a)); deck.position.y=0.7; deck.castShadow=true; g.add(deck);
+    [-1,1].forEach(sx=>{ const rail=rbox(0.12,0.5,span,0xb88a52,0.03); rail.position.set(sx*1.0,1.04,0); g.add(rail);
+      for(let k=-2;k<=2;k++) bloom(g,sx*1.0,1.3,k*(span/5),0.18,4,0.72); }); });
+  // a couple of moored rowboats on the straighter reaches
+  [Math.round(0.4*N), Math.round(0.62*N)].forEach((bi,bn)=>{ const p=P[bi],t=T[bi], nx=-t.z, nz=t.x;
+    const boat=new THREE.Group(); boat.position.set(p.x+nx*half*0.32, 0.16, p.z+nz*half*0.32); boat.rotation.y=Math.atan2(t.x,t.z)+0.15; scene.add(boat);
+    const hull=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,8,0,Math.PI*2,0,Math.PI/2), toon(bn?0x6a7f9a:0x8a5a36)); hull.scale.set(1.0,0.7,2.1); hull.rotation.x=Math.PI; hull.position.y=0.18; boat.add(hull);
+    for(let s=-1;s<=1;s++){ const seat=rbox(0.8,0.05,0.12,0x7e5532,0.02); seat.position.set(0,0.2,s*0.6); boat.add(seat); }
+    bloom(boat,0,0.26,0.8,0.3,8,0.9); });
+  // evening lanterns along the towpath (alternating banks)
+  [0.16,0.5,0.84].forEach((f,k)=>{ const bi=Math.round(f*N), p=P[bi],t=T[bi], nx=-t.z, nz=t.x, side=k%2?1:-1;
+    makeGuildLantern(p.x+nx*(half+1.2)*side, p.z+nz*(half+1.2)*side); });
+  // canal centres every few samples → Explorer Passport "canal" stamp coverage along the whole stream
+  for(let i=0;i<=N;i+=8) CANAL_PTS.push({x:P[i].x, z:P[i].z});
+  // taxi/landmark arrival + a wee signpost on the town-side bank by the central bridge
+  { const bi=bridges[(bridges.length/2)|0], p=P[bi],t=T[bi]; let nx=-t.z, nz=t.x; const s=inward(p,nx,nz); nx*=s; nz*=s;
+    RIVER_LANDMARK={ x:p.x+nx*(half+3.0), z:p.z+nz*(half+3.0) };
+    const sgx=p.x+nx*(half+1.6), sgz=p.z+nz*(half+1.6);
+    const signG=new THREE.Group(); signG.position.set(sgx,0,sgz); signG.rotation.y=Math.atan2(-sgx,-sgz); scene.add(signG);
+    const post=rbox(0.16,2.0,0.16,0x7a5230,0.03); post.position.y=1.0; outline(post,0.03); signG.add(post);
+    const board=new THREE.Mesh(new THREE.PlaneGeometry(1.95,0.64), new THREE.MeshBasicMaterial({map:signTexture('Petite-Venise · 쁘띠베니스',0x67c4d8),transparent:true})); board.position.set(0,1.72,0.08); signG.add(board);
+    EXTRA_COLLIDERS.push({x:sgx,z:sgz,r:0.4}); }
+}
 function makePark(cx, cz){   // 🌳 a calm rest park set off the plaza — gravel stroll path, sittable benches, shade trees, a low flower bed, a lantern & a signpost (no flashy balloons/particles)
   const toPlaza=Math.atan2(-cz,-cx);
   const g=new THREE.Group(); g.position.set(cx,0,cz); scene.add(g);
@@ -2276,6 +2360,8 @@ function placeColmar(){   // invoked after the shared garden geo (GEO_FLOWER) is
   // 🛶 Petite-Venise canals threading the mid-map inter-ring gaps (Colmar·Riquewihr), 30° off every avenue & clear of the rest pavilions
   [[47,90],[47,270],[74,210],[103,150],[134,330]].forEach(([rr,deg])=>{ const a=deg*D;
     makeCanalNook(Math.cos(a)*rr, Math.sin(a)*rr, -a); });   // rot=-θ keeps each canal tangential (parallel to the ring road), hugging the gap with a tiny radial footprint
+  // 🌊 the grand stream sweeping the open WEST flank — weaves the r≈130–142 inter-ring gap (N=library, S=Chronopolis, E=observatory all sit elsewhere)
+  makeRiver([[-120.4,75.2],[-122.2,44.5],[-134.7,18.9],[-130,0],[-134.7,-18.9],[-122.2,-44.5],[-120.4,-75.2]], {width:5.8});
   // market cluster (315°)
   (function(){ const a=315*D, cx=Math.cos(a)*22, cz=Math.sin(a)*22, n=Math.atan2(cz,cx);
     makeStall(cx,cz,n+Math.PI,0xd23b3b,0xfff0f0);
@@ -3923,7 +4009,7 @@ const COURSE_LM=[{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'cana
 function lmCourseDest(id){ switch(id){
   case 'chrono': return (typeof CHRONO!=='undefined'&&CHRONO)?{label:t('lmChrono'),_pos:CHRONO._pos,_landmark:'chrono'}:null;
   case 'observatory': return (typeof OBS!=='undefined'&&OBS)?{label:t('obsName'),_pos:OBS._pos,_landmark:'obs'}:null;
-  case 'canal': return CANAL_PTS.length?{label:t('lmCanal'),_pos:new THREE.Vector3(CANAL_PTS[0].x,0,CANAL_PTS[0].z),_landmark:'canal'}:null;
+  case 'canal': { const c=RIVER_LANDMARK||CANAL_PTS[0]; return c?{label:t('lmCanal'),_pos:new THREE.Vector3(c.x,0,c.z),_landmark:'canal'}:null; }
   case 'plaza': return {label:t('lmPlaza'),_pos:new THREE.Vector3(0,0,0),_landmark:'plaza'};
   case 'library': return (typeof LIB!=='undefined'&&LIB)?{label:LIB.label,_pos:LIB._pos,_isLibrary:true}:null;
 } return null; }
@@ -4506,7 +4592,7 @@ function landmarkNav(q){
     return OBS ? mk('lmDriveObs', t('obsName'), OBS._pos, 'obs') : null;
   // generic landmarks need a "go" verb so plain chatter about a canal/plaza doesn't hail a taxi
   if(go.test(q)){
-    if(/쁘띠 ?베니스|petite[- ]?venise|운하|canal/i.test(q) && CANAL_PTS.length) return mk('lmDriveCanal', t('lmCanal'), new THREE.Vector3(CANAL_PTS[0].x,0,CANAL_PTS[0].z), 'canal');
+    if(/쁘띠 ?베니스|petite[- ]?venise|운하|canal/i.test(q) && (RIVER_LANDMARK||CANAL_PTS.length)){ const c=RIVER_LANDMARK||CANAL_PTS[0]; return mk('lmDriveCanal', t('lmCanal'), new THREE.Vector3(c.x,0,c.z), 'canal'); }
     if(/중앙 ?광장|광장|분수|town ?square|plaza|fountain/i.test(q)) return mk('lmDrivePlaza', t('lmPlaza'), new THREE.Vector3(0,0,0), 'plaza');
     if(/공원|산책로|쉼터|\bpark\b/i.test(q)) return mk('lmDrivePark', t('lmPark'), new THREE.Vector3(-43,0,-15), 'park');
   }
