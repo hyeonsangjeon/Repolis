@@ -92,6 +92,7 @@ verify:
   commands:
     - node council/test.mjs        # → ALL GREEN — 130 checks passed
     - node council/test-live.mjs   # → 56 passed, 0 failed
+    - node scripts/smoke.mjs       # → ALL GREEN — index.html static regression guards
     - node --check scholars.js
     - node --check cloudflare-taxi/src/grounded.js
   ui: serve locally and drive the page in Chrome DevTools; require 0 console errors (mobile 390x844 + desktop).

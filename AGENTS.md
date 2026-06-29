@@ -98,6 +98,7 @@ zero LLM, zero cost — so run them freely:
 ```bash
 node council/test.mjs        # deterministic council crosscheck   → "ALL GREEN — 130 checks passed"
 node council/test-live.mjs   # live guards + state machine         → "56 passed, 0 failed"
+node scripts/smoke.mjs       # index.html static regression guards  → "ALL GREEN" (viewport / CTA / key-stuck / library / module syntax)
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js
 ```
