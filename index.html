@@ -95,6 +95,7 @@
   #station { position: fixed; z-index: 13; top: 70px; right: 14px; width: 320px; max-width: calc(100vw - 28px);
     background: rgba(255,251,242,.97); backdrop-filter: blur(10px); border-radius: 18px;
     box-shadow: 0 12px 40px rgba(70,40,15,.28); padding: 16px; transform-origin: top right;
+    max-height: calc(100vh - 88px); overflow-y: auto;
     transition: opacity .18s ease, transform .18s ease; }
   #station.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #station h3 { font-size: 13px; letter-spacing: .03em; color: #9a6e1e; padding: 2px 34px 4px 2px;
@@ -120,6 +121,18 @@
   #station .squick button { font: inherit; font-size: 11px; cursor: pointer; padding: 5px 10px; border-radius: 999px;
     border: 1px solid #e3d2b6; background: #fffdf8; color: #8a6f4e; }
   #station .squick button:active { background: #f3e6cf; }
+  /* 🚆 in-world knowledge districts (single-hop rides via the existing taxi) */
+  #station .sdist-h { font-size: 11px; font-weight: 700; color: #9a6e1e; padding: 2px 2px 8px; letter-spacing: .02em; }
+  #station .sdist { display: flex; flex-direction: column; gap: 6px; }
+  #station .sdist button { font: inherit; font-size: 12.5px; cursor: pointer; text-align: left; width: 100%;
+    display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 11px;
+    border: 1px solid #e3d2b6; background: #fffdf8; color: #5a4326; transition: background .12s ease, border-color .12s ease; }
+  #station .sdist button:hover { background: #fbf4e6; border-color: #d9bf95; }
+  #station .sdist button:active { background: #f3e6cf; transform: translateY(1px); }
+  #station .sdist .di { font-size: 16px; line-height: 1; }
+  #station .sdist .dn { flex: 1; min-width: 0; }
+  #station .sdist .dgo { font-size: 13px; color: #b05e1c; opacity: .8; }
+  #station .sdiv { margin-top: 13px; padding-top: 13px; border-top: 1px solid #efe2cb; }
   #station .shome { padding: 11px 0 0; }
   #station .shome button { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; width: 100%;
     padding: 9px; border-radius: 11px; border: 1.5px solid #79c6a0; background: #eef9f2; color: #2f7d5b; }
@@ -578,17 +591,22 @@
 
 <div id="station" class="hidden">
   <button class="sclose" id="stationClose" type="button" aria-label="닫기">✕</button>
-  <h3>🚉 <span data-i18n="stationTitle">다른 GitHub 마을로 이동</span></h3>
-  <div class="ssub" data-i18n="stationSub">GitHub username을 입력하면 그 사람의 공개 레포 마을로 기차가 데려다줘요.</div>
+  <h3>🚉 <span data-i18n="stationTitle">Repolis 역 · 어디로 갈까요?</span></h3>
   <div class="scur"><span data-i18n="stationCurrent">현재 마을</span>: <b id="stationCurName">—</b></div>
-  <div class="srow">
-    <input id="stationInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="39" placeholder="GitHub username 입력" data-i18n-ph="stationUserPh" />
-    <button id="stationGo" data-i18n="stationGo">🚆 기차 타고 이동</button>
+  <div class="sdist-h" data-i18n="stationDistrictsH">🚆 이 세계의 지식 구역</div>
+  <div class="sdist" id="stationDistricts"></div>
+  <div class="sdiv">
+    <div class="sdist-h" data-i18n="stationExternalH">🌍 다른 GitHub 마을</div>
+    <div class="ssub" data-i18n="stationSub">GitHub username을 입력하면 그 사람의 공개 레포 마을로 기차가 데려다줘요.</div>
+    <div class="srow">
+      <input id="stationInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="39" placeholder="GitHub username 입력" data-i18n-ph="stationUserPh" />
+      <button id="stationGo" data-i18n="stationGo">🚆 기차 타고 이동</button>
+    </div>
+    <div class="sex" data-i18n="stationExamples">예: mrdoob, torvalds, karpathy, vercel</div>
+    <div class="serr" id="stationErr" style="display:none;"></div>
+    <div class="squick" id="stationQuick"></div>
+    <div class="shome" id="stationHome" style="display:none;"></div>
   </div>
-  <div class="sex" data-i18n="stationExamples">예: mrdoob, torvalds, karpathy, vercel</div>
-  <div class="serr" id="stationErr" style="display:none;"></div>
-  <div class="squick" id="stationQuick"></div>
-  <div class="shome" id="stationHome" style="display:none;"></div>
   <div class="sshare"><button id="shareBtn" data-i18n="copyLink">🔗 링크 복사</button></div>
 </div>
 
@@ -954,7 +972,8 @@ const I18N = {
     modeOwnerLabel:'풀 트래픽 시티', modePublicLabel:'공개 GitHub 마을',
     townOf:'{user} 님의 마을', myCity:'내 도시',
     stationBtn:'🚉 역', stationLm:'GitHub 역',
-    stationTitle:'다른 GitHub 마을로 이동', stationSub:'GitHub username을 입력하면 그 사람의 공개 레포 마을로 기차가 데려다줘요.',
+    stationTitle:'Repolis 역 · 어디로 갈까요?', stationSub:'GitHub username을 입력하면 그 사람의 공개 레포 마을로 기차가 데려다줘요.',
+    stationDistrictsH:'🚆 이 세계의 지식 구역', stationExternalH:'🌍 다른 GitHub 마을',
     stationCurrent:'현재 마을', stationUserPh:'GitHub username 입력', stationGo:'🚆 기차 타고 이동',
     stationExamples:'예: mrdoob, torvalds, karpathy, vercel', stationHome:'← {user} 님의 도시로',
     stationInvalid:'올바른 GitHub username을 입력해 주세요.',
@@ -1086,7 +1105,8 @@ const I18N = {
     modeOwnerLabel:'Full Traffic City', modePublicLabel:'Public GitHub Town',
     townOf:"{user}'s town", myCity:'My city',
     stationBtn:'🚉 Station', stationLm:'GitHub Station',
-    stationTitle:'Travel to another GitHub town', stationSub:"Enter a GitHub username and the train will take you to that person's public-repo town.",
+    stationTitle:'Repolis Station · Where to?', stationSub:"Enter a GitHub username and the train will take you to that person's public-repo town.",
+    stationDistrictsH:'🚆 Knowledge districts', stationExternalH:'🌍 Other GitHub towns',
     stationCurrent:'Current town', stationUserPh:'Enter GitHub username', stationGo:'🚆 Take the train',
     stationExamples:'e.g. mrdoob, torvalds, karpathy, vercel', stationHome:"← Back to {user}'s city",
     stationInvalid:'Please enter a valid GitHub username.',
@@ -4152,6 +4172,7 @@ document.getElementById('loading').style.display='none';
   const curName=document.getElementById('stationCurName');
   const stationClose=document.getElementById('stationClose');
   const EXAMPLES=['mrdoob','torvalds','karpathy','vercel','sindresorhus'];
+  const DISTRICTS=[{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'}];
   const baseUrl=()=>location.origin+location.pathname;
   const townName=()=> cityMode==='public' ? tf('townOf',{user:currentUser}) : t('myCity');
 
@@ -4170,8 +4191,26 @@ document.getElementById('loading').style.display='none';
     document.getElementById('trainMsg').textContent=tf('trainDepart',{user:OWNER}); document.getElementById('trainSub').textContent='';
     trainOv.classList.add('show'); setTimeout(()=>{ location.href=baseUrl(); }, 750); }
 
+  function renderDistricts(){
+    const wrap=document.getElementById('stationDistricts'); if(!wrap) return;
+    wrap.innerHTML='';
+    DISTRICTS.forEach(d=>{
+      const dest=(typeof lmCourseDest==='function')?lmCourseDest(d.id):null;
+      if(!dest) return;   // skip districts this town doesn't have (e.g. a visitor's public town)
+      const b=document.createElement('button'); b.type='button';
+      const ico=document.createElement('span'); ico.className='di'; ico.textContent=d.ico;
+      const nm=document.createElement('span'); nm.className='dn'; nm.textContent=dest.label;
+      const go=document.createElement('span'); go.className='dgo'; go.textContent='→';
+      b.appendChild(ico); b.appendChild(nm); b.appendChild(go);
+      b.onclick=()=>{ closeStation();
+        if(typeof taxiTo==='function') taxiTo(dest); else if(typeof setNav==='function') setNav(dest);
+        track('district_ride',{id:d.id}); };
+      wrap.appendChild(b);
+    });
+  }
   function renderStation(){
     curName.textContent=townName();
+    renderDistricts();
     quick.innerHTML=''; EXAMPLES.forEach(u=>{ const b=document.createElement('button'); b.textContent=u; b.onclick=()=>{ inp.value=u; depart(u); }; quick.appendChild(b); });
     if(cityMode==='public'){ homeWrap.style.display='block'; homeWrap.innerHTML='<button id="goHomeBtn"></button>'; const hb=document.getElementById('goHomeBtn'); hb.textContent=tf('stationHome',{user:OWNER}); hb.onclick=goHome; }
     else homeWrap.style.display='none';

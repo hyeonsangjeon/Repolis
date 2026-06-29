@@ -56,7 +56,19 @@ ok(/fetch\(['"]assets\/contribution-library\.json['"][\s\S]{0,120}\.then\(/.test
 ok(/contribution-library[\s\S]{0,300}\.catch\(/.test(HTML), 'library fetch has a .catch fallback');
 ok(!/await\s+fetch\(['"]assets\/contribution-library/.test(HTML), 'library fetch is not top-level awaited');
 
-/* ── 5) inline <script type=module> still parses ── */
+/* ── 5) Train Network v0: station knowledge-district single-hop travel ── */
+group('station districts (Train Network v0) wiring');
+ok(/const\s+DISTRICTS\s*=\s*\[/.test(HTML), 'DISTRICTS table exists');
+ok(/id=["']stationDistricts["']/.test(HTML), '#stationDistricts container in station modal');
+ok(/function\s+renderDistricts\s*\(/.test(HTML), 'renderDistricts() builder exists');
+ok(/renderStation\s*\(\s*\)\s*\{[\s\S]{0,120}renderDistricts\s*\(\s*\)/.test(HTML), 'renderStation() calls renderDistricts()');
+ok(/lmCourseDest\s*\(\s*d\.id\s*\)/.test(HTML), 'district resolves its destination via lmCourseDest(id)');
+ok(/if\s*\(\s*!dest\s*\)\s*return/.test(HTML), 'absent districts are skipped (public-town graceful degrade)');
+ok(/taxiTo\s*\(\s*dest\s*\)/.test(HTML), 'district button rides via taxiTo(dest)');
+ok(/track\(\s*['"]district_ride['"]/.test(HTML), 'district ride is tracked');
+ok(/stationDistrictsH\s*:/.test(HTML), 'stationDistrictsH i18n key present');
+
+/* ── 6) inline <script type=module> still parses ── */
 group('inline module parses (node --check)');
 const mod = HTML.match(/<script type="module">([\s\S]*?)<\/script>/);
 ok(!!mod, 'inline module script found');
