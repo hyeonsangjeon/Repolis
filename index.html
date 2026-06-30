@@ -366,7 +366,8 @@
     display: flex; align-items: center; gap: 7px; padding: 4px 8px; border-bottom: 2px solid #efdfc4; margin-bottom: 4px; }
   .libcat h3 .n { margin-left: auto; font-size: 11px; font-weight: 700; color: #b89a6c; }
   a.libitem { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border-radius: 11px;
-    text-decoration: none; color: inherit; transition: background .13s; }
+    text-decoration: none; color: inherit; transition: background .13s;
+    opacity: 0; animation: libItemIn .34s ease both; }
   a.libitem:hover { background: #f4e8d2; }
   a.libitem .dot { flex: 0 0 auto; margin-top: 4px; width: 8px; height: 8px; border-radius: 50%; background: #d8a24e; }
   a.libitem .tx { flex: 1; min-width: 0; }
@@ -374,6 +375,7 @@
   a.libitem .me { display: block; font-size: 11.5px; color: #9b7d52; margin-top: 2px; }
   a.libitem .go { flex: 0 0 auto; color: #b89a6c; font-size: 13px; margin-top: 2px; opacity: .6; }
   a.libitem:hover .go { opacity: 1; color: #c2702f; }
+  @keyframes libItemIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   .libEmpty { padding: 30px 18px; text-align: center; color: #8a6a3a; font-size: 13.5px; line-height: 1.65; }
   .libEmpty p { margin: 0 0 14px; }
   .libEmpty .gh { display: inline-block; padding: 9px 16px; border-radius: 999px; background: #c2702f;
@@ -4272,6 +4274,7 @@ function buildLibrary(){
     e.innerHTML=`<p>${esc(t('libUnavailable'))}</p><a class="gh" href="${libRepoUrl()}" target="_blank" rel="noopener">${t('libRepoBtn')}</a>`;
     body.appendChild(e);
   } else {
+    let _li=0;
     cats.forEach(cat=>{
       const sec=document.createElement('div'); sec.className='libcat';
       const h=document.createElement('h3');
@@ -4280,6 +4283,7 @@ function buildLibrary(){
       cat.items.forEach(it=>{
         const a=document.createElement('a'); a.className='libitem'; a.href=(it.url&&safeHref(it.url))||libRepoUrl(); a.target='_blank'; a.rel='noopener';
         a.innerHTML=`<span class="dot"></span><span class="tx"><span class="ti">${esc(it.title||'')}</span>${it.meta?`<span class="me">${esc(it.meta)}</span>`:''}</span><span class="go">↗</span>`;
+        a.style.animationDelay=(Math.min(_li,14)*0.03)+'s'; _li++;   // staggered entrance, capped so long lists never feel laggy
         sec.appendChild(a);
       });
       body.appendChild(sec);
