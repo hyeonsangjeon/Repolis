@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.39.0] — 2026-07-01
+
+### 🎡 Grand Ferris Wheel — board it and rise for a whole-village panorama
+- **A new rideable landmark.** A grand Ferris wheel now turns on the open ESE flank of the village (A-frame legs, a turning rim, 8 colourful gondolas that hang level as the wheel spins, and a town-side boarding platform). It faces the city centre so riders look back out over the rooftops.
+- **Board it and ride up high.** Walk onto the boarding pad (or take the taxi) and press **Enter / tap 🎡** to hop into whichever gondola is at the bottom. The camera rides that cabin up, around, and back down through one slow free-look turn (~15s) before stepping you back onto the ground — a self-contained "see the whole village at a glance" moment.
+- **Wired into every wayfinding system.** It's a Passport stamp (🎡, the 9th landmark), a Station district button (🎡대관람차→ → single-hop taxi ride that auto-boards on arrival), an "오늘의 코스 / course" landmark, and a taxi natural-language destination ("대관람차로 가자" / "take me to the Ferris wheel"). Arriving by taxi auto-boards you 800ms after the ride ends.
+- **Night rim-lights.** The rim and gondola bulbs are an unlit shared material that twinkles and glows brighter after dark, so the wheel reads as a lit beacon against the aurora at night.
+- **Performance-safe & self-contained.** No new lights — the wheel reuses shared geometries/materials, the boarding platform is left clear of `COLLIDERS` (only the hub base + four leg footings collide), and the idle-FPS cap stays in effect except while you're actually aboard. Verified on real GPU (desktop + 390px mobile): wheel renders day + night, Station 🎡 district tap → ride → auto-board (riding, turning), taxi NL-nav drives + auto-boards, Station modal fits a 390px viewport with 6 districts and no overflow, **0 console errors**. Smoke 31 + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.38.0] — 2026-06-30
 
 ### 📚 Contribution Library is now data-driven (daily batch) + collapsible sources

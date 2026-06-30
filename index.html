@@ -960,6 +960,9 @@ const I18N = {
     obsTitle:'🔭 별빛 전망대', obsSub:'밤하늘 현자들의 별자리를 한자리에서.', obsHint:'밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾',
     obsSign:'OBSERVATORY', obsStar:'으뜸별', obsConstel:'별자리', obsMyth:'신화', obsClose:'닫기',
     lmObs:'별빛 전망대로 모실게요 🔭 별과 현자들을 만나러 가요.', lmDriveObs:'별빛 전망대로 갑니다… 🔭✨', lmArriveObs:'별빛 전망대에 도착했어요. 하늘을 올려다보세요 🔭',
+    ferrisName:'대관람차', ferrisReached:' — 마을이 한눈에 보이는 대관람차. <span class="key">Enter</span> 또는 클릭으로 탑승',
+    ferrisRiding:'🎡 마을이 한눈에! 한 바퀴 천천히 돌아 내려와요…', ferrisBoard:'🎡 대관람차에 탑승! 위로 올라가며 마을을 둘러보세요', ferrisDone:'🎡 즐거운 탑승이었어요! 또 타러 오세요',
+    lmDriveFerris:'🎡 대관람차로 갑니다… 꼭대기에서 마을을 내려다봐요!', lmArriveFerris:'🚕 <b>대관람차</b>에 도착! 탑승해서 위로 올라가 볼까요? 🎡',
     festAllStamps:'🎆 마을을 모두 둘러봤어요! 모든 명소 스탬프 완성 — 축제를 즐겨요!', festRepos:'🎆 레포 {n}곳 방문 달성! 불꽃이 터져요.',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
@@ -1093,6 +1096,9 @@ const I18N = {
     obsTitle:'🔭 Stargazer\'s Observatory', obsSub:'The night-sky scholars\' constellations, all in one place.', obsHint:'Climb up at night to see the scholars\' constellations at their brightest. ☾',
     obsSign:'OBSERVATORY', obsStar:'Star', obsConstel:'Constellation', obsMyth:'Myth', obsClose:'Close',
     lmObs:'Off to the Stargazer\'s Observatory 🔭 to meet the stars and the scholars.', lmDriveObs:'Driving to the Observatory… 🔭✨', lmArriveObs:'We\'ve reached the Observatory. Look up at the sky 🔭',
+    ferrisName:'Grand Ferris Wheel', ferrisReached:' — the grand Ferris wheel over the village. Press <span class="key">Enter</span> or click to board',
+    ferrisRiding:'🎡 The whole village at a glance! Riding one slow turn back down…', ferrisBoard:'🎡 Aboard the Ferris wheel! Rise up and take in the village', ferrisDone:'🎡 Hope you enjoyed the ride! Come again',
+    lmDriveFerris:'🎡 Off to the Grand Ferris Wheel… a view from the very top!', lmArriveFerris:"🚕 We've reached the <b>Grand Ferris Wheel</b>! Hop aboard and rise up 🎡",
     festAllStamps:'🎆 You\'ve explored the whole village! Every landmark stamped — enjoy the festival!', festRepos:'🎆 {n} repos visited! Fireworks light up the sky.',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
@@ -3097,6 +3103,7 @@ const ROLE_LABELS={ olddoc:{ko:'회의가',en:'Skeptic'}, livewire:{ko:'옹호�
 /* ───────── 🔭 Stargazer's Observatory — a view-deck landmark; climb it to meet the night-sky scholars & their constellations (best after dark) ───────── */
 const OBS_POS = new THREE.Vector3(203, 0, 22);   // east clearing (r≈204 < player clamp 215); library is north (+z), Chronopolis south
 let OBS=null, nearObs=null, obsScope=null;
+let FERRIS=null, nearFerris=null, ferris=null;   // 🎡 grand Ferris wheel — board it to ride up high for a whole-village panorama
 /* ───────── 🚉 GitHub Station — civic landmark beside the taxi stand; board a train to any public user's town (visual-only prop, non-colliding) ───────── */
 let STATION=null, nearStation=null, openStationModal=()=>{};
 (function buildObservatory(){
@@ -3153,6 +3160,67 @@ let STATION=null, nearStation=null, openStationModal=()=>{};
   const ap=WX(0,9.6);
   OBS={ _isObs:true, _pos:new THREE.Vector3(ap.x,0,ap.z), label:t('obsName') };
   COLLIDERS.push({x:OBS_POS.x,z:OBS_POS.z, r:7.2});   // the stylobate base is solid; the player meets it from the stair side
+})();
+
+/* ───────── 🎡 Grand Ferris Wheel — board it to rise high and take in the whole village
+            (slow free-look turn · A-frame legs · 8 gondolas that hang level · rim lights that glow at night) ───────── */
+const FERRIS_POS=new THREE.Vector3(160,0,-58);   // clear ESE flank (38u from the nearest house; board point r≈182 < player clamp 215); the wheel faces town centre
+(function buildFerrisWheel(){
+  const R=16, HUB=21, NCAB=8, AXLE=2.6;
+  const root=new THREE.Group(); root.position.copy(FERRIS_POS);
+  root.rotation.y=Math.atan2(-FERRIS_POS.x,-FERRIS_POS.z);   // local +Z faces town centre → riders look out over the city
+  scene.add(root);
+  const WX=(x,z)=>({ x:FERRIS_POS.x+Math.cos(root.rotation.y)*x-Math.sin(root.rotation.y)*z,
+                     z:FERRIS_POS.z+Math.sin(root.rotation.y)*x+Math.cos(root.rotation.y)*z });   // local→world on the ground
+  const strut=(a,b,rad,mat)=>{ const dir=new THREE.Vector3().subVectors(b,a), len=dir.length();
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,len,10), mat);
+    m.position.copy(a).addScaledVector(dir,0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.clone().normalize()); m.castShadow=true; return m; };
+  // ground pad + town-side boarding platform
+  const pad=new THREE.Mesh(new THREE.CylinderGeometry(R*0.66,R*0.74,0.5,40), toon(0x8b9099)); pad.position.y=0.25; root.add(pad); outline(pad,0.02);
+  const plat=rbox(7.4,0.7,4.4,0xb98a4e,0.05); plat.position.set(0,0.55,R*0.58); root.add(plat); outline(plat,0.03);
+  [-1,1].forEach(sx=>{ const rail=rbox(0.24,0.9,4.0,0x8a5a30,0.03); rail.position.set(sx*3.6,1.1,R*0.58); root.add(rail); });
+  // A-frame legs (two frames along the axle) meeting at the hub + axle + braces
+  const legMat=toon(0xc2ccd6);
+  [AXLE,-AXLE].forEach(z=>{ const apex=new THREE.Vector3(0,HUB,z);
+    [-1,1].forEach(sx=>{ root.add(strut(new THREE.Vector3(sx*R*0.52,0.4,z), apex, 0.55, legMat)); });
+    root.add(strut(new THREE.Vector3(-R*0.52,0.5,z), new THREE.Vector3(R*0.52,0.5,z), 0.32, legMat)); });
+  root.add(strut(new THREE.Vector3(0,HUB,AXLE), new THREE.Vector3(0,HUB,-AXLE), 0.5, legMat));            // hub axle
+  [-1,1].forEach(sx=>{ root.add(strut(new THREE.Vector3(sx*R*0.30,HUB*0.52,AXLE), new THREE.Vector3(sx*R*0.30,HUB*0.52,-AXLE), 0.24, legMat)); });
+  // the turning wheel — spins about the axle (its local Z)
+  const wheel=new THREE.Group(); wheel.position.set(0,HUB,0); root.add(wheel);
+  const rimMat=toon(0x3fa6cf), spokeMat=toon(0xd8e3ec), hubMat=toon(0xeef3f7);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,AXLE*2,18), hubMat); hub.rotation.x=Math.PI/2; wheel.add(hub);
+  const bulbMat=new THREE.MeshBasicMaterial({color:0xffe7a3, transparent:true, opacity:0.85});
+  const bulbGeo=new THREE.SphereGeometry(0.4,8,6);
+  [AXLE,-AXLE].forEach(z=>{
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(R,0.36,8,52), rimMat); rim.position.z=z; rim.castShadow=true; wheel.add(rim);
+    for(let i=0;i<NCAB;i++){ const a=i/NCAB*Math.PI*2; wheel.add(strut(new THREE.Vector3(0,0,z), new THREE.Vector3(Math.cos(a)*R,Math.sin(a)*R,z), 0.12, spokeMat)); }
+    for(let i=0;i<20;i++){ const a=i/20*Math.PI*2, b=new THREE.Mesh(bulbGeo,bulbMat); b.position.set(Math.cos(a)*R,Math.sin(a)*R,z+ (z>0?0.4:-0.4)); wheel.add(b); }
+  });
+  // gondolas — hang from each rim point, kept level by a per-frame counter-rotation
+  const PAL=[0xff5d8f,0xffd23f,0x4aa3c7,0x7ed957,0xb06fe0,0xff8a3d,0xff3b6e,0x46c7b0], cabs=[];
+  for(let i=0;i<NCAB;i++){ const a=i/NCAB*Math.PI*2, col=PAL[i%PAL.length];
+    wheel.add(strut(new THREE.Vector3(Math.cos(a)*R,Math.sin(a)*R,AXLE), new THREE.Vector3(Math.cos(a)*R,Math.sin(a)*R,-AXLE), 0.14, spokeMat));   // tie the two rims at the cabin
+    const cab=new THREE.Group(); cab.position.set(Math.cos(a)*R,Math.sin(a)*R,0); wheel.add(cab);
+    const arm=rbox(0.16,1.4,0.16,0x6a7078,0.02); arm.position.y=-0.7; cab.add(arm);
+    const body=rbox(2.0,1.2,2.2,col,0.10); body.position.y=-2.1; body.castShadow=true; cab.add(body); outline(body,0.02);
+    const roof=new THREE.Mesh(new THREE.ConeGeometry(1.7,0.9,4), toon(0xfff4e2)); roof.rotation.y=Math.PI/4; roof.position.y=-1.1; cab.add(roof);
+    const seat=rbox(1.7,0.18,1.9,0x5a3b22,0.02); seat.position.y=-2.5; cab.add(seat);
+    cabs.push(cab);
+  }
+  // town-side boarding marker + signpost
+  const bw=WX(0,R*0.62+2);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(1.9,2.4,32), new THREE.MeshBasicMaterial({color:0xffd98a,transparent:true,opacity:0.5,side:THREE.DoubleSide})); ring.rotation.x=-Math.PI/2; ring.position.set(0,0.06,R*0.62+2); root.add(ring);
+  const signG=new THREE.Group(); signG.position.set(-4.4,0,R*0.58); root.add(signG);
+  const post=rbox(0.16,2.2,0.16,0x7a5230,0.03); post.position.y=1.1; outline(post,0.03); signG.add(post);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(2.1,0.66), new THREE.MeshBasicMaterial({map:signTexture('Ferris Wheel · 대관람차',0x4aa3c7),transparent:true})); board.position.set(0,1.9,0.08); signG.add(board);
+  signG.rotation.y=Math.atan2(-WX(-4.4,R*0.58).x, -WX(-4.4,R*0.58).z);   // face the sign toward town
+  [-3.4,3.4].forEach(x=>{ const w=WX(x,R*0.62+1.2); makeGuildLantern(w.x,w.z); });
+  // colliders: solid hub base + the four leg footings (boarding platform on +Z stays clear)
+  COLLIDERS.push({x:FERRIS_POS.x,z:FERRIS_POS.z, r:4.5});
+  [AXLE,-AXLE].forEach(z=>[-1,1].forEach(sx=>{ const w=WX(sx*R*0.52,z); COLLIDERS.push({x:w.x,z:w.z,r:1.1}); }));
+  FERRIS={ _isFerris:true, _pos:new THREE.Vector3(bw.x,0,bw.z), label:t('ferrisName'),
+           wheel:wheel, cabs:cabs, bulbMat:bulbMat, board:new THREE.Vector3(bw.x,0,bw.z) };
 })();
 
 /* ---- ambient debate: one reused world bubble cycles through the deterministic transcript (0 LLM) ---- */
@@ -3968,6 +4036,7 @@ const PASS_LANDMARKS=[
   {id:'canal',            ico:'🛶', key:'lmCanal'},
   {id:'chrono',           ico:'⏳', key:'lmChrono'},
   {id:'observatory',      ico:'🔭', key:'lmObservatory'},
+  {id:'ferris',           ico:'🎡', key:'ferrisName'},
 ];
 let visited=0;
 let passport=loadPassport();
@@ -4005,10 +4074,11 @@ function _todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth
 function _seedFrom(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function _rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let x=Math.imul(seed^seed>>>15,1|seed); x=x+Math.imul(x^x>>>7,61|x)^x; return ((x^x>>>14)>>>0)/4294967296; }; }
 function _shuffle(arr,rng){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const tmp=a[i]; a[i]=a[j]; a[j]=tmp; } return a; }
-const COURSE_LM=[{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'}];
+const COURSE_LM=[{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'ferris',ico:'🎡'}];
 function lmCourseDest(id){ switch(id){
   case 'chrono': return (typeof CHRONO!=='undefined'&&CHRONO)?{label:t('lmChrono'),_pos:CHRONO._pos,_landmark:'chrono'}:null;
   case 'observatory': return (typeof OBS!=='undefined'&&OBS)?{label:t('obsName'),_pos:OBS._pos,_landmark:'obs'}:null;
+  case 'ferris': return (typeof FERRIS!=='undefined'&&FERRIS)?{label:t('ferrisName'),_pos:FERRIS._pos,_landmark:'ferris'}:null;
   case 'canal': { const c=RIVER_LANDMARK||CANAL_PTS[0]; return c?{label:t('lmCanal'),_pos:new THREE.Vector3(c.x,0,c.z),_landmark:'canal'}:null; }
   case 'plaza': return {label:t('lmPlaza'),_pos:new THREE.Vector3(0,0,0),_landmark:'plaza'};
   case 'library': return (typeof LIB!=='undefined'&&LIB)?{label:LIB.label,_pos:LIB._pos,_isLibrary:true}:null;
@@ -4229,7 +4299,7 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(ferris) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -4258,7 +4328,7 @@ document.getElementById('loading').style.display='none';
   const curName=document.getElementById('stationCurName');
   const stationClose=document.getElementById('stationClose');
   const EXAMPLES=['mrdoob','torvalds','karpathy','vercel','sindresorhus'];
-  const DISTRICTS=[{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'}];
+  const DISTRICTS=[{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'}];
   const baseUrl=()=>location.origin+location.pathname;
   const townName=()=> cityMode==='public' ? tf('townOf',{user:currentUser}) : t('myCity');
 
@@ -4593,6 +4663,7 @@ function landmarkNav(q){
   // generic landmarks need a "go" verb so plain chatter about a canal/plaza doesn't hail a taxi
   if(go.test(q)){
     if(/쁘띠 ?베니스|petite[- ]?venise|운하|canal/i.test(q) && (RIVER_LANDMARK||CANAL_PTS.length)){ const c=RIVER_LANDMARK||CANAL_PTS[0]; return mk('lmDriveCanal', t('lmCanal'), new THREE.Vector3(c.x,0,c.z), 'canal'); }
+    if(/대관람차|관람차|ferris|big ?wheel|observation ?wheel/i.test(q) && FERRIS) return mk('lmDriveFerris', t('ferrisName'), FERRIS._pos, 'ferris');
     if(/중앙 ?광장|광장|분수|town ?square|plaza|fountain/i.test(q)) return mk('lmDrivePlaza', t('lmPlaza'), new THREE.Vector3(0,0,0), 'plaza');
     if(/공원|산책로|쉼터|\bpark\b/i.test(q)) return mk('lmDrivePark', t('lmPark'), new THREE.Vector3(-43,0,-15), 'park');
   }
@@ -4880,10 +4951,33 @@ function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visib
     addMsg('bot', t(key)||(LANG==='ko'?`🚕 <b>${repo.label}</b>에 도착했어요!`:`🚕 We've arrived at <b>${repo.label}</b>!`), {noHist:true});
     if(k==='chrono') setTimeout(()=>{ try{ openChrono(repo._chronoPreset||undefined); }catch(e){} }, 700);
     if(k==='obs') setTimeout(()=>{ try{ openObservatory(); }catch(e){} }, 700);
+    if(k==='ferris') setTimeout(()=>{ try{ boardFerris(); }catch(e){} }, 800);
     return;
   }
   addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
   setTimeout(()=>openCard(repo),500); }
+
+/* ---- 🎡 Ferris wheel ride: board the gondola at the bottom, rise for one slow free-look turn, then step back onto the ground ---- */
+function updateFerris(dt){ if(!FERRIS) return;
+  const spin = ferris ? 0.42 : 0.16;                                      // a touch livelier while you're aboard
+  FERRIS.wheel.rotation.z += spin*dt;
+  for(const c of FERRIS.cabs) c.rotation.z = -FERRIS.wheel.rotation.z;    // gondolas stay level as the wheel turns
+  if(ferris) ferris.turned += spin*dt;
+  FERRIS.bulbMat.opacity = (isNight?0.98:0.55)*(0.72+0.28*Math.sin(clock.elapsedTime*3.2));   // rim lights twinkle, brighter after dark
+}
+function boardFerris(){ if(ferris||ride||modalOpen||!FERRIS) return;
+  let best=null, by=Infinity; const w=new THREE.Vector3();
+  for(const c of FERRIS.cabs){ c.getWorldPosition(w); if(w.y<by){ by=w.y; best=c; } }   // hop into whichever gondola is at the bottom
+  ferris={ cab:best, turned:0 }; freeLook=true; model.visible=false; blob.visible=false;
+  if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  camYaw=Math.atan2(FERRIS_POS.x,FERRIS_POS.z); camPitch=0.20; camDist=18;               // sit on the outer side, looking back over the town
+  promptEl.classList.remove('show'); actBtn.classList.remove('avail');
+  if(addStamp('ferris')) popSparkle(FERRIS_POS.x,8,FERRIS_POS.z,0xffe7a3);
+  track('ferris_board',{}); showWave(t('ferrisBoard'),2800); }
+function disembarkFerris(){ if(!ferris) return; ferris=null; model.visible=true; blob.visible=true; freeLook=false;
+  const b=FERRIS.board; player.position.set(b.x,0,b.z);
+  model.rotation.y=Math.atan2(-b.x,-b.z); camYaw=model.rotation.y+Math.PI; camPitch=0.42; camDist=14;
+  showWave(t('ferrisDone'),2800); }
 
 /* ---- wiring ---- */
 taxiBtn.onclick=()=> chatEl.classList.contains('hidden')?openChat(NPCS.find(n=>n.kind==='taxi')):closeChat();
@@ -4924,9 +5018,10 @@ function animate(){
   frame++;
   const _now=performance.now();
   const _idle=(_now-lastAct)>1200;                 // perf: no input/move >1.2s → idle
-  if(_idle && !(tour&&tour.active) && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour keep full fps)
+  if(_idle && !(tour&&tour.active) && !ferris && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour keep full fps)
   lastFrame=_now;
   const dt=Math.min(clock.getDelta(),0.05);
+  updateFerris(dt);
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
   mv.set(0,0,0);
@@ -4955,6 +5050,10 @@ function animate(){
         setTimeout(()=>{ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; },2500);
       }
     }
+  } else if(ferris){
+    const w=new THREE.Vector3(); ferris.cab.getWorldPosition(w);
+    player.position.set(w.x, w.y-2.0, w.z);                  // ride the gondola — the camera follows it up, around and back down
+    if(ferris.turned>=Math.PI*2) disembarkFerris();          // one full turn → back at the bottom, step off
   } else {
     if(sitting&&userInput) standUp();
     if(keys['KeyW']||keys['ArrowUp']) mv.add(tF);
@@ -5003,6 +5102,7 @@ function animate(){
   nearChrono = (CHRONO && player.position.distanceTo(CHRONO._pos) < 8.5) ? CHRONO : null;
   nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
   nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
+  nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
   // 🏠 first walk-up to a house → a gentle sparkle + acknowledge bob (landmarks get their own reactions below; skip while a taxi drives you past many houses)
   if(nearest && !nearest._isLibrary && !ride) greetBuilding(nearest);
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes) + a localized sparkle on first stamp
@@ -5013,11 +5113,13 @@ function animate(){
     if(nearChrono && !passHasStamp('chrono')){ if(addStamp('chrono')) popSparkle(CHRONO._pos.x,4,CHRONO._pos.z,0xffd86b); }
     if(nearObs && !passHasStamp('observatory')){ if(addStamp('observatory')) popSparkle(OBS._pos.x,5,OBS._pos.z,0x9fd0ff); }
     if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ if(addStamp('canal')) popSparkle(c.x,2.6,c.z,0x7fe3da); break; } } } }
-  if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
+  if(ferris){ promptEl.innerHTML = t('ferrisRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
+  else if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
   else if(nearObs&&!modalOpen){ promptEl.innerHTML=`<b>${t('obsName')}</b>${t('obsReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🔭'; }
   else if(nearStation&&!modalOpen){ promptEl.innerHTML=`<b>${t('stationLm')}</b>${t('stationReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚉'; }
+  else if(nearFerris&&!modalOpen){ promptEl.innerHTML=`<b>${t('ferrisName')}</b>${t('ferrisReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎡'; }
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
@@ -5295,6 +5397,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__obsOpen=()=>{ openObservatory(); const body=document.getElementById('obsBody'); return { show:obsModal.classList.contains('show'), cards:body.querySelectorAll('.obsCard').length, stars:[...body.querySelectorAll('.obsCard .star')].map(e=>e.textContent.trim()), tags:[...body.querySelectorAll('.obsCard .tags span')].map(e=>e.textContent.trim()) }; };
   window.__obsClose=()=>{ closeObservatory(); return !obsModal.classList.contains('show'); };
   window.__obsScan=()=>{ let mind=Infinity,who=null; for(const b of buildings){ const dx=(b._x!=null?b._x:b.position.x)-OBS_POS.x, dz=(b._z!=null?b._z:b.position.z)-OBS_POS.z; const edge=Math.hypot(dx,dz)-(b._cw||3); if(edge<mind){ mind=edge; who=b.repo; } } return { obsCenterR:+Math.hypot(OBS_POS.x,OBS_POS.z).toFixed(1), nearestBld:who, nearestEdge:+mind.toFixed(1), baseR:7.8 }; };
+  window.__ferris=()=>({ has:!!FERRIS, pos:FERRIS?{x:+FERRIS._pos.x.toFixed(1),z:+FERRIS._pos.z.toFixed(1)}:null, board:FERRIS?{x:+FERRIS.board.x.toFixed(1),z:+FERRIS.board.z.toFixed(1)}:null, near:!!nearFerris, riding:!!ferris, turned:ferris?+ferris.turned.toFixed(2):0, dist:FERRIS?+player.position.distanceTo(FERRIS.board).toFixed(1):null });
+  window.__board=()=>{ if(!FERRIS) return 'no ferris'; const b=FERRIS.board; player.position.set(b.x,0,b.z); return window.__ferris(); };
 
   window.__fireworks=(n)=>{ fireworksShow(n||10); return { queued:_fwQueue, active:FW.length, auroraBoost:+_auroraBoost.toFixed(1) }; };
   window.__visitFx=(name)=>{ let b=name?buildings.find(x=>x.repo===name||x.label===name):null;
