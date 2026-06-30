@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.40.0] — 2026-07-01
+
+### 🎠 Carousel — a funfair partner for the Ferris wheel
+- **A second rideable fair attraction.** A spinning carousel (회전목마) now turns on the ESE funfair green right beside the Ferris wheel — a raised stone deck, a striped canopy with a glowing finial, rim bulbs, and eight colourful chibi horses that gently bob up and down as the platform turns. The two rides together read as a little funfair corner of the village.
+- **Board it and spin.** Walk onto the deck (or take the taxi) and press **Enter / tap 🎠** to mount the nearest horse. The camera rides that horse around one slow free-look turn before stepping you back to the boarding point — a quick, playful "round and round" moment to pair with the wheel's panorama.
+- **Wired into every wayfinding system.** It's a Station district button (🎠회전목마→ → single-hop taxi ride that auto-mounts on arrival), an "오늘의 코스 / course" landmark, and a taxi natural-language destination ("회전목마로 가자" / "take me to the carousel" / "merry-go-round"). Arriving by taxi auto-boards you shortly after the ride ends.
+- **Night rim-lights.** Like the wheel, the canopy rim bulbs are an unlit shared material that twinkles and glows brighter after dark, so the carousel joins the wheel as a lit funfair beacon against the aurora.
+- **Performance-safe & self-contained.** No new lights — the carousel reuses shared geometries/materials and the toon gradient map; only the centre hub collides (`COLLIDERS`), leaving the outer deck walkable so you can reach a horse, and the idle-FPS cap stays in effect except while aboard. Verified on real GPU (desktop + 390px mobile): carousel renders and spins, board → ride → auto-disembark works (riding, turning ~0.52 rad/s, returns to the boarding point after one turn), the riding prompt shows, taxi NL-nav routes (KO/EN/merry-go-round), the Station modal fits a 390px viewport with 7 districts and no overflow, **0 console errors**. Smoke 31 + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.39.0] — 2026-07-01
 
 ### 🎡 Grand Ferris Wheel — board it and rise for a whole-village panorama

@@ -979,6 +979,7 @@ const I18N = {
     ferrisName:'대관람차', ferrisReached:' — 마을이 한눈에 보이는 대관람차. <span class="key">Enter</span> 또는 클릭으로 탑승',
     ferrisRiding:'🎡 마을이 한눈에! 한 바퀴 천천히 돌아 내려와요…', ferrisBoard:'🎡 대관람차에 탑승! 위로 올라가며 마을을 둘러보세요', ferrisDone:'🎡 즐거운 탑승이었어요! 또 타러 오세요',
     lmDriveFerris:'🎡 대관람차로 갑니다… 꼭대기에서 마을을 내려다봐요!', lmArriveFerris:'🚕 <b>대관람차</b>에 도착! 탑승해서 위로 올라가 볼까요? 🎡',
+    carouselName:'회전목마', carouselReached:' — 알록달록 놀이공원의 회전목마. <span class="key">Enter</span> 또는 클릭으로 탑승', carouselRiding:'🎠 빙글빙글~ 한 바퀴 돌면 내려요', carouselBoard:'🎠 회전목마에 탑승! 천천히 돌며 놀이공원을 둘러보세요', carouselDone:'🎠 즐거웠나요? 또 타러 오세요', lmDriveCarousel:'🎠 회전목마로 갑니다… 빙글빙글 놀이공원으로!', lmArriveCarousel:'🚕 <b>회전목마</b>에 도착! 목마에 올라타 볼까요? 🎠',
     festAllStamps:'🎆 마을을 모두 둘러봤어요! 모든 명소 스탬프 완성 — 축제를 즐겨요!', festRepos:'🎆 레포 {n}곳 방문 달성! 불꽃이 터져요.',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
@@ -1115,6 +1116,7 @@ const I18N = {
     ferrisName:'Grand Ferris Wheel', ferrisReached:' — the grand Ferris wheel over the village. Press <span class="key">Enter</span> or click to board',
     ferrisRiding:'🎡 The whole village at a glance! Riding one slow turn back down…', ferrisBoard:'🎡 Aboard the Ferris wheel! Rise up and take in the village', ferrisDone:'🎡 Hope you enjoyed the ride! Come again',
     lmDriveFerris:'🎡 Off to the Grand Ferris Wheel… a view from the very top!', lmArriveFerris:"🚕 We've reached the <b>Grand Ferris Wheel</b>! Hop aboard and rise up 🎡",
+    carouselName:'Carousel', carouselReached:' — a colourful carousel at the funfair. Press <span class="key">Enter</span> or click to board', carouselRiding:'🎠 Round and round~ step off after one turn', carouselBoard:'🎠 Aboard the carousel! Spin gently and take in the funfair', carouselDone:'🎠 Did you enjoy it? Come ride again', lmDriveCarousel:'🎠 Off to the carousel… round and round at the funfair!', lmArriveCarousel:"🚕 We've reached the <b>Carousel</b>! Hop on a horse? 🎠",
     festAllStamps:'🎆 You\'ve explored the whole village! Every landmark stamped — enjoy the festival!', festRepos:'🎆 {n} repos visited! Fireworks light up the sky.',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
@@ -3120,6 +3122,7 @@ const ROLE_LABELS={ olddoc:{ko:'회의가',en:'Skeptic'}, livewire:{ko:'옹호�
 const OBS_POS = new THREE.Vector3(203, 0, 22);   // east clearing (r≈204 < player clamp 215); library is north (+z), Chronopolis south
 let OBS=null, nearObs=null, obsScope=null;
 let FERRIS=null, nearFerris=null, ferris=null;   // 🎡 grand Ferris wheel — board it to ride up high for a whole-village panorama
+let CAROUSEL=null, nearCarousel=null, carousel=null;   // 🎠 carousel — board a horse for a gentle spin-and-bob at the ESE funfair
 /* ───────── 🚉 GitHub Station — civic landmark beside the taxi stand; board a train to any public user's town (visual-only prop, non-colliding) ───────── */
 let STATION=null, nearStation=null, openStationModal=()=>{};
 (function buildObservatory(){
@@ -3237,6 +3240,65 @@ const FERRIS_POS=new THREE.Vector3(160,0,-58);   // clear ESE flank (38u from th
   [AXLE,-AXLE].forEach(z=>[-1,1].forEach(sx=>{ const w=WX(sx*R*0.52,z); COLLIDERS.push({x:w.x,z:w.z,r:1.1}); }));
   FERRIS={ _isFerris:true, _pos:new THREE.Vector3(bw.x,0,bw.z), label:t('ferrisName'),
            wheel:wheel, cabs:cabs, bulbMat:bulbMat, board:new THREE.Vector3(bw.x,0,bw.z) };
+})();
+
+/* ───────── 🎠 Carousel — a colourful funfair ride beside the Ferris wheel; board a horse for a gentle spin-and-bob
+            (mirrors the Ferris board pattern · 8 chibi horses that bob · rim bulbs that glow at night) ───────── */
+const CAROUSEL_POS=new THREE.Vector3(180,0,-80);   // ESE funfair, 30u from the Ferris wheel; board point r≈182 < player clamp 215
+(function buildCarousel(){
+  const root=new THREE.Group(); root.position.copy(CAROUSEL_POS); scene.add(root);
+  const R=5.4, NH=8, DECK_Y=0.64, POLE_H=5.2;
+  const PAL=[0xe6486f,0xf2a154,0xf6d860,0x6fcf72,0x4ab3e6,0x7a6cf0,0xef6fb0,0xf28f6b];
+  const ACC=0x6a3d8f;
+  // raised deck
+  const skirt=new THREE.Mesh(new THREE.CylinderGeometry(R+1.0,R+1.2,0.5,40), toon(shade(0xb98a5e,-16))); skirt.position.y=0.3; root.add(skirt);
+  const deck=new THREE.Mesh(new THREE.CylinderGeometry(R+0.9,R+1.0,0.42,40), toon(0xb98a5e)); deck.position.y=DECK_Y; outline(deck,0.02); root.add(deck);
+  const deckTop=new THREE.Mesh(new THREE.CylinderGeometry(R+0.84,R+0.84,0.06,40), toon(0xe9d6b0)); deckTop.position.y=DECK_Y+0.22; root.add(deckTop);
+  // centre column + finial
+  const col=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.7,POLE_H+0.6,16), toon(0xede3d0)); col.position.y=DECK_Y+0.2+(POLE_H+0.6)/2; outline(col,0.02); root.add(col);
+  const finial=new THREE.Mesh(new THREE.SphereGeometry(0.6,16,12), new THREE.MeshBasicMaterial({color:0xffd86b})); finial.position.y=DECK_Y+0.2+POLE_H+0.9; root.add(finial);
+  // spinning assembly: striped canopy + rim bulbs + horses
+  const spin=new THREE.Group(); root.add(spin);
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=32; const cc=cv.getContext('2d');
+  for(let i=0;i<16;i++){ cc.fillStyle=(i%2)?'#fff3e0':'#e6486f'; cc.fillRect(i*16,0,16,32); }
+  const stripe=new THREE.CanvasTexture(cv); stripe.wrapS=stripe.wrapT=THREE.RepeatWrapping; stripe.repeat.set(8,1);
+  const canopy=new THREE.Mesh(new THREE.ConeGeometry(R+1.4,2.6,NH*4,1,true), new THREE.MeshToonMaterial({map:stripe,gradientMap:GRAD,side:THREE.DoubleSide}));
+  canopy.position.y=DECK_Y+0.2+POLE_H-0.4; spin.add(canopy);
+  const eave=new THREE.Mesh(new THREE.TorusGeometry(R+1.35,0.16,8,40), toon(0xf6d860)); eave.rotation.x=Math.PI/2; eave.position.y=DECK_Y+0.2+POLE_H-1.66; spin.add(eave);
+  const cap=new THREE.Mesh(new THREE.SphereGeometry(0.7,14,10), new THREE.MeshBasicMaterial({color:0xffe08a})); cap.position.y=DECK_Y+0.2+POLE_H+0.7; spin.add(cap);
+  const bulbMat=new THREE.MeshBasicMaterial({color:0xfff1c2,transparent:true,opacity:0.85});
+  const bgeo=new THREE.SphereGeometry(0.12,8,6);
+  for(let i=0;i<NH*3;i++){ const a=i/(NH*3)*Math.PI*2; const b=new THREE.Mesh(bgeo,bulbMat); b.position.set(Math.cos(a)*(R+1.32), DECK_Y+0.2+POLE_H-1.66, Math.sin(a)*(R+1.32)); spin.add(b); }
+  // horses
+  const horses=[];
+  for(let i=0;i<NH;i++){
+    const a=i/NH*Math.PI*2, col2=PAL[i%PAL.length];
+    const g=new THREE.Group(); g.position.set(Math.cos(a)*R*0.82, 2.2, Math.sin(a)*R*0.82); g.rotation.y=-a+Math.PI/2; spin.add(g);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,4.4,8), new THREE.MeshBasicMaterial({color:0xf3c969})); pole.position.y=0.2; g.add(pole);
+    const body=rbox(1.5,0.9,0.6,col2,0.26); outline(body,0.02); g.add(body);
+    const neck=rbox(0.5,0.8,0.5,col2,0.22); neck.position.set(0.7,0.55,0); neck.rotation.z=-0.5; g.add(neck);
+    const head=rbox(0.7,0.5,0.42,col2,0.2); head.position.set(1.05,0.95,0); g.add(head);
+    const snout=rbox(0.4,0.34,0.36,shade(col2,8),0.16); snout.position.set(1.36,0.84,0); g.add(snout);
+    const mane=rbox(0.24,1.0,0.5,ACC,0.1); mane.position.set(0.66,0.7,0); mane.rotation.z=-0.5; g.add(mane);
+    const tail=rbox(0.3,0.9,0.4,ACC,0.14); tail.position.set(-0.78,0.1,0); tail.rotation.z=0.6; g.add(tail);
+    const saddle=rbox(0.7,0.2,0.66,0xf2efe6,0.08); saddle.position.set(-0.05,0.5,0); g.add(saddle);
+    const legc=shade(col2,-12);
+    [[0.5,0.32],[0.5,-0.32],[-0.5,0.32],[-0.5,-0.32]].forEach(([lx,lz])=>{ const leg=rbox(0.2,0.8,0.2,legc,0.06); leg.position.set(lx,-0.7,lz); g.add(leg); });
+    horses.push({grp:g, base:2.2, ph:a});
+  }
+  // boarding ring + signpost + lanterns (board point faces town centre)
+  const ring=new THREE.Mesh(new THREE.RingGeometry(1.8,2.3,32), new THREE.MeshBasicMaterial({color:0xffd98a,transparent:true,opacity:0.5,side:THREE.DoubleSide})); ring.rotation.x=-Math.PI/2; ring.position.y=0.06; root.add(ring);
+  const dir=new THREE.Vector3(-CAROUSEL_POS.x,0,-CAROUSEL_POS.z).normalize();
+  const board=new THREE.Vector3(CAROUSEL_POS.x+dir.x*(R+2.4),0,CAROUSEL_POS.z+dir.z*(R+2.4));
+  const signG=new THREE.Group(); signG.position.set(board.x,0,board.z); scene.add(signG);
+  const post=rbox(0.16,2.2,0.16,0x7a5230,0.03); post.position.y=1.1; outline(post,0.03); signG.add(post);
+  const sboard=new THREE.Mesh(new THREE.PlaneGeometry(2.1,0.66), new THREE.MeshBasicMaterial({map:signTexture('Carousel · 회전목마',0xe6486f),transparent:true})); sboard.position.set(0,1.9,0.08); signG.add(sboard);
+  signG.rotation.y=Math.atan2(-board.x,-board.z);
+  makeGuildLantern(board.x+2.6, board.z); makeGuildLantern(board.x-2.6, board.z);
+  // collider: only the centre hub (outer deck stays walkable so you can reach a horse)
+  COLLIDERS.push({x:CAROUSEL_POS.x,z:CAROUSEL_POS.z, r:2.2});
+  CAROUSEL={ _isCarousel:true, _pos:new THREE.Vector3(CAROUSEL_POS.x,0,CAROUSEL_POS.z), label:t('carouselName'),
+             spin:spin, horses:horses, bulbMat:bulbMat, board:board, turned:0 };
 })();
 
 /* ---- ambient debate: one reused world bubble cycles through the deterministic transcript (0 LLM) ---- */
@@ -4053,6 +4115,7 @@ const PASS_LANDMARKS=[
   {id:'chrono',           ico:'⏳', key:'lmChrono'},
   {id:'observatory',      ico:'🔭', key:'lmObservatory'},
   {id:'ferris',           ico:'🎡', key:'ferrisName'},
+  {id:'carousel',         ico:'🎠', key:'carouselName'},
 ];
 let visited=0;
 let passport=loadPassport();
@@ -4090,11 +4153,12 @@ function _todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth
 function _seedFrom(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function _rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let x=Math.imul(seed^seed>>>15,1|seed); x=x+Math.imul(x^x>>>7,61|x)^x; return ((x^x>>>14)>>>0)/4294967296; }; }
 function _shuffle(arr,rng){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const tmp=a[i]; a[i]=a[j]; a[j]=tmp; } return a; }
-const COURSE_LM=[{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'ferris',ico:'🎡'}];
+const COURSE_LM=[{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
 function lmCourseDest(id){ switch(id){
   case 'chrono': return (typeof CHRONO!=='undefined'&&CHRONO)?{label:t('lmChrono'),_pos:CHRONO._pos,_landmark:'chrono'}:null;
   case 'observatory': return (typeof OBS!=='undefined'&&OBS)?{label:t('obsName'),_pos:OBS._pos,_landmark:'obs'}:null;
   case 'ferris': return (typeof FERRIS!=='undefined'&&FERRIS)?{label:t('ferrisName'),_pos:FERRIS._pos,_landmark:'ferris'}:null;
+  case 'carousel': return (typeof CAROUSEL!=='undefined'&&CAROUSEL)?{label:t('carouselName'),_pos:CAROUSEL._pos,_landmark:'carousel'}:null;
   case 'canal': { const c=RIVER_LANDMARK||CANAL_PTS[0]; return c?{label:t('lmCanal'),_pos:new THREE.Vector3(c.x,0,c.z),_landmark:'canal'}:null; }
   case 'plaza': return {label:t('lmPlaza'),_pos:new THREE.Vector3(0,0,0),_landmark:'plaza'};
   case 'library': return (typeof LIB!=='undefined'&&LIB)?{label:LIB.label,_pos:LIB._pos,_isLibrary:true}:null;
@@ -4317,7 +4381,7 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(ferris) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -4346,7 +4410,7 @@ document.getElementById('loading').style.display='none';
   const curName=document.getElementById('stationCurName');
   const stationClose=document.getElementById('stationClose');
   const EXAMPLES=['mrdoob','torvalds','karpathy','vercel','sindresorhus'];
-  const DISTRICTS=[{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'}];
+  const DISTRICTS=[{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
   const baseUrl=()=>location.origin+location.pathname;
   const townName=()=> cityMode==='public' ? tf('townOf',{user:currentUser}) : t('myCity');
 
@@ -4685,6 +4749,7 @@ function landmarkNav(q){
   if(go.test(q)){
     if(/쁘띠 ?베니스|petite[- ]?venise|운하|canal/i.test(q) && (RIVER_LANDMARK||CANAL_PTS.length)){ const c=RIVER_LANDMARK||CANAL_PTS[0]; return mk('lmDriveCanal', t('lmCanal'), new THREE.Vector3(c.x,0,c.z), 'canal'); }
     if(/대관람차|관람차|ferris|big ?wheel|observation ?wheel/i.test(q) && FERRIS) return mk('lmDriveFerris', t('ferrisName'), FERRIS._pos, 'ferris');
+    if(/회전목마|목마|carousel|merry.?go.?round/i.test(q) && CAROUSEL) return mk('lmDriveCarousel', t('carouselName'), CAROUSEL._pos, 'carousel');
     if(/중앙 ?광장|광장|분수|town ?square|plaza|fountain/i.test(q)) return mk('lmDrivePlaza', t('lmPlaza'), new THREE.Vector3(0,0,0), 'plaza');
     if(/공원|산책로|쉼터|\bpark\b/i.test(q)) return mk('lmDrivePark', t('lmPark'), new THREE.Vector3(-43,0,-15), 'park');
   }
@@ -4973,6 +5038,7 @@ function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visib
     if(k==='chrono') setTimeout(()=>{ try{ openChrono(repo._chronoPreset||undefined); }catch(e){} }, 700);
     if(k==='obs') setTimeout(()=>{ try{ openObservatory(); }catch(e){} }, 700);
     if(k==='ferris') setTimeout(()=>{ try{ boardFerris(); }catch(e){} }, 800);
+    if(k==='carousel') setTimeout(()=>{ try{ boardCarousel(); }catch(e){} }, 800);
     return;
   }
   addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
@@ -4999,6 +5065,28 @@ function disembarkFerris(){ if(!ferris) return; ferris=null; model.visible=true;
   const b=FERRIS.board; player.position.set(b.x,0,b.z);
   model.rotation.y=Math.atan2(-b.x,-b.z); camYaw=model.rotation.y+Math.PI; camPitch=0.42; camDist=14;
   showWave(t('ferrisDone'),2800); }
+
+/* ---- 🎠 Carousel ride: hop on the nearest horse, spin gently with a bob for one full turn, then step back onto the ground ---- */
+function updateCarousel(dt){ if(!CAROUSEL) return;
+  const spin = carousel ? 0.52 : 0.22;                                    // a touch livelier while you're aboard
+  CAROUSEL.spin.rotation.y += spin*dt;
+  for(const h of CAROUSEL.horses) h.grp.position.y = h.base + Math.sin(clock.elapsedTime*2.4 + h.ph)*0.42;   // horses bob up and down
+  if(carousel) carousel.turned += spin*dt;
+  CAROUSEL.bulbMat.opacity = (isNight?0.98:0.6)*(0.72+0.28*Math.sin(clock.elapsedTime*3.0));   // rim bulbs twinkle, brighter after dark
+}
+function boardCarousel(){ if(carousel||ride||modalOpen||!CAROUSEL) return;
+  let best=null, bd=Infinity; const w=new THREE.Vector3();
+  for(const h of CAROUSEL.horses){ h.grp.getWorldPosition(w); const d=w.distanceToSquared(CAROUSEL.board); if(d<bd){ bd=d; best=h; } }   // mount whichever horse is nearest the platform
+  carousel={ horse:best, turned:0 }; freeLook=true; model.visible=false; blob.visible=false;
+  if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  camYaw=Math.atan2(CAROUSEL_POS.x,CAROUSEL_POS.z); camPitch=0.18; camDist=12;                 // sit on the horse, looking out over the funfair
+  promptEl.classList.remove('show'); actBtn.classList.remove('avail');
+  if(addStamp('carousel')) popSparkle(CAROUSEL_POS.x,4,CAROUSEL_POS.z,0xffd0e6);
+  track('carousel_board',{}); showWave(t('carouselBoard'),2800); }
+function disembarkCarousel(){ if(!carousel) return; carousel=null; model.visible=true; blob.visible=true; freeLook=false;
+  const b=CAROUSEL.board; player.position.set(b.x,0,b.z);
+  model.rotation.y=Math.atan2(-b.x,-b.z); camYaw=model.rotation.y+Math.PI; camPitch=0.42; camDist=14;
+  showWave(t('carouselDone'),2800); }
 
 /* ---- wiring ---- */
 taxiBtn.onclick=()=> chatEl.classList.contains('hidden')?openChat(NPCS.find(n=>n.kind==='taxi')):closeChat();
@@ -5039,10 +5127,11 @@ function animate(){
   frame++;
   const _now=performance.now();
   const _idle=(_now-lastAct)>1200;                 // perf: no input/move >1.2s → idle
-  if(_idle && !(tour&&tour.active) && !ferris && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour keep full fps)
+  if(_idle && !(tour&&tour.active) && !ferris && !carousel && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour keep full fps)
   lastFrame=_now;
   const dt=Math.min(clock.getDelta(),0.05);
   updateFerris(dt);
+  updateCarousel(dt);
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
   mv.set(0,0,0);
@@ -5075,6 +5164,10 @@ function animate(){
     const w=new THREE.Vector3(); ferris.cab.getWorldPosition(w);
     player.position.set(w.x, w.y-2.0, w.z);                  // ride the gondola — the camera follows it up, around and back down
     if(ferris.turned>=Math.PI*2) disembarkFerris();          // one full turn → back at the bottom, step off
+  } else if(carousel){
+    const w=new THREE.Vector3(); carousel.horse.grp.getWorldPosition(w);
+    player.position.set(w.x, w.y-1.6, w.z);                  // ride the horse — the camera circles with the carousel
+    if(carousel.turned>=Math.PI*2) disembarkCarousel();      // one full turn → step off at the platform
   } else {
     if(sitting&&userInput) standUp();
     if(keys['KeyW']||keys['ArrowUp']) mv.add(tF);
@@ -5124,6 +5217,7 @@ function animate(){
   nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
   nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
   nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
+  nearCarousel = (CAROUSEL && !carousel && player.position.distanceTo(CAROUSEL.board) < 6.0) ? CAROUSEL : null;
   // 🏠 first walk-up to a house → a gentle sparkle + acknowledge bob (landmarks get their own reactions below; skip while a taxi drives you past many houses)
   if(nearest && !nearest._isLibrary && !ride) greetBuilding(nearest);
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes) + a localized sparkle on first stamp
@@ -5135,12 +5229,14 @@ function animate(){
     if(nearObs && !passHasStamp('observatory')){ if(addStamp('observatory')) popSparkle(OBS._pos.x,5,OBS._pos.z,0x9fd0ff); }
     if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ if(addStamp('canal')) popSparkle(c.x,2.6,c.z,0x7fe3da); break; } } } }
   if(ferris){ promptEl.innerHTML = t('ferrisRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
+  else if(carousel){ promptEl.innerHTML = t('carouselRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
   else if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
   else if(nearObs&&!modalOpen){ promptEl.innerHTML=`<b>${t('obsName')}</b>${t('obsReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🔭'; }
   else if(nearStation&&!modalOpen){ promptEl.innerHTML=`<b>${t('stationLm')}</b>${t('stationReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚉'; }
   else if(nearFerris&&!modalOpen){ promptEl.innerHTML=`<b>${t('ferrisName')}</b>${t('ferrisReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎡'; }
+  else if(nearCarousel&&!modalOpen){ promptEl.innerHTML=`<b>${t('carouselName')}</b>${t('carouselReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎠'; }
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
@@ -5420,6 +5516,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__obsScan=()=>{ let mind=Infinity,who=null; for(const b of buildings){ const dx=(b._x!=null?b._x:b.position.x)-OBS_POS.x, dz=(b._z!=null?b._z:b.position.z)-OBS_POS.z; const edge=Math.hypot(dx,dz)-(b._cw||3); if(edge<mind){ mind=edge; who=b.repo; } } return { obsCenterR:+Math.hypot(OBS_POS.x,OBS_POS.z).toFixed(1), nearestBld:who, nearestEdge:+mind.toFixed(1), baseR:7.8 }; };
   window.__ferris=()=>({ has:!!FERRIS, pos:FERRIS?{x:+FERRIS._pos.x.toFixed(1),z:+FERRIS._pos.z.toFixed(1)}:null, board:FERRIS?{x:+FERRIS.board.x.toFixed(1),z:+FERRIS.board.z.toFixed(1)}:null, near:!!nearFerris, riding:!!ferris, turned:ferris?+ferris.turned.toFixed(2):0, dist:FERRIS?+player.position.distanceTo(FERRIS.board).toFixed(1):null });
   window.__board=()=>{ if(!FERRIS) return 'no ferris'; const b=FERRIS.board; player.position.set(b.x,0,b.z); return window.__ferris(); };
+  window.__carousel=()=>({ has:!!CAROUSEL, pos:CAROUSEL?{x:+CAROUSEL._pos.x.toFixed(1),z:+CAROUSEL._pos.z.toFixed(1)}:null, board:CAROUSEL?{x:+CAROUSEL.board.x.toFixed(1),z:+CAROUSEL.board.z.toFixed(1)}:null, near:!!nearCarousel, riding:!!carousel, turned:carousel?+carousel.turned.toFixed(2):0, dist:CAROUSEL?+player.position.distanceTo(CAROUSEL.board).toFixed(1):null });
+  window.__boardC=()=>{ if(!CAROUSEL) return 'no carousel'; const b=CAROUSEL.board; player.position.set(b.x,0,b.z); return window.__carousel(); };
 
   window.__fireworks=(n)=>{ fireworksShow(n||10); return { queued:_fwQueue, active:FW.length, auroraBoost:+_auroraBoost.toFixed(1) }; };
   window.__visitFx=(name)=>{ let b=name?buildings.find(x=>x.repo===name||x.label===name):null;
