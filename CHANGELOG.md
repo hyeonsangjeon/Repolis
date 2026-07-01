@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.41.0] — 2026-07-01
+
+### 🚪 "Entries today" HUD counter — a distinct page-load count
+- **A new chip in the live badge.** The village HUD now reads `🟢 5 · 방문자 12명 · 입장 21회 · 누적 682명` (EN: `🟢 5 · visitors 12 · entries 21 · total 682`). The new **입장 / entries** chip is a coarse *entry / page-load* count — refreshes, re-entries and new tabs all count — shown deliberately **distinct** from the official unique-visitor numbers, with 명 (people) vs 회 (times) units in Korean to keep the two meanings clear at a glance.
+- **Two sources, clearly separated.** `live / 방문자(today) / 누적(total)` remain the realtime-worker (`repolis-rt`) *unique visitors*; the new `입장(entries)` reads a public read-only aggregate from the metrics worker (`repolis-metrics`) `page_load` count. The stale `WORLD_UNIQUE*` snapshot values are **not** pulled into the HUD.
+- **No token in the public client.** The chip derives its endpoint from the already-present analytics `<meta>` (single source of truth): when analytics collection is configured it fetches a minimal `{pageLoadToday, pageLoadTotal, day}` over CORS (`cache: no-store`, throttled, re-fetch on tab-visible); when the meta is empty it simply stays hidden with zero network. The date boundary stays **UTC**, surfaced in the badge tooltip ("UTC 기준 / UTC day").
+- **Verified.** Desktop + 390px mobile: chip renders on its own HUD row with no overflow (badge right 284 < 390), bilingual tooltip re-localizes on language toggle, `__rt().entries` exposes the live value, **0 console errors**. Smoke 31 + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.40.0] — 2026-07-01
 
 ### 🎠 Carousel — a funfair partner for the Ferris wheel

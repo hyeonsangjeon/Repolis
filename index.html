@@ -584,7 +584,7 @@
   <button id="dayBtn" class="badge" title="Time of day" aria-label="Time of day" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
   <div class="badge"><span data-i18n="visited">방문</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
   <button id="passBtn" class="badge" title="Explorer Passport" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🛂 <span data-i18n="passport">여권</span></button>
-  <div class="badge" id="liveBadge" title="online now · today · all-time unique visitors">🟢 <b id="liveCount">1</b><span id="todayWrap" style="display:none;"> · <span data-i18n="todayWord">오늘</span> <b id="todayCount">0</b></span><span id="allWrap" style="display:none;"> · <span data-i18n="totalWord">누적</span> <b id="allCount">0</b></span></div>
+  <div class="badge" id="liveBadge" title="online now · today unique visitors · entries today (page loads) · all-time unique · UTC">🟢 <b id="liveCount">1</b><span id="todayWrap" style="display:none;"> · <span data-i18n="visitorsWord">방문자</span> <b id="todayCount">0</b><span data-i18n="peopleUnit">명</span></span><span id="entryWrap" style="display:none;"> · <span data-i18n="entriesWord">입장</span> <b id="entryCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="allWrap" style="display:none;"> · <span data-i18n="totalWord">누적</span> <b id="allCount">0</b><span data-i18n="peopleUnit">명</span></span></div>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
 </div>
 <button id="menuBtn">☰<span class="dot"></span></button>
@@ -947,6 +947,7 @@ const I18N = {
   ko:{
     loading:'레포 도시를 짓는 중…',
     visited:'방문', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
+    visitorsWord:'방문자', entriesWord:'입장', entriesUnit:'회', peopleUnit:'명',
     passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프를 모아요.',
     passportRepos:'방문한 레포', passportHint:'현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
@@ -1084,6 +1085,7 @@ const I18N = {
   en:{
     loading:'Building Repolis…',
     visited:'Visited', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
+    visitorsWord:'visitors', entriesWord:'entries', entriesUnit:'', peopleUnit:'',
     passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps.',
     passportRepos:'Repos visited', passportHint:'Walk up to a scholar, the library, a canal or the plaza to earn a stamp.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
@@ -1233,6 +1235,7 @@ function applyLang(){
   if(typeof renderChronoCase==='function' && chronoModal && chronoModal.classList.contains('show') && chronoCaseId){ renderChronoCase(chronoCaseId); chronoModalLang=LANG; }
   if(typeof renderObservatory==='function' && typeof obsModal!=='undefined' && obsModal && obsModal.classList.contains('show')) renderObservatory();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
+  if(typeof window.__updateLiveTitle==='function') window.__updateLiveTitle();
 }
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
@@ -5299,7 +5302,7 @@ addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.upd
    With RT_DEFAULT empty the world runs solo and just shows "🟢 1". */
 const RT_DEFAULT='wss://repolis-rt.wingnut0310.workers.dev';
 const RT_URL=(new URLSearchParams(location.search).get('rt'))||localStorage.getItem('repolisRT')||window.REPOLIS_RT||RT_DEFAULT;
-const liveCountEl=document.getElementById('liveCount'), todayWrap=document.getElementById('todayWrap'), todayCountEl=document.getElementById('todayCount'), allWrap=document.getElementById('allWrap'), allCountEl=document.getElementById('allCount');
+const liveCountEl=document.getElementById('liveCount'), todayWrap=document.getElementById('todayWrap'), todayCountEl=document.getElementById('todayCount'), allWrap=document.getElementById('allWrap'), allCountEl=document.getElementById('allCount'), entryWrap=document.getElementById('entryWrap'), entryCountEl=document.getElementById('entryCount');
 function guestId(){ let id=localStorage.getItem('repolisGuestId'); if(!id){ id='g'+Math.random().toString(36).slice(2,9); localStorage.setItem('repolisGuestId',id); } return id; }
 function guestName(){ let n=localStorage.getItem('repolisGuestName'); if(!n){ n='Guest-'+Math.floor(1000+Math.random()*9000); localStorage.setItem('repolisGuestName',n); } return n; }
 const peers=new Map();
@@ -5338,6 +5341,25 @@ let rtSock=null, rtSendT=0, lastSent={x:1e9,z:1e9,y:0};
 function setLive(n){ liveCountEl.textContent=Math.max(1,n|0); }
 function setToday(n){ todayWrap.style.display='inline'; todayCountEl.textContent=n|0; }
 function setTotal(n){ allWrap.style.display='inline'; allCountEl.textContent=n|0; }
+/* Entries-today (page loads) from the metrics worker — a coarse entry count (incl. refreshes / re-entries / new tabs),
+   deliberately DISTINCT from the rt unique-visitor counts above. Read-only public aggregate {pageLoadToday,pageLoadTotal,day}.
+   Derived from the analytics endpoint so there's one source of truth; only shows when analytics collection is configured. */
+const PUBLIC_STATS_URL=(function(){ try{ if(ANALYTICS_ENDPOINT) return ANALYTICS_ENDPOINT.replace(/\/(analytics\/)?event\/?$/,'/public/today'); }catch(e){} return null; })();
+let _entriesToday=null, _entriesDay=null, _entriesT=0;
+function setEntries(n){ if(entryWrap) entryWrap.style.display='inline'; if(entryCountEl) entryCountEl.textContent=n|0; }
+function updateLiveTitle(){ const lb=document.getElementById('liveBadge'); if(!lb) return;
+  const e=_entriesToday; const d=_entriesDay?` (${_entriesDay})`:'';
+  lb.title = LANG==='ko'
+    ? `🟢 현재 접속 · 방문자 = 오늘 고유 방문자 · 입장 = 오늘 입장 횟수(새로고침·재입장 포함${e!=null?` ${e}회`:''}) · 누적 = 전체 고유 방문자 · UTC 기준${d}`
+    : `🟢 online now · visitors = unique today · entries = page loads today (incl. refreshes${e!=null?` ${e}`:''}) · total = all-time unique · UTC${d}`;
+}
+function refreshEntries(){ if(!PUBLIC_STATS_URL) return; const now=Date.now(); if(now-_entriesT<25000) return; _entriesT=now;
+  fetch(PUBLIC_STATS_URL,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{
+    if(d&&typeof d.pageLoadToday==='number'){ _entriesToday=d.pageLoadToday; _entriesDay=d.day||null; setEntries(d.pageLoadToday); updateLiveTitle(); }
+  }).catch(()=>{}); }
+window.__updateLiveTitle=updateLiveTitle;
+refreshEntries(); updateLiveTitle();
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') refreshEntries(); });
 function addPeer(p){ if(!p||p.id===guestId()||peers.has(p.id)) return;
   const color=p.color!=null?p.color:PEER_COLORS[hashStr(p.id)%PEER_COLORS.length];
   const g=makePeerAvatar(p.name,color); g.position.set(p.x||0,0,p.z||0); g.rotation.y=p.yaw||0; scene.add(g);
@@ -5410,7 +5432,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom}));
   window.__card=(name)=>{ const r=REPOS.find(x=>x.repo===name); if(r){ openCard(r); return {repo:r.repo,license:r.license,open_issues:r.open_issues,release_tag:r.release_tag,archived:r.archived,chips:[...document.querySelectorAll('#cardChips .chip')].map(c=>c.textContent.trim())}; } return null; };
   window.__modal=()=>modalOpen;
-  window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, total:allCountEl.textContent, ws:rtSock?rtSock.readyState:-1});
+  window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, today:todayCountEl.textContent, total:allCountEl.textContent, entries:entryCountEl?entryCountEl.textContent:null, entriesUrl:PUBLIC_STATS_URL, ws:rtSock?rtSock.readyState:-1});
   window.__peerSim=(x=4,z=-2)=>{ rtHandle({t:'join',peer:{id:'gSIM',name:'Tester',x,z,yaw:0,color:0x6fa8ef}}); const p=peers.get('gSIM'); p.group.updateMatrixWorld(true); const v=new THREE.Vector3(0,2.2,0).applyMatrix4(p.group.matrixWorld).project(camera); return {sx:Math.round((v.x*0.5+0.5)*innerWidth), sy:Math.round((-v.y*0.5+0.5)*innerHeight), armR:!!p.group._armR}; };
   window.__greet=(cx,cy)=>{ const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return {id:g.id, myEmoteT:+emoteT.toFixed(2), kind:emoteKind}; } return null; };
   window.__wave=(id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'wave',id:t,to:guestId()}); return {by:t, peerEmoteT:+(peers.get(t)?.emoteT||0).toFixed(2), toast:greetToast.textContent}; };
