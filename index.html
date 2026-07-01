@@ -1298,6 +1298,14 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 app.appendChild(renderer.domElement);
 const MAXANISO = renderer.capabilities.getMaxAnisotropy();
 
+/* ---- device quality tier: gate detail density so mobile/low-end lower overdraw without touching desktop ---- */
+const _coarse = matchMedia('(pointer:coarse)').matches;
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const IS_MOBILE = _coarse && Math.min(innerWidth, innerHeight) <= 820;      // phone/tablet-ish touch surface
+const LOW_END = (navigator.hardwareConcurrency||8) <= 4 || (navigator.deviceMemory||8) <= 4 || (IS_MOBILE && innerWidth <= 430);
+const DETAIL = IS_MOBILE ? (LOW_END ? 0.5 : 0.72) : (LOW_END ? 0.82 : 1);   // scene-density multiplier (1=full desktop)
+const detail = n => Math.max(0, Math.round(n*DETAIL));                       // scale a per-instance count by the device tier
+
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xd9e4c8, 150, 460);
 const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, 0.1, 760);
@@ -1318,11 +1326,15 @@ function applyRim(mat){
       '  float _rim=pow(1.0-clamp(dot(normalize(normal),normalize(vViewPosition)),0.0,1.0),uRimPower);\n'+
       '  gl_FragColor.rgb+=uRimColor*(_rim*uRimStrength);\n#include <dithering_fragment>');
   };
-  mat.customProgramCacheKey=()=>'rimtoon'+(mat.map?'M':'')+(mat.gradientMap?'G':'');
+  mat.customProgramCacheKey=()=>'rimtoon'+(mat.map?'M':'')+(mat.gradientMap?'G':'')+(mat.vertexColors?'V':'');
   return mat;
 }
 const toon = (color)=> applyRim(new THREE.MeshToonMaterial({ color, gradientMap:GRAD }));
 const basic = (color)=> new THREE.MeshBasicMaterial({ color });
+/* shared decoration materials — pooled so repeated static trims/knobs/flags don't mint a material each
+   (they're never individually tinted, so sharing is safe and cuts material churn) */
+const MAT_KNOB=basic(0xf3d27a), MAT_GOLD=basic(0xffd23f);
+const FLAG_MATS=[0xe85d4e,0xf2b13c,0x4fa3d1,0x6fbf73,0xb07cc6].map(c=>basic(c));
 
 /* ---- cartoon outline (inverted hull) ---- */
 const outlineCache = {};
@@ -1349,6 +1361,25 @@ function outline(mesh, th=0.05){
 function rbox(w,h,d,color,r=0.12,seg=3){
   const m = new THREE.Mesh(new RoundedBoxGeometry(w,h,d,seg,r), toon(color));
   m.castShadow = true; m.receiveShadow = true; return m;
+}
+/* baked vertical shading: write a per-vertex grey ramp (base darker → top neutral) so walls read a
+   soft skylight/AO gradient with zero extra draw calls. Geometry + material are unique per building,
+   so enabling vertexColors here is local. map colour is multiplied by this ramp. */
+function bakeVGrad(mesh, bot=0.78, top=1.02){
+  const geo=mesh.geometry; if(!geo.boundingBox) geo.computeBoundingBox();
+  const y0=geo.boundingBox.min.y, span=Math.max(1e-3, geo.boundingBox.max.y-y0);
+  const pos=geo.attributes.position, n=pos.count, col=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ const t=(pos.getY(i)-y0)/span, m=Math.min(1.15, bot+(top-bot)*t); col[i*3]=col[i*3+1]=col[i*3+2]=m; }
+  geo.setAttribute('color', new THREE.BufferAttribute(col,3));
+  if(mesh.material){ mesh.material.vertexColors=true; mesh.material.needsUpdate=true; }
+  return mesh;
+}
+const _sstep=(e0,e1,x)=>{ const t=Math.min(1,Math.max(0,(x-e0)/(e1-e0))); return t*t*(3-2*t); };
+/* baked radial shading for flat discs/planes: fn(r)→brightness written as a grey vertex ramp (planar UVs preserved) */
+function bakeRadial(geo, fn){
+  const pos=geo.attributes.position, n=pos.count, col=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ const m=fn(Math.hypot(pos.getX(i),pos.getY(i))); col[i*3]=col[i*3+1]=col[i*3+2]=m; }
+  geo.setAttribute('color', new THREE.BufferAttribute(col,3)); return geo;
 }
 /* soft rounded primitives (for cute, non-boxy characters) */
 function ball(r,color,seg=18){
@@ -1706,7 +1737,7 @@ function _birdTex(){ const c=document.createElement('canvas'); c.width=c.height=
 const BIRD_TEX=_birdTex();
 const birdFlock=new THREE.Group(); scene.add(birdFlock);
 const birds=[];
-for(let i=0;i<11;i++){
+for(let i=0;i<detail(11);i++){
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:BIRD_TEX,color:0x343b4d,transparent:true,opacity:0.92,depthWrite:false}));
   s.userData={ cx:(Math.random()-0.5)*120, cz:(Math.random()-0.5)*120, rad:48+Math.random()*120, h:30+Math.random()*28, sp:0.05+Math.random()*0.06, ph:Math.random()*Math.PI*2, fl:3+Math.random()*2, sc:1.7+Math.random()*1.4 };
   birdFlock.add(s); birds.push(s);
@@ -1726,7 +1757,7 @@ function makeButterfly(col){ const g=new THREE.Group();
   g.add(wl,wr,body); g._wl=wl; g._wr=wr; return g; }
 const butterflyGroup=new THREE.Group(); scene.add(butterflyGroup);
 const butterflies=[];
-for(let i=0;i<16;i++){
+for(let i=0;i<detail(16);i++){
   const g=makeButterfly(BFLY_COLS[i%BFLY_COLS.length]);
   const a=Math.random()*Math.PI*2, r=6+Math.random()*62;
   g.userData={ cx:Math.cos(a)*r, cz:Math.sin(a)*r, rad:1.6+Math.random()*4.5, by:0.8+Math.random()*2.2, sp:0.45+Math.random()*0.7, ph:Math.random()*Math.PI*2, fl:9+Math.random()*5 };
@@ -1869,7 +1900,18 @@ function roofTexture(col){ const key='r_'+col; if(_roofCache.has(key)) return _r
 }
 
 /* ---- ground ---- */
-const ground = new THREE.Mesh(new THREE.CircleGeometry(300,72), texMat(GRASS_TEX,59,59,false));
+// segmented plane (planar UVs → clean grass tiling) with a baked radial meadow gradient: a sunlit clearing
+// around the plaza that gently deepens into the fogged distance for depth. Bigger than the old r300 disc so
+// its edge sits past fog-end (invisible). Still one mesh = one draw call.
+const GROUND_R=470, GTILE=10.2;
+const groundGeo=new THREE.PlaneGeometry(GROUND_R*2, GROUND_R*2, 64, 64);
+bakeRadial(groundGeo, r=>{
+  const lift = 0.07*(1-_sstep(8,78,r));        // warm sunlit lift hugging the square/paths
+  const deep = 0.17*_sstep(120,330,r);         // deepen toward the horizon before fog takes over
+  return Math.min(1.1, 1.0+lift-deep);
+});
+const ground = new THREE.Mesh(groundGeo, texMat(GRASS_TEX, (GROUND_R*2)/GTILE, (GROUND_R*2)/GTILE, false));
+ground.material.vertexColors=true;
 ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
 const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5,40), texMat(SAND_TEX,7,7,false));
 plaza.rotation.x=-Math.PI/2; plaza.position.y=0.02; plaza.receiveShadow=true; scene.add(plaza);
@@ -1887,7 +1929,7 @@ const RUNE_MATS=[];
   star(8.2,6.0,12,0.34); star(7.2,4.2,6,0.22);   // 12-pt + 6-pt starlight polygons woven between rings
 })();
 // floating star-dust drifting over the plaza (magic motes — kept light so the square breathes)
-const starDust=(function(){ const N=54, pos=[], base=[], ph=[];
+const starDust=(function(){ const N=detail(54), pos=[], base=[], ph=[];
   for(let i=0;i<N;i++){ const a=Math.random()*Math.PI*2, r=Math.random()*8.6, y=0.4+Math.random()*3.6;
     pos.push(Math.cos(a)*r,y,Math.sin(a)*r); base.push(Math.cos(a)*r,y,Math.sin(a)*r); ph.push(Math.random()*6.28); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
@@ -2162,7 +2204,7 @@ function makePavilion(px,pz){
     col.position.set(Math.cos(a)*R,1.62,Math.sin(a)*R); outline(col,0.04); g.add(col); }
   const ring=new THREE.Mesh(new THREE.TorusGeometry(R,0.12,6,24), toon(0xd8cdb2)); ring.rotation.x=Math.PI/2; ring.position.y=3.05; g.add(ring);
   const roof=new THREE.Mesh(new THREE.ConeGeometry(4.0,1.7,8), toon(0x9c5a3c)); roof.position.y=3.95; roof.rotation.y=Math.PI/8; outline(roof,0.05); g.add(roof);
-  const finial=new THREE.Mesh(new THREE.SphereGeometry(0.22,10,8), basic(0xffd23f)); finial.position.y=4.85; g.add(finial);
+  const finial=new THREE.Mesh(new THREE.SphereGeometry(0.22,10,8), MAT_GOLD); finial.position.y=4.85; g.add(finial);
   const lantern=new THREE.Mesh(new THREE.SphereGeometry(0.18,10,8), new THREE.MeshBasicMaterial({color:0xffdca0})); lantern.position.y=2.9; g.add(lantern);
   makeBench(px+1.55, pz, -Math.PI/2);
   makeBench(px-1.55, pz, Math.PI/2);
@@ -2610,7 +2652,7 @@ function addGarage(g,w,d,yr,roofColor){
 
 /* ---- grand-house parts: wings, porch, balcony, portico, cupola, dormer ---- */
 function addWing(g, ww, wh, wd, wall, roofColor, x){
-  const wb=rbox(ww,wh,wd,wall,0.16); wb.position.set(x,wh/2,0); outline(wb,0.05); g.add(wb);
+  const wb=rbox(ww,wh,wd,wall,0.16); bakeVGrad(wb); wb.position.set(x,wh/2,0); outline(wb,0.05); g.add(wb);
   const wr=makeRoof('hip', ww*0.92, wh, roofColor); wr.position.x=x; g.add(wr);
   const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.66,0.66), basic(0xffe4a0)); gl.position.set(x,wh*0.55,wd/2+0.05); g.add(gl);
 }
@@ -2645,7 +2687,7 @@ function addPortico(g, w, d, color, big){
 function addCupola(g, h, color){
   const drum=new THREE.Mesh(new THREE.CylinderGeometry(0.82,0.92,1.2,14), toon(0xf3ecd8)); drum.position.y=h+1.4; outline(drum,0.04); g.add(drum);
   const dome=new THREE.Mesh(new THREE.SphereGeometry(0.88,16,10,0,Math.PI*2,0,Math.PI/2), toon(color)); dome.position.y=h+2.0; g.add(dome);
-  const fin=new THREE.Mesh(new THREE.SphereGeometry(0.14,8,8), basic(0xffd23f)); fin.position.y=h+3.0; g.add(fin);
+  const fin=new THREE.Mesh(new THREE.SphereGeometry(0.14,8,8), MAT_GOLD); fin.position.y=h+3.0; g.add(fin);
 }
 function addDormer(g, d, y){
   const db=rbox(1.1,0.95,0.9,0xf3ead4,0.05); db.position.set(0,y,d*0.16); g.add(db);
@@ -2726,10 +2768,10 @@ function makeBuilding(repo){
   cshadow.rotation.x=-Math.PI/2; cshadow.position.y=0.03; g.add(cshadow);
   const hedge=new THREE.Mesh(new THREE.TorusGeometry(yr,0.28,6,48), toon(repo._downtown?0xb7a274:0x5d9e46));
   hedge.rotation.x=Math.PI/2; hedge.position.y=0.34; g.add(hedge);
-  if(!repo._downtown){ for(let i=0;i<3;i++){ const a=Math.random()*Math.PI*2, rr=yr*(0.4+Math.random()*0.4);
+  if(!repo._downtown){ for(let i=0;i<detail(3);i++){ const a=Math.random()*Math.PI*2, rr=yr*(0.4+Math.random()*0.4);
     const b=new THREE.Mesh(new THREE.SphereGeometry(0.4+Math.random()*0.3,8,6), toon(0x5aa048)); b.position.set(Math.cos(a)*rr,0.4,Math.sin(a)*rr); b.scale.y=0.8; g.add(b); } }
   // garden richness = composite score (flowers, trees, chowchow pet)
-  const nf=Math.round(rich*5);
+  const nf=detail(Math.round(rich*5));
   for(let i=0;i<nf;i++){ const a=(i/Math.max(1,nf))*Math.PI*2+Math.random(), rr=yr*(0.4+Math.random()*0.5);
     const stem=new THREE.Mesh(GEO_STEM,MAT_STEM); stem.position.set(Math.cos(a)*rr,0.21,Math.sin(a)*rr); g.add(stem);
     const fl=new THREE.Mesh(GEO_FLOWER,FLOWER_MATS[i%FLOWER_MATS.length]); fl.position.set(Math.cos(a)*rr,0.44,Math.sin(a)*rr); g.add(fl); }
@@ -2739,7 +2781,7 @@ function makeBuilding(repo){
     const crown=new THREE.Mesh(GEO_CROWN,MAT_CROWN); crown.position.set(Math.cos(a)*rr,1.32,Math.sin(a)*rr); crown.scale.y=1.1; crown.castShadow=true; g.add(crown); }
   if(rich>0.5){ const dog=makeChow(CHOW_COATS[Math.floor(Math.random()*3)]); const a=Math.random()*Math.PI*2; dog.position.set(Math.cos(a)*yr*0.5,0,Math.sin(a)*yr*0.5); dog.rotation.y=-a+Math.PI/2; dog.scale.setScalar(0.85); dog.userData.ph=Math.random()*9; g.add(dog); CHOWS.push(dog); }
   // Provençal lavender accents in the yard (close-up signature of the village)
-  { const nL=repo._downtown?1:2; for(let i=0;i<nL;i++){ const a=(i/Math.max(1,nL))*Math.PI*2+Math.random()*1.6, rr=yr*(0.55+Math.random()*0.32);
+  { const nL=detail(repo._downtown?1:2); for(let i=0;i<nL;i++){ const a=(i/Math.max(1,nL))*Math.PI*2+Math.random()*1.6, rr=yr*(0.55+Math.random()*0.32);
     lavenderClump(g, Math.cos(a)*rr, Math.sin(a)*rr, 0.85+Math.random()*0.4); } }
   // a koi pond for lively/active repos, a driveway garage for well-starred/forked ones
   if(repo.stars>=8 || repo._activity>0.7) addPond(g,yr);
@@ -2748,14 +2790,14 @@ function makeBuilding(repo){
   // body + roof (score-tiered silhouette: cabin→cottage→house→townhouse→villa→manor→mansion + tower/shop)
   const bodyR=(kind==='tower'||kind==='townhouse')?0.12:0.2;
   const wstyle=wallStyleFor(repo); repo._wstyle=wstyle; const wtex=wallTexture(wstyle, repo.wall);
-  const body=rbox(w,h,d,repo.wall,bodyR); body.material=texMat(wtex, Math.max(1.2,w/3.2), Math.max(1.2,h/3.2));
+  const body=rbox(w,h,d,repo.wall,bodyR); body.material=texMat(wtex, Math.max(1.2,w/3.2), Math.max(1.2,h/3.2)); bakeVGrad(body);
   body.position.y=h/2; outline(body,0.06); g.add(body);
   repo._body=body;
   // projecting stone base course (water-table) grounds the building on its plot
   const plinth=rbox(w+0.26, 0.5, d+0.26, 0x8f8676, bodyR); plinth.position.y=0.25; outline(plinth,0.05); g.add(plinth);
   repo._cw=(w*0.5+0.6)*((kind==='manor'||kind==='mansion')?1.4:(kind==='villa')?1.18:1);
   let topH=h, topW=w;
-  if(kind==='shop'){ const uh=Math.max(1.8,h*0.34); const up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.material=texMat(wtex, Math.max(1,w*0.62/3.2), Math.max(1,uh/3.2)); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
+  if(kind==='shop'){ const uh=Math.max(1.8,h*0.34); const up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.material=texMat(wtex, Math.max(1,w*0.62/3.2), Math.max(1,uh/3.2)); bakeVGrad(up); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
   // side wings for grand residences (저택)
   if(kind==='villa'){ addWing(g, w*0.52, h*0.66, d*0.8, repo.wall, repo.roof, w*0.66); }
   else if(kind==='manor'||kind==='mansion'){ const wh=h*(kind==='mansion'?0.8:0.72), wx=w*0.72;
@@ -2779,7 +2821,7 @@ function makeBuilding(repo){
   else if(kind==='townhouse'){ const stoop=rbox(2.0,0.5,1.1,0xd9cdb4,0.04); stoop.position.set(0,0.25,d/2+0.62); outline(stoop,0.02); g.add(stoop); }
   // door
   const door=rbox(1.4,2.1,0.3,0x6e4a2e,0.12); door.position.set(0,1.05,d/2); outline(door,0.04); g.add(door);
-  const knob=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6), basic(0xf3d27a)); knob.position.set(0.44,1.05,d/2+0.18); g.add(knob);
+  const knob=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6), MAT_KNOB); knob.position.set(0.44,1.05,d/2+0.18); g.add(knob);
   // awning only for shop & small cabins/cottages (others have porch/portico/balcony)
   if(kind==='shop'){ const aw=rbox(w*0.96,0.26,1.3,(CATS[repo._cat]||CATS.Software).color,0.06); aw.position.set(0,2.5,d/2+0.55); outline(aw,0.03); g.add(aw); }
   else if(kind==='cottage'||kind==='cabin'){ const awn=rbox(1.9,0.24,0.85,repo.roof,0.08); awn.position.set(0,2.3,d/2+0.32); outline(awn,0.03); g.add(awn); }
@@ -2800,11 +2842,11 @@ function makeBuilding(repo){
       const fl=new THREE.Mesh(GEO_FLOWER,FLOWER_MATS[(hashStr(repo.repo)+Math.round(wx*7))%FLOWER_MATS.length]); fl.position.set(wx,wy-0.46,d/2+0.24); g.add(fl); }
   }));
   // bunting flags (fancy = clones)
-  if(flags>0){ const fc=[0xe85d4e,0xf2b13c,0x4fa3d1,0x6fbf73,0xb07cc6];
+  if(flags>0){
     for(let f=0;f<flags;f++){ const fx=-w*0.34+(w*0.68)*(f/Math.max(1,flags-1)); const fy=h-0.4-Math.sin((f/Math.max(1,flags-1))*Math.PI)*0.7;
-      const fl=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.64), basic(fc[f%fc.length])); fl.position.set(fx,fy,d/2+0.42); g.add(fl); } }
+      const fl=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.64), FLAG_MATS[f%FLAG_MATS.length]); fl.position.set(fx,fy,d/2+0.42); g.add(fl); } }
   // gold roof trim when very fancy
-  if(fancy>0.62){ const trim=new THREE.Mesh(new THREE.TorusGeometry(w*0.5,0.07,6,18), basic(0xffd23f)); trim.rotation.x=Math.PI/2; trim.position.y=h+0.06; g.add(trim); }
+  if(fancy>0.62){ const trim=new THREE.Mesh(new THREE.TorusGeometry(w*0.5,0.07,6,18), MAT_GOLD); trim.rotation.x=Math.PI/2; trim.position.y=h+0.06; g.add(trim); }
   // 🎉 recent release → festive garland + glowing tag badge (data-driven town event)
   if(repo._fresh){ addReleaseGarland(g, w, d, topH, repo); }
   // gold stars (= stars count, capped)
@@ -5589,6 +5631,12 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__liveClose=()=>{ closeLiveHud(); return { active:liveDebate.active, hud:document.getElementById('chronoLiveHud').classList.contains('show') }; };
 
   window.__feat=()=>({pond:buildings.filter(b=>b.stars>=8||b._activity>0.7).length, garage:buildings.filter(b=>b.stars>=11||(b.forks||0)>=4).length, buildings:buildings.length});
+  window.__perf=()=>{ const info=renderer.info; return {
+    calls:info.render.calls, triangles:info.render.triangles,
+    geometries:info.memory.geometries, textures:info.memory.textures, programs:(info.programs||[]).length,
+    dpr:+renderer.getPixelRatio().toFixed(2), size:[innerWidth,innerHeight],
+    tier:{ mobile:IS_MOBILE, lowEnd:LOW_END, reduced:REDUCED, detail:DETAIL },
+    idleCap:(performance.now()-lastAct)>1200, shadowAuto:renderer.shadowMap.autoUpdate }; };
   window.__act=()=>({prompt:document.getElementById('prompt').classList.contains('show'), btn:document.getElementById('actBtn').classList.contains('avail')});
   window.__cw=(name)=>{ const b=buildings.find(x=>x.repo===name); return b?+(b._cw||3).toFixed(2):null; };
   window.__farZRepo=()=>{ let best=null,bz=-1e9; for(const b of buildings){ if(b._isLibrary) continue; if(b._z>bz){ bz=b._z; best=b; } } return best?{repo:best.repo,x:+best._x.toFixed(1),z:+best._z.toFixed(1)}:null; };

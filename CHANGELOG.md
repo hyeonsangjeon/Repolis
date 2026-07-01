@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.44.0] — 2026-07-01
+
+### 🎨 Village texture / performance pass v1 — richer surface, no perf regression
+- **The meadow finally has depth.** The flat uniform ground was the biggest visual gap. It's now a segmented `PlaneGeometry` carrying a baked radial vertex-color gradient — sunlit near the plaza, deepening toward the horizon — while still tiling the existing procedural grass texture. **Zero new textures** (`GRASS_TEX` is reused): the plaza reads warm and lit, the field recedes into the fog with no visible plane edge.
+- **Baked wall shading.** Building bodies, shop upper storeys and wings get a subtle per-vertex vertical ramp (`bakeVGrad`) — bases a touch darker, tops neutral — for a hand-painted, grounded look. Toon materials keep their rim-light; the bake only writes a `color` attribute so outlines and the day/night RIM shaders are unaffected.
+- **Device quality tier + mobile detail gates.** A small `IS_MOBILE / LOW_END / REDUCED` tier drives a `detail(n)` multiplier (`1` desktop, `0.72`/`0.5` mobile) that scales scene-density counts: birds, butterflies, star-dust, per-garden flowers, bushes and lavender all thin out on phones. **Desktop is byte-for-byte unchanged** (`DETAIL=1`), while 390px mobile drops ~85 draw calls with the same texture count.
+- **Pooled decoration materials.** Repeated static trims that used to mint a `MeshBasicMaterial` each — door knobs, gold roof trim, bunting flags, landmark finials — are now shared module-level pools (`MAT_KNOB`, `MAT_GOLD`, `FLAG_MATS`), trimming material churn with no visual change.
+- **`window.__perf()` debug helper** (`?dbg`) reports `renderer.info` (calls / triangles / geometries / textures / programs), DPR, viewport and the active device tier — the instrument used to prove non-regression.
+- **Measured non-regression.** Desktop 1280×800: calls **3353** (≤ baseline 3523), textures **108** (= baseline, zero new), geometries 6013, programs 23 (+2 fixed, the vertex-color bake variants). Mobile 390×844 (dpr 2, `detail 0.5`): calls **1377** (baseline 1462, −85 from the gates), textures **89** (= baseline). Verified day + night, desktop + mobile: rich meadow/wall shading, no plane-edge artifact, no HUD overflow (390 = 390), **0 console errors**. Smoke 31 + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.43.0] — 2026-07-01
 
 ### 🔎 Scholar trace — the grounding excerpt, now in a per-source accordion
