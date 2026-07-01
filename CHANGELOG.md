@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.42.0] — 2026-07-01
+
+### 🚪 HUD counters reworked around real entry joins (repolis-rt `/__usage`)
+- **Four clear metrics, one realtime source.** The village badge now reads `🟢 4 · 오늘 입장 12회 · 누적 입장 2535회 · 고유 684명` (EN: `🟢 4 · entries today 12 · total entries 2535 · unique 684`). All four come straight from the realtime worker's WS frames (`welcome / join / stats`), which now carry `live · total · entriesToday · entriesTotal` mirrored from repolis-rt's `/__usage` counters — no HTTP fetch and no token in the public client.
+- **Entries vs unique, kept distinct.** `오늘 입장 / 누적 입장` (entries today / total entries) are *entry joins* — page load · re-entry · join — a coarse "how busy" count. `고유` (unique) stays the deduplicated all-time guest count. Korean keeps 회 (times) vs 명 (people) units so the two meanings never blur.
+- **Seeded total entries.** `누적 입장` is seeded once as `round(unique × 3.7)` in the room's Durable Object, then every real join accrues on top — surfaced in the badge tooltip along with the meaning of each field and the UTC day.
+- **`오늘 고유 방문자` (today-unique) left for the dashboard.** That value is analytics-only and is intentionally no longer shown on the main HUD, removing the earlier visitor/entries confusion.
+- **Dropped the metrics `/public/today` client fetch.** The HUD no longer pings the metrics worker; the realtime WS is the single source, which also removes a cross-origin request (the `/__usage` HTTP mirror is curl/debug only and isn't CORS-enabled).
+- **Clearer exploration label.** The repo-exploration progress chip is now `탐험 0/62` / `Explored` (was the ambiguous `방문` / `Visited`), so it never reads as a visitor count.
+- **Responsive & verified.** A pure-CSS full/short label swap keeps the badge tidy on narrow screens (`입장 · 누적 · 고유` under 520px). Desktop + 390px mobile: badge sits on its own HUD row with no overflow (right 294 < 390), KO/EN toggle re-localizes labels + tooltip, `__rt()` exposes `entriesToday/entriesTotal/total`, **0 console errors**. Smoke 31 + council 130 + live 56 green; `scholars.js` / `grounded.js` / `cloudflare/src/server.js` syntax-clean.
+
 ## [1.41.0] — 2026-07-01
 
 ### 🚪 "Entries today" HUD counter — a distinct page-load count

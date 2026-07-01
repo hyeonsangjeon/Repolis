@@ -13,8 +13,8 @@
 // Protocol (JSON over WS):
 //   client -> { t:'join', id, name, x, z, yaw, color }
 //   client -> { t:'pos',  id, x, z, yaw }
-//   server -> { t:'welcome', peers:[...], live, today, total }
-//   server -> { t:'join', peer, live, today, total }
+//   server -> { t:'welcome', peers:[...], live, today, total, entriesToday, entriesTotal }
+//   server -> { t:'join', peer, live, today, total, entriesToday, entriesTotal }
 //   server -> { t:'pos', id, x, z, yaw }
 //   server -> { t:'leave', id, live }
 //
@@ -22,6 +22,9 @@
 // the Durable Object's SQLite storage, so they survive restarts. `live` is the
 // number of currently-open sockets (in memory; naturally resets to 0 only when
 // the room is empty and the object evicts).
+
+const ENTRY_SEED_MULTIPLIER = 3.7;
+const COUNTER_BASIS = "UTC day / world unique guest / entry joins";
 
 export class RepolisRoom {
   constructor(state, env) {
@@ -62,8 +65,10 @@ export class RepolisRoom {
       // O(1) rollups so the hot join path never scans `seen`:
       //   daily_count.n = unique guests for that UTC-day; stat['total'] = distinct guests all-time.
       this.sql.exec("CREATE TABLE IF NOT EXISTS daily_count (day TEXT PRIMARY KEY, n INTEGER NOT NULL)");
+      this.sql.exec("CREATE TABLE IF NOT EXISTS entry_count (day TEXT PRIMARY KEY, n INTEGER NOT NULL)");
       this.sql.exec("CREATE TABLE IF NOT EXISTS stat (k TEXT PRIMARY KEY, v INTEGER NOT NULL)");
       this.backfillOnce();
+      this.seedEntriesOnce();
       this.ready = true;
       return true;
     } catch (e) {
@@ -84,6 +89,15 @@ export class RepolisRoom {
     this.sql.exec("INSERT OR REPLACE INTO stat (k, v) VALUES ('total', ?)", total);
     for (const r of this.sql.exec("SELECT day, COUNT(*) AS n FROM seen GROUP BY day").toArray())
       this.sql.exec("INSERT OR REPLACE INTO daily_count (day, n) VALUES (?, ?)", r.day, r.n);
+  }
+
+  // `entries_total` is an estimated historical entry counter. We do not have
+  // app-lifetime page-load history in this DO, so the first value is seeded once
+  // from the current all-time unique visitor count, then real joins increment it.
+  seedEntriesOnce() {
+    if (this.sql.exec("SELECT v FROM stat WHERE k = 'entries_total' LIMIT 1").toArray().length) return;
+    const total = Number((this.sql.exec("SELECT v FROM stat WHERE k = 'total' LIMIT 1").toArray()[0] || {}).v) || 0;
+    this.sql.exec("INSERT OR IGNORE INTO stat (k, v) VALUES ('entries_total', ?)", Math.round(total * ENTRY_SEED_MULTIPLIER));
   }
 
   today() {
@@ -107,6 +121,32 @@ export class RepolisRoom {
     };
   }
 
+  readCounts(day = this.today()) {
+    const today = (this.sql.exec("SELECT n FROM daily_count WHERE day = ?", day).toArray()[0] || {}).n;
+    const total = (this.sql.exec("SELECT v FROM stat WHERE k = 'total'").toArray()[0] || {}).v;
+    const entriesToday = (this.sql.exec("SELECT n FROM entry_count WHERE day = ?", day).toArray()[0] || {}).n;
+    const entriesTotal = (this.sql.exec("SELECT v FROM stat WHERE k = 'entries_total'").toArray()[0] || {}).v;
+    return {
+      today: Number(today) || 0,
+      total: Number(total) || 0,
+      entriesToday: Number(entriesToday) || 0,
+      entriesTotal: Number(entriesTotal) || 0,
+    };
+  }
+
+  counterSnapshot() {
+    const base = this.usage();
+    const day = this.today();
+    if (!this.ensureSchema()) {
+      return { ...base, ok: false, day, today: null, total: null, entriesToday: null, entriesTotal: null, basis: COUNTER_BASIS };
+    }
+    try {
+      return { ...base, ok: true, day, ...this.readCounts(day), basis: COUNTER_BASIS, entrySeedMultiplier: ENTRY_SEED_MULTIPLIER };
+    } catch (e) {
+      return { ...base, ok: false, day, today: null, total: null, entriesToday: null, entriesTotal: null, basis: COUNTER_BASIS };
+    }
+  }
+
   // Count one new connection. Returns false once the monthly cap is reached so the
   // caller can refuse cheaply. O(1): an in-memory counter flushed to storage only
   // every 500 hits (one row write per 500); the month key resets it for free.
@@ -128,10 +168,14 @@ export class RepolisRoom {
   // which (as the table grew + reconnects accumulated) exhausted the free-tier
   // rows-read budget and took the room — and the live counter — offline. Returns
   // null counts when storage is unavailable so the caller can still serve presence.
-  counts(gid) {
-    if (!this.ensureSchema()) return { today: null, total: null };
+  counts(gid, countEntry = true) {
+    if (!this.ensureSchema()) return { today: null, total: null, entriesToday: null, entriesTotal: null };
     try {
       const day = this.today();
+      if (countEntry) {
+        this.sql.exec("INSERT INTO entry_count (day, n) VALUES (?, 1) ON CONFLICT(day) DO UPDATE SET n = n + 1", day);
+        this.sql.exec("INSERT INTO stat (k, v) VALUES ('entries_total', 1) ON CONFLICT(k) DO UPDATE SET v = v + 1");
+      }
       if (gid) {
         const seenToday = this.sql.exec("SELECT 1 FROM seen WHERE gid = ? AND day = ? LIMIT 1", gid, day).toArray().length;
         if (!seenToday) {
@@ -143,11 +187,9 @@ export class RepolisRoom {
             this.sql.exec("INSERT INTO stat (k, v) VALUES ('total', 1) ON CONFLICT(k) DO UPDATE SET v = v + 1");
         }
       }
-      const today = (this.sql.exec("SELECT n FROM daily_count WHERE day = ?", day).toArray()[0] || {}).n;
-      const total = (this.sql.exec("SELECT v FROM stat WHERE k = 'total'").toArray()[0] || {}).v;
-      return { today: Number(today) || 0, total: Number(total) || 0 };
+      return this.readCounts(day);
     } catch (e) {
-      return { today: null, total: null };
+      return { today: null, total: null, entriesToday: null, entriesTotal: null };
     }
   }
 
@@ -156,7 +198,7 @@ export class RepolisRoom {
     // Lightweight usage monitor — no socket, no table scan. Check spend headroom:
     //   curl https://repolis-rt.<sub>.workers.dev/__usage
     if (url.pathname.endsWith("/__usage")) {
-      return new Response(JSON.stringify(this.usage()), { headers: { "content-type": "application/json" } });
+      return new Response(JSON.stringify(this.counterSnapshot()), { headers: { "content-type": "application/json" } });
     }
     if (req.headers.get("Upgrade") !== "websocket") {
       return new Response("Repolis realtime OK", { status: 200 });
@@ -186,12 +228,15 @@ export class RepolisRoom {
           x: +m.x || 0, z: +m.z || 0, yaw: +m.yaw || 0,
           color: m.color,
         };
+        const countEntry = !this.sessions.has(ws);
         this.sessions.set(ws, peer);
-        const { today, total } = this.counts(peer.id);
+        const { today, total, entriesToday, entriesTotal } = this.counts(peer.id, countEntry);
         const live = this.sessions.size;
         const stats = { live };
         if (today != null) stats.today = today;   // omitted while storage is over quota
         if (total != null) stats.total = total;   // → client keeps its last shown value
+        if (entriesToday != null) stats.entriesToday = entriesToday;
+        if (entriesTotal != null) stats.entriesTotal = entriesTotal;
         const others = [...this.sessions.values()].filter((p) => p !== peer);
         ws.send(JSON.stringify({ t: "welcome", peers: others, ...stats }));
         this.broadcast({ t: "join", peer, ...stats }, ws);
