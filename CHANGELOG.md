@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.43.0] — 2026-07-01
+
+### 🔎 Scholar trace — the grounding excerpt, now in a per-source accordion
+- **See the chunk, not just the link.** Each source in a scholar's 🔎 references list (VEGA · MS Learn, and the DeepWiki / direct-MCP path) now carries a collapsed **발췌 / Excerpt** accordion holding the cleaned text chunk the answer was actually grounded on — so you can read *why* a link was cited without leaving the chat. Sources that carry no chunk still show just the title + link as before.
+- **The server surfaces the excerpt it already had.** `cloudflare-taxi/src/grounded.js` `parseDocs()` no longer discards `references[].sourceData.content`; it runs it through the existing `cleanDoc()` and returns a ≤600-char `snippet` per ref in `trace.refs` (the direct-MCP docs path passes its own `snippet` through too). No new retrieval and no new API call — the reference source data is already fetched with `includeReferenceSourceData: true`, so this only stops throwing it away.
+- **XSS-safe by construction.** The excerpt is untrusted document text, so the trace renderer sets it via `textContent` only — never `innerHTML`. An `<img onerror>` / `<script>` payload renders as literal text and does **not** execute (verified with a live payload).
+- **Collapsed & bounded for mobile.** Each excerpt is a nested `<details>` collapsed by default under a short `발췌 / Excerpt` summary; the body is height-capped (`max-height` + `overflow-y:auto`) and wraps (`word-break`), so a long chunk can't blow up the chat panel. Verified on desktop + 390px mobile, KO/EN: excerpt accordions appear only when a chunk exists, the no-chunk ref shows none, no horizontal overflow, **0 console errors**. Smoke 31 + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+- **Note:** the excerpt is populated by the `repolis-taxi` Cloudflare Worker, so it appears on live scholar answers once the worker is redeployed (`wrangler deploy`) with this `grounded.js`. The static site needs no redeploy beyond this commit.
+
 ## [1.42.0] — 2026-07-01
 
 ### 🚪 HUD counters reworked around real entry joins (repolis-rt `/__usage`)

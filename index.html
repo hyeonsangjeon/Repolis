@@ -523,6 +523,17 @@
   .msg .refsBlock .traceRef:active { background: #eef4fd; }
   .msg .refsBlock .traceRef code { background: #eaf1fb; color: #2f5d96; }
   .msg .refsBlock .traceRef.noLink { background: transparent; border: none; color: #4a6a92; }
+  .msg .traceRefItem { display: flex; flex-direction: column; gap: 4px; }
+  .msg details.refSnip { margin: 0 2px; }
+  .msg summary.refSnipHead { font-size: 10px; font-weight: 700; color: #5a7096; letter-spacing: .2px;
+    cursor: pointer; list-style: none; user-select: none; display: inline-flex; align-items: center;
+    min-height: 28px; padding: 0 2px; }
+  .msg summary.refSnipHead::-webkit-details-marker { display: none; }
+  .msg summary.refSnipHead::before { content: '▸'; margin-right: 4px; font-size: 8px; opacity: .7; }
+  .msg details.refSnip[open] summary.refSnipHead::before { content: '▾'; }
+  .msg .refSnipBody { margin-top: 4px; padding: 7px 9px; background: #f7fafe; border: 1px solid #e6eef8;
+    border-radius: 8px; font-size: 11px; line-height: 1.55; color: #4a5a70; word-break: break-word;
+    max-height: 168px; overflow-y: auto; }
   .msg .refsNote { margin-top: 8px; padding: 8px 11px; background: #f3ecdb; border-radius: 10px;
     font-size: 11px; color: #6a5436; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .msg .refsNote code { background: #e0d5bb; padding: 1px 5px; border-radius: 5px; }
@@ -1054,7 +1065,7 @@ const I18N = {
     taxiThinking:'별빛에 비춰 잠깐 헤아려볼게요 ✦',
     groundedPromptUrl:'AI Foundry Live API URL을 입력하세요 (없으면 비워두세요 → 키 없이 로컬검색으로 동작)\n예: https://repolis-taxi.<you>.workers.dev/ (권장 · Cloudflare Worker)  또는  https://your-app.vercel.app/api/taxi-grounded',
     traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceRefs:'참조',
-    traceCopy:'링크 복사', traceCopied:'복사됨', traceOpen:'열기',
+    traceCopy:'링크 복사', traceCopied:'복사됨', traceOpen:'열기', traceSnippet:'발췌',
     traceGenTitle:'✦ 어떻게 답했나', traceGeneral:'별빛에 깃든 일반 지식에서 답했어요',
     refsTitle:'📚 참고한 문서', refsNone:'참고 문서 없음 · 일반 지식으로 답했어요',
     npcTaxi:'택시기사', npcEng:'MS Docs 엔지니어', engTitle:'📘 MS Docs 엔지니어',
@@ -1193,7 +1204,7 @@ const I18N = {
     taxiThinking:'Let me reckon by the starlight ✦',
     groundedPromptUrl:'Enter your AI Foundry Live API URL (or leave blank → keyless Local search)\ne.g. https://repolis-taxi.<you>.workers.dev/ (recommended · Cloudflare Worker)  or  https://your-app.vercel.app/api/taxi-grounded',
     traceTitle:'🔎 How I found this', traceKs:'Knowledge source', traceTool:'MCP tool', traceRefs:'References',
-    traceCopy:'Copy link', traceCopied:'Copied', traceOpen:'Open',
+    traceCopy:'Copy link', traceCopied:'Copied', traceOpen:'Open', traceSnippet:'Excerpt',
     traceGenTitle:'✦ How I answered', traceGeneral:'Answered from general starlit knowledge',
     refsTitle:'📚 Sources', refsNone:'No source docs · answered from general knowledge',
     npcTaxi:'Taxi driver', npcEng:'MS Docs Engineer', engTitle:'📘 MS Docs Engineer',
@@ -4579,6 +4590,7 @@ function buildTracePanel(tr){
   const rl=document.createElement('div'); rl.className='traceRefs';
   refs.forEach(r=>{ const href=safeHref(r.url);
     const label='<code>'+esc(r.name||r.url)+'</code>'+(r.stars!=null?(' ★'+r.stars):'')+(r.lang?(' · '+esc(r.lang)):'');
+    const item=document.createElement('div'); item.className='traceRefItem';
     const row=document.createElement('div'); row.className='traceRefRow';
     if(href){ const a=document.createElement('a'); a.className='traceRef'; a.href=href; a.target='_blank'; a.rel='noopener noreferrer';
         a.innerHTML=label+'<span class="extlink" aria-hidden="true">↗</span>';
@@ -4587,7 +4599,13 @@ function buildTracePanel(tr){
         cp.onclick=ev=>{ ev.preventDefault(); ev.stopPropagation(); copyLink(href,cp); };
         row.appendChild(a); row.appendChild(cp);
     } else { const span=document.createElement('span'); span.className='traceRef noLink'; span.innerHTML=label; row.appendChild(span); }
-    rl.appendChild(row); });
+    item.appendChild(row);
+    const snip=String(r.snippet||'').trim();                          // the chunk grounding used → collapsed excerpt (untrusted → textContent only, never innerHTML)
+    if(snip){ const sd=document.createElement('details'); sd.className='refSnip';
+        const ss=document.createElement('summary'); ss.className='refSnipHead'; ss.textContent=t('traceSnippet');
+        const sb=document.createElement('div'); sb.className='refSnipBody'; sb.textContent=snip;
+        sd.appendChild(ss); sd.appendChild(sb); item.appendChild(sd); }
+    rl.appendChild(item); });
   block.appendChild(rl); wrap.appendChild(block);
   // Secondary: the technical "how I found this" meta stays in a collapsible fold.
   const d=document.createElement('details'); d.className='trace';
@@ -4987,7 +5005,7 @@ async function askScholar(q, npc){
       if(top.title) msg+='<br><br><b>'+esc(top.title)+'</b>';
       if(top.snippet) msg+='<br>'+esc(top.snippet);
       const tr=data.trace||{};
-      const trace={ ks:tr.source, tools:[tr.tool].filter(Boolean), refs:(data.items||[]).map(i=>({name:i.title,url:i.url})), mcpMs:tr.mcpMs };
+      const trace={ ks:tr.source, tools:[tr.tool].filter(Boolean), refs:(data.items||[]).map(i=>({name:i.title,url:i.url,snippet:i.snippet})), mcpMs:tr.mcpMs };
       trackAiTurn('scholar_grounded', npc, q, aiStarted, { ok:true, refs:trace.refs.length, repo:!!repoName });
       addMsg('bot', msg, { trace }); return;
     }

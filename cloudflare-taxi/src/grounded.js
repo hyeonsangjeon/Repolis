@@ -280,18 +280,22 @@ function parseDocs(references) {
     if (!r) continue;
     let title = r.title || "";
     let url = "";
+    let body = "";
     const sd = r.sourceData;
     const c = sd && (typeof sd === "object" ? sd.content : sd);
     if (typeof c === "string") {
-      try { const o = JSON.parse(c); title = o.title || title; url = o.contentUrl || o.url || url; }
-      catch { /* plain snippet */ }
+      try { const o = JSON.parse(c); title = o.title || title; url = o.contentUrl || o.url || url; body = o.content || o.snippet || o.chunk || ""; }
+      catch { body = c; /* plain snippet, not JSON */ }
     } else if (c && typeof c === "object") {
-      title = c.title || title; url = c.contentUrl || c.url || url;
+      title = c.title || title; url = c.contentUrl || c.url || url; body = c.content || c.snippet || c.chunk || "";
     }
     if (!url && sd && typeof sd === "object") url = sd.contentUrl || sd.url || "";
     title = String(title).slice(0, 160);
+    // The chunk the grounding actually used → a short cleaned excerpt for the trace accordion.
+    const cleaned = cleanDoc(body);
+    const snippet = cleaned.length > 600 ? cleaned.slice(0, 600) + "…" : cleaned;
     const k = url || title;
-    if ((title || url) && !seen.has(k)) { seen.add(k); out.push({ name: title, url }); }
+    if ((title || url) && !seen.has(k)) { seen.add(k); out.push({ name: title, url, snippet }); }
   }
   return out;
 }
