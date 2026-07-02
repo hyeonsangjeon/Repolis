@@ -3456,14 +3456,22 @@ function chronoTimeline(testi,verdictVal,noAnswer){
 }
 function fxQuestion(fx){ if(!fx) return ''; const q=fx.question; if(q) return q[LANG]||q.ko||q.en||''; return fx.topic||''; }
 /* Phase C — link a repo's house to the Chronopolis debate it echoes (match repo topics/name vs fixture tags) */
+/* Ambient/plumbing tags shared by many unrelated repos (web glue, languages, formats, over-broad AI terms).
+   They must NEVER alone anchor a "related debate" link: otherwise e.g. youtube-dl-nas — a media downloader that
+   merely happens to use bottle/websocket/login-system — falsely matched the HTTP-status debate, so its card's
+   "관련 토론 보기" button drove the taxi to Chronopolis on a topic that has nothing to do with the repo.
+   A match must share at least one *domain-specific* tag, so the link always reflects the repo's real identity. */
+const CHRONO_GENERIC_TAGS=new Set(['http','rest','api','backend','express','bottle','flask','websocket','login-system',
+  'queue','csv','json','clone','html','css','frontend','flexbox','layout','bootstrap','tailwind',
+  'javascript','typescript','nodejs','llm','agent','prompt','schema','validation','serialization','completion','chain']);
 function repoChronoTokens(repo){ const s=new Set();
   ((repo&&repo.topics)||[]).forEach(x=>{ x=String(x).toLowerCase(); if(x) s.add(x); });
   String((repo&&repo.repo)||'').toLowerCase().split(/[^a-z0-9]+/).forEach(x=>{ if(x) s.add(x); });
   return s; }
 function chronoMatch(repo){ if(!repo||!CF||!CF.list) return null;
   const toks=repoChronoTokens(repo); if(!toks.size) return null;
-  let bestId=null, bestScore=0;
-  CF.list().forEach(fx=>{ let sc=0; (fx.tags||[]).forEach(tg=>{ if(toks.has(tg)) sc++; });
+  let bestId=null, bestScore=0;                                       // score domain-specific overlaps only — generic plumbing tags are ignored
+  CF.list().forEach(fx=>{ let sc=0; (fx.tags||[]).forEach(tg=>{ if(toks.has(tg)&&!CHRONO_GENERIC_TAGS.has(tg)) sc++; });
     if(sc>bestScore){ bestScore=sc; bestId=fx.id; } });
   return bestScore>=1 ? bestId : null; }
 // Deterministic verdict recap for a curated case — facts only (signature + verdict + recency timeline),
@@ -4369,13 +4377,17 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   const relId=chronoMatch(repo);
   act.innerHTML=`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">${t('openGithub')}</a>`
     +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'')
-    +(relId?`<button class="btn chrono" id="relChronoBtn">${t('chronoRelated')}</button>`:'')
+    +(relId?`<button class="btn chrono" id="relChronoBtn" data-repo="${esc(repo.repo)}" data-preset="${esc(relId)}">${t('chronoRelated')}</button>`:'')
     +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
   document.getElementById('closeBtn').onclick=closeCard;
-  if(relId){ document.getElementById('relChronoBtn').onclick=()=>{ closeCard();
+  if(relId){ const rc=document.getElementById('relChronoBtn'); rc.onclick=()=>{
+    // resolve the debate strictly from THIS card's own repo identity (data-preset), never a hovered/last-selected repo
+    const srcRepo=rc.dataset.repo, preset=rc.dataset.preset||relId;
+    if(_DBG && srcRepo!==repo.repo) console.warn('[repolis] relChrono target mismatch:', srcRepo, '≠ card', repo.repo);
+    track('chrono_related_click',{repo:srcRepo,preset}); closeCard();
     const cd=(typeof lmCourseDest==='function')?lmCourseDest('chrono'):null;
-    if(cd && typeof taxiTo==='function'){ cd._chronoPreset=relId; taxiTo(cd); return; }
-    openChrono(relId); }; }
+    if(cd && typeof taxiTo==='function'){ cd._chronoPreset=preset; taxiTo(cd); return; }
+    openChrono(preset); }; }
   const ghBtn=act.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>track('github_click',{repo:repo.repo});
   const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
   track('repo_card_open',{repo:repo.repo});

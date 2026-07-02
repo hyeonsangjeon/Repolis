@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.44.1] — 2026-07-02
+
+### 🐛 Fix — a repo's "관련 토론 보기" link followed incidental plumbing, not its identity
+- **`youtube-dl-nas` → Chronopolis(HTTP) mis-route, fixed.** Opening some houses (e.g. `youtube-dl-nas`) showed a `⏳ 관련 토론 보기` button that drove the taxi to a Chronopolis debate with nothing to do with the repo. Cause: `chronoMatch()` scored **any** shared tag (score ≥ 1), so a media downloader that merely uses `bottle` / `websocket` / `login-system` matched the *HTTP status-code* debate. It affected **30 / 62** houses; ~15 were cross-domain false positives (`Repolis`/`pyveil` → Transformers via `llm`, `ISO-3166` → pandas via `csv`, `gotty-docker`/`yesno` → HTTP via `websocket`, `*-agent-*` → LangChain via `agent`, …).
+- **Anchor the match on the repo's own identity.** A new `CHRONO_GENERIC_TAGS` stoplist (web glue, languages, formats, over-broad AI terms — `http/rest/api/bottle/flask/websocket/login-system/queue/csv/json/html/css/javascript/nodejs/llm/agent/…`) is excluded from scoring, so a debate link appears **only when a domain-specific tag is shared**. Result: 15 spurious links dropped (incl. `youtube-dl-nas`), 15 genuine ones preserved (`rag-faq-streamlit`/`AWS-LLM-SageMaker` → RAG, `ChatGPT-API-JS` → OpenAI SDK, `channel-vault-nas` → React, `PDF2LLM-Tuning-Studio` → PyTorch, …).
+- **Click target bound to the card's repo.** The `relChronoBtn` now carries `data-repo` / `data-preset` and resolves the debate strictly from **that card's** identity — never a hovered/last-selected repo — with a `?dbg` mismatch assertion as a tripwire.
+- **Regression guard.** `scripts/smoke.mjs` gained a behavioral group that runs the **real** shipped `chronoMatch` (extracted from `index.html`) against the **real** `repos.json` + `council/fixtures.js`: asserts `youtube-dl-nas` → no debate, genuine matches survive, and the invariant *"no house routes to a debate via generic tags alone."*
+- **Verified.** youtube-dl-nas card now shows only `GitHub 열기 / 닫기` (desktop + 390px mobile, no overflow); genuine repos still route with their own preset; **0 console errors**. Smoke **41** (+10) + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.44.0] — 2026-07-01
 
 ### 🎨 Village texture / performance pass v1 — richer surface, no perf regression

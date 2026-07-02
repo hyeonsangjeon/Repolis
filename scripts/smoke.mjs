@@ -12,7 +12,9 @@ import { execFileSync } from 'child_process';
 import { tmpdir } from 'os';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
+const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HTML = readFileSync(join(ROOT, 'index.html'), 'utf8');
 
@@ -79,6 +81,51 @@ if (mod) {
   catch (e) { clean = false; console.log('  ✗ module syntax: ' + (e.stderr ? e.stderr.toString().split('\n')[0] : e.message)); }
   finally { try { rmSync(tmp); } catch (_) {} }
   ok(clean, 'inline module passes node --check');
+}
+
+/* ── 7) chronoMatch: a repo's "관련 토론 보기" link must reflect its own identity, not incidental plumbing ──
+ *    Regression guard for the youtube-dl-nas → Chronopolis(HTTP) mis-route: the repo merely uses
+ *    bottle/websocket/login-system, so it must NOT match the HTTP-status debate. Runs the REAL shipped
+ *    chronoMatch (extracted from index.html) against the REAL repos.json + council fixtures. */
+group('chronoMatch anchors on domain-specific tags (no spurious debate routing)');
+ok(/const CHRONO_GENERIC_TAGS\s*=\s*new Set\(/.test(HTML), 'CHRONO_GENERIC_TAGS stoplist exists');
+ok(/if\(toks\.has\(tg\)\s*&&\s*!CHRONO_GENERIC_TAGS\.has\(tg\)\)/.test(HTML), 'chronoMatch ignores generic/plumbing tags when scoring');
+ok(/data-preset="\$\{esc\(relId\)\}"/.test(HTML), 'relChrono button binds its target to the card repo (data-preset)');
+const genSrc = (HTML.match(/const CHRONO_GENERIC_TAGS=new Set\(\[[\s\S]*?\]\);/) || [])[0];
+const tokSrc = (HTML.match(/function repoChronoTokens\(repo\)\{[\s\S]*?return s; \}/) || [])[0];
+const matchSrc = (HTML.match(/function chronoMatch\(repo\)\{[\s\S]*?return bestScore>=1 \? bestId : null; \}/) || [])[0];
+ok(!!(genSrc && tokSrc && matchSrc), 'chronoMatch + helpers extractable from index.html');
+if (genSrc && tokSrc && matchSrc) {
+  let CF = null, repos = [], chronoMatch = null, tokensOf = null, GEN = null;
+  try {
+    CF = require(join(ROOT, 'council/fixtures.js'));
+    const rj = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
+    repos = Array.isArray(rj) ? rj : (rj.repos || []);
+    chronoMatch = new Function('CF', `${genSrc}\n${tokSrc}\n${matchSrc}\nreturn chronoMatch;`)(CF);
+    tokensOf = new Function(`${tokSrc}\nreturn repoChronoTokens;`)();
+    GEN = new Function(`${genSrc}\nreturn CHRONO_GENERIC_TAGS;`)();
+  } catch (e) { console.log('  ✗ chronoMatch harness: ' + e.message); }
+  ok(!!(CF && CF.list && repos.length), 'council fixtures + repos.json loaded for behavioral check');
+  if (chronoMatch && repos.length) {
+    const byName = n => repos.find(r => r.repo === n);
+    const yt = byName('youtube-dl-nas');
+    ok(!!yt && chronoMatch(yt) === null, 'youtube-dl-nas no longer routes to a Chronopolis debate (reported bug fixed)');
+    const gotty = byName('gotty-docker');
+    ok(!gotty || chronoMatch(gotty) === null, 'generic-only match (gotty-docker via websocket) is dropped');
+    const rag = byName('rag-faq-streamlit');
+    ok(!rag || chronoMatch(rag) === 'rag_longctx', 'genuine match preserved (rag-faq-streamlit → RAG debate)');
+    const react = byName('channel-vault-nas');
+    ok(!react || chronoMatch(react) === 'react_effect', 'genuine match preserved (channel-vault-nas → React debate)');
+    // Invariant: no repo may reach a debate through generic/plumbing tags alone.
+    const genOnly = [];
+    for (const r of repos) {
+      const id = chronoMatch(r); if (!id) continue;
+      const fx = CF.get(id); const toks = tokensOf(r);
+      const specific = (fx.tags || []).filter(tg => toks.has(tg) && !GEN.has(tg));
+      if (!specific.length) genOnly.push(r.repo + '→' + id);
+    }
+    ok(genOnly.length === 0, 'every 관련토론 link shares a domain-specific tag' + (genOnly.length ? ' [' + genOnly.join(', ') + ']' : ''));
+  }
 }
 
 console.log('\n──────────────────────────────');
