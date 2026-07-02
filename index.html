@@ -4339,8 +4339,39 @@ function setNav(repo){ navTarget=repo; navHolder.visible=true;
   document.getElementById('navBadge').style.display=''; document.getElementById('navName').textContent=repo.label; }
 
 const modal=document.getElementById('modal'); let modalOpen=false;
+
+/* ── canonical repo identity resolver ─────────────────────────────────
+   The single place any string (grounded worker reply, #repo deep link, a
+   debug helper) becomes a repo object. Canonical key = repo.repo; falls
+   back case-insensitively, then '-'/'_'-insensitively (labelOf treats them
+   alike) so a shown repo can never resolve to a different one. */
+const _repoNorm=s=>String(s==null?'':s).toLowerCase().replace(/[_-]/g,'-');
+function repoByKey(key){
+  if(key==null) return null; const raw=String(key).trim(); if(!raw) return null;
+  let hit=REPOS.find(r=>r.repo===raw); if(hit) return hit;                          // exact canonical
+  const lc=raw.toLowerCase(); hit=REPOS.find(r=>r.repo.toLowerCase()===lc); if(hit) return hit;   // case-insensitive
+  const nn=_repoNorm(raw); hit=REPOS.find(r=>_repoNorm(r.repo)===nn); if(hit) return hit;          // '-'/'_' insensitive
+  return null; }
+
+/* ── repo deep link (#repo=<canonical key>) ───────────────────────────
+   A shared/pasted URL opens the exact repo card; openCard writes the hash,
+   closeCard clears it, and back/forward + hashchange stay in sync. Other
+   query params (?user=/?rt=/?dbg) are preserved. */
+let _repoHashGuard=false;
+function repoHashKey(){ const m=String(location.hash||'').match(/^#repo=(.+)$/); return m?decodeURIComponent(m[1]):null; }
+function setRepoHash(repo){ if(_repoHashGuard||!repo||!repo.repo) return; _repoHashGuard=true;
+  try{ const h='#repo='+encodeURIComponent(repo.repo); if(location.hash!==h) history.replaceState(null,'',location.pathname+location.search+h); }catch(e){}
+  _repoHashGuard=false; }
+function clearRepoHash(){ if(_repoHashGuard||!repoHashKey()) return; _repoHashGuard=true;
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+  _repoHashGuard=false; }
+function openRepoFromHash(){ const r=repoByKey(repoHashKey()); if(r){ openCard(r); return true; } return false; }
+window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=repoHashKey();
+  if(!k){ if(modalOpen && modal._repoKey) closeCard(); return; }
+  if(k!==(modal._repoKey||'')){ const r=repoByKey(k); if(r) openCard(r); } });
+
 function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
-  modalOpen=true; modal.classList.add('show');
+  modalOpen=true; modal.classList.add('show'); modal._repoKey=repo.repo||null; setRepoHash(repo);
   document.getElementById('cardTop').style.background=repo.color;
   document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
   document.getElementById('cardName').textContent=repo.label;
@@ -4392,7 +4423,7 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
   track('repo_card_open',{repo:repo.repo});
   markVisited(repo); }
-function closeCard(){ modalOpen=false; modal.classList.remove('show'); }
+function closeCard(){ modalOpen=false; modal.classList.remove('show'); modal._repoKey=null; clearRepoHash(); }
 modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
 
 /* ---- Contribution Library panel ---- */
@@ -4460,7 +4491,8 @@ function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.
 function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; player.position.set(seat.x,0,seat.z); model.rotation.y=seat.rot; camYaw=seat.rot+Math.PI; walk=0; }
 function standUp(){ sitting=null; }
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
-  try{ if(REPOS.length){ getCourse(); setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, 1000); } }catch(e){} };
+  try{ if(REPOS.length){ getCourse(); setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, 1000); } }catch(e){}
+  setTimeout(()=>{ try{ openRepoFromHash(); }catch(e){} }, 480); };
 (function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
     document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
@@ -4996,9 +5028,9 @@ async function groundedAsk(q){
     if(data.fallback){ sb.remove(); trackAiTurn('grounded', 'taxi', q, aiStarted, { ok:false, fallback:'worker_fallback' });
       const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); trackChatEvent('chat_response', { route:'local_fallback', npc:'taxi', qLen:qLenBucket(q), ok:true, ai:false, fallback:'worker_fallback', repo:!!r.repo }); return; }   // silent local fallback
     sb.classList.remove('typing');                                    // settle the searching line — keep it as a record
-    let repo=data.repo?REPOS.find(r=>r.repo.toLowerCase()===String(data.repo).toLowerCase()):null;
+    let repo=data.repo?repoByKey(data.repo):null;
     if(!repo){ const ticks=[...String(data.message||'').matchAll(/`([\w.\-]+)`/g)].map(m=>m[1].toLowerCase());   // KB returned no repo (empty refs) → recover from names the answer named
-      for(const tk of ticks){ const hit=REPOS.find(r=>r.repo.toLowerCase()===tk); if(hit){ repo=hit; break; } } }
+      for(const tk of ticks){ const hit=repoByKey(tk); if(hit){ repo=hit; break; } } }
     const sc=searchCandidates(q,8); const main=repo||sc.list[0];
     let msg=String(data.message||t('thisOne')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
     const alts=padAlts(main, sc.list.filter(r=>r!==main).slice(0,3));
@@ -5507,9 +5539,9 @@ document.addEventListener('pointerdown',e=>{ if(emoteBar.classList.contains('hid
 if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:model.rotation.y,freeLook,dragBtn});
   window.__ride=()=>ride?ride.phase:null; window.__taxiPos=()=>({x:+taxi.position.x.toFixed(1),z:+taxi.position.z.toFixed(1),vis:model.visible});
   window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; };
-  window.__taxi=(name)=>{ const r=REPOS.find(x=>x.repo===name); if(r&&r._pos){ taxiTo(r); return true; } return false; };
+  window.__taxi=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name)); if(r&&r._pos){ taxiTo(r); return true; } return false; };
   window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom}));
-  window.__card=(name)=>{ const r=REPOS.find(x=>x.repo===name); if(r){ openCard(r); return {repo:r.repo,license:r.license,open_issues:r.open_issues,release_tag:r.release_tag,archived:r.archived,chips:[...document.querySelectorAll('#cardChips .chip')].map(c=>c.textContent.trim())}; } return null; };
+  window.__card=(name)=>{ const r=repoByKey(name); if(r){ openCard(r); return {repo:r.repo,license:r.license,open_issues:r.open_issues,release_tag:r.release_tag,archived:r.archived,chips:[...document.querySelectorAll('#cardChips .chip')].map(c=>c.textContent.trim())}; } return null; };
   window.__modal=()=>modalOpen;
   window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, total:allCountEl.textContent, entriesToday:entryCountEl?entryCountEl.textContent:null, entriesTotal:entryTotalCountEl?entryTotalCountEl.textContent:null, ws:rtSock?rtSock.readyState:-1});
   window.__peerSim=(x=4,z=-2)=>{ rtHandle({t:'join',peer:{id:'gSIM',name:'Tester',x,z,yaw:0,color:0x6fa8ef}}); const p=peers.get('gSIM'); p.group.updateMatrixWorld(true); const v=new THREE.Vector3(0,2.2,0).applyMatrix4(p.group.matrixWorld).project(camera); return {sx:Math.round((v.x*0.5+0.5)*innerWidth), sy:Math.round((-v.y*0.5+0.5)*innerHeight), armR:!!p.group._armR}; };
@@ -5520,7 +5552,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__emotes=()=>Object.keys(EMOTES);  window.__meteor=(az)=>{ spawnMeteor(az); return true; };
   window.__course=()=>{ const c=getCourse(); return {date:c.date, items:c.items.map(it=>({type:it.type,id:it.id,label:courseItemLabel(it),done:courseItemDone(it)})), prog:courseProgress()}; };
   window.__courseNext=()=>{ courseGuideNext(); return ride?ride.phase:'idle'; };
-  window.__visitRepo=(name)=>{ const r=(name&&REPOS.find(x=>x.repo===name||x.label===name))||REPOS[0]; if(!r) return null; markVisited(r); return {repo:r.repo, lit:!!r._litVisited, mark:!!r._visitMark, prog:courseProgress()}; };
+  window.__visitRepo=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name))||REPOS[0]; if(!r) return null; markVisited(r); return {repo:r.repo, lit:!!r._litVisited, mark:!!r._visitMark, prog:courseProgress()}; };
   window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; };
   window.__sky=(t)=>{ if(t!==undefined){ skyAuto=false; skyT=skyTarget=((t%1)+1)%1; applySky(skyT); const nn=_nightAt(skyT); if(nn!==_nightState) setNightState(nn); } return {skyT:+skyT.toFixed(3),skyTarget:+skyTarget.toFixed(3),isNight,auto:skyAuto,phase:SKY_PHASES[skyPhaseIdx].name,sunVis:sunSky.visible}; };
   window.__skyCycle=()=>{ skyAuto=!skyAuto; lastAct=performance.now(); return skyAuto; };
@@ -5583,9 +5615,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
       tlWin:(body.querySelector('.chronoRecap .ctNode.win .cv')||{}).textContent||null,
       turns:body.querySelectorAll('.chronoTurn').length, data:d }; };
   window.__chronoStamp=()=>({ has:passHasStamp('chrono'), landmarks:PASS_LANDMARKS.map(l=>l.id) });
-  window.__chronoMatch=(name)=>{ const r=(name&&REPOS.find(x=>x.repo===name||x.label===name))||null; if(!r) return {found:false};
+  window.__chronoMatch=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name))||null; if(!r) return {found:false};
     const id=chronoMatch(r); return { repo:r.repo, lang:r.lang, topics:(r.topics||[]).length, match:id, sig:(id&&CF&&CF.get)?(CF.get(id).sline):null, question:(id&&CF&&CF.get)?fxQuestion(CF.get(id)):null }; };
-  window.__card=(name)=>{ const r=(name&&REPOS.find(x=>x.repo===name||x.label===name))||null; if(!r) return {found:false}; openCard(r);
+  window.__card=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name))||null; if(!r) return {found:false}; openCard(r);
     const b=document.getElementById('relChronoBtn');
     return { repo:r.repo, cardShown:modal.classList.contains('show'), hasRelBtn:!!b, relText:b?b.textContent:null }; };
   window.__walkSim=(fromX,fromZ,dirX,dirZ,steps=300)=>{
@@ -5621,7 +5653,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__boardC=()=>{ if(!CAROUSEL) return 'no carousel'; const b=CAROUSEL.board; player.position.set(b.x,0,b.z); return window.__carousel(); };
 
   window.__fireworks=(n)=>{ fireworksShow(n||10); return { queued:_fwQueue, active:FW.length, auroraBoost:+_auroraBoost.toFixed(1) }; };
-  window.__visitFx=(name)=>{ let b=name?buildings.find(x=>x.repo===name||x.label===name):null;
+  window.__visitFx=(name)=>{ let b=name?(repoByKey(name)||buildings.find(x=>x.label===name)):null;
     if(!b){ let nd=Infinity; for(const x of buildings){ if(x._isLibrary) continue; const d=player.position.distanceTo(x._pos); if(d<nd){ nd=d; b=x; } } }
     if(b){ b._greeted=false; greetBuilding(b); }
     return { greeted:b?b.repo:null, sparkles:VISIT_FX.length, bobs:BOBS.length }; };

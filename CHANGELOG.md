@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.45.0] — 2026-07-02
+
+### 🧭 Navigation / identity reliability — a shown repo can never open a different one
+- **One canonical resolver.** Every place that turns a *string* into a repo now goes through a single `repoByKey()` in `index.html`: it tries the exact `repo.repo` key, then case-insensitive, then a last-resort `-`/`_`-insensitive normalization — exact/CI always win so the fuzzy fallback can't cause a wrong match. Unknown / empty / null keys resolve to `null` (no accidental hit). The grounded-reply resolve and its tick-recovery loop, plus every `?dbg` helper (`__card` / `__taxi` / `__visitRepo` / `__chronoMatch` / `__visitFx`), were rewired onto it, replacing five subtly-different ad-hoc `REPOS.find(...)` variants.
+- **Shareable `#repo=<key>` deep links.** Opening a card writes `#repo=<canonical>` via `history.replaceState` (so it never pollutes history or fires a re-entrant `hashchange`); closing clears it. On boot the link opens the matching card **after** the intro dismisses (the `#intro` z-layer sits above `#modal`), and a genuine `hashchange` (pasted link / share) switches or closes the card to match — always keyed off the card's own `modal._repoKey`.
+- **Audit result: identity-safe by construction.** Building interaction is proximity-based (no raycast lottery), and nearly every card/preview/taxi/search button already closes over its own repo object rather than a global `selectedRepo`. Verified across the 62 repos: no two collide under normalization, and every `repo.url` last segment matches `repo.repo` (so "Open on GitHub" can't mis-route).
+- **Regression guard.** `scripts/smoke.mjs` gained a group that runs the **real** shipped `repoByKey` / `repoHashKey` (extracted from `index.html`) against the **real** `repos.json`: exact/CI/`-_`-normalized/unknown→null, self round-trip for all repos, url↔repo invariant, no normalized-key collision, and a `#repo=` hash round-trip.
+- **Verified.** Deep-link open (desktop + 390px mobile), close clears the hash, `hashchange` switches the card; 16 confusable repos (`youtube-dl-nas` vs `channel-vault-nas`; SageMaker/Bedrock/ISO families; `AIsketcher`; …) all show **displayed == target == key**; the `youtube-dl-nas` Chronos false-debate stays fixed; **0 console errors**, no overflow. Smoke **56** (+15) + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.44.1] — 2026-07-02
 
 ### 🐛 Fix — a repo's "관련 토론 보기" link followed incidental plumbing, not its identity

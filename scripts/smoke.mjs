@@ -128,6 +128,45 @@ if (genSrc && tokSrc && matchSrc) {
   }
 }
 
+/* ── 8) repoByKey: the one canonical string→repo resolver — a shown repo can never resolve to a different one ──
+ *    Runs the REAL shipped repoByKey (extracted from index.html) against the REAL repos.json, plus data
+ *    invariants (url last segment ↔ repo.repo) and the #repo deep-link hash round-trip. */
+group('repoByKey canonical identity resolve (navigation reliability)');
+ok(/function repoByKey\(key\)\{/.test(HTML), 'repoByKey canonical resolver exists');
+ok(/function openRepoFromHash\(\)\{/.test(HTML) && /#repo=/.test(HTML), 'repo deep link (#repo=) wiring exists');
+ok(/modal\._repoKey=repo\.repo/.test(HTML), 'openCard records the card repo key for hash sync');
+const normSrc = (HTML.match(/const _repoNorm=[^;]+;/) || [])[0];
+const rbkSrc  = (HTML.match(/function repoByKey\(key\)\{[\s\S]*?return null; \}/) || [])[0];
+const rhkSrc  = (HTML.match(/function repoHashKey\(\)\{[\s\S]*?\}/) || [])[0];
+ok(!!(normSrc && rbkSrc && rhkSrc), 'repoByKey + _repoNorm + repoHashKey extractable from index.html');
+if (normSrc && rbkSrc) {
+  let repos = [];
+  try { const rj = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8')); repos = Array.isArray(rj) ? rj : (rj.repos || []); } catch (e) { console.log('  ✗ repos.json load: ' + e.message); }
+  ok(repos.length > 0, 'repos.json loaded for identity check');
+  if (repos.length) {
+    const R = new Function('REPOS', `${normSrc}\n${rbkSrc}\nreturn repoByKey;`)(repos);
+    const norm = new Function(`${normSrc}\nreturn _repoNorm;`)();
+    const s = repos[0];
+    ok(R(s.repo) === s, 'exact canonical key resolves to its own repo');
+    ok(R(s.repo.toUpperCase()) === s, 'case-insensitive key resolves to the same repo');
+    ok(R(s.repo.replace(/-/g, '_')) === s, "'-'/'_' -insensitive key resolves to the same repo");
+    ok(R('__no-such-repo__') === null && R('') === null && R(null) === null && R('   ') === null, 'unknown / empty / null key resolves to null (no accidental match)');
+    const bad = repos.filter(r => R(r.repo) !== r).map(r => r.repo);
+    ok(bad.length === 0, 'every repo round-trips through its canonical key' + (bad.length ? ' [' + bad.slice(0, 4).join(', ') + ']' : ''));
+    const mism = repos.filter(r => { const seg = String(r.url || '').replace(/\/+$/, '').split('/').pop(); return String(seg).toLowerCase() !== String(r.repo).toLowerCase(); }).map(r => r.repo);
+    ok(mism.length === 0, 'every repo.url last segment matches repo.repo (Open-on-GitHub cannot mis-route)' + (mism.length ? ' [' + mism.slice(0, 4).join(', ') + ']' : ''));
+    const seen = new Map(), coll = [];
+    for (const r of repos) { const n = norm(r.repo); if (seen.has(n)) coll.push(seen.get(n) + '≈' + r.repo); else seen.set(n, r.repo); }
+    ok(coll.length === 0, 'no two repos share a normalized key (the -/_ fallback stays unambiguous)' + (coll.length ? ' [' + coll.join(', ') + ']' : ''));
+  }
+}
+if (rhkSrc) {
+  const mk = hash => new Function('location', `${rhkSrc}\nreturn repoHashKey();`)({ hash });
+  ok(mk('#repo=' + encodeURIComponent('youtube-dl-nas')) === 'youtube-dl-nas', 'deep-link hash round-trips the canonical key');
+  ok(mk('#repo=' + encodeURIComponent('owner/repo name')) === 'owner/repo name', 'deep-link hash decodes special chars');
+  ok(mk('') === null && mk('#other') === null, 'non-repo hash yields null');
+}
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
