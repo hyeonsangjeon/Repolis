@@ -123,7 +123,7 @@
   #station .squick button { font: inherit; font-size: 11px; cursor: pointer; padding: 5px 10px; border-radius: 999px;
     border: 1px solid #e3d2b6; background: #fffdf8; color: #8a6f4e; }
   #station .squick button:active { background: #f3e6cf; }
-  /* 🚆 in-world knowledge districts (single-hop rides via the existing taxi) */
+  /* 🚉 in-world landmark stops (single-hop rides via the existing taxi) */
   #station .sdist-h { font-size: 11px; font-weight: 700; color: #9a6e1e; padding: 2px 2px 8px; letter-spacing: .02em; }
   #station .sdist { display: flex; flex-direction: column; gap: 6px; }
   #station .sdist button { font: inherit; font-size: 12.5px; cursor: pointer; text-align: left; width: 100%;
@@ -186,6 +186,8 @@
   .courseItem.done .ci { background: #eef9f2; border-color: #79c6a0; }
   .courseItem.done .cn { color: #2f7d5b; text-decoration: line-through; text-decoration-color: rgba(47,125,91,.4); }
   .courseItem.done .cs { color: #2f9d6a; }
+  .courseItem .czTag { flex: 0 0 auto; font-size: 9.5px; font-weight: 700; color: #b08a54; background: #fff3d6;
+    border: 1px solid #edd8a6; border-radius: 999px; padding: 1px 6px; max-width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .courseGo { display: block; width: 100%; margin-top: 9px; min-height: 38px; border: 0; cursor: pointer; border-radius: 10px;
     font-family: inherit; font-size: 12.5px; font-weight: 800; color: #3a2a08; background: linear-gradient(135deg,#f1c45a,#e09a2f);
     box-shadow: 0 4px 12px rgba(208,140,40,.28); transition: transform .12s ease, filter .12s ease; }
@@ -197,6 +199,15 @@
   .pZones { font-size: 11px; color: #ab8a66; padding: 6px 2px 2px; line-height: 1.5; }
   .pZones .z { color: #c98a4a; font-weight: 700; }
   .pHint { font-size: 10.5px; color: #c2ab88; padding: 9px 2px 0; text-align: center; }
+  .pDistricts { padding: 6px 2px 0; }
+  .pDistricts .pdH { font-size: 11px; font-weight: 800; letter-spacing: .02em; color: #9a6e1e; text-transform: uppercase; padding: 6px 2px 6px; }
+  .pDistricts .pdRow { display: flex; align-items: center; gap: 7px; padding: 3px 2px; }
+  .pDistricts .pdIco { flex: 0 0 auto; width: 18px; text-align: center; font-size: 13px; }
+  .pDistricts .pdNm { flex: 0 0 auto; font-size: 11px; font-weight: 700; color: #6f5326; white-space: nowrap; max-width: 118px; overflow: hidden; text-overflow: ellipsis; }
+  .pDistricts .pdBar { flex: 1; height: 5px; border-radius: 3px; background: #eadfce; overflow: hidden; }
+  .pDistricts .pdBar > i { display: block; height: 100%; border-radius: 3px; transition: width .4s ease; }
+  .pDistricts .pdN { flex: 0 0 auto; font-size: 10.5px; font-weight: 800; color: #ab8a66; min-width: 32px; text-align: right; }
+  .pDistricts .pdHint { font-size: 10px; color: #c6af8c; padding: 6px 2px 0; line-height: 1.4; }
   #passBtn.glow { box-shadow: 0 0 0 2px #79c6a0, 0 4px 14px rgba(47,157,106,.3); }
 
   #prompt { position: fixed; z-index: 11; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
@@ -254,6 +265,18 @@
   .card .since { width: 100%; font-size: 11px; color: #ab8a66; padding: 8px 24px 0; line-height: 1.5; }
   .chip b { color: #d2622f; }
   .card .metricnote { font-size: 11px; color: #b39f8c; padding: 8px 24px 0; line-height: 1.4; }
+  .card .cardAsk { padding: 12px 24px 0; }
+  .cardAsk .caTitle { font-size: 12.5px; font-weight: 800; color: #8a6a3e; margin: 0 0 9px; }
+  .cardAsk .caRow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+  .cardAsk .caBtn { flex: 1 1 auto; min-width: 118px; text-align: center; cursor: pointer; border: 1px solid #e6d3ad;
+    background: #fbf3e2; color: #6a523d; font-family: inherit; font-size: 12px; font-weight: 700; border-radius: 10px; padding: 9px 10px;
+    transition: background .14s ease, transform .12s ease; }
+  .cardAsk .caBtn:hover { background: #f3e6cd; transform: translateY(-1px); }
+  .cardAsk .caHint { font-size: 10.5px; font-weight: 700; color: #b39f8c; margin: 2px 0 6px; text-transform: uppercase; letter-spacing: .02em; }
+  .cardAsk .caChips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cardAsk .caChip { cursor: pointer; font-size: 11.5px; font-weight: 600; color: #6a4f86; background: #f1ecf8;
+    border: 1px solid #ddd0ec; border-radius: 999px; padding: 6px 11px; transition: background .14s ease, transform .12s ease; }
+  .cardAsk .caChip:hover { background: #e7ddf7; transform: translateY(-1px); }
 
   /* ---- Contribution Library panel ---- */
   #libModal { position: fixed; inset: 0; z-index: 22; display: none; align-items: center; justify-content: center;
@@ -636,6 +659,7 @@
   <div class="courseBox" id="courseBox" style="display:none;"></div>
   <div class="stampGrid" id="stampGrid"></div>
   <div class="pRow"><span data-i18n="passportRepos">방문한 레포</span> <b><span id="pRepoN">0</span>/<span id="pRepoT">0</span></b></div>
+  <div class="pDistricts" id="pDistricts"></div>
   <div class="pZones" id="pZones"></div>
   <div class="pHint" data-i18n="passportHint">현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.</div>
 </div>
@@ -654,7 +678,7 @@
   <button class="sclose" id="stationClose" type="button" aria-label="닫기">✕</button>
   <h3>🚉 <span data-i18n="stationTitle">Repolis 역 · 어디로 갈까요?</span></h3>
   <div class="scur"><span data-i18n="stationCurrent">현재 마을</span>: <b id="stationCurName">—</b></div>
-  <div class="sdist-h" data-i18n="stationDistrictsH">🚆 이 세계의 지식 구역</div>
+  <div class="sdist-h" data-i18n="stationDistrictsH">🚉 명소로 바로 이동</div>
   <div class="sdist" id="stationDistricts"></div>
   <div class="sdiv">
     <div class="sdist-h" data-i18n="stationExternalH">🌍 다른 GitHub 마을</div>
@@ -703,6 +727,7 @@
     <div class="since" id="cardSince"></div>
     <div class="body"><p id="cardDesc"></p></div>
     <div class="metricnote" id="cardMetricNote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).</div>
+    <div class="cardAsk" id="cardAsk"></div>
     <div class="actions" id="cardActions"></div>
   </div>
 </div>
@@ -997,6 +1022,7 @@ const I18N = {
     passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프를 모아요.',
     passportRepos:'방문한 레포', passportHint:'현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
+    passportDistricts:'구역별 탐험', passportDistrictsHint:'각 지구의 레포를 방문하면 채워져요.',
     courseTitle:'오늘의 코스', courseGo:'🚕 코스 안내', courseAllDone:'🎉 코스 완주!', courseDone:'✓',
     courseBanner:'🗺️ 오늘의 추천 코스 3곳이 정해졌어요! 여권 🛂에서 확인하고 따라가 보세요', courseReward:'🎉 오늘의 코스를 완주했어요! 멋진 탐험이었어요 ✨',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
@@ -1040,7 +1066,7 @@ const I18N = {
     townOf:'{user} 님의 마을', myCity:'내 도시',
     stationBtn:'🚉 역', stationLm:'GitHub 역',
     stationTitle:'Repolis 역 · 어디로 갈까요?', stationSub:'GitHub username을 입력하면 그 사람의 공개 레포 마을로 기차가 데려다줘요.',
-    stationDistrictsH:'🚆 이 세계의 지식 구역', stationExternalH:'🌍 다른 GitHub 마을',
+    stationDistrictsH:'🚉 명소로 바로 이동', stationExternalH:'🌍 다른 GitHub 마을',
     stationCurrent:'현재 마을', stationUserPh:'GitHub username 입력', stationGo:'🚆 기차 타고 이동',
     stationExamples:'예: mrdoob, torvalds, karpathy, vercel', stationHome:'← {user} 님의 도시로',
     stationInvalid:'올바른 GitHub username을 입력해 주세요.',
@@ -1063,6 +1089,7 @@ const I18N = {
     mapBtn:'지도', mapTitle:'월드맵', mapHint:'구역을 누르면 그 지구 중심까지 택시가 데려다줘요.',
     noResults:'검색 결과가 없어요', noDesc:'아직 설명이 없는 레포예요. GitHub에서 확인해보세요.',
     openGithub:'GitHub 열기 ↗', liveDemo:'라이브 데모 ↗', close:'닫기', socialPreview:'소셜 프리뷰',
+    cardAskTitle:'🚕 이 레포, 더 알아보기', cardAskRepo:'이 레포 질문하기', cardAskWhy:'왜 이 구역에 있나요?', cardSimilar:'비슷한 레포 보기', cardSuggestHint:'추천 질문',
     rideThere:'🚕 그 집까지 데려다줄게요', soLead:'그럼 ',
     greeterHtml:'어서오세요! 🚕 <b>Repolis 택시기사</b>입니다.<br>어떤 걸 찾으세요? 예: <b>제일 인기있는 레포</b>, <b>AI 에이전트</b>, <b>STT</b>, <b>아무거나</b>',
     greetReply:'안녕하세요! 🚕 어떤 레포를 찾으세요? 예: <b>제일 인기있는 레포</b>, <b>AI 에이전트</b>, <b>STT</b>',
@@ -1137,6 +1164,7 @@ const I18N = {
     passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps.',
     passportRepos:'Repos visited', passportHint:'Walk up to a scholar, the library, a canal or the plaza to earn a stamp.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
+    passportDistricts:'District progress', passportDistrictsHint:'Fills up as you visit each district\'s repos.',
     courseTitle:'Today\'s course', courseGo:'🚕 Guide me', courseAllDone:'🎉 Course complete!', courseDone:'✓',
     courseBanner:'🗺️ Today\'s 3-stop route is ready! Open your Passport 🛂 to follow it', courseReward:'🎉 You completed today\'s course! Lovely exploring ✨',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
@@ -1180,7 +1208,7 @@ const I18N = {
     townOf:"{user}'s town", myCity:'My city',
     stationBtn:'🚉 Station', stationLm:'GitHub Station',
     stationTitle:'Repolis Station · Where to?', stationSub:"Enter a GitHub username and the train will take you to that person's public-repo town.",
-    stationDistrictsH:'🚆 Knowledge districts', stationExternalH:'🌍 Other GitHub towns',
+    stationDistrictsH:'🚉 Landmark stops', stationExternalH:'🌍 Other GitHub towns',
     stationCurrent:'Current town', stationUserPh:'Enter GitHub username', stationGo:'🚆 Take the train',
     stationExamples:'e.g. mrdoob, torvalds, karpathy, vercel', stationHome:"← Back to {user}'s city",
     stationInvalid:'Please enter a valid GitHub username.',
@@ -1203,6 +1231,7 @@ const I18N = {
     mapBtn:'Map', mapTitle:'World Map', mapHint:'Tap a district and the taxi drives you to its centre.',
     noResults:'No results', noDesc:'No description yet. Check it out on GitHub.',
     openGithub:'Open on GitHub ↗', liveDemo:'Live demo ↗', close:'Close', socialPreview:'Social preview',
+    cardAskTitle:'🚕 Explore this repo', cardAskRepo:'Ask about this repo', cardAskWhy:'Why this district?', cardSimilar:'Similar repos', cardSuggestHint:'Try asking',
     rideThere:"🚕 I'll drive you there", soLead:'Then ',
     greeterHtml:"Welcome! 🚕 I'm the <b>Repolis taxi driver</b>.<br>What are you looking for? e.g. <b>most popular repo</b>, <b>AI agents</b>, <b>STT</b>, <b>anything</b>",
     greetReply:"Hello! 🚕 Which repo are you after? e.g. <b>most popular</b>, <b>AI agents</b>, <b>STT</b>",
@@ -2178,8 +2207,8 @@ function updateGarlands(t){ for(const gl of GARLANDS){
 /* ====================== DISTRICTS (repo neighbourhoods) ======================
    A deterministic classifier sorts every repo into exactly one topic *district*
    from lang + topics + desc + activity. This is a separate namespace from the
-   knowledge-train DISTRICTS (station modal) and from repoByKey — it never
-   touches repo identity. Distribution is verified in scripts/smoke.mjs. */
+   station modal's LANDMARK_STOPS (landmark fast-travel) and from repoByKey — it
+   never touches repo identity. Distribution is verified in scripts/smoke.mjs. */
 /*ZONECLASSIFIER:START*/
 const ZONE_CAT = [
   {id:'ai',      ko:'AI 연구구역',      en:'AI Research District',       icon:'🔭', tone:0x6aa6de, ground:0x223247},
@@ -2218,6 +2247,10 @@ function zoneOf(repo){
 /*ZONECLASSIFIER:END*/
 REPOS.forEach(r=>{ r._zone = zoneOf(r); });
 const ZONES = ZONE_CAT.filter(z => REPOS.some(r=>r._zone===z.id));   // only non-empty districts, kept in catalog (angular) order
+function zoneCatById(id){ return ZONE_CAT.find(z=>z.id===id)||null; }
+function zoneIconById(id){ const z=zoneCatById(id); return z?z.icon:''; }
+function zoneNameById(id){ const z=zoneCatById(id); return z?(LANG==='ko'?z.ko:z.en):''; }
+function zoneReposOf(z){ return (z&&z.repos&&z.repos.length)?z.repos:REPOS.filter(r=>r._zone===(z&&z.id)); }
 
 /* ---- town layout: concentric ring streets; repos grouped into district wedges (downtown→hometown by rank within each) ---- */
 const buildings=[];
@@ -4330,6 +4363,20 @@ function restorePassport(){ if(!passport.repos.length) return;
     if(r._row) r._row.classList.add('visited'); if(r._ring) r._ring.material.color.set(0x2f9d6a); lightVisitedHouse(r,true); } }
   document.getElementById('visitCount').textContent=visited;
   if(isNight){ _nightState=null; setNightState(true); } }
+function districtProgress(){ if(typeof ZONES==='undefined'||!ZONES) return [];
+  return ZONES.map(z=>{ const reps=zoneReposOf(z);
+    const vis=reps.filter(r=>passport.repos.indexOf(r.repo)>=0).length;
+    return { id:z.id, name:(LANG==='ko'?z.ko:z.en), icon:z.icon, tone:z.tone>>>0, visited:vis, total:reps.length }; }); }
+function renderDistrictProgress(){ const box=document.getElementById('pDistricts'); if(!box) return;
+  const ds=districtProgress(); if(!ds.length){ box.innerHTML=''; return; }
+  let html=`<div class="pdH">${_esc(t('passportDistricts'))}</div>`;
+  ds.forEach(d=>{ const pct=d.total?Math.round(d.visited/d.total*100):0;
+    const col='#'+((d.tone)&0xffffff).toString(16).padStart(6,'0');
+    html+=`<div class="pdRow"><span class="pdIco">${d.icon}</span><span class="pdNm">${_esc(d.name)}</span>`
+      +`<span class="pdBar"><i style="width:${pct}%;background:${col}"></i></span>`
+      +`<span class="pdN">${d.visited}/${d.total}</span></div>`; });
+  html+=`<div class="pdHint">${_esc(t('passportDistrictsHint'))}</div>`;
+  box.innerHTML=html; }
 function renderPassport(){ renderCourse(); const grid=document.getElementById('stampGrid'); if(!grid) return;
   grid.innerHTML='';
   for(const lm of PASS_LANDMARKS){ const got=passHasStamp(lm.id);
@@ -4340,9 +4387,11 @@ function renderPassport(){ renderCourse(); const grid=document.getElementById('s
   const missing=PASS_LANDMARKS.filter(l=>!passHasStamp(l.id));
   document.getElementById('pZones').innerHTML = missing.length
     ? (t('passportZonesLeft')+missing.map(l=>`<span class="z">${t(l.key).split(' · ')[0]}</span>`).join(', '))
-    : t('passportAllZones'); }
+    : t('passportAllZones');
+  renderDistrictProgress(); }
 /* ───────── 🗺️ Daily Course — today's deterministic 3-stop route (local-only, no PII) ───────── */
 const COURSE_KEY='repolisCourse';
+const COURSE_V=2;   // v2 = district-aware course; bump forces a safe rebuild (progress lives in passport, not here)
 let course=null;
 function _todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function _seedFrom(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
@@ -4358,16 +4407,25 @@ function lmCourseDest(id){ switch(id){
   case 'plaza': return {label:t('lmPlaza'),_pos:new THREE.Vector3(0,0,0),_landmark:'plaza'};
   case 'library': return (typeof LIB!=='undefined'&&LIB)?{label:LIB.label,_pos:LIB._pos,_isLibrary:true}:null;
 } return null; }
+function _zoneVisitRatio(z){ const reps=zoneReposOf(z); if(!reps.length) return {reps,vis:0,ratio:1};
+  const vis=reps.filter(r=>passport.repos.indexOf(r.repo)>=0).length; return {reps, vis, ratio:vis/reps.length}; }
+function _zoneRepresentative(z){ const reps=zoneReposOf(z).slice().sort((a,b)=>(a.rank||0)-(b.rank||0));
+  return reps.find(r=>passport.repos.indexOf(r.repo)<0) || reps[0] || null; }   // prefer an unvisited standout, else the best-ranked
 function buildCourse(){ const rng=_rng(_seedFrom('course:'+_todayKey()));
-  const lms=_shuffle(COURSE_LM.filter(l=>lmCourseDest(l.id)),rng).slice(0,2);
-  const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.stars||0)).slice(0,12);
-  const repo=pop.length?pop[Math.floor(rng()*pop.length)]:null;
-  let items=[]; if(repo) items.push({type:'repo',id:repo.repo,ico:'🏠'});
+  let items=[];
+  if(typeof ZONES!=='undefined' && ZONES && ZONES.length){                       // 🧭 district-aware: cross two least-explored districts
+    const zs=ZONES.map(z=>({z, v:_zoneVisitRatio(z)})).filter(o=>o.v.reps.length);
+    zs.sort((a,b)=> (a.v.ratio-b.v.ratio) || (rng()-0.5));                        // least-visited first, seeded jitter to vary ties daily
+    zs.slice(0,2).forEach(o=>{ const r=_zoneRepresentative(o.z); if(r && !items.some(it=>it.id===r.repo)) items.push({type:'repo',id:r.repo,ico:'🏠',zone:o.z.id}); });
+  }
+  if(!items.length){ const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.stars||0)).slice(0,12);   // fallback: classic popular pick
+    const repo=pop.length?pop[Math.floor(rng()*pop.length)]:null; if(repo) items.push({type:'repo',id:repo.repo,ico:'🏠',zone:repo._zone}); }
+  const lms=_shuffle(COURSE_LM.filter(l=>lmCourseDest(l.id)),rng).slice(0,1);     // one landmark stop keeps the tour varied
   lms.forEach(l=>items.push({type:'lm',id:l.id,ico:l.ico}));
   items=_shuffle(items,rng);
-  return {date:_todayKey(), items, rewarded:false}; }
-function getCourse(){ if(course&&course.date===_todayKey()) return course;
-  try{ const c=JSON.parse(localStorage.getItem(COURSE_KEY)); if(c&&c.date===_todayKey()&&Array.isArray(c.items)&&c.items.length){ course=c; return course; } }catch(e){}
+  return {date:_todayKey(), v:COURSE_V, items, rewarded:false}; }
+function getCourse(){ if(course&&course.date===_todayKey()&&course.v===COURSE_V) return course;
+  try{ const c=JSON.parse(localStorage.getItem(COURSE_KEY)); if(c&&c.date===_todayKey()&&c.v===COURSE_V&&Array.isArray(c.items)&&c.items.length){ course=c; return course; } }catch(e){}
   course=buildCourse(); try{ localStorage.setItem(COURSE_KEY,JSON.stringify(course)); }catch(e){} return course; }
 function courseItemDone(it){ return it.type==='repo'?passport.repos.indexOf(it.id)>=0:passHasStamp(it.id); }
 function courseItemLabel(it){ if(it.type==='repo'){ const r=REPOS.find(x=>x.repo===it.id); return r?r.label:it.id; }
@@ -4413,8 +4471,11 @@ function endTour(showEnd){ if(!tour) return; if(tour._timer) clearTimeout(tour._
 function renderCourse(){ const box=document.getElementById('courseBox'); if(!box) return;
   if(!REPOS.length){ box.style.display='none'; return; }
   const c=getCourse(), pr=courseProgress(), all=pr.done>=pr.total&&pr.total>0; box.style.display='';
-  let rows=''; c.items.forEach((it,i)=>{ const done=courseItemDone(it);
-    rows+=`<div class="courseItem${done?' done':''}" data-ci="${i}"><div class="ci">${it.ico}</div><div class="cn">${_esc(courseItemLabel(it))}</div><div class="cs">${done?t('courseDone'):'→'}</div></div>`; });
+  let rows=''; c.items.forEach((it,i)=>{ const done=courseItemDone(it); const isRepo=it.type==='repo';
+    const ico=isRepo?(zoneIconById(it.zone)||it.ico):it.ico;
+    const zn=isRepo&&it.zone?zoneNameById(it.zone):'';
+    const ztag=zn?`<span class="czTag">${_esc(zn)}</span>`:'';
+    rows+=`<div class="courseItem${done?' done':''}" data-ci="${i}"${zn?` title="${_esc(zn)}"`:''}><div class="ci">${ico}</div><div class="cn">${_esc(courseItemLabel(it))}</div>${ztag}<div class="cs">${done?t('courseDone'):'→'}</div></div>`; });
   box.innerHTML=`<div class="courseHead"><span class="ct">🗺️ ${_esc(t('courseTitle'))}</span><span class="cp">${pr.done}/${pr.total}</span></div>`
     +`<div class="courseBar"><i style="width:${pr.total?Math.round(pr.done/pr.total*100):0}%"></i></div>`+rows
     +`<button class="courseGo${all?' alldone':''}" id="courseGoBtn">${all?_esc(t('courseAllDone')):_esc(t('courseGo'))}</button>`;
@@ -4550,8 +4611,73 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   const ghBtn=act.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>track('github_click',{repo:repo.repo});
   const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
   track('repo_card_open',{repo:repo.repo});
+  renderCardAsk(repo);
   markVisited(repo); }
 function closeCard(){ modalOpen=false; modal.classList.remove('show'); modal._repoKey=null; clearRepoHash(); }
+/* ───────── 🚕 Repo-card actions — reuse the existing taxi/chat flow (no new backend) ───────── */
+function _taxiNpc(){ return (typeof NPCS!=='undefined'&&NPCS)?(NPCS.find(n=>n.kind==='taxi')||activeNpc||NPCS[0]):activeNpc; }
+function askInChat(q){ if(!q) return; closeCard(); openChat(_taxiNpc());   // routes through taxi → localIntent/grounded, same as typing it
+  chatText.value=q; sendChat(); }
+function repoSuggestedQs(repo){ const qs=[]; const tp=(repo.topics||[]).find(x=>x&&x.length>1); const lang=(repo.lang&&repo.lang!=='—')?repo.lang:'';
+  if(LANG==='ko'){ qs.push(`${repo.label}는 무엇을 하는 레포예요?`);
+    if(tp) qs.push(`${tp} 관련해서 이 레포는 어떻게 써요?`); else if(lang) qs.push(`${lang}로는 뭘 만들 수 있어요?`);
+    qs.push(`${repo.label} 어떻게 시작해요?`); }
+  else { qs.push(`What does ${repo.label} do?`);
+    if(tp) qs.push(`How do I use ${repo.label} for ${tp}?`); else if(lang) qs.push(`What can I build with ${lang}?`);
+    qs.push(`How do I get started with ${repo.label}?`); }
+  return qs.slice(0,3); }
+function similarRepos(repo,n){ n=n||3; if(!repo||!repo._zone) return [];
+  const topics=new Set((repo.topics||[]).map(x=>String(x).toLowerCase()));
+  const scored=REPOS.filter(r=>r!==repo && r._zone===repo._zone).map(r=>{ let s=0;
+    (r.topics||[]).forEach(x=>{ if(topics.has(String(x).toLowerCase())) s+=2; });
+    if(r.lang && r.lang===repo.lang) s+=1; s+=Math.min(2,(r.stars||0)/50);
+    return {r,s}; });
+  scored.sort((a,b)=> (b.s-a.s) || ((a.r.rank||0)-(b.r.rank||0)));
+  return scored.slice(0,n).map(x=>x.r); }
+function zoneWhy(repo){ const z=zoneCatById(repo._zone); const name=z?(LANG==='ko'?z.ko:z.en):(repo._zone||'');
+  if(repo._zone==='ruins'){ return LANG==='ko'
+      ? `${z?z.icon:'🏚️'} <b>${esc(repo.label)}</b>는 <b>${esc(name)}</b>에 있어요 — 실험적이거나 오래 잠든 레포라, 분위기 있는 폐허 지구에 배치했어요. (LLM 없이 분류기가 판단해요)`
+      : `${z?z.icon:'🏚️'} <b>${esc(repo.label)}</b> rests in the <b>${esc(name)}</b> — it looks experimental or long-dormant, so it sits among the atmospheric ruins. (Classified deterministically, no LLM.)`; }
+  const h=(repo.repo+' '+(repo.desc||'')+' '+((repo.topics||[]).join(' '))).toLowerCase();
+  const kws=(typeof ZKW!=='undefined'&&ZKW[repo._zone]?ZKW[repo._zone]:[]).filter(k=>h.includes(k[0])).map(k=>k[0]).slice(0,4);
+  const langAff=(typeof ZLANG!=='undefined'&&ZLANG[repo.lang])?ZLANG[repo.lang][repo._zone]:0;
+  const bits=[];
+  if(kws.length) bits.push((LANG==='ko'?'키워드 ':'keywords ')+kws.map(k=>'<code>'+esc(k)+'</code>').join(', '));
+  if(langAff) bits.push(LANG==='ko'?`<code>${esc(repo.lang)}</code> 언어`:`the <code>${esc(repo.lang)}</code> language`);
+  const reason=bits.length?bits.join(' + '):(LANG==='ko'?'전반적인 주제':'its overall theme');
+  return LANG==='ko'
+    ? `${z?z.icon:'🧭'} <b>${esc(repo.label)}</b>는 <b>${esc(name)}</b>에 있어요 — ${reason}가 이 구역과 맞았거든요. (LLM 없이 분류기가 판단해요)`
+    : `${z?z.icon:'🧭'} <b>${esc(repo.label)}</b> lives in the <b>${esc(name)}</b> — ${reason} matched this district. (Classified deterministically, no LLM.)`; }
+function cardWhyZone(repo){ closeCard(); openChat(_taxiNpc());
+  const q=LANG==='ko'?`${repo.label}는 왜 이 구역에 있나요?`:`Why is ${repo.label} in this district?`;
+  addMsg('me',esc(q),{noHist:true}); addMsg('bot',zoneWhy(repo),{noHist:true}); }
+function cardSimilar(repo){ closeCard(); openChat(_taxiNpc());
+  const sims=similarRepos(repo,3);
+  const q=LANG==='ko'?`${repo.label}랑 비슷한 레포 보여줘`:`Show repos similar to ${repo.label}`;
+  addMsg('me',esc(q),{noHist:true});
+  if(!sims.length){ addMsg('bot',(LANG==='ko'
+      ? `${esc(repo.label)}와 같은 구역에서 더 찾지 못했어요. 월드맵으로 다른 구역도 둘러보세요! 🗺️`
+      : `I couldn't find close matches in the same district. Try exploring other districts on the map! 🗺️`),{noHist:true}); return; }
+  const z=zoneCatById(repo._zone), zn=z?(LANG==='ko'?z.ko:z.en):'';
+  const lead=LANG==='ko'
+    ? `${z?z.icon:'🔍'} <b>${esc(zn)}</b>에서 <b>${esc(repo.label)}</b>와 비슷한 레포예요:`
+    : `${z?z.icon:'🔍'} Repos in the <b>${esc(zn)}</b> similar to <b>${esc(repo.label)}</b>:`;
+  addMsg('bot', lead, { repo:sims[0], alts:sims.slice(1), noHist:true }); }
+function renderCardAsk(repo){ const box=document.getElementById('cardAsk'); if(!box) return;
+  const hasZone=!!zoneCatById(repo._zone);
+  let html=`<div class="caTitle">${esc(t('cardAskTitle'))}</div><div class="caRow">`;
+  html+=`<button type="button" class="caBtn" data-ca="ask">💬 ${esc(t('cardAskRepo'))}</button>`;
+  if(hasZone) html+=`<button type="button" class="caBtn" data-ca="why">🧭 ${esc(t('cardAskWhy'))}</button>`;
+  html+=`<button type="button" class="caBtn" data-ca="similar">🔍 ${esc(t('cardSimilar'))}</button></div>`;
+  const qs=repoSuggestedQs(repo);
+  if(qs.length){ html+=`<div class="caHint">${esc(t('cardSuggestHint'))}</div><div class="caChips">`;
+    qs.forEach(q=>{ html+=`<span class="caChip" data-caq="${esc(q)}">${esc(q)}</span>`; }); html+='</div>'; }
+  box.innerHTML=html;
+  const firstQ=qs[0]||(LANG==='ko'?`${repo.label}는 무엇을 하는 레포예요?`:`What does ${repo.label} do?`);
+  const ab=box.querySelector('[data-ca="ask"]'); if(ab) ab.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'ask'}); askInChat(firstQ); };
+  const wb=box.querySelector('[data-ca="why"]'); if(wb) wb.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'why'}); cardWhyZone(repo); };
+  const sb=box.querySelector('[data-ca="similar"]'); if(sb) sb.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'similar'}); cardSimilar(repo); };
+  box.querySelectorAll('.caChip').forEach(el=>{ el.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'chip'}); askInChat(el.dataset.caq); }; }); }
 modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
 
 /* ---- Contribution Library panel ---- */
@@ -4642,7 +4768,7 @@ document.getElementById('loading').style.display='none';
   const curName=document.getElementById('stationCurName');
   const stationClose=document.getElementById('stationClose');
   const EXAMPLES=['mrdoob','torvalds','karpathy','vercel','sindresorhus'];
-  const DISTRICTS=[{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
+  const LANDMARK_STOPS=[{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
   const baseUrl=()=>location.origin+location.pathname;
   const townName=()=> cityMode==='public' ? tf('townOf',{user:currentUser}) : t('myCity');
 
@@ -4661,12 +4787,12 @@ document.getElementById('loading').style.display='none';
     document.getElementById('trainMsg').textContent=tf('trainDepart',{user:OWNER}); document.getElementById('trainSub').textContent='';
     trainOv.classList.add('show'); setTimeout(()=>{ location.href=baseUrl(); }, 750); }
 
-  function renderDistricts(){
+  function renderLandmarkStops(){
     const wrap=document.getElementById('stationDistricts'); if(!wrap) return;
     wrap.innerHTML='';
-    DISTRICTS.forEach(d=>{
+    LANDMARK_STOPS.forEach(d=>{
       const dest=(typeof lmCourseDest==='function')?lmCourseDest(d.id):null;
-      if(!dest) return;   // skip districts this town doesn't have (e.g. a visitor's public town)
+      if(!dest) return;   // skip landmark stops this town doesn't have (e.g. a visitor's public town)
       const b=document.createElement('button'); b.type='button';
       const ico=document.createElement('span'); ico.className='di'; ico.textContent=d.ico;
       const nm=document.createElement('span'); nm.className='dn'; nm.textContent=dest.label;
@@ -4674,13 +4800,13 @@ document.getElementById('loading').style.display='none';
       b.appendChild(ico); b.appendChild(nm); b.appendChild(go);
       b.onclick=()=>{ closeStation();
         if(typeof taxiTo==='function') taxiTo(dest); else if(typeof setNav==='function') setNav(dest);
-        track('district_ride',{id:d.id}); };
+        track('landmark_stop_ride',{id:d.id}); };
       wrap.appendChild(b);
     });
   }
   function renderStation(){
     curName.textContent=townName();
-    renderDistricts();
+    renderLandmarkStops();
     quick.innerHTML=''; EXAMPLES.forEach(u=>{ const b=document.createElement('button'); b.textContent=u; b.onclick=()=>{ inp.value=u; depart(u); }; quick.appendChild(b); });
     if(cityMode==='public'){ homeWrap.style.display='block'; homeWrap.innerHTML='<button id="goHomeBtn"></button>'; const hb=document.getElementById('goHomeBtn'); hb.textContent=tf('stationHome',{user:OWNER}); hb.onclick=goHome; }
     else homeWrap.style.display='none';
@@ -5771,7 +5897,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__emote=(kind='clap')=>{ playEmote(kind); return {emoteT:+emoteT.toFixed(2), kind:emoteKind}; };
   window.__peerEmote=(kind='dance',id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'emote',id:t,kind}); const p=peers.get(t); return {by:t, emoteT:+(p?.emoteT||0).toFixed(2), kind:p?.emoteKind, armL:!!p?.group._armL}; };
   window.__emotes=()=>Object.keys(EMOTES);  window.__meteor=(az)=>{ spawnMeteor(az); return true; };
-  window.__course=()=>{ const c=getCourse(); return {date:c.date, items:c.items.map(it=>({type:it.type,id:it.id,label:courseItemLabel(it),done:courseItemDone(it)})), prog:courseProgress()}; };
+  window.__course=()=>{ const c=getCourse(); return {date:c.date, v:c.v, items:c.items.map(it=>({type:it.type,id:it.id,zone:it.zone||null,label:courseItemLabel(it),done:courseItemDone(it)})), districts:[...new Set(c.items.filter(it=>it.type==='repo').map(it=>it.zone).filter(Boolean))], prog:courseProgress()}; };
+  window.__passport=()=>({repos:passport.repos.slice(), stamps:passport.stamps.slice(), repoCount:passport.repos.length, stampCount:passport.stamps.length, districts:districtProgress()});
+  window.__districtProgress=()=>districtProgress();
   window.__courseNext=()=>{ courseGuideNext(); return ride?ride.phase:'idle'; };
   window.__visitRepo=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name))||REPOS[0]; if(!r) return null; markVisited(r); return {repo:r.repo, lit:!!r._litVisited, mark:!!r._visitMark, prog:courseProgress()}; };
   window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; };

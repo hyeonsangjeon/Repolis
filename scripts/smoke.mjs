@@ -58,16 +58,18 @@ ok(/fetch\(['"]assets\/contribution-library\.json['"][\s\S]{0,120}\.then\(/.test
 ok(/contribution-library[\s\S]{0,300}\.catch\(/.test(HTML), 'library fetch has a .catch fallback');
 ok(!/await\s+fetch\(['"]assets\/contribution-library/.test(HTML), 'library fetch is not top-level awaited');
 
-/* ── 5) Train Network v0: station knowledge-district single-hop travel ── */
-group('station districts (Train Network v0) wiring');
-ok(/const\s+DISTRICTS\s*=\s*\[/.test(HTML), 'DISTRICTS table exists');
+/* ── 5) Train Network v0: station landmark-stop single-hop travel ──
+ *    NOTE: these are LANDMARK fast-travel stops (plaza/library/chrono/…), a separate namespace
+ *    from the repo districts (ZONE_CAT). Naming is kept distinct so the two never read as one. */
+group('station landmark stops (Train Network v0) wiring');
+ok(/const\s+LANDMARK_STOPS\s*=\s*\[/.test(HTML), 'LANDMARK_STOPS table exists');
 ok(/id=["']stationDistricts["']/.test(HTML), '#stationDistricts container in station modal');
-ok(/function\s+renderDistricts\s*\(/.test(HTML), 'renderDistricts() builder exists');
-ok(/renderStation\s*\(\s*\)\s*\{[\s\S]{0,120}renderDistricts\s*\(\s*\)/.test(HTML), 'renderStation() calls renderDistricts()');
-ok(/lmCourseDest\s*\(\s*d\.id\s*\)/.test(HTML), 'district resolves its destination via lmCourseDest(id)');
-ok(/if\s*\(\s*!dest\s*\)\s*return/.test(HTML), 'absent districts are skipped (public-town graceful degrade)');
-ok(/taxiTo\s*\(\s*dest\s*\)/.test(HTML), 'district button rides via taxiTo(dest)');
-ok(/track\(\s*['"]district_ride['"]/.test(HTML), 'district ride is tracked');
+ok(/function\s+renderLandmarkStops\s*\(/.test(HTML), 'renderLandmarkStops() builder exists');
+ok(/renderStation\s*\(\s*\)\s*\{[\s\S]{0,120}renderLandmarkStops\s*\(\s*\)/.test(HTML), 'renderStation() calls renderLandmarkStops()');
+ok(/lmCourseDest\s*\(\s*d\.id\s*\)/.test(HTML), 'landmark stop resolves its destination via lmCourseDest(id)');
+ok(/if\s*\(\s*!dest\s*\)\s*return/.test(HTML), 'absent stops are skipped (public-town graceful degrade)');
+ok(/taxiTo\s*\(\s*dest\s*\)/.test(HTML), 'landmark stop button rides via taxiTo(dest)');
+ok(/track\(\s*['"]landmark_stop_ride['"]/.test(HTML), 'landmark stop ride is tracked');
 ok(/stationDistrictsH\s*:/.test(HTML), 'stationDistrictsH i18n key present');
 
 /* ── 6) inline <script type=module> still parses ── */
@@ -216,6 +218,44 @@ if (zcSrc && normSrc) {
     ok(drift.length === 0, 'zoneOf is deterministic (same repo → same district across calls)');
   }
 }
+
+/* ── 10) World Loop Integration v1: passport district progress · district-aware course ──
+ *    repo-card actions/questions · deterministic zoneWhy · station-vs-district naming · debug hooks.
+ *    All wired to REUSE the existing passport/course/taxi flow — no new localStorage key, no new backend. */
+group('passport + course + card district loop (World Loop Integration v1)');
+// 10a — passport district progress (derived from passport.repos + r._zone; backward-compatible)
+ok(/function districtProgress\(\)/.test(HTML), 'districtProgress() helper exists');
+ok(/function districtProgress\(\)\{[\s\S]*?passport\.repos/.test(HTML), 'districtProgress derives from existing passport.repos (no new storage key)');
+ok(/id=["']pDistricts["']/.test(HTML), 'passport #pDistricts progress DOM present');
+ok(/function renderPassport\(\)[\s\S]*?renderDistrictProgress\(\)/.test(HTML), 'renderPassport() renders district progress');
+ok(/passportDistricts:\s*['"]/.test(HTML) && (HTML.match(/passportDistricts:\s*['"]/g) || []).length >= 2, 'passportDistricts i18n present in ko + en');
+// 10b — Today's Course is district-aware, with a safe version gate
+ok(/const COURSE_V\s*=\s*2\b/.test(HTML), 'COURSE_V version gate exists');
+ok(/function buildCourse\(\)\{[\s\S]*?ZONES[\s\S]*?zone:\s*o\.z\.id/.test(HTML), 'buildCourse crosses ZONES districts (carries zone id on repo stops)');
+ok(/function getCourse\(\)\{[\s\S]*?c\.v===COURSE_V/.test(HTML), 'getCourse gates on course version (safe migration/rebuild)');
+ok(/zoneIconById\(it\.zone\)/.test(HTML), 'renderCourse shows the district icon for repo stops');
+// 10c — repo-card actions + suggested questions, wired into the existing chat flow
+ok(/id=["']cardAsk["']/.test(HTML), 'repo card #cardAsk section DOM present');
+ok(/function renderCardAsk\(repo\)/.test(HTML), 'renderCardAsk() builds the card actions');
+ok(/renderCardAsk\(repo\);/.test(HTML), 'openCard() populates the card-ask section');
+ok(/function askInChat\(q\)\{[\s\S]*?sendChat\(\)/.test(HTML), 'askInChat() reuses the existing taxi sendChat flow (no new backend)');
+ok(/function cardWhyZone\(repo\)/.test(HTML) && /function cardSimilar\(repo\)/.test(HTML), 'cardWhyZone() + cardSimilar() actions exist');
+ok(/function repoSuggestedQs\(repo\)/.test(HTML), 'repoSuggestedQs() builds contextual questions');
+ok(/function similarRepos\(repo,n\)/.test(HTML), 'similarRepos() finds same-district matches');
+ok((HTML.match(/cardAskRepo:\s*['"]/g) || []).length >= 2 && (HTML.match(/cardAskWhy:\s*['"]/g) || []).length >= 2 && (HTML.match(/cardSimilar:\s*['"]/g) || []).length >= 2, 'card-ask i18n keys present in ko + en');
+// 10d — district explanation is deterministic (no LLM / network)
+const zoneWhySrc = (HTML.match(/function zoneWhy\(repo\)\{[\s\S]*?\nfunction cardWhyZone/) || [, ''])[0];
+ok(zoneWhySrc.length > 0, 'zoneWhy() explanation helper exists');
+ok(zoneWhySrc.length > 0 && !/fetch\(|groundedAsk|webllmAsk|proxyAsk|await /.test(zoneWhySrc), 'zoneWhy() is deterministic — no fetch/LLM call');
+// 10e — station "landmark stops" no longer read as repo districts
+ok(/const LANDMARK_STOPS\s*=\s*\[/.test(HTML), 'station list renamed to LANDMARK_STOPS');
+ok(!/const DISTRICTS\s*=\s*\[/.test(HTML), 'old station const DISTRICTS is gone (no landmark/district name clash)');
+ok(/function renderLandmarkStops\(\)/.test(HTML) && !/function renderDistricts\(\)/.test(HTML), 'renderLandmarkStops() replaces renderDistricts()');
+ok(!/지식 구역/.test(HTML) && !/Knowledge districts/i.test(HTML), 'station heading no longer says "지식 구역" / "Knowledge districts"');
+ok(/🚉 명소로 바로 이동/.test(HTML) && /🚉 Landmark stops/.test(HTML), 'station heading now reads as landmark stops (ko + en)');
+// 10f — debug helpers
+ok(/window\.__passport\s*=/.test(HTML) && /window\.__districtProgress\s*=/.test(HTML), 'debug helpers __passport() + __districtProgress() present');
+ok(/window\.__course=\(\)=>\{[\s\S]*?districts:/.test(HTML), '__course() reports district info');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
