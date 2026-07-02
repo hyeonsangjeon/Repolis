@@ -583,6 +583,27 @@
     .msg .tdots i { opacity: .6; }
     a.libitem { opacity: 1; }
   }
+  /* ---- 🗺️ world map / minimap v1 ---- */
+  #mapWrap { position: fixed; inset: 0; z-index: 16; display: flex; align-items: center; justify-content: center; transition: opacity .18s; }
+  #mapWrap.hidden { opacity: 0; pointer-events: none; }
+  #mapBackdrop { position: absolute; inset: 0; background: rgba(24,18,10,.44); backdrop-filter: blur(2px); }
+  #mapPanel { position: relative; z-index: 1; background: rgba(255,251,242,.97); backdrop-filter: blur(10px);
+    border-radius: 20px; box-shadow: 0 18px 50px rgba(60,40,15,.32); border: 1px solid rgba(210,180,130,.5);
+    padding: 14px 16px 16px; width: min(92vw, 400px); max-height: 92vh; overflow-y: auto; }
+  #mapHead { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 10px; }
+  #mapTitle { font-size: 14px; font-weight: 800; color: #7a4e1e; letter-spacing: .02em; }
+  #mapClose { width: 30px; height: 30px; padding: 0; border: none; border-radius: 10px; cursor: pointer;
+    background: #efe0c4; color: #7a4e1e; font-size: 15px; line-height: 1; }
+  #mapClose:hover { background: #e7d6b6; } #mapClose:active { transform: translateY(1px); }
+  #worldmap { display: block; width: min(82vw, 360px); height: min(82vw, 360px); margin: 0 auto;
+    border-radius: 16px; background: #f3ead7; cursor: pointer; touch-action: manipulation; }
+  #mapLegend { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 0 2px; justify-content: center; }
+  #mapLegend .mz { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+    color: #5a4326; cursor: pointer; padding: 5px 9px; border-radius: 999px; background: #fff; border: 1px solid #e4d3ad; line-height: 1; }
+  #mapLegend .mz:hover { background: #fbf4e6; border-color: #d9bf95; } #mapLegend .mz:active { transform: translateY(1px); }
+  #mapLegend .mz .mzc { font-size: 10px; color: #a98a5f; font-weight: 700; }
+  #mapLegend .mz i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+  .mapHint { font-size: 10.5px; color: #b0946a; text-align: center; padding: 9px 4px 0; line-height: 1.4; }
 </style>
 </head>
 <body>
@@ -595,6 +616,7 @@
   <button id="stationBtn" class="badge" title="Travel to another GitHub town" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;" data-i18n="stationBtn">🚉 역</button>
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
   <button id="dayBtn" class="badge" title="Time of day" aria-label="Time of day" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
+  <button id="mapBtn" class="badge" title="World map" aria-label="World map" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🗺️ <span data-i18n="mapBtn">지도</span></button>
   <div class="badge"><span data-i18n="visited">탐험</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
   <button id="passBtn" class="badge" title="Explorer Passport" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🛂 <span data-i18n="passport">여권</span></button>
   <div class="badge" id="liveBadge" title="online now · entries today · total entries · all-time unique guests · UTC">🟢 <b id="liveCount">1</b><span id="entryWrap" style="display:none;"> · <span class="hudFull" data-i18n="entriesTodayWord">오늘 입장</span><span class="hudShort" data-i18n="entriesTodayShort">입장</span> <b id="entryCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="entryTotalWrap" style="display:none;"> · <span class="hudFull" data-i18n="entriesTotalWord">누적 입장</span><span class="hudShort" data-i18n="entriesTotalShort">누적</span> <b id="entryTotalCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="allWrap" style="display:none;"> · <span data-i18n="uniqueWord">고유</span> <b id="allCount">0</b><span data-i18n="peopleUnit">명</span></span></div>
@@ -616,6 +638,16 @@
   <div class="pRow"><span data-i18n="passportRepos">방문한 레포</span> <b><span id="pRepoN">0</span>/<span id="pRepoT">0</span></b></div>
   <div class="pZones" id="pZones"></div>
   <div class="pHint" data-i18n="passportHint">현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.</div>
+</div>
+
+<div id="mapWrap" class="hidden" role="dialog" aria-modal="true" aria-label="World map">
+  <div id="mapBackdrop"></div>
+  <div id="mapPanel">
+    <div id="mapHead"><span id="mapTitle">🗺️ 월드맵</span><button id="mapClose" type="button" aria-label="Close">✕</button></div>
+    <canvas id="worldmap" width="360" height="360"></canvas>
+    <div id="mapLegend"></div>
+    <div id="mapHint" class="mapHint"></div>
+  </div>
 </div>
 
 <div id="station" class="hidden">
@@ -1028,6 +1060,7 @@ const I18N = {
     modeLocalOpt:'로컬검색 · 무키', modeWebllmOpt:'WebLLM · 브라우저AI', modeProxyOpt:'AI 프록시 · 고품질',
     chatPh:'어떤 레포를 찾으세요? 예: 제일 인기있는 레포',
     go:'길찾기', downtown:'도심지', hometown:'홈타운',
+    mapBtn:'지도', mapTitle:'월드맵', mapHint:'구역을 누르면 그 지구 중심까지 택시가 데려다줘요.',
     noResults:'검색 결과가 없어요', noDesc:'아직 설명이 없는 레포예요. GitHub에서 확인해보세요.',
     openGithub:'GitHub 열기 ↗', liveDemo:'라이브 데모 ↗', close:'닫기', socialPreview:'소셜 프리뷰',
     rideThere:'🚕 그 집까지 데려다줄게요', soLead:'그럼 ',
@@ -1167,6 +1200,7 @@ const I18N = {
     modeLocalOpt:'Local search · no key', modeWebllmOpt:'WebLLM · Browser AI', modeProxyOpt:'AI proxy · high quality',
     chatPh:'Which repo are you after? e.g. most popular',
     go:'Route', downtown:'Downtown', hometown:'Hometown',
+    mapBtn:'Map', mapTitle:'World Map', mapHint:'Tap a district and the taxi drives you to its centre.',
     noResults:'No results', noDesc:'No description yet. Check it out on GitHub.',
     openGithub:'Open on GitHub ↗', liveDemo:'Live demo ↗', close:'Close', socialPreview:'Social preview',
     rideThere:"🚕 I'll drive you there", soLead:'Then ',
@@ -1250,6 +1284,8 @@ function applyLang(){
   if(typeof renderChronoCase==='function' && chronoModal && chronoModal.classList.contains('show') && chronoCaseId){ renderChronoCase(chronoCaseId); chronoModalLang=LANG; }
   if(typeof renderObservatory==='function' && typeof obsModal!=='undefined' && obsModal && obsModal.classList.contains('show')) renderObservatory();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
+  if(typeof refreshDistrictSigns==='function') refreshDistrictSigns();
+  if(_mapReady && typeof syncMapChrome==='function') syncMapChrome();
   if(typeof window.__updateLiveTitle==='function') window.__updateLiveTitle();
 }
 
@@ -2139,14 +2175,80 @@ function updateGarlands(t){ for(const gl of GARLANDS){
   for(const p of gl.penns) p.m.rotation.x=p.base+Math.sin(t*2.0+p.ph)*0.32;
   gl.badge.position.y=gl.by+Math.sin(t*1.4)*0.06; } }
 
-/* ---- town layout: concentric ring streets, downtown → hometown by rank ---- */
+/* ====================== DISTRICTS (repo neighbourhoods) ======================
+   A deterministic classifier sorts every repo into exactly one topic *district*
+   from lang + topics + desc + activity. This is a separate namespace from the
+   knowledge-train DISTRICTS (station modal) and from repoByKey — it never
+   touches repo identity. Distribution is verified in scripts/smoke.mjs. */
+/*ZONECLASSIFIER:START*/
+const ZONE_CAT = [
+  {id:'ai',      ko:'AI 연구구역',      en:'AI Research District',       icon:'🔭', tone:0x6aa6de, ground:0x223247},
+  {id:'infra',   ko:'홈랩·인프라 항구',  en:'Homelab / Infra Harbor',     icon:'⚓', tone:0x4fb0a6, ground:0x1f3a38},
+  {id:'web',     ko:'웹·프론트 거리',    en:'Web / Frontend Street',      icon:'🪟', tone:0xe0a94a, ground:0x4a3a20},
+  {id:'data',    ko:'데이터 공방',       en:'Data Workshop',              icon:'📊', tone:0xb072d6, ground:0x3a2648},
+  {id:'library', ko:'문서·학습관',       en:'Library / Learning Quarter', icon:'📚', tone:0x66c48a, ground:0x22432f},
+  {id:'ruins',   ko:'실험·폐허 지구',    en:'Archive / Experiment Ruins', icon:'🏚️', tone:0x9a8f7e, ground:0x37332b},
+  {id:'commons', ko:'커먼즈 광장',       en:'Commons',                    icon:'🏛️', tone:0xb6a98f, ground:0x393227},
+];
+const ZKW = {
+  ai:      [['llm',3],['rag',3],['agent',3],['agents',3],['gpt',2],['openai',2],['azure-openai',3],['anthropic',2],['claude',2],['bedrock',3],['sagemaker',3],['huggingface',2],['transformer',2],['transformers',2],['embedding',2],['embeddings',2],['faiss',2],['langchain',3],['nlp',2],['stt',2],['asr',2],['speech',2],['whisper',2],['diffusion',3],['controlnet',3],['lora',3],['peft',3],['finetuning',3],['fine-tuning',3],['distillation',2],['bert',2],['kobert',2],['ml',1],['machine-learning',2],['generative-ai',3],['genai',3],['reasoning',2],['hyperparameter',3],['deep-learning',3],['tensorflow',2],['tpu',2],['sentiment',2],['guardrails',2],['mcp',2],['evaluation',1],['benchmark',1],['neural',2],['deblurring',2],['image-processing',1],['sentence-transformers',2],['kullm',2],['polyglot',1],['ployglot',1],['pii',1],['stable-diffusion',3],['gdpval',2],['ptu',2],['llmops',3],['mlops',2],['cer',1],['wer',1],['pronunciation',1]],
+  infra:   [['nas',4],['docker',2],['docker-compose',2],['dockerindocker',3],['dind',3],['kubernetes',3],['k8s',3],['rancher',3],['vagrant',3],['minikube',3],['jenkins',3],['cicd',2],['continuous-integration',2],['continuous-delivery',2],['devops',2],['self-hosted',3],['selfhosted',3],['homelab',3],['gotty',3],['web-terminal',2],['browser-terminal',2],['terminal',2],['galera',3],['cluster',2],['nginx',2],['alpine',2],['ubuntu',2],['orchestration',2],['sysmon',3],['kafka',2],['mariadb',2],['nodeport',2],['rbac',1],['proxy',1],['server',1],['worker',1],['container',2],['monitor',2]],
+  web:     [['react',3],['vue',3],['svelte',3],['three',2],['three-js',3],['webgl',3],['frontend',3],['ui',2],['dashboard',2],['browser',1],['website',2],['site',1],['css',2],['tailwind',2],['vite',2],['bootstrap',2],['spa',2],['pwa',2],['d3',2],['data-visualization',2],['portfolio',2],['flask',2],['bottle',2],['socket-io',2],['socket',1],['websocket',1],['static',1],['login-system',1],['3d',2],['ghibli',1]],
+  data:    [['csv',3],['dataset',3],['iso3166',3],['spark',3],['pyspark',3],['emr',3],['zeppelin',3],['hadoop',3],['dataplatform',3],['analytics',2],['etl',2],['pandas',2],['scrap',2],['crawl',2],['queue',2],['producer',1],['consumer',1],['producer-consumer',2],['thread',1],['batch',1],['normalization',1]],
+  library: [['workshop',4],['immersion',4],['immersion-day',4],['tutorial',3],['awesome',3],['awosome',3],['example',3],['examples',3],['cookbook',4],['coding-school',4],['hands-on',3],['lab',2],['prelab',4],['materials',3],['sample',2],['samples',2],['docs',3],['doc',1],['guide',3],['book',2],['notes',2],['roadmap',2],['wiki',2],['knowledge',2],['contribution',4],['contributions',4],['education',3],['learn',2],['learning',2],['publications',3],['speaking',2]],
+};
+const ZLANG = {
+  'Shell':{infra:2}, 'Dockerfile':{infra:3}, 'PowerShell':{infra:2}, 'HCL':{infra:2},
+  'JavaScript':{web:2}, 'TypeScript':{web:2}, 'HTML':{web:2}, 'CSS':{web:2}, 'Vue':{web:3}, 'PHP':{web:1},
+  'Jupyter Notebook':{ai:2}, 'Python':{ai:1}, 'Java':{web:1},
+};
+function _zoneHay(r){ return (r.repo+' '+(r.desc||'')+' '+((r.topics||[]).join(' '))).toLowerCase(); }
+function zoneOf(repo){
+  const h=_zoneHay(repo), s={ai:0,infra:0,web:0,data:0,library:0};
+  for(const z in ZKW) for(const kw of ZKW[z]) if(h.includes(kw[0])) s[z]+=kw[1];
+  const aff=ZLANG[repo.lang]||{}; for(const z in aff) s[z]+=aff[z];
+  const best=Math.max(s.ai,s.infra,s.web,s.data,s.library);
+  const junk=/\b(temp|tmp|test ?bed|xmas|christmas|competition|myipynb|scratch|playground|sandbox)\b/i.test(repo.repo+' '+(repo.desc||''));
+  const age=repo.pushed?Math.max(0,(Date.now()-new Date(repo.pushed).getTime())/86400000):3650;
+  if(junk || (best<=1 && (repo.stars||0)<=1 && age>420 && (repo.rank||0)>=40)) return 'ruins';
+  const order=['ai','infra','library','data','web']; let bz='commons', bs=0;
+  for(const z of order){ if(s[z]>bs){ bs=s[z]; bz=z; } }
+  return bs>0?bz:'commons';
+}
+/*ZONECLASSIFIER:END*/
+REPOS.forEach(r=>{ r._zone = zoneOf(r); });
+const ZONES = ZONE_CAT.filter(z => REPOS.some(r=>r._zone===z.id));   // only non-empty districts, kept in catalog (angular) order
+
+/* ---- town layout: concentric ring streets; repos grouped into district wedges (downtown→hometown by rank within each) ---- */
 const buildings=[];
 const RINGS=[{r:34,n:6},{r:60,n:9},{r:88,n:12},{r:118,n:13},{r:150,n:13}];
-(function place(){ let idx=0;
-  RINGS.forEach((ring,ri)=>{ for(let k=0;k<ring.n && idx<REPOS.length;k++,idx++){ const repo=REPOS[idx];
-    const ang=(k/ring.n)*Math.PI*2 + (ri%2?Math.PI/ring.n:0) - Math.PI/2;
-    repo._ang=ang; repo._x=Math.cos(ang)*ring.r; repo._z=Math.sin(ang)*ring.r; } });
-  while(idx<REPOS.length){ const repo=REPOS[idx]; const ang=(idx/8)*Math.PI*2; repo._ang=ang; repo._x=Math.cos(ang)*180; repo._z=Math.sin(ang)*180; idx++; }
+(function place(){
+  // Identical slot geometry to the classic city (5 ring streets + a faint overflow ring). We keep every
+  // slot position byte-for-byte so the Colmar props/landmarks/colliders threaded around them never collide —
+  // we only choose WHICH repo occupies each slot, grouping districts into contiguous angular wedges.
+  const TWO=Math.PI*2, norm=a=>{ a%=TWO; return a<0?a+TWO:a; };
+  const SLOTS=[];
+  RINGS.forEach((ring,ri)=>{ for(let k=0;k<ring.n;k++){ const ang=(k/ring.n)*TWO + (ri%2?Math.PI/ring.n:0) - Math.PI/2;
+    SLOTS.push({x:Math.cos(ang)*ring.r, z:Math.sin(ang)*ring.r, ang, r:ring.r}); } });
+  const nOver=Math.max(0, REPOS.length - SLOTS.length);
+  for(let j=0;j<nOver;j++){ const ang=(j/Math.max(1,nOver))*TWO - Math.PI/2;   // evenly spread (fixes the classic 225° double-up), just past the outer ring
+    SLOTS.push({x:Math.cos(ang)*178, z:Math.sin(ang)*178, ang, r:178}); }
+  SLOTS.forEach(s=>s.a=norm(s.ang));
+  SLOTS.sort((p,q)=> p.a-q.a || p.r-q.r);                    // sweep slots by angle → consecutive runs form pie wedges
+  ZONES.forEach(z=>{ z.repos = REPOS.filter(r=>r._zone===z.id).sort((a,b)=>(a.rank||0)-(b.rank||0)); });
+  let si=0;
+  ZONES.forEach(z=>{ const claim=SLOTS.slice(si, si+z.repos.length); si+=z.repos.length;
+    claim.sort((p,q)=>p.r-q.r);                              // inner slots first → best-ranked repo of the district sits downtown
+    z.repos.forEach((repo,i)=>{ const sl=claim[i]; if(!sl) return; repo._ang=sl.ang; repo._x=sl.x; repo._z=sl.z; });
+    const angs=claim.map(s=>s.a).sort((a,b)=>a-b);
+    z._a0=angs.length?angs[0]:0; z._a1=angs.length?angs[angs.length-1]:0;
+    let sx=0,sz=0; const n=Math.max(1,z.repos.length); z.repos.forEach(r=>{ sx+=r._x; sz+=r._z; });
+    z.cx=sx/n; z.cz=sz/n; z.angMid=Math.atan2(z.cz,z.cx);
+  });
+  // tile the full circle: each district's ground wedge spans midpoint→midpoint between neighbours
+  const Z=ZONES.length;
+  for(let i=0;i<Z;i++){ const cur=ZONES[i], nxt=ZONES[(i+1)%Z]; let gap=nxt._a0-cur._a1; if(gap<0) gap+=TWO; cur._bEnd=norm(cur._a1+gap/2); }
+  for(let i=0;i<Z;i++){ ZONES[i]._bStart=ZONES[(i-1+Z)%Z]._bEnd; }
 })();
 
 /* ring roads + sidewalks + radial avenues with lane dashes */
@@ -2876,6 +2978,31 @@ function makeBuilding(repo){
   repo._group=g; repo._pos=new THREE.Vector3(repo._x,0,repo._z); repo._visited=false; buildings.push(repo);
 }
 REPOS.forEach(makeBuilding);
+
+/* ---- district identity: a subtle tinted floor per wedge + an entrance marker (low-cost, procedural) ---- */
+const _DISTRICT_SIGNS=[];
+function paintDistricts(){
+  const TWO=Math.PI*2;
+  for(const z of ZONES){
+    let len=((z._bEnd - z._bStart)%TWO+TWO)%TWO; if(!(len>0.01)) len=TWO/Math.max(1,ZONES.length);
+    const seg=Math.max(6, Math.round(len/TWO*72));
+    const wedge=new THREE.Mesh(new THREE.RingGeometry(19,164,seg,1,z._bStart,len),
+      new THREE.MeshBasicMaterial({color:z.ground,transparent:true,opacity:0.20,depthWrite:false}));
+    wedge.rotation.x=-Math.PI/2; wedge.position.y=0.007; wedge.renderOrder=0; scene.add(wedge);   // below the ring roads (y≥0.009)
+    const mr=162, mx=Math.cos(z.angMid)*mr, mz=Math.sin(z.angMid)*mr;
+    const g=new THREE.Group(); g.position.set(mx,0,mz); g.rotation.y=Math.atan2(-mx,-mz); scene.add(g);   // face the town centre
+    const post=rbox(0.18,3.0,0.18,0x6f5334,0.04); post.position.y=1.5; outline(post,0.03); g.add(post);
+    const arm=rbox(0.18,0.18,0.62,0x6f5334,0.04); arm.position.set(0,2.78,0.2); g.add(arm);
+    const board=new THREE.Mesh(new THREE.PlaneGeometry(3.0,0.96), new THREE.MeshBasicMaterial({map:signTexture(z.icon+' '+(LANG==='ko'?z.ko:z.en), z.tone),transparent:true}));
+    board.position.set(0,2.5,0.14); g.add(board);
+    const orb=new THREE.Mesh(new THREE.SphereGeometry(0.26,12,10), basic(z.tone)); orb.position.set(0,3.24,0); g.add(orb);
+    bloom(g,0,3.24,0,0.72,10,0.7);                                  // soft district beacon in the wedge's tone
+    if(typeof EXTRA_COLLIDERS!=='undefined') EXTRA_COLLIDERS.push({x:mx,z:mz,r:0.6});
+    z._marker=g; _DISTRICT_SIGNS.push({z, board});
+  }
+}
+paintDistricts();
+function refreshDistrictSigns(){ for(const s of _DISTRICT_SIGNS){ const m=s.board.material; if(m&&m.map){ m.map.dispose(); m.map=signTexture(s.z.icon+' '+(LANG==='ko'?s.z.ko:s.z.en), s.z.tone); m.needsUpdate=true; } } }
 
 /* ====================== CONTRIBUTION LIBRARY (special civic landmark) ====================== */
 const LIBREPO='https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions';
@@ -4867,12 +4994,35 @@ function landmarkNav(q){
   }
   return null;
 }
+/* 🧭 districtNav — "AI 연구구역으로 가자" / "take me to the harbor" → POLARIS offers a ride to a repo-district
+   centre. ZONE_SYN is a SEPARATE namespace from repoByKey, so a district phrase can never resolve to a repo;
+   it runs after landmarkNav (so proper landmarks still win) and before the Contribution-Library check (whose
+   bare 도서관/library keeps its own landmark). Distinctive spatial phrases only — never a bare "AI"/"web". */
+const ZONE_SYN = {
+  ai:      /a\.?i\.? ?(연구 ?구역|연구소|관측소|구역|지구|동네|마을|디스트릭트|district)|연구 ?구역|리서치 ?(구역|지구|디스트릭트|district)|research ?district/i,
+  infra:   /홈랩|home ?lab|인프라 ?(항구|구역|지구|하버|harbou?r)|서버 ?(부두|항구)|(도커|docker) ?항구|infra(structure)? ?(harbou?r|district)|\bharbou?r\b|항구/i,
+  web:     /웹 ?(거리|구역|스트리트|지구|동네)|프론트 ?(엔드)? ?(거리|구역)|front ?end ?(street|district)|web ?(street|district)|상점가/i,
+  data:    /데이터 ?(공방|구역|워크숍|작업장|지구)|\b공방\b|data ?(workshop|district)|워크숍|작업장/i,
+  library: /문서 ?(관|구역|학습관|지구)|학습 ?(관|구역)|자료관|라이브러리 ?(구역|지구|쿼터)|library ?(quarter|district)|learning ?quarter/i,
+  ruins:   /(실험 ?)?폐허|유적|experiment ?ruins?|\bruins?\b|아카이브 ?(구역|지구)|실험 ?(구역|지구)/i,
+  commons: /커먼즈 ?(광장|구역)?|commons/i,
+};
+function zoneResolve(q){ for(const z of ZONES){ const re=ZONE_SYN[z.id]; if(re&&re.test(q)) return z; } return null; }
+function zoneDest(z){ return { label:(LANG==='ko'?z.ko:z.en), _zoneDest:true, _zone:z.id, _pos:new THREE.Vector3(z.cx,0,z.cz) }; }
+function districtNav(q){ const z=zoneResolve(q); if(!z) return null;
+  const name=LANG==='ko'?z.ko:z.en, n=z.repos?z.repos.length:0;
+  const msg=LANG==='ko'
+    ? `${z.icon} <b>${name}</b> 구역으로 모셔다 드릴게요 — 이 일대에 레포 ${n}개가 모여 있어요. 택시 타고 가시겠어요?`
+    : `${z.icon} I can drive you to the <b>${name}</b> — ${n} repos are gathered there. Hop in the taxi?`;
+  return { repo: zoneDest(z), message: msg, alts: [] };
+}
 function _coreIntent(q){
   const ql=q.toLowerCase();
   const lore=townLore(q,'taxi'); if(lore) return { repo:null, message:lore, alts:[] };
   const st=smalltalk(q); if(st){ const p=(st==='stWho'?scholarPersona('taxi','who'):st==='stHelp'?scholarPersona('taxi','help'):null); return { repo:null, message:p||t(st), alts:[] }; }
   const meta=townMeta(q); if(meta) return { repo:null, message:meta, alts:[] };
   const lm=landmarkNav(q); if(lm) return lm;
+  const dz=districtNav(q); if(dz) return dz;             // 🧭 repo-district ride (after landmarks, before the Library landmark)
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
   // ✦ night-sky / cosmic small talk shares words with our metrics (별 = star, 하늘 보다…). Don't let
   //   "밤하늘 별 보는 거 좋아해?" become a star-count sort — fall through to general chat, unless the
@@ -5144,6 +5294,14 @@ function taxiTo(repo){ standUp(); ride={repo, phase:'coming', t:0}; setNav(repo)
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
 function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; openChat();
+  if(repo._zoneDest){                                                 // 🧭 arrived at a repo-district centre (no card, no landmark)
+    const z=ZONES.find(x=>x.id===repo._zone), name=z?(LANG==='ko'?z.ko:z.en):repo.label;
+    const n=z&&z.repos?z.repos.length:0, rs=z&&z.repos?z.repos.slice(0,3).map(r=>r.label).join(', '):'';
+    addMsg('bot',(LANG==='ko'
+      ? `${z?z.icon:'🧭'} <b>${name}</b>에 도착했어요! 이 구역엔 레포 ${n}개가 모여 있어요${rs?` — 예: ${rs}`:''}. 마음껏 둘러보세요 🧭`
+      : `${z?z.icon:'🧭'} We've arrived at the <b>${name}</b>! ${n} repos gather here${rs?` — e.g. ${rs}`:''}. Explore freely 🧭`),{noHist:true});
+    return;
+  }
   if(repo._landmark){
     const k=repo._landmark, key='lmArrive'+k.charAt(0).toUpperCase()+k.slice(1);
     addMsg('bot', t(key)||(LANG==='ko'?`🚕 <b>${repo.label}</b>에 도착했어요!`:`🚕 We've arrived at <b>${repo.label}</b>!`), {noHist:true});
@@ -5155,6 +5313,68 @@ function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visib
   }
   addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
   setTimeout(()=>openCard(repo),500); }
+
+/* ---- 🗺️ World map / minimap v1 — district overview + click/tap to ride to a district centre ---- */
+var _mapReady=false;                                                 // hoisted flag: applyLang() runs before this module, so gate its syncMapChrome() call
+const mapWrap=document.getElementById('mapWrap'), mapCanvas=document.getElementById('worldmap'),
+      mapLegend=document.getElementById('mapLegend'), mapBtn=document.getElementById('mapBtn'),
+      mapTitleEl=document.getElementById('mapTitle'), mapHintEl=document.getElementById('mapHint'),
+      mapCloseBtn=document.getElementById('mapClose'), mapBackdrop=document.getElementById('mapBackdrop');
+let mapOpen=false, _mapTimer=null;
+const MAP_R=205;                                                      // world radius (player clamp ≈215) mapped onto the canvas disc
+function _mapS(){ return (mapCanvas.width/2-16)/MAP_R; }
+function _mapP(x,z){ const s=_mapS(), c=mapCanvas.width/2; return [c+x*s, c+z*s]; }   // world→canvas (no z flip → canvas atan2 matches world angles)
+function _mhex(n){ return '#'+('000000'+(n>>>0).toString(16)).slice(-6); }
+function drawMinimap(){
+  if(!mapCanvas) return; const ctx=mapCanvas.getContext('2d'); const W=mapCanvas.width, C=W/2, s=_mapS(), TWO=Math.PI*2;
+  ctx.clearRect(0,0,W,W);
+  ctx.beginPath(); ctx.arc(C,C,MAP_R*s+9,0,TWO); ctx.fillStyle='#e9dcc0'; ctx.fill();
+  for(const z of ZONES){ let len=((z._bEnd-z._bStart)%TWO+TWO)%TWO; if(!(len>0.01)) continue;   // district wedges (tone-tinted)
+    ctx.beginPath(); ctx.moveTo(C,C); ctx.arc(C,C,MAP_R*s,z._bStart,z._bStart+len); ctx.closePath();
+    ctx.fillStyle=_mhex(z.tone); ctx.globalAlpha=0.22; ctx.fill(); ctx.globalAlpha=1; }
+  ctx.strokeStyle='rgba(120,96,60,.26)'; ctx.lineWidth=1;                                        // ring roads
+  for(const ring of RINGS){ ctx.beginPath(); ctx.arc(C,C,ring.r*s,0,TWO); ctx.stroke(); }
+  for(const b of buildings){ if(b._isLibrary) continue; const p=_mapP(b._x,b._z);                // building dots (zone-toned; downtown brighter)
+    const z=ZONES.find(x=>x.id===b._zone); ctx.beginPath(); ctx.arc(p[0],p[1],b._downtown?2.6:1.8,0,TWO);
+    ctx.fillStyle=z?_mhex(z.tone):'#b09a72'; ctx.globalAlpha=b._downtown?1:0.8; ctx.fill(); ctx.globalAlpha=1; }
+  const LM=[];                                                                                   // key landmarks
+  if(typeof LIB!=='undefined'&&LIB) LM.push([LIB._pos.x,LIB._pos.z,'📚']);
+  if(typeof CHRONO!=='undefined'&&CHRONO) LM.push([CHRONO._pos.x,CHRONO._pos.z,'⏳']);
+  if(typeof OBS!=='undefined'&&OBS) LM.push([OBS._pos.x,OBS._pos.z,'🔭']);
+  if(typeof FERRIS!=='undefined'&&FERRIS) LM.push([FERRIS._pos.x,FERRIS._pos.z,'🎡']);
+  if(typeof CAROUSEL!=='undefined'&&CAROUSEL) LM.push([CAROUSEL._pos.x,CAROUSEL._pos.z,'🎠']);
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font='11px system-ui,sans-serif'; for(const l of LM){ const p=_mapP(l[0],l[1]); ctx.fillText(l[2],p[0],p[1]); }
+  ctx.font='13px system-ui,sans-serif'; for(const z of ZONES){ const p=_mapP(z.cx,z.cz); ctx.globalAlpha=0.92; ctx.fillText(z.icon,p[0],p[1]); ctx.globalAlpha=1; }
+  const pp=_mapP(player.position.x,player.position.z), yaw=model.rotation.y;                      // player heading triangle
+  const fx=Math.sin(yaw), fz=Math.cos(yaw), rx=Math.cos(yaw), rz=-Math.sin(yaw);
+  ctx.beginPath(); ctx.moveTo(pp[0]+fx*8.5,pp[1]+fz*8.5); ctx.lineTo(pp[0]-fx*5+rx*5,pp[1]-fz*5+rz*5); ctx.lineTo(pp[0]-fx*5-rx*5,pp[1]-fz*5-rz*5); ctx.closePath();
+  ctx.fillStyle='#ff3b6e'; ctx.strokeStyle='#fff'; ctx.lineWidth=1.6; ctx.fill(); ctx.stroke();
+}
+function buildMapLegend(){ if(!mapLegend) return; mapLegend.innerHTML='';
+  for(const z of ZONES){ const b=document.createElement('div'); b.className='mz';
+    b.innerHTML=`<i style="background:${_mhex(z.tone)}"></i>${z.icon} ${esc(LANG==='ko'?z.ko:z.en)} <span class="mzc">${z.repos.length}</span>`;
+    b.onclick=()=>{ gotoZone(z.id); }; mapLegend.appendChild(b); }
+}
+function syncMapChrome(){ if(mapTitleEl) mapTitleEl.textContent='🗺️ '+t('mapTitle'); if(mapHintEl) mapHintEl.textContent=t('mapHint');
+  if(mapBtn){ const lbl=mapBtn.querySelector('[data-i18n]'); if(lbl) lbl.textContent=t('mapBtn'); mapBtn.title=t('mapTitle'); }
+  if(mapOpen) buildMapLegend(); }
+function openMap(){ if(!mapWrap) return; buildMapLegend(); syncMapChrome(); drawMinimap(); mapWrap.classList.remove('hidden'); mapOpen=true;
+  if(_mapTimer) clearInterval(_mapTimer); _mapTimer=setInterval(()=>{ if(mapOpen) drawMinimap(); else if(_mapTimer){ clearInterval(_mapTimer); _mapTimer=null; } },150);
+  if(typeof track==='function') track('map_open',{}); }
+function closeMap(){ if(!mapWrap) return; mapWrap.classList.add('hidden'); mapOpen=false; if(_mapTimer){ clearInterval(_mapTimer); _mapTimer=null; } }
+function toggleMap(){ mapOpen?closeMap():openMap(); }
+function gotoZone(id){ const z=ZONES.find(x=>x.id===id); if(!z) return false; closeMap(); taxiTo(zoneDest(z)); return true; }
+if(mapBtn) mapBtn.onclick=toggleMap;
+if(mapCloseBtn) mapCloseBtn.onclick=closeMap;
+if(mapBackdrop) mapBackdrop.onclick=closeMap;
+if(mapCanvas) mapCanvas.onclick=(e)=>{ const r=mapCanvas.getBoundingClientRect(), sc=mapCanvas.width/r.width, TWO=Math.PI*2;
+  const cx=(e.clientX-r.left)*sc-mapCanvas.width/2, cz=(e.clientY-r.top)*sc-mapCanvas.width/2;
+  if(Math.hypot(cx,cz)/_mapS()<16) return;                                                       // plaza hub → ignore
+  let ang=((Math.atan2(cz,cx)%TWO)+TWO)%TWO, hit=null;
+  for(const z of ZONES){ const a0=((z._bStart%TWO)+TWO)%TWO, len=((z._bEnd-z._bStart)%TWO+TWO)%TWO, d=((ang-a0)%TWO+TWO)%TWO; if(d<=len){ hit=z; break; } }
+  if(hit) gotoZone(hit.id); };
+_mapReady=true; syncMapChrome();                                     // initialise the map-button label now that the DOM refs exist
 
 /* ---- 🎡 Ferris wheel ride: board the gondola at the bottom, rise for one slow free-look turn, then step back onto the ground ---- */
 function updateFerris(dt){ if(!FERRIS) return;
@@ -5676,6 +5896,14 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__liveClose=()=>{ closeLiveHud(); return { active:liveDebate.active, hud:document.getElementById('chronoLiveHud').classList.contains('show') }; };
 
   window.__feat=()=>({pond:buildings.filter(b=>b.stars>=8||b._activity>0.7).length, garage:buildings.filter(b=>b.stars>=11||(b.forks||0)>=4).length, buildings:buildings.length});
+  window.__zones=()=>ZONES.map(z=>({ id:z.id, name:(LANG==='ko'?z.ko:z.en), count:z.repos.length,
+    reps:z.repos.slice(0,3).map(r=>r.repo), center:[+z.cx.toFixed(1),+z.cz.toFixed(1)],
+    band:[Math.round(z._a0*180/Math.PI),Math.round(z._a1*180/Math.PI)] }));
+  window.__zoneOf=(k)=>{ const r=repoByKey(k); return r?r._zone:null; };
+  window.__gotoZone=(name)=>{ const q=String(name==null?'':name).trim(); let z=ZONES.find(x=>x.id===q); if(!z) z=zoneResolve(q);
+    return z?gotoZone(z.id):false; };
+  window.__map=(open)=>{ if(open===false) closeMap(); else if(open===true) openMap(); else toggleMap();
+    return { open:mapOpen, zones:ZONES.length, legend:document.querySelectorAll('#mapLegend .mz').length }; };
   window.__perf=()=>{ const info=renderer.info; return {
     calls:info.render.calls, triangles:info.render.triangles,
     geometries:info.memory.geometries, textures:info.memory.textures, programs:(info.programs||[]).length,
