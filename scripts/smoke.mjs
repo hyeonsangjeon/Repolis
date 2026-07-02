@@ -134,10 +134,11 @@ if (genSrc && tokSrc && matchSrc) {
 group('repoByKey canonical identity resolve (navigation reliability)');
 ok(/function repoByKey\(key\)\{/.test(HTML), 'repoByKey canonical resolver exists');
 ok(/function openRepoFromHash\(\)\{/.test(HTML) && /#repo=/.test(HTML), 'repo deep link (#repo=) wiring exists');
+ok(/function repoHashKey\(\)\{[\s\S]*?try\{[\s\S]*?\}catch/.test(HTML), 'repoHashKey guards decodeURIComponent (a mangled shared link cannot throw)');
 ok(/modal\._repoKey=repo\.repo/.test(HTML), 'openCard records the card repo key for hash sync');
 const normSrc = (HTML.match(/const _repoNorm=[^;]+;/) || [])[0];
 const rbkSrc  = (HTML.match(/function repoByKey\(key\)\{[\s\S]*?return null; \}/) || [])[0];
-const rhkSrc  = (HTML.match(/function repoHashKey\(\)\{[\s\S]*?\}/) || [])[0];
+const rhkSrc  = (HTML.match(/function repoHashKey\(\)\{[\s\S]*?catch\(_\)\{ return m\[1\]; \} \}/) || [])[0];
 ok(!!(normSrc && rbkSrc && rhkSrc), 'repoByKey + _repoNorm + repoHashKey extractable from index.html');
 if (normSrc && rbkSrc) {
   let repos = [];
@@ -165,6 +166,9 @@ if (rhkSrc) {
   ok(mk('#repo=' + encodeURIComponent('youtube-dl-nas')) === 'youtube-dl-nas', 'deep-link hash round-trips the canonical key');
   ok(mk('#repo=' + encodeURIComponent('owner/repo name')) === 'owner/repo name', 'deep-link hash decodes special chars');
   ok(mk('') === null && mk('#other') === null, 'non-repo hash yields null');
+  const noThrow = h => { try { return mk(h); } catch (e) { return '__THREW__:' + e.name; } };
+  ok(noThrow('#repo=%') === '%', 'malformed %-encoding hash falls back to raw (never throws URIError)');
+  ok(noThrow('#repo=%zz') === '%zz', 'invalid %-sequence hash falls back to raw (never throws URIError)');
 }
 
 console.log('\n──────────────────────────────');

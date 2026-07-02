@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.45.1] — 2026-07-02
+
+### 🛡️ Deep-link hardening — a mangled `#repo=` link can no longer throw
+- **`repoHashKey()` stops trusting the hash to be valid percent-encoding.** A shared/pasted URL whose `#repo=` fragment carries a malformed `%` sequence (`#repo=%`, `#repo=%zz`, a truncated multi-byte `#repo=%E0%A4%A`) made `decodeURIComponent` throw `URIError`. The **boot** open was wrapped in try/catch, but the live `hashchange` handler and the `closeCard → clearRepoHash` path were **not** — so pasting a mangled link (or closing a card while one was in the address bar) threw an uncaught exception and could wedge the modal state. `repoHashKey()` now catches the decode and falls back to the **raw** captured key, which `repoByKey` then resolves normally or safely rejects as `null`. Valid links are byte-for-byte unchanged.
+- **Regression guard.** `scripts/smoke.mjs` now runs the **real** shipped `repoHashKey` (extracted from `index.html`) against malformed hashes and asserts it returns the raw key instead of throwing, plus a static check that the decode is guarded — alongside the existing round-trip cases. Smoke **59** (+3).
+- **Verified.** Live in Chrome (desktop + 390px mobile): a genuine `hashchange` to `#repo=%zz` / `#repo=%` no longer throws (`window.onerror` stays empty), closing a card on a malformed hash clears it cleanly, a fresh boot on a malformed deep link opens no wrong card and shows no overflow, and valid `#repo=` links still open/switch to the exact card — **0 console errors**. Smoke 59 + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.45.0] — 2026-07-02
 
 ### 🧭 Navigation / identity reliability — a shown repo can never open a different one
