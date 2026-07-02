@@ -171,6 +171,52 @@ if (rhkSrc) {
   ok(noThrow('#repo=%zz') === '%zz', 'invalid %-sequence hash falls back to raw (never throws URIError)');
 }
 
+/* ── 9) District Expansion v1: deterministic repo-district classifier + world map wiring ──
+ *    Runs the REAL shipped zoneOf (extracted between the ZONECLASSIFIER markers) over the REAL repos.json:
+ *    every repo lands in exactly one active district, the active count stays in the readable 5–7 band, and
+ *    a district id can never collide with a repo's canonical key. Plus presence of the map / travel wiring. */
+group('district classifier + world map (District Expansion v1)');
+const zcSrc = (HTML.match(/\/\*ZONECLASSIFIER:START\*\/([\s\S]*?)\/\*ZONECLASSIFIER:END\*\//) || [, ''])[1];
+ok(zcSrc.length > 0, 'ZONECLASSIFIER block extractable from index.html');
+ok(/const ZONE_CAT\s*=\s*\[/.test(zcSrc), 'ZONE_CAT district catalog exists');
+ok(/function zoneOf\(repo\)/.test(zcSrc), 'zoneOf() classifier exists');
+ok(/const ZONE_SYN\s*=\s*\{/.test(HTML), 'ZONE_SYN travel-synonym namespace exists (separate from repoByKey)');
+ok(/function districtNav\(q\)\{/.test(HTML) && /const dz=districtNav\(q\);/.test(HTML), 'districtNav wired into _coreIntent (every taxi mode)');
+ok(/function zoneOf\(repo\)/.test(HTML) && /REPOS\.forEach\(r=>\{\s*r\._zone\s*=\s*zoneOf\(r\)/.test(HTML), 'every repo is assigned r._zone at build');
+ok(/function paintDistricts\(\)/.test(HTML) && /function refreshDistrictSigns\(\)/.test(HTML), 'district ground tints + signposts (paintDistricts/refresh) present');
+ok(/if\(repo\._zoneDest\)\{/.test(HTML), 'arriveTaxi has a _zoneDest branch (district arrival, no card)');
+ok(/function gotoZone\(id\)\{/.test(HTML), 'gotoZone(id) travel helper exists');
+ok(/id=["']worldmap["']/.test(HTML) && /id=["']mapWrap["']/.test(HTML) && /id=["']mapBtn["']/.test(HTML), 'world map DOM (#mapWrap/#worldmap/#mapBtn) present');
+ok(/function drawMinimap\(\)/.test(HTML) && /function openMap\(\)/.test(HTML) && /function closeMap\(\)/.test(HTML), 'minimap draw/open/close functions present');
+ok(/mapBtn\s*:\s*['"]/.test(HTML) && /mapTitle\s*:\s*['"]/.test(HTML) && /mapHint\s*:\s*['"]/.test(HTML), 'map i18n keys (mapBtn/mapTitle/mapHint) present');
+ok(/window\.__zones\s*=/.test(HTML) && /window\.__gotoZone\s*=/.test(HTML), 'debug helpers __zones() + __gotoZone() present');
+if (zcSrc && normSrc) {
+  let repos = [], zoneOf = null, CAT = null;
+  try {
+    const rj = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
+    repos = Array.isArray(rj) ? rj : (rj.repos || []);
+    const built = new Function(`${zcSrc}\nreturn { ZONE_CAT, zoneOf };`)();
+    CAT = built.ZONE_CAT; zoneOf = built.zoneOf;
+  } catch (e) { console.log('  ✗ zoneOf harness: ' + e.message); }
+  ok(!!(zoneOf && CAT && repos.length), 'zoneOf + ZONE_CAT + repos.json loaded for behavioral check');
+  if (zoneOf && CAT && repos.length) {
+    const ids = new Set(CAT.map(z => z.id));
+    const norm = new Function(`${normSrc}\nreturn _repoNorm;`)();
+    const counts = {}; let bad = [];
+    for (const r of repos) { const z = zoneOf(r); if (!ids.has(z)) { bad.push(r.repo + '→' + z); continue; } counts[z] = (counts[z] || 0) + 1; }
+    ok(bad.length === 0, 'every repo classifies into exactly one catalog district' + (bad.length ? ' [' + bad.slice(0, 4).join(', ') + ']' : ''));
+    const active = Object.keys(counts);
+    ok(active.length >= 5 && active.length <= 7, 'active district count is in the 5–7 readable band (got ' + active.length + ': ' + active.map(a => a + ':' + counts[a]).join(', ') + ')');
+    ok(active.every(a => counts[a] >= 1), 'every active district holds at least one repo');
+    ok(repos.reduce((s, r) => s + (ids.has(zoneOf(r)) ? 1 : 0), 0) === repos.length, 'district assignment total equals repo count (no repo dropped/duplicated)');
+    const collide = CAT.filter(z => repos.some(r => norm(r.repo) === norm(z.id))).map(z => z.id);
+    ok(collide.length === 0, 'no district id collides with a repo canonical key (district resolve stays a separate namespace)' + (collide.length ? ' [' + collide.join(', ') + ']' : ''));
+    // determinism: classifying twice yields identical labels
+    const drift = repos.filter(r => zoneOf(r) !== zoneOf(r)).map(r => r.repo);
+    ok(drift.length === 0, 'zoneOf is deterministic (same repo → same district across calls)');
+  }
+}
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
