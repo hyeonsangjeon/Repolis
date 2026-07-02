@@ -11,5 +11,7 @@ cloudflare-taxi/.wrangler/
 # (AGENTS.md is intentionally NOT here — it's the public agent-onboarding spec.)
 CHRONOPOLIS_SPEC.md
 CLAUDE.md
+# Local-only scratch: agent worklogs, screenshots, context-handoff notes — never commit
+local.data/
 __pycache__/
 *.pyc
