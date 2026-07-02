@@ -4358,7 +4358,8 @@ function repoByKey(key){
    closeCard clears it, and back/forward + hashchange stay in sync. Other
    query params (?user=/?rt=/?dbg) are preserved. */
 let _repoHashGuard=false;
-function repoHashKey(){ const m=String(location.hash||'').match(/^#repo=(.+)$/); return m?decodeURIComponent(m[1]):null; }
+function repoHashKey(){ const m=String(location.hash||'').match(/^#repo=(.+)$/); if(!m) return null;
+  try{ return decodeURIComponent(m[1]); }catch(_){ return m[1]; } }   // malformed %-encoding (mangled shared link) → raw fallback, never throw
 function setRepoHash(repo){ if(_repoHashGuard||!repo||!repo.repo) return; _repoHashGuard=true;
   try{ const h='#repo='+encodeURIComponent(repo.repo); if(location.hash!==h) history.replaceState(null,'',location.pathname+location.search+h); }catch(e){}
   _repoHashGuard=false; }
