@@ -4375,7 +4375,7 @@ function buildResident(res){ const g=new THREE.Group(); const SK=0xf0c79a, HR=0x
   const ll=capsule(0.15,0.34,0x33384a); ll.position.set(-0.17,0.46,0); outline(ll,0.03); g.add(ll);
   const lr=ll.clone(); lr.position.x=0.17; g.add(lr);
   { const tok=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:res.accent||res.color,transparent:true,opacity:0.9,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); tok.scale.set(0.4,0.4,1); tok.position.set(0,2.52,0.12); g.add(tok); }
-  g._head=hd; g._armL=al; g._armR=ar; npcFaces.add(hd.material); return g; }
+  g._head=hd; g._armL=al; g._armR=ar; g._legL=ll; g._legR=lr; npcFaces.add(hd.material); return g; }
 function residentTag(res){ const W=256,H=100,c=document.createElement('canvas'); c.width=W;c.height=H; const x=c.getContext('2d'); const hex=_hex(res.color);
   function rr(X,Y,w,h,r){ x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+w,Y,X+w,Y+h,r); x.arcTo(X+w,Y+h,X,Y+h,r); x.arcTo(X,Y+h,X,Y,r); x.arcTo(X,Y,X+w,Y,r); x.closePath(); }
   rr(10,14,W-20,H-40,26); x.fillStyle='rgba(10,12,24,0.55)'; x.fill();
@@ -4402,6 +4402,9 @@ function makeResBubble(){ const W=384,H=176, cv=document.createElement('canvas')
     update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0; sp.material.opacity+=(want-sp.material.opacity)*0.14; sp.position.y=3.9+Math.sin(clock.elapsedTime*1.5)*0.05; } }; }
 
 const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
+// ---- wander + rendezvous tuning: townsfolk stroll around home and walk toward one another to actually meet before talking ----
+const RES_MOVE={ wanderSpd:(IS_MOBILE?0.7:1.05), meetSpd:(IS_MOBILE?1.7:2.4), roamR:6.5,
+  pauseMin:2.5, pauseMax:7.0, talkDist:4.2, meetMax:58, approachMax:16, arrive:0.5, gait:2.2 };
 function _residentSpot(res){
   if(res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11]]; for(const p of cands){ if(_hubGap(p[0],p[1])>=4.0) return {x:p[0],z:p[1]}; } return {x:-8,z:6}; }
   const zc=_zoneById(res.zone), hub=zc&&zc._hub; if(!hub) return {x:44,z:44};
@@ -4413,7 +4416,8 @@ function _residentSpot(res){
 function placeResident(res){ const g=buildResident(res), sp=_residentSpot(res);
   g.position.set(sp.x,0,sp.z); g.rotation.y=Math.atan2(-sp.x,-sp.z);
   const tag=residentTag(res); g.add(tag); const bub=makeResBubble(); bub.sprite.position.set(0,3.9,0); g.add(bub.sprite); scene.add(g);
-  const live={ res, group:g, tag, bub, _baseRot:g.rotation.y, _ph:Math.random()*6.28, _gt:0, lastLine:-1 };
+  const live={ res, group:g, tag, bub, _baseRot:g.rotation.y, _ph:Math.random()*6.28, _gt:0, lastLine:-1,
+    home:{x:sp.x,z:sp.z}, _rt:null, _rp:Math.random()*4, _wk:Math.random()*6.28, _wspd:RES_MOVE.wanderSpd*(0.85+Math.random()*0.3) };
   live._npc={ resident:true, id:res.id, kind:'resident', res, pos:g.position, reach:RES_REACH }; res._live=live;
   RESIDENTS_LIVE.push(live); return live; }
 if(NPC_CFG.modeEnabled && NPC_CFG.visualEnabled){ for(const res of RESIDENTS.slice(0,MAX_RESIDENTS)) placeResident(res); }
@@ -4440,10 +4444,11 @@ function _endAmb(reason){ const C=_ambConv; _ambConv=null; if(C){ _pairCd.set(_p
     _emitMetric('npc_ambient_finished',{a:C.a.res.id,b:C.b.res.id,turns:C.turns.length,reason}); } _ambNextAt=clock.elapsedTime + 10 + Math.random()*16; }
 function _startAmb(a,b){ const now=clock.elapsedTime;
   if(!a){ let best=null,bd=Infinity; const P=RESIDENTS_LIVE;
-    for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){ const A=P[i],B=P[j]; if((_pairCd.get(_pairKey(A,B))||0)>now) continue; const dd=A.group.position.distanceTo(B.group.position)+Math.random()*40; if(dd<bd){ bd=dd; best=[A,B]; } }
+    for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){ const A=P[i],B=P[j]; if((_pairCd.get(_pairKey(A,B))||0)>now) continue; const dist=A.group.position.distanceTo(B.group.position); if(dist>RES_MOVE.meetMax) continue; const dd=dist+Math.random()*22; if(dd<bd){ bd=dd; best=[A,B]; } }
     if(!best) return false; a=best[0]; b=best[1]; }
   const degrade=_budgetLow(); const max=Math.max(2, Math.min(NPC_CFG.hardMaxTurns, degrade?NPC_CFG.degradeMaxTurns:(NPC_CFG.minTurns+((Math.random()*(NPC_CFG.maxTurns-NPC_CFG.minTurns+1))|0))));
-  _ambConv={ a,b, who:a, other:b, i:0, max, topic:(a.res.topics&&a.res.topics[0])||a.res.zone, nextAt:now+0.6, turns:[], pending:false };
+  const near=a.group.position.distanceTo(b.group.position)<=RES_MOVE.talkDist+0.6;
+  _ambConv={ a,b, who:a, other:b, i:0, max, topic:(a.res.topics&&a.res.topics[0])||a.res.zone, phase:near?'talk':'approach', approachUntil:now+RES_MOVE.approachMax, nextAt:near?now+0.6:Infinity, turns:[], pending:false };
   _emitMetric('npc_ambient_started',{a:a.res.id,b:b.res.id,max}); return true; }
 function _advanceAmb(){ const C=_ambConv; if(!C||C.pending) return; const now=clock.elapsedTime; const speaker=C.who, listener=C.other;
   const useAI = NPC_CFG.aiEnabled && NPC_CFG.ambientAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
@@ -4456,13 +4461,45 @@ function _advanceAmb(){ const C=_ambConv; if(!C||C.pending) return; const now=cl
   else done(_scriptLine(speaker),false,false); }
 function _ambientTick(){ const now=clock.elapsedTime;
   if(document.hidden){ if(_ambConv) _endAmb('hidden'); return; }
-  if(_ambConv){ if(now>=_ambConv.nextAt) _advanceAmb(); return; }
+  if(_ambConv){ const C=_ambConv;
+    if(C.phase==='approach'){ if(C.a.group.position.distanceTo(C.b.group.position)<=RES_MOVE.talkDist+0.4 || now>=C.approachUntil){ C.phase='talk'; C.nextAt=now+0.5; } return; }
+    if(now>=C.nextAt) _advanceAmb(); return; }
   if(!_ambientAllowed() || now<_guestCdUntil) return;
   if(now>=_ambNextAt) _startAmb(); }
-function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.elapsedTime;
-  for(const L of RESIDENTS_LIVE){ const g=L.group; const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz);
-    const tgt = d<14 ? Math.atan2(dx,dz) : L._baseRot + Math.sin(tt*0.4+L._ph)*0.2; g.rotation.y=lerpA(g.rotation.y,tgt,0.05);
-    if(g._head) g._head.position.y = 2.0 + Math.sin(tt*1.7+L._ph)*0.03; L.bub.update(dt);
+// ---- resident locomotion: step toward a target with a simple leg-swing gait; returns true once arrived ----
+function _resWalk(L,tx,tz,spd,dt){ const g=L.group, dx=tx-g.position.x, dz=tz-g.position.z, d=Math.hypot(dx,dz);
+  if(d<=RES_MOVE.arrive) return true;
+  const step=Math.min(spd*dt,d), nx=dx/d, nz=dz/d; g.position.x+=nx*step; g.position.z+=nz*step;
+  g.rotation.y=lerpA(g.rotation.y, Math.atan2(nx,nz), 0.2);
+  L._wk+=step*RES_MOVE.gait; const sw=Math.sin(L._wk)*0.5;
+  if(g._legL){ g._legL.rotation.x=sw; g._legR.rotation.x=-sw; }
+  if(g._head) g._head.position.y=2.0+Math.abs(Math.sin(L._wk))*0.05; return false; }
+// ---- next wander waypoint: district folk roam a ring around home; the plaza guide strolls between set plaza spots ----
+function _resRoamTarget(L){
+  if(L.res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11]];
+    for(let k=0;k<6;k++){ const p=cands[(Math.random()*cands.length)|0];
+      if(Math.hypot(p[0]-L.group.position.x,p[1]-L.group.position.z)<1.5) continue;
+      if(_hubGap(p[0],p[1])>=4.0) return {x:p[0],z:p[1]}; } return null; }
+  const h=L.home;
+  for(let k=0;k<8;k++){ const a=Math.random()*Math.PI*2, r=RES_MOVE.roamR*(0.4+Math.random()*0.6), x=h.x+Math.cos(a)*r, z=h.z+Math.sin(a)*r;
+    if(x*x+z*z<400 || Math.hypot(x,z)>210 || _hubGap(x,z)<4.0) continue; return {x,z}; }
+  return null; }
+function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.elapsedTime; const C=_ambConv, hidden=document.hidden;
+  for(const L of RESIDENTS_LIVE){ const g=L.group;
+    const inConv=C&&(C.a===L||C.b===L), partner=inConv?(C.a===L?C.b:C.a):null;
+    const chatBound=_resChatActive()&&activeNpc&&activeNpc.res===L.res; let moving=false;
+    if(inConv && C.phase==='approach' && !hidden){
+      if(g.position.distanceTo(partner.group.position)>RES_MOVE.talkDist){ _resWalk(L,partner.group.position.x,partner.group.position.z,RES_MOVE.meetSpd,dt); moving=true; }
+    } else if(!inConv && !chatBound && !LOW_END && !hidden){
+      if(!L._rt && tt>=L._rp) L._rt=_resRoamTarget(L);
+      if(L._rt){ if(_resWalk(L,L._rt.x,L._rt.z,L._wspd,dt)){ L._rt=null; L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } }
+    if(moving){ if(L._gt>0) L._gt-=dt; if(g._armL) g._armL.rotation.z*=0.85; if(g._armR) g._armR.rotation.z*=0.85; L.bub.update(dt); continue; }
+    let tgt;
+    if(inConv && C.phase==='talk'){ tgt=Math.atan2(partner.group.position.x-g.position.x, partner.group.position.z-g.position.z); }
+    else { const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz); tgt=d<14?Math.atan2(dx,dz):L._baseRot+Math.sin(tt*0.4+L._ph)*0.2; }
+    g.rotation.y=lerpA(g.rotation.y,tgt,0.06);
+    if(g._legL){ g._legL.rotation.x*=0.8; g._legR.rotation.x*=0.8; }
+    if(g._head) g._head.position.y=2.0+Math.sin(tt*1.7+L._ph)*0.03; L.bub.update(dt);
     if(g._armL){ if(L._gt>0){ L._gt-=dt; g._armL.rotation.z=1.0-Math.sin(tt*7)*0.3; } else g._armL.rotation.z+=(0-g._armL.rotation.z)*0.1; } }
   _ambientTick(); }
 
@@ -6460,11 +6497,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   // 🧑‍🌾 resident NPC social layer probes
   window.__villagers=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, name:(L.res[LANG]||L.res.ko).name,
     x:+L.group.position.x.toFixed(1), z:+L.group.position.z.toFixed(1), near:+player.position.distanceTo(L.group.position).toFixed(2)<=RES_REACH }));
-  window.__npcRoutes=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, home:[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)], facing:+L._baseRot.toFixed(2) }));
+  window.__npcRoutes=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, pos:[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)], anchor:[+L.home.x.toFixed(1),+L.home.z.toFixed(1)], target:L._rt?[+L._rt.x.toFixed(1),+L._rt.z.toFixed(1)]:null, facing:+L._baseRot.toFixed(2) }));
   window.__npcState=()=>({ mode:NPC_CFG.modeEnabled, visual:NPC_CFG.visualEnabled, ai:NPC_CFG.aiEnabled, ambientAi:NPC_CFG.ambientAiEnabled, playerAi:NPC_CFG.playerChatAiEnabled,
     scriptedAmbient:NPC_CFG.scriptedAmbient, live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
   window.__npcEncounter=(a,b)=>{ const A=RESIDENTS_LIVE.find(L=>L.res.id===a)||RESIDENTS_LIVE[0], B=RESIDENTS_LIVE.find(L=>L.res.id===b)||RESIDENTS_LIVE[1];
-    if(!A||!B||A===B) return {ok:false}; _pairCd.delete(_pairKey(A,B)); if(_ambConv) _endAmb('debug'); _startAmb(A,B); if(_ambConv){ _ambConv.nextAt=0; _advanceAmb(); }
+    if(!A||!B||A===B) return {ok:false}; _pairCd.delete(_pairKey(A,B)); if(_ambConv) _endAmb('debug'); _startAmb(A,B); if(_ambConv){ _ambConv.phase='talk'; _ambConv.nextAt=0; _advanceAmb(); }
     return { ok:true, a:A.res.id, b:B.res.id, max:_ambConv?_ambConv.max:0, i:_ambConv?_ambConv.i:1, last:_npcTranscript.slice(-1)[0]||null }; };
   window.__npcBudget=()=>({ ...JSON.parse(JSON.stringify(_npcBudget)), low:_budgetLow(), exhausted:_budgetExhausted() });
   window.__npcTranscript=()=>_npcTranscript.slice(-20);
