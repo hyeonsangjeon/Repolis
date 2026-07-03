@@ -794,7 +794,7 @@
       <button data-lang="ko">한국어</button><button data-lang="en">English</button>
     </div>
     <h1>🏙️ Repolis — <span data-i18n="cityOfRepos">레포들의 도시</span></h1>
-    <div class="sub" data-i18n-html="introSub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.</div>
+    <div class="sub" data-i18n-html="introSub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>깃버에게 물어보면 그 레포까지 데려다줘요.</div>
     <div class="ctrls">
       <div><b>WASD / ←↑↓→</b><span data-i18n="ctrlWalk">걷기</span></div>
       <div><b>좌클릭 / Left</b><span data-i18n="ctrlLookL">시점 회전(자유 시점)</span></div>
@@ -810,11 +810,11 @@
 <div id="tourCap" class="hidden"><span class="tcDot" id="tourDot">✨</span><span class="tcTxt" id="tourTxt"></span><button class="tcSkip" id="tourSkip" data-i18n="tourSkip">건너뛰기 ⏭</button></div>
 <div id="joy"><div class="nub"></div></div>
 <button id="actBtn" title="Open" aria-label="Open">🚪</button>
-<div class="hint" data-i18n-html="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기</div>
+<div class="hint" data-i18n-html="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 깃버에게 물어보기</div>
 
 <div id="drivebar"><span data-i18n="drivePre">🚕 </span><span id="driveName"></span><span data-i18n="drivePost"> (으)로 가는 중…</span> <span class="cancel" id="driveCancel"><span class="fill"></span><span class="lbl" data-i18n="stop">멈추기</span></span></div>
 
-<button id="taxiBtn" title="Ask the taxi" aria-label="Ask the taxi">🚕<span class="pulse"></span></button>
+<button id="taxiBtn" title="Ask Gitber" aria-label="Ask Gitber">🚕<span class="pulse"></span></button>
 <button id="emoteBtn" title="Emotes" aria-label="Emotes">😊</button>
 <div id="emoteBar" class="hidden" role="group" aria-label="Emotes">
   <button data-emote="wave" title="Wave" aria-label="Wave">👋</button>
@@ -825,7 +825,7 @@
 </div>
 <div id="chat" class="hidden">
   <div class="chatHead">
-    <span class="ttl" data-i18n="taxiTitle">🚕 레포 택시기사</span>
+    <span class="ttl" data-i18n="taxiTitle">🚕 깃버</span>
     <select id="modeSel" title="AI 모드">
       <option value="local" data-i18n="modeLocalOpt">로컬검색 · 무키</option>
       <option value="webllm" data-i18n="modeWebllmOpt">WebLLM · 브라우저AI</option>
@@ -1040,8 +1040,8 @@ const I18N = {
     chronoTimeOld:'오래됨', chronoTimeNew:'최신', chronoTimeWin:'시간이 가리킴',
     chronoRecap:'📋 시간의 판정 다시보기 (결정적)', chronoRecapHide:'🔼 판정 접기', chronoVerdictLbl:'시간의 판정', chronoConfLbl:'신뢰도', chronoRecapNoAns:'판정 보류 — 충분한 증언이 없습니다.',     chronoRecapHint:'이 예시는 결정적 판정입니다 — 라이브 토론과 달리 언제 봐도 같은 결론.', chronoRelated:'⏳ 관련 토론 보기',
     tourStart:'🎬 가이드 투어로 둘러보기', tourSkip:'건너뛰기 ⏭', tourReplay:'🎬 가이드 투어',
-    tourCap1:'레포들의 도시에 오신 걸 환영해요! 광장의 현자 <b>POLARIS</b>가 인사를 건네네요. 🚕 그 옆은 택시 정류장이에요.',
-    tourCap2:'🚕 택시기사에게 주제를 말하면 그 레포 집까지 데려다줘요. 도착하면 집에 불이 켜지고 스탬프를 받아요.',
+    tourCap1:'레포들의 도시에 오신 걸 환영해요! 광장의 현자 <b>POLARIS</b>가 인사를 건네네요. 🚕 그 옆은 깃버 정류장이에요.',
+    tourCap2:'🚕 깃버에게 주제를 말하면 그 레포 집까지 데려다줘요. 도착하면 집에 불이 켜지고 스탬프를 받아요.',
     tourCap3:'⏳ <b>Chronopolis</b> — 세 현자가 토론하고, <b>시간</b>(가장 최신 출처)이 승부를 가려요.',
     tourCap4:'🛂 여권에 방문 스탬프를 모으고, <b>오늘의 코스</b> 3곳을 따라가 보세요!',
     tourEnd:'투어 끝! 이제 자유롭게 마을을 누벼보세요. 🌟',
@@ -1056,7 +1056,7 @@ const I18N = {
     festAllStamps:'🎆 마을을 모두 둘러봤어요! 모든 명소 스탬프 완성 — 축제를 즐겨요!', festRepos:'🎆 레포 {n}곳 방문 달성! 불꽃이 터져요.',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
-    introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>택시기사에게 물어보면 그 레포까지 데려다줘요.',
+    introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>깃버에게 물어보면 그 레포까지 데려다줘요.',
     introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
     privacyNote:'익명 집계 통계만 측정해요 · 개인정보·계정·검색어는 저장하지 않아요.',
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
@@ -1080,9 +1080,9 @@ const I18N = {
     publicNetMsg:'마을을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
     stationRetry:'🚉 다른 마을 가기', goOwnerCity:'🏙️ {user} 님의 도시 가기',
     shareTown:'이 마을 공유', copyLink:'🔗 링크 복사', copied:'복사됨!',
-    hint:'집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 택시기사에게 물어보기',
+    hint:'집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 깃버에게 물어보기',
     drivePre:'🚕 ', drivePost:' (으)로 가는 중…', stop:'🛑 꾹 눌러 내리기',
-    taxiTitle:'🚕 레포 택시기사',
+    taxiTitle:'🚕 깃버',
     modeLocalOpt:'로컬검색 · 무키', modeWebllmOpt:'WebLLM · 브라우저AI', modeProxyOpt:'AI 프록시 · 고품질',
     chatPh:'어떤 레포를 찾으세요? 예: 제일 인기있는 레포',
     go:'길찾기', downtown:'도심지', hometown:'홈타운',
@@ -1091,16 +1091,16 @@ const I18N = {
     openGithub:'GitHub 열기 ↗', liveDemo:'라이브 데모 ↗', close:'닫기', socialPreview:'소셜 프리뷰',
     cardAskTitle:'🚕 이 레포, 더 알아보기', cardAskRepo:'이 레포 질문하기', cardAskWhy:'왜 이 구역에 있나요?', cardSimilar:'비슷한 레포 보기', cardSuggestHint:'추천 질문',
     rideThere:'🚕 그 집까지 데려다줄게요', soLead:'그럼 ',
-    greeterHtml:'어서오세요! 🚕 <b>Repolis 택시기사</b>입니다.<br>어떤 걸 찾으세요? 예: <b>제일 인기있는 레포</b>, <b>AI 에이전트</b>, <b>STT</b>, <b>아무거나</b>',
+    greeterHtml:'어서오세요! 🚕 <b>Repolis 깃버</b>예요.<br>어떤 걸 찾으세요? 예: <b>제일 인기있는 레포</b>, <b>AI 에이전트</b>, <b>STT</b>, <b>아무거나</b>',
     greetReply:'안녕하세요! 🚕 어떤 레포를 찾으세요? 예: <b>제일 인기있는 레포</b>, <b>AI 에이전트</b>, <b>STT</b>',
     stThanks:'천만에요! 😊 또 어디로 모셔다드릴까요?',
     stBye:'안녕히 가세요! 🚕 또 들러주세요.',
     stHow:'저야 늘 쌩쌩하죠! 😄 필요할 때 편하게 불러주세요!',
-    stWho:'저는 Repolis의 택시기사예요 🚕 이 도시의 어떤 레포든 모셔다드려요. 어디로 갈까요?',
+    stWho:'저는 Repolis의 깃버예요 🚕 이 도시의 어떤 레포든 모셔다드려요. 어디로 갈까요?',
     stHelp:'레포를 찾아 그 집까지 태워다드려요! “제일 인기있는 레포”, “RAG”, “최근에 뭐 푸시했어?”처럼 물어보세요 🚕',
     stNice:'헤헤, 고마워요! 😊',
     stOff1:'하하, 그건 제 전문은 아니지만 😄 그래도 얘기 즐겁네요!',
-    stOff2:'음~ 저는 사실 레포 구경시켜드리는 택시기사라 그쪽은 잘 몰라요 ㅎㅎ',
+    stOff2:'음~ 저는 사실 레포 구경시켜드리는 깃버라 그쪽은 잘 몰라요 ㅎㅎ',
     stOff3:'제가 아는 건 현상님 GitHub 레포들뿐이라… 그래도 궁금한 거 있으면 편하게 물어봐요! 😊',
     stOff4:'오늘은 손님이 좀 한가하신가 봐요 😄 저는 미터기 대신 레포만 세고 있어요 ㅎㅎ',
     stOff5:'하하 이런 수다도 좋지만, 제 특기는 역시 레포 안내라서요 🚕 한 곳 구경 가보실래요?',
@@ -1128,7 +1128,7 @@ const I18N = {
     traceCopy:'링크 복사', traceCopied:'복사됨', traceOpen:'열기', traceSnippet:'발췌',
     traceGenTitle:'✦ 어떻게 답했나', traceGeneral:'별빛에 깃든 일반 지식에서 답했어요',
     refsTitle:'📚 참고한 문서', refsNone:'참고 문서 없음 · 일반 지식으로 답했어요',
-    npcTaxi:'택시기사', npcEng:'MS Docs 엔지니어', engTitle:'📘 MS Docs 엔지니어',
+    npcTaxi:'깃버', npcEng:'MS Docs 엔지니어', engTitle:'📘 MS Docs 엔지니어',
     engThanks:'도움이 됐다니 기뻐요! 📘 더 궁금한 게 있으면 물어보세요.', engBye:'또 궁금한 게 생기면 찾아오세요! 📘', engHow:'저야 늘 문서 읽느라 바쁘죠 😄 어떤 Microsoft 기술이 궁금하세요?', engWho:'저는 <b>MS Docs 엔지니어</b>예요 📘 Microsoft Learn 공식 문서에서 답을 찾아드려요. 무엇이 궁금하세요?', engHelp:'Azure·.NET·Copilot 같은 Microsoft 기술을 물어보세요 📘 <b>공식 문서</b>에서 실시간으로 찾아드려요. 예: “Azure AI Foundry 에이전트”', engNice:'감사해요! 😊 더 찾아드릴 게 있을까요?',
     engGreet:'안녕하세요! 📘 저는 <b>Microsoft Docs 엔지니어</b>예요. Azure·.NET·Copilot 같은 <b>Microsoft Learn 공식 문서</b>를 실시간으로 찾아드려요. 무엇이 궁금하세요? 예: <b>Azure AI Foundry 에이전트</b>, <b>Azure AI Search</b>',
     engPh:'무엇이 궁금하세요? 예: Azure AI Foundry 에이전트',
@@ -1138,7 +1138,7 @@ const I18N = {
     engErr:'문서를 찾는 중 문제가 생겼어요 😅 잠시 후 다시 시도해 주세요.',
     engNoBackend:'문서 검색 백엔드(MCP)가 연결돼 있지 않아요. 라이브 사이트에서 사용해 주세요 📘',
     engAbout:'저는 <b>Microsoft Learn MCP</b>에 연결된 <b>MS Docs 엔지니어</b>예요 📘 Azure AI Search Foundry의 <b>Knowledge Source</b>로 공식 Microsoft Learn 문서를 실시간 검색하고, <b>gpt-5.4-mini</b>가 여러분의 언어로 답을 정리해 드려요. 무엇이 궁금하세요?',
-    taxiStand:'택시 정류장',
+    taxiStand:'깃버 정류장',
     libName:'기여 도서관', libSign:'LIBRARY 도서관',
     libReached:'에 도착! <span class="key">Enter</span> 또는 클릭으로 입장',
     libSub:'전현상의 논문 · 발표 · 오픈소스 기여 · 수상 아카이브',
@@ -1182,8 +1182,8 @@ const I18N = {
     chronoTimeOld:'older', chronoTimeNew:'newer', chronoTimeWin:'Time points here',
     chronoRecap:'📋 Replay the verdict (deterministic)', chronoRecapHide:'🔼 Hide verdict', chronoVerdictLbl:"Time's verdict", chronoConfLbl:'confidence', chronoRecapNoAns:'Verdict withheld — not enough testimony.',     chronoRecapHint:'This example is a deterministic verdict — unlike the live debate, it reads the same every time.', chronoRelated:'⏳ Related debate',
     tourStart:'🎬 Take a guided tour', tourSkip:'Skip ⏭', tourReplay:'🎬 Guided tour',
-    tourCap1:'Welcome to the City of Repos! <b>POLARIS</b>, the scholar at the plaza, waves hello. 🚕 The taxi stand is right beside them.',
-    tourCap2:'🚕 Tell the taxi a topic and it drives you to that repo\u2019s house. On arrival the house lights up and you earn a stamp.',
+    tourCap1:'Welcome to the City of Repos! <b>POLARIS</b>, the scholar at the plaza, waves hello. 🚕 The Gitber taxi stand is right beside them.',
+    tourCap2:'🚕 Tell Gitber a topic and it drives you to that repo\u2019s house. On arrival the house lights up and you earn a stamp.',
     tourCap3:'⏳ <b>Chronopolis</b> — three scholars debate, and <b>time</b> (the freshest source) decides who wins.',
     tourCap4:'🛂 Collect visit stamps in your passport, then follow <b>today\u2019s 3-stop course</b>!',
     tourEnd:'Tour complete! Now roam the town freely. 🌟',
@@ -1198,7 +1198,7 @@ const I18N = {
     festAllStamps:'🎆 You\'ve explored the whole village! Every landmark stamped — enjoy the festival!', festRepos:'🎆 {n} repos visited! Fireworks light up the sky.',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
-    introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask the taxi driver and it'll drive you right to any repo.",
+    introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask Gitber and it'll drive you right to any repo.",
     introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
     privacyNote:'Anonymous, aggregate stats only — no personal data, accounts, or search queries are stored.',
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
@@ -1222,9 +1222,9 @@ const I18N = {
     publicNetMsg:"Couldn't load the town. Check your connection and try again.",
     stationRetry:'🚉 Visit another town', goOwnerCity:"🏙️ Visit {user}'s city",
     shareTown:'Share this town', copyLink:'🔗 Copy link', copied:'Copied!',
-    hint:'Walk up to a house (repo) · ☰ Wayfinding · 🚕 Ask the taxi driver',
+    hint:'Walk up to a house (repo) · ☰ Wayfinding · 🚕 Ask Gitber',
     drivePre:'🚕 Driving to ', drivePost:'…', stop:'🛑 Hold to get off',
-    taxiTitle:'🚕 Repo Taxi Driver',
+    taxiTitle:'🚕 Gitber',
     modeLocalOpt:'Local search · no key', modeWebllmOpt:'WebLLM · Browser AI', modeProxyOpt:'AI proxy · high quality',
     chatPh:'Which repo are you after? e.g. most popular',
     go:'Route', downtown:'Downtown', hometown:'Hometown',
@@ -1233,16 +1233,16 @@ const I18N = {
     openGithub:'Open on GitHub ↗', liveDemo:'Live demo ↗', close:'Close', socialPreview:'Social preview',
     cardAskTitle:'🚕 Explore this repo', cardAskRepo:'Ask about this repo', cardAskWhy:'Why this district?', cardSimilar:'Similar repos', cardSuggestHint:'Try asking',
     rideThere:"🚕 I'll drive you there", soLead:'Then ',
-    greeterHtml:"Welcome! 🚕 I'm the <b>Repolis taxi driver</b>.<br>What are you looking for? e.g. <b>most popular repo</b>, <b>AI agents</b>, <b>STT</b>, <b>anything</b>",
+    greeterHtml:"Welcome! 🚕 I'm <b>Gitber</b>, your Repolis taxi.<br>What are you looking for? e.g. <b>most popular repo</b>, <b>AI agents</b>, <b>STT</b>, <b>anything</b>",
     greetReply:"Hello! 🚕 Which repo are you after? e.g. <b>most popular</b>, <b>AI agents</b>, <b>STT</b>",
     stThanks:"Anytime! 😊 Where to next?",
     stBye:"Take care! 🚕 Come back anytime.",
     stHow:"Doing great, thanks! 😄 Just give me a shout whenever you need me!",
-    stWho:"I'm the Repolis taxi driver 🚕 I'll drive you to any repo in this city. Where to?",
+    stWho:"I'm Gitber, the Repolis taxi 🚕 I'll drive you to any repo in this city. Where to?",
     stHelp:'I find repos and drive you to them! Try “most popular”, “RAG”, or “what did I push recently?” 🚕',
     stNice:"Aw, thank you! 😊",
     stOff1:"Haha, not really my area 😄 but fun to chat!",
-    stOff2:"Hmm, I'm just the repo taxi driver, so I don't know much about that 😅",
+    stOff2:"Hmm, I'm just Gitber, the repo taxi, so I don't know much about that 😅",
     stOff3:"All I really know is your GitHub repos… but feel free to ask me about those! 😊",
     stOff4:"Slow day, huh? 😄 The only meter I run counts repos, not fares!",
     stOff5:"Haha I'm enjoying the chat, but repo tours are my real talent 🚕 want to go see one?",
@@ -1270,7 +1270,7 @@ const I18N = {
     traceCopy:'Copy link', traceCopied:'Copied', traceOpen:'Open', traceSnippet:'Excerpt',
     traceGenTitle:'✦ How I answered', traceGeneral:'Answered from general starlit knowledge',
     refsTitle:'📚 Sources', refsNone:'No source docs · answered from general knowledge',
-    npcTaxi:'Taxi driver', npcEng:'MS Docs Engineer', engTitle:'📘 MS Docs Engineer',
+    npcTaxi:'Gitber', npcEng:'MS Docs Engineer', engTitle:'📘 MS Docs Engineer',
     engThanks:"Glad it helped! 📘 Ask me anything else.", engBye:"Come back whenever you have a question! 📘", engHow:"Always busy reading docs 😄 What Microsoft tech can I help with?", engWho:"I'm the <b>MS Docs engineer</b> 📘 I find answers in the official Microsoft Learn docs. What do you need?", engHelp:'Ask about Azure, .NET, Copilot and other Microsoft tech 📘 I search the <b>official docs</b> in real time. e.g. “Azure AI Foundry agent”', engNice:"Thank you! 😊 Anything else I can look up?",
     engGreet:"Hi! 📘 I'm the <b>Microsoft Docs engineer</b>. I search the <b>official Microsoft Learn docs</b> (Azure, .NET, Copilot…) in real time. What do you need? e.g. <b>Azure AI Foundry agent</b>, <b>Azure AI Search</b>",
     engPh:'What do you need? e.g. Azure AI Foundry agent',
@@ -1280,7 +1280,7 @@ const I18N = {
     engErr:'Something went wrong searching the docs 😅 Please try again.',
     engNoBackend:"The docs backend (MCP) isn't connected. Try it on the live site 📘",
     engAbout:"I'm the <b>MS Docs engineer</b>, wired to the <b>Microsoft Learn MCP</b> 📘 I search the official Microsoft Learn docs through an Azure AI Search Foundry <b>Knowledge Source</b>, and <b>gpt-5.4-mini</b> composes the answer in your language. What would you like to know?",
-    taxiStand:'TAXI STAND',
+    taxiStand:'GITBER STAND',
     libName:'Contribution Library', libSign:'LIBRARY 도서관',
     libReached:' reached! <span class="key">Enter</span> or click to enter',
     libSub:"Hyeonsang Jeon's papers · talks · open-source contributions · awards",
@@ -4017,8 +4017,8 @@ NPCS.push({ group:driver, pos:driver.position.clone(), kind:'taxi', reach:4.6 })
 /* ---- 🚉 GitHub Station — a civic landmark beside the taxi stand; board a "train" to any public GitHub user's town.
    Visual-only (non-colliding) so it never affects movement near the busy plaza; the topbar 🚉 button is the shortcut. ---- */
 (function buildStation(){
-  const SP=new THREE.Vector3(18,0,14);
-  const g=new THREE.Group(); g.position.copy(SP); g.rotation.y=-2.2; scene.add(g);
+  const SP=new THREE.Vector3(8,0,16);
+  const g=new THREE.Group(); g.position.copy(SP); g.rotation.y=-2.68; scene.add(g);
   const base=new THREE.Mesh(new THREE.CylinderGeometry(2.3,2.5,0.3,24), toon(0xcdbfa6)); base.position.y=0.15; base.receiveShadow=true; g.add(base);
   const rim=new THREE.Mesh(new THREE.TorusGeometry(2.3,0.12,8,30), toon(0x8f8676)); rim.rotation.x=-Math.PI/2; rim.position.y=0.3; g.add(rim);
   [-1.5,1.5].forEach(px=>{ const post=rbox(0.18,3.1,0.18,0x6b4a2e,0.03); post.position.set(px,1.6,0); outline(post,0.03); g.add(post); });
@@ -5052,8 +5052,8 @@ function townMeta(q){
   if(howMany.test(ql) && /(현자|학자|npc|엔지니어|기사|주민|캐릭터|scholars?|npcs?|characters?|residents?)/.test(ql)){
     const scholars=NPCS.filter(n=>n.kind!=='taxi').length, total=NPCS.length;
     return LANG==='ko'
-      ? `이 도시에는 택시 기사 1명과 현자 ${scholars}명, 모두 ${total}명의 NPC가 있어요. 누구와 이야기해 볼까요? 🙂`
-      : `This town has 1 taxi driver and ${scholars} scholar(s) — ${total} NPCs in total. Who would you like to talk to? 🙂`;
+      ? `이 도시에는 택시 기사 깃버와 현자 ${scholars}명, 모두 ${total}명의 NPC가 있어요. 누구와 이야기해 볼까요? 🙂`
+      : `This town has Gitber the taxi driver and ${scholars} scholar(s) — ${total} NPCs in total. Who would you like to talk to? 🙂`;
   }
   // how many repos / buildings
   if(howMany.test(ql) && /(레포|repo|저장소|프로젝트|project|building|건물|집)/.test(ql))
@@ -6000,6 +6000,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__board=()=>{ if(!FERRIS) return 'no ferris'; const b=FERRIS.board; player.position.set(b.x,0,b.z); return window.__ferris(); };
   window.__carousel=()=>({ has:!!CAROUSEL, pos:CAROUSEL?{x:+CAROUSEL._pos.x.toFixed(1),z:+CAROUSEL._pos.z.toFixed(1)}:null, board:CAROUSEL?{x:+CAROUSEL.board.x.toFixed(1),z:+CAROUSEL.board.z.toFixed(1)}:null, near:!!nearCarousel, riding:!!carousel, turned:carousel?+carousel.turned.toFixed(2):0, dist:CAROUSEL?+player.position.distanceTo(CAROUSEL.board).toFixed(1):null });
   window.__boardC=()=>{ if(!CAROUSEL) return 'no carousel'; const b=CAROUSEL.board; player.position.set(b.x,0,b.z); return window.__carousel(); };
+  window.__station=(tx,tz)=>{ if(!STATION) return {has:false}; const S=(tx==null?STATION._pos:new THREE.Vector3(+tx,0,+tz)); let mind=Infinity,who=null,wpos=null,wcw=null;
+    for(const b of buildings){ if(b._isLibrary) continue; const bx=(b._x!=null?b._x:b.position.x), bz=(b._z!=null?b._z:b.position.z); const cw=(b._cw||3); const edge=Math.hypot(bx-S.x,bz-S.z)-cw; if(edge<mind){ mind=edge; who=b.repo; wpos={x:+bx.toFixed(1),z:+bz.toFixed(1)}; wcw=+cw.toFixed(1); } }
+    return { has:true, pos:{x:+S.x.toFixed(1),z:+S.z.toFixed(1)}, r:+Math.hypot(S.x,S.z).toFixed(1), near:!!nearStation, dist:+player.position.distanceTo(S).toFixed(1), reach:6.0, baseR:2.5, nearestBld:who, nearestBldPos:wpos, nearestBldCw:wcw, gapToEdge:+mind.toFixed(1) }; };
 
   window.__fireworks=(n)=>{ fireworksShow(n||10); return { queued:_fwQueue, active:FW.length, auroraBoost:+_auroraBoost.toFixed(1) }; };
   window.__visitFx=(name)=>{ let b=name?(repoByKey(name)||buildings.find(x=>x.label===name)):null;
