@@ -292,6 +292,29 @@
   #obsModal.show { display: flex; }
   #obsModal .libhead { background: linear-gradient(135deg,#26345e 0%,#10122a 100%); }
   #obsModal .libhead .cnt { background:#bcd0ff; color:#1a2240; }
+  #zoneBoard { position: fixed; inset: 0; z-index: 22; display: none; align-items: center; justify-content: center;
+    background: rgba(16,12,6,.56); backdrop-filter: blur(5px); padding: 18px; }
+  #zoneBoard.show { display: flex; }
+  #zoneBoard .libcard { width: 460px; }
+  #zoneBoard .libhead .cnt { background:#ffe4a0; color:#4a3410; }
+  .zbBasis { font-size: 12px; line-height: 1.55; color: #6f5a34; background:#f6efdf; border:1px solid #eaddc2;
+    border-radius: 12px; padding: 10px 12px; margin: 10px 4px 4px; }
+  .zbBasis code { background:#eadcbe; border-radius: 5px; padding: 1px 5px; font-size: 11px; }
+  .zbBar { height: 7px; border-radius: 4px; background:#eadfce; overflow:hidden; margin: 10px 6px 2px; }
+  .zbBar > i { display:block; height:100%; border-radius:4px; transition: width .4s ease; }
+  .zbSecT { font-size: 11px; font-weight: 800; letter-spacing:.03em; text-transform: uppercase; color:#9a6e1e; padding: 12px 8px 4px; }
+  a.zbRepo { display:flex; align-items:center; gap:9px; padding: 9px 11px; border-radius: 11px; text-decoration:none;
+    color:inherit; cursor:pointer; transition: background .13s; }
+  a.zbRepo:hover { background:#f4e8d2; }
+  a.zbRepo .rk { flex:none; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:10.5px; font-weight:800; color:#fff; }
+  a.zbRepo .nm { flex:1; font-size:13px; font-weight:700; color:#5a4526; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  a.zbRepo .vs { flex:none; font-size:15px; opacity:.85; }
+  .zbActs { display:flex; flex-wrap:wrap; gap:8px; padding: 12px 6px 12px; }
+  .zbBtn { flex:1 1 auto; min-width: 128px; border:none; cursor:pointer; border-radius: 12px; padding: 11px 12px;
+    font-size: 12.5px; font-weight: 800; color:#4a3410; background:#ffd98a; transition: filter .13s; }
+  .zbBtn:hover { filter: brightness(1.05); }
+  .zbBtn.sub { background:#eadfce; color:#6f5a34; }
   .obsCard { display:flex; gap:12px; padding:13px 15px; border-radius:14px; background:#f6f3ec; border:1px solid #e6e0d4; margin-bottom:11px; }
   .obsCard .badge { flex:none; width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:25px;
     background:radial-gradient(circle at 50% 38%, #1a2347, #0a0e22); box-shadow:0 0 0 2px var(--ac,#9fc0ff) inset, 0 2px 8px rgba(0,0,0,.18); }
@@ -772,6 +795,18 @@
     <div class="libbody" id="obsBody"></div>
   </div>
 </div>
+<div id="zoneBoard">
+  <div class="libcard">
+    <div class="libhead" id="zbHead">
+      <button class="x" id="zbClose" aria-label="close">✕</button>
+      <div class="ic" id="zbIcon">🧭</div>
+      <h2 id="zbName">District</h2>
+      <div class="sub" id="zbSub"></div>
+      <div class="cnt" id="zbCount"></div>
+    </div>
+    <div class="libbody" id="zbBody"></div>
+  </div>
+</div>
 
 <div id="chronoLiveHud">
   <div class="clhTop">
@@ -1023,6 +1058,9 @@ const I18N = {
     passportRepos:'방문한 레포', passportHint:'현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
     passportDistricts:'구역별 탐험', passportDistrictsHint:'각 지구의 레포를 방문하면 채워져요.',
+    zbSub:'이 구역의 대표 레포와 나의 탐험 진행률', zbBoard:'구역 안내판',
+    zbReps:'대표 레포', zbRide:'🚕 대표 레포로 이동', zbUnseen:'🧭 아직 안 본 레포 안내',
+    zbAsk:'❓ 이 구역이 궁금해요', zbAllSeen:'이 구역의 레포를 모두 둘러봤어요! 🎉', zbHubHint:'구역 안내판 열기',
     courseTitle:'오늘의 코스', courseGo:'🚕 코스 안내', courseAllDone:'🎉 코스 완주!', courseDone:'✓',
     courseBanner:'🗺️ 오늘의 추천 코스 3곳이 정해졌어요! 여권 🛂에서 확인하고 따라가 보세요', courseReward:'🎉 오늘의 코스를 완주했어요! 멋진 탐험이었어요 ✨',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
@@ -1165,6 +1203,9 @@ const I18N = {
     passportRepos:'Repos visited', passportHint:'Walk up to a scholar, the library, a canal or the plaza to earn a stamp.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
     passportDistricts:'District progress', passportDistrictsHint:'Fills up as you visit each district\'s repos.',
+    zbSub:'Representative repos and your exploration here', zbBoard:'district board',
+    zbReps:'Representative repos', zbRide:'🚕 Ride to a top repo', zbUnseen:'🧭 Guide me to an unseen one',
+    zbAsk:'❓ Tell me about this district', zbAllSeen:'You\'ve visited every repo in this district! 🎉', zbHubHint:'open district board',
     courseTitle:'Today\'s course', courseGo:'🚕 Guide me', courseAllDone:'🎉 Course complete!', courseDone:'✓',
     courseBanner:'🗺️ Today\'s 3-stop route is ready! Open your Passport 🛂 to follow it', courseReward:'🎉 You completed today\'s course! Lovely exploring ✨',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
@@ -1314,6 +1355,8 @@ function applyLang(){
   if(typeof renderObservatory==='function' && typeof obsModal!=='undefined' && obsModal && obsModal.classList.contains('show')) renderObservatory();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
   if(typeof refreshDistrictSigns==='function') refreshDistrictSigns();
+  if(typeof refreshHubSigns==='function') refreshHubSigns();
+  { const _zb=document.getElementById('zoneBoard'); if(typeof renderZoneBoard==='function' && _zb && _zb.classList.contains('show') && _zb._zid) renderZoneBoard(_zb._zid); }
   if(_mapReady && typeof syncMapChrome==='function') syncMapChrome();
   if(typeof window.__updateLiveTitle==='function') window.__updateLiveTitle();
 }
@@ -3037,6 +3080,69 @@ function paintDistricts(){
 paintDistricts();
 function refreshDistrictSigns(){ for(const s of _DISTRICT_SIGNS){ const m=s.board.material; if(m&&m.map){ m.map.dispose(); m.map=signTexture(s.z.icon+' '+(LANG==='ko'?s.z.ko:s.z.en), s.z.tone); m.needsUpdate=true; } } }
 
+/* ---- 🪧 district hub landmarks: one walkable centre + info board per active district (procedural, low-cost, shared geometry) ---- */
+const ZONE_HUBS=[]; const _HUB_SIGNS=[];
+const HUB_R=2.15;              // stone plinth radius
+const HUB_NEAR=5.4;            // walk-up prompt radius (hub is checked AFTER buildings, so a house never loses its door)
+const _HUB_GEO={ disc:new THREE.CylinderGeometry(HUB_R+1.2,HUB_R+1.2,0.08,32), plinth:new THREE.CylinderGeometry(HUB_R,HUB_R+0.3,0.42,26) };
+function _hubGap(x,z){ let g=Infinity; for(const b of buildings){ if(b._isLibrary) continue; const d=Math.hypot(b._x-x,b._z-z)-(b._cw||3); if(d<g) g=d; } return g; }
+function _hubSpot(z, taken){ const TWO=Math.PI*2;
+  const band=((z._bEnd-z._bStart)%TWO+TWO)%TWO || TWO;              // stay within the district's own angular wedge
+  const inBand=a=>((((a-z._bStart)%TWO)+TWO)%TWO) <= band;
+  const RS=[46,52,40,58,34,64,70,78,86,94,30];                     // inner-mid radii, deterministic sweep
+  const DA=[0,0.09,-0.09,0.18,-0.18,0.28,-0.28];
+  for(const thr of [9,7.5,6.2]){ for(const R of RS){ for(const da of DA){   // relax clearance only if a tight wedge can't satisfy 9
+    const a=z.angMid+da, x=Math.cos(a)*R, zz=Math.sin(a)*R;
+    if(!inBand(a) || x*x+zz*zz < 441) continue;                    // inside the wedge, outside the r=21 plaza core
+    if(_hubGap(x,zz) < thr) continue;                              // keep the hub centre off every building's walk-up reach
+    let ok=true; for(const p of taken){ if(Math.hypot(p.x-x,p.z-zz) < (p.r||12)){ ok=false; break; } } if(!ok) continue;
+    return {x,z:zz};
+  }}}
+  const a=z.angMid; return {x:Math.cos(a)*46, z:Math.sin(a)*46};   // deterministic fallback (rare)
+}
+function _hubAccent(z,g){ const T=z.tone;
+  switch(z.id){
+    case 'ai': { const trip=new THREE.Group(); trip.position.set(1.5,0,0.2); g.add(trip);                       // observatory telescope on a tripod
+      [[0,0.34],[0.3,-0.2],[-0.3,-0.2]].forEach(([lx,lz])=>{ const leg=rbox(0.09,1.5,0.09,0x39435f,0.02); leg.position.set(lx,0.75,lz); leg.rotation.x=lz*0.5; leg.rotation.z=-lx*0.5; trip.add(leg); });
+      const tube=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.24,1.7,14), toon(0x2f3d5e)); tube.position.set(0,1.7,0); tube.rotation.z=-0.62; trip.add(tube);
+      const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.12,14), basic(T)); lens.position.set(0.78,2.18,0); lens.rotation.z=-0.62; trip.add(lens); break; }
+    case 'infra': { [[0.5,0xcf7a3a],[1.36,0x3f8f86],[2.2,0xb9852f]].forEach(([oy,c],i)=>{ const box=rbox(2.0-i*0.16,0.82,1.2,c,0.05); box.position.set(1.4+(i%2?0.06:0),oy,0.1); g.add(box); });   // stacked shipping containers
+      const mast=rbox(0.16,3.4,0.16,0x555f6a,0.02); mast.position.set(-1.5,1.7,0.2); g.add(mast);              // server-dock crane
+      const jib=rbox(2.4,0.16,0.16,0x555f6a,0.02); jib.position.set(-0.6,3.3,0.2); g.add(jib);
+      const hook=rbox(0.12,0.5,0.12,0x99a0a8,0.02); hook.position.set(0.5,2.95,0.2); g.add(hook); break; }
+    case 'web': { [[-1.3,0xff9d5c],[0.15,0x63c7d6],[1.6,0xf6c945]].forEach(([lx,c])=>{ const pst=rbox(0.12,1.9,0.12,0x6f5334,0.02); pst.position.set(lx,0.95,0.4); g.add(pst);   // shop-sign street
+        const panel=rbox(1.0,0.62,0.08,c,0.03); panel.position.set(lx,1.72,0.4); g.add(panel); });
+      const win=new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.8), basic(T)); win.position.set(1.6,1.72,0.46); g.add(win); break; }
+    case 'data': { [[-1.4,1.0],[-0.55,1.7],[0.3,1.35],[1.15,2.1]].forEach(([bx,h],i)=>{ const bar=rbox(0.6,h,0.6,i%2?T:0x8a6fd0,0.04); bar.position.set(1.4+bx,h/2,0.1); g.add(bar); });   // chart-bar sculpture
+      const pipe=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,2.6,10), toon(0x9aa2ad)); pipe.position.set(-1.2,1.0,0.55); pipe.rotation.z=Math.PI/2; g.add(pipe); break; }
+    case 'library': { const shelf=rbox(2.6,1.8,0.5,0x7a5a34,0.05); shelf.position.set(1.5,0.9,0); g.add(shelf);   // open-air stacks
+      const cols=[0xb44a3a,0xd8a24a,0x3f7d5a,0x3a5a8a,0x8a4a7a];
+      for(let r=0;r<2;r++){ for(let i=0;i<5;i++){ const bk=rbox(0.16,0.6,0.28,cols[(i+r)%cols.length],0.02); bk.position.set(0.55+i*0.2,0.6+r*0.7,0.26); g.add(bk); } }
+      const lectern=rbox(0.7,0.1,0.5,0x6f5334,0.03); lectern.position.set(-0.9,1.0,0.3); lectern.rotation.x=-0.4; g.add(lectern); break; }
+    case 'ruins': { const col=new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.4,1.5,12), toon(0x8f8577)); col.position.set(1.4,0.75,0.1); col.rotation.z=0.12; g.add(col);   // broken experiment apparatus
+      const cap=rbox(1.0,0.3,1.0,0x9a917f,0.04); cap.position.set(1.2,1.7,0.1); cap.rotation.z=0.3; g.add(cap);
+      const slab=rbox(1.6,0.24,0.7,0x847b6d,0.03); slab.position.set(-1.3,0.13,0.4); slab.rotation.y=0.5; g.add(slab); break; }
+    default: { const bowl=new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.6,0.5,16), toon(0xc9bea4)); bowl.position.set(1.4,0.55,0.1); g.add(bowl);   // commons fountain fallback
+      const jet=new THREE.Mesh(new THREE.SphereGeometry(0.24,12,10), basic(T)); jet.position.set(1.4,1.1,0.1); g.add(jet); }
+  }
+}
+const _HUB_TAKEN=[{x:0,z:0,r:20},{x:12,z:9,r:9},{x:8,z:16,r:9}];   // plaza core + taxi stand + GitHub Station: keep hubs clear of them
+function buildHub(z){ const sp=_hubSpot(z, _HUB_TAKEN), hx=sp.x, hz=sp.z;
+  const g=new THREE.Group(); g.position.set(hx,0,hz); g.rotation.y=Math.atan2(-hx,-hz); scene.add(g);         // face the town centre
+  const disc=new THREE.Mesh(_HUB_GEO.disc, new THREE.MeshBasicMaterial({color:z.ground,transparent:true,opacity:0.55,depthWrite:false})); disc.position.y=0.02; disc.renderOrder=1; g.add(disc);
+  const plinth=new THREE.Mesh(_HUB_GEO.plinth, toon(0xd8cdb4)); plinth.position.y=0.21; outline(plinth,0.03); g.add(plinth);
+  const post=rbox(0.5,2.5,0.5,0x7a6142,0.05); post.position.y=1.67; outline(post,0.03); g.add(post);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(2.7,0.9), new THREE.MeshBasicMaterial({map:signTexture(z.icon+' '+(LANG==='ko'?z.ko:z.en), z.tone),transparent:true})); board.position.set(0,2.2,0.28); g.add(board);
+  const orb=new THREE.Mesh(new THREE.SphereGeometry(0.32,14,12), basic(z.tone)); orb.position.y=3.06; g.add(orb);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:z.tone,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); halo.scale.set(3.0,3.0,1); halo.position.y=3.06; halo._nightOp=(z.id==='ruins')?0.34:0.8; g.add(halo); LAMP_GLOWS.push(halo);
+  _hubAccent(z,g);
+  if(typeof EXTRA_COLLIDERS!=='undefined') EXTRA_COLLIDERS.push({x:hx,z:hz,r:1.9});                          // minimal centre collider — the decorative accents stay walkable
+  const rec={ id:z.id, x:hx, z:hz, pos:new THREE.Vector3(hx,0,hz), group:g };
+  z._hub=rec; ZONE_HUBS.push(rec); _HUB_SIGNS.push({z, board}); _HUB_TAKEN.push({x:hx,z:hz,r:13});
+}
+for(const z of ZONES) buildHub(z);
+function refreshHubSigns(){ for(const s of _HUB_SIGNS){ const m=s.board.material; if(m&&m.map){ m.map.dispose(); m.map=signTexture(s.z.icon+' '+(LANG==='ko'?s.z.ko:s.z.en), s.z.tone); m.needsUpdate=true; } } }
+
 /* ====================== CONTRIBUTION LIBRARY (special civic landmark) ====================== */
 const LIBREPO='https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions';
 /* Contribution Library data is generated daily from the Hyeonsang-AI-Contributions
@@ -4389,6 +4495,57 @@ function renderPassport(){ renderCourse(); const grid=document.getElementById('s
     ? (t('passportZonesLeft')+missing.map(l=>`<span class="z">${t(l.key).split(' · ')[0]}</span>`).join(', '))
     : t('passportAllZones');
   renderDistrictProgress(); }
+/* ───────── 🪧 District board — the hub info panel (reuses the passport/course district data, no new backend) ───────── */
+const zoneBoard=document.getElementById('zoneBoard');
+function zoneBasis(z){ // deterministic "why this district" line — top keyword hits + dominant language across its repos (no LLM)
+  const reps=zoneReposOf(z); const kw={}, lg={};
+  const kws=(typeof ZKW!=='undefined'&&ZKW[z.id])?ZKW[z.id]:[];
+  for(const r of reps){ const h=(r.repo+' '+(r.desc||'')+' '+((r.topics||[]).join(' '))).toLowerCase();
+    for(const k of kws){ if(h.includes(k[0])) kw[k[0]]=(kw[k[0]]||0)+1; }
+    if(r.lang&&r.lang!=='—') lg[r.lang]=(lg[r.lang]||0)+1; }
+  const topK=Object.keys(kw).sort((a,b)=>kw[b]-kw[a]).slice(0,3);
+  const topL=Object.keys(lg).sort((a,b)=>lg[b]-lg[a]).slice(0,2);
+  const bits=[];
+  if(topK.length) bits.push((LANG==='ko'?'키워드 ':'keywords ')+topK.map(k=>'<code>'+esc(k)+'</code>').join(', '));
+  if(topL.length) bits.push((LANG==='ko'?'주 언어 ':'mostly ')+topL.map(l=>'<code>'+esc(l)+'</code>').join(', '));
+  const reason=bits.length?bits.join(' · '):(LANG==='ko'?'전반적인 주제':'their overall theme');
+  return LANG==='ko'
+    ? `${z.icon} 이 레포들은 ${reason} 덕분에 이 구역에 모였어요. <b>(LLM 없이 분류기가 결정해요)</b>`
+    : `${z.icon} These repos gather here by ${reason}. <b>(Decided by the classifier, no LLM.)</b>`; }
+function renderZoneBoard(id){ const z=zoneCatById(id); if(!z||!zoneBoard) return;
+  const reps=zoneReposOf(z).slice().sort((a,b)=>(a.rank||0)-(b.rank||0));
+  const prog=districtProgress().find(d=>d.id===id)||{visited:0,total:reps.length};
+  const tone='#'+((z.tone>>>0)&0xffffff).toString(16).padStart(6,'0');
+  zoneBoard._zid=id;
+  document.getElementById('zbHead').style.background='linear-gradient(135deg,'+tone+' 0%, rgba(20,14,6,.88) 125%)';
+  document.getElementById('zbIcon').textContent=z.icon;
+  document.getElementById('zbName').textContent=(LANG==='ko'?z.ko:z.en);
+  document.getElementById('zbSub').textContent=t('zbSub');
+  document.getElementById('zbCount').textContent=prog.visited+' / '+prog.total;
+  const pct=prog.total?Math.round(prog.visited/prog.total*100):0;
+  const top=reps.slice(0,5);
+  const unseen=reps.find(r=>passport.repos.indexOf(r.repo)<0);
+  let html=`<div class="zbBar"><i style="width:${pct}%;background:${tone}"></i></div>`;
+  html+=`<div class="zbBasis">${zoneBasis(z)}</div>`;
+  html+=`<div class="zbSecT">${esc(t('zbReps'))}</div>`;
+  top.forEach((r,i)=>{ const seen=passport.repos.indexOf(r.repo)>=0;
+    html+=`<a class="zbRepo" data-repo="${esc(r.repo)}"><span class="rk" style="background:${tone}">${i+1}</span>`
+      +`<span class="nm">${esc(r.label)}</span><span class="vs">${seen?'✓':'🚕'}</span></a>`; });
+  html+=`<div class="zbActs">`
+    +`<button class="zbBtn" id="zbRide">${esc(t('zbRide'))}</button>`
+    +`<button class="zbBtn sub" id="zbUnseen">${esc(t('zbUnseen'))}</button>`
+    +`<button class="zbBtn sub" id="zbAsk">${esc(t('zbAsk'))}</button></div>`;
+  const body=document.getElementById('zbBody'); body.innerHTML=html; body.scrollTop=0;
+  body.querySelectorAll('a.zbRepo').forEach(a=>{ a.onclick=()=>{ const r=repoByKey(a.dataset.repo); if(r){ closeZoneBoard(); taxiTo(r); } }; });   // re-resolve via the canonical resolver, never a stale closure repo
+  const ride=document.getElementById('zbRide'); if(ride) ride.onclick=()=>{ const r=top[0]&&repoByKey(top[0].repo); if(r){ closeZoneBoard(); taxiTo(r); } };
+  const un=document.getElementById('zbUnseen'); if(un) un.onclick=()=>{ const r=unseen&&repoByKey(unseen.repo); if(r){ closeZoneBoard(); taxiTo(r); } else if(typeof showWave==='function'){ showWave(t('zbAllSeen'),3200); } };
+  const ask=document.getElementById('zbAsk'); if(ask) ask.onclick=()=>{ const nm=(LANG==='ko'?z.ko:z.en); closeZoneBoard();
+    askInChat(LANG==='ko'?`${nm}는 어떤 구역이에요?`:`What kind of district is the ${nm}?`); }; }
+function openZoneBoard(id){ if(!zoneBoard) return; modalOpen=true; zoneBoard.classList.add('show'); renderZoneBoard(id);
+  if(typeof track==='function') track('zone_board_open',{zone:id}); }
+function closeZoneBoard(){ if(!zoneBoard) return; modalOpen=false; zoneBoard.classList.remove('show'); zoneBoard._zid=null; }
+if(zoneBoard){ const zc=document.getElementById('zbClose'); if(zc) zc.onclick=closeZoneBoard;
+  zoneBoard.addEventListener('click',e=>{ if(e.target===zoneBoard) closeZoneBoard(); }); }
 /* ───────── 🗺️ Daily Course — today's deterministic 3-stop route (local-only, no PII) ───────── */
 const COURSE_KEY='repolisCourse';
 const COURSE_V=2;   // v2 = district-aware course; bump forces a safe rebuild (progress lives in passport, not here)
@@ -4594,20 +4751,12 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   if(repo.desc){ desc.textContent=repo.desc; desc.className=''; }
   else { desc.textContent=t('noDesc'); desc.className='empty'; }
   const act=document.getElementById('cardActions');
-  const relId=chronoMatch(repo);
+  // 레포 카드에서는 '관련 토론 보기'(크로노폴리스 이동) 버튼을 노출하지 않는다 —
+  // 집(레포)에서 갑자기 토론장으로 튕기는 흐름을 없애기 위함. chronoMatch는 검색/디버그용으로만 유지.
   act.innerHTML=`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">${t('openGithub')}</a>`
     +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'')
-    +(relId?`<button class="btn chrono" id="relChronoBtn" data-repo="${esc(repo.repo)}" data-preset="${esc(relId)}">${t('chronoRelated')}</button>`:'')
     +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
   document.getElementById('closeBtn').onclick=closeCard;
-  if(relId){ const rc=document.getElementById('relChronoBtn'); rc.onclick=()=>{
-    // resolve the debate strictly from THIS card's own repo identity (data-preset), never a hovered/last-selected repo
-    const srcRepo=rc.dataset.repo, preset=rc.dataset.preset||relId;
-    if(_DBG && srcRepo!==repo.repo) console.warn('[repolis] relChrono target mismatch:', srcRepo, '≠ card', repo.repo);
-    track('chrono_related_click',{repo:srcRepo,preset}); closeCard();
-    const cd=(typeof lmCourseDest==='function')?lmCourseDest('chrono'):null;
-    if(cd && typeof taxiTo==='function'){ cd._chronoPreset=preset; taxiTo(cd); return; }
-    openChrono(preset); }; }
   const ghBtn=act.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>track('github_click',{repo:repo.repo});
   const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
   track('repo_card_open',{repo:repo.repo});
@@ -4735,10 +4884,10 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
   document.getElementById('visitCount').textContent=visited; repo._row.classList.add('visited');
   repo._ring.material.color.set(0x2f9d6a); lightVisitedHouse(repo); addRepoVisit(repo.repo); greetBuilding(repo); }
 
-const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, activeNpc=null;
+const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, nearHub=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -5134,7 +5283,8 @@ const ZONE_SYN = {
   commons: /커먼즈 ?(광장|구역)?|commons/i,
 };
 function zoneResolve(q){ for(const z of ZONES){ const re=ZONE_SYN[z.id]; if(re&&re.test(q)) return z; } return null; }
-function zoneDest(z){ return { label:(LANG==='ko'?z.ko:z.en), _zoneDest:true, _zone:z.id, _pos:new THREE.Vector3(z.cx,0,z.cz) }; }
+function zoneDest(z){ const p=(z._hub&&z._hub.pos)?z._hub.pos:new THREE.Vector3(z.cx,0,z.cz);   // taxi arrives at the district hub (falls back to the centroid)
+  return { label:(LANG==='ko'?z.ko:z.en), _zoneDest:true, _zone:z.id, _pos:p.clone() }; }
 function districtNav(q){ const z=zoneResolve(q); if(!z) return null;
   const name=LANG==='ko'?z.ko:z.en, n=z.repos?z.repos.length:0;
   const msg=LANG==='ko'
@@ -5420,12 +5570,13 @@ function taxiTo(repo){ standUp(); ride={repo, phase:'coming', t:0}; setNav(repo)
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
 function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; openChat();
-  if(repo._zoneDest){                                                 // 🧭 arrived at a repo-district centre (no card, no landmark)
+  if(repo._zoneDest){                                                 // 🧭 arrived at a repo-district hub (no card, no landmark)
     const z=ZONES.find(x=>x.id===repo._zone), name=z?(LANG==='ko'?z.ko:z.en):repo.label;
     const n=z&&z.repos?z.repos.length:0, rs=z&&z.repos?z.repos.slice(0,3).map(r=>r.label).join(', '):'';
+    const hub=z&&z._hub;
     addMsg('bot',(LANG==='ko'
-      ? `${z?z.icon:'🧭'} <b>${name}</b>에 도착했어요! 이 구역엔 레포 ${n}개가 모여 있어요${rs?` — 예: ${rs}`:''}. 마음껏 둘러보세요 🧭`
-      : `${z?z.icon:'🧭'} We've arrived at the <b>${name}</b>! ${n} repos gather here${rs?` — e.g. ${rs}`:''}. Explore freely 🧭`),{noHist:true});
+      ? `${z?z.icon:'🧭'} <b>${name}</b> 허브에 도착했어요! 이 구역엔 레포 ${n}개가 모여 있어요${rs?` — 예: ${rs}`:''}.${hub?' 🪧 안내판에서 <b>구역 안내판</b>을 열 수 있어요.':''} 마음껏 둘러보세요 🧭`
+      : `${z?z.icon:'🧭'} We've arrived at the <b>${name}</b> hub! ${n} repos gather here${rs?` — e.g. ${rs}`:''}.${hub?' 🪧 Open the <b>district board</b> at the signpost.':''} Explore freely 🧭`),{noHist:true});
     return;
   }
   if(repo._landmark){
@@ -5471,7 +5622,9 @@ function drawMinimap(){
   if(typeof CAROUSEL!=='undefined'&&CAROUSEL) LM.push([CAROUSEL._pos.x,CAROUSEL._pos.z,'🎠']);
   ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.font='11px system-ui,sans-serif'; for(const l of LM){ const p=_mapP(l[0],l[1]); ctx.fillText(l[2],p[0],p[1]); }
-  ctx.font='13px system-ui,sans-serif'; for(const z of ZONES){ const p=_mapP(z.cx,z.cz); ctx.globalAlpha=0.92; ctx.fillText(z.icon,p[0],p[1]); ctx.globalAlpha=1; }
+  ctx.font='13px system-ui,sans-serif'; for(const z of ZONES){ const hp=(z._hub&&z._hub.pos)?z._hub.pos:{x:z.cx,z:z.cz}; const p=_mapP(hp.x,hp.z);   // district icon sits on its hub (taxi/board destination)
+    ctx.beginPath(); ctx.arc(p[0],p[1],5.6,0,TWO); ctx.strokeStyle=_mhex(z.tone); ctx.lineWidth=1.5; ctx.globalAlpha=0.8; ctx.stroke(); ctx.globalAlpha=1;
+    ctx.globalAlpha=0.94; ctx.fillText(z.icon,p[0],p[1]); ctx.globalAlpha=1; }
   const pp=_mapP(player.position.x,player.position.z), yaw=model.rotation.y;                      // player heading triangle
   const fx=Math.sin(yaw), fz=Math.cos(yaw), rx=Math.cos(yaw), rz=-Math.sin(yaw);
   ctx.beginPath(); ctx.moveTo(pp[0]+fx*8.5,pp[1]+fz*8.5); ctx.lineTo(pp[0]-fx*5+rx*5,pp[1]-fz*5+rz*5); ctx.lineTo(pp[0]-fx*5-rx*5,pp[1]-fz*5-rz*5); ctx.closePath();
@@ -5676,6 +5829,7 @@ function animate(){
   nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
   nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
   nearCarousel = (CAROUSEL && !carousel && player.position.distanceTo(CAROUSEL.board) < 6.0) ? CAROUSEL : null;
+  nearHub=null; if(!nearest){ let hd=HUB_NEAR; for(const h of ZONE_HUBS){ const d=player.position.distanceTo(h.pos); if(d<hd){ hd=d; nearHub=h; } } }   // hubs never override a building's own door (checked only when no house is in reach)
   // 🏠 first walk-up to a house → a gentle sparkle + acknowledge bob (landmarks get their own reactions below; skip while a taxi drives you past many houses)
   if(nearest && !nearest._isLibrary && !ride) greetBuilding(nearest);
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes) + a localized sparkle on first stamp
@@ -5698,6 +5852,8 @@ function animate(){
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
+  else if(nearHub&&!modalOpen){ const z=zoneCatById(nearHub.id); const nm=z?(LANG==='ko'?z.ko:z.en):''; const ic=z?z.icon:'🪧';
+      promptEl.innerHTML=(LANG==='ko'?`<b>${ic} ${nm}</b> · <span class="key">Enter</span>/버튼으로 <b>구역 안내판</b> 열기 🪧`:`<b>${ic} ${nm}</b> · <span class="key">Enter</span>/button for the <b>district board</b> 🪧`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪧'; }
   else if(nearestSeat&&!modalOpen){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> 또는 버튼으로 <b>앉기</b> 🪑`:`<span class="key">Enter</span> or button to <b>sit</b> 🪑`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪑'; }
   else { promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪'; }
 
@@ -6035,6 +6191,19 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     return z?gotoZone(z.id):false; };
   window.__map=(open)=>{ if(open===false) closeMap(); else if(open===true) openMap(); else toggleMap();
     return { open:mapOpen, zones:ZONES.length, legend:document.querySelectorAll('#mapLegend .mz').length }; };
+  window.__zoneHubs=()=>ZONE_HUBS.map(h=>{
+    const z=zoneCatById(h.id);
+    let gap=Infinity, near=null;
+    for(const b of buildings){ if(b._isLibrary) continue; const d=Math.hypot(b._x-h.x,b._z-h.z)-(b._cw||3); if(d<gap){ gap=d; near=b.repo; } }
+    const dest=zoneDest(z||{id:h.id,cx:h.x,cz:h.z,ko:'',en:''});
+    let meshes=0; if(h.group) h.group.traverse(o=>{ if(o.isMesh||o.isSprite) meshes++; });
+    return { id:h.id, name:z?(LANG==='ko'?z.ko:z.en):h.id, pos:[+h.x.toFixed(1),+h.z.toFixed(1)],
+      finite:Number.isFinite(h.x)&&Number.isFinite(h.z), buildingGap:+gap.toFixed(2), nearestBuilding:near, meshes,
+      destMatchesHub:Math.hypot(dest._pos.x-h.x,dest._pos.z-h.z)<0.01 };
+  });
+  window.__zoneBoard=(id)=>{ const q=String(id==null?'':id).trim(); let z=ZONES.find(x=>x.id===q); if(!z) z=zoneResolve(q);
+    if(!z) return false; openZoneBoard(z.id); return { open:zoneBoard.classList.contains('show'), zid:zoneBoard._zid,
+      reps:[...zoneBoard.querySelectorAll('a.zbRepo')].map(a=>a.dataset.repo), acts:[...zoneBoard.querySelectorAll('.zbBtn')].map(b=>b.id) }; };
   window.__perf=()=>{ const info=renderer.info; return {
     calls:info.render.calls, triangles:info.render.triangles,
     geometries:info.memory.geometries, textures:info.memory.textures, programs:(info.programs||[]).length,
