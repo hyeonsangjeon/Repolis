@@ -8,6 +8,16 @@ main = "src/grounded.js"
 compatibility_date = "2025-04-01"
 workers_dev = true
 
+# ── Resident NPC live on/off (owner dashboard toggle) ─────────────────────────
+# Shared KV with the private repolis-metrics dashboard. The dashboard writes the
+# on/off flags here; this Worker reads them per request ONLY when NPC_LIVE_TOGGLE
+# is "true" (the master kill-switch). With the toggle off, KV is ignored and the
+# residents stay strictly env-gated — the safe, deploy-only default. Same namespace
+# id must be bound in repolis-metrics/wrangler.toml.
+[[kv_namespaces]]
+binding = "NPC_FLAGS"
+id = "0cad99a719a84c919839aa9e0616db53"
+
 # Non-secret config. The Search key is a SECRET — never put it here:
 #   wrangler secret put SEARCH_API_KEY
 [vars]

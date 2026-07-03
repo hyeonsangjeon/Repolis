@@ -759,9 +759,9 @@ function npcMetric(env, name, meta) {
     fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ev: name, t: Date.now(), ...npcRedact(meta) }) }).catch(() => {});
   } catch { /* metrics never break a turn */ }
 }
-// Provider adapter. Hard ceiling: with NPC_AI_ENABLED !== "true" this returns null WITHOUT calling any model.
-async function npcModelCall(env, role, sys, userMsg) {
-  if (env.NPC_AI_ENABLED !== "true") return null;
+// Provider adapter. Hard ceiling: with the effective aiEnabled false this returns null WITHOUT calling any model.
+async function npcModelCall(env, role, sys, userMsg, aiEnabled) {
+  if (!aiEnabled) return null;
   if (!env.AAD_CLIENT_ID || !env.AAD_CLIENT_SECRET || !env.AAD_TENANT || !env.AOAI_ENDPOINT) return null;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), Number(env.NPC_TIMEOUT_MS || 12000));
@@ -783,17 +783,49 @@ async function npcModelCall(env, role, sys, userMsg) {
     return txt && txt.trim() ? { text: txt.trim(), usage: j.usage || null } : null;
   } catch { clearTimeout(timer); return null; }
 }
+// --- Live flag resolver. NPC_LIVE_TOGGLE is the master kill-switch. When it is NOT "true",
+//     behaviour is exactly the env-gated default (KV ignored) — the safe, deploy-only posture.
+//     When "true", the shared NPC_FLAGS KV overrides per key in near real time (owner dashboard
+//     writes it), with the matching env var as the per-key fallback. AI can never be enabled unless
+//     this resolver returns aiEnabled=true, so the hard model-call ceiling is preserved. ---
+async function npcResolveFlags(env) {
+  const envAi = env.NPC_AI_ENABLED === "true";
+  const envAmb = env.NPC_AMBIENT_ENABLED === "true";
+  const envPc = env.NPC_PLAYER_CHAT_ENABLED === "true";
+  const liveReady = env.NPC_LIVE_TOGGLE === "true" && env.NPC_FLAGS && typeof env.NPC_FLAGS.get === "function";
+  if (!liveReady) {
+    return { aiEnabled: envAi, ambientEnabled: envAi && envAmb, playerChatEnabled: envAi && envPc, source: "env", liveToggle: false };
+  }
+  let kAi = null, kAmb = null, kPc = null;
+  try {
+    [kAi, kAmb, kPc] = await Promise.all([
+      env.NPC_FLAGS.get("ai_enabled"),
+      env.NPC_FLAGS.get("ambient_enabled"),
+      env.NPC_FLAGS.get("player_chat_enabled"),
+    ]);
+  } catch { /* KV read failure → fall back to env per key below */ }
+  const pick = (kv, envVal) => (kv === "true" ? true : kv === "false" ? false : envVal);
+  const ai = pick(kAi, envAi);
+  return {
+    aiEnabled: ai,
+    ambientEnabled: ai && pick(kAmb, envAmb),
+    playerChatEnabled: ai && pick(kPc, envPc),
+    source: "kv", liveToggle: true,
+  };
+}
 async function npcHandler(body, request, env) {
   const action = body.npc_action;
   const lang = String(body.lang || "ko").toLowerCase().startsWith("en") ? "en" : "ko";
-  const aiEnabled = env.NPC_AI_ENABLED === "true";
-  const ambientOn = aiEnabled && env.NPC_AMBIENT_ENABLED === "true";
-  const playerOn = aiEnabled && env.NPC_PLAYER_CHAT_ENABLED === "true";
+  const flags = await npcResolveFlags(env);
+  const aiEnabled = flags.aiEnabled;
+  const ambientOn = flags.ambientEnabled;
+  const playerOn = flags.playerChatEnabled;
 
   if (action === "npcConfig") {
     return json({ ok: true, config: {
-      aiEnabled, ambientEnabled: env.NPC_AMBIENT_ENABLED === "true", playerChatEnabled: env.NPC_PLAYER_CHAT_ENABLED === "true",
+      aiEnabled, ambientEnabled: ambientOn, playerChatEnabled: playerOn,
       maxTurns: Number(env.NPC_MAX_TURNS || 6), hardMaxTurns: Number(env.NPC_HARD_MAX_TURNS || 10),
+      source: flags.source, liveToggle: flags.liveToggle,
     }, budget: npcBudgetState(env) }, 200, env);
   }
   if (action === "npcBudget") return json({ ok: true, budget: npcBudgetState(env) }, 200, env);
@@ -807,7 +839,7 @@ async function npcHandler(body, request, env) {
     if (budget.blocked) { npcMetric(env, "npc_budget_blocked", { where: role }); return json({ ok: false, fallback: true, reason: "npc_budget_exhausted", budget }, 200, env); }
     const sys = role === "ambient" ? npcAmbientPrompt(body.speaker, body.listener, body.topic, lang) : npcPlayerPrompt(body.speaker, lang);
     const userMsg = role === "ambient" ? npcAmbientUser(body, lang) : String(body.question || "").slice(0, 300);
-    const out = await npcModelCall(env, role, sys, userMsg);
+    const out = await npcModelCall(env, role, sys, userMsg, aiEnabled);
     if (!out) { npcMetric(env, "npc_fallback_used", { where: role, reason: "model_unavailable" }); return json({ ok: true, fallback: true, reason: "model_unavailable", budget }, 200, env); }
     const cost = npcCostUsd(env, out.usage);
     npcChargeTurn(env, cost);
