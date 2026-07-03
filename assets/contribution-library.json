@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T18:57:27.740Z",
+  "generatedAt": "2026-07-03T19:59:23.791Z",
   "source": {
     "ko": "https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions/blob/main/README.md",
     "en": "https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions/blob/main/README-EN.md"
@@ -90,6 +90,11 @@
             "title": "감성문장과 뉴스 학습모델을 기반한 주가 예측의 가능성 연구 후기 (Feat. BERT model)",
             "meta": "SK AX 사내 기술 컨퍼런스, SK holdings C&C, 2020.",
             "url": "https://youtu.be/kSZOsFX_KHI?si=6F5TqHFOfquvw4OC"
+          },
+          {
+            "title": "한국어 ASR 벤치마크 다시 보기: 3,922문장과 3개 콜센터 시나리오로 다시 본 한국어 STT 벤치마크",
+            "meta": "2023 공개 실험 재분석 및 작업 회고, 2023.",
+            "url": "https://hyeonsangjeon.github.io/job-transcribe/"
           }
         ]
       },
@@ -169,8 +174,13 @@
         "title": "Recent Microsoft Public Speaking Engagements",
         "items": [
           {
+            "title": "Fabric IQ Knowledge Source의 AI Search 백본 구조와 적용 패턴",
+            "meta": "내부 컨퍼런스 발표, Microsoft Tech Summit Korea, 2026년 6월 29일, Sr. Solution Engineer, Global Black Belt AI Apps, Microsoft.",
+            "url": "https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions/blob/main/assets/speaking/2026-06-29-tech-summit-korea-fabric-iq-ai-search.png"
+          },
+          {
             "title": "모델은 쏟아진다 — 뭘 고르고, 얼마나 되는가: Foundry 벤치마크, 모델 라우팅, BYOM",
-            "meta": "Microsoft Event, 2026년 6월 26일.",
+            "meta": "퍼블릭 컨퍼런스 발표, Microsoft Event, 2026년 6월 26일 14:00-14:30, Sr. Solution Engineer, Global Black Belt AI Apps, Microsoft.",
             "url": "https://msevents.microsoft.com/event?id=3011252995&ocid=AID2445079_FACEBOOK_oo_spl100010613930089"
           },
           {
@@ -281,9 +291,9 @@
             "url": "https://github.com/hyeonsangjeon/when-reasoning-pays-off"
           },
           {
-            "title": "Azure AI Search Foundry IQ Live Knowledge Sources: MCP Server와 Fabric Ontology Knowledge Source 기반 실시간 근거 추적 샘플",
+            "title": "Azure AI Search Foundry IQ Live Knowledge Sources: Microsoft 공식 샘플 자산 - MCP Server와 Fabric Ontology Knowledge Source 기반 실시간 근거 추적 샘플",
             "meta": "",
-            "url": "https://github.com/hyeonsangjeon/azure-ai-search-foundry-iq-live-knowledge-sources"
+            "url": "https://github.com/microsoft/azure-ai-search-foundry-iq-live-knowledge-sources"
           },
           {
             "title": "Foundry IQ Demo Suite: Azure AI Search Knowledge Bases, Knowledge Sources, Semantic JOIN, Fabric IQ, SharePoint, MCP grounding을 보여주는 Knowledge Retrieval Studio",
@@ -477,6 +487,11 @@
             "title": "A Study on the Possibility of Stock Price Prediction Based on Sentiment Analysis and News Classification Models (Feat. BERT Model),",
             "meta": "SK AX Internal Technology Conference, SK Holdings C&C, 2020.",
             "url": "https://youtu.be/kSZOsFX_KHI?si=6F5TqHFOfquvw4OC"
+          },
+          {
+            "title": "Revisiting Korean ASR Benchmarks: 3,922 Sentences and Three Call-Center Scenarios",
+            "meta": "2023 public experiment revisit and work retrospective, 2023.",
+            "url": "https://hyeonsangjeon.github.io/job-transcribe/"
           }
         ]
       },
@@ -551,8 +566,13 @@
         "title": "Recent Microsoft Public Speaking Engagements",
         "items": [
           {
+            "title": "AI Search Backbone Architecture and Implementation Patterns for Fabric IQ Knowledge Sources",
+            "meta": "Internal conference session, Microsoft Tech Summit Korea, June 29, 2026, Sr. Solution Engineer, Global Black Belt AI Apps, Microsoft.",
+            "url": "https://github.com/hyeonsangjeon/Hyeonsang-AI-Contributions/blob/main/assets/speaking/2026-06-29-tech-summit-korea-fabric-iq-ai-search.png"
+          },
+          {
             "title": "Models Are Flooding In - Which Ones Should We Choose, and How Much Do They Cost?: Foundry Benchmark, Model Routing, and BYOM",
-            "meta": "Microsoft Event, June 26, 2026.",
+            "meta": "Public conference session, Microsoft Event, June 26, 2026, 14:00-14:30, Sr. Solution Engineer, Global Black Belt AI Apps, Microsoft.",
             "url": "https://msevents.microsoft.com/event?id=3011252995&ocid=AID2445079_FACEBOOK_oo_spl100010613930089"
           },
           {
@@ -663,9 +683,9 @@
             "url": "https://github.com/hyeonsangjeon/when-reasoning-pays-off"
           },
           {
-            "title": "Azure AI Search Foundry IQ Live Knowledge Sources: live grounding sample for MCP Server and Fabric Ontology Knowledge Sources with traceable evidence",
+            "title": "Azure AI Search Foundry IQ Live Knowledge Sources: official Microsoft sample asset for MCP Server and Fabric Ontology Knowledge Sources with traceable evidence",
             "meta": "",
-            "url": "https://github.com/hyeonsangjeon/azure-ai-search-foundry-iq-live-knowledge-sources"
+            "url": "https://github.com/microsoft/azure-ai-search-foundry-iq-live-knowledge-sources"
           },
           {
             "title": "Foundry IQ Demo Suite: Knowledge Retrieval Studio for Azure AI Search Knowledge Bases, Knowledge Sources, Semantic JOIN, Fabric IQ, SharePoint, and MCP grounding",
