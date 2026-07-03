@@ -4288,6 +4288,241 @@ const auraPulse=[];
   });
 })();
 
+/* ====================== 🧑‍🌾 RESIDENT NPC SOCIAL LAYER v1 — turn-by-turn, budget-capped townspeople ======================
+   Residents are the town's living folk — distinct from the plaza scholars (POLARIS/VEGA/RIGEL) and Gitber the taxi.
+   They live in the repo districts, trade short turn-by-turn lines (town life), and chat with the visitor.
+   Default = deterministic SCRIPTED (zero network, zero cost). An optional Cloudflare Worker path (npc* actions)
+   lights up real model turns ONLY when the operator enables it AND the daily budget allows. Everything degrades to
+   scripted on: AI off · budget exhausted · worker error · hidden tab. No secret/model/endpoint ever ships in this file. */
+const MAX_RESIDENTS=10;
+const NPC_CFG={ modeEnabled:true, visualEnabled:true,
+  aiEnabled:false, ambientAiEnabled:false, playerChatAiEnabled:false,   // AI features: off until the worker's env says otherwise
+  scriptedAmbient:true, scriptedPlayerChat:true,                        // the free fallback — always available, no cost
+  minTurns:4, maxTurns:6, hardMaxTurns:10, degradeMaxTurns:4,
+  gapMin:5, gapMax:10, pairCooldownMin:20, pairCooldownMax:60, guestCooldownSec:8,
+  activeMin:3, activeMax:10, maxConcurrent:1, worker:null };
+if(IS_MOBILE) NPC_CFG.maxTurns=5;
+if(LOW_END) NPC_CFG.scriptedAmbient=false;                              // low-end phones: residents stay, chatter eases off
+const RESIDENTS=[
+  { id:'sol', zone:'ai', color:0x9ab8ff, accent:0xbcd0ff, tone:'curious·cost-aware',
+    topics:['model','budget','experiment','ai','rag','agent'],
+    ko:{name:'솔',role:'파운드리 견습생'}, en:{name:'Sol',role:'Foundry apprentice'},
+    greet:{ko:'별빛 관측소에 오신 걸 환영해요.',en:'Welcome to the observatory yard.'},
+    blurb:{ko:'저는 솔, AI 연구구역의 파운드리 견습생이에요. 예산을 지키며 작은 실험을 좋아하죠.',en:'I\u2019m Sol, the Foundry apprentice of the AI district \u2014 I like small, budget-minded experiments.'},
+    amb:{ko:['오늘 실험은 예산 안에서 잘 돌아갔어요.','작은 모델로도 충분할 때가 많더라고요.','관측소 불빛 아래서 결과를 정리 중이에요.','실패한 실험도 기록해 두면 배움이 돼요.','이 구역은 밤에 별이 잘 보여요.'],
+        en:['Today\u2019s run stayed nicely under budget.','A smaller model is often plenty.','Sorting results under the observatory lights.','Even failed runs teach us something.','The stars read clearest over this district.']} },
+  { id:'jun', zone:'infra', color:0x4fbfae, accent:0x9be8dc, tone:'practical·terse',
+    topics:['build','ci','deploy','docker','server','automation'],
+    ko:{name:'준',role:'항구 정비공'}, en:{name:'Jun',role:'build mechanic'},
+    greet:{ko:'항구에 잘 왔어요. 손 조심하고요.',en:'Welcome to the harbor. Mind your step.'},
+    blurb:{ko:'저는 준, 홈랩·인프라 항구의 정비공이에요. 빌드와 배포를 굴러가게 하죠.',en:'I\u2019m Jun, the mechanic of the Homelab Harbor \u2014 I keep builds and deploys running.'},
+    amb:{ko:['부두 크레인 점검 끝. 이상 무.','빌드가 초록불이면 하루가 편하죠.','컨테이너는 항상 라벨을 붙여요.','케이블 정리가 일의 절반이에요.','파이프라인은 단순할수록 좋아요.'],
+        en:['Dock crane checked. All clear.','A green build makes the day easy.','Always label your containers.','Half the job is tidy cabling.','The simpler the pipeline, the better.']} },
+  { id:'nari', zone:'web', color:0xf6b45c, accent:0xffd79a, tone:'gentle·observant',
+    topics:['web','frontend','ui','dashboard','app'],
+    ko:{name:'나리',role:'거리 정원사'}, en:{name:'Nari',role:'repo gardener'},
+    greet:{ko:'프론트 거리에 온 걸 환영해요.',en:'Welcome to the frontend street.'},
+    blurb:{ko:'저는 나리, 웹·프론트 거리의 정원사예요. 레포의 앞마당을 가꿔요.',en:'I\u2019m Nari, the gardener of the Web street \u2014 I tend each repo\u2019s front yard.'},
+    amb:{ko:['간판에 먼지가 앉았네, 닦아둘게요.','거리의 화단이 오늘 참 곱네요.','작은 앱도 정성껏 가꾸면 자라요.','창가 데모가 지나가는 이의 눈을 끌죠.','골목마다 색이 달라 좋아요.'],
+        en:['A little dust on the signs \u2014 I\u2019ll wipe it.','The street planters look lovely today.','Even a small app grows if you tend it.','A window demo catches every passer-by.','Each alley has its own colour.']} },
+  { id:'tae', zone:'data', color:0xb79bf0, accent:0xd8c7ff, tone:'dry·observant',
+    topics:['data','test','pipeline','analytics','csv'],
+    ko:{name:'태',role:'조용한 테스터'}, en:{name:'Tae',role:'quiet tester'},
+    greet:{ko:'데이터 공방이에요. 천천히 둘러봐요.',en:'The data workshop. Look around slowly.'},
+    blurb:{ko:'저는 태, 데이터 공방의 조용한 테스터예요. 엣지 케이스를 살펴요.',en:'I\u2019m Tae, the quiet tester of the Data workshop \u2014 I hunt edge cases.'},
+    amb:{ko:['엣지 케이스 하나 또 찾았어요.','작업대 위 숫자는 거짓말을 안 해요.','파이프 새는 곳부터 막아야죠.','차트가 이상하면 데이터부터 의심해요.','조용한 게 대개 잘 돌아가는 거예요.'],
+        en:['Found another edge case.','Numbers on the bench don\u2019t lie.','Patch the leaking pipe first.','Odd chart? Suspect the data first.','Quiet usually means it\u2019s working.']} },
+  { id:'rin', zone:'library', color:0x62c07a, accent:0xa8e6b6, tone:'reflective·orderly',
+    topics:['docs','readme','tutorial','knowledge','history'],
+    ko:{name:'린',role:'기록 담당'}, en:{name:'Rin',role:'archive curator'},
+    greet:{ko:'문서·학습관에 오신 걸 환영해요.',en:'Welcome to the library quarter.'},
+    blurb:{ko:'저는 린, 문서·학습관의 기록 담당이에요. README와 역사를 정리해요.',en:'I\u2019m Rin, the curator of the Library \u2014 I keep READMEs and history in order.'},
+    amb:{ko:['오래된 README도 이야기를 품고 있어요.','서가는 순서가 생명이죠.','기록은 미래의 나에게 보내는 편지예요.','열람대는 늘 정갈하게.','문서 하나가 길을 밝히기도 해요.'],
+        en:['Even old READMEs hold a story.','Order is everything on these shelves.','Notes are letters to your future self.','Keep the reading desk tidy.','One doc can light the whole path.']} },
+  { id:'mira', zone:'ruins', color:0xc79a86, accent:0xe6c7b6, tone:'visual·calm',
+    topics:['mood','light','weather','time','world'],
+    ko:{name:'미라',role:'분위기지기'}, en:{name:'Mira',role:'atmosphere keeper'},
+    greet:{ko:'실험·폐허 지구예요. 천천히 머물러요.',en:'The old experiment ruins. Stay a while.'},
+    blurb:{ko:'저는 미라, 마을의 분위기지기예요. 빛과 시간, 폐허의 결을 살펴요.',en:'I\u2019m Mira, the atmosphere keeper \u2014 I watch the light, the hour, and the ruins\u2019 mood.'},
+    amb:{ko:['해질녘엔 폐허도 부드러워 보여요.','빛이 바뀌면 마을의 표정도 바뀌죠.','낡은 실험지에도 온기가 남아 있어요.','오늘 하늘색은 조금 차분하네요.','고요함도 하나의 풍경이에요.'],
+        en:['At dusk even ruins look soft.','When the light shifts, so does the town\u2019s mood.','Old test-grounds still hold some warmth.','Today\u2019s sky runs a little calm.','Stillness is a landscape too.']} },
+  { id:'kai', zone:'plaza', color:0xf0c069, accent:0xffe0a0, tone:'concise·welcoming',
+    topics:['guide','district','path','station','plaza'],
+    ko:{name:'카이',role:'광장 길잡이'}, en:{name:'Kai',role:'crossing guide'},
+    greet:{ko:'광장에 온 걸 환영해요. 어디로 가 볼까요?',en:'Welcome to the plaza. Where to?'},
+    blurb:{ko:'저는 카이, 광장의 길잡이예요. 어느 구역이든 안내해요.',en:'I\u2019m Kai, the plaza\u2019s crossing guide \u2014 I\u2019ll point you to any district.'},
+    amb:{ko:['광장에서 어느 구역이든 안내해 드려요.','길을 잃으면 저를 찾아요.','오늘은 AI 구역이 붐비네요.','역과 정류장은 바로 저쪽이에요.','천천히, 마을은 넓어요.'],
+        en:['From the plaza I can point you anywhere.','Lost? Just find me.','The AI district is busy today.','The station and stand are right over there.','Take your time \u2014 the town is wide.']} }
+];
+window.RESIDENTS=RESIDENTS;
+const _ZWHY={ ai:{ko:'LLM·RAG·에이전트·모델',en:'LLMs, RAG, agents and models'}, infra:{ko:'NAS·도커·자동화·서버',en:'NAS, Docker, automation and servers'},
+  web:{ko:'웹·프론트엔드·대시보드',en:'web, frontend and dashboards'}, data:{ko:'수집·분석·파이프라인',en:'scraping, analytics and pipelines'},
+  library:{ko:'문서·튜토리얼·지식',en:'docs, tutorials and knowledge'}, ruins:{ko:'오래되거나 실험적인',en:'old or experimental'} };
+function _zoneById(id){ for(const z of ZONES){ if(z.id===id) return z; } return null; }
+function _resZone(res){ return res.zone==='plaza'?null:_zoneById(res.zone); }
+function _resReps(res,n){ const z=_resZone(res); return (z&&z.repos)?z.repos.slice(0,n||3):[]; }
+function _hex(c){ return '#'+(c>>>0).toString(16).padStart(6,'0'); }
+
+// ---- resident visuals (shared helpers; ~10 meshes each, faces glow at night like the scholars) ----
+function buildResident(res){ const g=new THREE.Group(); const SK=0xf0c79a, HR=0x2b2118;
+  const body=capsule(0.4,0.44,res.color); body.position.y=1.26; body.scale.z=0.82; outline(body,0.04); g.add(body);
+  const hd=ball(0.46,SK,16); hd.position.y=2.0; hd.scale.set(1,0.98,0.96); outline(hd,0.04); g.add(hd);
+  const hair=ball(0.5,HR,14); hair.position.set(0,2.22,-0.02); hair.scale.set(1.04,0.6,1.06); outline(hair,0.03); g.add(hair);
+  [[-0.18],[0.18]].forEach(([ex])=>{ const e=new THREE.Mesh(new THREE.SphereGeometry(0.08,10,8), basic(0x2a2320)); e.position.set(ex,2.0,0.42); e.scale.z=0.5; g.add(e); });
+  { const m=new THREE.Mesh(new THREE.TorusGeometry(0.08,0.02,8,14,Math.PI), basic(0x8a4f44)); m.position.set(0,1.82,0.42); m.rotation.z=Math.PI; g.add(m); }
+  const al=capsule(0.12,0.36,res.color); al.position.set(-0.46,1.32,0); outline(al,0.03); g.add(al);
+  const ar=al.clone(); ar.position.x=0.46; g.add(ar);
+  const ll=capsule(0.15,0.34,0x33384a); ll.position.set(-0.17,0.46,0); outline(ll,0.03); g.add(ll);
+  const lr=ll.clone(); lr.position.x=0.17; g.add(lr);
+  { const tok=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:res.accent||res.color,transparent:true,opacity:0.9,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); tok.scale.set(0.4,0.4,1); tok.position.set(0,2.52,0.12); g.add(tok); }
+  g._head=hd; g._armL=al; g._armR=ar; npcFaces.add(hd.material); return g; }
+function residentTag(res){ const W=256,H=100,c=document.createElement('canvas'); c.width=W;c.height=H; const x=c.getContext('2d'); const hex=_hex(res.color);
+  function rr(X,Y,w,h,r){ x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+w,Y,X+w,Y+h,r); x.arcTo(X+w,Y+h,X,Y+h,r); x.arcTo(X,Y+h,X,Y,r); x.arcTo(X,Y,X+w,Y,r); x.closePath(); }
+  rr(10,14,W-20,H-40,26); x.fillStyle='rgba(10,12,24,0.55)'; x.fill();
+  x.lineWidth=3; x.strokeStyle=hex; x.globalAlpha=0.85; rr(10,14,W-20,H-40,26); x.stroke(); x.globalAlpha=1;
+  x.textAlign='center'; x.textBaseline='middle'; const L=res[LANG]||res.ko;
+  x.fillStyle='#fff'; x.font='700 34px system-ui,Arial'; x.fillText(L.name, W/2, 40);
+  x.fillStyle=hex; x.font='600 19px system-ui,Arial'; x.fillText('\u00b7 '+L.role+' \u00b7', W/2, 74);
+  const tx=new THREE.CanvasTexture(c); tx.anisotropy=4;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false,fog:false})); s.scale.set(2.9,1.13,1); s.position.y=3.06; s.renderOrder=6; s._res=res; return s; }
+function makeResBubble(){ const W=384,H=176, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const c=cv.getContext('2d');
+  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false})); sp.scale.set(6.4,2.93,1); sp.renderOrder=19; let life=0;
+  function wrap(text,maxw){ const words=String(text).split(/\s+/); const lines=[]; let cur='';
+    for(const w of words){ const tryl=cur?cur+' '+w:w; if(c.measureText(tryl).width>maxw && cur){ lines.push(cur); cur=w; if(lines.length>=3) break; } else cur=tryl; }
+    if(cur&&lines.length<3) lines.push(cur);
+    if(lines.length>=3){ let last=lines[2]; while(c.measureText(last+'\u2026').width>maxw && last.length>1) last=last.slice(0,-1); lines[2]=last+'\u2026'; }
+    return lines; }
+  function draw(text,hex){ c.clearRect(0,0,W,H); c.font='600 25px system-ui,sans-serif'; const lines=wrap(text,W-56);
+    const bh=28*lines.length+30, top=(H-26)-bh, r=24;
+    c.beginPath(); c.moveTo(12+r,top); c.arcTo(W-12,top,W-12,top+bh,r); c.arcTo(W-12,top+bh,12,top+bh,r); c.arcTo(12,top+bh,12,top,r); c.arcTo(12,top,W-12,top,r); c.closePath();
+    c.fillStyle='rgba(255,251,242,0.97)'; c.fill(); c.lineWidth=4; c.strokeStyle=hex||'#caa'; c.stroke();
+    c.beginPath(); c.moveTo(W/2-14,top+bh-2); c.lineTo(W/2+14,top+bh-2); c.lineTo(W/2-10,top+bh+20); c.closePath(); c.fillStyle='rgba(255,251,242,0.97)'; c.fill();
+    c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle'; lines.forEach((ln,i)=>{ c.fillText(ln, W/2, top+22+i*28); }); tex.needsUpdate=true; }
+  return { sprite:sp, say(text,hex){ draw(text,hex); life=Math.min(9, 3.4 + String(text).length*0.03); }, clear(){ life=0; },
+    update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0; sp.material.opacity+=(want-sp.material.opacity)*0.14; sp.position.y=3.9+Math.sin(clock.elapsedTime*1.5)*0.05; } }; }
+
+const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
+function _residentSpot(res){
+  if(res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11]]; for(const p of cands){ if(_hubGap(p[0],p[1])>=4.0) return {x:p[0],z:p[1]}; } return {x:-8,z:6}; }
+  const zc=_zoneById(res.zone), hub=zc&&zc._hub; if(!hub) return {x:44,z:44};
+  for(const d of [7,8,6.5,9,10,11]){ for(let k=0;k<12;k++){ const a=k*(Math.PI/6), x=hub.x+Math.cos(a)*d, z=hub.z+Math.sin(a)*d;
+    if(x*x+z*z<400 || Math.hypot(x,z)>210 || _hubGap(x,z)<4.0) continue;
+    let ok=true; for(const rr of RESIDENTS_LIVE){ if(Math.hypot(rr.group.position.x-x, rr.group.position.z-z)<6){ ok=false; break; } } if(!ok) continue;
+    return {x,z}; } }
+  return {x:hub.x+7, z:hub.z}; }
+function placeResident(res){ const g=buildResident(res), sp=_residentSpot(res);
+  g.position.set(sp.x,0,sp.z); g.rotation.y=Math.atan2(-sp.x,-sp.z);
+  const tag=residentTag(res); g.add(tag); const bub=makeResBubble(); bub.sprite.position.set(0,3.9,0); g.add(bub.sprite); scene.add(g);
+  const live={ res, group:g, tag, bub, _baseRot:g.rotation.y, _ph:Math.random()*6.28, _gt:0, lastLine:-1 };
+  live._npc={ resident:true, id:res.id, kind:'resident', res, pos:g.position, reach:RES_REACH }; res._live=live;
+  RESIDENTS_LIVE.push(live); return live; }
+if(NPC_CFG.modeEnabled && NPC_CFG.visualEnabled){ for(const res of RESIDENTS.slice(0,MAX_RESIDENTS)) placeResident(res); }
+window.RESIDENTS_LIVE=RESIDENTS_LIVE;
+function refreshResidentTags(){ for(const L of RESIDENTS_LIVE){ const m=L.tag.material; if(m&&m.map){ m.map.dispose(); } const ns=residentTag(L.res); L.tag.material.map=ns.material.map; L.tag.material.needsUpdate=true; } }
+
+// ---- budget mirror (worker is source of truth when reachable; else a local sim for testing degradation) ----
+const _npcBudget={ enabled:false, source:'local-sim', dayCapUsd:10, spentUsd:0, remainingUsd:10, blocked:false, turnsToday:0, dailyTurnMax:0, aiTurns:0, fallbackTurns:0 };
+function _applyBudget(b){ if(!b||typeof b!=='object') return; ['dayCapUsd','spentUsd','remainingUsd','turnsToday','dailyTurnMax'].forEach(k=>{ if(typeof b[k]==='number') _npcBudget[k]=b[k]; });
+  if(typeof b.blocked==='boolean') _npcBudget.blocked=b.blocked; if(typeof b.enabled==='boolean') _npcBudget.enabled=b.enabled; _npcBudget.source='worker'; }
+function _budgetLow(){ const B=_npcBudget; if(B.blocked) return true; if(B.dailyTurnMax>0 && B.turnsToday>=B.dailyTurnMax*0.85) return true; if(B.dayCapUsd>0 && B.remainingUsd<=B.dayCapUsd*0.15) return true; return false; }
+function _budgetExhausted(){ const B=_npcBudget; if(B.blocked) return true; if(B.dailyTurnMax>0 && B.turnsToday>=B.dailyTurnMax) return true; if(B.dayCapUsd>0 && B.remainingUsd<=0) return true; return false; }
+function _emitMetric(name,meta){ try{ if(typeof track==='function') track(name, meta||{}); }catch(e){} }
+
+// ---- turn-by-turn ambient engine (1 conversation max; scripted default; hidden-tab + budget aware) ----
+let _ambConv=null, _ambNextAt=9, _guestCdUntil=0; const _pairCd=new Map(); const _npcTranscript=[];
+function _resChatActive(){ try{ return !!(activeNpc&&activeNpc.resident&&chatEl&&!chatEl.classList.contains('hidden')); }catch(e){ return false; } }
+function _pairKey(a,b){ return [a.res.id,b.res.id].sort().join('|'); }
+function _cap180(s){ return String(s||'').replace(/\s+/g,' ').trim().slice(0,180); }
+function _pushTranscript(t){ _npcTranscript.push(t); if(_npcTranscript.length>60) _npcTranscript.shift(); }
+function _scriptLine(L){ const bank=(L.res.amb&&(L.res.amb[LANG]||L.res.amb.ko))||['\u2026']; let i=(Math.random()*bank.length)|0; if(bank.length>1 && i===L.lastLine) i=(i+1)%bank.length; L.lastLine=i; return bank[i]; }
+function _ambientAllowed(){ return NPC_CFG.modeEnabled && !document.hidden && !_resChatActive() && RESIDENTS_LIVE.length>=NPC_CFG.activeMin && (NPC_CFG.scriptedAmbient || (NPC_CFG.aiEnabled&&NPC_CFG.ambientAiEnabled)); }
+function _endAmb(reason){ const C=_ambConv; _ambConv=null; if(C){ _pairCd.set(_pairKey(C.a,C.b), clock.elapsedTime + NPC_CFG.pairCooldownMin + Math.random()*(NPC_CFG.pairCooldownMax-NPC_CFG.pairCooldownMin));
+    _emitMetric('npc_ambient_finished',{a:C.a.res.id,b:C.b.res.id,turns:C.turns.length,reason}); } _ambNextAt=clock.elapsedTime + 10 + Math.random()*16; }
+function _startAmb(a,b){ const now=clock.elapsedTime;
+  if(!a){ let best=null,bd=Infinity; const P=RESIDENTS_LIVE;
+    for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){ const A=P[i],B=P[j]; if((_pairCd.get(_pairKey(A,B))||0)>now) continue; const dd=A.group.position.distanceTo(B.group.position)+Math.random()*40; if(dd<bd){ bd=dd; best=[A,B]; } }
+    if(!best) return false; a=best[0]; b=best[1]; }
+  const degrade=_budgetLow(); const max=Math.max(2, Math.min(NPC_CFG.hardMaxTurns, degrade?NPC_CFG.degradeMaxTurns:(NPC_CFG.minTurns+((Math.random()*(NPC_CFG.maxTurns-NPC_CFG.minTurns+1))|0))));
+  _ambConv={ a,b, who:a, other:b, i:0, max, topic:(a.res.topics&&a.res.topics[0])||a.res.zone, nextAt:now+0.6, turns:[], pending:false };
+  _emitMetric('npc_ambient_started',{a:a.res.id,b:b.res.id,max}); return true; }
+function _advanceAmb(){ const C=_ambConv; if(!C||C.pending) return; const now=clock.elapsedTime; const speaker=C.who, listener=C.other;
+  const useAI = NPC_CFG.aiEnabled && NPC_CFG.ambientAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
+  function done(line,ai,fb){ line=_cap180(line); speaker.bub.say(line,_hex(speaker.res.color)); speaker._gt=2.2;
+    const turn={ t:Math.round(clock.elapsedTime), a:C.a.res.id, b:C.b.res.id, who:speaker.res.id, text:line, ai:!!ai, fb:!!fb };
+    C.turns.push(turn); _pushTranscript(turn); if(fb) _npcBudget.fallbackTurns++; if(ai) _npcBudget.aiTurns++;
+    _emitMetric('npc_ambient_turn',{who:speaker.res.id,ai:!!ai,fb:!!fb,len:line.length});
+    C.i++; C.who=listener; C.other=speaker; C.nextAt=now + NPC_CFG.gapMin + Math.random()*(NPC_CFG.gapMax-NPC_CFG.gapMin); if(C.i>=C.max) _endAmb('done'); }
+  if(useAI){ C.pending=true; C.nextAt=now+9.5; _aiAmbientTurn(C,speaker,listener).then(line=>{ C.pending=false; if(line) done(line,true,false); else done(_scriptLine(speaker),false,true); }).catch(()=>{ C.pending=false; done(_scriptLine(speaker),false,true); }); }
+  else done(_scriptLine(speaker),false,false); }
+function _ambientTick(){ const now=clock.elapsedTime;
+  if(document.hidden){ if(_ambConv) _endAmb('hidden'); return; }
+  if(_ambConv){ if(now>=_ambConv.nextAt) _advanceAmb(); return; }
+  if(!_ambientAllowed() || now<_guestCdUntil) return;
+  if(now>=_ambNextAt) _startAmb(); }
+function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.elapsedTime;
+  for(const L of RESIDENTS_LIVE){ const g=L.group; const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz);
+    const tgt = d<14 ? Math.atan2(dx,dz) : L._baseRot + Math.sin(tt*0.4+L._ph)*0.2; g.rotation.y=lerpA(g.rotation.y,tgt,0.05);
+    if(g._head) g._head.position.y = 2.0 + Math.sin(tt*1.7+L._ph)*0.03; L.bub.update(dt);
+    if(g._armL){ if(L._gt>0){ L._gt-=dt; g._armL.rotation.z=1.0-Math.sin(tt*7)*0.3; } else g._armL.rotation.z+=(0-g._armL.rotation.z)*0.1; } }
+  _ambientTick(); }
+
+// ---- optional worker turns (npcAmbientTurn / npcPlayerChat) — any failure returns null → scripted fallback ----
+async function _npcFetch(payload){ const url=NPC_CFG.worker; if(!url) return null;
+  const ctrl=new AbortController(), to=setTimeout(()=>ctrl.abort(),9000);
+  try{ const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal}); clearTimeout(to);
+    if(!res.ok) return null; const data=await res.json(); if(data&&data.budget) _applyBudget(data.budget); return data; }
+  catch(e){ clearTimeout(to); return null; } }
+async function _aiAmbientTurn(C,speaker,listener){ const data=await _npcFetch({ npc_action:'npcAmbientTurn', speaker:speaker.res.id, listener:listener.res.id, zone:speaker.res.zone, topic:C.topic, lang:LANG, last:C.turns.slice(-4).map(t=>({who:t.who,text:t.text})) });
+  if(!data){ _emitMetric('npc_fallback_used',{where:'ambient',reason:'fetch_fail'}); return null; }
+  if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{where:'ambient'}); } _emitMetric('npc_fallback_used',{where:'ambient',reason:data.reason||'no_line'}); return null; }
+  _emitMetric('npc_budget_spend',{where:'ambient',spent:_npcBudget.spentUsd}); return String(data.line); }
+async function _aiPlayerChat(res,q){ const data=await _npcFetch({ npc_action:'npcPlayerChat', speaker:res.id, zone:res.zone, question:q, lang:LANG });
+  if(!data){ _emitMetric('npc_fallback_used',{where:'player',reason:'fetch_fail'}); return null; }
+  if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{where:'player'}); } _emitMetric('npc_fallback_used',{where:'player',reason:data.reason||'no_line'}); return null; }
+  _emitMetric('npc_budget_spend',{where:'player',spent:_npcBudget.spentUsd}); return String(data.line); }
+
+// ---- deterministic scripted player-chat reply (grounded in the resident's district/repos; good-topics only) ----
+function _zoneNames(n){ return ZONES.slice(0,n||3).map(z=>LANG==='ko'?z.ko:z.en).join(', '); }
+function residentTitle(res){ const L=res[LANG]||res.ko; return esc(L.name)+' \u00b7 '+esc(L.role); }
+function residentPh(res){ const L=res[LANG]||res.ko; return LANG==='ko'?`${L.name}에게 말 걸기\u2026`:`Say something to ${L.name}\u2026`; }
+function residentGreet(res){ return esc((res.greet&&(res.greet[LANG]||res.greet.ko))||''); }
+function residentPromptHtml(L){ const res=L.res, nm=res[LANG]||res.ko, z=_zoneById(res.zone), ic=z?z.icon:'\uD83D\uDE42';
+  return (LANG==='ko'?`<b>${ic} ${esc(nm.name)}</b> \u00b7 ${esc(nm.role)} \u00b7 <span class="key">Enter</span>/\ud074\ub9ad\uc73c\ub85c <b>\ub9d0 \uac78\uae30</b> \uD83D\uDCAC`
+                     :`<b>${ic} ${esc(nm.name)}</b> \u00b7 ${esc(nm.role)} \u00b7 <span class="key">Enter</span>/click to <b>talk</b> \uD83D\uDCAC`); }
+function residentReply(res,q){ const ql=String(q||'').toLowerCase().trim(), ko=LANG==='ko', z=_resZone(res);
+  const zn = z?(ko?z.ko:z.en):(ko?'마을 전체':'the whole town'); const L=res[LANG]||res.ko, reps=_resReps(res,3);
+  const bye=/(잘\s*가|안녕히|또\s*(봐|만나|와)|bye|see\s*you|goodbye|cya|later|수고|들어가)/;
+  const who=/(누구|누구세요|이름|정체|who\s*are\s*you|your\s*name|introduce)/;
+  const why=/(왜|이유|어째서|why|기준|어떻게\s*(정해|분류|나눠))/;
+  const repoRe=/(레포|repo|저장소|프로젝트|project|추천|보여|show|list|목록|뭐\s*있|어떤\s*게|볼\s*만)/;
+  const hereRe=/(여기|이\s*구역|이\s*동네|구역|동네|district|zone|어디|무슨\s*곳|뭐\s*하)/;
+  if(bye.test(ql)) return { html: esc(ko?`살펴 가요. ${zn}은 언제든 다시 들러요. \uD83D\uDC4B`:`Take care \u2014 ${zn} is always here. \uD83D\uDC4B`) };
+  if(who.test(ql)) return { html: esc(res.blurb?(res.blurb[LANG]||res.blurb.ko):(ko?`저는 ${L.name}, ${zn}의 ${L.role}예요.`:`I\u2019m ${L.name}, the ${L.role} of ${zn}.`)) };
+  if(!z){ // kai / plaza — a town-level guide, no single district
+    if(repoRe.test(ql)||hereRe.test(ql)||why.test(ql)) return { html: esc(ko?`마을엔 ${_zoneNames(3)} 같은 구역이 있어요. 지도(\uD83D\uDDFA\uFE0F)를 열거나 어디로 갈지 말해줘요.`:`The town has districts like ${_zoneNames(3)}. Open the map (\uD83D\uDDFA\uFE0F) or tell me where to go.`) };
+    return { html: residentGreet(res)+' '+esc(ko?'어느 구역으로 안내할까요?':'Which district shall I point you to?') };
+  }
+  if(repoRe.test(ql) && reps.length){ const first=reps[0], listtxt=reps.map(r=>r.repo).join(', ');
+    return { html: esc(ko?`${zn}엔 ${listtxt} 같은 레포가 있어요. ${first.repo}부터 가 볼까요?`:`In ${zn} you\u2019ll find ${listtxt}. Shall we start with ${first.repo}?`), repo:first }; }
+  if(why.test(ql)){ const w=_ZWHY[res.zone]?(_ZWHY[res.zone][LANG]||_ZWHY[res.zone].ko):''; return { html: esc((ko?`${zn}엔 ${w} 관련 레포가 모여 있어요.`:`${zn} gathers repos about ${w}.`)+(reps[0]?(ko?` 예: ${reps[0].repo}.`:` e.g. ${reps[0].repo}.`):'')) }; }
+  const g=residentGreet(res), cnt=z.repos.length;
+  return { html: (g?g+' ':'')+esc(ko?`여기는 ${zn}, ${L.role}로서 제가 돌보는 곳이에요. 레포 ${cnt}채가 있어요.`:`This is ${zn}, my patch as the ${L.role}. ${cnt} repo-houses stand here.`) }; }
+async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) return; _guestCdUntil=clock.elapsedTime + NPC_CFG.guestCooldownSec;
+  const useAI = NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
+  if(useAI){ const sb=showTyping(addMsg('bot','\u2026',{noHist:true}));
+    try{ const line=await _aiPlayerChat(res,q); if(line){ sb.remove(); addMsg('bot', esc(_cap180(line))); trackChatEvent('npc_player_chat',{npc:'resident',id:res.id,ai:true}); return; } }catch(e){}
+    sb.remove(); }
+  const r=residentReply(res,q); addMsg('bot', r.html, r.repo?{repo:r.repo}:undefined); trackChatEvent('npc_player_chat',{npc:'resident',id:res.id,ai:false}); }
+
+// ---- boot: best-effort worker config (learn runtime toggles + budget); unreachable → stay scripted ----
+async function npcBootConfig(){ NPC_CFG.worker=(typeof groundedUrl==='function'?groundedUrl():null)||null; if(!NPC_CFG.worker) return;
+  const data=await _npcFetch({ npc_action:'npcConfig', lang:LANG }); if(!data) return;
+  if(data.config){ const c=data.config; NPC_CFG.aiEnabled=!!c.aiEnabled; NPC_CFG.ambientAiEnabled=!!c.aiEnabled&&!!c.ambientEnabled; NPC_CFG.playerChatAiEnabled=!!c.aiEnabled&&!!c.playerChatEnabled;
+    if(c.maxTurns) NPC_CFG.maxTurns=Math.min(NPC_CFG.hardMaxTurns,c.maxTurns); }
+  if(data.budget) _applyBudget(data.budget);
+  _emitMetric('npc_mode_changed',{aiEnabled:NPC_CFG.aiEnabled,ambient:NPC_CFG.ambientAiEnabled,player:NPC_CFG.playerChatAiEnabled,source:'worker'}); }
+setTimeout(()=>{ try{ npcBootConfig(); }catch(e){} }, 2600);
+
 /* ---- character (chibi, cute — soft rounded forms, no hard boxes) ---- */
 const player=new THREE.Group(); const model=new THREE.Group(); player.add(model);
 const SHIRT=0xf4f4f0, SKIN=0xf3cda3, HAIR=0x231b16, PANTS=0x26262c, SOCK=0x20202a, SHOE=0xf2f2f0;
@@ -4887,7 +5122,7 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, nearHub=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident) openChat(nearResident); else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -5120,8 +5355,9 @@ function fallbackCopy(url, ok){ try{ const ta=document.createElement('textarea')
   document.execCommand('copy'); document.body.removeChild(ta); ok&&ok(); }catch(_){ } }
 const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
 function scholarPersona(kind, slot){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(sc&&sc.active&&sc.persona){ const p=sc.persona[LANG]||sc.persona.ko; if(p&&p[slot]) return p[slot]; } return null; }
-function npcGreet(n){ const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
-function applyNpcChrome(n){ const scholar = n && n.kind!=='taxi';
+function npcGreet(n){ if(n&&n.resident) return residentGreet(n.res); const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
+function applyNpcChrome(n){ if(n&&n.resident){ if(chatHeadTtl) chatHeadTtl.innerHTML=residentTitle(n.res); modeSel.style.display='none'; chatText.placeholder=residentPh(n.res); return; }
+  const scholar = n && n.kind!=='taxi';
   if(chatHeadTtl) chatHeadTtl.innerHTML = scholar ? (scholarPersona(n.kind,'title')||t('engTitle')) : t('taxiTitle');
   modeSel.style.display = scholar?'none':''; chatText.placeholder = scholar ? (scholarPersona(n.kind,'ph')||t('engPh')) : t('chatPh'); }
 function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); chatEl.classList.remove('hidden');
@@ -5554,7 +5790,7 @@ async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; b
   trackChatEvent('chat_submit', { npc, qLen });
   let ok=false;
   addMsg('me',q.replace(/</g,'&lt;'));
-  try{ await askDriver(q); ok=true; }
+  try{ if(activeNpc&&activeNpc.resident){ await residentSay(q); } else { await askDriver(q); } ok=true; }
   finally{ trackChatEvent('chat_turn_done', { npc, qLen, ok, ms:elapsedMs(started) }); busy=false; chatText.focus(); } }
 
 /* ---- taxi ride: the cab drives to you, picks you up, carries you there ---- */
@@ -5830,6 +6066,7 @@ function animate(){
   nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
   nearCarousel = (CAROUSEL && !carousel && player.position.distanceTo(CAROUSEL.board) < 6.0) ? CAROUSEL : null;
   nearHub=null; if(!nearest){ let hd=HUB_NEAR; for(const h of ZONE_HUBS){ const d=player.position.distanceTo(h.pos); if(d<hd){ hd=d; nearHub=h; } } }   // hubs never override a building's own door (checked only when no house is in reach)
+  nearResident=null; if(!nearest && !nearHub){ let rd=RES_REACH; for(const L of RESIDENTS_LIVE){ const d=player.position.distanceTo(L._npc.pos); if(d<rd){ rd=d; nearResident=L._npc; } } }   // residents sit below buildings + hubs — they never hijack a repo door or a district board
   // 🏠 first walk-up to a house → a gentle sparkle + acknowledge bob (landmarks get their own reactions below; skip while a taxi drives you past many houses)
   if(nearest && !nearest._isLibrary && !ride) greetBuilding(nearest);
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes) + a localized sparkle on first stamp
@@ -5854,6 +6091,7 @@ function animate(){
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
   else if(nearHub&&!modalOpen){ const z=zoneCatById(nearHub.id); const nm=z?(LANG==='ko'?z.ko:z.en):''; const ic=z?z.icon:'🪧';
       promptEl.innerHTML=(LANG==='ko'?`<b>${ic} ${nm}</b> · <span class="key">Enter</span>/버튼으로 <b>구역 안내판</b> 열기 🪧`:`<b>${ic} ${nm}</b> · <span class="key">Enter</span>/button for the <b>district board</b> 🪧`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪧'; }
+  else if(nearResident&&!modalOpen){ promptEl.innerHTML=residentPromptHtml(nearResident); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearestSeat&&!modalOpen){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> 또는 버튼으로 <b>앉기</b> 🪑`:`<span class="key">Enter</span> or button to <b>sit</b> 🪑`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪑'; }
   else { promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪'; }
 
@@ -5890,6 +6128,7 @@ function animate(){
   updateFireworks(dt);
   updateVisitFx(dt);
   updateNpcs(dt);
+  updateResidents(dt);
   rtTick(dt);
   if(userInput||moving||ride||dragging||navTarget) lastAct=_now;   // perf: dynamic state → stay 60fps + refresh shadows next frames
   if(!_idle) renderer.shadowMap.needsUpdate=true;                  // perf: refresh shadow map only while active; frozen when idle
@@ -6218,6 +6457,24 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     const ux=Math.cos(fromAngle), uz=Math.sin(fromAngle), r=(b._cw||3);
     player.position.set(b._x+ux*r, 0, b._z+uz*r); camYaw=Math.atan2(b._x-player.position.x,b._z-player.position.z); camPitch=0.32; camDist=20;
     return {x:+player.position.x.toFixed(2), z:+player.position.z.toFixed(2), d:+player.position.distanceTo(b._pos).toFixed(2), cw:+r.toFixed(2)}; };
+  // 🧑‍🌾 resident NPC social layer probes
+  window.__villagers=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, name:(L.res[LANG]||L.res.ko).name,
+    x:+L.group.position.x.toFixed(1), z:+L.group.position.z.toFixed(1), near:+player.position.distanceTo(L.group.position).toFixed(2)<=RES_REACH }));
+  window.__npcRoutes=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, home:[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)], facing:+L._baseRot.toFixed(2) }));
+  window.__npcState=()=>({ mode:NPC_CFG.modeEnabled, visual:NPC_CFG.visualEnabled, ai:NPC_CFG.aiEnabled, ambientAi:NPC_CFG.ambientAiEnabled, playerAi:NPC_CFG.playerChatAiEnabled,
+    scriptedAmbient:NPC_CFG.scriptedAmbient, live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
+  window.__npcEncounter=(a,b)=>{ const A=RESIDENTS_LIVE.find(L=>L.res.id===a)||RESIDENTS_LIVE[0], B=RESIDENTS_LIVE.find(L=>L.res.id===b)||RESIDENTS_LIVE[1];
+    if(!A||!B||A===B) return {ok:false}; _pairCd.delete(_pairKey(A,B)); if(_ambConv) _endAmb('debug'); _startAmb(A,B); if(_ambConv){ _ambConv.nextAt=0; _advanceAmb(); }
+    return { ok:true, a:A.res.id, b:B.res.id, max:_ambConv?_ambConv.max:0, i:_ambConv?_ambConv.i:1, last:_npcTranscript.slice(-1)[0]||null }; };
+  window.__npcBudget=()=>({ ...JSON.parse(JSON.stringify(_npcBudget)), low:_budgetLow(), exhausted:_budgetExhausted() });
+  window.__npcTranscript=()=>_npcTranscript.slice(-20);
+  window.__npcSim=(o)=>{ o=o||{}; ['remainingUsd','spentUsd','turnsToday','dailyTurnMax','dayCapUsd'].forEach(k=>{ if(typeof o[k]==='number') _npcBudget[k]=o[k]; });
+    if(typeof o.blocked==='boolean') _npcBudget.blocked=o.blocked; if(typeof o.enabled==='boolean') _npcBudget.enabled=o.enabled; _npcBudget.source='sim'; return window.__npcBudget(); };
+  window.__npcAmbTick=()=>{ if(_ambConv){ _ambConv.nextAt=0; _advanceAmb(); } else { _ambNextAt=0; _ambientTick(); } return { active:!!_ambConv, i:_ambConv?_ambConv.i:0 }; };
+  window.__npcTalk=async (id,q)=>{ const L=RESIDENTS_LIVE.find(x=>x.res.id===id)||RESIDENTS_LIVE[0]; if(!L) return null; openChat(L._npc);
+    const chrome={ active:activeNpc&&activeNpc.id, title:chatHeadTtl?chatHeadTtl.textContent:null, modeHidden:modeSel.style.display==='none', ph:chatText.placeholder, greeted:(chatLog.textContent||'').slice(0,60) };
+    if(q){ await residentSay(q); const msgs=chatLog.querySelectorAll('.msg.bot'); chrome.reply=(msgs[msgs.length-1]||{}).textContent||null; }
+    return chrome; };
 }
 </script>
 </body>

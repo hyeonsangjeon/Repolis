@@ -294,6 +294,55 @@ ok(/window\.__zoneHubs\s*=/.test(HTML) && /window\.__zoneBoard\s*=/.test(HTML), 
 // 11g — hub districts stay distinct from the station's landmark rides (no naming clash)
 ok(/const ZONE_HUBS\s*=/.test(HTML) && /const LANDMARK_STOPS\s*=/.test(HTML), 'repo-district hubs (ZONE_HUBS) and station landmark rides (LANDMARK_STOPS) remain separate systems');
 
+/* ── 12) Resident NPC Social Layer v1: budget-capped townspeople ──
+ *    7 residents (max 10) that trade turn-by-turn ambient lines + chat with the visitor. Default = deterministic
+ *    SCRIPTED (zero network / zero cost); an optional Cloudflare Worker path lights up model turns only when the
+ *    operator enables it AND the daily budget allows. Guards: roster size, prompt priority (residents never hijack
+ *    a repo door or a district board), hidden-tab ambient stop, budget-exhausted fallback, turn/cooldown caps,
+ *    NO secret/model/endpoint in the public client, debug probes, and the additive worker actions. */
+group('resident NPC social layer + budget cap (Resident NPC Social Layer v1)');
+const npcBlock = (HTML.match(/RESIDENT NPC SOCIAL LAYER v1[\s\S]*?character \(chibi/) || [, ''])[0];
+ok(npcBlock.length > 0, 'resident NPC block extractable from index.html');
+// 12a — roster: exactly 7 residents, hard cap 10
+ok(/const MAX_RESIDENTS=10/.test(npcBlock), 'MAX_RESIDENTS cap is 10');
+ok((npcBlock.match(/\{ id:'/g) || []).length === 7, 'RESIDENTS roster holds exactly 7 townspeople');
+ok(/RESIDENTS\.slice\(0,MAX_RESIDENTS\)/.test(npcBlock), 'placement is clamped to the max-resident cap');
+// 12b — prompt priority: residents sit BELOW buildings + hubs (no repo-door / district-board hijack)
+ok(/nearResident=null; if\(!nearest && !nearHub\)\{/.test(HTML), 'nearResident is detected only when no building AND no hub is in reach');
+ok(/openZoneBoard\(nearHub\.id\); else if\(nearResident\) openChat\(nearResident\)/.test(HTML), 'doAct() checks nearResident AFTER nearHub (buildings + hubs win)');
+ok(/else if\(nearResident&&!modalOpen\)\{ promptEl\.innerHTML=residentPromptHtml/.test(HTML), 'resident prompt is emitted after the hub prompt branch');
+ok(/const RES_REACH=3\.4/.test(npcBlock), 'residents use a small walk-up reach (3.4)');
+// 12c — turn-by-turn ambient engine: hidden-tab stop, one conversation, turn + cooldown caps
+ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.test(npcBlock), 'ambient engine stops on a hidden tab (no background chatter/cost)');
+ok(/hardMaxTurns:10/.test(npcBlock), 'ambient conversations are hard-capped at 10 turns');
+ok(/pairCooldownMin:20, pairCooldownMax:60/.test(npcBlock), 'a resident pair has a 20–60s cooldown before chatting again');
+ok(/maxConcurrent:1/.test(npcBlock), 'at most one ambient conversation runs at a time');
+ok(/_cap180/.test(npcBlock) && /slice\(0,180\)/.test(npcBlock), 'each ambient line is capped at 180 chars');
+// 12d — budget: exhaustion forces the free scripted fallback, degradation trims turns
+ok(/function _budgetExhausted\(\)/.test(npcBlock) && /function _budgetLow\(\)/.test(npcBlock), 'client budget mirror exposes low + exhausted checks');
+ok(/NPC_CFG\.aiEnabled && NPC_CFG\.ambientAiEnabled && !_budgetExhausted\(\)/.test(npcBlock), 'AI ambient turn is gated on budget-not-exhausted');
+ok(/NPC_CFG\.aiEnabled && NPC_CFG\.playerChatAiEnabled && !_budgetExhausted\(\)/.test(npcBlock), 'AI player chat is gated on budget-not-exhausted');
+ok(/degrade\?NPC_CFG\.degradeMaxTurns/.test(npcBlock), 'a low budget degrades the conversation to fewer turns');
+// 12e — public-safe: the client ships NO api key, model deployment name, or Azure endpoint
+ok(!/AOAI_ENDPOINT|AAD_CLIENT|SEARCH_API_KEY|cognitiveservices|["']api-key["']/.test(npcBlock), 'resident client code contains no Azure endpoint / secret');
+ok(!/gpt-[0-9]/.test(npcBlock), 'resident client code names no model deployment');
+ok(!/NPC_MODEL_|NPC_DAY_CAP_USD|AOAI_DEPLOYMENT/.test(npcBlock), 'server-only NPC env names never appear in the client');
+// 12f — debug probes
+ok(/window\.__villagers=/.test(HTML) && /window\.__npcRoutes=/.test(HTML) && /window\.__npcEncounter=/.test(HTML), 'debug helpers __villagers/__npcRoutes/__npcEncounter present');
+ok(/window\.__npcBudget=/.test(HTML) && /window\.__npcTranscript=/.test(HTML), 'debug helpers __npcBudget/__npcTranscript present');
+// 12g — worker: additive npc_action scaffolding with the env-off ceiling + budget guard + fallback model
+let WORKER = '';
+try { WORKER = readFileSync(join(ROOT, 'cloudflare-taxi/src/grounded.js'), 'utf8'); } catch (e) { console.log('  ✗ grounded.js load: ' + e.message); }
+ok(WORKER.length > 0, 'grounded.js worker source loaded');
+ok(/if \(body && body\.npc_action\) return npcHandler\(body, request, env\)/.test(WORKER), 'fetch router dispatches body.npc_action to npcHandler (existing actions untouched)');
+ok(/async function npcHandler\(/.test(WORKER), 'npcHandler() exists');
+ok(/action === "npcConfig"/.test(WORKER) && /action === "npcBudget"/.test(WORKER) && /"npcAmbientTurn"/.test(WORKER) && /"npcPlayerChat"/.test(WORKER), 'all four npc actions (config/budget/ambientTurn/playerChat) handled');
+ok(/env\.NPC_AI_ENABLED !== "true"\) return null/.test(WORKER), 'hard ceiling: NPC_AI_ENABLED !== "true" never reaches a model call');
+ok(/reason: "npc_budget_exhausted"/.test(WORKER), 'over-budget returns npc_budget_exhausted (client falls back to scripted)');
+ok(/NPC_MODEL_DEFAULT \|\| "gpt-5\.4-mini"/.test(WORKER), 'provider adapter falls back to gpt-5.4-mini when no NPC_MODEL_* alias is set');
+ok(/env\.NPC_DAY_CAP_USD/.test(WORKER) && !/COUNCIL_[A-Z_]*\s*\|\|\s*env\.NPC_/.test(WORKER), 'NPC budget uses the NPC_* namespace (separate from COUNCIL_*)');
+ok(/function npcMetric\(/.test(WORKER) && /env\.METRICS_URL/.test(WORKER), 'redacted fire-and-forget metrics emit (env.METRICS_URL) present');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }

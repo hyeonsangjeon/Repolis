@@ -170,3 +170,72 @@ Responses:
 // use Local search instead:
 { "fallback": true, "reason": "timeout 25000ms" }
 ```
+
+## 🧑‍🌾 Resident NPC social layer (optional, budget-capped)
+
+The city's **townspeople** (7 residents — distinct from the plaza scholars and Gitber the taxi) trade
+short turn-by-turn ambient lines and chat with the visitor. **This is off by default and costs nothing:**
+`index.html` ships them as deterministic **scripted** residents (zero network). The Worker only produces
+real model turns when you opt in *and* the daily budget allows — otherwise every action returns
+`{ fallback: true }` and the client uses its own free scripted bank.
+
+The client learns the runtime toggles + budget from a best-effort `npcConfig` call on boot; it can never
+exceed the Worker's env ceiling. All model turns are **budget-capped** (UTC-day tally) and **redacted** in
+metrics. The `NPC_*` namespace is fully separate from `COUNCIL_*`.
+
+### Actions
+
+`POST /` with an `npc_action` (no `question` needed):
+
+```jsonc
+{ "npc_action": "npcConfig", "lang": "ko" }
+// → { ok, config:{ aiEnabled, ambientEnabled, playerChatEnabled, maxTurns, hardMaxTurns }, budget:{…} }
+{ "npc_action": "npcBudget" }
+// → { ok, budget:{ enabled, dayCapUsd, spentUsd, remainingUsd, turnsToday, dailyTurnMax, blocked } }
+{ "npc_action": "npcAmbientTurn", "speaker":"sol", "listener":"jun", "topic":"model", "lang":"ko",
+  "last":[{ "who":"jun", "text":"…" }] }
+// → { ok, line:"one ≤180-char line", budget:{…} }   |   { ok, fallback:true, reason, budget }
+{ "npc_action": "npcPlayerChat", "speaker":"nari", "zone":"web", "question":"…", "lang":"ko" }
+// → { ok, line:"…", budget }   |   { ok:false, fallback:true, reason:"npc_budget_exhausted", budget }
+```
+
+### Env (all optional — defaults keep AI **off** so a fresh clone costs nothing)
+
+| Var | Default | Meaning |
+|---|---|---|
+| `NPC_AI_ENABLED` | `false` | Master switch. `!== "true"` → **never** a model call (hard ceiling). |
+| `NPC_AMBIENT_ENABLED` | `false` | Allow model-powered ambient turns (requires `NPC_AI_ENABLED`). |
+| `NPC_PLAYER_CHAT_ENABLED` | `false` | Allow model-powered player chat (requires `NPC_AI_ENABLED`). |
+| `NPC_MODEL_DEFAULT` | `gpt-5.4-mini` | Deployment name for NPC turns. |
+| `NPC_MODEL_AMBIENT` / `NPC_MODEL_PLAYER` | — | Optional per-role deployment overrides. |
+| `NPC_DAY_CAP_USD` | `10` | Hard daily spend cap; over it → `npc_budget_exhausted`. |
+| `NPC_DAILY_TURN_MAX` | `0` (off) | Optional hard daily turn cap. |
+| `NPC_PRICE_IN_PER_1K` / `NPC_PRICE_OUT_PER_1K` | `0.00015` / `0.0006` | Price per 1K tokens for the day tally. |
+| `NPC_TURN_COST_USD` | `0.0003` | Flat per-turn estimate when the model returns no usage. |
+| `NPC_MAX_TURNS` / `NPC_HARD_MAX_TURNS` | `6` / `10` | Advertised default / absolute ambient turn caps. |
+| `NPC_TIMEOUT_MS` | `12000` | Per-turn model timeout. |
+| `METRICS_URL` | — | Optional private collector; redacted fire-and-forget events (lengths only, no text). |
+
+Model turns reuse the **same** Entra ID service principal as the scholar chat (`AAD_*` + `AOAI_ENDPOINT`);
+no new secret is needed.
+
+### Deferred (documented, not shipped in v1)
+
+- **Durable budget store.** The day tally lives in Worker **module scope**, so it resets when the isolate
+  recycles — fine as a soft cost brake, but for strict multi-isolate enforcement bind a **D1 table** or a
+  **Durable Object** and swap `npcBudgetState` / `npcChargeTurn` to read/write it.
+- **Private `repolis-metrics` dashboard.** The Worker only *emits* to `METRICS_URL`; the dashboard itself
+  is a separate **private** repo (never part of this public town).
+- **Real Azure Foundry deployment names.** `NPC_MODEL_*` are config-only; with none set the adapter falls
+  back to `gpt-5.4-mini`.
+
+Local `.dev.vars` to try a real turn:
+
+```
+NPC_AI_ENABLED=true
+NPC_AMBIENT_ENABLED=true
+NPC_PLAYER_CHAT_ENABLED=true
+NPC_DAY_CAP_USD=1
+# reuses AOAI_ENDPOINT + AAD_* from the scholar-chat block above
+```
+
