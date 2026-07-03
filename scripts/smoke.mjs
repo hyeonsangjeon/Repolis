@@ -312,6 +312,11 @@ ok(/nearResident=null; if\(!nearest && !nearHub\)\{/.test(HTML), 'nearResident i
 ok(/openZoneBoard\(nearHub\.id\); else if\(nearResident\) openChat\(nearResident\)/.test(HTML), 'doAct() checks nearResident AFTER nearHub (buildings + hubs win)');
 ok(/else if\(nearResident&&!modalOpen\)\{ promptEl\.innerHTML=residentPromptHtml/.test(HTML), 'resident prompt is emitted after the hub prompt branch');
 ok(/const RES_REACH=3\.4/.test(npcBlock), 'residents use a small walk-up reach (3.4)');
+// 12b-2 — living town: residents wander around home and walk toward one another before talking (not static statues)
+ok(/const RES_MOVE=\{[^}]*meetMax:/.test(npcBlock) && /talkDist:/.test(npcBlock), 'RES_MOVE tuning (meetMax + talkDist) exists for wander + rendezvous');
+ok(/function _resRoamTarget\(/.test(npcBlock) && /function _resWalk\(/.test(npcBlock), 'residents have a wander-target picker + a walk-step locomotion helper');
+ok(/phase:near\?'talk':'approach'/.test(npcBlock) && /C\.phase==='approach'/.test(npcBlock), 'a distant pair first walks together (approach) before the turn-by-turn talk');
+ok(/!LOW_END && !hidden/.test(npcBlock), 'wander is skipped on low-end devices + hidden tabs (perf + no background motion)');
 // 12c — turn-by-turn ambient engine: hidden-tab stop, one conversation, turn + cooldown caps
 ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.test(npcBlock), 'ambient engine stops on a hidden tab (no background chatter/cost)');
 ok(/hardMaxTurns:10/.test(npcBlock), 'ambient conversations are hard-capped at 10 turns');

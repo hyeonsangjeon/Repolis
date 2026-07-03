@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.50.0] — 2026-07-04
+
+### 🚶 Resident NPCs come alive — they wander the districts and walk over to talk
+- **Townsfolk are no longer statues.** `updateResidents(dt)` now drives real locomotion: each resident strolls a gentle ring around its home spot (district folk roam ~6.5u around the hub; 카이/Kai ambles between set plaza spots), picking a fresh waypoint, walking there with a simple leg-swing gait (`_resWalk` / `_resRoamTarget`), then pausing 2.5–7s before the next stroll. Placement, `_hubGap` building clearance, the inner-plaza/outer-ring bounds, and the walk-up 💬 reach are all preserved — a wandering resident's `nearResident` hit tracks its live position.
+- **Conversations are real encounters now.** The ambient engine picks the *closest* available pair within a `meetMax` (58u) rendezvous range; if they aren't already together the conversation opens in an **approach** phase where both residents walk toward one another, and the turn-by-turn bubbles only start once they're within talking distance (~4.2u) or a 16s approach timeout — so you see two townsfolk converge in the street and chat **face-to-face**, then part and drift home. Pair cooldown (20–60s) rotates who meets whom, so the whole cast mingles over time.
+- **Every guard preserved.** Movement is skipped on a hidden tab and on LOW_END phones (no background motion, no perf hit); a resident freezes while the visitor is chatting it; the one-conversation cap, hard 10-turn ceiling, ≤180-char bubbles, budget degradation, and the scripted-by-default / env-gated-AI ceiling are all untouched. `RES_MOVE` centralizes the tuning (speeds, roam radius, meet range, gait).
+- **Guards + debug.** `scripts/smoke.mjs` gains a wander/rendezvous group (**+4 → 167**) asserting `RES_MOVE`, the `_resRoamTarget`/`_resWalk` helpers, the approach-before-talk phase, and the hidden-tab/LOW_END movement skip. `__npcRoutes()` now reports each resident's live `pos`, `anchor`, and current wander `target`.
+
+### Verified
+- Hermetic block green: **smoke 167 · council 130 · live 56/0**, `scholars.js` + `grounded.js` syntax-clean, inline module syntax-checked. Live in Chrome (desktop 1440×900 + mobile 390×844): all 7 residents visibly wander, a distant pair (태/Tae ↔ 린/Rin, 31u apart) walked together and conversed at **4.46u**, pairs rotated (나리/Nari↔태/Tae → 태/Tae↔린/Rin), residents resumed strolling after talking, and walk-up player chat froze the chatting resident — at **0 console errors**.
+
 ## [1.49.1] — 2026-07-03
 
 ### 🕹️ Resident NPC AI — live on/off from the owner dashboard (no redeploy)
