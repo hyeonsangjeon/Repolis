@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.49.1] — 2026-07-03
+
+### 🕹️ Resident NPC AI — live on/off from the owner dashboard (no redeploy)
+- **Real-time toggle, not just a deploy.** The resident-NPC AI (ambient + player chat) can now be flipped on/off from a button on the private **repolis-metrics** dashboard, without a Worker deploy. `cloudflare-taxi/src/grounded.js` gains `npcResolveFlags(env)`: when the new master kill-switch `NPC_LIVE_TOGGLE === "true"`, it reads a shared `NPC_FLAGS` KV namespace per request (`ai_enabled` / `ambient_enabled` / `player_chat_enabled`), each key falling back to its env var when absent; otherwise KV is ignored and residents stay **strictly env-gated** (the safe, deploy-only default). `npcConfig` now reports `source` (`env`/`kv`) and `liveToggle`.
+- **Ceiling preserved.** The hard model-call ceiling is unchanged — `npcModelCall` still returns `null` unless the resolved `aiEnabled` is true, so `NPC_AI_ENABLED=false` + no KV key = scripted, always. A fresh fork with no `NPC_LIVE_TOGGLE` and no KV binding behaves exactly as before.
+- **Monitoring card.** The dashboard shows a "주민 AI · 실시간 스위치" card (master/ambient/player state, `env`/`kv` source, live-toggle availability, day budget spent/remaining/turns) with 전체 켜기 / 전체 끄기 / 새로고침 buttons. KV propagation is **≤~60s** (surfaced in the UI).
+- **Guards + docs.** `scripts/smoke.mjs` resolver-aware ceiling guards (**+5 → 163**) assert the master kill-switch, KV read, env fallback, and effective-`aiEnabled` gating. `cloudflare-taxi/README.md` documents `NPC_LIVE_TOGGLE` + the `NPC_FLAGS` binding. No key/model/endpoint ships in the public client.
+
+### Verified
+- Hermetic block green: **smoke 163 · council 130 · live 56/0**, `scholars.js` + `grounded.js` syntax-clean. Live end-to-end on Cloudflare: dashboard KV write flips the taxi `npcConfig` on (~12s) and off (~12s); owner routes are 401-gated; KV reset to the clean OFF baseline. Dashboard card verified in Chrome (owner harness) at 0 console errors.
+
 ## [1.49.0] — 2026-07-03
 
 ### 🧑‍🌾 Resident NPC Social Layer v1 — turn-by-turn, budget-capped townspeople

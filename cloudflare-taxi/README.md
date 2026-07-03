@@ -189,7 +189,7 @@ metrics. The `NPC_*` namespace is fully separate from `COUNCIL_*`.
 
 ```jsonc
 { "npc_action": "npcConfig", "lang": "ko" }
-// → { ok, config:{ aiEnabled, ambientEnabled, playerChatEnabled, maxTurns, hardMaxTurns }, budget:{…} }
+// → { ok, config:{ aiEnabled, ambientEnabled, playerChatEnabled, maxTurns, hardMaxTurns, source, liveToggle }, budget:{…} }
 { "npc_action": "npcBudget" }
 // → { ok, budget:{ enabled, dayCapUsd, spentUsd, remainingUsd, turnsToday, dailyTurnMax, blocked } }
 { "npc_action": "npcAmbientTurn", "speaker":"sol", "listener":"jun", "topic":"model", "lang":"ko",
@@ -206,6 +206,7 @@ metrics. The `NPC_*` namespace is fully separate from `COUNCIL_*`.
 | `NPC_AI_ENABLED` | `false` | Master switch. `!== "true"` → **never** a model call (hard ceiling). |
 | `NPC_AMBIENT_ENABLED` | `false` | Allow model-powered ambient turns (requires `NPC_AI_ENABLED`). |
 | `NPC_PLAYER_CHAT_ENABLED` | `false` | Allow model-powered player chat (requires `NPC_AI_ENABLED`). |
+| `NPC_LIVE_TOGGLE` | `false` | Master kill-switch for the live KV path. `!== "true"` → the `NPC_FLAGS` KV is **ignored** and residents stay strictly env-gated (deploy-only, the safe default). `"true"` → the dashboard can flip on/off in real time (see below). |
 | `NPC_MODEL_DEFAULT` | `gpt-5.4-mini` | Deployment name for NPC turns. |
 | `NPC_MODEL_AMBIENT` / `NPC_MODEL_PLAYER` | — | Optional per-role deployment overrides. |
 | `NPC_DAY_CAP_USD` | `10` | Hard daily spend cap; over it → `npc_budget_exhausted`. |
@@ -219,12 +220,33 @@ metrics. The `NPC_*` namespace is fully separate from `COUNCIL_*`.
 Model turns reuse the **same** Entra ID service principal as the scholar chat (`AAD_*` + `AOAI_ENDPOINT`);
 no new secret is needed.
 
+### Live on/off from the owner dashboard (no redeploy)
+
+By default the flags above are **deploy-time** — flipping them means `wrangler secret put` + a Worker
+deploy (seconds, but still a deploy). For a real-time button, bind a shared KV namespace and turn on the
+master kill-switch:
+
+```
+# create once, bind the SAME id in repolis-metrics/wrangler.toml
+wrangler kv namespace create NPC_FLAGS
+# [[kv_namespaces]] binding="NPC_FLAGS" id="…" in wrangler.toml (already wired here)
+wrangler secret put NPC_LIVE_TOGGLE   # set to: true
+```
+
+With `NPC_LIVE_TOGGLE="true"`, this Worker reads `NPC_FLAGS` keys `ai_enabled` / `ambient_enabled` /
+`player_chat_enabled` (`"true"`/`"false"`) **per request**, each falling back to its env var when the key is
+absent. The private **repolis-metrics** dashboard writes those keys from an owner-only button. Propagation
+across Cloudflare's edge takes **up to ~60s**. This can never bypass the ceiling: `aiEnabled` is still ANDed
+into every model call, so `NPC_AI_ENABLED=false` + no KV key = strictly scripted. Leave `NPC_LIVE_TOGGLE`
+unset and the KV is ignored entirely — forks stay safe with zero config.
+
 ### Deferred (documented, not shipped in v1)
 
 - **Durable budget store.** The day tally lives in Worker **module scope**, so it resets when the isolate
   recycles — fine as a soft cost brake, but for strict multi-isolate enforcement bind a **D1 table** or a
   **Durable Object** and swap `npcBudgetState` / `npcChargeTurn` to read/write it.
-- **Private `repolis-metrics` dashboard.** The Worker only *emits* to `METRICS_URL`; the dashboard itself
+- **Private `repolis-metrics` dashboard.** The Worker *emits* redacted metrics to `METRICS_URL` and, when
+  `NPC_LIVE_TOGGLE` is on, *reads* the on/off flags the dashboard writes to `NPC_FLAGS`. The dashboard itself
   is a separate **private** repo (never part of this public town).
 - **Real Azure Foundry deployment names.** `NPC_MODEL_*` are config-only; with none set the adapter falls
   back to `gpt-5.4-mini`.
