@@ -85,14 +85,15 @@ if (mod) {
   ok(clean, 'inline module passes node --check');
 }
 
-/* ── 7) chronoMatch: a repo's "관련 토론 보기" link must reflect its own identity, not incidental plumbing ──
- *    Regression guard for the youtube-dl-nas → Chronopolis(HTTP) mis-route: the repo merely uses
- *    bottle/websocket/login-system, so it must NOT match the HTTP-status debate. Runs the REAL shipped
- *    chronoMatch (extracted from index.html) against the REAL repos.json + council fixtures. */
-group('chronoMatch anchors on domain-specific tags (no spurious debate routing)');
+/* ── 7) chronoMatch: the repo↔debate matcher stays correct, but the repo card must NOT expose a
+ *    "관련 토론 보기"(→Chronopolis) button —집(레포)에서 토론장으로 튕기는 흐름을 제거했다.
+ *    chronoMatch 자체는 검색/디버그용으로 유지되므로 아래 행동 테스트로 계속 가드한다.
+ *    Also the historical youtube-dl-nas → Chronopolis(HTTP) mis-route guard: bottle/websocket/login-system
+ *    must NOT match the HTTP-status debate. Runs the REAL shipped chronoMatch against repos.json + fixtures. */
+group('chronoMatch stays correct · repo card exposes no debate-jump button');
 ok(/const CHRONO_GENERIC_TAGS\s*=\s*new Set\(/.test(HTML), 'CHRONO_GENERIC_TAGS stoplist exists');
 ok(/if\(toks\.has\(tg\)\s*&&\s*!CHRONO_GENERIC_TAGS\.has\(tg\)\)/.test(HTML), 'chronoMatch ignores generic/plumbing tags when scoring');
-ok(/data-preset="\$\{esc\(relId\)\}"/.test(HTML), 'relChrono button binds its target to the card repo (data-preset)');
+ok(!/id="relChronoBtn"/.test(HTML), 'repo card no longer renders the 관련 토론 보기(→Chronopolis) button (removed by request)');
 const genSrc = (HTML.match(/const CHRONO_GENERIC_TAGS=new Set\(\[[\s\S]*?\]\);/) || [])[0];
 const tokSrc = (HTML.match(/function repoChronoTokens\(repo\)\{[\s\S]*?return s; \}/) || [])[0];
 const matchSrc = (HTML.match(/function chronoMatch\(repo\)\{[\s\S]*?return bestScore>=1 \? bestId : null; \}/) || [])[0];
@@ -256,6 +257,42 @@ ok(/🚉 명소로 바로 이동/.test(HTML) && /🚉 Landmark stops/.test(HTML)
 // 10f — debug helpers
 ok(/window\.__passport\s*=/.test(HTML) && /window\.__districtProgress\s*=/.test(HTML), 'debug helpers __passport() + __districtProgress() present');
 ok(/window\.__course=\(\)=>\{[\s\S]*?districts:/.test(HTML), '__course() reports district info');
+
+/* ── 11) District Landmark Hubs v1: one walkable hub + info board per active district ──
+ *    procedural (shared geometry), placed clear of buildings, checked AFTER houses (no door hijack),
+ *    taxi/map arrive at the hub, board reuses passport/course data + the canonical repo resolver. */
+group('district landmark hubs + info board (District Landmark Hubs v1)');
+// 11a — hub system + one hub for every active district
+ok(/const ZONE_HUBS\s*=\s*\[\]/.test(HTML), 'ZONE_HUBS registry exists');
+ok(/function buildHub\(z\)/.test(HTML), 'buildHub() procedural builder exists');
+ok(/for\(const z of ZONES\)\s*buildHub\(z\)/.test(HTML), 'a hub is built for every active ZONES district');
+ok(/function _hubSpot\(z,\s*taken\)/.test(HTML) && /function _hubGap\(x,z\)/.test(HTML), 'deterministic placement (_hubSpot) + building-clearance (_hubGap) helpers exist');
+ok(/function _hubAccent\(z,g\)/.test(HTML), '_hubAccent() gives each district its own low-cost identity');
+const buildHubSrc = (HTML.match(/function buildHub\(z\)\{[\s\S]*?\nfor\(const z of ZONES\) buildHub/) || [, ''])[0];
+ok(/EXTRA_COLLIDERS\.push\(\{x:hx,z:hz,r:1\.9\}\)/.test(buildHubSrc), 'hub adds a single minimal centre collider (accents stay walkable)');
+ok(!/new THREE\.PointLight|new THREE\.SpotLight/.test(buildHubSrc), 'hub build spawns no new scene lights (perf gate)');
+// 11b — hubs never hijack a repo building's own door: detected only when no house is in reach, acted after nearest
+ok(/nearHub=null;\s*if\(!nearest\)\{/.test(HTML), 'nearHub is detected only when no building is in reach (buildings win)');
+ok(/openCard\(nearest\);\s*else if\(nearHub\)\s*openZoneBoard\(nearHub\.id\)/.test(HTML), 'doAct() checks nearHub AFTER nearest (no repo-prompt hijack)');
+// 11c — taxi + map destinations are hub-based
+ok(/function zoneDest\(z\)\{[\s\S]*?z\._hub/.test(HTML), 'zoneDest() sends the taxi to the district hub');
+ok(/for\(const z of ZONES\)\{ const hp=\(z\._hub&&z\._hub\.pos\)/.test(HTML), 'minimap draws the district icon on its hub');
+// 11d — the district board modal + its action hooks
+ok(/id=["']zoneBoard["']/.test(HTML) && /id=["']zbBody["']/.test(HTML) && /id=["']zbClose["']/.test(HTML), 'district board modal DOM (#zoneBoard/#zbBody/#zbClose) present');
+ok(/function renderZoneBoard\(id\)/.test(HTML) && /function openZoneBoard\(id\)/.test(HTML) && /function closeZoneBoard\(\)/.test(HTML), 'board render/open/close functions exist');
+ok(/id=["']zbRide["']/.test(HTML) && /id=["']zbUnseen["']/.test(HTML) && /id=["']zbAsk["']/.test(HTML), 'board action hooks (ride / guide-unseen / ask) present');
+ok(/class="zbRepo"[\s\S]*?data-repo=/.test(HTML), 'board lists clickable representative repos');
+// 11e — board reuses canonical repo identity + the existing chat, and its basis line is deterministic
+ok(/repoByKey\(a\.dataset\.repo\)/.test(HTML), 'board re-resolves repo taps through the canonical repoByKey resolver');
+ok(/zbAsk[\s\S]{0,140}?askInChat\(/.test(HTML), 'board "ask" reuses the existing askInChat/taxi chat flow (no new backend)');
+const zoneBasisSrc = (HTML.match(/function zoneBasis\(z\)\{[\s\S]*?\nfunction renderZoneBoard/) || [, ''])[0];
+ok(zoneBasisSrc.length > 0 && !/fetch\(|groundedAsk|webllmAsk|await /.test(zoneBasisSrc), 'zoneBasis() district explanation is deterministic — no fetch/LLM');
+// 11f — hub sign i18n + language refresh + debug helpers
+ok((HTML.match(/zbSub:\s*['"]/g) || []).length >= 2 && (HTML.match(/zbRide:\s*['"]/g) || []).length >= 2 && (HTML.match(/zbBoard:\s*['"]/g) || []).length >= 2, 'board i18n keys (zbSub/zbRide/zbBoard) present in ko + en');
+ok(/function refreshHubSigns\(\)/.test(HTML) && /if\(typeof refreshHubSigns==='function'\) refreshHubSigns\(\)/.test(HTML), 'hub signs re-texture on language change');
+ok(/window\.__zoneHubs\s*=/.test(HTML) && /window\.__zoneBoard\s*=/.test(HTML), 'debug helpers __zoneHubs() + __zoneBoard() present');
+// 11g — hub districts stay distinct from the station's landmark rides (no naming clash)
+ok(/const ZONE_HUBS\s*=/.test(HTML) && /const LANDMARK_STOPS\s*=/.test(HTML), 'repo-district hubs (ZONE_HUBS) and station landmark rides (LANDMARK_STOPS) remain separate systems');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

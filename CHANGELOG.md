@@ -3,6 +3,21 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.48.0] — 2026-07-03
+
+### 🪧 District Landmark Hubs v1 — every district gets a walkable hub + info board
+- **One procedural hub landmark per active district.** Each of the 6 active districts now has a low-cost, walkable centre built from shared geometry (`_HUB_GEO`: disc + plinth) plus a per-district accent — 🔭 AI observatory dish/antenna, ⚓ Infra server-dock crane, 🪟 Web sign-panel, 📊 Data pipe/chart totem, 📚 Library open stacks, 🏚️ Ruins broken rig — a signpost (reusing `signTexture`) and a night-glow halo sprite (reuses `GLOW_TEX` + `LAMP_GLOWS`, dimmer for ruins). **86 meshes total across all 6 hubs**, textures unchanged (shared geometry/materials), so `__perf()` is effectively flat.
+- **Deterministic placement that never hijacks a repo door.** `_hubSpot()` sweeps fixed radii × angular offsets along each zone's `angMid`, requiring building-edge clearance and staying outside the plaza core plus the taxi-stand / GitHub-Station keep-outs. Live gaps: **AI 12.7 · Infra 9.3 · Web 11.3 · Data 11.5 · Library 11.5 · Ruins 11.7 units** — every hub keeps a building-free walk-up disc. `nearHub` is detected **only when no building is in reach** (checked after `nearest` in both the tick and `doAct`), so hubs never steal a house's 🚪 prompt — preserving the Gitber-stand/Station overlap fix.
+- **Walkable info board.** Walk up → 🪧 prompt → Enter/button opens a **district board** modal (reuses the `.libcard` pattern): district icon + name, `visited/total` progress bar, a deterministic why-line (`zoneBasis`: matched keywords + languages, "LLM 없이 분류기가 결정해요"), 5 representative repos (visited ✓ / ride 🚕), and three actions — **🚕 대표 레포로 이동**, **🧭 아직 안 본 레포 안내** (routes to an unvisited in-district repo), **❓ 이 구역이 궁금해요** (opens Gitber with district context). Repo taps re-resolve through `repoByKey` so identity is exact. Mobile-safe (`max-width:100%`, fits 390×844 with no overflow).
+- **Taxi & map arrive at the hub.** `zoneDest()` now targets `z._hub.pos` (fallback centroid), the world-map district icon sits on the hub, and the arrival message is hub-based ("⚓ …항구 허브에 도착했어요 … 🪧 안내판에서 구역 안내판을 열 수 있어요"). No wrong card opens on arrival.
+- **Debug + guards.** New `?dbg` helpers `window.__zoneHubs()` (id/name/pos/finite/buildingGap/nearestBuilding/**meshes**/destMatchesHub) and `window.__zoneBoard(id)`. `scripts/smoke.mjs` gained a hub group (+22) asserting one hub per active district, hub-based taxi/map destinations, and the board DOM/string/action hooks. Smoke **127**.
+
+### 🚪 Repo cards no longer eject you to Chronopolis
+- **The "관련 토론 보기 / Related debate" button is removed from the repo card.** Entering a house (`openCard`) and being offered a one-tap taxi ride off to a Chronopolis debate was jarring — the `#relChronoBtn` button (and its handler) now never render. `chronoMatch()` — with its generic-tag stoplist and `window.__chronoMatch` helper — is **kept** for search/debug, so the matcher stays correct and guarded; only the card surface was removed. The smoke `chronoMatch` group flips its DOM assertion to **assert the button is absent**, locking the removal.
+
+### Verified
+- Live in Chrome (desktop + 390×844 mobile, KO + EN): all 6 hubs finite with ≥9.3-unit building gaps and `destMatchesHub:true`; walk-up 🪧 prompt → board opens with correct name/progress/basis/reps/actions; a rep tap rides to the exact repo; "아직 안 본 레포 안내" rides to an unvisited in-district repo (`gdpval-realworks`); `__gotoZone('infra')` lands 6 units from the infra hub with a hub-based arrival message; the repo card now shows only **GitHub 열기 + 닫기** (no debate jump). Preserved fixes hold — `#repo=` deep link, malformed `#repo=%zz`, Chronos routing, district taxi nav, `repoByKey` identity — at **0 app console errors**. Smoke 127 + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.47.1] — 2026-07-03
 
 ### 🚕 Gitber — the repo taxi gets a name, and the station stops crowding its neighbour
