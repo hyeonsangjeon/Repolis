@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.47.1] — 2026-07-03
+
+### 🚕 Gitber — the repo taxi gets a name, and the station stops crowding its neighbour
+- **The taxi is now "깃버 / Gitber" (Git + Uber).** Every player-facing taxi surface was rebranded in both languages — the intro subtitle + `hint` line, the taxi FAB tooltip/aria (`Ask Gitber`), the chat header `taxiTitle` (**🚕 깃버 / 🚕 Gitber**), the greeter + station "who am I / off-topic" replies, the `npcTaxi` label, the 3D `taxiStand` sign (**깃버 정류장 / GITBER STAND**), and the NPC-roster sentence. **POLARIS stays the named driver persona** — Gitber is the service/brand, POLARIS still greets and drives — so the lore in `scholars.js` is untouched, and the hidden LLM system prompts + SEO meta tags are intentionally left as the plain "taxi driver" role.
+- **GitHub Station moved out of the building's lap.** The 🚉 station prop sat at `(18,14)`, only **5.9 units** from the edge of its neighbour `computing-Korean-STT-error-rates` — *inside* the station's own `6.0` walk-up radius — so standing between them, the 🚉 ticket-office prompt hijacked the house's 🚪 open-repo prompt (the reported click overlap). It now sits in the open plaza-side annulus at `(8,16)`: **14.8 units** of clearance to the nearest building, ~8 from the taxi stand (so it still reads as "beside the taxi stand"), re-faced toward the plaza. The station is a visual-only, non-colliding landmark and is neither a taxi ride target nor a minimap node, so only `STATION._pos` (walk-up detection) moved — the topbar 🚉 ticket office is unchanged.
+- **Debug helper.** New `?dbg` helper `window.__station([x,z])` reports the station's position, radius, walk-up state and the **edge gap to the nearest building** (accepts optional test coords to probe hypothetical spots).
+- **Verified.** Live in Chrome (desktop + 390×844 mobile, KO + EN): "🚕 깃버"/"Ask Gitber" render across the intro, hint, FAB and chat header; the station stands on open grass with a clean 🚉 walk-up and **no building overlap**; and the preserved fixes still hold — `#repo=` deep link opens the exact card, malformed `#repo=%zz` never throws, district taxi nav + `zoneOf` intact — all at **0 console errors**. Smoke 105 + council 130 + live 56 green; `scholars.js` / `grounded.js` syntax-clean.
+
 ## [1.47.0] — 2026-07-02
 
 ### 🧭 World Loop Integration v1 — the passport, course and repo cards now speak "districts"
