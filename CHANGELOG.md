@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.50.3] — 2026-07-04
+
+### 💬 Fix — resident speech bubbles were getting cut off mid-sentence
+- **Why it cut off.** The resident ambient bubble (`makeResBubble`) rendered at most **3 lines** on a small canvas and hard-truncated the 3rd line with a mid-word `…` — but the worker was told the AI could write up to **180 characters**, and ambient AI is live in production (`NPC_FLAGS` KV `liveToggle`), so real NPC lines ran far longer than 3 lines could hold and got chopped in the middle of a word (e.g. `…화분 덕에 더…`).
+- **The fix is on both ends.** Client: the bubble is enlarged (`448×252`, up to **5 lines**, 24px) so a full short line fits, and ambient text now runs through a new **`_capBub`** clean cap (≤80 chars) that trims only at a sentence/clause/word boundary — never inside a word — appending `…` solely when it actually trims. Worker: the shared persona guard drops from **“180 characters” → “90 characters”**, the ambient prompt asks for **~60 characters**, and the server response is capped role-aware (`ambient 90 / player 180`) so ambient lines come back bubble-sized natively. Player-chat in the DOM panel keeps the fuller 180-char cap.
+- **Preserved.** All prior NPC guards: hidden-tab freeze, visitor-chat freeze, pair cooldown, budget/env gating, 10-turn hard ceiling, `motionEnabled` locomotion, and the lifelike LOW_END walking pace from 1.50.2.
+- **Guards.** `scripts/smoke.mjs` (**→ 176**) adds checks that ambient text uses `_capBub` (word-boundary trim, no mid-word cut), the bubble renders up to 5 lines, and player chat keeps its 180-char cap.
+
+### Verified
+- Hermetic block green: **smoke 176 · council 130 · live 56/0**, `scholars.js` + `grounded.js` syntax-clean, inline module syntax-checked. Chrome mobile **390×844** (LOW_END forced) + desktop **1440×900**: a 79-char line renders as **4 full lines with no ellipsis** ending cleanly (`…바라보네요.`); a 108-char AI line is trimmed to a clean 77-char clause (`…퍼지고,`) then wraps to 4 lines — no mid-word cuts, **0 console errors**. Deployed worker (`repolis-taxi`) now returns short complete ambient lines (~27–28 chars, e.g. `카이, 오늘은 웹 골목 화단이 유난히 싱그럽더라 🌿`).
+
 ## [1.50.2] — 2026-07-04
 
 ### 🚶 Tuning — LOW_END residents now walk at a lifelike pace (not a crawl)

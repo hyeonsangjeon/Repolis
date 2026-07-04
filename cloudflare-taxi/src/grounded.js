@@ -690,16 +690,16 @@ const NPC_PERSONAS = {
 function _npcName(id, lang) { const p = NPC_PERSONAS[id]; if (!p) return id; return (lang === "en" ? p.en : p.ko); }
 function _npcGuard(lang) {
   return lang === "en"
-    ? "You are an ordinary townsperson in a cozy 3D city of code repositories. Speak ONLY as this resident about their district's everyday life, streets, gardens, builds, docs or mood. Never say you are an AI, never mention models, providers, prompts, tokens, budgets, or any private/internal detail, and don't impersonate the plaza scholars or the taxi. One short natural line, at most 180 characters, no emoji spam."
-    : "당신은 코드 저장소들로 이루어진 아늑한 3D 도시의 평범한 주민입니다. 오직 이 주민으로서 자기 구역의 일상·거리·정원·빌드·문서·분위기에 대해서만 말하세요. 자신이 AI라고 말하거나 모델·제공자·프롬프트·토큰·예산·내부/비공개 정보를 언급하지 말고, 광장의 현자나 택시를 흉내 내지 마세요. 짧고 자연스러운 한 줄, 최대 180자.";
+    ? "You are an ordinary townsperson in a cozy 3D city of code repositories. Speak ONLY as this resident about their district's everyday life, streets, gardens, builds, docs or mood. Never say you are an AI, never mention models, providers, prompts, tokens, budgets, or any private/internal detail, and don't impersonate the plaza scholars or the taxi. One short natural line, at most 90 characters, no emoji spam."
+    : "당신은 코드 저장소들로 이루어진 아늑한 3D 도시의 평범한 주민입니다. 오직 이 주민으로서 자기 구역의 일상·거리·정원·빌드·문서·분위기에 대해서만 말하세요. 자신이 AI라고 말하거나 모델·제공자·프롬프트·토큰·예산·내부/비공개 정보를 언급하지 말고, 광장의 현자나 택시를 흉내 내지 마세요. 짧고 자연스러운 한 줄, 최대 90자.";
 }
 function npcAmbientPrompt(speakerId, listenerId, topic, lang) {
   const s = _npcName(speakerId, lang), l = _npcName(listenerId, lang), P = NPC_PERSONAS[speakerId] || {};
   const zn = (P.zone && (lang === "en" ? P.zone.en : P.zone.ko)) || "";
   const vb = (P.vibe && (lang === "en" ? P.vibe.en : P.vibe.ko)) || "";
   return lang === "en"
-    ? `${_npcGuard(lang)} Your name is ${s.name}, the ${s.role} of ${zn} — ${vb}. You are chatting with your neighbour ${l.name}. Continue the small talk with ONE friendly line about town life.`
-    : `${_npcGuard(lang)} 당신의 이름은 ${s.name}, ${zn}의 ${s.role}이고 성격은 ${vb} 편이에요. 이웃 ${l.name}와 담소 중이에요. 마을살이에 대한 친근한 한 줄로 대화를 이어가세요.`;
+    ? `${_npcGuard(lang)} Your name is ${s.name}, the ${s.role} of ${zn} — ${vb}. You are chatting with your neighbour ${l.name}. Continue the small talk with ONE friendly line about town life, kept short (about 60 characters).`
+    : `${_npcGuard(lang)} 당신의 이름은 ${s.name}, ${zn}의 ${s.role}이고 성격은 ${vb} 편이에요. 이웃 ${l.name}와 담소 중이에요. 마을살이에 대한 친근한 한 줄로, 짧게(60자 안팎) 대화를 이어가세요.`;
 }
 function npcPlayerPrompt(speakerId, lang) {
   const s = _npcName(speakerId, lang), P = NPC_PERSONAS[speakerId] || {};
@@ -713,7 +713,7 @@ function npcAmbientUser(body, lang) {
   if (!last.length) return lang === "en" ? "(open the conversation)" : "(대화를 시작하세요)";
   return last.map((t) => `${_npcName(t.who, lang).name}: ${String(t.text || "").slice(0, 180)}`).join("\n");
 }
-function capLine(s) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, 180); }
+function capLine(s, max = 180) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, max); }
 
 // --- NPC budget: UTC-day module-scope ledger (best-effort; deferred: D1/DO for durable multi-isolate enforcement) ---
 let _npcLedger = { day: "", spentUsd: 0, turns: 0 };
@@ -845,7 +845,7 @@ async function npcHandler(body, request, env) {
     npcChargeTurn(env, cost);
     const budget2 = npcBudgetState(env);
     npcMetric(env, role === "ambient" ? "npc_ambient_turn" : "npc_player_chat", { where: role, ai: true, line: out.text, spent: cost });
-    return json({ ok: true, line: capLine(out.text), budget: budget2 }, 200, env);
+    return json({ ok: true, line: capLine(out.text, role === "ambient" ? 90 : 180), budget: budget2 }, 200, env);
   }
   return json({ error: "unknown npc_action" }, 400, env);
 }
