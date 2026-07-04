@@ -303,9 +303,10 @@ ok(/const ZONE_HUBS\s*=/.test(HTML) && /const LANDMARK_STOPS\s*=/.test(HTML), 'r
 group('resident NPC social layer + budget cap (Resident NPC Social Layer v1)');
 const npcBlock = (HTML.match(/RESIDENT NPC SOCIAL LAYER v1[\s\S]*?character \(chibi/) || [, ''])[0];
 ok(npcBlock.length > 0, 'resident NPC block extractable from index.html');
-// 12a — roster: exactly 7 residents, hard cap 10
+// 12a — roster: exactly 8 residents (7 district folk + the plaza dreamer Noa), hard cap 10
 ok(/const MAX_RESIDENTS=10/.test(npcBlock), 'MAX_RESIDENTS cap is 10');
-ok((npcBlock.match(/\{ id:'/g) || []).length === 7, 'RESIDENTS roster holds exactly 7 townspeople');
+ok((npcBlock.match(/\{ id:'/g) || []).length === 8, 'RESIDENTS roster holds exactly 8 townspeople');
+ok(/\{ id:'noa', zone:'plaza'/.test(npcBlock), 'the plaza dreamer Noa is in the roster (strolls the square brainstorming ideas)');
 ok(/RESIDENTS\.slice\(0,MAX_RESIDENTS\)/.test(npcBlock), 'placement is clamped to the max-resident cap');
 // 12b — prompt priority: residents sit BELOW buildings + hubs (no repo-door / district-board hijack)
 ok(/nearResident=null; if\(!nearest && !nearHub\)\{/.test(HTML), 'nearResident is detected only when no building AND no hub is in reach');
@@ -325,6 +326,15 @@ const _lowW=(npcBlock.match(/wanderSpd:\(LOW_END\?([0-9.]+)/)||[])[1], _lowM=(np
 ok(_lowW && parseFloat(_lowW)>=0.7, `LOW_END wander speed (${_lowW}) is a lifelike walking pace (>=0.7), not a near-frozen crawl`);
 ok(_lowM && parseFloat(_lowM)>=1.1, `LOW_END meet speed (${_lowM}) is brisk enough to actually rendezvous (>=1.1)`);
 ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\)/.test(npcBlock), 'a hidden tab still stops ambient chatter (background motion/cost guard preserved)');
+// 12b-4 — a quiet place to rest: townsfolk stroll to a free bench, sit a while, then get back up (and yield the seat to a chat/conversation)
+ok(/function _resSit\(/.test(npcBlock) && /function _resStand\(/.test(npcBlock), 'residents have sit + stand pose helpers for resting on a bench');
+ok(/function _freeSeat\(/.test(npcBlock) && /for\(const s of SEATS\)/.test(npcBlock), 'residents pick the nearest free SEAT within seatSeek to rest at');
+ok(/restChance:/.test(npcBlock) && /seatSeek:/.test(npcBlock), 'RES_MOVE carries rest tuning (restChance + seatSeek)');
+ok(/if\(inConv\|\|chatBound\)\{ _resStand\(L\); _seatRelease\(L\)/.test(npcBlock), 'a resting resident stands + frees the bench the moment a chat/conversation claims them');
+// 12b-5 — glowing roadside flowers: colourful by day, a soft shimmer after dark (day/night-driven, not always-on)
+ok(/function makeGlowFlowers\(/.test(HTML) && /const GLOW_FLORA=\[\]/.test(HTML), 'glowing-flower builder + registry exist');
+ok(/function updateGlowFlora\(t\)\{[\s\S]*?if\(!isNight\)/.test(HTML), 'glow flora are driven by day/night (dark → glow, day → off)');
+ok(/placeGlowFlowers\(\);/.test(HTML), 'glow flowers are placed into the world');
 // 12c — turn-by-turn ambient engine: hidden-tab stop, one conversation, turn + cooldown caps
 ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.test(npcBlock), 'ambient engine stops on a hidden tab (no background chatter/cost)');
 ok(/hardMaxTurns:10/.test(npcBlock), 'ambient conversations are hard-capped at 10 turns');

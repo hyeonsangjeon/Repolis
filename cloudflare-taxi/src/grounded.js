@@ -677,7 +677,7 @@ async function councilStreamHandler(body, request, env) {
    reason:"npc_budget_exhausted" }. The budget ledger below is a module-scope best-effort tally (resets when the
    Worker isolate recycles) — a durable D1/Durable-Object store is the documented deferred upgrade for real enforcement. */
 
-// Short server-side persona summaries for the 7 residents (canonical source is the RESIDENTS registry in index.html).
+// Short server-side persona summaries for the 8 residents (canonical source is the RESIDENTS registry in index.html).
 const NPC_PERSONAS = {
   sol:  { ko:{name:"솔",role:"파운드리 견습생"},   en:{name:"Sol",role:"Foundry apprentice"}, zone:{ko:"AI 연구구역",en:"the AI research district"},   vibe:{ko:"호기심 많고 예산을 아끼는",en:"curious and budget-minded"} },
   jun:  { ko:{name:"준",role:"항구 정비공"},       en:{name:"Jun",role:"build mechanic"},     zone:{ko:"홈랩·인프라 항구",en:"the Homelab Harbor"},     vibe:{ko:"실용적이고 말수 적은",en:"practical and terse"} },
@@ -686,6 +686,7 @@ const NPC_PERSONAS = {
   rin:  { ko:{name:"린",role:"기록 담당"},         en:{name:"Rin",role:"archive curator"},    zone:{ko:"문서·학습관",en:"the Library quarter"},       vibe:{ko:"차분하고 정돈된",en:"reflective and orderly"} },
   mira: { ko:{name:"미라",role:"분위기지기"},       en:{name:"Mira",role:"atmosphere keeper"}, zone:{ko:"실험·폐허 지구",en:"the old ruins"},          vibe:{ko:"시각적이고 고요한",en:"visual and calm"} },
   kai:  { ko:{name:"카이",role:"광장 길잡이"},     en:{name:"Kai",role:"crossing guide"},     zone:{ko:"중앙 광장",en:"the central plaza"},          vibe:{ko:"간결하고 다정한",en:"concise and welcoming"} },
+  noa:  { ko:{name:"노아",role:"광장 몽상가"},     en:{name:"Noa",role:"plaza dreamer"},      zone:{ko:"중앙 광장",en:"the central plaza"},          vibe:{ko:"몽상적이고 호기심 많은",en:"dreamy and curious"} },
 };
 function _npcName(id, lang) { const p = NPC_PERSONAS[id]; if (!p) return id; return (lang === "en" ? p.en : p.ko); }
 function _npcGuard(lang) {
