@@ -1549,6 +1549,7 @@ function updateKoi(t){
 
 /* plaza fountain spray (gravity particles) + glows toggled at night */
 const FOUNTAINS=[]; const NIGHT_GLOWS=[];
+const GLOW_FLORA=[]; let _floraLit=false;   // 🌼 luminous roadside blossoms — colourful by day, softly shimmering after dark
 function updateFountains(dt){
   for(const F of FOUNTAINS){ const a=F.pos, st=F.st;
     for(let i=0;i<st.length;i++){ const d=st[i];
@@ -2463,6 +2464,35 @@ function makePlanter(x,z,s=1){
   const box=new THREE.Mesh(new THREE.CylinderGeometry(0.34*s,0.28*s,0.42*s,8), toon(0xcaa56e)); box.position.y=0.21*s; box.castShadow=true; outline(box,0.03); g.add(box);
   bloom(g,0,0.44*s,0,0.3*s,11,s);
   return g;
+}
+// 🌼 a small cluster of luminous flowers — bright petals by day, a soft glow (halo + ground pool) that switches on at night and shimmers (see updateGlowFlora)
+function makeGlowFlowers(x,z,col,s=1){
+  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  const petal=basic(col); const n=6+((Math.random()*3)|0);
+  for(let i=0;i<n;i++){ const a=Math.random()*6.2832, rr=Math.random()*0.42*s;
+    const stem=new THREE.Mesh(GEO_STEM,MAT_STEM); stem.position.set(Math.cos(a)*rr,0.17*s,Math.sin(a)*rr); stem.scale.set(0.8,0.8*s,0.8); g.add(stem);
+    const fl=new THREE.Mesh(GEO_FLOWER,petal); fl.position.set(Math.cos(a)*rr,0.4*s,Math.sin(a)*rr); fl.scale.setScalar((0.8+Math.random()*0.5)*s); g.add(fl); }
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:col,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  halo.scale.set(1.9*s,1.9*s,1); halo.position.y=0.44*s; g.add(halo);
+  const pool=new THREE.Mesh(new THREE.CircleGeometry(1.15*s,18), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:col,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  pool.rotation.x=-Math.PI/2; pool.position.y=0.05; g.add(pool);
+  GLOW_FLORA.push({ halo, pool, base:0.5+Math.random()*0.25, ph:Math.random()*6.28 });
+  return g;
+}
+// scatter the glowing blossoms as a gentle roadside ring around the plaza + a few down each avenue (called late, after buildings + _hubGap exist)
+function placeGlowFlowers(){
+  const hues=[0x7fe0ff,0xffb0e6,0xffe08a,0xb4a0ff,0x8affc8];   // dream cyan · rose · warm gold · violet · mint
+  const ringN=LOW_END?8:(IS_MOBILE?10:14);
+  for(let i=0;i<ringN;i++){ const a=i/ringN*Math.PI*2+0.2, r=9.6+((i%2)?1.6:0), x=Math.cos(a)*r, z=Math.sin(a)*r;
+    if(_hubGap(x,z)<3.0) continue; makeGlowFlowers(x,z,hues[i%hues.length],0.95+Math.random()*0.3); }
+  if(!LOW_END){ for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2, nx=Math.cos(ang+Math.PI/2), nz=Math.sin(ang+Math.PI/2);
+    [20,30].forEach((rr,k)=>{ const bx=Math.cos(ang)*rr+nx*3.6, bz=Math.sin(ang)*rr+nz*3.6;
+      if(_hubGap(bx,bz)<3.2) return; makeGlowFlowers(bx,bz,hues[(a+k)%hues.length],0.9); }); } }
+}
+function updateGlowFlora(t){ if(!GLOW_FLORA.length) return;
+  if(!isNight){ if(_floraLit){ _floraLit=false; for(const f of GLOW_FLORA){ f.halo.material.opacity=0; f.pool.material.opacity=0; } } return; }
+  _floraLit=true;
+  for(const f of GLOW_FLORA){ const p=0.72+0.28*Math.sin(t*1.3+f.ph); f.halo.material.opacity=f.base*p; f.pool.material.opacity=f.base*0.45*p; }
 }
 function makeGuildLantern(x,z){
   const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
@@ -4355,7 +4385,14 @@ const RESIDENTS=[
     greet:{ko:'광장에 온 걸 환영해요. 어디로 가 볼까요?',en:'Welcome to the plaza. Where to?'},
     blurb:{ko:'저는 카이, 광장의 길잡이예요. 어느 구역이든 안내해요.',en:'I\u2019m Kai, the plaza\u2019s crossing guide \u2014 I\u2019ll point you to any district.'},
     amb:{ko:['광장에서 어느 구역이든 안내해 드려요.','길을 잃으면 저를 찾아요.','오늘은 AI 구역이 붐비네요.','역과 정류장은 바로 저쪽이에요.','천천히, 마을은 넓어요.'],
-        en:['From the plaza I can point you anywhere.','Lost? Just find me.','The AI district is busy today.','The station and stand are right over there.','Take your time \u2014 the town is wide.']} }
+        en:['From the plaza I can point you anywhere.','Lost? Just find me.','The AI district is busy today.','The station and stand are right over there.','Take your time \u2014 the town is wide.']} },
+  { id:'noa', zone:'plaza', color:0x8fd0e8, accent:0xcdeffb, tone:'dreamy\u00b7curious',
+    topics:['idea','dream','imagine','future','create','plaza'],
+    ko:{name:'노아',role:'광장 몽상가'}, en:{name:'Noa',role:'plaza dreamer'},
+    greet:{ko:'천천히 걷다 보면 생각이 맑아져요. 잘 왔어요.',en:'A slow walk clears the mind \u2014 welcome.'},
+    blurb:{ko:'저는 노아, 광장을 거닐며 이 도시가 앞으로 뭐가 될 수 있을지 상상하는 몽상가예요.',en:'I\u2019m Noa, the plaza dreamer \u2014 I wander the square and imagine what this city could become.'},
+    amb:{ko:['이 광장에 밤에도 빛나는 꽃길이 있으면 어떨까 상상했어요.','걷다 보면 흩어진 생각들이 길처럼 이어져요.','새 구역 하나를 마음속으로 그려보는 중이에요.','좋은 아이디어는 대개 산책 끝에 찾아와요.','벤치에 앉아 하늘을 보면 답이 떠오르곤 해요.'],
+        en:['I imagined a flower path here that glows after dark.','When I walk, scattered thoughts line up like streets.','I\u2019m sketching a whole new district in my head.','The best ideas arrive at the end of a stroll.','Sit on a bench, watch the sky \u2014 answers surface.']} }
 ];
 window.RESIDENTS=RESIDENTS;
 const _ZWHY={ ai:{ko:'LLM·RAG·에이전트·모델',en:'LLMs, RAG, agents and models'}, infra:{ko:'NAS·도커·자동화·서버',en:'NAS, Docker, automation and servers'},
@@ -4411,9 +4448,13 @@ const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
 // comes ONLY from the conversation side (fewer turns, longer gaps, one at a time, AI off/low-freq) — locomotion and its perceived speed are never throttled.
 const RES_MOVE={ wanderSpd:(LOW_END?0.9:(IS_MOBILE?0.95:1.05)), meetSpd:(LOW_END?1.4:(IS_MOBILE?1.7:2.4)),
   roamR:6.5, pauseMin:2.5, pauseMax:7.0,
+  restChance:(LOW_END?0.28:0.4), restMin:8, restMax:16, seatSeek:15,   // townsfolk occasionally stroll to a free bench and sit a while before wandering on
   talkDist:4.2, meetMax:(LOW_END?48:58), approachMax:(LOW_END?20:16), arrive:0.5, gait:2.2 };
 function _residentSpot(res){
-  if(res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11]]; for(const p of cands){ if(_hubGap(p[0],p[1])>=4.0) return {x:p[0],z:p[1]}; } return {x:-8,z:6}; }
+  if(res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11],[11,-4],[-11,3],[4,10],[-3,-11]];   // extra spots so two plaza folk (Kai + Noa) don't stack
+    for(const p of cands){ if(_hubGap(p[0],p[1])<4.0) continue;
+      let ok=true; for(const rr of RESIDENTS_LIVE){ if(Math.hypot(rr.group.position.x-p[0], rr.group.position.z-p[1])<6){ ok=false; break; } } if(!ok) continue;
+      return {x:p[0],z:p[1]}; } return {x:-8,z:6}; }
   const zc=_zoneById(res.zone), hub=zc&&zc._hub; if(!hub) return {x:44,z:44};
   for(const d of [7,8,6.5,9,10,11]){ for(let k=0;k<12;k++){ const a=k*(Math.PI/6), x=hub.x+Math.cos(a)*d, z=hub.z+Math.sin(a)*d;
     if(x*x+z*z<400 || Math.hypot(x,z)>210 || _hubGap(x,z)<4.0) continue;
@@ -4424,10 +4465,11 @@ function placeResident(res){ const g=buildResident(res), sp=_residentSpot(res);
   g.position.set(sp.x,0,sp.z); g.rotation.y=Math.atan2(-sp.x,-sp.z);
   const tag=residentTag(res); g.add(tag); const bub=makeResBubble(); bub.sprite.position.set(0,4.55,0); g.add(bub.sprite); scene.add(g);
   const live={ res, group:g, tag, bub, _baseRot:g.rotation.y, _ph:Math.random()*6.28, _gt:0, lastLine:-1,
-    home:{x:sp.x,z:sp.z}, _rt:null, _rp:Math.random()*4, _wk:Math.random()*6.28, _wspd:RES_MOVE.wanderSpd*(0.85+Math.random()*0.3) };
+    home:{x:sp.x,z:sp.z}, _rt:null, _rest:null, _rp:Math.random()*4, _wk:Math.random()*6.28, _wspd:RES_MOVE.wanderSpd*(0.85+Math.random()*0.3) };
   live._npc={ resident:true, id:res.id, kind:'resident', res, pos:g.position, reach:RES_REACH }; res._live=live;
   RESIDENTS_LIVE.push(live); return live; }
 if(NPC_CFG.modeEnabled && NPC_CFG.visualEnabled){ for(const res of RESIDENTS.slice(0,MAX_RESIDENTS)) placeResident(res); }
+placeGlowFlowers();   // 🌼 luminous roadside blossoms around the plaza + avenues (needs buildings + _hubGap, so run here)
 window.RESIDENTS_LIVE=RESIDENTS_LIVE;
 function refreshResidentTags(){ for(const L of RESIDENTS_LIVE){ const m=L.tag.material; if(m&&m.map){ m.map.dispose(); } const ns=residentTag(L.res); L.tag.material.map=ns.material.map; L.tag.material.needsUpdate=true; } }
 
@@ -4489,23 +4531,43 @@ function _resWalk(L,tx,tz,spd,dt){ const g=L.group, dx=tx-g.position.x, dz=tz-g.
   if(g._head) g._head.position.y=2.0+Math.abs(Math.sin(L._wk))*0.05; return false; }
 // ---- next wander waypoint: district folk roam a ring around home; the plaza guide strolls between set plaza spots ----
 function _resRoamTarget(L){
-  if(L.res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11]];
-    for(let k=0;k<6;k++){ const p=cands[(Math.random()*cands.length)|0];
+  if(L.res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11],[11,-4],[-11,3],[4,10],[-3,-11],[12,4],[-12,-3]];
+    for(let k=0;k<8;k++){ const p=cands[(Math.random()*cands.length)|0];
       if(Math.hypot(p[0]-L.group.position.x,p[1]-L.group.position.z)<1.5) continue;
       if(_hubGap(p[0],p[1])>=4.0) return {x:p[0],z:p[1]}; } return null; }
   const h=L.home;
   for(let k=0;k<8;k++){ const a=Math.random()*Math.PI*2, r=RES_MOVE.roamR*(0.4+Math.random()*0.6), x=h.x+Math.cos(a)*r, z=h.z+Math.sin(a)*r;
     if(x*x+z*z<400 || Math.hypot(x,z)>210 || _hubGap(x,z)<4.0) continue; return {x,z}; }
   return null; }
+// ---- resting on a bench: townsfolk stroll to a free SEAT, sit a while, then get back up (a quiet place to rest) ----
+const SIT_POSE={ y:0.2, leg:1.25 };
+function _freeSeat(L){ let best=null,bd=RES_MOVE.seatSeek; const px=L.group.position.x, pz=L.group.position.z;
+  for(const s of SEATS){ if(s._occ) continue; const d=Math.hypot(s.x-px,s.z-pz); if(d<bd){ bd=d; best=s; } } return best; }
+function _resSit(L,s){ const g=L.group; g.position.set(s.x,SIT_POSE.y,s.z); g.rotation.y=s.rot;
+  if(g._legL){ g._legL.rotation.x=SIT_POSE.leg; g._legR.rotation.x=SIT_POSE.leg; } if(g._head) g._head.position.y=2.0; }
+function _resStand(L){ const g=L.group; g.position.y=0; if(g._legL){ g._legL.rotation.x=0; g._legR.rotation.x=0; } }
+function _seatRelease(L){ if(L._rest&&L._rest.seat) L._rest.seat._occ=null; L._rest=null; }
 function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.elapsedTime; const C=_ambConv, hidden=document.hidden;
   for(const L of RESIDENTS_LIVE){ const g=L.group;
     const inConv=C&&(C.a===L||C.b===L), partner=inConv?(C.a===L?C.b:C.a):null;
     const chatBound=_resChatActive()&&activeNpc&&activeNpc.res===L.res; let moving=false;
+    // resting on a bench: hold the seated pose until the timer ends; a chat/conversation makes them stand and yield the seat
+    if(L._rest){
+      if(inConv||chatBound){ _resStand(L); _seatRelease(L); }
+      else if(L._rest.phase==='sit'){
+        if(!hidden && tt>=L._rest.until){ _resStand(L); _seatRelease(L); L._rp=tt+1.5+Math.random()*3; }
+        else { g.position.y=SIT_POSE.y; if(g._legL){ g._legL.rotation.x=SIT_POSE.leg; g._legR.rotation.x=SIT_POSE.leg; } g.rotation.y=lerpA(g.rotation.y,L._rest.seat.rot,0.1);
+          if(g._armL){ g._armL.rotation.z+=(0.12-g._armL.rotation.z)*0.1; g._armR.rotation.z+=(0.12-g._armR.rotation.z)*0.1; } L.bub.update(dt); continue; } }   // stay seated
+    }
     if(inConv && C.phase==='approach' && !hidden && NPC_CFG.motionEnabled){
       if(g.position.distanceTo(partner.group.position)>RES_MOVE.talkDist){ _resWalk(L,partner.group.position.x,partner.group.position.z,RES_MOVE.meetSpd,dt); moving=true; }
     } else if(!inConv && !chatBound && !hidden && NPC_CFG.motionEnabled){   // wander is NOT gated on LOW_END — low-end just moves slower (RES_MOVE.wanderSpd); only a hidden tab / chat / conversation stops it
-      if(!L._rt && tt>=L._rp) L._rt=_resRoamTarget(L);
-      if(L._rt){ if(_resWalk(L,L._rt.x,L._rt.z,L._wspd,dt)){ L._rt=null; L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } }
+      if(L._rest && L._rest.phase==='goto'){   // strolling over to the chosen bench, then sit
+        if(_resWalk(L,L._rest.seat.x,L._rest.seat.z,L._wspd,dt)){ L._rest.phase='sit'; L._rest.until=tt+RES_MOVE.restMin+Math.random()*(RES_MOVE.restMax-RES_MOVE.restMin); _resSit(L,L._rest.seat); L.bub.update(dt); continue; } else moving=true;
+      } else {
+        if(!L._rt && tt>=L._rp){ const s=(Math.random()<RES_MOVE.restChance)?_freeSeat(L):null;
+          if(s){ s._occ=L; L._rest={ seat:s, phase:'goto', until:0 }; } else L._rt=_resRoamTarget(L); }
+        if(L._rt){ if(_resWalk(L,L._rt.x,L._rt.z,L._wspd,dt)){ L._rt=null; L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } } }
     if(moving){ if(L._gt>0) L._gt-=dt; if(g._armL) g._armL.rotation.z*=0.85; if(g._armR) g._armR.rotation.z*=0.85; L.bub.update(dt); continue; }
     let tgt;
     if(inConv && C.phase==='talk'){ tgt=Math.atan2(partner.group.position.x-g.position.x, partner.group.position.z-g.position.z); }
@@ -6179,6 +6241,7 @@ function animate(){
   updateVisitFx(dt);
   updateNpcs(dt);
   updateResidents(dt);
+  updateGlowFlora(clock.elapsedTime);
   rtTick(dt);
   if(userInput||moving||ride||dragging||navTarget) lastAct=_now;   // perf: dynamic state → stay 60fps + refresh shadows next frames
   if(!_idle) renderer.shadowMap.needsUpdate=true;                  // perf: refresh shadow map only while active; frozen when idle
@@ -6510,11 +6573,12 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   // 🧑‍🌾 resident NPC social layer probes
   window.__villagers=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, name:(L.res[LANG]||L.res.ko).name,
     x:+L.group.position.x.toFixed(1), z:+L.group.position.z.toFixed(1), near:+player.position.distanceTo(L.group.position).toFixed(2)<=RES_REACH }));
-  window.__npcRoutes=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, pos:[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)], anchor:[+L.home.x.toFixed(1),+L.home.z.toFixed(1)], target:L._rt?[+L._rt.x.toFixed(1),+L._rt.z.toFixed(1)]:null, facing:+L._baseRot.toFixed(2) }));
+  window.__npcRoutes=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, pos:[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)], anchor:[+L.home.x.toFixed(1),+L.home.z.toFixed(1)], target:L._rt?[+L._rt.x.toFixed(1),+L._rt.z.toFixed(1)]:null, rest:L._rest?L._rest.phase:null, facing:+L._baseRot.toFixed(2) }));
   window.__npcMoved=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, dist:+(L._dist||0).toFixed(2), walking:!!L._rt||!!(_ambConv&&(_ambConv.a===L||_ambConv.b===L)&&_ambConv.phase==='approach') }));
   window.__npcState=()=>({ mode:NPC_CFG.modeEnabled, visual:NPC_CFG.visualEnabled, ai:NPC_CFG.aiEnabled, ambientAi:NPC_CFG.ambientAiEnabled, playerAi:NPC_CFG.playerChatAiEnabled,
     scriptedAmbient:NPC_CFG.scriptedAmbient, lowEnd:LOW_END, mobile:IS_MOBILE, motionEnabled:NPC_CFG.motionEnabled, wanderSpd:+RES_MOVE.wanderSpd.toFixed(2), meetSpd:+RES_MOVE.meetSpd.toFixed(2), gapMin:NPC_CFG.gapMin, gapMax:NPC_CFG.gapMax, maxTurns:NPC_CFG.maxTurns,
-    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
+    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), resting:RESIDENTS_LIVE.filter(L=>L._rest).length, seats:SEATS.length, flora:GLOW_FLORA.length, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
+  window.__seats=()=>SEATS.map((s,i)=>({ i, pos:[+s.x.toFixed(1),+s.z.toFixed(1)], occupied:s._occ?s._occ.res.id:null }));
   window.__npcEncounter=(a,b)=>{ const A=RESIDENTS_LIVE.find(L=>L.res.id===a)||RESIDENTS_LIVE[0], B=RESIDENTS_LIVE.find(L=>L.res.id===b)||RESIDENTS_LIVE[1];
     if(!A||!B||A===B) return {ok:false}; _pairCd.delete(_pairKey(A,B)); if(_ambConv) _endAmb('debug'); _startAmb(A,B); if(_ambConv){ _ambConv.phase='talk'; _ambConv.nextAt=0; _advanceAmb(); }
     return { ok:true, a:A.res.id, b:B.res.id, max:_ambConv?_ambConv.max:0, i:_ambConv?_ambConv.i:1, last:_npcTranscript.slice(-1)[0]||null }; };

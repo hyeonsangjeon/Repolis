@@ -3,7 +3,19 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
-## [1.51.0] — 2026-07-04
+## [1.52.0] — 2026-07-04
+
+### 🌼 A plaza dreamer, benches to rest on, and roadside flowers that glow after dark
+- **A new resident — Noa, the plaza dreamer.** An 8th townsperson (`noa`, zone `plaza`, max cap still 10) now strolls the central square brainstorming ideas aloud — a wandering, curious counterpart to Kai the crossing guide. Added to the client `RESIDENTS` roster and the worker `NPC_PERSONAS` registry so live chat stays in-persona.
+- **Somewhere to rest.** Residents now actually *use* the benches. A rest state machine (`_freeSeat`/`_resSit`/`_resStand`/`_seatRelease` + `RES_MOVE.restChance/restMin/restMax/seatSeek`) sends a wanderer to the nearest free `SEAT`, sits them in a relaxed pose for a spell, then stands them back up. If a visitor or an ambient conversation claims them mid-rest, they immediately stand and free the seat.
+- **Flowers that glow at night.** New `makeGlowFlowers`/`placeGlowFlowers`/`updateGlowFlora` scatter luminous blossoms around the plaza and avenues — colourful and unlit by day, softly shimmering (halo sprite + additive ground pool) after dark, driven every frame by the day/night state rather than the one-shot transition.
+- **Preserved.** Every prior NPC guard is intact: hidden-tab freeze, visitor-chat freeze, pair cooldown, budget/env gating, the 10-turn hard ceiling, `motionEnabled` locomotion, and the lifelike LOW_END walking pace. Glow flora own their own sprites (outside `NIGHT_GLOWS`) so nothing disturbs the lamp/window night system.
+- **Debug + guards.** `__npcRoutes` now reports each resident's `rest` phase, `__npcState` adds `resting`/`seats`/`flora` counts, and a new `__seats()` lists bench occupancy. `scripts/smoke.mjs` asserts exactly **8** residents (incl. Noa), the bench-rest helpers, and the day/night-driven glow flowers.
+
+### Verified
+- Hermetic block green: **smoke · council 130 · live 56/0**, `scholars.js` + `grounded.js` syntax-clean. Browser-checked desktop + mobile 390×844 (0 console errors): Noa strolls the plaza, residents walk to benches and sit, glow flowers shimmer at night.
+
+
 
 ### 🌌 Residents are now self-aware — they know they're AI, and they'll tell you how the city feels
 - **Old behavior.** The worker persona guard hard-ordered residents to *"never say you are an AI"* — a flat denial. Fine for immersion, but it meant a resident would dodge or fib if a visitor sincerely asked what they were.
