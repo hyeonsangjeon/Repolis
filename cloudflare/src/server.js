@@ -17,6 +17,10 @@
 //   server -> { t:'join', peer, live, today, total, entriesToday, entriesTotal }
 //   server -> { t:'pos', id, x, z, yaw }
 //   server -> { t:'leave', id, live }
+//   server -> { t:'sync', ids:[...], live }   // authoritative roster (every ~15s); clients drop any avatar not listed
+//
+// Owner moderation (not part of the public client): GET /__admin/peers and
+// /__admin/kick?id=|name=[&ban=secs], both gated by the ADMIN_KEY secret.
 //
 // Counters: `today` and `total` (unique visitors today / all-time) are kept in
 // the Durable Object's SQLite storage, so they survive restarts. `live` is the
@@ -25,6 +29,11 @@
 
 const ENTRY_SEED_MULTIPLIER = 3.7;
 const COUNTER_BASIS = "UTC day / world unique guest / entry joins";
+// How often the room broadcasts its authoritative peer roster ({t:'sync'}). Clients
+// drop any avatar not in the roster, so a ghost (a peer whose one-shot `leave` was
+// missed by a client) self-heals within one interval instead of lingering forever.
+const SYNC_MS = 15000;
+const MAX_BAN_S = 3600; // safety ceiling for an admin kick's optional re-join ban
 
 export class RepolisRoom {
   constructor(state, env) {
@@ -32,6 +41,8 @@ export class RepolisRoom {
     this.env = env;
     this.sql = state.storage.sql;
     this.sessions = new Map(); // ws -> peer
+    this.bans = new Map();     // peer id / "name:<name>" -> ban-expiry ms (in-memory; short admin kicks)
+    this._alarmSet = false;    // is a roster-sync alarm currently scheduled?
     this.ready = false;        // schema + counters initialised?
     // Kill switch: a monthly cap on NEW connections so a traffic spike or abuse
     // can never push the bill past the included Workers Paid allowance. Tunable
@@ -200,6 +211,11 @@ export class RepolisRoom {
     if (url.pathname.endsWith("/__usage")) {
       return new Response(JSON.stringify(this.counterSnapshot()), { headers: { "content-type": "application/json" } });
     }
+    // Owner-only moderation (list live peers / kick a nuisance socket). Gated by the
+    // ADMIN_KEY secret — never exposed to the public client. See admin().
+    if (url.pathname.includes("/__admin/")) {
+      return this.admin(req, url);
+    }
     if (req.headers.get("Upgrade") !== "websocket") {
       return new Response("Repolis realtime OK", { status: 200 });
     }
@@ -216,6 +232,79 @@ export class RepolisRoom {
     return new Response(null, { status: 101, webSocket: client });
   }
 
+  // Owner-only moderation endpoint. Auth: ADMIN_KEY secret via ?key= or x-admin-key.
+  //   GET  /__admin/peers          -> { live, peers:[{id,name,x,z,yaw}] }
+  //   POST /__admin/kick?id=<id>   -> close matching socket(s), broadcast leave
+  //        /__admin/kick?name=<n>  -> match by display name (e.g. "Guest-7500")
+  //        &ban=<seconds>          -> also refuse that id/name re-joining for a bit (<=1h)
+  // Kicking only severs a live socket. A ghost avatar (already-gone peer still shown on
+  // some client because its `leave` was missed) has no socket here — the periodic
+  // {t:'sync'} roster removes those automatically; see alarm().
+  admin(req, url) {
+    const secret = this.env && this.env.ADMIN_KEY;
+    const key = url.searchParams.get("key") || req.headers.get("x-admin-key");
+    if (!secret) return this.json({ error: "ADMIN_KEY not set on the worker" }, 501);
+    if (key !== secret) return new Response("forbidden", { status: 403 });
+    const path = url.pathname;
+    if (path.endsWith("/__admin/peers")) {
+      const peers = [...this.sessions.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, yaw: p.yaw }));
+      return this.json({ live: this.sessions.size, peers, bans: [...this.bans.keys()] });
+    }
+    if (path.endsWith("/__admin/kick")) {
+      const id = url.searchParams.get("id");
+      const name = url.searchParams.get("name");
+      if (!id && !name) return this.json({ error: "pass ?id= or ?name=" }, 400);
+      const banS = Math.min(MAX_BAN_S, Math.max(0, parseInt(url.searchParams.get("ban") || "0", 10) || 0));
+      const kicked = [];
+      for (const [ws, p] of [...this.sessions]) {
+        if ((id && p.id === id) || (name && p.name === name)) {
+          kicked.push({ id: p.id, name: p.name });
+          this.sessions.delete(ws);
+          if (banS) {
+            const until = Date.now() + banS * 1000;
+            this.bans.set(p.id, until);
+            this.bans.set("name:" + p.name, until);
+          }
+          try { ws.close(4001, "kicked"); } catch (e) { /* already closing */ }
+          this.broadcast({ t: "leave", id: p.id, live: this.sessions.size });
+        }
+      }
+      return this.json({ kicked, count: kicked.length, live: this.sessions.size, bannedFor: banS || null });
+    }
+    return this.json({ error: "unknown admin route", routes: ["/__admin/peers", "/__admin/kick"] }, 404);
+  }
+
+  json(obj, status = 200) {
+    return new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json" } });
+  }
+
+  isBanned(peer) {
+    const now = Date.now();
+    for (const k of [peer.id, "name:" + peer.name]) {
+      const until = this.bans.get(k);
+      if (until) { if (until > now) return true; this.bans.delete(k); }
+    }
+    return false;
+  }
+
+  // Keep exactly one roster-sync alarm scheduled while the room is populated. The
+  // alarm broadcasts the authoritative peer id list so ghost avatars self-heal; it
+  // reschedules itself until the room empties, then stops (no idle-room cost).
+  scheduleSync() {
+    if (this._alarmSet) return;
+    try { this.state.storage.setAlarm(Date.now() + SYNC_MS); this._alarmSet = true; }
+    catch (e) { this._alarmSet = false; /* storage/alarm unavailable — presence still works */ }
+  }
+
+  async alarm() {
+    this._alarmSet = false;
+    if (this.sessions.size > 0) {
+      const ids = [...this.sessions.values()].map((p) => p.id);
+      this.broadcast({ t: "sync", ids, live: this.sessions.size });
+      this.scheduleSync();
+    }
+  }
+
   wire(ws) {
     ws.addEventListener("message", (ev) => {
       let m;
@@ -228,8 +317,11 @@ export class RepolisRoom {
           x: +m.x || 0, z: +m.z || 0, yaw: +m.yaw || 0,
           color: m.color,
         };
+        // An admin kick can carry a short ban; refuse the re-join cleanly.
+        if (this.isBanned(peer)) { try { ws.close(4003, "banned"); } catch (e) { /* ignore */ } return; }
         const countEntry = !this.sessions.has(ws);
         this.sessions.set(ws, peer);
+        this.scheduleSync();   // ensure the ghost-clearing roster broadcast is running while anyone is here
         const { today, total, entriesToday, entriesTotal } = this.counts(peer.id, countEntry);
         const live = this.sessions.size;
         const stats = { live };
@@ -280,12 +372,13 @@ export default {
     const url = new URL(req.url);
     const isWS = req.headers.get("Upgrade") === "websocket";
     const isUsage = url.pathname.endsWith("/__usage");
-    if (!isWS && !isUsage) {
+    const isAdmin = url.pathname.includes("/__admin/");
+    if (!isWS && !isUsage && !isAdmin) {
       return new Response("Repolis realtime server — connect over WebSocket.", { status: 200 });
     }
     // Everyone shares one room; the last path segment names it (default "world").
-    // /__usage always reports the shared "world" room.
-    const room = isUsage ? "world" : (url.pathname.split("/").filter(Boolean).pop() || "world");
+    // /__usage and /__admin/* always target the shared "world" room.
+    const room = (isUsage || isAdmin) ? "world" : (url.pathname.split("/").filter(Boolean).pop() || "world");
     const id = env.REPOLIS_ROOM.idFromName(room);
     return env.REPOLIS_ROOM.get(id).fetch(req);
   },

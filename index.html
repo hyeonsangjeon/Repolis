@@ -6351,6 +6351,7 @@ function rtHandle(m){
   else if(m.t==='join'){ addPeer(m.peer); applyStats(m); }
   else if(m.t==='pos'){ const p=peers.get(m.id); if(p){ p.tx=m.x; p.tz=m.z; p.tyaw=m.yaw; } }
   else if(m.t==='leave'){ removePeer(m.id); if(m.live!=null) setLive(m.live); }
+  else if(m.t==='sync'){ const ids=new Set(m.ids||[]); for(const id of [...peers.keys()]) if(!ids.has(id)) removePeer(id); if(m.live!=null) setLive(m.live); }   // authoritative roster: drop any ghost avatar the server no longer knows about
   else if(m.t==='stats'){ applyStats(m); }
   else if(m.t==='wave'){ const p=peers.get(m.id); if(p){ p.emoteT=EMOTES.wave.dur; p.emoteKind='wave'; emoteBubble(p.group,'wave'); if(m.to===guestId()) showWave(LANG==='ko'?`${p.name} 님이 인사했어요 👋`:`${p.name} waved at you 👋`); } }
   else if(m.t==='emote'){ const p=peers.get(m.id); if(p){ const E=EMOTES[m.kind]; if(E){ p.emoteT=E.dur; p.emoteKind=m.kind; emoteBubble(p.group,m.kind); } } }
@@ -6399,6 +6400,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__card=(name)=>{ const r=repoByKey(name); if(r){ openCard(r); return {repo:r.repo,license:r.license,open_issues:r.open_issues,release_tag:r.release_tag,archived:r.archived,chips:[...document.querySelectorAll('#cardChips .chip')].map(c=>c.textContent.trim())}; } return null; };
   window.__modal=()=>modalOpen;
   window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, total:allCountEl.textContent, entriesToday:entryCountEl?entryCountEl.textContent:null, entriesTotal:entryTotalCountEl?entryTotalCountEl.textContent:null, ws:rtSock?rtSock.readyState:-1});
+  window.__peers=()=>[...peers.entries()].map(([id,p])=>({id, name:p.name, x:+p.group.position.x.toFixed(1), z:+p.group.position.z.toFixed(1)}));   // live remote avatars I'm rendering
+  window.__kickGhost=(q)=>{ let n=0; for(const [id,p] of [...peers]){ if(q==null||id===q||p.name===q){ removePeer(id); n++; } } return {removed:n};};   // locally drop a lingering avatar by id/name (or all if no arg); server roster keeps real peers
   window.__peerSim=(x=4,z=-2)=>{ rtHandle({t:'join',peer:{id:'gSIM',name:'Tester',x,z,yaw:0,color:0x6fa8ef}}); const p=peers.get('gSIM'); p.group.updateMatrixWorld(true); const v=new THREE.Vector3(0,2.2,0).applyMatrix4(p.group.matrixWorld).project(camera); return {sx:Math.round((v.x*0.5+0.5)*innerWidth), sy:Math.round((-v.y*0.5+0.5)*innerHeight), armR:!!p.group._armR}; };
   window.__greet=(cx,cy)=>{ const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return {id:g.id, myEmoteT:+emoteT.toFixed(2), kind:emoteKind}; } return null; };
   window.__wave=(id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'wave',id:t,to:guestId()}); return {by:t, peerEmoteT:+(peers.get(t)?.emoteT||0).toFixed(2), toast:greetToast.textContent}; };

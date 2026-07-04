@@ -3,6 +3,18 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.53.0] — 2026-07-04
+
+### 🧹 Ghost avatars can't haunt the city anymore — plus a private admin kick
+- **The bug.** A remote avatar only ever disappeared when the server sent an explicit `leave` (or the socket you own closed). If a single `leave` was ever missed — a network blip, a worker eviction — that avatar circled the plaza *forever* for everyone, with no way to clear it. (This is what `guest-7500` was: a stale ghost, not a live connection.)
+- **Self-healing roster.** The realtime worker (`repolis-rt`) now broadcasts an **authoritative `{t:'sync', ids, live}`** roster every ~15s (via a Durable Object alarm, only while anyone's connected). The client reconciles against it and drops any local avatar the server no longer knows about — so a missed `leave` heals itself within one sync cycle instead of lingering. Idempotent and false-cull-proof: idle-but-live peers stay because the server, not a client timer, is the source of truth.
+- **Admin kick tool (private).** New token-gated endpoints on the worker: `GET /__admin/peers` lists everyone in the room (`id, name, x, z, yaw` + live count), and `/__admin/kick?id=|name=[&ban=secs]` force-closes matching sockets (code 4001), broadcasts a `leave`, and can lay a short in-memory ban (≤1h) so a nuisance can't instantly reconnect. Gated behind an `ADMIN_KEY` secret — returns **501** if unset (fails safe), **403** on a bad key. Never committed.
+- **Debug helpers.** `window.__peers()` lists the avatars you're rendering; `window.__kickGhost(idOrName)` locally drops a stray one (or all, with no arg) — the next server sync keeps the real peers.
+- **Preserved.** Visitor counters (현재/오늘/누적, UTC day), the solo-mode fallback when `RT_DEFAULT` is empty, and the identical JSON-over-WebSocket protocol are all untouched. No new deps; still free-plan Durable Objects.
+
+### Verified
+- Hermetic block green: **smoke · council 130 · live 56/0**, `scholars.js` + `grounded.js` + `cloudflare/src/server.js` syntax-clean. Local `wrangler dev` integration test **11/11** (join visibility, admin auth 403/list, kick-by-name broadcast, ban refusal, periodic sync roster). Smoke gains a realtime ghost-cleanup guard.
+
 ## [1.52.0] — 2026-07-04
 
 ### 🌼 A plaza dreamer, benches to rest on, and roadside flowers that glow after dark

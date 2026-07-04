@@ -47,3 +47,34 @@ Then open the site pointed at it:
 - "today" uses the UTC date.
 - Same JSON-over-WebSocket protocol as `../party/repolis.js` and
   `../scripts/dev_realtime.mjs`, so the client is identical across all three.
+- The room broadcasts an authoritative `{t:'sync', ids, live}` roster every ~15s
+  (Durable Object alarm, only while someone's connected). The client drops any
+  avatar not in it, so a missed `leave` (network blip / worker eviction) can't
+  leave a **ghost avatar** circling forever — it self-heals within one cycle.
+
+## Admin (kick a stray / ghost avatar)
+
+Token-gated endpoints, off by default. Set a secret first (never commit it):
+
+```bash
+cd cloudflare
+npx wrangler secret put ADMIN_KEY      # paste a strong random value
+npx wrangler deploy
+```
+
+Then, from a trusted shell:
+
+```bash
+BASE=https://repolis-rt.<you>.workers.dev
+# who's in the room right now?
+curl "$BASE/__admin/peers?key=$ADMIN_KEY"
+# force-disconnect someone by display name (or id=), optionally ban ≤1h
+curl "$BASE/__admin/kick?key=$ADMIN_KEY&name=Guest-7500&ban=300"
+```
+
+`/__admin/peers` returns `{live, peers:[{id,name,x,z,yaw}], bans}`.
+`/__admin/kick` closes matching sockets (code 4001), broadcasts a `leave`, and
+with `&ban=<secs>` lays a short in-memory ban. Responses: **501** if `ADMIN_KEY`
+is unset (fails safe), **403** on a bad key, **400** with no `id`/`name`. The ban
+is in-memory (lost on DO eviction) — fine for short nuisance blocks, not a
+permanent ban list.
