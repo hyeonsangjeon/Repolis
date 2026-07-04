@@ -321,7 +321,9 @@ ok(/motionEnabled:true/.test(npcBlock), 'NPC_CFG carries a motionEnabled flag (r
 ok(!/!inConv && !chatBound && !LOW_END/.test(npcBlock), 'wander gate is NOT disabled by LOW_END (no "!LOW_END" in the locomotion branch)');
 ok(/!inConv && !chatBound && !hidden && NPC_CFG\.motionEnabled/.test(npcBlock), 'wander runs whenever motion is enabled and the tab is visible (LOW_END-independent)');
 ok(!/LOW_END\) NPC_CFG\.scriptedAmbient=false/.test(npcBlock), 'LOW_END no longer kills scripted ambient chatter (kept, just eased)');
-ok(/wanderSpd:\(LOW_END\?0\.[0-9]+/.test(npcBlock) && /meetSpd:\(LOW_END\?/.test(npcBlock), 'RES_MOVE gives LOW_END a slower-but-nonzero wander + meet speed');
+const _lowW=(npcBlock.match(/wanderSpd:\(LOW_END\?([0-9.]+)/)||[])[1], _lowM=(npcBlock.match(/meetSpd:\(LOW_END\?([0-9.]+)/)||[])[1];
+ok(_lowW && parseFloat(_lowW)>=0.7, `LOW_END wander speed (${_lowW}) is a lifelike walking pace (>=0.7), not a near-frozen crawl`);
+ok(_lowM && parseFloat(_lowM)>=1.1, `LOW_END meet speed (${_lowM}) is brisk enough to actually rendezvous (>=1.1)`);
 ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\)/.test(npcBlock), 'a hidden tab still stops ambient chatter (background motion/cost guard preserved)');
 // 12c — turn-by-turn ambient engine: hidden-tab stop, one conversation, turn + cooldown caps
 ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.test(npcBlock), 'ambient engine stops on a hidden tab (no background chatter/cost)');

@@ -4406,10 +4406,11 @@ function makeResBubble(){ const W=384,H=176, cv=document.createElement('canvas')
 
 const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
 // ---- wander + rendezvous tuning: townsfolk stroll around home and walk toward one another to actually meet before talking ----
-// LOW_END keeps moving, just gentler: slower gait, tighter roam, longer pauses, shorter rendezvous range (motion stays ON — only speed/frequency ease).
-const RES_MOVE={ wanderSpd:(LOW_END?0.42:(IS_MOBILE?0.7:1.05)), meetSpd:(LOW_END?0.95:(IS_MOBILE?1.7:2.4)),
-  roamR:(LOW_END?5.0:6.5), pauseMin:(LOW_END?3.5:2.5), pauseMax:(LOW_END?9.0:7.0),
-  talkDist:4.2, meetMax:(LOW_END?44:58), approachMax:(LOW_END?24:16), arrive:0.5, gait:2.2 };
+// LOW_END walks at a lifelike pace (0.9 — only a touch under desktop 1.05) with the SAME roam radius + pauses as desktop; the cost/perf saving on low-end
+// comes ONLY from the conversation side (fewer turns, longer gaps, one at a time, AI off/low-freq) — locomotion and its perceived speed are never throttled.
+const RES_MOVE={ wanderSpd:(LOW_END?0.9:(IS_MOBILE?0.95:1.05)), meetSpd:(LOW_END?1.4:(IS_MOBILE?1.7:2.4)),
+  roamR:6.5, pauseMin:2.5, pauseMax:7.0,
+  talkDist:4.2, meetMax:(LOW_END?48:58), approachMax:(LOW_END?20:16), arrive:0.5, gait:2.2 };
 function _residentSpot(res){
   if(res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11]]; for(const p of cands){ if(_hubGap(p[0],p[1])>=4.0) return {x:p[0],z:p[1]}; } return {x:-8,z:6}; }
   const zc=_zoneById(res.zone), hub=zc&&zc._hub; if(!hub) return {x:44,z:44};
@@ -4474,7 +4475,7 @@ function _ambientTick(){ const now=clock.elapsedTime;
 // ---- resident locomotion: step toward a target with a simple leg-swing gait; returns true once arrived ----
 function _resWalk(L,tx,tz,spd,dt){ const g=L.group, dx=tx-g.position.x, dz=tz-g.position.z, d=Math.hypot(dx,dz);
   if(d<=RES_MOVE.arrive) return true;
-  const step=Math.min(spd*dt,d), nx=dx/d, nz=dz/d; g.position.x+=nx*step; g.position.z+=nz*step;
+  const step=Math.min(spd*dt,d), nx=dx/d, nz=dz/d; g.position.x+=nx*step; g.position.z+=nz*step; L._dist=(L._dist||0)+step;
   g.rotation.y=lerpA(g.rotation.y, Math.atan2(nx,nz), 0.2);
   L._wk+=step*RES_MOVE.gait; const sw=Math.sin(L._wk)*0.5;
   if(g._legL){ g._legL.rotation.x=sw; g._legR.rotation.x=-sw; }
@@ -6503,9 +6504,10 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__villagers=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, name:(L.res[LANG]||L.res.ko).name,
     x:+L.group.position.x.toFixed(1), z:+L.group.position.z.toFixed(1), near:+player.position.distanceTo(L.group.position).toFixed(2)<=RES_REACH }));
   window.__npcRoutes=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, pos:[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)], anchor:[+L.home.x.toFixed(1),+L.home.z.toFixed(1)], target:L._rt?[+L._rt.x.toFixed(1),+L._rt.z.toFixed(1)]:null, facing:+L._baseRot.toFixed(2) }));
+  window.__npcMoved=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, dist:+(L._dist||0).toFixed(2), walking:!!L._rt||!!(_ambConv&&(_ambConv.a===L||_ambConv.b===L)&&_ambConv.phase==='approach') }));
   window.__npcState=()=>({ mode:NPC_CFG.modeEnabled, visual:NPC_CFG.visualEnabled, ai:NPC_CFG.aiEnabled, ambientAi:NPC_CFG.ambientAiEnabled, playerAi:NPC_CFG.playerChatAiEnabled,
     scriptedAmbient:NPC_CFG.scriptedAmbient, lowEnd:LOW_END, mobile:IS_MOBILE, motionEnabled:NPC_CFG.motionEnabled, wanderSpd:+RES_MOVE.wanderSpd.toFixed(2), meetSpd:+RES_MOVE.meetSpd.toFixed(2), gapMin:NPC_CFG.gapMin, gapMax:NPC_CFG.gapMax, maxTurns:NPC_CFG.maxTurns,
-    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
+    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
   window.__npcEncounter=(a,b)=>{ const A=RESIDENTS_LIVE.find(L=>L.res.id===a)||RESIDENTS_LIVE[0], B=RESIDENTS_LIVE.find(L=>L.res.id===b)||RESIDENTS_LIVE[1];
     if(!A||!B||A===B) return {ok:false}; _pairCd.delete(_pairKey(A,B)); if(_ambConv) _endAmb('debug'); _startAmb(A,B); if(_ambConv){ _ambConv.phase='talk'; _ambConv.nextAt=0; _advanceAmb(); }
     return { ok:true, a:A.res.id, b:B.res.id, max:_ambConv?_ambConv.max:0, i:_ambConv?_ambConv.i:1, last:_npcTranscript.slice(-1)[0]||null }; };
