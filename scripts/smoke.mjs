@@ -374,6 +374,10 @@ ok(/NPC_MODEL_DEFAULT \|\| "gpt-5\.4-mini"/.test(WORKER), 'provider adapter fall
 ok(/env\.NPC_DAY_CAP_USD/.test(WORKER) && !/COUNCIL_[A-Z_]*\s*\|\|\s*env\.NPC_/.test(WORKER), 'NPC budget uses the NPC_* namespace (separate from COUNCIL_*)');
 ok(/function npcMetric\(/.test(WORKER) && /env\.METRICS_URL/.test(WORKER), 'redacted fire-and-forget metrics emit (env.METRICS_URL) present');
 
+// 13 — realtime ghost cleanup: client reconciles against the server's authoritative roster
+ok(/m\.t==='sync'/.test(HTML) && /for\(const id of \[\.\.\.peers\.keys\(\)\]\) if\(!ids\.has\(id\)\) removePeer\(id\)/.test(HTML), "client drops any avatar missing from the server's authoritative sync roster (self-healing ghost cleanup)");
+ok(/window\.__peers=\(\)=>/.test(HTML) && /window\.__kickGhost=\(q\)=>/.test(HTML), 'realtime debug helpers (__peers / __kickGhost) are present for inspecting and dropping stray avatars');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
