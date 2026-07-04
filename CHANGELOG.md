@@ -3,6 +3,18 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.50.2] — 2026-07-04
+
+### 🚶 Tuning — LOW_END residents now walk at a lifelike pace (not a crawl)
+- **The 1.50.1 hotfix unfroze residents but left them too slow.** On real phones the LOW_END wander speed of `0.42` read as "barely moving." Movement is cheap (just position updates) — the perf cost is AI calls / bubbles / turns / concurrency, not walking — so there was no reason to crawl.
+- **LOW_END walking is now lifelike.** `RES_MOVE` LOW_END speeds jump to **`wanderSpd 0.9`** (from 0.42, just under desktop's 1.05) and **`meetSpd 1.4`** (from 0.95). Roam radius and stroll pauses are now the **same as desktop** (`roamR 6.5`, `pause 2.5–7s`) instead of the old tighter/longer low-end values, so low-end folk cover real ground and stand around less. The leg-swing gait is distance-coupled, so faster walking automatically gives a faster, natural stride. Rendezvous range eased to `meetMax 48 / approachMax 20s` to match the brisker meet speed.
+- **Cost saving stays on the conversation side only.** LOW_END still runs one conversation at a time (`maxConcurrent 1`), shorter chats (`maxTurns 4`), slower cadence (`gap 8–14s`), and AI off/low-freq (env-gated) — none of which touches locomotion.
+- **Preserved.** Hidden-tab freeze, visitor-chat freeze, pair cooldown, budget/env gating, hard 10-turn ceiling, and the `motionEnabled` locomotion decoupling from 1.50.1.
+- **Debug + guards.** `_resWalk` now accumulates per-resident distance; `window.__npcMoved()` reports each resident's `dist` + `walking` flag and `__npcState()` gains a `moved` total. `scripts/smoke.mjs` (**→ 173**) replaces the "nonzero speed" check with numeric guards asserting LOW_END `wanderSpd >= 0.7` and `meetSpd >= 1.1` (locks the lifelike-pace requirement).
+
+### Verified
+- Hermetic block green: **smoke 173 · council 130 · live 56/0**, `scholars.js` + `grounded.js` syntax-clean, inline module syntax-checked. Live in Chrome LOW_END mobile **390×844** (`hardwareConcurrency` forced to 2): `wanderSpd:0.9, meetSpd:1.4`, residents visibly stroll the districts (≥1 clearly walking every few seconds, cumulative `moved` climbing steadily), hidden tab still freezes all motion, **0 console errors**.
+
 ## [1.50.1] — 2026-07-04
 
 ### 🩹 Hotfix — residents were frozen on mobile/low-end; they move again (just gentler)
