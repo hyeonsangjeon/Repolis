@@ -4091,7 +4091,11 @@ function stepSky(dt){
 // back-compat: setTimeOfDay(bool) snaps instantly (used by ?dbg __night and the initial paint)
 function setTimeOfDay(night){ skyPhaseIdx=night?2:0; skyT=skyTarget=SKY_PHASES[skyPhaseIdx].t; skyAuto=false; applySky(skyT); setNightState(night); updateDayIcon(); }
 document.getElementById('dayBtn').onclick=()=>{ skyPhaseIdx=(skyPhaseIdx+1)%SKY_PHASES.length; skyTarget=SKY_PHASES[skyPhaseIdx].t; skyAuto=false; lastAct=performance.now(); updateDayIcon(); };
-applySky(0.5); setNightState(false); updateDayIcon();
+// map the visitor's local wall-clock hour to a SKY_PHASES index (0 day,1 dusk,2 night,3 dawn) — static buckets, morning golden hour→dawn, evening→dusk
+function skyPhaseForHour(h){ h=((h%24)+24)%24; if(h>=5&&h<8) return 3; if(h>=8&&h<17) return 0; if(h>=17&&h<20) return 1; return 2; }
+// first-entry paint: pick the phase from the browser clock instead of hardcoding noon
+function initTimeOfDay(){ skyPhaseIdx=skyPhaseForHour(new Date().getHours()); skyT=skyTarget=SKY_PHASES[skyPhaseIdx].t; skyAuto=false; applySky(skyT); setNightState(_nightAt(skyT)); updateDayIcon(); }
+initTimeOfDay();
 
 /* ---- taxi stand at the plaza (LLM 안내자가 사는 곳) ---- */
 const TAXI_POS=new THREE.Vector3(12,0,9);
@@ -6416,6 +6420,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__night=(n)=>{ setTimeOfDay(n!==false); return isNight; };
   window.__sky=(t)=>{ if(t!==undefined){ skyAuto=false; skyT=skyTarget=((t%1)+1)%1; applySky(skyT); const nn=_nightAt(skyT); if(nn!==_nightState) setNightState(nn); } return {skyT:+skyT.toFixed(3),skyTarget:+skyTarget.toFixed(3),isNight,auto:skyAuto,phase:SKY_PHASES[skyPhaseIdx].name,sunVis:sunSky.visible}; };
   window.__skyCycle=()=>{ skyAuto=!skyAuto; lastAct=performance.now(); return skyAuto; };
+  window.__skyForHour=(h)=>{ const i=skyPhaseForHour(h); return {hour:((h%24)+24)%24,idx:i,phase:SKY_PHASES[i].name,t:SKY_PHASES[i].t}; };
   window.__lib=()=>{ openCard(LIB); return true; };
   window.__libView=(back=20)=>{ player.position.set(0,0,LIB._z-LIB._cw-back); model.rotation.y=0; camYaw=Math.PI; camPitch=0.34; camDist=42; return {z:+player.position.z.toFixed(1)}; };
   window.__tp=(x,z,yaw=Math.PI,pitch=0.30,dist=24)=>{ player.position.set(x,0,z); model.rotation.y=Math.PI-yaw; camYaw=yaw; camPitch=pitch; camDist=dist; return {x,z}; };

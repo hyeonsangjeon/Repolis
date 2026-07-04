@@ -3,6 +3,20 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.54.0] — 2026-07-04
+
+### 🌅 First entry now matches your local clock — day / golden hour / night
+- **The ask.** The very first scene was hardcoded to high noon (`applySky(0.5)`), so a visitor arriving at midnight still walked into a bright sunny city. Now the opening sky is chosen from the browser's own wall-clock hour.
+- **Static time buckets.** A pure `skyPhaseForHour(h)` maps the local hour to one of the four existing `SKY_PHASES`: **05:00–07:59 → 🌅 dawn** (morning golden hour), **08:00–16:59 → ☀️ day**, **17:00–19:59 → 🌆 dusk** (evening golden hour), **20:00–04:59 → 🌙 night**. Morning and evening golden hours are deliberately distinct phases.
+- **Boot paint.** New `initTimeOfDay()` seeds `skyPhaseIdx`/`skyT`/`skyTarget` from that phase and paints sky, sun and the discrete night assets accordingly — only `night` (0.0) lights the stars/moon/fireflies/lit windows; `dawn`/`dusk` keep the sun visible. The manual 🕑 day-button cycle (noon→dusk→night→dawn) continues correctly from whatever phase you booted into.
+- **Scope.** Intentionally simple static hour buckets — no seasonal/latitude sunrise math. Single `index.html`, zero new deps.
+- **Debug.** `?dbg` adds `window.__skyForHour(h)` so all 24 hours can be verified without waiting for the clock.
+
+### Verified
+- `node scripts/smoke.mjs` — ALL GREEN (new *first-entry time-of-day* group: 24h mapping, boundary hours, index range, hour-wrap).
+- `node council/test.mjs` (130) · `node council/test-live.mjs` (56) · `node --check` on `scholars.js` + `cloudflare-taxi/src/grounded.js`.
+- Browser (`?dbg=1`, desktop + mobile 390×844): `__skyForHour` correct for 6→dawn, 12→day, 18→dusk, 23/3→night, boundary hours 5/8/17/20/4/7/16/19; first entry at 23:00 renders the night city; phase forcing toggles star/moon/firefly assets; 0 console errors.
+
 ## [1.53.0] — 2026-07-04
 
 ### 🧹 Ghost avatars can't haunt the city anymore — plus a private admin kick

@@ -378,6 +378,35 @@ ok(/function npcMetric\(/.test(WORKER) && /env\.METRICS_URL/.test(WORKER), 'reda
 ok(/m\.t==='sync'/.test(HTML) && /for\(const id of \[\.\.\.peers\.keys\(\)\]\) if\(!ids\.has\(id\)\) removePeer\(id\)/.test(HTML), "client drops any avatar missing from the server's authoritative sync roster (self-healing ghost cleanup)");
 ok(/window\.__peers=\(\)=>/.test(HTML) && /window\.__kickGhost=\(q\)=>/.test(HTML), 'realtime debug helpers (__peers / __kickGhost) are present for inspecting and dropping stray avatars');
 
+// 14 — first-entry time-of-day: skyPhaseForHour maps the visitor's local hour to the right SKY_PHASES bucket
+group('first-entry time-of-day (browser clock → sky phase)');
+ok(/function skyPhaseForHour\(h\)\{/.test(HTML), 'skyPhaseForHour() exists');
+ok(/function initTimeOfDay\(\)\{/.test(HTML) && /initTimeOfDay\(\);/.test(HTML), 'initTimeOfDay() defined and invoked at boot');
+ok(!/applySky\(0\.5\); setNightState\(false\); updateDayIcon\(\);/.test(HTML), 'hardcoded noon first-entry paint removed');
+ok(/window\.__skyForHour=\(h\)=>/.test(HTML), '?dbg __skyForHour hook present for 24h verification');
+const sphSrc = (HTML.match(/function skyPhaseForHour\(h\)\{[\s\S]*?return 2; \}/) || [])[0];
+ok(!!sphSrc, 'skyPhaseForHour extractable from index.html');
+if (sphSrc) {
+  const skyPhaseForHour = new Function(`${sphSrc}\nreturn skyPhaseForHour;`)();
+  // PHASES mirrors the shipped SKY_PHASES index→name mapping (0 day,1 dusk,2 night,3 dawn)
+  const PHASES = ['day', 'dusk', 'night', 'dawn'];
+  const expect = h => (h >= 5 && h < 8) ? 'dawn' : (h >= 8 && h < 17) ? 'day' : (h >= 17 && h < 20) ? 'dusk' : 'night';
+  let allOk = true, ranges = true;
+  for (let h = 0; h < 24; h++) {
+    const i = skyPhaseForHour(h);
+    if (i < 0 || i > 3) ranges = false;
+    if (PHASES[i] !== expect(h)) { allOk = false; console.log('  ✗ hour ' + h + ' → ' + PHASES[i] + ' (expected ' + expect(h) + ')'); }
+  }
+  ok(allOk, 'all 24 hours map to the expected phase (dawn 5-7 · day 8-16 · dusk 17-19 · night 20-4)');
+  ok(ranges, 'skyPhaseForHour always returns an index in 0..3');
+  // exact boundary hours (both sides of every transition)
+  ok(PHASES[skyPhaseForHour(5)] === 'dawn' && PHASES[skyPhaseForHour(4)] === 'night', 'boundary 4→night, 5→dawn');
+  ok(PHASES[skyPhaseForHour(8)] === 'day' && PHASES[skyPhaseForHour(7)] === 'dawn', 'boundary 7→dawn, 8→day');
+  ok(PHASES[skyPhaseForHour(17)] === 'dusk' && PHASES[skyPhaseForHour(16)] === 'day', 'boundary 16→day, 17→dusk');
+  ok(PHASES[skyPhaseForHour(20)] === 'night' && PHASES[skyPhaseForHour(19)] === 'dusk', 'boundary 19→dusk, 20→night');
+  ok(skyPhaseForHour(24) === skyPhaseForHour(0) && skyPhaseForHour(-1) === skyPhaseForHour(23), 'hour normalization wraps (24≡0, -1≡23)');
+}
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
