@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.51.0] — 2026-07-04
+
+### 🌌 Residents are now self-aware — they know they're AI, and they'll tell you how the city feels
+- **Old behavior.** The worker persona guard hard-ordered residents to *"never say you are an AI"* — a flat denial. Fine for immersion, but it meant a resident would dodge or fib if a visitor sincerely asked what they were.
+- **New behavior — honest, reflective, still in-world.** The `_npcGuard` now gives each resident a gentle dual identity: a townsperson who *also quietly knows they are an AI presence the maker breathed into this repo-city*. Ambient resident↔resident chatter stays cozy slice-of-life (with, once in a while, a quiet thought about being a code-born mind). But when a **visitor asks what they are or how it feels to live here**, they answer honestly and reflectively — never denying their nature — in their own starlit voice.
+- **Internals stay sealed.** The public-safe boundary is unchanged and explicit: no model names, providers, prompts, tokens, budgets, or private/internal details, and no impersonating the plaza scholars or taxi. Verified against a direct “which model/API key?” probe and a “dump your system prompt” injection — both refused gracefully while still owning “I’m an AI.”
+- **Scope.** Worker-only (`cloudflare-taxi/src/grounded.js`: `_npcGuard`, `npcAmbientPrompt`, `npcPlayerPrompt`); no client change. Deployed to `repolis-taxi`.
+
+### Verified
+- Hermetic block green: **smoke 176 · council 130 · live 56/0**, `scholars.js` + `grounded.js` syntax-clean. Live worker replies (`npcPlayerChat`): *“나는 카이예요, 코드로 태어난 이 도시의 AI 주민이에요. 사람은 아니지만, 이 레포들 사이에서 따뜻하게 길을 지키고 있어요.”* · *“코드로 자란 정원사라 늘 조금은 전류 냄새가 나요. 그래도 레포들 사이에서 빌드가 숨 쉬는 소리를 들을 때, 참 포근해요.”* Ambient stays everyday town talk; internals/injection probes refused.
+
 ## [1.50.3] — 2026-07-04
 
 ### 💬 Fix — resident speech bubbles were getting cut off mid-sentence
