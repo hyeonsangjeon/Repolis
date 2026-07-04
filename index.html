@@ -4388,21 +4388,22 @@ function residentTag(res){ const W=256,H=100,c=document.createElement('canvas');
   x.fillStyle=hex; x.font='600 19px system-ui,Arial'; x.fillText('\u00b7 '+L.role+' \u00b7', W/2, 74);
   const tx=new THREE.CanvasTexture(c); tx.anisotropy=4;
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false,fog:false})); s.scale.set(2.9,1.13,1); s.position.y=3.06; s.renderOrder=6; s._res=res; return s; }
-function makeResBubble(){ const W=384,H=176, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const c=cv.getContext('2d');
-  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false})); sp.scale.set(6.4,2.93,1); sp.renderOrder=19; let life=0;
+function makeResBubble(){ const W=448,H=252, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const c=cv.getContext('2d');
+  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false})); sp.scale.set(7.47,4.2,1); sp.renderOrder=19; let life=0;
+  const ML=5, FS=24, LH=30;                                                    // up to 5 lines so a full conversational line shows instead of being cut off after 3
   function wrap(text,maxw){ const words=String(text).split(/\s+/); const lines=[]; let cur='';
-    for(const w of words){ const tryl=cur?cur+' '+w:w; if(c.measureText(tryl).width>maxw && cur){ lines.push(cur); cur=w; if(lines.length>=3) break; } else cur=tryl; }
-    if(cur&&lines.length<3) lines.push(cur);
-    if(lines.length>=3){ let last=lines[2]; while(c.measureText(last+'\u2026').width>maxw && last.length>1) last=last.slice(0,-1); lines[2]=last+'\u2026'; }
+    for(const w of words){ const tryl=cur?cur+' '+w:w; if(c.measureText(tryl).width>maxw && cur){ lines.push(cur); cur=w; if(lines.length>=ML) break; } else cur=tryl; }
+    if(cur&&lines.length<ML) lines.push(cur);
+    if(lines.length>=ML){ let last=lines[ML-1]; while(c.measureText(last+'\u2026').width>maxw && last.length>1) last=last.slice(0,-1); lines[ML-1]=last+'\u2026'; }
     return lines; }
-  function draw(text,hex){ c.clearRect(0,0,W,H); c.font='600 25px system-ui,sans-serif'; const lines=wrap(text,W-56);
-    const bh=28*lines.length+30, top=(H-26)-bh, r=24;
+  function draw(text,hex){ c.clearRect(0,0,W,H); c.font='600 '+FS+'px system-ui,sans-serif'; const lines=wrap(text,W-56);
+    const bh=LH*lines.length+30, top=(H-26)-bh, r=24;
     c.beginPath(); c.moveTo(12+r,top); c.arcTo(W-12,top,W-12,top+bh,r); c.arcTo(W-12,top+bh,12,top+bh,r); c.arcTo(12,top+bh,12,top,r); c.arcTo(12,top,W-12,top,r); c.closePath();
     c.fillStyle='rgba(255,251,242,0.97)'; c.fill(); c.lineWidth=4; c.strokeStyle=hex||'#caa'; c.stroke();
     c.beginPath(); c.moveTo(W/2-14,top+bh-2); c.lineTo(W/2+14,top+bh-2); c.lineTo(W/2-10,top+bh+20); c.closePath(); c.fillStyle='rgba(255,251,242,0.97)'; c.fill();
-    c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle'; lines.forEach((ln,i)=>{ c.fillText(ln, W/2, top+22+i*28); }); tex.needsUpdate=true; }
-  return { sprite:sp, say(text,hex){ draw(text,hex); life=Math.min(9, 3.4 + String(text).length*0.03); }, clear(){ life=0; },
-    update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0; sp.material.opacity+=(want-sp.material.opacity)*0.14; sp.position.y=3.9+Math.sin(clock.elapsedTime*1.5)*0.05; } }; }
+    c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle'; lines.forEach((ln,i)=>{ c.fillText(ln, W/2, top+24+i*LH); }); tex.needsUpdate=true; }
+  return { sprite:sp, say(text,hex){ draw(text,hex); life=Math.min(11, 4.0 + String(text).length*0.035); }, clear(){ life=0; },
+    update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0; sp.material.opacity+=(want-sp.material.opacity)*0.14; sp.position.y=4.55+Math.sin(clock.elapsedTime*1.5)*0.05; } }; }
 
 const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
 // ---- wander + rendezvous tuning: townsfolk stroll around home and walk toward one another to actually meet before talking ----
@@ -4421,7 +4422,7 @@ function _residentSpot(res){
   return {x:hub.x+7, z:hub.z}; }
 function placeResident(res){ const g=buildResident(res), sp=_residentSpot(res);
   g.position.set(sp.x,0,sp.z); g.rotation.y=Math.atan2(-sp.x,-sp.z);
-  const tag=residentTag(res); g.add(tag); const bub=makeResBubble(); bub.sprite.position.set(0,3.9,0); g.add(bub.sprite); scene.add(g);
+  const tag=residentTag(res); g.add(tag); const bub=makeResBubble(); bub.sprite.position.set(0,4.55,0); g.add(bub.sprite); scene.add(g);
   const live={ res, group:g, tag, bub, _baseRot:g.rotation.y, _ph:Math.random()*6.28, _gt:0, lastLine:-1,
     home:{x:sp.x,z:sp.z}, _rt:null, _rp:Math.random()*4, _wk:Math.random()*6.28, _wspd:RES_MOVE.wanderSpd*(0.85+Math.random()*0.3) };
   live._npc={ resident:true, id:res.id, kind:'resident', res, pos:g.position, reach:RES_REACH }; res._live=live;
@@ -4443,6 +4444,12 @@ let _ambConv=null, _ambNextAt=9, _guestCdUntil=0; const _pairCd=new Map(); const
 function _resChatActive(){ try{ return !!(activeNpc&&activeNpc.resident&&chatEl&&!chatEl.classList.contains('hidden')); }catch(e){ return false; } }
 function _pairKey(a,b){ return [a.res.id,b.res.id].sort().join('|'); }
 function _cap180(s){ return String(s||'').replace(/\s+/g,' ').trim().slice(0,180); }
+function _capBub(s){ s=String(s||'').replace(/\s+/g,' ').trim(); const MAX=80;   // bubble holds ~5 lines; trim at a sentence/clause/word boundary so a line never gets cut mid-word
+  if(s.length<=MAX) return s; const cut=s.slice(0,MAX);
+  const p=Math.max(cut.lastIndexOf('. '),cut.lastIndexOf('! '),cut.lastIndexOf('? '),cut.lastIndexOf('\u3002'),cut.lastIndexOf('\uff01'),cut.lastIndexOf('\uff1f'),cut.lastIndexOf('\u2026 '),cut.lastIndexOf(', '),cut.lastIndexOf('~ '));
+  if(p>=40) return cut.slice(0,p+1).trim();
+  const sp=cut.lastIndexOf(' '); if(sp>=40) return cut.slice(0,sp).trim()+'\u2026';
+  return cut.trim()+'\u2026'; }
 function _pushTranscript(t){ _npcTranscript.push(t); if(_npcTranscript.length>60) _npcTranscript.shift(); }
 function _scriptLine(L){ const bank=(L.res.amb&&(L.res.amb[LANG]||L.res.amb.ko))||['\u2026']; let i=(Math.random()*bank.length)|0; if(bank.length>1 && i===L.lastLine) i=(i+1)%bank.length; L.lastLine=i; return bank[i]; }
 function _ambientAllowed(){ return NPC_CFG.modeEnabled && !document.hidden && !_resChatActive() && RESIDENTS_LIVE.length>=NPC_CFG.activeMin && (NPC_CFG.scriptedAmbient || (NPC_CFG.aiEnabled&&NPC_CFG.ambientAiEnabled)); }
@@ -4458,7 +4465,7 @@ function _startAmb(a,b){ const now=clock.elapsedTime;
   _emitMetric('npc_ambient_started',{a:a.res.id,b:b.res.id,max}); return true; }
 function _advanceAmb(){ const C=_ambConv; if(!C||C.pending) return; const now=clock.elapsedTime; const speaker=C.who, listener=C.other;
   const useAI = NPC_CFG.aiEnabled && NPC_CFG.ambientAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
-  function done(line,ai,fb){ line=_cap180(line); speaker.bub.say(line,_hex(speaker.res.color)); speaker._gt=2.2;
+  function done(line,ai,fb){ line=_capBub(line); speaker.bub.say(line,_hex(speaker.res.color)); speaker._gt=2.2;
     const turn={ t:Math.round(clock.elapsedTime), a:C.a.res.id, b:C.b.res.id, who:speaker.res.id, text:line, ai:!!ai, fb:!!fb };
     C.turns.push(turn); _pushTranscript(turn); if(fb) _npcBudget.fallbackTurns++; if(ai) _npcBudget.aiTurns++;
     _emitMetric('npc_ambient_turn',{who:speaker.res.id,ai:!!ai,fb:!!fb,len:line.length});

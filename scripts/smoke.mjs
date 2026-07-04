@@ -330,7 +330,10 @@ ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.tes
 ok(/hardMaxTurns:10/.test(npcBlock), 'ambient conversations are hard-capped at 10 turns');
 ok(/pairCooldownMin:20, pairCooldownMax:60/.test(npcBlock), 'a resident pair has a 20–60s cooldown before chatting again');
 ok(/maxConcurrent:1/.test(npcBlock), 'at most one ambient conversation runs at a time');
-ok(/_cap180/.test(npcBlock) && /slice\(0,180\)/.test(npcBlock), 'each ambient line is capped at 180 chars');
+ok(/_capBub\(line\)/.test(npcBlock), 'ambient bubble text runs through the bubble-friendly clean cap (_capBub), not a raw 180-char slice');
+ok(/function _capBub\(s\)\{[\s\S]*?lastIndexOf\(' '\)[\s\S]*?\}/.test(npcBlock), '_capBub trims at a sentence/word boundary so a bubble line never gets cut mid-word');
+ok(/function makeResBubble\(\)\{[\s\S]*?const ML=5/.test(npcBlock), 'resident speech bubble renders up to 5 lines (a full conversational line shows instead of a 3-line cut)');
+ok(/_cap180/.test(npcBlock) && /slice\(0,180\)/.test(npcBlock), 'player-chat lines keep the 180-char cap for the DOM panel');
 // 12d — budget: exhaustion forces the free scripted fallback, degradation trims turns
 ok(/function _budgetExhausted\(\)/.test(npcBlock) && /function _budgetLow\(\)/.test(npcBlock), 'client budget mirror exposes low + exhausted checks');
 ok(/NPC_CFG\.aiEnabled && NPC_CFG\.ambientAiEnabled && !_budgetExhausted\(\)/.test(npcBlock), 'AI ambient turn is gated on budget-not-exhausted');
