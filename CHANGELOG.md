@@ -3,6 +3,18 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.50.1] — 2026-07-04
+
+### 🩹 Hotfix — residents were frozen on mobile/low-end; they move again (just gentler)
+- **Why they froze.** On a 390px phone `LOW_END` is effectively always true, and three coupled guards ganged up to *stop motion entirely*: `NPC_CFG.scriptedAmbient` was force-set to `false`, and the `updateResidents(dt)` wander branch was gated behind `!LOW_END`, so low-end devices got no wandering **and** no scripted chatter — the town looked dead.
+- **The fix — motion is decoupled from LOW_END.** Locomotion is now gated on a dedicated `NPC_CFG.motionEnabled` flag (always true) plus `!document.hidden`, never on `LOW_END`. Residents keep strolling on every device; LOW_END only *eases* things — it no longer disables them. `RES_MOVE` gains LOW_END branches: slower gait (`wanderSpd 0.42` vs 1.05, within the 0.35–0.5 target), gentler `meetSpd` (0.95), tighter roam radius (5.0), longer pauses (3.5–9s), and a shorter rendezvous range (`meetMax 44`, `approachMax 24`).
+- **What LOW_END now reduces (not removes).** Scripted ambient **stays on**; conversations get shorter (`minTurns 3 / maxTurns 4 / degradeMaxTurns 3`), the turn cadence slows (`gap 8–14s`), and only one conversation runs at a time (`maxConcurrent 1`). The boot `npcConfig` worker fetch may now *tighten* turns on LOW_END but never *loosen* them past the low-end cap — so the 4-turn ceiling actually sticks.
+- **Preserved.** Hidden-tab freeze, visitor-chat freeze, the approach-before-talk phase, the hard 10-turn ceiling, pair cooldown, budget degradation, AI env-gating, and the building/hub/repo prompt priority are all untouched.
+- **Debug + guards.** `window.__npcState()` now exposes `lowEnd`, `motionEnabled`, `scriptedAmbient`, `wanderSpd`, `meetSpd`, `gapMin/gapMax`, `maxTurns`. `scripts/smoke.mjs` (**→ 172**) swaps the old "skip wander on LOW_END" assertion for guards proving the opposite: `motionEnabled` gate present, no `!LOW_END` in the locomotion branch, a slower-but-nonzero LOW_END wander/meet speed, and scripted ambient no longer killed by LOW_END.
+
+### Verified
+- Hermetic block green: **smoke 172 · council 130 · live 56/0**, `scholars.js` + `grounded.js` syntax-clean, inline module syntax-checked. Live in Chrome with `hardwareConcurrency` forced to 2 (LOW_END path): mobile **390×844** — `lowEnd:true, motionEnabled:true, scriptedAmbient:true, wanderSpd:0.42, maxTurns:4`, **6 of 7 residents moved** (max 2.5u) over 6s, a hidden tab froze all motion (0 movers), and it resumed on return. Desktop **1280×800** (normal path) — `wanderSpd:1.05, maxTurns:6`, 5 residents moving. **0 console errors** on both.
+
 ## [1.50.0] — 2026-07-04
 
 ### 🚶 Resident NPCs come alive — they wander the districts and walk over to talk
