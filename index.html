@@ -4300,9 +4300,12 @@ const NPC_CFG={ modeEnabled:true, visualEnabled:true,
   scriptedAmbient:true, scriptedPlayerChat:true,                        // the free fallback — always available, no cost
   minTurns:4, maxTurns:6, hardMaxTurns:10, degradeMaxTurns:4,
   gapMin:5, gapMax:10, pairCooldownMin:20, pairCooldownMax:60, guestCooldownSec:8,
-  activeMin:3, activeMax:10, maxConcurrent:1, worker:null };
+  activeMin:3, activeMax:10, maxConcurrent:1, motionEnabled:true, worker:null };
 if(IS_MOBILE) NPC_CFG.maxTurns=5;
-if(LOW_END) NPC_CFG.scriptedAmbient=false;                              // low-end phones: residents stay, chatter eases off
+if(LOW_END){                                                            // low-end: keep the town ALIVE — movement stays on (slowed), chatter just gets rarer + shorter
+  NPC_CFG.minTurns=3; NPC_CFG.maxTurns=4; NPC_CFG.degradeMaxTurns=3;    // shorter conversations
+  NPC_CFG.gapMin=8; NPC_CFG.gapMax=14; NPC_CFG.maxConcurrent=1;         // slower turn cadence, still one conversation at a time
+}                                                                       // NOTE: scriptedAmbient stays TRUE and motionEnabled stays TRUE — residents must still wander
 const RESIDENTS=[
   { id:'sol', zone:'ai', color:0x9ab8ff, accent:0xbcd0ff, tone:'curious·cost-aware',
     topics:['model','budget','experiment','ai','rag','agent'],
@@ -4403,8 +4406,10 @@ function makeResBubble(){ const W=384,H=176, cv=document.createElement('canvas')
 
 const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
 // ---- wander + rendezvous tuning: townsfolk stroll around home and walk toward one another to actually meet before talking ----
-const RES_MOVE={ wanderSpd:(IS_MOBILE?0.7:1.05), meetSpd:(IS_MOBILE?1.7:2.4), roamR:6.5,
-  pauseMin:2.5, pauseMax:7.0, talkDist:4.2, meetMax:58, approachMax:16, arrive:0.5, gait:2.2 };
+// LOW_END keeps moving, just gentler: slower gait, tighter roam, longer pauses, shorter rendezvous range (motion stays ON — only speed/frequency ease).
+const RES_MOVE={ wanderSpd:(LOW_END?0.42:(IS_MOBILE?0.7:1.05)), meetSpd:(LOW_END?0.95:(IS_MOBILE?1.7:2.4)),
+  roamR:(LOW_END?5.0:6.5), pauseMin:(LOW_END?3.5:2.5), pauseMax:(LOW_END?9.0:7.0),
+  talkDist:4.2, meetMax:(LOW_END?44:58), approachMax:(LOW_END?24:16), arrive:0.5, gait:2.2 };
 function _residentSpot(res){
   if(res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11]]; for(const p of cands){ if(_hubGap(p[0],p[1])>=4.0) return {x:p[0],z:p[1]}; } return {x:-8,z:6}; }
   const zc=_zoneById(res.zone), hub=zc&&zc._hub; if(!hub) return {x:44,z:44};
@@ -4488,9 +4493,9 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
   for(const L of RESIDENTS_LIVE){ const g=L.group;
     const inConv=C&&(C.a===L||C.b===L), partner=inConv?(C.a===L?C.b:C.a):null;
     const chatBound=_resChatActive()&&activeNpc&&activeNpc.res===L.res; let moving=false;
-    if(inConv && C.phase==='approach' && !hidden){
+    if(inConv && C.phase==='approach' && !hidden && NPC_CFG.motionEnabled){
       if(g.position.distanceTo(partner.group.position)>RES_MOVE.talkDist){ _resWalk(L,partner.group.position.x,partner.group.position.z,RES_MOVE.meetSpd,dt); moving=true; }
-    } else if(!inConv && !chatBound && !LOW_END && !hidden){
+    } else if(!inConv && !chatBound && !hidden && NPC_CFG.motionEnabled){   // wander is NOT gated on LOW_END — low-end just moves slower (RES_MOVE.wanderSpd); only a hidden tab / chat / conversation stops it
       if(!L._rt && tt>=L._rp) L._rt=_resRoamTarget(L);
       if(L._rt){ if(_resWalk(L,L._rt.x,L._rt.z,L._wspd,dt)){ L._rt=null; L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } }
     if(moving){ if(L._gt>0) L._gt-=dt; if(g._armL) g._armL.rotation.z*=0.85; if(g._armR) g._armR.rotation.z*=0.85; L.bub.update(dt); continue; }
@@ -4555,7 +4560,7 @@ async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) retu
 async function npcBootConfig(){ NPC_CFG.worker=(typeof groundedUrl==='function'?groundedUrl():null)||null; if(!NPC_CFG.worker) return;
   const data=await _npcFetch({ npc_action:'npcConfig', lang:LANG }); if(!data) return;
   if(data.config){ const c=data.config; NPC_CFG.aiEnabled=!!c.aiEnabled; NPC_CFG.ambientAiEnabled=!!c.aiEnabled&&!!c.ambientEnabled; NPC_CFG.playerChatAiEnabled=!!c.aiEnabled&&!!c.playerChatEnabled;
-    if(c.maxTurns) NPC_CFG.maxTurns=Math.min(NPC_CFG.hardMaxTurns,c.maxTurns); }
+    if(c.maxTurns){ const cap=Math.min(NPC_CFG.hardMaxTurns,c.maxTurns); NPC_CFG.maxTurns=LOW_END?Math.min(NPC_CFG.maxTurns,cap):cap; } }   // LOW_END: worker may tighten turns, never loosen past the low-end cap
   if(data.budget) _applyBudget(data.budget);
   _emitMetric('npc_mode_changed',{aiEnabled:NPC_CFG.aiEnabled,ambient:NPC_CFG.ambientAiEnabled,player:NPC_CFG.playerChatAiEnabled,source:'worker'}); }
 setTimeout(()=>{ try{ npcBootConfig(); }catch(e){} }, 2600);
@@ -6499,7 +6504,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     x:+L.group.position.x.toFixed(1), z:+L.group.position.z.toFixed(1), near:+player.position.distanceTo(L.group.position).toFixed(2)<=RES_REACH }));
   window.__npcRoutes=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, pos:[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)], anchor:[+L.home.x.toFixed(1),+L.home.z.toFixed(1)], target:L._rt?[+L._rt.x.toFixed(1),+L._rt.z.toFixed(1)]:null, facing:+L._baseRot.toFixed(2) }));
   window.__npcState=()=>({ mode:NPC_CFG.modeEnabled, visual:NPC_CFG.visualEnabled, ai:NPC_CFG.aiEnabled, ambientAi:NPC_CFG.ambientAiEnabled, playerAi:NPC_CFG.playerChatAiEnabled,
-    scriptedAmbient:NPC_CFG.scriptedAmbient, live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
+    scriptedAmbient:NPC_CFG.scriptedAmbient, lowEnd:LOW_END, mobile:IS_MOBILE, motionEnabled:NPC_CFG.motionEnabled, wanderSpd:+RES_MOVE.wanderSpd.toFixed(2), meetSpd:+RES_MOVE.meetSpd.toFixed(2), gapMin:NPC_CFG.gapMin, gapMax:NPC_CFG.gapMax, maxTurns:NPC_CFG.maxTurns,
+    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
   window.__npcEncounter=(a,b)=>{ const A=RESIDENTS_LIVE.find(L=>L.res.id===a)||RESIDENTS_LIVE[0], B=RESIDENTS_LIVE.find(L=>L.res.id===b)||RESIDENTS_LIVE[1];
     if(!A||!B||A===B) return {ok:false}; _pairCd.delete(_pairKey(A,B)); if(_ambConv) _endAmb('debug'); _startAmb(A,B); if(_ambConv){ _ambConv.phase='talk'; _ambConv.nextAt=0; _advanceAmb(); }
     return { ok:true, a:A.res.id, b:B.res.id, max:_ambConv?_ambConv.max:0, i:_ambConv?_ambConv.i:1, last:_npcTranscript.slice(-1)[0]||null }; };

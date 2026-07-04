@@ -316,7 +316,13 @@ ok(/const RES_REACH=3\.4/.test(npcBlock), 'residents use a small walk-up reach (
 ok(/const RES_MOVE=\{[^}]*meetMax:/.test(npcBlock) && /talkDist:/.test(npcBlock), 'RES_MOVE tuning (meetMax + talkDist) exists for wander + rendezvous');
 ok(/function _resRoamTarget\(/.test(npcBlock) && /function _resWalk\(/.test(npcBlock), 'residents have a wander-target picker + a walk-step locomotion helper');
 ok(/phase:near\?'talk':'approach'/.test(npcBlock) && /C\.phase==='approach'/.test(npcBlock), 'a distant pair first walks together (approach) before the turn-by-turn talk');
-ok(/!LOW_END && !hidden/.test(npcBlock), 'wander is skipped on low-end devices + hidden tabs (perf + no background motion)');
+// 12b-3 — LOW_END must NOT freeze the town: residents keep wandering (slower), only a hidden tab / chat / conversation stops them
+ok(/motionEnabled:true/.test(npcBlock), 'NPC_CFG carries a motionEnabled flag (residents move by default)');
+ok(!/!inConv && !chatBound && !LOW_END/.test(npcBlock), 'wander gate is NOT disabled by LOW_END (no "!LOW_END" in the locomotion branch)');
+ok(/!inConv && !chatBound && !hidden && NPC_CFG\.motionEnabled/.test(npcBlock), 'wander runs whenever motion is enabled and the tab is visible (LOW_END-independent)');
+ok(!/LOW_END\) NPC_CFG\.scriptedAmbient=false/.test(npcBlock), 'LOW_END no longer kills scripted ambient chatter (kept, just eased)');
+ok(/wanderSpd:\(LOW_END\?0\.[0-9]+/.test(npcBlock) && /meetSpd:\(LOW_END\?/.test(npcBlock), 'RES_MOVE gives LOW_END a slower-but-nonzero wander + meet speed');
+ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\)/.test(npcBlock), 'a hidden tab still stops ambient chatter (background motion/cost guard preserved)');
 // 12c — turn-by-turn ambient engine: hidden-tab stop, one conversation, turn + cooldown caps
 ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.test(npcBlock), 'ambient engine stops on a hidden tab (no background chatter/cost)');
 ok(/hardMaxTurns:10/.test(npcBlock), 'ambient conversations are hard-capped at 10 turns');
