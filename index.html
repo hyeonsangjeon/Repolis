@@ -4056,7 +4056,7 @@ function setNightState(night){
   LAMP_GLOWS.forEach(o=>{ o.material.opacity = night? o._nightOp : 0; });
   WATER_NIGHT.value = night?1:0;
   NIGHT_GLOWS.forEach(o=>{ o.material.opacity = night? o._n : 0; });
-  if(faceLight) faceLight.intensity = night?16:0;
+  if(faceLight) faceLight.intensity = night?16:6;   // hero fill light: never 0 — dimmer by day/dawn/dusk, brighter at night so the avatar always reads against the background
   if(faceMat) faceMat.emissive.setHex(night?0x6a4f30:0x000000);
   npcFaces.forEach(m=>m.emissive.setHex(night?0x4a3a24:0x000000));   // softer than the player so the hero still reads brightest
   buildings.forEach(b=>{
@@ -4683,7 +4683,7 @@ const legL=new THREE.Group(); legL.position.set(-0.2,0.92,0); model.add(legL);
 const legR=legL.clone(); legR.position.x=0.2; model.add(legR);
 const blob=new THREE.Mesh(new THREE.CircleGeometry(1.0,28), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0x07142e,transparent:true,opacity:0.32,depthWrite:false}));
 blob.rotation.x=-Math.PI/2; blob.position.y=0.03; player.add(blob); // soft contact shadow
-faceLight=new THREE.PointLight(0xfff0d8,0,15,1.5); faceLight.position.set(0,2.35,0.7); model.add(faceLight);
+faceLight=new THREE.PointLight(0xfff0d8, isNight?16:6, 15,1.5); faceLight.position.set(0,2.35,0.7); model.add(faceLight);   // built after initTimeOfDay(): seed to the current phase so day entry isn't stuck dark (setNightState early-returns when the state hasn't flipped)
 faceMat=head.material;
 player.position.set(2.6,0,-3.2);   // spawn beside the plaza fountain (not inside the basin)
 scene.add(player);
@@ -6421,6 +6421,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__sky=(t)=>{ if(t!==undefined){ skyAuto=false; skyT=skyTarget=((t%1)+1)%1; applySky(skyT); const nn=_nightAt(skyT); if(nn!==_nightState) setNightState(nn); } return {skyT:+skyT.toFixed(3),skyTarget:+skyTarget.toFixed(3),isNight,auto:skyAuto,phase:SKY_PHASES[skyPhaseIdx].name,sunVis:sunSky.visible}; };
   window.__skyCycle=()=>{ skyAuto=!skyAuto; lastAct=performance.now(); return skyAuto; };
   window.__skyForHour=(h)=>{ const i=skyPhaseForHour(h); return {hour:((h%24)+24)%24,idx:i,phase:SKY_PHASES[i].name,t:SKY_PHASES[i].t}; };
+  window.__playerLight=(v)=>{ if(v!=null&&faceLight) faceLight.intensity=+v; return {intensity:faceLight?+faceLight.intensity.toFixed(2):null, on:!!(faceLight&&faceLight.intensity>0), isNight, phase:SKY_PHASES[skyPhaseIdx].name, faceEmissive:faceMat?('#'+faceMat.emissive.getHexString()):null}; };   // inspect (or live-tune) the hero fill light
   window.__lib=()=>{ openCard(LIB); return true; };
   window.__libView=(back=20)=>{ player.position.set(0,0,LIB._z-LIB._cw-back); model.rotation.y=0; camYaw=Math.PI; camPitch=0.34; camDist=42; return {z:+player.position.z.toFixed(1)}; };
   window.__tp=(x,z,yaw=Math.PI,pitch=0.30,dist=24)=>{ player.position.set(x,0,z); model.rotation.y=Math.PI-yaw; camYaw=yaw; camPitch=pitch; camDist=dist; return {x,z}; };

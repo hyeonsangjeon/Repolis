@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.54.1] — 2026-07-05
+
+### 🔦 The player spotlight is back — in every phase, not just at night
+- **What broke.** The hero fill light (`faceLight`) that makes your avatar pop was wired **night-only** (`night?16:0`) since it was introduced, and it's created *after* `initTimeOfDay()` runs — so with `setNightState` early-returning when the day/night state hasn't flipped, the light was **never lifted off 0 during the day**. While the opening scene was hardcoded to bright noon that went unnoticed, but once [1.54.0] made first entry follow the local clock, visitors landing at **day / dawn / dusk** got an unlit hero that washed into the background.
+- **The fix (small regression fix).** The fill light now stays on in **every** phase — a soft `6` by day / dawn / dusk, a bright `16` at night — and is **seeded to the current phase at build time** so a daytime entry is never left dark. It stays a *local* warm pool (point light, distance 15) around the avatar, so the hero reads as "me" without over-brightening the world.
+- **Preserved.** `skyPhaseForHour`, `initTimeOfDay`, the manual 🌙/☀️ `dayBtn` cycle, and every night-asset toggle (moon · stars · lit windows · glows) are untouched.
+- **Debug.** New `?dbg` hook `window.__playerLight([v])` reports (and can live-tune) the hero light's `intensity` / `on` / `isNight` / `phase`. `scripts/smoke.mjs` gains a guard so the day value can never regress back to 0.
+
+### Verified
+- Hermetic: `node scripts/smoke.mjs` **green** (adds 3 hero-light guards). Browser-checked desktop 1440×900 + mobile 390×844 (LOW_END), 0 console errors: hero fill light **on in all four phases** (`__playerLight` → day/dawn/dusk 6, night 16), subtle warm pool by day (world not over-brightened), dramatic spotlight at night; manual day↔night cycle still drives the light.
+
 ## [1.54.0] — 2026-07-04
 
 ### 🌅 First entry now matches your local clock — day / golden hour / night
