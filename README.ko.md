@@ -21,7 +21,9 @@
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis: 내 GitHub 레포가 3D 도시로 — 택시에게 &quot;제일 인기있는 레포&quot;라고 말해 그 집까지 타고 가서 카드를 열고 GitHub로 바로 이동하는 데모" width="86%"></a>
 
-<sub>▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>라이브 데모</b></a> · Built with Three.js · 한 개의 <code>index.html</code></sub>
+<b>여기서 시작 →</b>&nbsp; ▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>라이브 데모</b></a> &nbsp;·&nbsp; 💻 <a href="#로컬에서-바로-띄우기-빌드-없음"><b>로컬에서 실행</b></a> &nbsp;·&nbsp; 🏙️ <a href="#-직접-띄우기"><b>내 도시로 포크 / 직접 띄우기</b></a>
+
+<sub>가입 없이, 빌드 없이 · Three.js로 제작 · 단 하나의 <code>index.html</code></sub>
 
 </div>
 

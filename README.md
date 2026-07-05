@@ -21,7 +21,9 @@ Don't know where to go? Just tell the 🚕 **LLM taxi driver** — say _"take me
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis: see your GitHub repos as a 3D city, tell the taxi &quot;most popular&quot;, ride to that repo's house, open its card, and jump straight to it on GitHub" width="86%"></a>
 
-<sub>▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>Live demo</b></a> · Built with Three.js · one single <code>index.html</code></sub>
+<b>Start here →</b>&nbsp; ▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>Live demo</b></a> &nbsp;·&nbsp; 💻 <a href="#try-it-locally-no-build-step"><b>Run locally</b></a> &nbsp;·&nbsp; 🏙️ <a href="#-run-your-own"><b>Fork / build your own city</b></a>
+
+<sub>No sign‑up, no build step · Built with Three.js · one single <code>index.html</code></sub>
 
 </div>
 
