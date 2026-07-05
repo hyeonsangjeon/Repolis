@@ -407,6 +407,12 @@ if (sphSrc) {
   ok(skyPhaseForHour(24) === skyPhaseForHour(0) && skyPhaseForHour(-1) === skyPhaseForHour(23), 'hour normalization wraps (24≡0, -1≡23)');
 }
 
+// 15 — player spotlight: the hero fill light must stay lit in every phase (regression guard: day was stuck at 0)
+group('player hero fill light (all phases)');
+ok(/faceLight\.intensity = night\?16:6;/.test(HTML), 'setNightState keeps the hero fill light on by day (6) — never drops to 0 — and brighter at night (16)');
+ok(/faceLight=new THREE\.PointLight\(0xfff0d8, isNight\?16:6,/.test(HTML), 'the hero fill light is seeded to the current phase at build (day entry is not left dark)');
+ok(/window\.__playerLight=/.test(HTML), '?dbg __playerLight hook present to inspect/tune the hero fill light');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
