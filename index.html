@@ -4595,6 +4595,8 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
         else { g.position.y=SIT_POSE.y; if(g._legL){ g._legL.rotation.x=SIT_POSE.leg; g._legR.rotation.x=SIT_POSE.leg; } g.rotation.y=lerpA(g.rotation.y,L._rest.seat.rot,0.1);
           if(g._armL){ g._armL.rotation.z+=(0.12-g._armL.rotation.z)*0.1; g._armR.rotation.z+=(0.12-g._armR.rotation.z)*0.1; } L.bub.update(dt); continue; } }   // stay seated
     }
+    if(chatBound && L._joinWalk && !hidden && NPC_CFG.motionEnabled){   // an invited resident steps into the circle, then settles and faces the visitor (chatBound normally freezes them in place)
+      if(_resWalk(L,L._joinWalk.x,L._joinWalk.z,RES_MOVE.meetSpd,dt)) L._joinWalk=null; else moving=true; }
     if(inConv && C.phase==='approach' && !hidden && NPC_CFG.motionEnabled){
       if(Math.hypot(g.position.x-C.center.x,g.position.z-C.center.z)>RES_MOVE.talkDist){ _resWalk(L,C.center.x,C.center.z,RES_MOVE.meetSpd,dt); moving=true; }   // everyone converges on the shared circle centre, forming a ring (never piles onto one partner)
     } else if(!inConv && !chatBound && !hidden && NPC_CFG.motionEnabled){   // wander is NOT gated on LOW_END — low-end just moves slower (RES_MOVE.wanderSpd); only a hidden tab / chat / conversation stops it
@@ -4667,6 +4669,7 @@ function residentReply(res,q){ const ql=String(q||'').toLowerCase().trim(), ko=L
   const g=residentGreet(res), cnt=z.repos.length;
   return { html: (g?g+' ':'')+esc(ko?`여기는 ${zn}, ${L.role}로서 제가 돌보는 곳이에요. 레포 ${cnt}채가 있어요.`:`This is ${zn}, my patch as the ${L.role}. ${cnt} repo-houses stand here.`) }; }
 async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) return; _guestCdUntil=clock.elapsedTime + NPC_CFG.guestCooldownSec;
+  if(await _maybeInvite(q)) return;                                                            // name another resident (with an invite cue) → this 1:1 grows into a 모임 they both join
   const last=_resHistWindow(); _resHistPush('visitor',q);                                     // record the question after snapshotting the prior thread (the worker appends it as the ask)
   const useAI = NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
   if(useAI){ const sb=showTyping(addMsg('bot','\u2026',{noHist:true}));
@@ -4693,8 +4696,53 @@ function _groupNames(ms){ return ms.map(m=>{ const n=m.res[LANG]||m.res.ko; retu
 function _groupChip(res){ const n=res[LANG]||res.ko; return `<b style="color:${_hex(res.color)}">${esc(n.name)}</b> `; }
 function _groupPromptHtml(ms){ return (LANG==='ko'?`<b>\uD83D\uDC65 ${ms.length}\uBA85\uC774 \uBAA8\uC5EC \uC788\uC5B4\uC694</b> \u00b7 <span class="key">Enter</span>/\uD074\uB9AD\uC73C\uB85C <b>\uB300\uD654\uC5D0 \uB07C\uAE30</b> \uD83D\uDCAC`:`<b>\uD83D\uDC65 a gathering of ${ms.length}</b> \u00b7 <span class="key">Enter</span>/click to <b>join in</b> \uD83D\uDCAC`); }
 function groupGreet(wrap){ return _groupNames(wrap.live||[])+' \u2014 '+esc(LANG==='ko'?'\uBB34\uC2A8 \uC774\uC57C\uAE30\uB4E0 \uAC19\uC774 \uB098\uB220\uC694.':"let's talk it over together."); }
+// ---- invite another resident by name: say "린도 부를까?" mid-chat and that resident walks over and joins the circle ----
+const _RES_INV_CUE=/(부르|부를|불러|초대|데려|합류|같이|함께|껴|끼(?:워|어|자)|오라|와\s*줘|와서|얘기|이야기|대화|만나|물어|call|invite|join|bring|come|talk|meet|ask)/i;
+function _escRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function _resNamedIn(q, excludeIds){ const s=String(q||''); if(!s) return null;                 // find a live resident named in the text (KO name + a person particle, or the EN name as a word)
+  for(const res of RESIDENTS){ if(!res._live) continue; if(excludeIds&&excludeIds.indexOf(res.id)>=0) continue;
+    const koRe=new RegExp('(^|[^가-힣])'+_escRe(res.ko.name)+'(이|가|랑|이랑|와|과|도|만|님|씨|을|를|은|는|한테|에게|께|$|[^가-힣])');
+    const enRe=new RegExp('(^|[^A-Za-z])'+_escRe(res.en.name)+'([^A-Za-z]|$)','i');
+    if(koRe.test(s)||enRe.test(s)) return res; }
+  return null; }
+function _inviteTarget(q){ if(!_RES_INV_CUE.test(String(q||''))) return null;                    // require an invite/talk cue so a passing name mention doesn't summon anyone
+  const here=(activeGroupMembers||[]).map(m=>m.res.id); if(activeNpc&&activeNpc.resident&&activeNpc.res) here.push(activeNpc.res.id);
+  return _resNamedIn(q, here); }
+function _placeJoiner(L){ const ms=(activeGroupMembers||[]).filter(m=>m!==L); if(!ms.length){ L._joinWalk=null; return; }
+  let cx=0, cz=0; for(const m of ms){ cx+=m.group.position.x; cz+=m.group.position.z; } cx/=ms.length; cz/=ms.length;   // the circle's centre
+  const a=Math.atan2(L.group.position.z-cz, L.group.position.x-cx)||Math.random()*6.28, R=RES_MOVE.talkDist*0.9;
+  const d=Math.hypot(L.group.position.x-cx, L.group.position.z-cz);
+  if(d>14) L.group.position.set(cx+Math.cos(a)*11, 0, cz+Math.sin(a)*11);                        // if far off, step in from ~11u out on their own side (a believable approach, not a cross-map teleport)
+  if(L._rest) _seatRelease(L); L._rt=null; L._joinWalk={ x:cx+Math.cos(a)*R, z:cz+Math.sin(a)*R }; }
+function _inviteResident(res){ const L=res&&res._live; if(!L) return false;
+  if(_ambConv && _ambConv.members.indexOf(L)>=0) _endAmb('invited');
+  const wrap=activeNpc; if(!wrap) return false;
+  if(wrap.group){ if(wrap.live.some(m=>m&&m.res&&m.res.id===res.id)) return false; wrap.live.push(L); wrap.members.push(res); }
+  else if(wrap.resident&&wrap.res){ const curL=wrap.res._live; if(!curL||curL===L) return false;   // upgrade a 1:1 into a 모임 in place (keeps the open log + shared thread)
+    wrap.group=true; wrap.id='group'; wrap.kind='resident'; wrap.live=[curL,L]; wrap.members=[curL.res,res]; wrap.gi=wrap.gi||0; }
+  else return false;
+  activeGroupMembers=wrap.live.slice(); _placeJoiner(L); _resCd.delete(res.id); L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN; L.bub.clear();
+  applyNpcChrome(wrap); return true; }
+function _inviteGreetLine(res){ const ko=LANG==='ko', b= ko?['저도 껴도 될까요? 반가워요!','부르셨어요? 얼른 왔어요.','안녕하세요, 저도 같이 이야기해요!','오, 저를 찾으셨군요. 반가워요!']
+                                              :['Mind if I join? Nice to meet you!','You called? I hurried over.','Hi — let me talk with you too!','Oh, you were looking for me? Hello!'];
+  return b[(Math.random()*b.length)|0]; }
+async function _maybeInvite(q){ const cand=_inviteTarget(q); if(!cand) return false;
+  const cap=Math.max(2, Math.min(NPC_CFG.maxGroup, RESIDENTS_LIVE.length)), wasGroup=!!(activeNpc&&activeNpc.group);
+  _resHistPush('visitor',q);
+  if(wasGroup && (activeGroupMembers||[]).length>=cap){ const spk=activeGroupMembers[0].res;      // circle is full — say so instead of overflowing it
+    const full=LANG==='ko'?`지금은 자리가 꽉 찼어요. 한 명이 쉬러 가면 ${esc(cand.ko.name)} 부를게요.`:`We're full right now — once someone steps away we'll bring ${esc(cand.en.name)} in.`;
+    addMsg('bot',_groupChip(spk)+full); _resHistPush(spk.id,_plain(full)); return true; }
+  const host=(activeGroupMembers&&activeGroupMembers[0]&&activeGroupMembers[0].res)||(activeNpc&&activeNpc.res)||null;
+  if(!_inviteResident(cand)) return false;
+  if(host){ const wc=LANG==='ko'?`어서 와요, ${esc(cand.ko.name)}! 같이 이야기해요.`:`Welcome, ${esc(cand.en.name)}! Let's talk together.`;
+    addMsg('bot',_groupChip(host)+wc); _resHistPush(host.id,_plain(wc)); }
+  await new Promise(r=>setTimeout(r,480)); if(!activeGroupMembers) return true;                    // chat closed mid-invite
+  const g=_inviteGreetLine(cand); addMsg('bot',_groupChip(cand)+esc(g)); _resHistPush(cand.id,g);
+  trackChatEvent('npc_group_invite',{id:cand.id,size:(activeGroupMembers||[]).length,from:wasGroup?'group':'solo'}); return true; }
 async function groupSay(q){ const wrap=activeNpc, ms=((wrap&&wrap.live)||[]).filter(m=>m&&m.res); if(!ms.length){ await residentSay(q); return; }
   _guestCdUntil=clock.elapsedTime+NPC_CFG.guestCooldownSec;
+  if(await _maybeInvite(q)) return;                                                              // "린도 부를까?" → the named resident walks in and joins the circle
+
   const useAI=NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
   const base=_resHistWindow(); _resHistPush('visitor',q);                                     // the shared thread every speaker answers on top of
   const pi=(wrap.gi||0)%ms.length, pres=ms[pi].res;                                          // the addressed speaker round-robins so everyone gets a turn answering you
@@ -6694,6 +6742,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     return { ok:!!activeGroupMembers, members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], title:chatHeadTtl?chatHeadTtl.textContent:null, ph:chatText?chatText.placeholder:null }; };
   window.__groupChat=()=>({ active:!!activeGroupMembers, open:!!(chatEl&&!chatEl.classList.contains('hidden')), members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], primary:(activeNpc&&activeNpc.group)?activeNpc.res.id:null, gi:(activeNpc&&activeNpc.group)?activeNpc.gi:null, hist:_resHist.length });
   window.__resTranscript=()=>_resHist.slice(-12);   // shared resident/group thread the speakers answer on top of
+  window.__inviteResident=(id)=>{ const res=RESIDENTS.find(r=>r.id===id); if(!res||!res._live) return { ok:false, reason:'no such live resident' };   // force an invite: the named resident joins the open resident/group chat and walks in
+    if(!(activeNpc&&(activeNpc.group||activeNpc.resident))) return { ok:false, reason:'no active resident chat' };
+    const ok=_inviteResident(res); if(ok){ const g=_inviteGreetLine(res); addMsg('bot',_groupChip(res)+esc(g)); _resHistPush(res.id,g); }
+    return { ok, joined:id, walking:!!res._live._joinWalk, members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null, title:chatHeadTtl?chatHeadTtl.textContent:null }; };
+  window.__inviteMatch=(q)=>{ const c=_inviteTarget(q); return { cue:_RES_INV_CUE.test(String(q||'')), match:c?c.id:null }; };   // introspect the name+cue detector without side effects
   window.__npcBudget=()=>({ ...JSON.parse(JSON.stringify(_npcBudget)), low:_budgetLow(), exhausted:_budgetExhausted() });
   window.__npcTranscript=()=>_npcTranscript.slice(-20);
   window.__npcSim=(o)=>{ o=o||{}; ['remainingUsd','spentUsd','turnsToday','dailyTurnMax','dayCapUsd'].forEach(k=>{ if(typeof o[k]==='number') _npcBudget[k]=o[k]; });

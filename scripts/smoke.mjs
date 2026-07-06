@@ -471,6 +471,16 @@ ok(/window\.__resTranscript=\(\)=>_resHist\.slice\(-12\)/.test(HTML), '?dbg __re
 ok(/function npcPlayerUser\(body, ?lang\)/.test(WORKER) && /body\.last/.test(WORKER), 'the worker folds body.last into the player-chat user turn (who-labelled recent turns before the current ask)');
 ok(/npcPlayerPrompt\(body\.speaker, ?lang, ?\{[\s\S]*?chime:[\s\S]*?prev:/.test(WORKER), 'the worker passes chime/prev into npcPlayerPrompt so the second speaker is told to answer + build on the previous resident');
 
+group('resident invite-to-group (name a resident mid-chat → they walk over and join)');
+ok(/const _RES_INV_CUE=\/\(부르\|부를\|불러\|초대/.test(npcBlock) && /function _resNamedIn\(q, ?excludeIds\)/.test(npcBlock), 'name+cue detection: an invite/talk CUE plus a resident name (KO name + person particle, or EN word) is required to summon anyone');
+ok(/function _inviteTarget\(q\)\{ if\(!_RES_INV_CUE\.test\(String\(q\|\|''\)\)\) return null/.test(npcBlock), 'a bare name mention without an invite cue never triggers an invite (avoids false positives like a passing name)');
+ok(/function _inviteResident\(res\)\{/.test(npcBlock) && /wrap\.live\.push\(L\); wrap\.members\.push\(res\)/.test(npcBlock) && /wrap\.group=true; wrap\.id='group'; wrap\.kind='resident'; wrap\.live=\[curL,L\]/.test(npcBlock), '_inviteResident adds to an open circle, or upgrades a 1:1 into a 모임 in place (preserving the open log + shared thread)');
+ok(/async function _maybeInvite\(q\)\{/.test(npcBlock) && /const cap=Math\.max\(2, ?Math\.min\(NPC_CFG\.maxGroup, ?RESIDENTS_LIVE\.length\)\)/.test(npcBlock), '_maybeInvite caps the circle at NPC_CFG.maxGroup — a full circle says so instead of overflowing');
+ok(/async function groupSay\(q\)\{[\s\S]*?if\(await _maybeInvite\(q\)\) return;/.test(npcBlock) && /async function residentSay\(q\)\{[\s\S]*?if\(await _maybeInvite\(q\)\) return;/.test(npcBlock), 'both groupSay and residentSay check for an invite first, so naming a resident routes to the join flow');
+ok(/if\(chatBound && L\._joinWalk && !hidden && NPC_CFG\.motionEnabled\)\{[\s\S]*?_resWalk\(L,L\._joinWalk\.x,L\._joinWalk\.z,RES_MOVE\.meetSpd,dt\)/.test(npcBlock), 'an invited resident actually walks into the circle (chatBound + _joinWalk branch) instead of freezing in place');
+ok(/L\._joinWalk=\{ x:cx\+Math\.cos\(a\)\*R, z:cz\+Math\.sin\(a\)\*R \}/.test(npcBlock) && /if\(d>14\) L\.group\.position\.set\(cx\+Math\.cos\(a\)\*11/.test(npcBlock), '_placeJoiner steps a far-off joiner in from ~11u (no cross-map teleport) and settles them on a ring slot beside the circle');
+ok(/window\.__inviteResident=\(id\)=>/.test(HTML) && /window\.__inviteMatch=\(q\)=>/.test(HTML), '?dbg __inviteResident/__inviteMatch hooks force a join + introspect the name/cue detector');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
