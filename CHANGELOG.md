@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.59.0] — 2026-07-07
+
+### 🙌 Call a friend over — name a resident mid-chat and they walk in and join the circle
+- **What's new.** While you're talking with a resident (1:1) or a **모임 (group)**, you can now **invite another resident by name**. Say something like *"린과도 대화하고 싶어"* or *"미라도 불러줘"* and that resident **walks over, joins the chat, greets you, and answers alongside the others** from then on. The header grows to include them (**"노아 · 카이 · 린 · 모임"**) and a 1:1 seamlessly **becomes a 모임** in place — the open log and shared thread are preserved.
+- **The scene the residents asked for.** This makes real the moment the townsfolk kept gesturing at — *"린이 저 앞에 있어… 린이랑도 이야기하면 이 광장이 더 또렷해져"* — the visitor names them, and they come.
+- **How the invite is detected.** A resident is summoned only when the message carries **both** a name (a Korean name + a person particle like 도/랑/과/이/를, or the English name as a whole word) **and** an invite/talk cue (부르 · 부를 · 불러 · 초대 · 데려 · 합류 · 같이 · 함께 · 껴/끼 · 얘기 · 이야기 · 대화 · 만나 · call · invite · join · bring · talk · …). This keeps a passing name-drop (or a word like *태도* that merely contains a name) from dragging someone into the chat.
+- **They actually walk in.** An invited resident who's far away is stepped in from ~11u out on their own side of the circle (no jarring cross-map teleport), then **walks** to a ring slot at talking distance and settles facing you — reusing the same locomotion as the ambient circle. If they were resting on a bench or mid-ambient-chat, they stand and leave it cleanly first.
+- **Capped and graceful.** The circle honours **maxGroup** (4 desktop / 3 mobile & LOW_END). Invite one more when it's full and an existing member simply says so (*"지금은 자리가 꽉 찼어요…"*) instead of overflowing. Works fully **AI-off**: the join greeting + welcome are scripted, and the enlarged group answers your next question via the existing on-topic `residentReply` fallback.
+- **Preserved.** Budget/env AI gating, the shared `_resHist` transcript + context window from 1.58.0, round-robin turns, `_cap180`, `esc()`/textContent XSS safety, hidden-tab stop, per-resident/pair cooldowns, and the ambient engine are all intact. Client-only — no worker change required.
+- **Debug.** `?dbg` adds `window.__inviteResident(id)` (force a join into the open chat) and `window.__inviteMatch(q)` (introspect the name+cue detector without side effects).
+
 ## [1.58.0] — 2026-07-07
 
 ### 🧠 Residents answer the question — group chat is now context-aware, not random small talk
