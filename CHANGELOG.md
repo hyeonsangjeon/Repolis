@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.57.0] — 2026-07-07
+
+### 🙋 Step into the circle — the visitor can join a gathering and the whole group talks back
+- **What's new.** Walk up to a cluster of residents (or right into an active **circle**) and you can now **join the conversation**. The walk-up prompt reads **"대화에 끼기 / join in"** instead of a 1:1 "talk", and opening it binds the chat panel to the **whole group**: the header shows every member's name (**"솔 · 준 · 나리 · 모임"**), and when you say something the group answers together — a **primary responder** plus a second resident who **chimes in** with a short in-voice aside. It reads like stepping into a real huddle, not a private DM.
+- **Everyone answers you over time.** The addressed speaker **round-robins** across the circle (sol → jun → nari → …), so if you keep chatting, every member takes a turn replying to you — each line prefixed with a **colored name chip** so you always know who's talking. The primary gives the grounded, in-persona answer (meta-aware — they know they're an AI resident of this repo-city); the chime-in is a light scripted aside from the ambient bank.
+- **The circle turns to you.** The moment you join, the members' auto-conversation ends, they **freeze in place and face the visitor** (anyone within ~6.5u pivots straight to you), and their floating world-bubbles clear — the dialogue lives in the chat panel. Close the chat and the circle is **released**: each member rests a short beat, then town life resumes.
+- **How a group forms.** Pressing Enter/💬 by a resident gathers the neighbours genuinely clustered around them within a **joinR** walk-up radius (9u desktop / 7u LOW_END — deliberately tighter than the ambient `groupR`), capped at **maxGroup** (4 desktop / 3 mobile & LOW_END). Fewer than two nearby → it cleanly falls back to the existing **1:1 resident chat**. If you step into a circle that's already mid-conversation, you join **exactly that circle**.
+- **Cheap by design.** Joining adds **zero extra network cost**: it reuses the existing scripted persona replies and the same single AI player-chat path (bounded to **one AI call per message**, exactly like 1:1), so no worker change and no new spend. Budget-low / env-off still degrades to fully scripted answers.
+- **Preserved.** Hidden-tab stop, per-resident & pair cooldowns, LOW_END locomotion, greeting/idle-emote warmth, the ambient group-conversation engine, scholar/taxi chat, and the AI env-gating / daily budget caps are all intact. A stale in-flight ambient turn can no longer paint a bubble after you join (guarded in `done()`).
+- **Debug.** `?dbg` adds `window.__joinGroup([ids])` (force-join a named cluster / the nearest one) and `window.__groupChat()` (inspect the live player circle — active, members, primary, round-robin index); `window.__npcState()` now reports `joinR` and the active `groupChat` roster.
+
 ## [1.56.0] — 2026-07-07
 
 ### 🗣️ Residents gather into a circle — everyone takes a turn, not just two

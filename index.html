@@ -4453,7 +4453,7 @@ const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
 const RES_MOVE={ wanderSpd:(LOW_END?0.9:(IS_MOBILE?0.95:1.05)), meetSpd:(LOW_END?1.4:(IS_MOBILE?1.7:2.4)),
   roamR:6.5, pauseMin:2.5, pauseMax:7.0,
   restChance:(LOW_END?0.28:0.4), restMin:8, restMax:16, seatSeek:15,   // townsfolk occasionally stroll to a free bench and sit a while before wandering on
-  talkDist:4.2, meetMax:(LOW_END?48:58), approachMax:(LOW_END?20:16), arrive:0.5, gait:2.2, groupR:(LOW_END?15:20) };
+  talkDist:4.2, meetMax:(LOW_END?48:58), approachMax:(LOW_END?20:16), arrive:0.5, gait:2.2, groupR:(LOW_END?15:20), joinR:(LOW_END?7:9) };
 // ---- resident warmth: notice the visitor (a wave + short hello) and show the occasional solo life-emote ----
 // pure-visual · zero-cost · zero-network: greetings/emotes are client-side bubbles, edge-triggered + cooldown-gated so they never spam.
 // LOW_END keeps the full warmth but spaces the solo emotes out further — the cost/perf saving stays on the AI-conversation side, never on this.
@@ -4536,7 +4536,7 @@ function _startAmb(a,b){ const now=clock.elapsedTime; let members;
   _emitMetric('npc_ambient_started',{a:members[0].res.id,b:members[1].res.id,size:members.length,members:members.map(m=>m.res.id),max}); return true; }
 function _advanceAmb(){ const C=_ambConv; if(!C||C.pending) return; const now=clock.elapsedTime; const speaker=C.members[C.si], listener=C.prevWho||C.members[(C.si+1)%C.members.length];
   const useAI = NPC_CFG.aiEnabled && NPC_CFG.ambientAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
-  function done(line,ai,fb){ line=_capBub(line); speaker.bub.say(line,_hex(speaker.res.color)); speaker._gt=2.2;
+  function done(line,ai,fb){ if(_ambConv!==C){ C.pending=false; return; } line=_capBub(line); speaker.bub.say(line,_hex(speaker.res.color)); speaker._gt=2.2;
     const turn={ t:Math.round(clock.elapsedTime), a:C.a.res.id, b:C.b.res.id, who:speaker.res.id, text:line, ai:!!ai, fb:!!fb };
     C.turns.push(turn); _pushTranscript(turn); if(fb) _npcBudget.fallbackTurns++; if(ai) _npcBudget.aiTurns++;
     _emitMetric('npc_ambient_turn',{who:speaker.res.id,ai:!!ai,fb:!!fb,len:line.length});
@@ -4579,7 +4579,7 @@ function _seatRelease(L){ if(L._rest&&L._rest.seat) L._rest.seat._occ=null; L._r
 function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.elapsedTime; const C=_ambConv, hidden=document.hidden;
   for(const L of RESIDENTS_LIVE){ const g=L.group;
     const inConv=C&&C.members.indexOf(L)>=0, speaker=C?C.members[C.si]:null;
-    const chatBound=_resChatActive()&&activeNpc&&activeNpc.res===L.res; let moving=false;
+    const chatBound=_resChatActive()&&activeNpc&&(activeNpc.res===L.res || (activeGroupMembers&&activeGroupMembers.indexOf(L)>=0)); let moving=false;
     // warm welcome: the moment the visitor steps up, the resident notices — a wave + a short hello (edge-triggered + cooldown, so it never spams)
     if(!inConv && !chatBound && !hidden){
       const pnear=Math.hypot(player.position.x-g.position.x, player.position.z-g.position.z)<RES_GREET_DIST;
@@ -4610,7 +4610,7 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
       L._emoteCd=tt+RES_EMOTE_CD_MIN+Math.random()*(RES_EMOTE_CD_MAX-RES_EMOTE_CD_MIN);
       if(Math.random()<0.7){ L.bub.say(_resIdleEmote(), _hex(L.res.color)); L._gt=1.6; } }
     let tgt;
-    if(inConv && C.phase==='talk'){ const f=(L===speaker)?C.center:speaker.group.position; tgt=Math.atan2(f.x-g.position.x, f.z-g.position.z); }   // listeners turn to whoever's speaking; the speaker addresses the circle
+    if(inConv && C.phase==='talk'){ const pd=Math.hypot(player.position.x-g.position.x, player.position.z-g.position.z); const f=(pd<6.5)?player.position:((L===speaker)?C.center:speaker.group.position); tgt=Math.atan2(f.x-g.position.x, f.z-g.position.z); }   // listeners turn to whoever's speaking; the whole circle turns to the visitor who steps right up
     else { const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz); tgt=d<14?Math.atan2(dx,dz):L._baseRot+Math.sin(tt*0.4+L._ph)*0.2; }
     g.rotation.y=lerpA(g.rotation.y,tgt,0.06);
     if(g._legL){ g._legL.rotation.x*=0.8; g._legR.rotation.x*=0.8; }
@@ -4665,6 +4665,38 @@ async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) retu
     try{ const line=await _aiPlayerChat(res,q); if(line){ sb.remove(); addMsg('bot', esc(_cap180(line))); trackChatEvent('npc_player_chat',{npc:'resident',id:res.id,ai:true}); return; } }catch(e){}
     sb.remove(); }
   const r=residentReply(res,q); addMsg('bot', r.html, r.repo?{repo:r.repo}:undefined); trackChatEvent('npc_player_chat',{npc:'resident',id:res.id,ai:false}); }
+
+// ---- player joins a gathering: walk up to a cluster (or step into an active circle) and the whole group talks with you ----
+let activeGroupMembers=null;                                   // live residents in a player-facing group chat (frozen + turned to you)
+function _liveOf(npc){ return (npc&&npc.res&&npc.res._live)||null; }
+function _groupNear(npc){ const seed=_liveOf(npc); if(!seed) return null; let members;
+  if(_ambConv && _ambConv.members.indexOf(seed)>=0) members=_ambConv.members.slice();      // you stepped into an active circle → join exactly that circle
+  else { const sp=seed.group.position, jr=RES_MOVE.joinR;                                   // otherwise gather only the neighbours genuinely clustered around them
+    members=[seed].concat(RESIDENTS_LIVE.filter(L=>L!==seed && L.group.position.distanceTo(sp)<=jr)
+      .sort((a,b)=>a.group.position.distanceToSquared(sp)-b.group.position.distanceToSquared(sp))); }
+  const cap=Math.max(2,Math.min(NPC_CFG.maxGroup,RESIDENTS_LIVE.length)); members=members.slice(0,cap);
+  return members.length>=2?members:null; }
+function _releaseGroup(){ if(!activeGroupMembers) return; const until=clock.elapsedTime+8+Math.random()*6;
+  for(const m of activeGroupMembers) _resCd.set(m.res.id,until); activeGroupMembers=null; _ambNextAt=clock.elapsedTime+5+Math.random()*6; }   // members rest a beat, then town life resumes
+function openGroupChat(members){ if(_ambConv && members.some(m=>_ambConv.members.indexOf(m)>=0)) _endAmb('player-joined');
+  activeGroupMembers=members.slice();
+  openChat({ resident:true, group:true, id:'group', kind:'resident', res:members[0].res, live:members.slice(), members:members.map(m=>m.res), gi:0 }); }
+function _groupNames(ms){ return ms.map(m=>{ const n=m.res[LANG]||m.res.ko; return `<b style="color:${_hex(m.res.color)}">${esc(n.name)}</b>`; }).join(' \u00b7 '); }
+function _groupChip(res){ const n=res[LANG]||res.ko; return `<b style="color:${_hex(res.color)}">${esc(n.name)}</b> `; }
+function _groupPromptHtml(ms){ return (LANG==='ko'?`<b>\uD83D\uDC65 ${ms.length}\uBA85\uC774 \uBAA8\uC5EC \uC788\uC5B4\uC694</b> \u00b7 <span class="key">Enter</span>/\uD074\uB9AD\uC73C\uB85C <b>\uB300\uD654\uC5D0 \uB07C\uAE30</b> \uD83D\uDCAC`:`<b>\uD83D\uDC65 a gathering of ${ms.length}</b> \u00b7 <span class="key">Enter</span>/click to <b>join in</b> \uD83D\uDCAC`); }
+function groupGreet(wrap){ return _groupNames(wrap.live||[])+' \u2014 '+esc(LANG==='ko'?'\uBB34\uC2A8 \uC774\uC57C\uAE30\uB4E0 \uAC19\uC774 \uB098\uB220\uC694.':"let's talk it over together."); }
+async function groupSay(q){ const wrap=activeNpc, ms=((wrap&&wrap.live)||[]).filter(m=>m&&m.res); if(!ms.length){ await residentSay(q); return; }
+  _guestCdUntil=clock.elapsedTime+NPC_CFG.guestCooldownSec;
+  const pi=(wrap.gi||0)%ms.length, pres=ms[pi].res;                                          // the addressed speaker round-robins so everyone gets to answer you over the exchange
+  const useAI=NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
+  let mainHtml=null, repo=null;
+  if(useAI){ const sb=showTyping(addMsg('bot',_groupChip(pres)+'\u2026',{noHist:true}));
+    try{ const line=await _aiPlayerChat(pres,q); if(line) mainHtml=_groupChip(pres)+esc(_cap180(line)); }catch(e){} sb.remove(); }
+  if(!mainHtml){ const r=residentReply(pres,q); mainHtml=_groupChip(pres)+r.html; repo=r.repo; }
+  addMsg('bot',mainHtml,repo?{repo:repo}:undefined);
+  if(ms.length>1){ const oi=(pi+1+((Math.random()*(ms.length-1))|0))%ms.length, other=ms[oi];
+    await new Promise(r=>setTimeout(r,520)); if(activeGroupMembers) addMsg('bot',_groupChip(other.res)+esc(_cap180(_scriptLine(other)))); }   // a second resident chimes in with a short in-voice aside, rotating so the whole circle joins in
+  wrap.gi=(wrap.gi||0)+1; trackChatEvent('npc_player_chat',{npc:'group',size:ms.length,ai:useAI&&!!mainHtml}); }
 
 // ---- boot: best-effort worker config (learn runtime toggles + budget); unreachable → stay scripted ----
 async function npcBootConfig(){ NPC_CFG.worker=(typeof groundedUrl==='function'?groundedUrl():null)||null; if(!NPC_CFG.worker) return;
@@ -5274,7 +5306,7 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, nearHub=null, activeNpc=null;
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident) openChat(nearResident); else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const _g=_groupNear(nearResident); if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -5507,18 +5539,19 @@ function fallbackCopy(url, ok){ try{ const ta=document.createElement('textarea')
   document.execCommand('copy'); document.body.removeChild(ta); ok&&ok(); }catch(_){ } }
 const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
 function scholarPersona(kind, slot){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(sc&&sc.active&&sc.persona){ const p=sc.persona[LANG]||sc.persona.ko; if(p&&p[slot]) return p[slot]; } return null; }
-function npcGreet(n){ if(n&&n.resident) return residentGreet(n.res); const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
-function applyNpcChrome(n){ if(n&&n.resident){ if(chatHeadTtl) chatHeadTtl.innerHTML=residentTitle(n.res); modeSel.style.display='none'; chatText.placeholder=residentPh(n.res); return; }
+function npcGreet(n){ if(n&&n.group) return groupGreet(n); if(n&&n.resident) return residentGreet(n.res); const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
+function applyNpcChrome(n){ if(n&&n.group){ if(chatHeadTtl) chatHeadTtl.innerHTML=_groupNames(n.live||[])+' \u00b7 '+(LANG==='ko'?'\uBAA8\uC784':'circle'); modeSel.style.display='none'; chatText.placeholder=(LANG==='ko'?'\uBAA8\uC784\uC5D0 \uB9D0 \uAC78\uAE30\u2026':'Say something to the circle\u2026'); return; }
+  if(n&&n.resident){ if(chatHeadTtl) chatHeadTtl.innerHTML=residentTitle(n.res); modeSel.style.display='none'; chatText.placeholder=residentPh(n.res); return; }
   const scholar = n && n.kind!=='taxi';
   if(chatHeadTtl) chatHeadTtl.innerHTML = scholar ? (scholarPersona(n.kind,'title')||t('engTitle')) : t('taxiTitle');
   modeSel.style.display = scholar?'none':''; chatText.placeholder = scholar ? (scholarPersona(n.kind,'ph')||t('engPh')) : t('chatPh'); }
-function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); chatEl.classList.remove('hidden');
+function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); if(activeGroupMembers && !(npc&&npc.group)) _releaseGroup(); chatEl.classList.remove('hidden');
   if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; chatHistory=[]; }   // switching NPC resets the thread + memory
   applyNpcChrome(npc);
   if(!chatGreeted){ chatGreeted=true; addMsg('bot', npcGreet(npc), {noHist:true}); }
   trackChatEvent('chat_open', { npc:npcKindOf(npc) });
   setTimeout(()=>chatText.focus(),60); }
-function closeChat(){ chatEl.classList.add('hidden'); trackChatEvent('chat_close'); }
+function closeChat(){ chatEl.classList.add('hidden'); _releaseGroup(); trackChatEvent('chat_close'); }
 
 /* ---- Mode A: local intent search (no key, always works) ---- */
 const SYN={ rag:['rag','retrieval','faq','vector','embedding','검색증강','지식'], llm:['llm','gpt','openai','azure','generative','genai','foundry','language model','파운드리'],
@@ -5942,7 +5975,7 @@ async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; b
   trackChatEvent('chat_submit', { npc, qLen });
   let ok=false;
   addMsg('me',q.replace(/</g,'&lt;'));
-  try{ if(activeNpc&&activeNpc.resident){ await residentSay(q); } else { await askDriver(q); } ok=true; }
+  try{ if(activeNpc&&activeNpc.group){ await groupSay(q); } else if(activeNpc&&activeNpc.resident){ await residentSay(q); } else { await askDriver(q); } ok=true; }
   finally{ trackChatEvent('chat_turn_done', { npc, qLen, ok, ms:elapsedMs(started) }); busy=false; chatText.focus(); } }
 
 /* ---- taxi ride: the cab drives to you, picks you up, carries you there ---- */
@@ -6243,7 +6276,7 @@ function animate(){
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
   else if(nearHub&&!modalOpen){ const z=zoneCatById(nearHub.id); const nm=z?(LANG==='ko'?z.ko:z.en):''; const ic=z?z.icon:'🪧';
       promptEl.innerHTML=(LANG==='ko'?`<b>${ic} ${nm}</b> · <span class="key">Enter</span>/버튼으로 <b>구역 안내판</b> 열기 🪧`:`<b>${ic} ${nm}</b> · <span class="key">Enter</span>/button for the <b>district board</b> 🪧`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪧'; }
-  else if(nearResident&&!modalOpen){ promptEl.innerHTML=residentPromptHtml(nearResident); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
+  else if(nearResident&&!modalOpen){ const _g=_groupNear(nearResident); promptEl.innerHTML=_g?_groupPromptHtml(_g):residentPromptHtml(nearResident); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearestSeat&&!modalOpen){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> 또는 버튼으로 <b>앉기</b> 🪑`:`<span class="key">Enter</span> or button to <b>sit</b> 🪑`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪑'; }
   else { promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪'; }
 
@@ -6624,7 +6657,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__npcState=()=>({ mode:NPC_CFG.modeEnabled, visual:NPC_CFG.visualEnabled, ai:NPC_CFG.aiEnabled, ambientAi:NPC_CFG.ambientAiEnabled, playerAi:NPC_CFG.playerChatAiEnabled,
     scriptedAmbient:NPC_CFG.scriptedAmbient, lowEnd:LOW_END, mobile:IS_MOBILE, motionEnabled:NPC_CFG.motionEnabled, wanderSpd:+RES_MOVE.wanderSpd.toFixed(2), meetSpd:+RES_MOVE.meetSpd.toFixed(2), gapMin:NPC_CFG.gapMin, gapMax:NPC_CFG.gapMax, maxTurns:NPC_CFG.maxTurns,
     greetDist:RES_GREET_DIST, greetCd:[RES_GREET_CD_MIN,RES_GREET_CD_MAX], emoteCd:[RES_EMOTE_CD_MIN,RES_EMOTE_CD_MAX],
-    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, maxGroup:NPC_CFG.maxGroup, groupR:RES_MOVE.groupR, groupSize:(_ambConv?_ambConv.members.length:0), moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), resting:RESIDENTS_LIVE.filter(L=>L._rest).length, seats:SEATS.length, flora:GLOW_FLORA.length, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
+    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, maxGroup:NPC_CFG.maxGroup, groupR:RES_MOVE.groupR, joinR:RES_MOVE.joinR, groupChat:(activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null), groupSize:(_ambConv?_ambConv.members.length:0), moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), resting:RESIDENTS_LIVE.filter(L=>L._rest).length, seats:SEATS.length, flora:GLOW_FLORA.length, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
   window.__seats=()=>SEATS.map((s,i)=>({ i, pos:[+s.x.toFixed(1),+s.z.toFixed(1)], occupied:s._occ?s._occ.res.id:null }));
   window.__greet=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
@@ -6640,6 +6673,13 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     if(!mem||mem.length<2) return {ok:false}; for(const m of mem) _resCd.delete(m.res.id);
     _startAmb(mem); if(_ambConv){ _ambConv.phase='talk'; _ambConv.nextAt=0; _advanceAmb(); }
     return { ok:!!_ambConv, members:_ambConv?_ambConv.members.map(m=>m.res.id):[], size:_ambConv?_ambConv.members.length:0 }; };
+  window.__joinGroup=(ids)=>{ let mem;   // player joins a gathering: pass explicit ids, else the cluster around nearResident / the resident nearest the player
+    if(Array.isArray(ids)&&ids.length>=2) mem=ids.map(id=>RESIDENTS_LIVE.find(L=>L.res.id===id)).filter(Boolean);
+    else if(nearResident) mem=_groupNear(nearResident);
+    else { const seed=RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0]; mem=seed?_groupNear(seed._npc):null; }
+    if(!mem||mem.length<2) return { ok:false, reason:'no cluster' }; openGroupChat(mem);
+    return { ok:!!activeGroupMembers, members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], title:chatHeadTtl?chatHeadTtl.textContent:null, ph:chatText?chatText.placeholder:null }; };
+  window.__groupChat=()=>({ active:!!activeGroupMembers, open:!!(chatEl&&!chatEl.classList.contains('hidden')), members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], primary:(activeNpc&&activeNpc.group)?activeNpc.res.id:null, gi:(activeNpc&&activeNpc.group)?activeNpc.gi:null });
   window.__npcBudget=()=>({ ...JSON.parse(JSON.stringify(_npcBudget)), low:_budgetLow(), exhausted:_budgetExhausted() });
   window.__npcTranscript=()=>_npcTranscript.slice(-20);
   window.__npcSim=(o)=>{ o=o||{}; ['remainingUsd','spentUsd','turnsToday','dailyTurnMax','dayCapUsd'].forEach(k=>{ if(typeof o[k]==='number') _npcBudget[k]=o[k]; });

@@ -310,8 +310,8 @@ ok(/\{ id:'noa', zone:'plaza'/.test(npcBlock), 'the plaza dreamer Noa is in the 
 ok(/RESIDENTS\.slice\(0,MAX_RESIDENTS\)/.test(npcBlock), 'placement is clamped to the max-resident cap');
 // 12b — prompt priority: residents sit BELOW buildings + hubs (no repo-door / district-board hijack)
 ok(/nearResident=null; if\(!nearest && !nearHub\)\{/.test(HTML), 'nearResident is detected only when no building AND no hub is in reach');
-ok(/openZoneBoard\(nearHub\.id\); else if\(nearResident\) openChat\(nearResident\)/.test(HTML), 'doAct() checks nearResident AFTER nearHub (buildings + hubs win)');
-ok(/else if\(nearResident&&!modalOpen\)\{ promptEl\.innerHTML=residentPromptHtml/.test(HTML), 'resident prompt is emitted after the hub prompt branch');
+ok(/openZoneBoard\(nearHub\.id\); else if\(nearResident\)\{ const _g=_groupNear\(nearResident\)/.test(HTML), 'doAct() checks nearResident AFTER nearHub (buildings + hubs win)');
+ok(/else if\(nearResident&&!modalOpen\)\{ const _g=_groupNear\(nearResident\); promptEl\.innerHTML=_g\?_groupPromptHtml\(_g\):residentPromptHtml/.test(HTML), 'resident prompt is emitted after the hub prompt branch');
 ok(/const RES_REACH=3\.4/.test(npcBlock), 'residents use a small walk-up reach (3.4)');
 // 12b-2 — living town: residents wander around home and walk toward one another before talking (not static statues)
 ok(/const RES_MOVE=\{[^}]*meetMax:/.test(npcBlock) && /talkDist:/.test(npcBlock), 'RES_MOVE tuning (meetMax + talkDist) exists for wander + rendezvous');
@@ -438,6 +438,25 @@ ok(/Math\.min\(NPC_CFG\.hardMaxTurns, base\+\(members\.length-2\)\)/.test(npcBlo
 ok(/for\(const m of C\.members\) _resCd\.set/.test(npcBlock), 'every member gets a cooldown when the gathering ends (whole circle rests, not just the seed pair)');
 ok(/window\.__conv=\(\)=>/.test(HTML) && /window\.__gather=/.test(HTML), '?dbg __conv/__gather hooks expose + force group conversations');
 ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.test(npcBlock) && /maxConcurrent:1/.test(npcBlock), 'group conversations preserve the hidden-tab stop and the one-gathering-at-a-time cap');
+
+// 18 — the visitor can JOIN a gathering: walk up to a circle (or cluster) and the whole group chats back, round-robin
+group('resident player group chat (visitor joins a gathering)');
+ok(/let activeGroupMembers=null/.test(npcBlock), 'a module-level activeGroupMembers holds the residents in a player-facing circle');
+ok(/joinR:\(LOW_END\?7:9\)/.test(npcBlock), 'RES_MOVE carries a joinR walk-up radius (smaller than groupR) so a circle only forms when folk are genuinely clustered');
+ok(/function _groupNear\(npc\)\{[\s\S]*?_ambConv\.members\.indexOf\(seed\)>=0/.test(npcBlock), '_groupNear joins an existing circle if the seed is mid-conversation, else gathers the nearby cluster');
+ok(/function openGroupChat\(members\)\{[\s\S]*?_endAmb\('player-joined'\)/.test(npcBlock), "opening a group chat ends the residents' auto-conversation so they turn to the visitor");
+ok(/async function groupSay\(q\)\{/.test(npcBlock), 'groupSay drives the whole-circle reply to the visitor');
+ok(/const pi=\(wrap\.gi\|\|0\)%ms\.length/.test(npcBlock) && /wrap\.gi=\(wrap\.gi\|\|0\)\+1/.test(npcBlock), 'the addressed speaker round-robins (wrap.gi) so every circle member answers the visitor over the exchange');
+ok(/if\(ms\.length>1\)\{[\s\S]*?_scriptLine\(other\)/.test(npcBlock), 'a second resident chimes in with a short in-voice aside so it reads as a group, not a 1:1');
+ok(/const chatBound=_resChatActive\(\)&&activeNpc&&\(activeNpc\.res===L\.res \|\| \(activeGroupMembers&&activeGroupMembers\.indexOf\(L\)>=0\)\)/.test(npcBlock), 'every circle member freezes + turns to the visitor while the group chat is open (chatBound covers activeGroupMembers)');
+ok(/pd<6\.5\)\?player\.position/.test(npcBlock), 'residents in a circle turn to face the visitor who steps right up (pd<6.5)');
+ok(/if\(_ambConv!==C\)\{ C\.pending=false; return; \}/.test(npcBlock), "a stale in-flight ambient turn can't paint a bubble after the visitor joins (done() guards on _ambConv)");
+ok(/function _releaseGroup\(\)\{/.test(npcBlock) && /_releaseGroup\(\);/.test(HTML), 'closing/ switching the chat releases the circle (members rest a beat, then town life resumes)');
+ok(/if\(n&&n\.group\) return groupGreet\(n\)/.test(HTML) && /if\(n&&n\.group\)\{/.test(HTML), 'the chat panel has a group branch for greeting + chrome (names header, no mode selector)');
+ok(/if\(activeNpc&&activeNpc\.group\)\{ await groupSay\(q\)/.test(HTML), 'sendChat routes to groupSay when a gathering is active (before the 1:1 resident + taxi paths)');
+ok(/const _g=_groupNear\(nearResident\); if\(_g\) openGroupChat\(_g\); else openChat\(nearResident\)/.test(HTML), 'pressing Enter/💬 by a cluster opens the group chat, else falls back to a 1:1');
+ok(/promptEl\.innerHTML=_g\?_groupPromptHtml\(_g\):residentPromptHtml\(nearResident\)/.test(HTML), 'the walk-up prompt shows "join in / 대화에 끼기" for a cluster');
+ok(/window\.__joinGroup=/.test(HTML) && /window\.__groupChat=/.test(HTML), '?dbg __joinGroup/__groupChat hooks force + inspect a player group chat');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
