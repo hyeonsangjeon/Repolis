@@ -413,6 +413,18 @@ ok(/faceLight\.intensity = night\?16:6;/.test(HTML), 'setNightState keeps the he
 ok(/faceLight=new THREE\.PointLight\(0xfff0d8, isNight\?16:6,/.test(HTML), 'the hero fill light is seeded to the current phase at build (day entry is not left dark)');
 ok(/window\.__playerLight=/.test(HTML), '?dbg __playerLight hook present to inspect/tune the hero fill light');
 
+// 16 — resident warmth: residents notice the visitor (wave + hello) and show the occasional solo life-emote (all client-side, zero-cost)
+group('resident warmth (greet + idle emote)');
+ok(/function _resGreetLine\(res\)\{/.test(HTML), '_resGreetLine() builds a short localized wave-hello');
+ok(/const RES_GREET_DIST=5\.2, RES_GREET_CD_MIN=24, RES_GREET_CD_MAX=44;/.test(HTML), 'greet radius + cooldown constants present (edge-triggered, not spammy)');
+ok(/if\(pnear && !L\._pNear && tt>=L\._greetCd\)\{ L\.bub\.say\(_resGreetLine\(L\.res\), _hex\(L\.res\.color\)\); L\._gt=2\.6;/.test(HTML), 'proximity greeting is edge-triggered (_pNear), cooldown-gated (_greetCd), and waves (_gt) with a bubble');
+ok(/if\(!inConv && !chatBound && !hidden\)\{/.test(HTML), 'greeting is suppressed during a conversation / bound chat / hidden tab (never clobbers ambient bubbles)');
+ok(/if\(chatBound\) L\.bub\.clear\(\);/.test(HTML), 'a resident the visitor is chatting with hides its floating greeting/emote bubble (no residual bubble lingers into the chat)');
+ok(/function _resIdleEmote\(\)\{/.test(HTML) && /if\(Math\.random\(\)<0\.7\)\{ L\.bub\.say\(_resIdleEmote\(\), _hex\(L\.res\.color\)\); L\._gt=1\.6;/.test(HTML), 'low-frequency solo idle emote adds ambient town life');
+ok(/if\(!inConv && !chatBound && !L\._pNear && L\._gt<=0 && tt>=L\._emoteCd\)\{/.test(HTML), 'idle emote only fires when idle, alone, visitor not right here (greeting has precedence) and not mid-gesture');
+ok(/const RES_EMOTE_CD_MIN=\(LOW_END\?46:30\), RES_EMOTE_CD_MAX=\(LOW_END\?90:64\);/.test(HTML), 'LOW_END keeps the greeting warmth but spaces solo emotes further (saving stays on the AI side)');
+ok(/window\.__greet=\(id\)=>/.test(HTML) && /greetDist:RES_GREET_DIST, greetCd:\[RES_GREET_CD_MIN,RES_GREET_CD_MAX\]/.test(HTML), '?dbg __greet hook + __npcState greet/emote config present');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
