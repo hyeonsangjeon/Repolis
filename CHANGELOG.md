@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.58.0] — 2026-07-07
+
+### 🧠 Residents answer the question — group chat is now context-aware, not random small talk
+- **What was wrong.** In a **모임 (group chat)**, only the round-robin **primary** answered you; the **second resident who chimed in** blurted a random line pulled from the ambient small-talk bank (`_scriptLine`), so you'd ask *"쉴 때 더 있었으면 하는 게 있어?"* and hear an unrelated *"오늘은 AI 구역이 붐비네요."* No conversation history was sent either, so nobody followed the thread across turns.
+- **What's fixed.** The chime-in resident now **answers the same question** — via the AI player-chat path when it's on, or the deterministic **grounded reply** (`residentReply`, which branches on who/why/repo/here/bye) as a fallback — and **never** a random aside. Even with AI off, both speakers now stay on your topic (e.g. both list real repos from their district when you ask what's worth seeing).
+- **Shared thread + context window.** Resident and group chats now keep a shared **transcript** (`_resHist`, last 12 turns) and hand the **recent window** (last 10, who-labelled) to the worker as `last`, mirroring the scholars' history pattern. The second speaker additionally receives the **primary's just-given answer** (`chime`/`prev`) so it can build on it — agree, add, or offer another angle — instead of talking past it. Follow-up questions now follow the flow.
+- **Worker prompt hardened.** `npcPlayerPrompt` now insists the resident **answer the visitor's most recent question first and stay on topic — no subject changes, no drifting into small talk**; on a chime-in it's told to react to and build on the previous speaker. `npcPlayerUser` folds the who-labelled recent turns before the current ask. Fully **backward compatible** — the deployed worker ignores the new `last`/`chime`/`prev` fields, so the client fix (on-topic fallback) works even before a redeploy; a redeploy adds the full context.
+- **Preserved.** Budget/env AI gating, the one-AI-call-per-message ceiling, `_cap180`, `esc()`/textContent XSS safety, hidden-tab stop, per-resident & pair cooldowns, round-robin turns, LOW_END locomotion, and the ambient conversation engine (`_scriptLine` still powers town small talk) are all intact.
+- **Debug.** `?dbg` adds `window.__resTranscript()` (the shared resident/group thread) and `window.__groupChat()` now reports the transcript length.
+
 ## [1.57.0] — 2026-07-07
 
 ### 🙋 Step into the circle — the visitor can join a gathering and the whole group talks back

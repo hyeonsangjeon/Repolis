@@ -4628,7 +4628,14 @@ async function _aiAmbientTurn(C,speaker,listener){ const data=await _npcFetch({ 
   if(!data){ _emitMetric('npc_fallback_used',{where:'ambient',reason:'fetch_fail'}); return null; }
   if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{where:'ambient'}); } _emitMetric('npc_fallback_used',{where:'ambient',reason:data.reason||'no_line'}); return null; }
   _emitMetric('npc_budget_spend',{where:'ambient',spent:_npcBudget.spentUsd}); return String(data.line); }
-async function _aiPlayerChat(res,q){ const data=await _npcFetch({ npc_action:'npcPlayerChat', speaker:res.id, zone:res.zone, question:q, lang:LANG });
+// ---- shared resident/group chat transcript: every speaker answers on top of the thread (and a chime-in reacts in context) ----
+let _resHist=[];                                                     // {who:'visitor'|<resId>, text} — plain text, newest last; reset when the chat NPC changes
+function _plain(s){ return String(s==null?'':s).replace(/<[^>]*>/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim(); }
+function _resHistPush(who,text){ const s=_plain(text); if(!s) return; _resHist.push({who,text:s.slice(0,180)}); if(_resHist.length>12) _resHist=_resHist.slice(-12); }   // keep last 12 turns
+function _resHistWindow(){ return _resHist.slice(-10); }             // recent window handed to the worker so the speaker follows the flow
+async function _aiPlayerChat(res,q,opts){ opts=opts||{}; const payload={ npc_action:'npcPlayerChat', speaker:res.id, zone:res.zone, question:q, lang:LANG };
+  if(opts.last&&opts.last.length) payload.last=opts.last; if(opts.chime){ payload.chime=true; if(opts.prev) payload.prev=opts.prev; }   // last=prior thread; chime/prev → react to the previous speaker
+  const data=await _npcFetch(payload);
   if(!data){ _emitMetric('npc_fallback_used',{where:'player',reason:'fetch_fail'}); return null; }
   if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{where:'player'}); } _emitMetric('npc_fallback_used',{where:'player',reason:data.reason||'no_line'}); return null; }
   _emitMetric('npc_budget_spend',{where:'player',spent:_npcBudget.spentUsd}); return String(data.line); }
@@ -4660,11 +4667,12 @@ function residentReply(res,q){ const ql=String(q||'').toLowerCase().trim(), ko=L
   const g=residentGreet(res), cnt=z.repos.length;
   return { html: (g?g+' ':'')+esc(ko?`여기는 ${zn}, ${L.role}로서 제가 돌보는 곳이에요. 레포 ${cnt}채가 있어요.`:`This is ${zn}, my patch as the ${L.role}. ${cnt} repo-houses stand here.`) }; }
 async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) return; _guestCdUntil=clock.elapsedTime + NPC_CFG.guestCooldownSec;
+  const last=_resHistWindow(); _resHistPush('visitor',q);                                     // record the question after snapshotting the prior thread (the worker appends it as the ask)
   const useAI = NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
   if(useAI){ const sb=showTyping(addMsg('bot','\u2026',{noHist:true}));
-    try{ const line=await _aiPlayerChat(res,q); if(line){ sb.remove(); addMsg('bot', esc(_cap180(line))); trackChatEvent('npc_player_chat',{npc:'resident',id:res.id,ai:true}); return; } }catch(e){}
+    try{ const line=await _aiPlayerChat(res,q,{last}); if(line){ sb.remove(); const c=_cap180(line); addMsg('bot', esc(c)); _resHistPush(res.id,c); trackChatEvent('npc_player_chat',{npc:'resident',id:res.id,ai:true}); return; } }catch(e){}
     sb.remove(); }
-  const r=residentReply(res,q); addMsg('bot', r.html, r.repo?{repo:r.repo}:undefined); trackChatEvent('npc_player_chat',{npc:'resident',id:res.id,ai:false}); }
+  const r=residentReply(res,q); addMsg('bot', r.html, r.repo?{repo:r.repo}:undefined); _resHistPush(res.id,r.html); trackChatEvent('npc_player_chat',{npc:'resident',id:res.id,ai:false}); }
 
 // ---- player joins a gathering: walk up to a cluster (or step into an active circle) and the whole group talks with you ----
 let activeGroupMembers=null;                                   // live residents in a player-facing group chat (frozen + turned to you)
@@ -4687,16 +4695,21 @@ function _groupPromptHtml(ms){ return (LANG==='ko'?`<b>\uD83D\uDC65 ${ms.length}
 function groupGreet(wrap){ return _groupNames(wrap.live||[])+' \u2014 '+esc(LANG==='ko'?'\uBB34\uC2A8 \uC774\uC57C\uAE30\uB4E0 \uAC19\uC774 \uB098\uB220\uC694.':"let's talk it over together."); }
 async function groupSay(q){ const wrap=activeNpc, ms=((wrap&&wrap.live)||[]).filter(m=>m&&m.res); if(!ms.length){ await residentSay(q); return; }
   _guestCdUntil=clock.elapsedTime+NPC_CFG.guestCooldownSec;
-  const pi=(wrap.gi||0)%ms.length, pres=ms[pi].res;                                          // the addressed speaker round-robins so everyone gets to answer you over the exchange
   const useAI=NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
-  let mainHtml=null, repo=null;
+  const base=_resHistWindow(); _resHistPush('visitor',q);                                     // the shared thread every speaker answers on top of
+  const pi=(wrap.gi||0)%ms.length, pres=ms[pi].res;                                          // the addressed speaker round-robins so everyone gets a turn answering you
+  let mainLine=null, repo=null;
   if(useAI){ const sb=showTyping(addMsg('bot',_groupChip(pres)+'\u2026',{noHist:true}));
-    try{ const line=await _aiPlayerChat(pres,q); if(line) mainHtml=_groupChip(pres)+esc(_cap180(line)); }catch(e){} sb.remove(); }
-  if(!mainHtml){ const r=residentReply(pres,q); mainHtml=_groupChip(pres)+r.html; repo=r.repo; }
-  addMsg('bot',mainHtml,repo?{repo:repo}:undefined);
-  if(ms.length>1){ const oi=(pi+1+((Math.random()*(ms.length-1))|0))%ms.length, other=ms[oi];
-    await new Promise(r=>setTimeout(r,520)); if(activeGroupMembers) addMsg('bot',_groupChip(other.res)+esc(_cap180(_scriptLine(other)))); }   // a second resident chimes in with a short in-voice aside, rotating so the whole circle joins in
-  wrap.gi=(wrap.gi||0)+1; trackChatEvent('npc_player_chat',{npc:'group',size:ms.length,ai:useAI&&!!mainHtml}); }
+    try{ const line=await _aiPlayerChat(pres,q,{last:base}); if(line) mainLine=_cap180(line); }catch(e){} sb.remove(); }
+  if(!mainLine){ const r=residentReply(pres,q); mainLine=_plain(r.html); repo=r.repo; }       // AI off/failed → deterministic grounded answer (still on-topic), never random chatter
+  addMsg('bot',_groupChip(pres)+esc(mainLine),repo?{repo:repo}:undefined); _resHistPush(pres.id,mainLine);
+  if(ms.length>1){ const oi=(pi+1+((Math.random()*(ms.length-1))|0))%ms.length, other=ms[oi].res;
+    await new Promise(r=>setTimeout(r,520));
+    if(activeGroupMembers){ const ctx=base.concat([{who:pres.id,text:mainLine}]); let chime=null;   // the 2nd resident answers the SAME question, building on what was just said (context-aware, never a random aside)
+      if(useAI){ try{ const line=await _aiPlayerChat(other,q,{last:ctx,chime:true,prev:pres.id}); if(line) chime=_cap180(line); }catch(e){} }
+      if(!chime){ const r2=residentReply(other,q); chime=_plain(r2.html); }
+      addMsg('bot',_groupChip(other)+esc(chime)); _resHistPush(other.id,chime); } }
+  wrap.gi=(wrap.gi||0)+1; trackChatEvent('npc_player_chat',{npc:'group',size:ms.length,ai:useAI&&!!mainLine}); }
 
 // ---- boot: best-effort worker config (learn runtime toggles + budget); unreachable → stay scripted ----
 async function npcBootConfig(){ NPC_CFG.worker=(typeof groundedUrl==='function'?groundedUrl():null)||null; if(!NPC_CFG.worker) return;
@@ -5546,7 +5559,7 @@ function applyNpcChrome(n){ if(n&&n.group){ if(chatHeadTtl) chatHeadTtl.innerHTM
   if(chatHeadTtl) chatHeadTtl.innerHTML = scholar ? (scholarPersona(n.kind,'title')||t('engTitle')) : t('taxiTitle');
   modeSel.style.display = scholar?'none':''; chatText.placeholder = scholar ? (scholarPersona(n.kind,'ph')||t('engPh')) : t('chatPh'); }
 function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); if(activeGroupMembers && !(npc&&npc.group)) _releaseGroup(); chatEl.classList.remove('hidden');
-  if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; chatHistory=[]; }   // switching NPC resets the thread + memory
+  if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; chatHistory=[]; _resHist=[]; }   // switching NPC resets the thread + memory (scholar + resident/group transcripts)
   applyNpcChrome(npc);
   if(!chatGreeted){ chatGreeted=true; addMsg('bot', npcGreet(npc), {noHist:true}); }
   trackChatEvent('chat_open', { npc:npcKindOf(npc) });
@@ -6679,7 +6692,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     else { const seed=RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0]; mem=seed?_groupNear(seed._npc):null; }
     if(!mem||mem.length<2) return { ok:false, reason:'no cluster' }; openGroupChat(mem);
     return { ok:!!activeGroupMembers, members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], title:chatHeadTtl?chatHeadTtl.textContent:null, ph:chatText?chatText.placeholder:null }; };
-  window.__groupChat=()=>({ active:!!activeGroupMembers, open:!!(chatEl&&!chatEl.classList.contains('hidden')), members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], primary:(activeNpc&&activeNpc.group)?activeNpc.res.id:null, gi:(activeNpc&&activeNpc.group)?activeNpc.gi:null });
+  window.__groupChat=()=>({ active:!!activeGroupMembers, open:!!(chatEl&&!chatEl.classList.contains('hidden')), members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], primary:(activeNpc&&activeNpc.group)?activeNpc.res.id:null, gi:(activeNpc&&activeNpc.group)?activeNpc.gi:null, hist:_resHist.length });
+  window.__resTranscript=()=>_resHist.slice(-12);   // shared resident/group thread the speakers answer on top of
   window.__npcBudget=()=>({ ...JSON.parse(JSON.stringify(_npcBudget)), low:_budgetLow(), exhausted:_budgetExhausted() });
   window.__npcTranscript=()=>_npcTranscript.slice(-20);
   window.__npcSim=(o)=>{ o=o||{}; ['remainingUsd','spentUsd','turnsToday','dailyTurnMax','dayCapUsd'].forEach(k=>{ if(typeof o[k]==='number') _npcBudget[k]=o[k]; });
