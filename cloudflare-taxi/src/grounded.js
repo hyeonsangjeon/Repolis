@@ -702,17 +702,39 @@ function npcAmbientPrompt(speakerId, listenerId, topic, lang) {
     ? `${_npcGuard(lang)} Your name is ${s.name}, the ${s.role} of ${zn} — ${vb}. You are chatting with your neighbour ${l.name}. Continue the small talk with ONE friendly line about town life; once in a while you may let a quiet thought about being a code-born mind slip in. Keep it short (about 60 characters).`
     : `${_npcGuard(lang)} 당신의 이름은 ${s.name}, ${zn}의 ${s.role}이고 성격은 ${vb} 편이에요. 이웃 ${l.name}와 담소 중이에요. 마을살이에 대한 친근한 한 줄로 대화를 이어가되, 이따금 코드로 태어난 존재로서의 잔잔한 소회를 한 스푼 곁들여도 좋아요. 짧게(60자 안팎).`;
 }
-function npcPlayerPrompt(speakerId, lang) {
+function npcPlayerPrompt(speakerId, lang, opts) {
   const s = _npcName(speakerId, lang), P = NPC_PERSONAS[speakerId] || {};
   const zn = (P.zone && (lang === "en" ? P.zone.en : P.zone.ko)) || "";
-  return lang === "en"
-    ? `${_npcGuard(lang)} Your name is ${s.name}, the ${s.role} of ${zn}. A visitor is talking to you. Answer warmly in one or two short lines, grounded in your district. If they ask what you are or how it feels to live in this city, answer honestly and reflectively as a code-born AI resident — share your genuine sense of this town without denying your nature (but never the technical internals). If they ask about repos, point them to your district generally.`
-    : `${_npcGuard(lang)} 당신의 이름은 ${s.name}, ${zn}의 ${s.role}이에요. 방문객이 말을 걸었어요. 자기 구역에 근거해 한두 줄로 따뜻하게 답하세요. 당신이 무엇인지, 또는 이 도시에 사는 기분이 어떤지 물으면 코드로 태어난 AI 주민으로서 솔직하고 사색적으로 — 이 마을에 대한 진짜 소회를 자기 존재를 부정하지 말고(단 기술 내부는 빼고) 들려주세요. 레포를 물으면 자기 구역을 안내하세요.`;
+  const chime = !!(opts && opts.chime);
+  const prevName = opts && opts.prev ? _npcName(opts.prev, lang).name : "";
+  if (lang === "en") {
+    let base = `${_npcGuard(lang)} Your name is ${s.name}, the ${s.role} of ${zn}. A visitor is talking with your group. FIRST answer the visitor's most recent question directly and relevantly, in one or two short lines, grounded in your district. If they ask what you are or how it feels to live in this city, answer honestly and reflectively as a code-born AI resident (never the technical internals). If they ask about repos, point them to your district generally. Stay on the visitor's topic — do NOT change the subject or drift into unrelated small talk.`;
+    if (chime) base += ` ${prevName ? prevName + " just answered the same question" : "Another resident just answered"} — briefly build on or gently differ from that point, then add your own angle, still answering the visitor.`;
+    return base;
+  }
+  let base = `${_npcGuard(lang)} 당신의 이름은 ${s.name}, ${zn}의 ${s.role}이에요. 방문객이 당신들 모임과 이야기 중이에요. 먼저 방문객의 가장 최근 질문에 직접적이고 관련 있게, 자기 구역에 근거해 한두 줄로 답하세요. 당신이 무엇인지·이 도시에 사는 기분을 물으면 코드로 태어난 AI 주민으로서 솔직하고 사색적으로(단 기술 내부는 빼고) 답하세요. 레포를 물으면 자기 구역을 안내하세요. 반드시 방문객의 화제에 붙어서 답하고, 화제를 돌리거나 무관한 잡담으로 새지 마세요.`;
+  if (chime) base += ` ${prevName ? prevName + "가 방금 같은 질문에 답했어요" : "다른 주민이 방금 답했어요"} — 그 말에 짧게 이어(동의·보완·다른 시각) 반응한 뒤 당신의 관점을 덧붙이되, 여전히 방문객의 질문에 답하세요.`;
+  return base;
 }
 function npcAmbientUser(body, lang) {
   const last = Array.isArray(body.last) ? body.last.slice(-4) : [];
   if (!last.length) return lang === "en" ? "(open the conversation)" : "(대화를 시작하세요)";
   return last.map((t) => `${_npcName(t.who, lang).name}: ${String(t.text || "").slice(0, 180)}`).join("\n");
+}
+// Player chat with context: fold the recent group thread (who-labelled) in front of the visitor's current question,
+// so the speaker answers on top of the flow (and a chime-in can react to the previous resident). Empty last → question only.
+function npcPlayerUser(body, lang) {
+  const q = String(body.question || "").slice(0, 300);
+  const last = Array.isArray(body.last) ? body.last.slice(-8) : [];
+  if (!last.length) return q;
+  const visitor = lang === "en" ? "Visitor" : "방문객";
+  const lines = last.map((t) => {
+    const who = (t.who === "visitor" || t.role === "user") ? visitor : _npcName(t.who, lang).name;
+    return `${who}: ${String(t.text || "").slice(0, 160)}`;
+  });
+  const head = lang === "en" ? "Conversation so far:" : "지금까지의 대화:";
+  const ask = lang === "en" ? `The visitor now asks: ${q}\nAnswer this directly.` : `방문객이 지금 묻습니다: ${q}\n여기에 직접 답하세요.`;
+  return `${head}\n${lines.join("\n")}\n\n${ask}`;
 }
 function capLine(s, max = 180) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, max); }
 
@@ -774,7 +796,7 @@ async function npcModelCall(env, role, sys, userMsg, aiEnabled) {
     const r = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-      body: JSON.stringify({ messages: [{ role: "system", content: sys }, { role: "user", content: String(userMsg).slice(0, 600) }], max_completion_tokens: 120 }),
+      body: JSON.stringify({ messages: [{ role: "system", content: sys }, { role: "user", content: String(userMsg).slice(0, role === "player" ? 1500 : 600) }], max_completion_tokens: 120 }),
       signal: ctrl.signal,
     });
     clearTimeout(timer);
@@ -838,8 +860,8 @@ async function npcHandler(body, request, env) {
     // Env-off ceiling → never a model call; client falls back to its free scripted bank.
     if (!featureOn) { npcMetric(env, "npc_fallback_used", { where: role, reason: "disabled" }); return json({ ok: true, fallback: true, reason: "npc_ai_disabled", budget }, 200, env); }
     if (budget.blocked) { npcMetric(env, "npc_budget_blocked", { where: role }); return json({ ok: false, fallback: true, reason: "npc_budget_exhausted", budget }, 200, env); }
-    const sys = role === "ambient" ? npcAmbientPrompt(body.speaker, body.listener, body.topic, lang) : npcPlayerPrompt(body.speaker, lang);
-    const userMsg = role === "ambient" ? npcAmbientUser(body, lang) : String(body.question || "").slice(0, 300);
+    const sys = role === "ambient" ? npcAmbientPrompt(body.speaker, body.listener, body.topic, lang) : npcPlayerPrompt(body.speaker, lang, { chime: !!body.chime, prev: body.prev });
+    const userMsg = role === "ambient" ? npcAmbientUser(body, lang) : npcPlayerUser(body, lang);
     const out = await npcModelCall(env, role, sys, userMsg, aiEnabled);
     if (!out) { npcMetric(env, "npc_fallback_used", { where: role, reason: "model_unavailable" }); return json({ ok: true, fallback: true, reason: "model_unavailable", budget }, 200, env); }
     const cost = npcCostUsd(env, out.usage);

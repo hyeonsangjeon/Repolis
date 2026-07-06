@@ -447,7 +447,7 @@ ok(/function _groupNear\(npc\)\{[\s\S]*?_ambConv\.members\.indexOf\(seed\)>=0/.t
 ok(/function openGroupChat\(members\)\{[\s\S]*?_endAmb\('player-joined'\)/.test(npcBlock), "opening a group chat ends the residents' auto-conversation so they turn to the visitor");
 ok(/async function groupSay\(q\)\{/.test(npcBlock), 'groupSay drives the whole-circle reply to the visitor');
 ok(/const pi=\(wrap\.gi\|\|0\)%ms\.length/.test(npcBlock) && /wrap\.gi=\(wrap\.gi\|\|0\)\+1/.test(npcBlock), 'the addressed speaker round-robins (wrap.gi) so every circle member answers the visitor over the exchange');
-ok(/if\(ms\.length>1\)\{[\s\S]*?_scriptLine\(other\)/.test(npcBlock), 'a second resident chimes in with a short in-voice aside so it reads as a group, not a 1:1');
+ok(/if\(ms\.length>1\)\{[\s\S]*?residentReply\(other,q\)/.test(npcBlock) && !/_scriptLine\(other\)/.test(npcBlock), 'the second resident answers the SAME question (AI chime or residentReply fallback), never a random _scriptLine aside');
 ok(/const chatBound=_resChatActive\(\)&&activeNpc&&\(activeNpc\.res===L\.res \|\| \(activeGroupMembers&&activeGroupMembers\.indexOf\(L\)>=0\)\)/.test(npcBlock), 'every circle member freezes + turns to the visitor while the group chat is open (chatBound covers activeGroupMembers)');
 ok(/pd<6\.5\)\?player\.position/.test(npcBlock), 'residents in a circle turn to face the visitor who steps right up (pd<6.5)');
 ok(/if\(_ambConv!==C\)\{ C\.pending=false; return; \}/.test(npcBlock), "a stale in-flight ambient turn can't paint a bubble after the visitor joins (done() guards on _ambConv)");
@@ -457,6 +457,19 @@ ok(/if\(activeNpc&&activeNpc\.group\)\{ await groupSay\(q\)/.test(HTML), 'sendCh
 ok(/const _g=_groupNear\(nearResident\); if\(_g\) openGroupChat\(_g\); else openChat\(nearResident\)/.test(HTML), 'pressing Enter/💬 by a cluster opens the group chat, else falls back to a 1:1');
 ok(/promptEl\.innerHTML=_g\?_groupPromptHtml\(_g\):residentPromptHtml\(nearResident\)/.test(HTML), 'the walk-up prompt shows "join in / 대화에 끼기" for a cluster');
 ok(/window\.__joinGroup=/.test(HTML) && /window\.__groupChat=/.test(HTML), '?dbg __joinGroup/__groupChat hooks force + inspect a player group chat');
+
+group('resident chat carries conversation context (answers stay on the visitor\'s question)');
+ok(/let _resHist=\[\]/.test(npcBlock) && /function _resHistPush\(who,text\)/.test(npcBlock) && /function _resHistWindow\(\)/.test(npcBlock), 'a shared _resHist transcript (push + recent window) backs resident + group multi-turn memory');
+ok(/if\(_resHist\.length>12\) _resHist=_resHist\.slice\(-12\)/.test(npcBlock) && /return _resHist\.slice\(-10\)/.test(npcBlock), 'the transcript is bounded (keep 12, hand the last 10 to the worker) so the prompt never runs away');
+ok(/async function _aiPlayerChat\(res,q,opts\)\{/.test(npcBlock) && /if\(opts\.last&&opts\.last\.length\) payload\.last=opts\.last/.test(npcBlock), '_aiPlayerChat forwards the prior thread (payload.last) so the speaker follows the flow, not just the raw question');
+ok(/if\(opts\.chime\)\{ payload\.chime=true; if\(opts\.prev\) payload\.prev=opts\.prev/.test(npcBlock), '_aiPlayerChat marks a chime-in (chime+prev) so the worker tells the 2nd speaker to build on the previous one');
+ok(/const last=_resHistWindow\(\); _resHistPush\('visitor',q\)/.test(npcBlock) && /_resHistPush\(res\.id,c\)/.test(npcBlock), 'residentSay snapshots history then records both the question and the reply, so a follow-up keeps context');
+ok(/const ctx=base\.concat\(\[\{who:pres\.id,text:mainLine\}\]\)/.test(npcBlock) && /_aiPlayerChat\(other,q,\{last:ctx,chime:true,prev:pres\.id\}\)/.test(npcBlock), "groupSay feeds the 2nd resident the primary's just-given answer so the chime-in reacts to it (context-aware, on the same question)");
+ok(/_resHistPush\(pres\.id,mainLine\)/.test(npcBlock) && /_resHistPush\(other\.id,chime\)/.test(npcBlock), 'every group answer is recorded to the shared thread so later turns build on the whole exchange');
+ok(/_resHist=\[\]/.test(HTML.match(/if\(activeNpc!==npc\)\{[\s\S]*?\}/)?.[0] || ''), 'switching the chat NPC clears _resHist so a new gathering starts with a fresh thread');
+ok(/window\.__resTranscript=\(\)=>_resHist\.slice\(-12\)/.test(HTML), '?dbg __resTranscript surfaces the shared resident/group thread for verification');
+ok(/function npcPlayerUser\(body, ?lang\)/.test(WORKER) && /body\.last/.test(WORKER), 'the worker folds body.last into the player-chat user turn (who-labelled recent turns before the current ask)');
+ok(/npcPlayerPrompt\(body\.speaker, ?lang, ?\{[\s\S]*?chime:[\s\S]*?prev:/.test(WORKER), 'the worker passes chime/prev into npcPlayerPrompt so the second speaker is told to answer + build on the previous resident');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
