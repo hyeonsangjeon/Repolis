@@ -425,6 +425,20 @@ ok(/if\(!inConv && !chatBound && !L\._pNear && L\._gt<=0 && tt>=L\._emoteCd\)\{/
 ok(/const RES_EMOTE_CD_MIN=\(LOW_END\?46:30\), RES_EMOTE_CD_MAX=\(LOW_END\?90:64\);/.test(HTML), 'LOW_END keeps the greeting warmth but spaces solo emotes further (saving stays on the AI side)');
 ok(/window\.__greet=\(id\)=>/.test(HTML) && /greetDist:RES_GREET_DIST, greetCd:\[RES_GREET_CD_MIN,RES_GREET_CD_MAX\]/.test(HTML), '?dbg __greet hook + __npcState greet/emote config present');
 
+// 17 — resident group conversations: a nearby cluster forms a CIRCLE and everyone takes turns (not just 1:1)
+group('resident group conversations (gather → everyone talks)');
+ok(/maxGroup:4/.test(npcBlock), 'NPC_CFG carries a maxGroup so a gathering becomes a circle, not just a pair');
+ok(/if\(LOW_END\)\{[\s\S]*?NPC_CFG\.maxGroup=3;/.test(npcBlock), 'LOW_END + mobile cap the circle smaller (maxGroup 3) to stay light/readable');
+ok(/const groupR=|groupR:\(LOW_END\?15:20\)/.test(npcBlock), 'RES_MOVE carries a groupR gather radius so only genuinely-nearby folk join the circle');
+ok(/_ambConv=\{ members,/.test(npcBlock), 'ambient conversation holds a members[] array (N residents), not a fixed a/b pair');
+ok(/C\.si=\(C\.si\+1\)%C\.members\.length/.test(npcBlock), 'the speaking turn round-robins through every circle member so all of them talk');
+ok(/const cap=Math\.max\(2, Math\.min\(NPC_CFG\.maxGroup/.test(npcBlock), 'group size is clamped to maxGroup (nearby cooldown-free folk join, capped)');
+ok(/Math\.hypot\(g\.position\.x-C\.center\.x,g\.position\.z-C\.center\.z\)>RES_MOVE\.talkDist/.test(npcBlock), 'members converge on the shared circle centre during the approach phase (a ring, never a pile-up)');
+ok(/Math\.min\(NPC_CFG\.hardMaxTurns, base\+\(members\.length-2\)\)/.test(npcBlock), 'a bigger circle earns a few more turns but stays hard-capped at 10');
+ok(/for\(const m of C\.members\) _resCd\.set/.test(npcBlock), 'every member gets a cooldown when the gathering ends (whole circle rests, not just the seed pair)');
+ok(/window\.__conv=\(\)=>/.test(HTML) && /window\.__gather=/.test(HTML), '?dbg __conv/__gather hooks expose + force group conversations');
+ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.test(npcBlock) && /maxConcurrent:1/.test(npcBlock), 'group conversations preserve the hidden-tab stop and the one-gathering-at-a-time cap');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }

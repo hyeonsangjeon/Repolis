@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.56.0] — 2026-07-07
+
+### 🗣️ Residents gather into a circle — everyone takes a turn, not just two
+- **What's new.** When townspeople meet, they no longer talk strictly **1:1**. A gathering now grows into a small **group circle** and the speaking turn **round-robins through every member**, so three or four residents genuinely converse together instead of a bystander standing mute. Emergent, not staged: usually two chat, but nearby cooldown-free neighbours **join in** when the town clusters (plaza, benches), and everyone gets a line.
+- **How it forms.** The engine still picks the closest eligible **seed pair**, then grows the circle with residents within a gather radius (`groupR` — 20u desktop / 15u LOW_END) of the pair, capped at **maxGroup** (4 desktop / 3 mobile & LOW_END). Members walk to the shared **circle centre** (the group centroid) during the approach phase and settle into a ring at talk distance — they never pile onto one partner. Listeners face **whoever is speaking**; the speaker addresses the circle.
+- **Fair turns, still capped.** The turn budget scales gently with circle size (`base + (members − 2)`) but the **hard cap of 10 turns** is untouched, as are `maxConcurrent: 1` (one gathering at a time), the **5–10s** turn gap, and the AI/scripted split. A bigger circle just earns a few more turns so everyone speaks.
+- **Cheap by design.** Grouping adds **zero network cost**: it reuses the existing scripted speech bank and the same AI path (one speaker + one listener per turn), so no worker change and no extra spend. Budget-low still degrades to short scripted turns.
+- **Preserved.** Hidden-tab stop, pair cooldown (20–60s) **plus** a new per-resident cooldown so every circle member rests a beat before re-gathering, visitor-chat freeze, LOW_END locomotion, greeting/idle-emote warmth, and the AI env-gating / daily budget caps are all intact.
+- **Debug.** `?dbg` adds `window.__gather([ids])` (force a named/nearest group to gather and talk) and `window.__conv()` (inspect the live circle — members, speaker, phase, centre, turn/max); `window.__npcState()` now reports `maxGroup` / `groupR` / `groupSize`.
+
 ## [1.55.0] — 2026-07-06
 
 ### 👋 Residents notice you now — a wave, a hello, and quiet little moods
