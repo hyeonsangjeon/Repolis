@@ -3,6 +3,19 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.55.0] — 2026-07-06
+
+### 👋 Residents notice you now — a wave, a hello, and quiet little moods
+- **What's new.** Walk up to any of the eight townspeople and they **turn warm**: an edge-triggered greeting fires once as you enter their radius (~5.2u) — a short localized 👋 line in their own voice ("안녕, 솔이에요!") with a matching wave gesture. Left alone, residents also drift through occasional **solo idle emotes** ("😌 평화롭네", "🌆 오늘 하늘 좋다") so the city is never dead silent between conversations. This is the "resident warmth" pass — the village feels lived-in even when you're just passing through.
+- **Cheap by design.** Greetings and emotes are **scripted and zero-cost** (no AI call, no network) — reusing the existing resident speech-bubble. Per-resident cooldowns keep it calm: greet **24–44s**, idle emote **30–64s** desktop / **46–90s** LOW_END, with a 0.7 fire chance. Edge-triggered on approach (`_pNear`) so it fires **once per visit**, not every frame.
+- **The chat-bubble fix.** A greeting that fired a beat *before* you opened a resident's chat used to **linger over the panel** ("안녕 솔이에요!" floating while you're mid-conversation). Now, while you're chatting with a resident, that resident's floating greeting/emote bubble is **cleared every frame** — the dialogue lives in the chat panel, not in a stray world bubble. Resident-to-resident ambient bubbles and everyone else's greetings are untouched.
+- **Preserved.** Hidden-tab stop, resident wandering, bench resting, ambient resident-to-resident conversations (which already pause during player chat), pair cooldown, LOW_END locomotion, and the AI env-gating / budget caps are all intact. Greetings never fire during a conversation, a bound chat, or a hidden tab.
+- **Debug.** `?dbg` adds `window.__greet([id])` (force a greeting on the nearest/named resident — now **skips** anyone you're chatting with), and `window.__villagers()` / `window.__npcState()` report `pNear` / `greetIn` / `greetDist` / `greetCd` / `emoteCd`.
+
+### Verified
+- Hermetic: `node scripts/smoke.mjs` **green** (210 — new *resident warmth* group + greet-during-chat guard); `node council/test.mjs` (130) · `node council/test-live.mjs` (56) · `node --check` on `scholars.js` + `cloudflare-taxi/src/grounded.js`.
+- Browser (`?dbg=1`, desktop 1440×900 + mobile 390×844), 0 console errors: approaching a resident fires a greeting bubble + wave; **not chatting →** greeting visible (opacity 0.81); **chat opens →** a residual bubble fades 0.44 → **0**; **forcing a greeting mid-chat →** `skipped:'chatBound'`, bubble stays 0. Solo idle emotes and the seated resident render correctly.
+
 ## [1.54.1] — 2026-07-05
 
 ### 🔦 The player spotlight is back — in every phase, not just at night
