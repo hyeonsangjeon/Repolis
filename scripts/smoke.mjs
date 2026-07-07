@@ -491,6 +491,16 @@ ok(/else if\(nearInviteCircle\)\{ openGroupChat\(nearInviteCircle\.members\.slic
 ok(/👋 \$\{esc\(nm\)\} 님이 불러요/.test(HTML) && /is waving you over/.test(HTML), 'the HUD prompt names who is waving you over, in KO + EN');
 ok(/window\.__inviteState=\(\)=>/.test(HTML) && /window\.__hailMe=\(\)=>/.test(HTML), '?dbg __inviteState/__hailMe surface + force the wave-over for verification');
 
+group('residents react to the city (a local remarks on the repo you walk up to)');
+ok(/const RES_REACT_R=\(LOW_END\?11:14\), ?RES_REACT_CD=\(LOW_END\?22:15\)/.test(npcBlock), 'a walk-up react reach (RES_REACT_R) + per-resident cooldown (RES_REACT_CD) — a stroll past many houses never spams one local');
+ok(/function _repoReactLine\(res, ?repo\)\{/.test(npcBlock) && /zoneMatch=repo\._zone && repo\._zone===res\.zone/.test(npcBlock), '_repoReactLine builds a line grounded in the repo (and knows when it sits in the local\'s own district)');
+ok(/if\(repo\.archived\)/.test(npcBlock) && /if\(st>=40\)/.test(npcBlock) && /if\(vv>=200\)/.test(npcBlock) && /if\(fk>=8\)/.test(npcBlock) && /if\(recent\)/.test(npcBlock), 'the remark picks a TRUE standout of that repo — archived / stars / visitors / forks / recent activity — never invented praise');
+ok(/isNight\?`\$\{nm\}는 최근에 손봤어요 — 밤에도 창이 켜져 있죠/.test(npcBlock), 'recent-activity lines carry day/night flavor (windows glow at night)');
+ok(/function _residentReactToRepo\(repo\)\{ if\(!repo\|\|!repo\.repo\|\|repo\._isLibrary\|\|document\.hidden\) return;/.test(npcBlock), '_residentReactToRepo skips the library + a hidden tab, and only the nearest FREE local (not mid ambient/player chat) within reach speaks');
+ok(/const score=raw-\(\(repo\._zone && repo\._zone===L\.res\.zone\)\?4:0\); if\(score<bestScore\)/.test(npcBlock), 'the district caretaker is preferred (zone-match bias) but the reach cap (raw>RES_REACT_R) is still hard');
+ok(/if\(typeof _residentReactToRepo==='function'\) _residentReactToRepo\(b\);/.test(HTML), 'greetBuilding fires the reaction on first walk-up to a house (once per building, in the open world — not behind the card modal)');
+ok(/window\.__reactLine=\(id,name\)=>/.test(HTML) && /window\.__resReact=\(name\)=>/.test(HTML), '?dbg __reactLine/__resReact introspect + force a resident\'s repo reaction');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
