@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.60.0] — 2026-07-07
+
+### 👋 The town waves you over — a chatting circle notices you and calls you in
+- **What's new.** The social loop now closes both ways. In 1.59.0 you could name a resident to pull them into your chat; now a **gathering of residents notices *you***. Linger near a circle mid-conversation and the nearest member **turns, waves, and calls you over** (*"이리 와서 같이 이야기해요!"*), with a HUD hint naming who's hailing you — **"👋 노아 님이 불러요 · Enter로 대화에 끼기"**. Press Enter/💬 and you drop straight into the whole circle as a group chat. The village feels like it wants you there.
+- **How it triggers.** Purely scripted, **zero AI / zero budget**. When an ambient circle is actively talking and you're free (no building, board, seat, npc, or open chat) and lingering within an **invite reach** (`NPC_INVITE_R` — 8.5u desktop / 7.5u LOW_END, a little past the 3.4u walk-up reach), one member hails you **once per gathering**. A global cooldown (`NPC_INVITE_CD` — 26s / 34s LOW_END) keeps it from ever nagging.
+- **Accepting from a step away.** The wave extends your reach: Enter/💬 from within the invite radius opens the entire circle via the same `openGroupChat` path (no new chat machinery). Walk closer instead and the normal **"👥 …모여 있어요 · 대화에 끼기"** walk-up prompt takes over — the two never fight, and every other interaction (a repo door, district board, seat, scholar) always wins over the invitation.
+- **Preserved.** Hidden-tab stop, the post-chat guest cooldown, pair/resident cooldowns, `maxGroup`, LOW_END locomotion, and the ambient engine are all intact. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__inviteState()` (near/invited/inviter/reach/cooldown/distance) and `window.__hailMe()` (force the active circle to wave you over).
+
 ## [1.59.0] — 2026-07-07
 
 ### 🙌 Call a friend over — name a resident mid-chat and they walk in and join the circle

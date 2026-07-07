@@ -4458,6 +4458,7 @@ const RES_MOVE={ wanderSpd:(LOW_END?0.9:(IS_MOBILE?0.95:1.05)), meetSpd:(LOW_END
 // pure-visual · zero-cost · zero-network: greetings/emotes are client-side bubbles, edge-triggered + cooldown-gated so they never spam.
 // LOW_END keeps the full warmth but spaces the solo emotes out further — the cost/perf saving stays on the AI-conversation side, never on this.
 const RES_GREET_DIST=5.2, RES_GREET_CD_MIN=24, RES_GREET_CD_MAX=44;
+const NPC_INVITE_R=(LOW_END?7.5:8.5), NPC_INVITE_CD=(LOW_END?34:26);   // a chatting circle waves you over when you linger this close; global cooldown keeps it from nagging
 const RES_EMOTE_CD_MIN=(LOW_END?46:30), RES_EMOTE_CD_MAX=(LOW_END?90:64);
 function _resGreetLine(res){ const nm=(res[LANG]||res.ko).name, ko=LANG==='ko';
   const bank = ko ? ['\uD83D\uDC4B \uc5b4, \uc548\ub155\ud558\uc138\uc694!', `\uD83D\uDC4B ${nm}\uc608\uc694 \u2014 \ubc18\uac00\uc6cc\uc694!`, '\uc5ec\uae30\uae4c\uc9c0 \uc624\uc168\ub124\uc694, \ud658\uc601\ud574\uc694! \uD83D\uDC4B', '\uc624, \ubc29\ubb38\uc790\ub2e4! \uD83D\uDC4B', '\uD83D\uDC4B \uc88b\uc740 \ud558\ub8e8 \ubcf4\ub0b4\uc694~']
@@ -4499,7 +4500,7 @@ function _budgetExhausted(){ const B=_npcBudget; if(B.blocked) return true; if(B
 function _emitMetric(name,meta){ try{ if(typeof track==='function') track(name, meta||{}); }catch(e){} }
 
 // ---- turn-by-turn ambient engine (1 gathering max; a nearby cluster forms a CIRCLE and everyone takes turns; scripted default; hidden-tab + budget aware) ----
-let _ambConv=null, _ambNextAt=9, _guestCdUntil=0; const _pairCd=new Map(), _resCd=new Map(); const _npcTranscript=[];
+let _ambConv=null, _ambNextAt=9, _guestCdUntil=0, _ambInviteCd=0; const _pairCd=new Map(), _resCd=new Map(); const _npcTranscript=[];
 function _resChatActive(){ try{ return !!(activeNpc&&activeNpc.resident&&chatEl&&!chatEl.classList.contains('hidden')); }catch(e){ return false; } }
 function _pairKey(a,b){ return [a.res.id,b.res.id].sort().join('|'); }
 function _cap180(s){ return String(s||'').replace(/\s+/g,' ').trim().slice(0,180); }
@@ -4550,6 +4551,16 @@ function _ambientTick(){ const now=clock.elapsedTime;
     if(now>=C.nextAt) _advanceAmb(); return; }
   if(!_ambientAllowed() || now<_guestCdUntil) return;
   if(now>=_ambNextAt) _startAmb(); }
+// ---- a chatting circle notices the lingering visitor and waves them over (scripted, budget-free — the reverse of naming a resident) ----
+function _inviteHailLine(res){ const ko=LANG==='ko', b= ko?['이리 와서 같이 이야기해요!','거기 있었네요, 이리 껴요!','우리랑 같이 얘기할래요?','반가워요, 이리 와요!','같이 나눠요, 어서 와요!']
+                                              :['Come join us!','Hey, you — hop in!','Want to talk with us?','Good to see you — come over!','Pull up a spot, join in!'];
+  return b[(Math.random()*b.length)|0]; }
+function _ambInvitePlayer(C){ if(!C||C._invited||C.phase!=='talk') return;                        // once per gathering; the nearest member turns, waves, and calls you
+  let inv=null,bd=Infinity; for(const m of C.members){ const d=Math.hypot(player.position.x-m.group.position.x,player.position.z-m.group.position.z); if(d<bd){ bd=d; inv=m; } }
+  if(!inv) return; C._invited=true; C._inviteMember=inv; _ambInviteCd=clock.elapsedTime+NPC_INVITE_CD;
+  inv.bub.say(_inviteHailLine(inv.res), _hex(inv.res.color)); inv._gt=2.8;                         // speech bubble + a friendly wave gesture
+  try{ _emitMetric('npc_player_hailed',{who:inv.res.id,size:C.members.length}); }catch(e){} }
+
 // ---- resident locomotion: step toward a target with a simple leg-swing gait; returns true once arrived ----
 function _resWalk(L,tx,tz,spd,dt){ const g=L.group, dx=tx-g.position.x, dz=tz-g.position.z, d=Math.hypot(dx,dz);
   if(d<=RES_MOVE.arrive) return true;
@@ -5365,9 +5376,10 @@ function markVisited(repo){ if(repo._visited) return; repo._visited=true; visite
   repo._ring.material.color.set(0x2f9d6a); lightVisitedHouse(repo); addRepoVisit(repo.repo); greetBuilding(repo); }
 
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, nearHub=null, activeNpc=null;
+let nearInviteCircle=null;   // an active gathering that has waved you over (join it with Enter from a little further out than the walk-up reach)
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const _g=_groupNear(nearResident); if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const _g=_groupNear(nearResident); if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -6313,6 +6325,11 @@ function animate(){
   nearCarousel = (CAROUSEL && !carousel && player.position.distanceTo(CAROUSEL.board) < 6.0) ? CAROUSEL : null;
   nearHub=null; if(!nearest){ let hd=HUB_NEAR; for(const h of ZONE_HUBS){ const d=player.position.distanceTo(h.pos); if(d<hd){ hd=d; nearHub=h; } } }   // hubs never override a building's own door (checked only when no house is in reach)
   nearResident=null; if(!nearest && !nearHub){ let rd=RES_REACH; for(const L of RESIDENTS_LIVE){ const d=player.position.distanceTo(L._npc.pos); if(d<rd){ rd=d; nearResident=L._npc; } } }   // residents sit below buildings + hubs — they never hijack a repo door or a district board
+  nearInviteCircle=null;   // 👋 a nearby gathering waves the lingering visitor over: linger within invite reach (but past the walk-up reach) of a talking circle and one member calls you
+  if(!nearNpc && !nearest && !nearHub && !nearResident && !modalOpen && !sitting && !ferris && !carousel && !activeGroupMembers && !_resChatActive()
+     && _ambConv && _ambConv.phase==='talk' && clock.elapsedTime>=_guestCdUntil){
+    const C=_ambConv; if(Math.hypot(player.position.x-C.center.x, player.position.z-C.center.z)<=NPC_INVITE_R){
+      nearInviteCircle=C; if(!C._invited && clock.elapsedTime>=_ambInviteCd) _ambInvitePlayer(C); } }
   // 🏠 first walk-up to a house → a gentle sparkle + acknowledge bob (landmarks get their own reactions below; skip while a taxi drives you past many houses)
   if(nearest && !nearest._isLibrary && !ride) greetBuilding(nearest);
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes) + a localized sparkle on first stamp
@@ -6338,6 +6355,8 @@ function animate(){
   else if(nearHub&&!modalOpen){ const z=zoneCatById(nearHub.id); const nm=z?(LANG==='ko'?z.ko:z.en):''; const ic=z?z.icon:'🪧';
       promptEl.innerHTML=(LANG==='ko'?`<b>${ic} ${nm}</b> · <span class="key">Enter</span>/버튼으로 <b>구역 안내판</b> 열기 🪧`:`<b>${ic} ${nm}</b> · <span class="key">Enter</span>/button for the <b>district board</b> 🪧`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪧'; }
   else if(nearResident&&!modalOpen){ const _g=_groupNear(nearResident); promptEl.innerHTML=_g?_groupPromptHtml(_g):residentPromptHtml(nearResident); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
+  else if(nearInviteCircle&&!modalOpen){ const inv=nearInviteCircle._inviteMember||nearInviteCircle.members[0]; const nm=(inv.res[LANG]||inv.res.ko).name;
+      promptEl.innerHTML=(LANG==='ko'?`<b>👋 ${esc(nm)} 님이 불러요</b> · <span class="key">Enter</span>/버튼으로 <b>대화에 끼기</b> 💬`:`<b>👋 ${esc(nm)} is waving you over</b> · <span class="key">Enter</span>/button to <b>join in</b> 💬`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearestSeat&&!modalOpen){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> 또는 버튼으로 <b>앉기</b> 🪑`:`<span class="key">Enter</span> or button to <b>sit</b> 🪑`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪑'; }
   else { promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪'; }
 
@@ -6728,6 +6747,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     if(!A||!B||A===B) return {ok:false}; _pairCd.delete(_pairKey(A,B)); _resCd.delete(A.res.id); _resCd.delete(B.res.id); if(_ambConv) _endAmb('debug'); _startAmb(A,B); if(_ambConv){ _ambConv.phase='talk'; _ambConv.nextAt=0; _advanceAmb(); }
     return { ok:true, a:A.res.id, b:B.res.id, size:_ambConv?_ambConv.members.length:0, max:_ambConv?_ambConv.max:0, i:_ambConv?_ambConv.i:1, last:_npcTranscript.slice(-1)[0]||null }; };
   window.__conv=()=>_ambConv?{ members:_ambConv.members.map(m=>m.res.id), size:_ambConv.members.length, speaker:_ambConv.members[_ambConv.si].res.id, phase:_ambConv.phase, turn:_ambConv.i, max:_ambConv.max, center:[+_ambConv.center.x.toFixed(1),+_ambConv.center.z.toFixed(1)] }:null;
+  window.__inviteState=()=>({ near:!!nearInviteCircle, r:NPC_INVITE_R, cd:Math.max(0,+(_ambInviteCd-clock.elapsedTime).toFixed(1)),   // 👋 circle-waves-you-over state
+    invited:_ambConv?!!_ambConv._invited:false, inviter:(_ambConv&&_ambConv._inviteMember)?_ambConv._inviteMember.res.id:null,
+    dist:_ambConv?+Math.hypot(player.position.x-_ambConv.center.x,player.position.z-_ambConv.center.z).toFixed(1):null });
+  window.__hailMe=()=>{ if(!_ambConv) return { ok:false, reason:'no gathering' }; _ambInviteCd=0; _ambConv._invited=false; _ambConv.phase='talk'; _ambInvitePlayer(_ambConv);   // force the active circle to wave you over
+    return { ok:!!_ambConv._invited, inviter:_ambConv._inviteMember?_ambConv._inviteMember.res.id:null }; };
   window.__gather=(ids)=>{ if(_ambConv) _endAmb('debug'); let mem;   // force a group gathering: pass explicit ids, or omit for the maxGroup residents nearest the first one
     if(Array.isArray(ids)&&ids.length>=2) mem=ids.map(id=>RESIDENTS_LIVE.find(L=>L.res.id===id)).filter(Boolean);
     else { const seed=RESIDENTS_LIVE[0]; mem=RESIDENTS_LIVE.slice().sort((p,q)=>seed.group.position.distanceTo(p.group.position)-seed.group.position.distanceTo(q.group.position)).slice(0,NPC_CFG.maxGroup); }
