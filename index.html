@@ -1825,7 +1825,8 @@ function greetBuilding(b){ if(!b||b._greeted) return; b._greeted=true;
   popSparkle(b._pos.x+dx/dl*off, 3.6, b._pos.z+dz/dl*off, b._fresh?0xffd267:0xfff0b0); bobBuilding(b._group);
   // visiting a freshly-released repo throws confetti over its roof
   if(b._fresh){ const h=b._h||6; _fwSpawnBurst(b._pos.x, h+3.4, b._pos.z, FEST_COLS[(Math.random()*FEST_COLS.length)|0]);
-    _fwSpawnBurst(b._pos.x+dx/dl*off*0.6, h+2.4, b._pos.z+dz/dl*off*0.6, FEST_COLS[(Math.random()*FEST_COLS.length)|0]); } }
+    _fwSpawnBurst(b._pos.x+dx/dl*off*0.6, h+2.4, b._pos.z+dz/dl*off*0.6, FEST_COLS[(Math.random()*FEST_COLS.length)|0]); }
+  if(typeof _residentReactToRepo==='function') _residentReactToRepo(b); }   // the district's local, if nearby, remarks on the repo you just walked up to
 function updateVisitFx(dt){
   for(let i=VISIT_FX.length-1;i>=0;i--){ const f=VISIT_FX[i]; f.age+=dt; const k=f.age/f.life;
     const arr=f.o.geometry.attributes.position.array;
@@ -4459,6 +4460,7 @@ const RES_MOVE={ wanderSpd:(LOW_END?0.9:(IS_MOBILE?0.95:1.05)), meetSpd:(LOW_END
 // LOW_END keeps the full warmth but spaces the solo emotes out further — the cost/perf saving stays on the AI-conversation side, never on this.
 const RES_GREET_DIST=5.2, RES_GREET_CD_MIN=24, RES_GREET_CD_MAX=44;
 const NPC_INVITE_R=(LOW_END?7.5:8.5), NPC_INVITE_CD=(LOW_END?34:26);   // a chatting circle waves you over when you linger this close; global cooldown keeps it from nagging
+const RES_REACT_R=(LOW_END?11:14), RES_REACT_CD=(LOW_END?22:15);   // when you first walk up to a repo house, the nearby local reacts to it (data-grounded); cooldown so a stroll never spams one resident
 const RES_EMOTE_CD_MIN=(LOW_END?46:30), RES_EMOTE_CD_MAX=(LOW_END?90:64);
 function _resGreetLine(res){ const nm=(res[LANG]||res.ko).name, ko=LANG==='ko';
   const bank = ko ? ['\uD83D\uDC4B \uc5b4, \uc548\ub155\ud558\uc138\uc694!', `\uD83D\uDC4B ${nm}\uc608\uc694 \u2014 \ubc18\uac00\uc6cc\uc694!`, '\uc5ec\uae30\uae4c\uc9c0 \uc624\uc168\ub124\uc694, \ud658\uc601\ud574\uc694! \uD83D\uDC4B', '\uc624, \ubc29\ubb38\uc790\ub2e4! \uD83D\uDC4B', '\uD83D\uDC4B \uc88b\uc740 \ud558\ub8e8 \ubcf4\ub0b4\uc694~']
@@ -4560,6 +4562,32 @@ function _ambInvitePlayer(C){ if(!C||C._invited||C.phase!=='talk') return;      
   if(!inv) return; C._invited=true; C._inviteMember=inv; _ambInviteCd=clock.elapsedTime+NPC_INVITE_CD;
   inv.bub.say(_inviteHailLine(inv.res), _hex(inv.res.color)); inv._gt=2.8;                         // speech bubble + a friendly wave gesture
   try{ _emitMetric('npc_player_hailed',{who:inv.res.id,size:C.members.length}); }catch(e){} }
+// ---- residents know their district: walk up to a repo house and the nearby local remarks on it, grounded in that repo's real numbers (stars/visitors/forks/language/age) ----
+function _repoReactLine(res, repo){ const ko=LANG==='ko', nm=repo.label||repo.repo, zoneMatch=repo._zone && repo._zone===res.zone;
+  const st=repo.stars|0, fk=repo.forks|0, vv=(repo.visitors|0)||(repo.views|0), lang=(repo.lang&&repo.lang!=='—')?repo.lang:'';
+  const recent = repo.pushed ? ((Date.now()-new Date(repo.pushed).getTime())/86400000) < 30 : false;
+  const c=[];
+  if(repo.archived) c.push(ko?`${nm}는 이제 조용한 집이에요 — 잘 보존돼 있죠.`:`${nm} is a quiet house now — kept safe in the archive.`);
+  else if(repo.fork) c.push(ko?`${nm}는 어딘가에서 갈라져 나온 집이에요.`:`${nm} branched off from somewhere else.`);
+  if(st>=40) c.push(ko?`${nm}? 지붕에 별이 ${st}개나 떠 있어요 — 이 동네 자랑이죠.`:`${nm}? ${st} stars over its roof — the pride of this block.`);
+  if(vv>=200) c.push(ko?`요즘 ${nm} 앞이 붐벼요 — 방문객이 부쩍 늘었어요.`:`${nm} has been busy lately — lots of visitors.`);
+  if(fk>=8) c.push(ko?`${nm}는 여러 집으로 갈라져 나갔어요 (⑂${fk}).`:`${nm} spun off into ${fk} other houses.`);
+  if(recent) c.push(ko? (isNight?`${nm}는 최근에 손봤어요 — 밤에도 창이 켜져 있죠.`:`${nm}는 최근에 손봤어요 — 아직 온기가 남아 있어요.`)
+                       : (isNight?`${nm} was tended recently — its windows still glow at night.`:`${nm} was tended recently — still warm.`));
+  if(zoneMatch && lang) c.push(ko?`${nm}, ${lang}로 지은 우리 구역 집이에요. 제가 아끼죠.`:`${nm} — a ${lang} house in my district. I look after it.`);
+  else if(zoneMatch) c.push(ko?`${nm}, 제 구역에 있는 집이에요. 잘 왔어요.`:`${nm} — a house in my district. Glad you came by.`);
+  if(!c.length){ c.push(lang? (ko?`${nm}, ${lang}로 지은 집이네요. 천천히 둘러봐요.`:`${nm}, a ${lang} house. Take your time.`)
+                             : (ko?`${nm}, 좋은 집이에요. 천천히 둘러봐요.`:`${nm} — a good house. Have a look around.`)); }
+  return _capBub(c[(Math.random()*c.length)|0]); }
+function _residentReactToRepo(repo){ if(!repo||!repo.repo||repo._isLibrary||document.hidden) return; const now=clock.elapsedTime;
+  let best=null, bestScore=Infinity;                                                              // the nearest free local within reach reacts; the district's caretaker is preferred
+  for(const L of RESIDENTS_LIVE){ if(_ambConv && _ambConv.members.indexOf(L)>=0) continue; if(activeGroupMembers && activeGroupMembers.indexOf(L)>=0) continue;
+    if(activeNpc && activeNpc.res===L.res && _resChatActive()) continue; if((L._reactCd||0)>now) continue;
+    const raw=Math.hypot(player.position.x-L.group.position.x, player.position.z-L.group.position.z); if(raw>RES_REACT_R) continue;
+    const score=raw-((repo._zone && repo._zone===L.res.zone)?4:0); if(score<bestScore){ bestScore=score; best=L; } }
+  if(!best) return; const line=_repoReactLine(best.res, repo); if(!line) return;
+  best.bub.say(line, _hex(best.res.color)); best._gt=2.2; best._reactCd=now+RES_REACT_CD;
+  try{ _emitMetric('npc_repo_react',{who:best.res.id,repo:repo.repo,zone:repo._zone||null}); }catch(e){} }
 
 // ---- resident locomotion: step toward a target with a simple leg-swing gait; returns true once arrived ----
 function _resWalk(L,tx,tz,spd,dt){ const g=L.group, dx=tx-g.position.x, dz=tz-g.position.z, d=Math.hypot(dx,dz);
@@ -6752,6 +6780,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     dist:_ambConv?+Math.hypot(player.position.x-_ambConv.center.x,player.position.z-_ambConv.center.z).toFixed(1):null });
   window.__hailMe=()=>{ if(!_ambConv) return { ok:false, reason:'no gathering' }; _ambInviteCd=0; _ambConv._invited=false; _ambConv.phase='talk'; _ambInvitePlayer(_ambConv);   // force the active circle to wave you over
     return { ok:!!_ambConv._invited, inviter:_ambConv._inviteMember?_ambConv._inviteMember.res.id:null }; };
+  window.__reactLine=(id,name)=>{ const res=RESIDENTS.find(r=>r.id===id), repo=REPOS.find(x=>x.repo===name); return (res&&repo)?_repoReactLine(res,repo):null; };   // introspect a resident's grounded reaction to a repo (no side effects)
+  window.__resReact=(name)=>{ const repo=name?REPOS.find(x=>x.repo===name):nearest; if(!repo) return { ok:false, reason:'no repo' };   // force the nearby local to react to a repo (clears cooldowns first)
+    for(const L of RESIDENTS_LIVE) L._reactCd=0; _residentReactToRepo(repo);
+    const spoke=RESIDENTS_LIVE.filter(L=>(L._reactCd||0)>clock.elapsedTime).map(L=>L.res.id);
+    return { ok:!!spoke.length, repo:repo.repo, zone:repo._zone||null, reacted:spoke[0]||null }; };
   window.__gather=(ids)=>{ if(_ambConv) _endAmb('debug'); let mem;   // force a group gathering: pass explicit ids, or omit for the maxGroup residents nearest the first one
     if(Array.isArray(ids)&&ids.length>=2) mem=ids.map(id=>RESIDENTS_LIVE.find(L=>L.res.id===id)).filter(Boolean);
     else { const seed=RESIDENTS_LIVE[0]; mem=RESIDENTS_LIVE.slice().sort((p,q)=>seed.group.position.distanceTo(p.group.position)-seed.group.position.distanceTo(q.group.position)).slice(0,NPC_CFG.maxGroup); }

@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.61.0] — 2026-07-08
+
+### 🏘️ The locals know their houses — residents remark on the repo you walk up to
+- **What's new.** Repolis is a *city of repos*, and now the residents act like it. Walk up to a repo house and the **district's local**, if they're nearby, leans in with a short remark **grounded in that repo's real numbers** — its stars, visitors, forks, language, whether it's a fork/archived, or how recently it was touched. The chatty townsfolk are finally tied to the city they live in, not just each other.
+- **Always true to the data.** The line only ever states a genuine standout of *that* repo: `archived` → *"이제 조용한 집이에요 — 잘 보존돼 있죠"*; `fork` → *"어딘가에서 갈라져 나온 집이에요"*; ≥40 stars → *"지붕에 별이 N개나 떠 있어요 — 이 동네 자랑이죠"*; ≥200 visitors → *"요즘 앞이 붐벼요"*; ≥8 forks → *"여러 집으로 갈라져 나갔어요 (⑂N)"*; pushed in the last 30 days → *"최근에 손봤어요"* (with **day/night** flavor — *"밤에도 창이 켜져 있죠"*). No invented praise, ever.
+- **The caretaker knows it best.** When the repo sits in the local's **own district** (`repo._zone === res.zone`) they say so and name the language — *"…{lang}로 지은 우리 구역 집이에요. 제가 아끼죠."* The nearest free resident within reach reacts, with the district caretaker gently preferred.
+- **Well-behaved.** Purely scripted, **zero AI / zero budget**. Fires on first walk-up to a house (once per building, in the open world — never behind the card modal), only when a resident is genuinely within reach (`RES_REACT_R` 14u / 11u LOW_END), never during a hidden tab or while that resident is mid-conversation, and rate-limited per resident (`RES_REACT_CD` 15s / 22s LOW_END) so a stroll never turns into chatter.
+- **Preserved.** All prior social layers (gather → join → context answers → invite a resident → a circle waves you over), budget/env gating, hidden-tab stop, cooldowns. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__reactLine(id,repo)` (introspect a resident's grounded line) and `window.__resReact(repo?)` (force the nearby local to react).
+
 ## [1.60.0] — 2026-07-07
 
 ### 👋 The town waves you over — a chatting circle notices you and calls you in
