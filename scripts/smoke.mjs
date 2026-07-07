@@ -481,6 +481,16 @@ ok(/if\(chatBound && L\._joinWalk && !hidden && NPC_CFG\.motionEnabled\)\{[\s\S]
 ok(/L\._joinWalk=\{ x:cx\+Math\.cos\(a\)\*R, z:cz\+Math\.sin\(a\)\*R \}/.test(npcBlock) && /if\(d>14\) L\.group\.position\.set\(cx\+Math\.cos\(a\)\*11/.test(npcBlock), '_placeJoiner steps a far-off joiner in from ~11u (no cross-map teleport) and settles them on a ring slot beside the circle');
 ok(/window\.__inviteResident=\(id\)=>/.test(HTML) && /window\.__inviteMatch=\(q\)=>/.test(HTML), '?dbg __inviteResident/__inviteMatch hooks force a join + introspect the name/cue detector');
 
+group('a gathering waves you over (residents invite the lingering visitor)');
+ok(/const NPC_INVITE_R=\(LOW_END\?7\.5:8\.5\), ?NPC_INVITE_CD=\(LOW_END\?34:26\)/.test(npcBlock), 'a circle-invite reach (NPC_INVITE_R) + a global cooldown (NPC_INVITE_CD) — tuned tighter on LOW_END so it never nags');
+ok(/function _ambInvitePlayer\(C\)\{ if\(!C\|\|C\._invited\|\|C\.phase!=='talk'\) return;/.test(npcBlock) && /_ambInviteCd=clock\.elapsedTime\+NPC_INVITE_CD/.test(npcBlock), '_ambInvitePlayer fires once per gathering (talk phase only) and arms the global cooldown');
+ok(/inv\.bub\.say\(_inviteHailLine\(inv\.res\), ?_hex\(inv\.res\.color\)\); inv\._gt=2\.8/.test(npcBlock), 'the nearest member calls out (speech bubble) with a friendly wave gesture — no AI, no budget spend');
+ok(/nearInviteCircle=null;/.test(HTML) && /_ambConv && _ambConv\.phase==='talk' && clock\.elapsedTime>=_guestCdUntil/.test(HTML) && /Math\.hypot\(player\.position\.x-C\.center\.x, ?player\.position\.z-C\.center\.z\)<=NPC_INVITE_R/.test(HTML), 'the wave-over only triggers near a talking circle when the visitor is free (no building/hub/npc, not chatting, off the post-chat cooldown)');
+ok(/!nearNpc && !nearest && !nearHub && !nearResident && !modalOpen && !sitting && !ferris && !carousel && !activeGroupMembers && !_resChatActive\(\)/.test(HTML), 'the invitation yields to every other interaction — a door, board, seat, or open chat always wins');
+ok(/else if\(nearInviteCircle\)\{ openGroupChat\(nearInviteCircle\.members\.slice\(\)\); \}/.test(HTML), 'accepting the wave (Enter/💬) opens the whole circle as a group chat — reusing openGroupChat');
+ok(/👋 \$\{esc\(nm\)\} 님이 불러요/.test(HTML) && /is waving you over/.test(HTML), 'the HUD prompt names who is waving you over, in KO + EN');
+ok(/window\.__inviteState=\(\)=>/.test(HTML) && /window\.__hailMe=\(\)=>/.test(HTML), '?dbg __inviteState/__hailMe surface + force the wave-over for verification');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
