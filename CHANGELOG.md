@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.63.0] — 2026-07-08
+
+### 🪪 The town remembers you — a warmer welcome for a familiar face
+- **What's new.** Repolis now quietly remembers that *you've been here before*. On a return visit the residents greet you more warmly — **"👋 또 오셨네요, 반가워요!"** instead of a first-time hello — and stepping back into town shows a brief **welcome-back toast**. Come back after a long gap and it's warmer still: **"👋 오랜만이에요 — 다시 오신 걸 환영해요!"**. From your 5th visit the toast adds a little milestone (**"(5번째 방문 🎉)"**).
+- **How it remembers.** An **anonymous, on-device visit tally** kept only in `localStorage` (a small `{n, first, last}` counter) — the same kind of local memory the Explorer Passport already uses. It is **never sent anywhere**, holds no identity, account, or search terms, and stays true to the intro's privacy promise. A reload within 30 minutes counts as the *same* visit; only a genuine return bumps the tally. `returning` = your 2nd visit onward; `longAway` = returning after a 7-day gap.
+- **Where you feel it.** `_resGreetLine` gains familiar-face variants (used ~60% of the time for a returning visitor, with an extra-warm long-absence set), and entering town fires a one-time `_welcomeBackLine` toast *before* the daily-course banner (which is deferred so the two never clash). First-time visitors see exactly the original welcome — nothing changes for them.
+- **Preserved.** Every earlier layer (repo reactions, the campfire 쉼터 + comfort murmurs, invite-a-resident, the circle waving you over, group chat), budget/env gating, hidden-tab stop. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__visitor()` (read the memory), `window.__setVisitor({…})` (preview returning / long-away / milestone without a reload), and `window.__welcomeBack()` (fire the toast).
+
 ## [1.62.0] — 2026-07-08
 
 ### 🔥 A home for the residents — a cosy campfire 쉼터 where they warm up and feel at ease
