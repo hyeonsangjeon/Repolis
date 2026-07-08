@@ -521,6 +521,15 @@ ok(/function _welcomeBackLine\(\)\{/.test(npcBlock) && /n>=5\?/.test(npcBlock) &
 ok(/const rb=VISITOR\.returning; if\(rb\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML) && /}, ?rb\?4700:1000\)/.test(HTML), 'entering town shows the welcome-back toast first, and defers the daily-course banner so the two never clash');
 ok(/window\.__visitor=\(\)=>/.test(HTML) && /window\.__setVisitor=\(o\)=>/.test(HTML) && /window\.__welcomeBack=\(\)=>/.test(HTML), '?dbg __visitor/__setVisitor/__welcomeBack read + preview the returning-visitor warmth without a reload');
 
+group('graceful goodbyes — the circle waves you off, and no gathering is a trap');
+ok(/const _RES_BYE_CUE=\/\(잘\\s\*가/.test(npcBlock) && /function _farewellLine\(res\)/.test(npcBlock), 'a farewell detector + warm goodbye bank back the "say bye and they wave you off" flow');
+ok(/async function _maybeFarewell\(q\)\{ if\(!_RES_BYE_CUE\.test/.test(npcBlock) && /setTimeout\(\(\)=>\{ try\{ closeChat\(\); \}catch\(e\)\{\} \}, ?1500\)/.test(npcBlock), 'a goodbye makes the circle say farewell + wave, then the chat gently closes (closeChat releases the group)');
+ok(/async function groupSay\(q\)\{[\s\S]*?if\(await _maybeFarewell\(q\)\) return;/.test(npcBlock) && /async function residentSay\(q\)\{[\s\S]*?if\(await _maybeFarewell\(q\)\) return;/.test(npcBlock), 'both groupSay and residentSay honour a goodbye before anything else');
+ok(/function _residentLeave\(L\)\{ const wrap=activeNpc; if\(!wrap\|\|!wrap\.group\|\|!activeGroupMembers\|\|activeGroupMembers\.length<=2/.test(npcBlock), '_residentLeave never shrinks a circle below 2, and hands the lead on if the primary leaves');
+ok(/if\(ms\.length>2 && \(wrap\.gi\|\|0\)>=3 && activeGroupMembers && activeGroupMembers\.length>2 && Math\.random\(\)<0\.22\)/.test(npcBlock) && /_residentLeave\(leaver\)/.test(npcBlock), 'after a few turns in a 3+ circle, a non-primary resident may excuse themselves and wander off');
+ok(/L\._gt=2\.6; L\._rt=null; L\._rp=clock\.elapsedTime;/.test(npcBlock), 'a leaving resident waves, then (no longer chatBound) resumes wandering on their own');
+ok(/window\.__farewell=\(q\)=>/.test(HTML) && /window\.__byeMatch=\(q\)=>/.test(HTML) && /window\.__leaveGroup=\(id\)=>/.test(HTML), '?dbg __farewell/__byeMatch/__leaveGroup drive + introspect the goodbye and member-leave flows');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }

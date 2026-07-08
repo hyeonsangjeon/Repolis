@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.64.0] — 2026-07-09
+
+### 👋 Graceful goodbyes — the circle waves you off, and no gathering is a trap
+- **What's new.** Conversations now have a natural *ending*, not just a beginning. Say goodbye — **"잘 가"**, **"고마웠어요"**, **"see you"** — and the residents wave you off with a warm farewell (**"살펴 가요 — 또 들러요!"**, **"또 봐요, 반가웠어요!"**), then the chat **gently closes** and the circle disperses back into town life. It's the missing other half of the social loop (we could grow a gathering with invites; now it can end warmly too).
+- **A circle is never a trap.** After a few turns in a group of 3+, a non-primary resident may **excuse themselves** and drift off (**"나 이만 가볼게요, 또 얘기해요!"**) — they wave, leave the header, and resume wandering on their own. The lead is handed on if the primary leaves, and a circle never shrinks below two, so the conversation always holds together.
+- **How it works.** A farewell detector (`_RES_BYE_CUE`) runs first in both `groupSay` and `residentSay`; the group path has up to two members say goodbye + everyone waves, then `closeChat()` (which releases the group) fires after a short beat. `_residentLeave` removes a member in place, reassigns the primary/turn index, refreshes the header, and lets them wander off (no longer chatBound). Purely scripted, **zero AI / zero budget**; works fully AI-off.
+- **Preserved.** Every earlier layer (returning-visitor warmth, campfire 쉼터, repo reactions, invite-a-resident, the circle waving you over, context-aware group chat), budget/env gating, hidden-tab stop, cooldowns. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__farewell(q)` / `window.__byeMatch(q)` (drive + introspect the goodbye) and `window.__leaveGroup(id)` (force a member to excuse themselves).
+
 ## [1.63.0] — 2026-07-08
 
 ### 🪪 The town remembers you — a warmer welcome for a familiar face

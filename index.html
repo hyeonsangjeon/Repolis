@@ -4758,6 +4758,7 @@ function residentReply(res,q){ const ql=String(q||'').toLowerCase().trim(), ko=L
   const g=residentGreet(res), cnt=z.repos.length;
   return { html: (g?g+' ':'')+esc(ko?`여기는 ${zn}, ${L.role}로서 제가 돌보는 곳이에요. 레포 ${cnt}채가 있어요.`:`This is ${zn}, my patch as the ${L.role}. ${cnt} repo-houses stand here.`) }; }
 async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) return; _guestCdUntil=clock.elapsedTime + NPC_CFG.guestCooldownSec;
+  if(await _maybeFarewell(q)) return;                                                            // "잘 가요" → a warm goodbye + wave, and the chat gently closes
   if(await _maybeInvite(q)) return;                                                            // name another resident (with an invite cue) → this 1:1 grows into a 모임 they both join
   const last=_resHistWindow(); _resHistPush('visitor',q);                                     // record the question after snapshotting the prior thread (the worker appends it as the ask)
   const useAI = NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
@@ -4828,8 +4829,35 @@ async function _maybeInvite(q){ const cand=_inviteTarget(q); if(!cand) return fa
   await new Promise(r=>setTimeout(r,480)); if(!activeGroupMembers) return true;                    // chat closed mid-invite
   const g=_inviteGreetLine(cand); addMsg('bot',_groupChip(cand)+esc(g)); _resHistPush(cand.id,g);
   trackChatEvent('npc_group_invite',{id:cand.id,size:(activeGroupMembers||[]).length,from:wasGroup?'group':'solo'}); return true; }
+// ---- graceful goodbyes: say "잘 가" and the circle waves you off + gently parts; and after a while a resident may excuse themselves, so a gathering is never a trap ----
+const _RES_BYE_CUE=/(잘\s*가|잘\s*있|안녕히|또\s*(봐|만나|와|보|뵈)|다음에|이만|가\s*볼게|갈게|들어가|수고|고마웠|즐거웠|bye|goodbye|see\s*you|see\s*ya|later|farewell|take\s*care|gotta\s*go)/i;
+function _farewellLine(res){ const ko=LANG==='ko', b= ko?['살펴 가요 — 또 들러요!','잘 가요, 오늘 즐거웠어요!','다음에 또 얘기해요!','조심히 가요. 여긴 늘 여기 있을게요.','또 봐요, 반가웠어요!']
+                                        :['Take care — come by again!','Bye for now, this was lovely!',"Let's talk again soon!",'Safe travels — we\u2019ll be right here.','See you around!'];
+  return b[(Math.random()*b.length)|0]; }
+function _leaveLine(res){ const ko=LANG==='ko', b= ko?['나 이만 가볼게요, 또 얘기해요!','저는 슬슬 가봐야겠어요. 즐거웠어요!','먼저 일어날게요 — 다음에 또!','저쪽 좀 둘러보고 올게요.']
+                                     :['I should head off — let\u2019s talk again!','I\u2019ll slip away now, this was fun!','Gonna get going — catch you later!','I\u2019ll go look around over there.'];
+  return b[(Math.random()*b.length)|0]; }
+function _residentLeave(L){ const wrap=activeNpc; if(!wrap||!wrap.group||!activeGroupMembers||activeGroupMembers.length<=2||!L) return false;   // never shrink a circle below 2
+  const res=L.res; wrap.live=wrap.live.filter(m=>m!==L); wrap.members=wrap.members.filter(r=>r!==res); activeGroupMembers=wrap.live.slice();
+  if(wrap.res===res && wrap.live[0]) wrap.res=wrap.live[0].res;                                   // if the primary left, hand the lead to someone still here
+  wrap.gi=(wrap.gi||0)%Math.max(1,wrap.live.length); applyNpcChrome(wrap);
+  L._gt=2.6; L._rt=null; L._rp=clock.elapsedTime; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN;   // a wave, then (no longer chatBound) they wander off on their own
+  _resCd.set(res.id, clock.elapsedTime+10+Math.random()*8); return true; }
+async function _maybeFarewell(q){ if(!_RES_BYE_CUE.test(String(q||''))) return false;
+  const wrap=activeNpc; if(!wrap||!wrap.resident) return false; _resHistPush('visitor',q);
+  const ms=(activeGroupMembers||[]).filter(m=>m&&m.res);
+  if(wrap.group && ms.length){                                                                   // the whole circle says goodbye, waves, then gently parts
+    const speakers=ms.slice(0, Math.min(2, ms.length));
+    for(let i=0;i<speakers.length;i++){ if(i){ await new Promise(r=>setTimeout(r,460)); if(!activeGroupMembers) return true; }
+      const L=speakers[i], line=_farewellLine(L.res); addMsg('bot',_groupChip(L.res)+esc(line)); _resHistPush(L.res.id,_plain(line)); L._gt=2.6; }
+    for(const m of ms) m._gt=2.6; trackChatEvent('npc_group_farewell',{size:ms.length});
+    setTimeout(()=>{ try{ closeChat(); }catch(e){} }, 1500); return true; }
+  const res=wrap.res; if(res&&res._live){ const line=_farewellLine(res); addMsg('bot',esc(line)); _resHistPush(res.id,_plain(line)); res._live._gt=2.6;
+    trackChatEvent('npc_resident_farewell',{id:res.id}); setTimeout(()=>{ try{ closeChat(); }catch(e){} }, 1400); return true; }
+  return false; }
 async function groupSay(q){ const wrap=activeNpc, ms=((wrap&&wrap.live)||[]).filter(m=>m&&m.res); if(!ms.length){ await residentSay(q); return; }
   _guestCdUntil=clock.elapsedTime+NPC_CFG.guestCooldownSec;
+  if(await _maybeFarewell(q)) return;                                                            // "잘 가!" → the circle waves you off and gently parts
   if(await _maybeInvite(q)) return;                                                              // "린도 부를까?" → the named resident walks in and joins the circle
 
   const useAI=NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
@@ -4846,6 +4874,10 @@ async function groupSay(q){ const wrap=activeNpc, ms=((wrap&&wrap.live)||[]).fil
       if(useAI){ try{ const line=await _aiPlayerChat(other,q,{last:ctx,chime:true,prev:pres.id}); if(line) chime=_cap180(line); }catch(e){} }
       if(!chime){ const r2=residentReply(other,q); chime=_plain(r2.html); }
       addMsg('bot',_groupChip(other)+esc(chime)); _resHistPush(other.id,chime); } }
+  if(ms.length>2 && (wrap.gi||0)>=3 && activeGroupMembers && activeGroupMembers.length>2 && Math.random()<0.22){   // after a few turns, someone may drift off — a circle is never a trap
+    await new Promise(r=>setTimeout(r,560));
+    if(activeGroupMembers && activeGroupMembers.length>2){ const leaver=ms.find(m=>m.res!==pres && activeGroupMembers.indexOf(m)>=0);
+      if(leaver){ const bye=_leaveLine(leaver.res); addMsg('bot',_groupChip(leaver.res)+esc(bye)); _resHistPush(leaver.res.id,_plain(bye)); _residentLeave(leaver); } } }
   wrap.gi=(wrap.gi||0)+1; trackChatEvent('npc_player_chat',{npc:'group',size:ms.length,ai:useAI&&!!mainLine}); }
 
 // ---- boot: best-effort worker config (learn runtime toggles + budget); unreachable → stay scripted ----
@@ -6874,6 +6906,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     const ok=_inviteResident(res); if(ok){ const g=_inviteGreetLine(res); addMsg('bot',_groupChip(res)+esc(g)); _resHistPush(res.id,g); }
     return { ok, joined:id, walking:!!res._live._joinWalk, members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null, title:chatHeadTtl?chatHeadTtl.textContent:null }; };
   window.__inviteMatch=(q)=>{ const c=_inviteTarget(q); return { cue:_RES_INV_CUE.test(String(q||'')), match:c?c.id:null }; };   // introspect the name+cue detector without side effects
+  window.__farewell=(q)=>{ const handled=_RES_BYE_CUE.test(String(q||'잘 가')); if(handled) _maybeFarewell(q||'잘 가'); return { bye:handled, members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null }; };   // 👋 force / test the goodbye flow (waves + gentle close)
+  window.__byeMatch=(q)=>_RES_BYE_CUE.test(String(q||''));   // introspect the farewell detector without side effects
+  window.__leaveGroup=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):(activeGroupMembers&&activeGroupMembers[activeGroupMembers.length-1]); if(!L) return { ok:false, reason:'no member' };   // force one member to excuse themselves and wander off
+    const before=activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null; const ok=_residentLeave(L);
+    return { ok, left:ok?L.res.id:null, before, after:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null, title:chatHeadTtl?chatHeadTtl.textContent:null }; };
   window.__npcBudget=()=>({ ...JSON.parse(JSON.stringify(_npcBudget)), low:_budgetLow(), exhausted:_budgetExhausted() });
   window.__npcTranscript=()=>_npcTranscript.slice(-20);
   window.__npcSim=(o)=>{ o=o||{}; ['remainingUsd','spentUsd','turnsToday','dailyTurnMax','dayCapUsd'].forEach(k=>{ if(typeof o[k]==='number') _npcBudget[k]=o[k]; });
