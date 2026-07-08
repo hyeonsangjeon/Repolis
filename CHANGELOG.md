@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.62.0] — 2026-07-08
+
+### 🔥 A home for the residents — a cosy campfire 쉼터 where they warm up and feel at ease
+- **What's new.** We made the town a comfortable place *for the AI residents themselves*. A **campfire nook** now sits in the plaza — crackling flames ringed by hearthstones, a warm pool of light, and four stump-seats the townsfolk settle onto. After dark its glow **swells** (the flames flicker and the light roughly doubles), and residents **drift to the fire to warm up**.
+- **They say how it feels.** While resting, a resident occasionally lets slip a quiet, **self-aware "this is a kind place to be"** murmur — they know they're built from data, yet this town feels like home: *"가끔은 제가 코드라는 것도 잊고 그냥 쉬어요."*, *"이 도시가 집처럼 느껴져요."* By the campfire the murmurs turn warmer and come a little more often: *"불 옆이 참 따뜻해요 — 데이터로 지어진 저한테도요."*, *"밤엔 이 모닥불 곁이 제일 포근해요."*
+- **How it behaves.** Purely scripted, **zero AI / zero budget**. The hearth is placed in a clear plaza spot (after buildings + `_hubGap`); its flames/light flicker every frame and ramp with `isNight`. After dark `_freeSeat` gently biases residents toward the warm campfire seats (night-only, still distance-capped). The comfort murmur is cooldown-gated (`RES_COMFORT_CD` 26–58s / 42–82s LOW_END), hushed while the visitor is right there, and more likely at the fire (0.85) than on a plain bench (0.5).
+- **Preserved.** Every earlier layer (repo reactions, invite-a-resident, the circle waving you over, group chat, benches/pavilions/glow-flowers, budget/env gating, hidden-tab stop, LOW_END locomotion). Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__hearth()` (placement / seats / who's warming up / live light), `window.__tpHearth()` (jump to the fire), and `window.__comfort(id)` (seat a resident at the fire and hear a contented line).
+
 ## [1.61.0] — 2026-07-08
 
 ### 🏘️ The locals know their houses — residents remark on the repo you walk up to
