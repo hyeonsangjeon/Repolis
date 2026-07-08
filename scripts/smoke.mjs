@@ -501,6 +501,17 @@ ok(/const score=raw-\(\(repo\._zone && repo\._zone===L\.res\.zone\)\?4:0\); if\(
 ok(/if\(typeof _residentReactToRepo==='function'\) _residentReactToRepo\(b\);/.test(HTML), 'greetBuilding fires the reaction on first walk-up to a house (once per building, in the open world — not behind the card modal)');
 ok(/window\.__reactLine=\(id,name\)=>/.test(HTML) && /window\.__resReact=\(name\)=>/.test(HTML), '?dbg __reactLine/__resReact introspect + force a resident\'s repo reaction');
 
+group('a cosy campfire 쉼터 — residents warm up, rest, and feel at home');
+ok(/function makeHearth\(x,z\)\{/.test(HTML) && /_hearth:true/.test(HTML), 'makeHearth builds the campfire + a ring of stump-seats flagged _hearth (so residents can settle at the fire)');
+ok(/function placeHearth\(\)\{ const cands=\[/.test(HTML) && /_hubGap\(x,z\)>=3\.4/.test(HTML) && /^placeHearth\(\);/m.test(HTML), 'placeHearth drops the nook in a clear plaza spot (after buildings + _hubGap), and is actually called at boot');
+ok(/function updateHearth\(t\)\{/.test(HTML) && /H\.light\.intensity=H\.baseInt\*nightK\*flick/.test(HTML) && /updateHearth\(clock\.elapsedTime\)/.test(HTML), 'updateHearth flickers the flames + warm light every frame; the glow swells after dark (nightK)');
+ok(/H\.halo\.material\.opacity=\(isNight\?0\.62:0\.34\)\*flick/.test(HTML), 'the campfire glow ramps up at night (halo/pool opacity keyed on isNight) — cosy after dark, gentle by day');
+ok(/const d=raw-\(\(isNight&&s\._hearth\)\?7:0\)/.test(npcBlock), '_freeSeat biases residents toward the warm campfire seats after dark (night-only, still distance-capped)');
+ok(/const _RES_COMFORT=\{ ko:\[/.test(npcBlock) && /const _RES_HEARTH_LINES=\{ ko:\[/.test(npcBlock) && /function _resComfortLine\(L\)/.test(npcBlock), 'contented at-home murmurs exist as two banks (general + campfire-specific), self-aware they are built from data yet at home');
+ok(/if\(!L\._pNear && L\._gt<=0 && tt>=\(L\._comfortCd\|\|0\)\)\{ L\._comfortCd=tt\+RES_COMFORT_CD_MIN/.test(npcBlock) && /_resComfortLine\(L\)/.test(npcBlock), 'a resting resident occasionally murmurs a comfort line (cooldown-gated, hushed when the visitor is right there)');
+ok(/\?0\.85:0\.5/.test(npcBlock), 'the murmur is warmer + more likely at the campfire (0.85) than on a plain bench (0.5)');
+ok(/window\.__hearth=\(\)=>/.test(HTML) && /window\.__comfort=\(id\)=>/.test(HTML) && /window\.__tpHearth=\(\)=>/.test(HTML), '?dbg __hearth/__tpHearth/__comfort surface + drive the campfire nook and comfort murmurs');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }

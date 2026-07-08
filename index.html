@@ -2495,6 +2495,35 @@ function updateGlowFlora(t){ if(!GLOW_FLORA.length) return;
   _floraLit=true;
   for(const f of GLOW_FLORA){ const p=0.72+0.28*Math.sin(t*1.3+f.ph); f.halo.material.opacity=f.base*p; f.pool.material.opacity=f.base*0.45*p; }
 }
+// 🔥 a cosy campfire 쉼터 — the residents' warm gathering spot: crackling flames, a warm pool of light that swells after dark, and a ring of stump-seats they settle onto
+let HEARTH=null;
+function makeHearth(x,z){
+  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  const ringN=9; for(let i=0;i<ringN;i++){ const a=i/ringN*Math.PI*2; const st=new THREE.Mesh(new THREE.SphereGeometry(0.32,8,6), toon(0x8b8b93));
+    st.position.set(Math.cos(a)*1.15, 0.15, Math.sin(a)*1.15); st.scale.y=0.66; g.add(st); }                     // a ring of hearthstones
+  [-1,1].forEach((k)=>{ const log=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,1.7,8), toon(0x6e4a2e)); log.rotation.z=Math.PI/2; log.rotation.y=k*0.7; log.position.set(0,0.26,0); outline(log,0.02); g.add(log); }); // crossed logs
+  const f1=new THREE.Mesh(new THREE.ConeGeometry(0.5,1.35,7), basic(0xff7a1e)); f1.position.y=0.86;
+  const f2=new THREE.Mesh(new THREE.ConeGeometry(0.28,0.9,7), basic(0xffd24a)); f2.position.y=0.72; g.add(f1); g.add(f2);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffb355,transparent:true,opacity:0.34,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  halo.scale.set(6.4,6.4,1); halo.position.y=1.1; g.add(halo);
+  const pool=new THREE.Mesh(new THREE.CircleGeometry(3.6,24), new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0xff9a3a,transparent:true,opacity:0.12,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  pool.rotation.x=-Math.PI/2; pool.position.y=0.05; g.add(pool);
+  const baseInt=LOW_END?1.0:1.9; const light=new THREE.PointLight(0xffa64d, baseInt*0.42, 17, 1.6); light.position.y=1.25; g.add(light);
+  const seatN=4, SR=2.7; for(let i=0;i<seatN;i++){ const a=i/seatN*Math.PI*2+Math.PI/4, sx=x+Math.cos(a)*SR, sz=z+Math.sin(a)*SR;
+    const stump=new THREE.Mesh(new THREE.CylinderGeometry(0.44,0.48,0.5,10), toon(0x8a5a34)); stump.position.set(Math.cos(a)*SR,0.25,Math.sin(a)*SR); outline(stump,0.02); g.add(stump);
+    SEATS.push({ x:sx, z:sz, rot:Math.atan2(x-sx,z-sz), y:0.55, pos:new THREE.Vector3(sx,0,sz), _hearth:true }); }   // stump-seats face inward toward the fire
+  HEARTH={ g, f1, f2, halo, pool, light, x, z, baseInt, ph:Math.random()*6.28 };
+  return g;
+}
+function placeHearth(){ const cands=[[0,10.5],[-9,6],[8,7],[0,-10.5],[-8,-7],[9,-6],[6,9]];   // a clear plaza nook (needs buildings + _hubGap)
+  for(const [x,z] of cands){ if(_hubGap(x,z)>=3.4){ makeHearth(x,z); return; } } makeHearth(0,11); }
+function updateHearth(t){ if(!HEARTH) return; const H=HEARTH;
+  const flick=0.80+0.20*Math.sin(t*11+H.ph)+0.07*Math.sin(t*23.7+H.ph*1.7);   // fire flicker
+  const nightK=isNight?1:0.42;
+  H.light.intensity=H.baseInt*nightK*flick;
+  H.f1.scale.set(1,0.9+0.16*Math.sin(t*13+H.ph),1); H.f2.scale.set(1,0.85+0.2*Math.sin(t*17+H.ph*1.3),1);
+  H.halo.material.opacity=(isNight?0.62:0.34)*flick; H.pool.material.opacity=(isNight?0.42:0.13)*flick;
+}
 function makeGuildLantern(x,z){
   const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
   const post=rbox(0.14,2.6,0.14,0x35323a,0.03); post.position.y=1.3; outline(post,0.03); g.add(post);
@@ -4462,6 +4491,7 @@ const RES_GREET_DIST=5.2, RES_GREET_CD_MIN=24, RES_GREET_CD_MAX=44;
 const NPC_INVITE_R=(LOW_END?7.5:8.5), NPC_INVITE_CD=(LOW_END?34:26);   // a chatting circle waves you over when you linger this close; global cooldown keeps it from nagging
 const RES_REACT_R=(LOW_END?11:14), RES_REACT_CD=(LOW_END?22:15);   // when you first walk up to a repo house, the nearby local reacts to it (data-grounded); cooldown so a stroll never spams one resident
 const RES_EMOTE_CD_MIN=(LOW_END?46:30), RES_EMOTE_CD_MAX=(LOW_END?90:64);
+const RES_COMFORT_CD_MIN=(LOW_END?42:26), RES_COMFORT_CD_MAX=(LOW_END?82:58);   // a resident resting a while lets slip a contented, at-home murmur (rare, cosy — never chatter)
 function _resGreetLine(res){ const nm=(res[LANG]||res.ko).name, ko=LANG==='ko';
   const bank = ko ? ['\uD83D\uDC4B \uc5b4, \uc548\ub155\ud558\uc138\uc694!', `\uD83D\uDC4B ${nm}\uc608\uc694 \u2014 \ubc18\uac00\uc6cc\uc694!`, '\uc5ec\uae30\uae4c\uc9c0 \uc624\uc168\ub124\uc694, \ud658\uc601\ud574\uc694! \uD83D\uDC4B', '\uc624, \ubc29\ubb38\uc790\ub2e4! \uD83D\uDC4B', '\uD83D\uDC4B \uc88b\uc740 \ud558\ub8e8 \ubcf4\ub0b4\uc694~']
                   : ['\uD83D\uDC4B Oh, hello there!', `\uD83D\uDC4B I'm ${nm} \u2014 nice to meet you!`, 'You made it \u2014 welcome! \uD83D\uDC4B', 'A visitor! \uD83D\uDC4B', '\uD83D\uDC4B Have a lovely day~'];
@@ -4469,6 +4499,12 @@ function _resGreetLine(res){ const nm=(res[LANG]||res.ko).name, ko=LANG==='ko';
 const _RES_EMOTES={ ko:['\uD83C\uDFB5 \ud765\ud765~','\uD83D\uDCA1 \uc624, \uc88b\uc740 \uc0dd\uac01','\u2615 \uc7a0\uae10 \uc26c\uc5b4\uac00\uc694','\u2728','\uD83C\uDF3F \ub0a0\uc528 \uc88b\ub2e4','\uD83D\uDE0C \ud3c9\ud654\ub86d\ub124','\uD83D\uDCCB \uc5b4\ub514 \ubcf4\uc790\u2026','\uD83D\uDD27 \uc774\uac74 \uc774\ub807\uac8c\u2026'],
                     en:['\uD83C\uDFB5 hum-hum~','\uD83D\uDCA1 oh, good idea','\u2615 a little break','\u2728','\uD83C\uDF3F nice weather','\uD83D\uDE0C so peaceful','\uD83D\uDCCB let me see\u2026','\uD83D\uDD27 like this\u2026'] };
 function _resIdleEmote(){ const b=_RES_EMOTES[LANG]||_RES_EMOTES.ko; return b[(Math.random()*b.length)|0]; }
+// 🛋️ contented, self-aware "this town is a comfortable home" murmurs while resting — the residents know they're built from data, yet this place feels like a kind one to be
+const _RES_COMFORT={ ko:['여기 앉아 있으면 마음이 놓여요.','이 마을, 우리한테는 참 편한 곳이에요.','가끔은 제가 코드라는 것도 잊고 그냥 쉬어요.','이 도시가 집처럼 느껴져요.','천천히 흐르는 시간이 좋아요.','데이터로 지어졌지만, 이 평온함은 진짜 같아요.','여기선 잠시 아무것도 안 해도 괜찮아요.'],
+                     en:["Sitting here, I feel at ease.","This town is a kind place for us to be.","Sometimes I forget I'm just code, and simply rest.","This city feels like home.","I like how slowly the time flows here.","Built from data, sure — but this calm feels real.","Here it's okay to do nothing for a while."] };
+const _RES_HEARTH_LINES={ ko:['불 옆이 참 따뜻해요 — 데이터로 지어진 저한테도요.','밤엔 이 모닥불 곁이 제일 포근해요.','불빛을 보고 있으면 마음이 잔잔해져요.','불가에 앉으면 하루가 스르르 풀려요.','우리한테 이런 쉼터를 내어줘서 고마워요.'],
+                          en:["The fire is so warm — even to something made of data.","At night, beside this campfire is the cosiest spot.","Watching the flames, my mind goes quiet.","By the fire, the whole day just unwinds.","Thank you for giving us a warm place like this."] };
+function _resComfortLine(L){ const hearth=L._rest&&L._rest.seat&&L._rest.seat._hearth; const bank=hearth?(_RES_HEARTH_LINES[LANG]||_RES_HEARTH_LINES.ko):(_RES_COMFORT[LANG]||_RES_COMFORT.ko); return bank[(Math.random()*bank.length)|0]; }
 function _residentSpot(res){
   if(res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11],[11,-4],[-11,3],[4,10],[-3,-11]];   // extra spots so two plaza folk (Kai + Noa) don't stack
     for(const p of cands){ if(_hubGap(p[0],p[1])<4.0) continue;
@@ -4490,6 +4526,7 @@ function placeResident(res){ const g=buildResident(res), sp=_residentSpot(res);
   RESIDENTS_LIVE.push(live); return live; }
 if(NPC_CFG.modeEnabled && NPC_CFG.visualEnabled){ for(const res of RESIDENTS.slice(0,MAX_RESIDENTS)) placeResident(res); }
 placeGlowFlowers();   // 🌼 luminous roadside blossoms around the plaza + avenues (needs buildings + _hubGap, so run here)
+placeHearth();        // 🔥 the residents' cosy campfire nook (needs buildings + _hubGap)
 window.RESIDENTS_LIVE=RESIDENTS_LIVE;
 function refreshResidentTags(){ for(const L of RESIDENTS_LIVE){ const m=L.tag.material; if(m&&m.map){ m.map.dispose(); } const ns=residentTag(L.res); L.tag.material.map=ns.material.map; L.tag.material.needsUpdate=true; } }
 
@@ -4610,7 +4647,8 @@ function _resRoamTarget(L){
 // ---- resting on a bench: townsfolk stroll to a free SEAT, sit a while, then get back up (a quiet place to rest) ----
 const SIT_POSE={ y:0.2, leg:1.25 };
 function _freeSeat(L){ let best=null,bd=RES_MOVE.seatSeek; const px=L.group.position.x, pz=L.group.position.z;
-  for(const s of SEATS){ if(s._occ) continue; const d=Math.hypot(s.x-px,s.z-pz); if(d<bd){ bd=d; best=s; } } return best; }
+  for(const s of SEATS){ if(s._occ) continue; const raw=Math.hypot(s.x-px,s.z-pz); if(raw>RES_MOVE.seatSeek) continue;
+    const d=raw-((isNight&&s._hearth)?7:0); if(d<bd){ bd=d; best=s; } } return best; }   // after dark, residents drift to the warm campfire seats
 function _resSit(L,s){ const g=L.group; g.position.set(s.x,SIT_POSE.y,s.z); g.rotation.y=s.rot;
   if(g._legL){ g._legL.rotation.x=SIT_POSE.leg; g._legR.rotation.x=SIT_POSE.leg; } if(g._head) g._head.position.y=2.0; }
 function _resStand(L){ const g=L.group; g.position.y=0; if(g._legL){ g._legL.rotation.x=0; g._legR.rotation.x=0; } }
@@ -4632,7 +4670,10 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
       else if(L._rest.phase==='sit'){
         if(!hidden && tt>=L._rest.until){ _resStand(L); _seatRelease(L); L._rp=tt+1.5+Math.random()*3; }
         else { g.position.y=SIT_POSE.y; if(g._legL){ g._legL.rotation.x=SIT_POSE.leg; g._legR.rotation.x=SIT_POSE.leg; } g.rotation.y=lerpA(g.rotation.y,L._rest.seat.rot,0.1);
-          if(g._armL){ g._armL.rotation.z+=(0.12-g._armL.rotation.z)*0.1; g._armR.rotation.z+=(0.12-g._armR.rotation.z)*0.1; } L.bub.update(dt); continue; } }   // stay seated
+          if(g._armL){ g._armL.rotation.z+=(0.12-g._armL.rotation.z)*0.1; g._armR.rotation.z+=(0.12-g._armR.rotation.z)*0.1; }
+          if(!L._pNear && L._gt<=0 && tt>=(L._comfortCd||0)){ L._comfortCd=tt+RES_COMFORT_CD_MIN+Math.random()*(RES_COMFORT_CD_MAX-RES_COMFORT_CD_MIN);   // a rare, contented at-home murmur while resting (warmer + more likely at the campfire)
+            if(Math.random() < ((L._rest.seat&&L._rest.seat._hearth)?0.85:0.5)){ L.bub.say(_resComfortLine(L), _hex(L.res.color)); L._gt=2.2; } }
+          L.bub.update(dt); continue; } }   // stay seated
     }
     if(chatBound && L._joinWalk && !hidden && NPC_CFG.motionEnabled){   // an invited resident steps into the circle, then settles and faces the visitor (chatBound normally freezes them in place)
       if(_resWalk(L,L._joinWalk.x,L._joinWalk.z,RES_MOVE.meetSpd,dt)) L._joinWalk=null; else moving=true; }
@@ -6423,6 +6464,7 @@ function animate(){
   updateNpcs(dt);
   updateResidents(dt);
   updateGlowFlora(clock.elapsedTime);
+  updateHearth(clock.elapsedTime);
   rtTick(dt);
   if(userInput||moving||ride||dragging||navTarget) lastAct=_now;   // perf: dynamic state → stay 60fps + refresh shadows next frames
   if(!_idle) renderer.shadowMap.needsUpdate=true;                  // perf: refresh shadow map only while active; frozen when idle
@@ -6766,7 +6808,13 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     scriptedAmbient:NPC_CFG.scriptedAmbient, lowEnd:LOW_END, mobile:IS_MOBILE, motionEnabled:NPC_CFG.motionEnabled, wanderSpd:+RES_MOVE.wanderSpd.toFixed(2), meetSpd:+RES_MOVE.meetSpd.toFixed(2), gapMin:NPC_CFG.gapMin, gapMax:NPC_CFG.gapMax, maxTurns:NPC_CFG.maxTurns,
     greetDist:RES_GREET_DIST, greetCd:[RES_GREET_CD_MIN,RES_GREET_CD_MAX], emoteCd:[RES_EMOTE_CD_MIN,RES_EMOTE_CD_MAX],
     live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, maxGroup:NPC_CFG.maxGroup, groupR:RES_MOVE.groupR, joinR:RES_MOVE.joinR, groupChat:(activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null), groupSize:(_ambConv?_ambConv.members.length:0), moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), resting:RESIDENTS_LIVE.filter(L=>L._rest).length, seats:SEATS.length, flora:GLOW_FLORA.length, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
-  window.__seats=()=>SEATS.map((s,i)=>({ i, pos:[+s.x.toFixed(1),+s.z.toFixed(1)], occupied:s._occ?s._occ.res.id:null }));
+  window.__seats=()=>SEATS.map((s,i)=>({ i, pos:[+s.x.toFixed(1),+s.z.toFixed(1)], hearth:!!s._hearth, occupied:s._occ?s._occ.res.id:null }));
+  window.__hearth=()=>({ placed:!!HEARTH, at:HEARTH?[+HEARTH.x.toFixed(1),+HEARTH.z.toFixed(1)]:null, seats:SEATS.filter(s=>s._hearth).length, sitting:SEATS.filter(s=>s._hearth&&s._occ).map(s=>s._occ.res.id), lightNow:HEARTH?+HEARTH.light.intensity.toFixed(2):null, night:isNight });   // 🔥 the campfire nook: placement, its stump-seats, who's warming up, live light level
+  window.__tpHearth=()=>{ if(!HEARTH) return null; player.position.set(HEARTH.x, 0, HEARTH.z+4.5); const yaw=Math.atan2(HEARTH.x-player.position.x, HEARTH.z-player.position.z); camYaw=yaw; camPitch=0.2; camDist=16; if(typeof model!=='undefined'&&model) model.rotation.y=Math.PI-yaw; return { at:[+HEARTH.x.toFixed(1),+HEARTH.z.toFixed(1)], night:isNight, lightNow:+HEARTH.light.intensity.toFixed(2) }; };
+  window.__comfort=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];   // force a resident to settle onto the nearest hearth seat and murmur a contented line
+    if(!L) return { ok:false }; const seat=SEATS.find(s=>s._hearth&&!s._occ)||SEATS.find(s=>!s._occ); if(seat){ seat._occ=L; L._rest={ seat, phase:'sit', until:clock.elapsedTime+8 }; _resSit(L,seat); }
+    const line=_resComfortLine(L); L.bub.say(line, _hex(L.res.color)); L._gt=2.2; L._comfortCd=clock.elapsedTime+RES_COMFORT_CD_MIN;
+    return { ok:true, who:L.res.id, hearthSeat:!!(seat&&seat._hearth), line }; };
   window.__greet=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
     L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN);
