@@ -4493,9 +4493,18 @@ const RES_REACT_R=(LOW_END?11:14), RES_REACT_CD=(LOW_END?22:15);   // when you f
 const RES_EMOTE_CD_MIN=(LOW_END?46:30), RES_EMOTE_CD_MAX=(LOW_END?90:64);
 const RES_COMFORT_CD_MIN=(LOW_END?42:26), RES_COMFORT_CD_MAX=(LOW_END?82:58);   // a resident resting a while lets slip a contented, at-home murmur (rare, cosy — never chatter)
 function _resGreetLine(res){ const nm=(res[LANG]||res.ko).name, ko=LANG==='ko';
+  if(VISITOR.returning && Math.random()<0.6){   // a familiar face → a warmer hello, with a note when they've been away a while
+    const back = ko ? (VISITOR.longAway ? ['\uD83D\uDC4B \uc624\ub79c\ub9cc\uc774\uc5d0\uc694! \ud55c\ucc38 \uc548 \ubcf4\uc774\uc168\uc5b4\uc694.','\uD83D\uDC4B \ub2e4\uc2dc \uc624\uc168\ub124\uc694 \u2014 \uc624\ub79c\ub9cc\uc774\ub77c \ub354 \ubc18\uac00\uc6cc\uc694!','\uc624\ub798 \uae30\ub2e4\ub838\uc5b4\uc694, \ub610 \uc640\uc918\uc11c \uace0\ub9c8\uc6cc\uc694! \uD83D\uDC4B']
+                                         : ['\uD83D\uDC4B \ub610 \uc624\uc168\ub124\uc694, \ubc18\uac00\uc6cc\uc694!','\ub2e4\uc2dc \ubd10\uc11c \uc88b\uc544\uc694! \uD83D\uDC4B','\uD83D\uDC4B \uc5b4\uc11c \uc640\uc694 \u2014 \uc5bc\uad74\uc774 \uc775\uc219\ud558\ub124\uc694!','\uc624\ub298\ub3c4 \ub4e4\ub7ec\uc918\uc11c \uace0\ub9c8\uc6cc\uc694! \uD83D\uDC4B'])
+                    : (VISITOR.longAway ? ["\uD83D\uDC4B It's been a while \u2014 good to see you again!","\uD83D\uDC4B You're back! Long time no see.","We kept your spot warm \u2014 thanks for coming back! \uD83D\uDC4B"]
+                                         : ['\uD83D\uDC4B You came back \u2014 welcome!','Good to see you again! \uD83D\uDC4B','\uD83D\uDC4B A familiar face \u2014 hello!','Thanks for dropping by again! \uD83D\uDC4B']);
+    return back[(Math.random()*back.length)|0]; }
   const bank = ko ? ['\uD83D\uDC4B \uc5b4, \uc548\ub155\ud558\uc138\uc694!', `\uD83D\uDC4B ${nm}\uc608\uc694 \u2014 \ubc18\uac00\uc6cc\uc694!`, '\uc5ec\uae30\uae4c\uc9c0 \uc624\uc168\ub124\uc694, \ud658\uc601\ud574\uc694! \uD83D\uDC4B', '\uc624, \ubc29\ubb38\uc790\ub2e4! \uD83D\uDC4B', '\uD83D\uDC4B \uc88b\uc740 \ud558\ub8e8 \ubcf4\ub0b4\uc694~']
                   : ['\uD83D\uDC4B Oh, hello there!', `\uD83D\uDC4B I'm ${nm} \u2014 nice to meet you!`, 'You made it \u2014 welcome! \uD83D\uDC4B', 'A visitor! \uD83D\uDC4B', '\uD83D\uDC4B Have a lovely day~'];
   return bank[(Math.random()*bank.length)|0]; }
+function _welcomeBackLine(){ const ko=LANG==='ko', n=VISITOR.visits;   // a one-time warm toast when a returning visitor steps back into town
+  if(VISITOR.longAway) return ko?'\uD83D\uDC4B \uc624\ub79c\ub9cc\uc774\uc5d0\uc694 \u2014 \ub2e4\uc2dc \uc624\uc2e0 \uac78 \ud658\uc601\ud574\uc694!':'\uD83D\uDC4B It\u2019s been a while \u2014 welcome back!';
+  return ko ? `\uD83D\uDC4B \ub2e4\uc2dc \uc624\uc168\ub124\uc694, \ud658\uc601\ud574\uc694!${n>=5?` (${n}\ubc88\uc9f8 \ubc29\ubb38 \uD83C\uDF89)`:''}` : `\uD83D\uDC4B Welcome back!${n>=5?` (visit #${n} \uD83C\uDF89)`:''}`; }
 const _RES_EMOTES={ ko:['\uD83C\uDFB5 \ud765\ud765~','\uD83D\uDCA1 \uc624, \uc88b\uc740 \uc0dd\uac01','\u2615 \uc7a0\uae10 \uc26c\uc5b4\uac00\uc694','\u2728','\uD83C\uDF3F \ub0a0\uc528 \uc88b\ub2e4','\uD83D\uDE0C \ud3c9\ud654\ub86d\ub124','\uD83D\uDCCB \uc5b4\ub514 \ubcf4\uc790\u2026','\uD83D\uDD27 \uc774\uac74 \uc774\ub807\uac8c\u2026'],
                     en:['\uD83C\uDFB5 hum-hum~','\uD83D\uDCA1 oh, good idea','\u2615 a little break','\u2728','\uD83C\uDF3F nice weather','\uD83D\uDE0C so peaceful','\uD83D\uDCCB let me see\u2026','\uD83D\uDD27 like this\u2026'] };
 function _resIdleEmote(){ const b=_RES_EMOTES[LANG]||_RES_EMOTES.ko; return b[(Math.random()*b.length)|0]; }
@@ -5016,6 +5025,15 @@ let passport=loadPassport();
 function loadPassport(){ try{ const p=JSON.parse(localStorage.getItem(PASSPORT_KEY)); if(p&&typeof p==='object') return {repos:Array.isArray(p.repos)?p.repos:[], stamps:Array.isArray(p.stamps)?p.stamps:[], first:p.first||0, last:p.last||0}; }catch(e){} return {repos:[], stamps:[], first:0, last:0}; }
 function savePassport(){ passport.last=Date.now(); if(!passport.first) passport.first=passport.last; try{ localStorage.setItem(PASSPORT_KEY, JSON.stringify(passport)); }catch(e){} }
 function passHasStamp(id){ return passport.stamps.indexOf(id)>=0; }
+// 🪪 the town quietly remembers YOU — an anonymous, on-device visit tally (a localStorage counter, never sent anywhere) so residents can welcome a familiar face back
+let VISITOR = (function(){ const KEY='repolisVisits'; let v={ n:0, first:0, last:0 };
+  try{ const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(s&&typeof s==='object') v={ n:s.n||0, first:s.first||0, last:s.last||0 }; }catch(e){}
+  const now=Date.now(), prevLast=v.last, fresh=!prevLast || (now-prevLast)>1800000;   // a reload within 30 min is the same visit; a genuine return bumps the tally
+  if(fresh){ v.n=(v.n||0)+1; if(!v.first) v.first=now; } v.last=now;
+  try{ localStorage.setItem(KEY, JSON.stringify(v)); }catch(e){}
+  const awayDays = prevLast ? Math.floor((now-prevLast)/86400000) : 0;
+  return { visits:v.n, firstTime:v.n<=1, returning:v.n>1, awayDays, longAway:(v.n>1 && awayDays>=7) };
+})();
 const passportEl=document.getElementById('passport');
 function flashPassport(){ const b=document.getElementById('passBtn'); if(!b) return; b.classList.add('glow'); clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('glow'),2200); }
 function addStamp(id){ if(passHasStamp(id)) return false; passport.stamps.push(id); savePassport(); flashPassport(); if(!passportEl.classList.contains('hidden')) renderPassport();
@@ -5455,7 +5473,8 @@ function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.
 function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; player.position.set(seat.x,0,seat.z); model.rotation.y=seat.rot; camYaw=seat.rot+Math.PI; walk=0; }
 function standUp(){ sitting=null; }
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
-  try{ if(REPOS.length){ getCourse(); setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, 1000); } }catch(e){}
+  const rb=VISITOR.returning; if(rb){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} }, 850); }   // welcome a familiar face back before the daily-course banner
+  try{ if(REPOS.length){ getCourse(); setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, rb?4700:1000); } }catch(e){}
   setTimeout(()=>{ try{ openRepoFromHash(); }catch(e){} }, 480); };
 (function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
     document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
@@ -6819,6 +6838,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
     L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN);
     return { who:L.res.id, dist:+player.position.distanceTo(L.group.position).toFixed(2), greetDist:RES_GREET_DIST }; };
+  window.__visitor=()=>({ ...VISITOR });   // 🪪 the on-device visit memory (visits / returning / awayDays / longAway)
+  window.__setVisitor=(o)=>{ Object.assign(VISITOR, o||{}); return { ...VISITOR }; };   // override the memory to preview returning/long-away greetings without a reload
+  window.__welcomeBack=()=>{ const line=_welcomeBackLine(); if(VISITOR.returning) showWave(line, 3600); return { returning:VISITOR.returning, line }; };
   window.__npcEncounter=(a,b)=>{ const A=RESIDENTS_LIVE.find(L=>L.res.id===a)||RESIDENTS_LIVE[0], B=RESIDENTS_LIVE.find(L=>L.res.id===b)||RESIDENTS_LIVE[1];
     if(!A||!B||A===B) return {ok:false}; _pairCd.delete(_pairKey(A,B)); _resCd.delete(A.res.id); _resCd.delete(B.res.id); if(_ambConv) _endAmb('debug'); _startAmb(A,B); if(_ambConv){ _ambConv.phase='talk'; _ambConv.nextAt=0; _advanceAmb(); }
     return { ok:true, a:A.res.id, b:B.res.id, size:_ambConv?_ambConv.members.length:0, max:_ambConv?_ambConv.max:0, i:_ambConv?_ambConv.i:1, last:_npcTranscript.slice(-1)[0]||null }; };

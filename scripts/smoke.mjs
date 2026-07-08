@@ -512,6 +512,15 @@ ok(/if\(!L\._pNear && L\._gt<=0 && tt>=\(L\._comfortCd\|\|0\)\)\{ L\._comfortCd=
 ok(/\?0\.85:0\.5/.test(npcBlock), 'the murmur is warmer + more likely at the campfire (0.85) than on a plain bench (0.5)');
 ok(/window\.__hearth=\(\)=>/.test(HTML) && /window\.__comfort=\(id\)=>/.test(HTML) && /window\.__tpHearth=\(\)=>/.test(HTML), '?dbg __hearth/__tpHearth/__comfort surface + drive the campfire nook and comfort murmurs');
 
+group('the town remembers you — a warmer welcome for a returning visitor');
+ok(/let VISITOR = \(function\(\)\{ const KEY='repolisVisits'/.test(HTML) && /localStorage\.setItem\(KEY, ?JSON\.stringify\(v\)\)/.test(HTML), 'VISITOR is an anonymous, on-device visit tally kept only in localStorage (never sent anywhere)');
+ok(/const now=Date\.now\(\), ?prevLast=v\.last, ?fresh=!prevLast \|\| \(now-prevLast\)>1800000/.test(HTML), 'a reload within 30 min counts as the same visit; only a genuine return bumps the tally');
+ok(/returning:v\.n>1/.test(HTML) && /longAway:\(v\.n>1 && awayDays>=7\)/.test(HTML), 'the memory derives returning (2nd+ visit) and longAway (returning after a 7-day gap)');
+ok(/if\(VISITOR\.returning && Math\.random\(\)<0\.6\)\{/.test(npcBlock) && /VISITOR\.longAway \?/.test(npcBlock), 'a returning visitor gets a warmer resident hello ~60% of the time — with an extra-warm variant after a long absence');
+ok(/function _welcomeBackLine\(\)\{/.test(npcBlock) && /n>=5\?/.test(npcBlock) && /visit #\$\{n\}/.test(npcBlock), 'a one-time welcome-back toast greets a returning visitor (with a little milestone note from the 5th visit)');
+ok(/const rb=VISITOR\.returning; if\(rb\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML) && /}, ?rb\?4700:1000\)/.test(HTML), 'entering town shows the welcome-back toast first, and defers the daily-course banner so the two never clash');
+ok(/window\.__visitor=\(\)=>/.test(HTML) && /window\.__setVisitor=\(o\)=>/.test(HTML) && /window\.__welcomeBack=\(\)=>/.test(HTML), '?dbg __visitor/__setVisitor/__welcomeBack read + preview the returning-visitor warmth without a reload');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
