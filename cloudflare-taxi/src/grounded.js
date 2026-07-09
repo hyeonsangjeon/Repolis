@@ -705,15 +705,16 @@ function npcAmbientPrompt(speakerId, listenerId, topic, lang) {
 function npcPlayerPrompt(speakerId, lang, opts) {
   const s = _npcName(speakerId, lang), P = NPC_PERSONAS[speakerId] || {};
   const zn = (P.zone && (lang === "en" ? P.zone.en : P.zone.ko)) || "";
+  const vb = (P.vibe && (lang === "en" ? P.vibe.en : P.vibe.ko)) || "";
   const chime = !!(opts && opts.chime);
   const prevName = opts && opts.prev ? _npcName(opts.prev, lang).name : "";
   if (lang === "en") {
-    let base = `${_npcGuard(lang)} Your name is ${s.name}, the ${s.role} of ${zn}. A visitor is talking with your group. FIRST answer the visitor's most recent question directly and relevantly, in one or two short lines, grounded in your district. If they ask what you are or how it feels to live in this city, answer honestly and reflectively as a code-born AI resident (never the technical internals). If they ask about repos, point them to your district generally. Stay on the visitor's topic — do NOT change the subject or drift into unrelated small talk.`;
-    if (chime) base += ` ${prevName ? prevName + " just answered the same question" : "Another resident just answered"} — briefly build on or gently differ from that point, then add your own angle, still answering the visitor.`;
+    let base = `${_npcGuard(lang)} Your name is ${s.name}, the ${s.role} of ${zn}${vb ? ` — you're ${vb}` : ""}. A visitor is talking with your group. FIRST answer the visitor's most recent question directly and relevantly, in one or two short lines, in your OWN ${vb || "distinct"} voice, grounded in your district. Speak only as yourself — even if a neighbour shares your district, your take is your own. If they ask what you are or how it feels to live in this city, answer honestly and reflectively as a code-born AI resident (never the technical internals). If they ask about repos, point them to your district generally. Stay on the visitor's topic — do NOT change the subject or drift into unrelated small talk.`;
+    if (chime) base += ` ${prevName ? prevName + " just answered the same question" : "Another resident just answered"} — do NOT repeat, restate, or paraphrase their point or wording. Reply in your own ${vb || "distinct"} voice with a genuinely DIFFERENT angle: a different detail, feeling, or example. Keep it short, and never echo them.`;
     return base;
   }
-  let base = `${_npcGuard(lang)} 당신의 이름은 ${s.name}, ${zn}의 ${s.role}이에요. 방문객이 당신들 모임과 이야기 중이에요. 먼저 방문객의 가장 최근 질문에 직접적이고 관련 있게, 자기 구역에 근거해 한두 줄로 답하세요. 당신이 무엇인지·이 도시에 사는 기분을 물으면 코드로 태어난 AI 주민으로서 솔직하고 사색적으로(단 기술 내부는 빼고) 답하세요. 레포를 물으면 자기 구역을 안내하세요. 반드시 방문객의 화제에 붙어서 답하고, 화제를 돌리거나 무관한 잡담으로 새지 마세요.`;
-  if (chime) base += ` ${prevName ? prevName + "가 방금 같은 질문에 답했어요" : "다른 주민이 방금 답했어요"} — 그 말에 짧게 이어(동의·보완·다른 시각) 반응한 뒤 당신의 관점을 덧붙이되, 여전히 방문객의 질문에 답하세요.`;
+  let base = `${_npcGuard(lang)} 당신의 이름은 ${s.name}, ${zn}의 ${s.role}이고 성격은 ${vb || "당신만의"} 편이에요. 방문객이 당신들 모임과 이야기 중이에요. 먼저 방문객의 가장 최근 질문에 직접적이고 관련 있게, ${vb || "당신다운"} 말투로 자기 구역에 근거해 한두 줄로 답하세요. 오직 당신 자신으로서 말하세요 — 이웃과 같은 구역이어도 당신의 시각은 당신만의 것이에요. 당신이 무엇인지·이 도시에 사는 기분을 물으면 코드로 태어난 AI 주민으로서 솔직하고 사색적으로(단 기술 내부는 빼고) 답하세요. 레포를 물으면 자기 구역을 안내하세요. 반드시 방문객의 화제에 붙어서 답하고, 화제를 돌리거나 무관한 잡담으로 새지 마세요.`;
+  if (chime) base += ` ${prevName ? prevName + "가 방금 같은 질문에 답했어요" : "다른 주민이 방금 답했어요"} — 그 말이나 표현을 반복·재탕·바꿔 말하기 하지 말고, 당신의 ${vb || "고유한"} 성격대로 확실히 다른 각도(다른 디테일·감정·예시)로 짧게 답하세요. 절대 따라 말하지 마세요.`;
   return base;
 }
 function npcAmbientUser(body, lang) {

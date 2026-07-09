@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.65.1] — 2026-07-09
+
+### 🗣️ Fix: two residents from the same district no longer give near-identical answers
+- **Symptom.** In a 모임, plaza-mates **노아 and 카이** answered almost identically — the second speaker basically paraphrased the first (both *"우산 챙기고 미끄럼 조심"*, both *"골목이 살아나는 느낌"*).
+- **Why.** Three things compounded: (1) 노아 and 카이 share the **same district** (중앙 광장), and the player-chat prompt grounds each answer in that district; (2) the worker's `npcPlayerPrompt` injected only name/role/zone but **dropped each resident's `vibe`** (kai = concise·welcoming, noa = dreamy·curious), so the model had nothing to tell them apart; (3) the chime-in instruction *allowed* agreement, so the model took the easy path and echoed.
+- **Fix (worker `grounded.js`).** `npcPlayerPrompt` now folds each speaker's **vibe** into their voice ("answer in your own {vibe} voice… even if a neighbour shares your district, your take is your own"), and the chime-in clause is hardened: **do not repeat, restate, or paraphrase** the previous resident — reply with a genuinely different detail/feeling/example. Verified live: on the same question kai now says *"비 오면 빌드가 반짝이고…"* while noa says *"안개가 깔리면 골목이 더 깊어 보여서 마음이 자꾸 걷게 돼"*. Worker redeployed; client unchanged.
+
 ## [1.65.0] — 2026-07-09
 
 ### 🎆 Plaza bonfire festival — once a session, the whole town gathers to celebrate
