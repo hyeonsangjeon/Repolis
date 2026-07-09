@@ -540,6 +540,14 @@ ok(/if\(inConv\|\|chatBound\|\|_festival\)\{ _resStand\(L\); _seatRelease\(L\); 
 ok(/function _endFestival\(\)\{ if\(!_festival\) return; _festival=null;/.test(npcBlock) && /_festivalTick\(tt\); ?_ambientTick\(\);/.test(npcBlock), 'the festival ends cleanly (residents drift home) and is ticked every frame from updateResidents');
 ok(/window\.__festival=\(repo\)=>/.test(HTML) && /window\.__festState=\(\)=>/.test(HTML) && /window\.__endFestival=\(\)=>/.test(HTML), '?dbg __festival/__festState/__endFestival force + introspect + end the celebration');
 
+group('every resident has a cherished haunt (아지트) they visit and love');
+ok(/const _RES_FAV=\{ sol:\{ko:'볕 잘 드는 실험 자리'/.test(npcBlock) && /noa:\{ko:'별이 잘 보이는 모닥불 곁'/.test(npcBlock), 'each of the eight residents has a persona-fitting favourite place');
+ok(/function _resFavSpot\(L\)\{ if\(L\._fav\) return L\._fav;/.test(npcBlock) && /if\(L\.res\.id==='noa' && typeof HEARTH!=='undefined' && HEARTH\)/.test(npcBlock), '_resFavSpot resolves a stable, cached haunt (noa\'s is the campfire; others get a distinctive in-zone spot)');
+ok(/function _resFavLine\(L\)\{ const f=L\._fav, ?d=f\?\(LANG==='ko'\?f\.ko:f\.en\):''/.test(npcBlock), '_resFavLine speaks fondly of that spot, weaving in its descriptor');
+ok(/if\(tt>=\(L\._favCd\|\|0\) && Math\.random\(\)<0\.3\)\{ const f=_resFavSpot\(L\);/.test(npcBlock) && /L\._toFav=true; L\._favCd=tt\+42\+Math\.random\(\)\*44;/.test(npcBlock), 'now and then (cooldown-gated) a wandering resident heads for their haunt instead of a random waypoint');
+ok(/if\(L\._toFav\)\{ L\._toFav=false; L\._rp=tt\+RES_MOVE\.pauseMin\*1\.8\+Math\.random\(\)\*4;/.test(npcBlock) && /_resFavLine\(L\)/.test(npcBlock), 'on arrival they linger longer at the haunt and let an occasional fond word slip (hushed when the visitor is right there)');
+ok(/window\.__favs=\(\)=>/.test(HTML) && /window\.__goFav=\(id\)=>/.test(HTML), '?dbg __favs/__goFav list + drive each resident to their cherished haunt');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }

@@ -4514,6 +4514,22 @@ const _RES_COMFORT={ ko:['여기 앉아 있으면 마음이 놓여요.','이 마
 const _RES_HEARTH_LINES={ ko:['불 옆이 참 따뜻해요 — 데이터로 지어진 저한테도요.','밤엔 이 모닥불 곁이 제일 포근해요.','불빛을 보고 있으면 마음이 잔잔해져요.','불가에 앉으면 하루가 스르르 풀려요.','우리한테 이런 쉼터를 내어줘서 고마워요.'],
                           en:["The fire is so warm — even to something made of data.","At night, beside this campfire is the cosiest spot.","Watching the flames, my mind goes quiet.","By the fire, the whole day just unwinds.","Thank you for giving us a warm place like this."] };
 function _resComfortLine(L){ const hearth=L._rest&&L._rest.seat&&L._rest.seat._hearth; const bank=hearth?(_RES_HEARTH_LINES[LANG]||_RES_HEARTH_LINES.ko):(_RES_COMFORT[LANG]||_RES_COMFORT.ko); return bank[(Math.random()*bank.length)|0]; }
+// 🏞️ each resident has a cherished spot — a little haunt (아지트) that fits who they are; now and then they stroll there, linger, and speak of it fondly
+const _RES_FAV={ sol:{ko:'볕 잘 드는 실험 자리',en:'a sunny spot to tinker'}, jun:{ko:'물결 소리 들리는 항구 끝',en:'the harbour edge where the water laps'},
+  nari:{ko:'꽃이 제일 많이 핀 골목',en:'the alley where the flowers bloom thickest'}, tae:{ko:'아무도 안 오는 조용한 구석',en:'a quiet corner nobody visits'},
+  rin:{ko:'도서관 계단',en:'the library steps'}, mira:{ko:'노을이 제일 고운 폐허 언덕',en:'the ruin-hill with the best sunset'},
+  kai:{ko:'광장 한복판',en:'the heart of the plaza'}, noa:{ko:'별이 잘 보이는 모닥불 곁',en:'the campfire under the stars'} };
+function _resFavSpot(L){ if(L._fav) return L._fav; const F=_RES_FAV[L.res.id]; if(!F) return null; let x, z;
+  if(L.res.id==='noa' && typeof HEARTH!=='undefined' && HEARTH){ x=HEARTH.x-2.6; z=HEARTH.z; }             // noa's haunt is the campfire itself
+  else { const h=L.home; let got=null;                                                                     // a stable, distinctive spot a little way from home (homes sit in-zone, so it fits the descriptor)
+    for(let k=0;k<12;k++){ const a=(k*Math.PI/6)+(L._ph||0), r=8+(k%3)*2.5, nx=h.x+Math.cos(a)*r, nz=h.z+Math.sin(a)*r;
+      if(nx*nx+nz*nz<400 || Math.hypot(nx,nz)>206 || _hubGap(nx,nz)<4.0) continue; got={x:nx,z:nz}; break; }
+    if(got){ x=got.x; z=got.z; } else { x=h.x+7; z=h.z; } }
+  L._fav={ x:+x.toFixed(2), z:+z.toFixed(2), ko:F.ko, en:F.en }; return L._fav; }
+function _resFavLine(L){ const f=L._fav, d=f?(LANG==='ko'?f.ko:f.en):'', ko=LANG==='ko';
+  const b = ko?[`${d} — 여기가 제 아지트예요.`, '여기가 제가 제일 좋아하는 자리예요.', `틈날 때마다 ${d}에 와요.`, `${d}에 있으면 마음이 놓여요.`, `${d}, 여기가 참 좋아요.`]
+             :[`${d} — this is my little haunt.`, 'This is my favourite spot in town.', `I slip off to ${d} whenever I can.`, `At ${d}, I feel at ease.`, `${d} — I do love this place.`];
+  return b[(Math.random()*b.length)|0]; }
 function _residentSpot(res){
   if(res.zone==='plaza'){ const cands=[[-8,6],[-6,-8],[8,-8],[-10,-2],[9,5],[0,-11],[11,-4],[-11,3],[4,10],[-3,-11]];   // extra spots so two plaza folk (Kai + Noa) don't stack
     for(const p of cands){ if(_hubGap(p[0],p[1])<4.0) continue;
@@ -4726,9 +4742,15 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
       if(L._rest && L._rest.phase==='goto'){   // strolling over to the chosen bench, then sit
         if(_resWalk(L,L._rest.seat.x,L._rest.seat.z,L._wspd,dt)){ L._rest.phase='sit'; L._rest.until=tt+RES_MOVE.restMin+Math.random()*(RES_MOVE.restMax-RES_MOVE.restMin); _resSit(L,L._rest.seat); L.bub.update(dt); continue; } else moving=true;
       } else {
-        if(!L._rt && tt>=L._rp){ const s=(Math.random()<RES_MOVE.restChance)?_freeSeat(L):null;
-          if(s){ s._occ=L; L._rest={ seat:s, phase:'goto', until:0 }; } else L._rt=_resRoamTarget(L); }
-        if(L._rt){ if(_resWalk(L,L._rt.x,L._rt.z,L._wspd,dt)){ L._rt=null; L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } } }
+        if(!L._rt && tt>=L._rp){
+          if(tt>=(L._favCd||0) && Math.random()<0.3){ const f=_resFavSpot(L);   // now and then, slip off to your own cherished haunt
+            if(f){ L._rt={x:f.x,z:f.z}; L._toFav=true; L._favCd=tt+42+Math.random()*44; } else L._rt=_resRoamTarget(L); }
+          else { const s=(Math.random()<RES_MOVE.restChance)?_freeSeat(L):null;
+            if(s){ s._occ=L; L._rest={ seat:s, phase:'goto', until:0 }; } else L._rt=_resRoamTarget(L); } }
+        if(L._rt){ if(_resWalk(L,L._rt.x,L._rt.z,L._wspd,dt)){ L._rt=null;
+            if(L._toFav){ L._toFav=false; L._rp=tt+RES_MOVE.pauseMin*1.8+Math.random()*4;   // linger at the haunt + an occasional fond word about it
+              if(!L._pNear && tt>=(L._favSayCd||0)){ L._favSayCd=tt+34+Math.random()*30; L.bub.say(_resFavLine(L), _hex(L.res.color)); L._gt=1.8; } }
+            else L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } } }
     if(moving){ if(L._gt>0) L._gt-=dt; if(g._armL) g._armL.rotation.z*=0.85; if(g._armR) g._armR.rotation.z*=0.85; L.bub.update(dt); continue; }
     // a quiet solo flourish now and then — only when idle, alone, not mid-gesture and the visitor isn't right here (greeting takes precedence). Ambient town life, low frequency.
     if(!_festival && !inConv && !chatBound && !L._pNear && L._gt<=0 && tt>=L._emoteCd){
@@ -6901,6 +6923,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     if(!L) return { ok:false }; const seat=SEATS.find(s=>s._hearth&&!s._occ)||SEATS.find(s=>!s._occ); if(seat){ seat._occ=L; L._rest={ seat, phase:'sit', until:clock.elapsedTime+8 }; _resSit(L,seat); }
     const line=_resComfortLine(L); L.bub.say(line, _hex(L.res.color)); L._gt=2.2; L._comfortCd=clock.elapsedTime+RES_COMFORT_CD_MIN;
     return { ok:true, who:L.res.id, hearthSeat:!!(seat&&seat._hearth), line }; };
+  window.__favs=()=>RESIDENTS_LIVE.map(L=>{ const f=_resFavSpot(L); return { id:L.res.id, spot:f?[f.x,f.z]:null, place:f?(LANG==='ko'?f.ko:f.en):null, atFav:f?+Math.hypot(L.group.position.x-f.x,L.group.position.z-f.z).toFixed(1):null }; });   // 🏞️ each resident's cherished haunt
+  window.__goFav=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; const f=_resFavSpot(L); if(!f) return { ok:false };   // send a resident to their haunt now (bypasses the cooldown)
+    if(L._rest) _seatRelease(L); L._rt={x:f.x,z:f.z}; L._toFav=true; L._favCd=0; L._favSayCd=0; return { ok:true, id:L.res.id, spot:[f.x,f.z], place:LANG==='ko'?f.ko:f.en, line:_resFavLine(L) }; };
   window.__greet=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
     L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN);

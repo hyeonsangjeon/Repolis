@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.66.0] — 2026-07-10
+
+### 🏞️ Every resident has a cherished haunt (아지트) they visit and love
+- **What's new.** Repolis is now a place its residents genuinely *love* — each of the eight has a **favourite spot that fits who they are**, and now and then they'll **slip off to it, linger a while, and speak of it fondly**. Sol has *a sunny spot to tinker*, Jun *the harbour edge where the water laps*, Nari *the alley where the flowers bloom thickest*, Tae *a quiet corner nobody visits*, Rin *the library steps*, Mira *the ruin-hill with the best sunset*, Kai *the heart of the plaza*, and Noa's haunt is **the campfire under the stars** itself.
+- **How it feels.** While wandering, a resident occasionally (cooldown-gated) heads for their own haunt instead of a random waypoint, settles there a beat longer than usual, and lets a fond word slip — *"별이 잘 보이는 모닥불 곁, 여기가 참 좋아요."*, *"틈날 때마다 도서관 계단에 와요."* — hushed, as ever, when the visitor is right beside them (a greeting takes precedence).
+- **How it works.** Each haunt is a **stable, cached spot** resolved once from the resident's persona (Noa's ties to the live `HEARTH`; the rest get a distinctive in-zone point, so the descriptor always matches the place). Purely scripted, **zero AI / zero budget**; it rides the existing wander/roam loop, so it's suspended during a chat, the festival, or a hidden tab, and never fights the bench-rest or campfire behaviours.
+- **Preserved.** Every earlier layer (festival, graceful goodbyes, returning-visitor warmth, campfire 쉼터, repo reactions, invite-a-resident, the circle waving you over, group chat), budget/env gating, hidden-tab stop. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__favs()` (every resident's haunt + descriptor + current distance) and `window.__goFav(id)` (send one to their haunt now).
+
 ## [1.65.1] — 2026-07-09
 
 ### 🗣️ Fix: two residents from the same district no longer give near-identical answers
