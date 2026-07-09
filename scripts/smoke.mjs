@@ -420,8 +420,8 @@ ok(/const RES_GREET_DIST=5\.2, RES_GREET_CD_MIN=24, RES_GREET_CD_MAX=44;/.test(H
 ok(/if\(pnear && !L\._pNear && tt>=L\._greetCd\)\{ L\.bub\.say\(_resGreetLine\(L\.res\), _hex\(L\.res\.color\)\); L\._gt=2\.6;/.test(HTML), 'proximity greeting is edge-triggered (_pNear), cooldown-gated (_greetCd), and waves (_gt) with a bubble');
 ok(/if\(!inConv && !chatBound && !hidden\)\{/.test(HTML), 'greeting is suppressed during a conversation / bound chat / hidden tab (never clobbers ambient bubbles)');
 ok(/if\(chatBound\) L\.bub\.clear\(\);/.test(HTML), 'a resident the visitor is chatting with hides its floating greeting/emote bubble (no residual bubble lingers into the chat)');
-ok(/function _resIdleEmote\(\)\{/.test(HTML) && /if\(Math\.random\(\)<0\.7\)\{ L\.bub\.say\(_resIdleEmote\(\), _hex\(L\.res\.color\)\); L\._gt=1\.6;/.test(HTML), 'low-frequency solo idle emote adds ambient town life');
-ok(/if\(!_festival && !inConv && !chatBound && !L\._pNear && L\._gt<=0 && tt>=L\._emoteCd\)\{/.test(HTML), 'idle emote only fires when idle, alone, visitor not right here, no festival on (greeting has precedence) and not mid-gesture');
+ok(/function _resIdleEmote\(\)\{/.test(HTML) && /else if\(Math\.random\(\)<0\.7\)\{ L\.bub\.say\(Math\.random\(\)<0\.55\?_resTodLine\(\):_resIdleEmote\(\), _hex\(L\.res\.color\)\); L\._gt=1\.6;/.test(HTML), 'low-frequency solo idle emote adds ambient town life (now half time-flavored)');
+ok(/if\(!_festival && !inConv && !chatBound && !L\._pNear && L\._gt<=0 && \(L\._stretch\|\|0\)<=0 && tt>=L\._emoteCd\)\{/.test(HTML), 'idle emote only fires when idle, alone, visitor not right here, no festival, not mid-stretch/gesture (greeting has precedence)');
 ok(/const RES_EMOTE_CD_MIN=\(LOW_END\?46:30\), RES_EMOTE_CD_MAX=\(LOW_END\?90:64\);/.test(HTML), 'LOW_END keeps the greeting warmth but spaces solo emotes further (saving stays on the AI side)');
 ok(/window\.__greet=\(id\)=>/.test(HTML) && /greetDist:RES_GREET_DIST, greetCd:\[RES_GREET_CD_MIN,RES_GREET_CD_MAX\]/.test(HTML), '?dbg __greet hook + __npcState greet/emote config present');
 
@@ -547,6 +547,15 @@ ok(/function _resFavLine\(L\)\{ const f=L\._fav, ?d=f\?\(LANG==='ko'\?f\.ko:f\.e
 ok(/if\(tt>=\(L\._favCd\|\|0\) && Math\.random\(\)<0\.3\)\{ const f=_resFavSpot\(L\);/.test(npcBlock) && /L\._toFav=true; L\._favCd=tt\+42\+Math\.random\(\)\*44;/.test(npcBlock), 'now and then (cooldown-gated) a wandering resident heads for their haunt instead of a random waypoint');
 ok(/if\(L\._toFav\)\{ L\._toFav=false; L\._rp=tt\+RES_MOVE\.pauseMin\*1\.8\+Math\.random\(\)\*4;/.test(npcBlock) && /_resFavLine\(L\)/.test(npcBlock), 'on arrival they linger longer at the haunt and let an occasional fond word slip (hushed when the visitor is right there)');
 ok(/window\.__favs=\(\)=>/.test(HTML) && /window\.__goFav=\(id\)=>/.test(HTML), '?dbg __favs/__goFav list + drive each resident to their cherished haunt');
+
+group('the town keeps a daily rhythm (morning stretch → day bustle → dusk hush → night)');
+ok(/function _partOfDay\(\)\{ const n=\(typeof SKY_PHASES!=='undefined'&&SKY_PHASES\[skyPhaseIdx\]\)\?SKY_PHASES\[skyPhaseIdx\]\.name:'day'; return n==='dawn'\?'morn':n==='dusk'\?'eve':n==='night'\?'night':'day';/.test(npcBlock), '_partOfDay maps the live sky phase (dawn/day/dusk/night) to the town\'s rhythm slice');
+ok(/const _RES_TOD=\{[\s\S]*?morn:\{[\s\S]*?day:\{[\s\S]*?eve:\{[\s\S]*?night:\{/.test(npcBlock) && /function _resTodLine\(\)/.test(npcBlock) && /function _resTodGreet\(\)/.test(npcBlock), 'time-flavored idle lines + greetings exist for all four parts of the day');
+ok(/if\(_partOfDay\(\)==='morn' && tt>=\(L\._stretchCd\|\|0\)\)\{ L\._stretchCd=tt\+120\+Math\.random\(\)\*90; L\._stretch=1\.4; L\.bub\.say\(_resTodLine\(\)/.test(npcBlock), 'at dawn an idle resident does a cooldown-gated morning stretch + a good-morning word (the town wakes up)');
+ok(/else if\(Math\.random\(\)<0\.7\)\{ L\.bub\.say\(Math\.random\(\)<0\.55\?_resTodLine\(\):_resIdleEmote\(\)/.test(npcBlock), 'about half the ambient idle chatter now reflects the time of day');
+ok(/if\(L\._stretch>0\)\{ L\._stretch-=dt; const k=Math\.sin\([\s\S]*?up=-2\.2\*k;[\s\S]*?g\._armL\.rotation\.x=up; g\._armR\.rotation\.x=up;/.test(npcBlock), 'the morning stretch is a real gesture — both arms rise then settle');
+ok(/\{ const tg=_resTodGreet\(\); if\(tg && Math\.random\(\)<0\.4\) return tg; \}/.test(npcBlock), 'a walk-up greeting sometimes carries a morning/evening/night hello');
+ok(/window\.__partOfDay=\(\)=>/.test(HTML) && /window\.__stretch=\(id\)=>/.test(HTML), '?dbg __partOfDay/__stretch introspect the rhythm + force a morning stretch');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

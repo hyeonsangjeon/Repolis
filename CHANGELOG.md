@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.67.0] — 2026-07-10
+
+### 🕰️ The town keeps a daily rhythm — a morning stretch, and words that follow the light
+- **What's new.** The residents now **live by the hour**. At **dawn** they greet the day with a **morning stretch** — arms rising to the sky — and a bright word (*"좋은 아침이에요! ☀️"*, *"기지개 한 번 켜고 시작해요."*); through the **day** their idle chatter turns busy and warm (*"거리에 활기가 도네요."*); at **dusk** it softens (*"노을이 곱게 지네요. 🌆"*, *"이 시간이 제일 예뻐요."*); and at **night** it hushes (*"밤이 참 고요하네요."*) — so the same street *feels* different depending on when you visit.
+- **How it feels.** Idle residents now colour roughly half their little asides with the **time of day** instead of a generic emote, and at first light one will occasionally break into a real **arms-up stretch** (cooldown-gated, so it stays a rare, lived-in beat rather than a tic). Greetings pick up a light morning/evening flavour too — walk up at dawn and you may be met with *"오늘도 잘 부탁해요!"* instead of the usual hello.
+- **How it works.** It **reuses the existing sky-phase system** — `_partOfDay()` maps the current phase (dawn/day/dusk/night) to a **time-of-day line bank** (`_RES_TOD`), and the idle loop gates a morning `_stretch` animation + line off a per-resident cooldown. Purely scripted, **zero AI / zero budget**; it rides the same idle/wander loop, so it's suspended during a chat, the festival, or a hidden tab, and never fights the stretch, bench-rest, campfire, or haunt behaviours. The stretch is a genuine limb animation (both arms rise on a sine ease, then settle).
+- **Preserved.** Every earlier layer (cherished haunts, festival, graceful goodbyes, returning-visitor warmth, campfire 쉼터, repo reactions, invite-a-resident, the circle waving you over, group chat), budget/env gating, hidden-tab stop. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__partOfDay()` (current part/phase + a sample time-line + a sample greeting) and `window.__stretch(id)` (make one resident stretch and speak their morning line now).
+
 ## [1.66.0] — 2026-07-10
 
 ### 🏞️ Every resident has a cherished haunt (아지트) they visit and love
