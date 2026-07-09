@@ -4499,6 +4499,7 @@ function _resGreetLine(res){ const nm=(res[LANG]||res.ko).name, ko=LANG==='ko';
                     : (VISITOR.longAway ? ["\uD83D\uDC4B It's been a while \u2014 good to see you again!","\uD83D\uDC4B You're back! Long time no see.","We kept your spot warm \u2014 thanks for coming back! \uD83D\uDC4B"]
                                          : ['\uD83D\uDC4B You came back \u2014 welcome!','Good to see you again! \uD83D\uDC4B','\uD83D\uDC4B A familiar face \u2014 hello!','Thanks for dropping by again! \uD83D\uDC4B']);
     return back[(Math.random()*back.length)|0]; }
+  { const tg=_resTodGreet(); if(tg && Math.random()<0.4) return tg; }   // a light morning/evening/night hello
   const bank = ko ? ['\uD83D\uDC4B \uc5b4, \uc548\ub155\ud558\uc138\uc694!', `\uD83D\uDC4B ${nm}\uc608\uc694 \u2014 \ubc18\uac00\uc6cc\uc694!`, '\uc5ec\uae30\uae4c\uc9c0 \uc624\uc168\ub124\uc694, \ud658\uc601\ud574\uc694! \uD83D\uDC4B', '\uc624, \ubc29\ubb38\uc790\ub2e4! \uD83D\uDC4B', '\uD83D\uDC4B \uc88b\uc740 \ud558\ub8e8 \ubcf4\ub0b4\uc694~']
                   : ['\uD83D\uDC4B Oh, hello there!', `\uD83D\uDC4B I'm ${nm} \u2014 nice to meet you!`, 'You made it \u2014 welcome! \uD83D\uDC4B', 'A visitor! \uD83D\uDC4B', '\uD83D\uDC4B Have a lovely day~'];
   return bank[(Math.random()*bank.length)|0]; }
@@ -4508,6 +4509,20 @@ function _welcomeBackLine(){ const ko=LANG==='ko', n=VISITOR.visits;   // a one-
 const _RES_EMOTES={ ko:['\uD83C\uDFB5 \ud765\ud765~','\uD83D\uDCA1 \uc624, \uc88b\uc740 \uc0dd\uac01','\u2615 \uc7a0\uae10 \uc26c\uc5b4\uac00\uc694','\u2728','\uD83C\uDF3F \ub0a0\uc528 \uc88b\ub2e4','\uD83D\uDE0C \ud3c9\ud654\ub86d\ub124','\uD83D\uDCCB \uc5b4\ub514 \ubcf4\uc790\u2026','\uD83D\uDD27 \uc774\uac74 \uc774\ub807\uac8c\u2026'],
                     en:['\uD83C\uDFB5 hum-hum~','\uD83D\uDCA1 oh, good idea','\u2615 a little break','\u2728','\uD83C\uDF3F nice weather','\uD83D\uDE0C so peaceful','\uD83D\uDCCB let me see\u2026','\uD83D\uDD27 like this\u2026'] };
 function _resIdleEmote(){ const b=_RES_EMOTES[LANG]||_RES_EMOTES.ko; return b[(Math.random()*b.length)|0]; }
+// 🕰️ the town keeps a daily rhythm: waking + morning greetings at dawn, a lively bustle by day, a fond hush at dusk, quiet stars at night (folds into idle chatter + a morning stretch)
+function _partOfDay(){ const n=(typeof SKY_PHASES!=='undefined'&&SKY_PHASES[skyPhaseIdx])?SKY_PHASES[skyPhaseIdx].name:'day'; return n==='dawn'?'morn':n==='dusk'?'eve':n==='night'?'night':'day'; }
+const _RES_TOD={
+  morn:{ ko:['좋은 아침이에요! ☀️','새 하루가 밝았네요.','아침 공기가 상쾌해요.','오늘도 잘 부탁해요!','기지개 한 번 켜고 시작해요.'], en:['Good morning! ☀️','A new day begins.','The morning air is crisp.','Here we go, another day!','A good stretch to start the day.'] },
+  day:{ ko:['한낮 볕이 참 좋네요.','오늘도 마을이 북적여요.','점심때가 다 됐나 봐요.','거리에 활기가 도네요.','일하기 딱 좋은 날이에요.'], en:['Lovely midday sun.','The town is bustling today.','Must be nearly lunchtime.','The streets feel lively.','A fine day to get things done.'] },
+  eve:{ ko:['노을이 곱게 지네요. 🌆','하루가 저물어가요.','저녁 바람이 선선해요.','이 시간이 제일 예뻐요.','슬슬 하루를 갈무리해요.'], en:['The sunset is lovely. 🌆','The day is winding down.','A cool evening breeze.','This hour is the prettiest.','Time to wrap up the day.'] },
+  night:{ ko:['별이 잘 보이는 밤이에요. 🌙','밤이 참 고요하네요.','불빛이 하나둘 켜져요.','오늘 하루도 수고했어요.','밤공기가 좋네요.'], en:['A good night for stars. 🌙','The night is so quiet.','Lights flicker on, one by one.','A day well spent.','The night air is nice.'] },
+};
+function _resTodLine(){ const b=_RES_TOD[_partOfDay()]; const a=b&&(b[LANG]||b.ko); return (a&&a.length)?a[(Math.random()*a.length)|0]:_resIdleEmote(); }
+function _resTodGreet(){ const p=_partOfDay(), ko=LANG==='ko';
+  if(p==='morn') return ko?'좋은 아침이에요! ☀️':'Good morning! ☀️';
+  if(p==='eve')  return ko?'좋은 저녁이에요 🌆':'Good evening 🌆';
+  if(p==='night')return ko?'별 밤이네요, 어서 와요 🌙':'A starry night — welcome 🌙';
+  return null; }
 // 🛋️ contented, self-aware "this town is a comfortable home" murmurs while resting — the residents know they're built from data, yet this place feels like a kind one to be
 const _RES_COMFORT={ ko:['여기 앉아 있으면 마음이 놓여요.','이 마을, 우리한테는 참 편한 곳이에요.','가끔은 제가 코드라는 것도 잊고 그냥 쉬어요.','이 도시가 집처럼 느껴져요.','천천히 흐르는 시간이 좋아요.','데이터로 지어졌지만, 이 평온함은 진짜 같아요.','여기선 잠시 아무것도 안 해도 괜찮아요.'],
                      en:["Sitting here, I feel at ease.","This town is a kind place for us to be.","Sometimes I forget I'm just code, and simply rest.","This city feels like home.","I like how slowly the time flows here.","Built from data, sure — but this calm feels real.","Here it's okay to do nothing for a while."] };
@@ -4752,10 +4767,11 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
               if(!L._pNear && tt>=(L._favSayCd||0)){ L._favSayCd=tt+34+Math.random()*30; L.bub.say(_resFavLine(L), _hex(L.res.color)); L._gt=1.8; } }
             else L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } } }
     if(moving){ if(L._gt>0) L._gt-=dt; if(g._armL) g._armL.rotation.z*=0.85; if(g._armR) g._armR.rotation.z*=0.85; L.bub.update(dt); continue; }
-    // a quiet solo flourish now and then — only when idle, alone, not mid-gesture and the visitor isn't right here (greeting takes precedence). Ambient town life, low frequency.
-    if(!_festival && !inConv && !chatBound && !L._pNear && L._gt<=0 && tt>=L._emoteCd){
+    // a quiet solo flourish now and then — only when idle, alone, not mid-gesture and the visitor isn't right here (greeting takes precedence). Ambient town life, with a daily rhythm.
+    if(!_festival && !inConv && !chatBound && !L._pNear && L._gt<=0 && (L._stretch||0)<=0 && tt>=L._emoteCd){
       L._emoteCd=tt+RES_EMOTE_CD_MIN+Math.random()*(RES_EMOTE_CD_MAX-RES_EMOTE_CD_MIN);
-      if(Math.random()<0.7){ L.bub.say(_resIdleEmote(), _hex(L.res.color)); L._gt=1.6; } }
+      if(_partOfDay()==='morn' && tt>=(L._stretchCd||0)){ L._stretchCd=tt+120+Math.random()*90; L._stretch=1.4; L.bub.say(_resTodLine(), _hex(L.res.color)); }   // 🌅 a slow morning stretch + a good-morning word (the town wakes up)
+      else if(Math.random()<0.7){ L.bub.say(Math.random()<0.55?_resTodLine():_resIdleEmote(), _hex(L.res.color)); L._gt=1.6; } }   // about half the idle chatter reflects the time of day
     let tgt;
     if(_festival && !chatBound){ tgt=Math.atan2(_festival.center.x-g.position.x, _festival.center.z-g.position.z); }   // face the bonfire
     else if(inConv && C.phase==='talk'){ const pd=Math.hypot(player.position.x-g.position.x, player.position.z-g.position.z); const f=(pd<6.5)?player.position:((L===speaker)?C.center:speaker.group.position); tgt=Math.atan2(f.x-g.position.x, f.z-g.position.z); }   // listeners turn to whoever's speaking; the whole circle turns to the visitor who steps right up
@@ -4763,7 +4779,11 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
     g.rotation.y=lerpA(g.rotation.y,tgt,0.06);
     if(g._legL){ g._legL.rotation.x*=0.8; g._legR.rotation.x*=0.8; }
     if(g._head) g._head.position.y=2.0+Math.sin(tt*1.7+L._ph)*0.03; L.bub.update(dt);
-    if(g._armL){ if(L._gt>0){ L._gt-=dt; g._armL.rotation.z=1.0-Math.sin(tt*7)*0.3; } else g._armL.rotation.z+=(0-g._armL.rotation.z)*0.1; } }
+    if(g._armL){
+      if(L._stretch>0){ L._stretch-=dt; const k=Math.sin(Math.max(0,Math.min(1,(1.4-L._stretch)/1.4))*Math.PI), up=-2.2*k;   // 🌅 a slow morning stretch — both arms rise, then settle back
+        g._armL.rotation.x=up; g._armR.rotation.x=up; g._armL.rotation.z=0.18*k; g._armR.rotation.z=-0.18*k; }
+      else if(L._gt>0){ L._gt-=dt; g._armL.rotation.z=1.0-Math.sin(tt*7)*0.3; g._armL.rotation.x*=0.85; g._armR.rotation.x*=0.85; }
+      else { g._armL.rotation.z+=(0-g._armL.rotation.z)*0.1; g._armL.rotation.x*=0.85; g._armR.rotation.x*=0.85; } } }
   _festivalTick(tt); _ambientTick(); }
 
 // ---- optional worker turns (npcAmbientTurn / npcPlayerChat) — any failure returns null → scripted fallback ----
@@ -6926,6 +6946,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__favs=()=>RESIDENTS_LIVE.map(L=>{ const f=_resFavSpot(L); return { id:L.res.id, spot:f?[f.x,f.z]:null, place:f?(LANG==='ko'?f.ko:f.en):null, atFav:f?+Math.hypot(L.group.position.x-f.x,L.group.position.z-f.z).toFixed(1):null }; });   // 🏞️ each resident's cherished haunt
   window.__goFav=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; const f=_resFavSpot(L); if(!f) return { ok:false };   // send a resident to their haunt now (bypasses the cooldown)
     if(L._rest) _seatRelease(L); L._rt={x:f.x,z:f.z}; L._toFav=true; L._favCd=0; L._favSayCd=0; return { ok:true, id:L.res.id, spot:[f.x,f.z], place:LANG==='ko'?f.ko:f.en, line:_resFavLine(L) }; };
+  window.__partOfDay=()=>({ part:_partOfDay(), phase:(typeof SKY_PHASES!=='undefined'&&SKY_PHASES[skyPhaseIdx])?SKY_PHASES[skyPhaseIdx].name:null, isNight, sampleLine:_resTodLine(), greet:_resTodGreet() });   // 🕰️ current daily-rhythm slice + a sample time-flavored line
+  window.__stretch=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0]; if(!L) return { ok:false };   // force a morning-style stretch + a good-morning word
+    if(L._rest) _seatRelease(L); L._rt=null; L._stretch=1.4; L._stretchCd=clock.elapsedTime+120; const line=_resTodLine(); L.bub.say(line, _hex(L.res.color)); return { ok:true, id:L.res.id, part:_partOfDay(), line }; };
   window.__greet=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
     L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN);
