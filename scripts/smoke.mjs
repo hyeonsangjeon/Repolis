@@ -330,7 +330,7 @@ ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\)/.test(npcBlock),
 ok(/function _resSit\(/.test(npcBlock) && /function _resStand\(/.test(npcBlock), 'residents have sit + stand pose helpers for resting on a bench');
 ok(/function _freeSeat\(/.test(npcBlock) && /for\(const s of SEATS\)/.test(npcBlock), 'residents pick the nearest free SEAT within seatSeek to rest at');
 ok(/restChance:/.test(npcBlock) && /seatSeek:/.test(npcBlock), 'RES_MOVE carries rest tuning (restChance + seatSeek)');
-ok(/if\(inConv\|\|chatBound\)\{ _resStand\(L\); _seatRelease\(L\)/.test(npcBlock), 'a resting resident stands + frees the bench the moment a chat/conversation claims them');
+ok(/if\(inConv\|\|chatBound\|\|_festival\)\{ _resStand\(L\); _seatRelease\(L\)/.test(npcBlock), 'a resting resident stands + frees the bench the moment a chat/conversation/festival claims them');
 // 12b-5 — glowing roadside flowers: colourful by day, a soft shimmer after dark (day/night-driven, not always-on)
 ok(/function makeGlowFlowers\(/.test(HTML) && /const GLOW_FLORA=\[\]/.test(HTML), 'glowing-flower builder + registry exist');
 ok(/function updateGlowFlora\(t\)\{[\s\S]*?if\(!isNight\)/.test(HTML), 'glow flora are driven by day/night (dark → glow, day → off)');
@@ -421,7 +421,7 @@ ok(/if\(pnear && !L\._pNear && tt>=L\._greetCd\)\{ L\.bub\.say\(_resGreetLine\(L
 ok(/if\(!inConv && !chatBound && !hidden\)\{/.test(HTML), 'greeting is suppressed during a conversation / bound chat / hidden tab (never clobbers ambient bubbles)');
 ok(/if\(chatBound\) L\.bub\.clear\(\);/.test(HTML), 'a resident the visitor is chatting with hides its floating greeting/emote bubble (no residual bubble lingers into the chat)');
 ok(/function _resIdleEmote\(\)\{/.test(HTML) && /if\(Math\.random\(\)<0\.7\)\{ L\.bub\.say\(_resIdleEmote\(\), _hex\(L\.res\.color\)\); L\._gt=1\.6;/.test(HTML), 'low-frequency solo idle emote adds ambient town life');
-ok(/if\(!inConv && !chatBound && !L\._pNear && L\._gt<=0 && tt>=L\._emoteCd\)\{/.test(HTML), 'idle emote only fires when idle, alone, visitor not right here (greeting has precedence) and not mid-gesture');
+ok(/if\(!_festival && !inConv && !chatBound && !L\._pNear && L\._gt<=0 && tt>=L\._emoteCd\)\{/.test(HTML), 'idle emote only fires when idle, alone, visitor not right here, no festival on (greeting has precedence) and not mid-gesture');
 ok(/const RES_EMOTE_CD_MIN=\(LOW_END\?46:30\), RES_EMOTE_CD_MAX=\(LOW_END\?90:64\);/.test(HTML), 'LOW_END keeps the greeting warmth but spaces solo emotes further (saving stays on the AI side)');
 ok(/window\.__greet=\(id\)=>/.test(HTML) && /greetDist:RES_GREET_DIST, greetCd:\[RES_GREET_CD_MIN,RES_GREET_CD_MAX\]/.test(HTML), '?dbg __greet hook + __npcState greet/emote config present');
 
@@ -529,6 +529,16 @@ ok(/function _residentLeave\(L\)\{ const wrap=activeNpc; if\(!wrap\|\|!wrap\.gro
 ok(/if\(ms\.length>2 && \(wrap\.gi\|\|0\)>=3 && activeGroupMembers && activeGroupMembers\.length>2 && Math\.random\(\)<0\.22\)/.test(npcBlock) && /_residentLeave\(leaver\)/.test(npcBlock), 'after a few turns in a 3+ circle, a non-primary resident may excuse themselves and wander off');
 ok(/L\._gt=2\.6; L\._rt=null; L\._rp=clock\.elapsedTime;/.test(npcBlock), 'a leaving resident waves, then (no longer chatBound) resumes wandering on their own');
 ok(/window\.__farewell=\(q\)=>/.test(HTML) && /window\.__byeMatch=\(q\)=>/.test(HTML) && /window\.__leaveGroup=\(id\)=>/.test(HTML), '?dbg __farewell/__byeMatch/__leaveGroup drive + introspect the goodbye and member-leave flows');
+
+group('plaza bonfire festival — once a session the whole town gathers to celebrate');
+ok(/let _festival=null, ?_festDone=false, ?_festNextAt=\(LOW_END\?150:80\)\+Math\.random\(\)\*80/.test(npcBlock), 'the festival is a once-a-session event, armed for a while into the visit (later on LOW_END)');
+ok(/function startFestival\(repo\)\{ if\(_festival\) return false; if\(_ambConv\) _endAmb\('festival'\)/.test(npcBlock) && /fireworksShow\(LOW_END\?4:6\)/.test(npcBlock) && /_festDone=true/.test(npcBlock), 'startFestival ends any ambient chat, kicks off fireworks + a toast, and marks the session done (never repeats on its own)');
+ok(/function _festivalTick\(tt\)\{/.test(npcBlock) && /launchFirework\(F\.center\.x\+Math\.cos\(a\)\*r, ?F\.center\.z\+Math\.sin\(a\)\*r/.test(npcBlock) && /if\(_festDone \|\| document\.hidden \|\| _resChatActive\(\) \|\| !NPC_CFG\.motionEnabled \|\| RESIDENTS_LIVE\.length<2 \|\| tt<_festNextAt\) return;/.test(npcBlock), '_festivalTick blooms fireworks over the plaza and only auto-starts once (not hidden, not mid-chat, motion on)');
+ok(/if\(_festival\) return;\s*\/\/ no ambient chatter during the festival/.test(npcBlock), 'ambient chatter is suspended during the festival — everyone is at the bonfire');
+ok(/if\(_festival && !chatBound && !hidden && NPC_CFG\.motionEnabled\)\{[\s\S]*?_resWalk\(L,fx,fz,RES_MOVE\.meetSpd,dt\)/.test(npcBlock) && /if\(_festival\.phase==='celebrate' && !L\._pNear\)\{[\s\S]*?_festLine\(L\.res\)/.test(npcBlock), 'every free resident walks to a ring slot around the fire, then (in the celebrate phase) waves + cheers');
+ok(/if\(inConv\|\|chatBound\|\|_festival\)\{ _resStand\(L\); _seatRelease\(L\); \}/.test(npcBlock) && /if\(_festival && !chatBound\)\{ tgt=Math\.atan2\(_festival\.center\.x-g\.position\.x, ?_festival\.center\.z-g\.position\.z\); \}/.test(npcBlock), 'a festival stands resting residents up and turns everyone to face the bonfire');
+ok(/function _endFestival\(\)\{ if\(!_festival\) return; _festival=null;/.test(npcBlock) && /_festivalTick\(tt\); ?_ambientTick\(\);/.test(npcBlock), 'the festival ends cleanly (residents drift home) and is ticked every frame from updateResidents');
+ok(/window\.__festival=\(repo\)=>/.test(HTML) && /window\.__festState=\(\)=>/.test(HTML) && /window\.__endFestival=\(\)=>/.test(HTML), '?dbg __festival/__festState/__endFestival force + introspect + end the celebration');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

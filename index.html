@@ -4549,6 +4549,7 @@ function _emitMetric(name,meta){ try{ if(typeof track==='function') track(name, 
 
 // ---- turn-by-turn ambient engine (1 gathering max; a nearby cluster forms a CIRCLE and everyone takes turns; scripted default; hidden-tab + budget aware) ----
 let _ambConv=null, _ambNextAt=9, _guestCdUntil=0, _ambInviteCd=0; const _pairCd=new Map(), _resCd=new Map(); const _npcTranscript=[];
+let _festival=null, _festDone=false, _festNextAt=(LOW_END?150:80)+Math.random()*80;   // 🎆 once-a-session plaza bonfire festival: the whole town gathers, fireworks bloom, then everyone drifts home
 function _resChatActive(){ try{ return !!(activeNpc&&activeNpc.resident&&chatEl&&!chatEl.classList.contains('hidden')); }catch(e){ return false; } }
 function _pairKey(a,b){ return [a.res.id,b.res.id].sort().join('|'); }
 function _cap180(s){ return String(s||'').replace(/\s+/g,' ').trim().slice(0,180); }
@@ -4593,12 +4594,39 @@ function _advanceAmb(){ const C=_ambConv; if(!C||C.pending) return; const now=cl
   if(useAI){ C.pending=true; C.nextAt=now+9.5; _aiAmbientTurn(C,speaker,listener).then(line=>{ C.pending=false; if(line) done(line,true,false); else done(_scriptLine(speaker),false,true); }).catch(()=>{ C.pending=false; done(_scriptLine(speaker),false,true); }); }
   else done(_scriptLine(speaker),false,false); }
 function _ambientTick(){ const now=clock.elapsedTime;
+  if(_festival) return;                                                                         // no ambient chatter during the festival — everyone's at the bonfire
   if(document.hidden){ if(_ambConv) _endAmb('hidden'); return; }
   if(_ambConv){ const C=_ambConv;
     if(C.phase==='approach'){ if(C.members.every(m=>Math.hypot(m.group.position.x-C.center.x,m.group.position.z-C.center.z)<=RES_MOVE.talkDist+0.4) || now>=C.approachUntil){ C.phase='talk'; C.nextAt=now+0.5; } return; }
     if(now>=C.nextAt) _advanceAmb(); return; }
   if(!_ambientAllowed() || now<_guestCdUntil) return;
   if(now>=_ambNextAt) _startAmb(); }
+// ---- 🎆 plaza bonfire festival: once a session the whole town drops what it's doing, gathers round the campfire, fireworks bloom overhead, everyone cheers, then they drift back to their districts ----
+function _festLine(res){ const ko=LANG==='ko', b= ko?['다 같이 모였네요! 🎉','오늘 밤 최고예요!','우리 도시에 건배! 🥂','불꽃 예쁘다…','같이 있으니 참 좋네요!','또 이런 밤 있었으면!']
+                                    :['We\u2019re all here! 🎉','What a night!','Cheers to our city! 🥂','The fireworks are lovely…','Good to be together!','Let\u2019s do this again!'];
+  return b[(Math.random()*b.length)|0]; }
+function _freshRepoName(){ try{ const f=REPOS.filter(r=>r&&r._fresh); if(f.length){ const r=f[(Math.random()*f.length)|0]; return r.label||r.repo; } }catch(e){} return null; }
+function startFestival(repo){ if(_festival) return false; if(_ambConv) _endAmb('festival');
+  const c=(typeof HEARTH!=='undefined'&&HEARTH)?{x:HEARTH.x,z:HEARTH.z}:{x:0,z:8}, now=clock.elapsedTime, nm=repo||_freshRepoName();
+  _festival={ phase:'gather', center:c, celebrateAt:now+5, endAt:now+(LOW_END?18:23), nextFw:0, repo:nm };
+  for(const L of RESIDENTS_LIVE){ L._festSlot=null; L._festSay=0; if(L._rest) _seatRelease(L); }
+  fireworksShow(LOW_END?4:6);
+  const ko=LANG==='ko';
+  showWave(ko?(nm?`🎆 광장에 다 같이 모였어요 — ${nm} 축하해요!`:'🎆 오늘 밤, 온 마을이 광장에 모였어요!'):(nm?`🎆 The town is gathering in the plaza — celebrating ${nm}!`:'🎆 Tonight the whole town gathers in the plaza!'), 4400);
+  _festDone=true; try{ _emitMetric('npc_festival',{repo:nm||null,size:RESIDENTS_LIVE.length}); }catch(e){}
+  return true; }
+function _endFestival(){ if(!_festival) return; _festival=null; const now=clock.elapsedTime;
+  for(const L of RESIDENTS_LIVE){ L._festSlot=null; L._rp=now+1+Math.random()*3; _resCd.set(L.res.id, now+4+Math.random()*5); } _ambNextAt=now+7+Math.random()*9; }
+function _festivalTick(tt){
+  if(_festival){ const F=_festival;
+    if(document.hidden){ _endFestival(); return; }
+    if(F.phase==='gather' && tt>=F.celebrateAt) F.phase='celebrate';
+    if(tt>=F.endAt){ _endFestival(); return; }
+    if(tt>=F.nextFw && (F.phase==='gather'||F.phase==='celebrate')){ F.nextFw=tt+(LOW_END?1.1:0.55)+Math.random()*0.7;
+      const a=Math.random()*Math.PI*2, r=Math.random()*14; launchFirework(F.center.x+Math.cos(a)*r, F.center.z+Math.sin(a)*r, FEST_COLS[(Math.random()*FEST_COLS.length)|0]); }
+    return; }
+  if(_festDone || document.hidden || _resChatActive() || !NPC_CFG.motionEnabled || RESIDENTS_LIVE.length<2 || tt<_festNextAt) return;   // once a session, a while in, when the visitor isn't mid-chat
+  startFestival(); }
 // ---- a chatting circle notices the lingering visitor and waves them over (scripted, budget-free — the reverse of naming a resident) ----
 function _inviteHailLine(res){ const ko=LANG==='ko', b= ko?['이리 와서 같이 이야기해요!','거기 있었네요, 이리 껴요!','우리랑 같이 얘기할래요?','반가워요, 이리 와요!','같이 나눠요, 어서 와요!']
                                               :['Come join us!','Hey, you — hop in!','Want to talk with us?','Good to see you — come over!','Pull up a spot, join in!'];
@@ -4675,7 +4703,7 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
     } else { L._pNear=false; if(chatBound) L.bub.clear(); }   // while the visitor is chatting with THIS resident, keep its floating greeting/emote bubble hidden — the dialogue lives in the chat panel (a just-fired greeting could otherwise linger for a few seconds into the chat)
     // resting on a bench: hold the seated pose until the timer ends; a chat/conversation makes them stand and yield the seat
     if(L._rest){
-      if(inConv||chatBound){ _resStand(L); _seatRelease(L); }
+      if(inConv||chatBound||_festival){ _resStand(L); _seatRelease(L); }
       else if(L._rest.phase==='sit'){
         if(!hidden && tt>=L._rest.until){ _resStand(L); _seatRelease(L); L._rp=tt+1.5+Math.random()*3; }
         else { g.position.y=SIT_POSE.y; if(g._legL){ g._legL.rotation.x=SIT_POSE.leg; g._legR.rotation.x=SIT_POSE.leg; } g.rotation.y=lerpA(g.rotation.y,L._rest.seat.rot,0.1);
@@ -4686,9 +4714,15 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
     }
     if(chatBound && L._joinWalk && !hidden && NPC_CFG.motionEnabled){   // an invited resident steps into the circle, then settles and faces the visitor (chatBound normally freezes them in place)
       if(_resWalk(L,L._joinWalk.x,L._joinWalk.z,RES_MOVE.meetSpd,dt)) L._joinWalk=null; else moving=true; }
-    if(inConv && C.phase==='approach' && !hidden && NPC_CFG.motionEnabled){
+    if(_festival && !chatBound && !hidden && NPC_CFG.motionEnabled){   // 🎆 the whole town converges on the bonfire, then cheers around it
+      if(L._festSlot==null) L._festSlot={ a:(L._ph||Math.random()*6.28), r:5.2+Math.random()*3.6 };   // a stable spot on the ring around the fire
+      const fx=_festival.center.x+Math.cos(L._festSlot.a)*L._festSlot.r, fz=_festival.center.z+Math.sin(L._festSlot.a)*L._festSlot.r;
+      if(_resWalk(L,fx,fz,RES_MOVE.meetSpd,dt)){ if(_festival.phase==='celebrate' && !L._pNear){ if(L._gt<=0 && Math.random()<0.05) L._gt=1.8;   // arrived → wave + an occasional cheer
+        if(tt>=(L._festSay||0)){ L._festSay=tt+3.5+Math.random()*4.5; L.bub.say(_festLine(L.res), _hex(L.res.color)); L._gt=1.6; } } } else moving=true;
+    }
+    else if(inConv && C.phase==='approach' && !hidden && NPC_CFG.motionEnabled){
       if(Math.hypot(g.position.x-C.center.x,g.position.z-C.center.z)>RES_MOVE.talkDist){ _resWalk(L,C.center.x,C.center.z,RES_MOVE.meetSpd,dt); moving=true; }   // everyone converges on the shared circle centre, forming a ring (never piles onto one partner)
-    } else if(!inConv && !chatBound && !hidden && NPC_CFG.motionEnabled){   // wander is NOT gated on LOW_END — low-end just moves slower (RES_MOVE.wanderSpd); only a hidden tab / chat / conversation stops it
+    } else if(!_festival && !inConv && !chatBound && !hidden && NPC_CFG.motionEnabled){   // wander is NOT gated on LOW_END — low-end just moves slower (RES_MOVE.wanderSpd); only a hidden tab / chat / conversation / festival stops it
       if(L._rest && L._rest.phase==='goto'){   // strolling over to the chosen bench, then sit
         if(_resWalk(L,L._rest.seat.x,L._rest.seat.z,L._wspd,dt)){ L._rest.phase='sit'; L._rest.until=tt+RES_MOVE.restMin+Math.random()*(RES_MOVE.restMax-RES_MOVE.restMin); _resSit(L,L._rest.seat); L.bub.update(dt); continue; } else moving=true;
       } else {
@@ -4697,17 +4731,18 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
         if(L._rt){ if(_resWalk(L,L._rt.x,L._rt.z,L._wspd,dt)){ L._rt=null; L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } } }
     if(moving){ if(L._gt>0) L._gt-=dt; if(g._armL) g._armL.rotation.z*=0.85; if(g._armR) g._armR.rotation.z*=0.85; L.bub.update(dt); continue; }
     // a quiet solo flourish now and then — only when idle, alone, not mid-gesture and the visitor isn't right here (greeting takes precedence). Ambient town life, low frequency.
-    if(!inConv && !chatBound && !L._pNear && L._gt<=0 && tt>=L._emoteCd){
+    if(!_festival && !inConv && !chatBound && !L._pNear && L._gt<=0 && tt>=L._emoteCd){
       L._emoteCd=tt+RES_EMOTE_CD_MIN+Math.random()*(RES_EMOTE_CD_MAX-RES_EMOTE_CD_MIN);
       if(Math.random()<0.7){ L.bub.say(_resIdleEmote(), _hex(L.res.color)); L._gt=1.6; } }
     let tgt;
-    if(inConv && C.phase==='talk'){ const pd=Math.hypot(player.position.x-g.position.x, player.position.z-g.position.z); const f=(pd<6.5)?player.position:((L===speaker)?C.center:speaker.group.position); tgt=Math.atan2(f.x-g.position.x, f.z-g.position.z); }   // listeners turn to whoever's speaking; the whole circle turns to the visitor who steps right up
+    if(_festival && !chatBound){ tgt=Math.atan2(_festival.center.x-g.position.x, _festival.center.z-g.position.z); }   // face the bonfire
+    else if(inConv && C.phase==='talk'){ const pd=Math.hypot(player.position.x-g.position.x, player.position.z-g.position.z); const f=(pd<6.5)?player.position:((L===speaker)?C.center:speaker.group.position); tgt=Math.atan2(f.x-g.position.x, f.z-g.position.z); }   // listeners turn to whoever's speaking; the whole circle turns to the visitor who steps right up
     else { const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz); tgt=d<14?Math.atan2(dx,dz):L._baseRot+Math.sin(tt*0.4+L._ph)*0.2; }
     g.rotation.y=lerpA(g.rotation.y,tgt,0.06);
     if(g._legL){ g._legL.rotation.x*=0.8; g._legR.rotation.x*=0.8; }
     if(g._head) g._head.position.y=2.0+Math.sin(tt*1.7+L._ph)*0.03; L.bub.update(dt);
     if(g._armL){ if(L._gt>0){ L._gt-=dt; g._armL.rotation.z=1.0-Math.sin(tt*7)*0.3; } else g._armL.rotation.z+=(0-g._armL.rotation.z)*0.1; } }
-  _ambientTick(); }
+  _festivalTick(tt); _ambientTick(); }
 
 // ---- optional worker turns (npcAmbientTurn / npcPlayerChat) — any failure returns null → scripted fallback ----
 async function _npcFetch(payload){ const url=NPC_CFG.worker; if(!url) return null;
@@ -6916,6 +6951,11 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__npcSim=(o)=>{ o=o||{}; ['remainingUsd','spentUsd','turnsToday','dailyTurnMax','dayCapUsd'].forEach(k=>{ if(typeof o[k]==='number') _npcBudget[k]=o[k]; });
     if(typeof o.blocked==='boolean') _npcBudget.blocked=o.blocked; if(typeof o.enabled==='boolean') _npcBudget.enabled=o.enabled; _npcBudget.source='sim'; return window.__npcBudget(); };
   window.__npcAmbTick=()=>{ if(_ambConv){ _ambConv.nextAt=0; _advanceAmb(); } else { _ambNextAt=0; _ambientTick(); } return { active:!!_ambConv, i:_ambConv?_ambConv.i:0 }; };
+  window.__festival=(repo)=>{ _festDone=false; const ok=startFestival(repo);   // 🎆 force the plaza bonfire festival now (optionally naming a repo to celebrate)
+    return { ok, phase:_festival?_festival.phase:null, center:_festival?[+_festival.center.x.toFixed(1),+_festival.center.z.toFixed(1)]:null, repo:_festival?_festival.repo:null }; };
+  window.__festState=()=>({ active:!!_festival, phase:_festival?_festival.phase:null, done:_festDone, nextAt:+_festNextAt.toFixed(0), now:+clock.elapsedTime.toFixed(0),
+    gathered:_festival?RESIDENTS_LIVE.filter(L=>Math.hypot(L.group.position.x-_festival.center.x,L.group.position.z-_festival.center.z)<12).length:0, total:RESIDENTS_LIVE.length, fireworks:(typeof FW!=='undefined'?FW.length:null) });
+  window.__endFestival=()=>{ _endFestival(); return { active:!!_festival }; };
   window.__npcTalk=async (id,q)=>{ const L=RESIDENTS_LIVE.find(x=>x.res.id===id)||RESIDENTS_LIVE[0]; if(!L) return null; openChat(L._npc);
     const chrome={ active:activeNpc&&activeNpc.id, title:chatHeadTtl?chatHeadTtl.textContent:null, modeHidden:modeSel.style.display==='none', ph:chatText.placeholder, greeted:(chatLog.textContent||'').slice(0,60) };
     if(q){ await residentSay(q); const msgs=chatLog.querySelectorAll('.msg.bot'); chrome.reply=(msgs[msgs.length-1]||{}).textContent||null; }

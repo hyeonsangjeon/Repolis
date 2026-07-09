@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.65.0] — 2026-07-09
+
+### 🎆 Plaza bonfire festival — once a session, the whole town gathers to celebrate
+- **What's new.** A little magic now happens on its own: **once per visit**, the whole town **drops what it's doing and gathers around the campfire** for a brief festival — **fireworks bloom overhead**, everyone rings the fire and cheers (*"다 같이 모였네요! 🎉"*, *"우리 도시에 건배! 🥂"*), and a toast announces it. It's the crescendo of the resident social layer: the city of repos throwing itself a party.
+- **On-brand — it celebrates a repo.** If the data has a **freshly‑released repo** (pushed a release in the last 60 days), the festival is thrown *for it* — the banner reads *"광장에 다 같이 모였어요 — {repo} 축하해요!"* — so the party is tied to the actual city, not just decoration.
+- **Choreography.** `gather` (everyone walks to a ring around the bonfire) → `celebrate` (~18–23s of waving, cheering, and fireworks over the plaza) → the festival ends and everyone **drifts back to their districts**. Residents leave benches, turn to face the fire, and ambient chit‑chat is suspended for the duration. A resident you're **actively chatting with is never dragged off** — they stay in your conversation.
+- **Well‑behaved.** Purely scripted, **zero AI / zero budget**. Auto‑fires **only once per session**, a while into the visit, and **never** while you're mid‑chat, on a hidden tab, or with motion disabled; a hidden tab ends it early. Fireworks reuse the existing burst system (lighter cadence on LOW_END).
+- **Preserved.** Every earlier layer (graceful goodbyes, returning‑visitor warmth, campfire 쉼터, repo reactions, invite‑a‑resident, the circle waving you over, group chat), budget/env gating, hidden‑tab stop. Client‑only — no worker change.
+- **Debug.** `?dbg` adds `window.__festival(repo?)` (throw one now), `window.__festState()` (phase / how many have gathered / live fireworks), and `window.__endFestival()`.
+
 ## [1.64.0] — 2026-07-09
 
 ### 👋 Graceful goodbyes — the circle waves you off, and no gathering is a trap
