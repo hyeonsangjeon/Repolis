@@ -583,10 +583,20 @@ ok(/if\(_isFriend\(L,P\)\) _startStroll\(P,L\);/.test(npcBlock), 'after the bond
 ok(/if\(L\._stroll\)\{ const S=L\._stroll, W=S\.with;/.test(npcBlock), 'the wander loop handles an active stroll before ordinary roaming');
 ok(/S\.role==='lead'\)\{ if\(!S\.wp \|\| Math\.hypot[\s\S]*?S\.wp=_resRoamTarget\(L\)/.test(npcBlock), 'the lead friend picks gentle waypoints; the follower keeps pace beside them');
 ok(/tx=W\.group\.position\.x - Math\.sin\(th\)\*0\.7 \+ Math\.cos\(th\)\*1\.7\*sd;/.test(npcBlock), 'the follower walks a step beside + just behind the lead (side-by-side, no pile-up)');
-ok(/tt>=S\.until \|\| !W \|\| !W\._stroll \|\| W\._stroll\.with!==L \|\| W\._rest \|\| W\._joinWalk/.test(npcBlock), 'a stroll ends on its timer or the instant the partner is pulled away (desync-safe)');
+ok(/const partnerGone = !W \|\| !W\._stroll \|\| W\._stroll\.with!==L \|\| W\._rest \|\| W\._joinWalk;/.test(npcBlock) && /if\(partnerGone \|\| \(S\.role==='lead' && tt>=S\.until\)\)/.test(npcBlock), 'the follower tracks the lead; the lead owns the timer, and a stroll ends the instant a partner is pulled away (desync-safe)');
 ok(/if\(L\._stroll && \(inConv\|\|chatBound\|\|_festival\|\|L\._rest\|\|L\._pNear\)\) _endStroll\(L,tt\);/.test(npcBlock), 'a stroll yields the moment the visitor, a gathering, the festival, or a rest claims either friend');
 ok(/const NPC_STROLL_CD=\(LOW_END\?72:54\)/.test(npcBlock) && /_strollGlobalCd=tt\+dur\+NPC_STROLL_CD/.test(npcBlock), 'strolls are globally cooldown-gated so they stay an occasional, gentle beat');
 ok(/window\.__stroll=\(id\)=>/.test(HTML), '?dbg __stroll starts a friend stroll on the spot');
+
+group('two friends settle onto adjacent seats to sit and chat a while (co-rest)');
+ok(/function _coRestSeats\(L,W\)\{[\s\S]*?ab<1\.5\|\|ab>4\.6/.test(npcBlock), '_coRestSeats finds a free pair of adjacent seats (pavilion bench pair or campfire stumps)');
+ok(/function _startCoRest\(L,W,tt\)\{[\s\S]*?L\._restMate=W;[\s\S]*?W\._restMate=L;/.test(npcBlock), 'a co-rest seats both friends and links them as rest-mates');
+ok(/if\(S\.role==='lead' && !partnerGone && !L\._pNear && !W\._pNear && tt>=_coRestGlobalCd && Math\.random\(\)<0\.5\)\{[\s\S]*?_startCoRest\(L,W,tt\)/.test(npcBlock), 'when a stroll ends the lead may steer them both to sit together instead of parting');
+ok(/const mate=L\._restMate, mateSeated=mate&&mate\._rest&&mate\._rest\.phase==='sit'[\s\S]*?_resSitChatLine\(L,mate\)/.test(npcBlock), 'two friends seated side-by-side trade a little chat instead of the solo comfort murmur');
+ok(/function _resSitChatLine\(L,W\)\{[\s\S]*?function _coRestInviteLine/.test(npcBlock) || (/function _resSitChatLine\(L,W\)\{/.test(npcBlock) && /function _coRestInviteLine\(L,W\)\{/.test(npcBlock)), 'co-rest has an invite line + a seated friend-chat bank');
+ok(/function _seatRelease\(L\)\{[\s\S]*?L\._restMate=null;/.test(npcBlock), 'standing up clears the rest-mate link (no dangling pairing)');
+ok(/let _coRestGlobalCd=0;/.test(npcBlock) && /_coRestGlobalCd=tt\+NPC_STROLL_CD\*2/.test(npcBlock), 'co-rest is globally cooldown-gated so it stays an occasional beat');
+ok(/window\.__coRest=\(id\)=>/.test(HTML), '?dbg __coRest sits two friends down together on the spot');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

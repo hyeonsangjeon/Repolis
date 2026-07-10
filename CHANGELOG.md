@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.71.0] — 2026-07-10
+
+### 🪑 Two friends sit down together — a stroll that ends on a bench, side by side
+- **What's new.** A friend stroll (1.70.0) now sometimes ends not with goodbye but with the two friends **settling onto a pair of adjacent seats** — a pavilion bench pair or the campfire stumps — to **sit and chat a while** before parting. *"노아, 우리 저기 좀 앉을까요?"* → and there they sit, trading soft lines: *"이렇게 같이 앉아 있으니 좋다, 노아."*, *"오늘 하루는 어땠어요?"*, *"바람 참 좋네요, 그렇죠?"*
+- **How it feels.** Because the town's benches come in **facing pairs** (the 쉼터 pavilions) and its campfire is ringed with **stumps**, two friends who wander over naturally end up **facing each other or shoulder to shoulder at the fire**, swapping a few unhurried words — the most homely beat yet. If one's feeling wistful, the chat softens to match (*"이런 날은 옛날 생각이 나요."*).
+- **How it works.** When a lead's stroll timer ends, it may (cooldown-gated) call `_startCoRest`, which finds a free **adjacent seat pair** near the two (`_coRestSeats` — inter-seat 1.5–4.6, so pavilion pairs ~3.1 and campfire stumps ~3.8 qualify), seats both via the existing rest state-machine, and links them as `_restMate`s. While seated with a mate nearby, a resident trades `_resSitChatLine`s (naming the friend) on a shortened cadence instead of the solo comfort murmur. Purely scripted, **zero-AI / zero-budget**, client-only.
+- **Well-behaved.** Globally cooldown-gated (occasional). Inherits every seat guard: either friend is stood up the instant a chat, a gathering, or the festival claims them (`_seatRelease` now also clears the mate link), and it stops on a hidden tab. The stroll's follower now tracks the lead (the **lead owns the timer**), so the pair stays in sync through the hand-off to sitting.
+- **Preserved.** Every earlier layer (friend strolls, named bonds, moods + fellow-feeling, daily rhythm, cherished haunts, festival, campfire 쉼터, goodbyes, group chat), budget/env gating, hidden-tab stop. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__coRest(id)` (sit two friends down together on an adjacent seat pair now).
+
 ## [1.70.0] — 2026-07-10
 
 ### 🚶 Two friends amble off together — the town's bonds, now in motion
