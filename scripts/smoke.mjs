@@ -577,6 +577,17 @@ ok(/function _bondSeekTarget\(L\)\{[\s\S]*?_RES_BONDS\[L\.res\.id\]/.test(npcBlo
 ok(/if\(L\._toBond\)\{ L\._toBond=false;[\s\S]*?L\._noticeTryAt=0; L\._noticeCd=0;/.test(npcBlock), 'on arriving beside a friend, the warm hello is primed to fire promptly');
 ok(/window\.__bonds=\(\)=>/.test(HTML) && /window\.__goFriend=\(id\)=>/.test(HTML), '?dbg __bonds/__goFriend list friendships + send a resident to seek their friend');
 
+group('two friends amble off together for a short side-by-side stroll (bonds in motion)');
+ok(/function _startStroll\(lead,follow\)\{/.test(npcBlock) && /function _endStroll\(L,tt\)\{/.test(npcBlock) && /function _strollPartLine\(L,P\)\{/.test(npcBlock), 'a stroll has start/end helpers + a warm parting-line bank');
+ok(/if\(_isFriend\(L,P\)\) _startStroll\(P,L\);/.test(npcBlock), 'after the bond hello+reply, the two friends start a stroll together');
+ok(/if\(L\._stroll\)\{ const S=L\._stroll, W=S\.with;/.test(npcBlock), 'the wander loop handles an active stroll before ordinary roaming');
+ok(/S\.role==='lead'\)\{ if\(!S\.wp \|\| Math\.hypot[\s\S]*?S\.wp=_resRoamTarget\(L\)/.test(npcBlock), 'the lead friend picks gentle waypoints; the follower keeps pace beside them');
+ok(/tx=W\.group\.position\.x - Math\.sin\(th\)\*0\.7 \+ Math\.cos\(th\)\*1\.7\*sd;/.test(npcBlock), 'the follower walks a step beside + just behind the lead (side-by-side, no pile-up)');
+ok(/tt>=S\.until \|\| !W \|\| !W\._stroll \|\| W\._stroll\.with!==L \|\| W\._rest \|\| W\._joinWalk/.test(npcBlock), 'a stroll ends on its timer or the instant the partner is pulled away (desync-safe)');
+ok(/if\(L\._stroll && \(inConv\|\|chatBound\|\|_festival\|\|L\._rest\|\|L\._pNear\)\) _endStroll\(L,tt\);/.test(npcBlock), 'a stroll yields the moment the visitor, a gathering, the festival, or a rest claims either friend');
+ok(/const NPC_STROLL_CD=\(LOW_END\?72:54\)/.test(npcBlock) && /_strollGlobalCd=tt\+dur\+NPC_STROLL_CD/.test(npcBlock), 'strolls are globally cooldown-gated so they stay an occasional, gentle beat');
+ok(/window\.__stroll=\(id\)=>/.test(HTML), '?dbg __stroll starts a friend stroll on the spot');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
