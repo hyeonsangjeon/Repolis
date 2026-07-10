@@ -4572,6 +4572,22 @@ function _startStroll(lead,follow){ const tt=clock.elapsedTime; if(!lead||!follo
   lead._stroll={ with:follow, role:'lead', until:tt+dur, wp:null }; follow._stroll={ with:lead, role:'follow', until:tt+dur, side };
   _strollGlobalCd=tt+dur+NPC_STROLL_CD+Math.random()*30; _emitMetric('npc_stroll',{lead:lead.res.id,follow:follow.res.id}); return true; }
 function _endStroll(L,tt){ L._stroll=null; L._rt=null; L._rp=tt+RES_MOVE.pauseMin+Math.random()*3; L._noticeCd=tt+24; L._noticeTryAt=tt+8; }   // part warmly, then a beat before either greets again
+// 🪑 sometimes a stroll ends not with goodbye but with the two friends settling onto a pair of adjacent seats (a pavilion or the campfire) to sit and chat a while
+let _coRestGlobalCd=0;
+function _coRestSeats(L,W){ const mx=(L.group.position.x+W.group.position.x)/2, mz=(L.group.position.z+W.group.position.z)/2; let best=null,bd=Infinity;
+  for(let i=0;i<SEATS.length;i++){ const a=SEATS[i]; if(a._occ) continue; const da=Math.hypot(a.x-mx,a.z-mz); if(da>RES_MOVE.seatSeek*1.6) continue;
+    for(let j=0;j<SEATS.length;j++){ if(j===i) continue; const b=SEATS[j]; if(b._occ) continue; const ab=Math.hypot(a.x-b.x,a.z-b.z); if(ab<1.5||ab>4.6) continue;   // adjacent seats: pavilion pairs (~3.1) or campfire stumps (~3.8)
+      const score=da+Math.hypot(b.x-mx,b.z-mz); if(score<bd){ bd=score; best=[a,b]; } } }
+  return best; }
+function _coRestInviteLine(L,W){ const nm=(W.res[LANG]||W.res.ko).name, ko=LANG==='ko';
+  const b= ko?[`${nm}, 우리 저기 좀 앉을까요?`,`잠깐 앉아서 쉬어요, ${nm}.`,`${nm}, 다리도 쉴 겸 여기 앉아요.`,`저기 자리 있네요 — 앉아요, ${nm}.`]:[`${nm}, shall we sit over there?`,`Let\u2019s rest a moment, ${nm}.`,`${nm}, come, let\u2019s take a seat.`,`A free spot \u2014 let\u2019s sit, ${nm}.`]; return b[(Math.random()*b.length)|0]; }
+function _resSitChatLine(L,W){ const nm=(W.res[LANG]||W.res.ko).name, ko=LANG==='ko', m=_resMood(L);
+  if(m==='wistful' && Math.random()<0.5) return ko?`${nm}, 이런 날은 옛날 생각이 나요.`:`${nm}, days like this bring back memories.`;
+  const b= ko?[`이렇게 같이 앉아 있으니 좋다, ${nm}.`,`${nm}, 오늘 하루는 어땠어요?`,`바람 참 좋네요, 그렇죠 ${nm}?`,`가끔 이렇게 쉬는 것도 필요해요, ${nm}.`,`${nm}랑 있으면 마음이 편해요.`]:[`It\u2019s nice sitting here with you, ${nm}.`,`${nm}, how was your day?`,`Lovely breeze, isn\u2019t it, ${nm}?`,`We need a rest like this now and then, ${nm}.`,`I feel at ease around you, ${nm}.`]; return b[(Math.random()*b.length)|0]; }
+function _startCoRest(L,W,tt){ if(!L||!W||L._rest||W._rest||L._pNear||W._pNear) return false; const pair=_coRestSeats(L,W); if(!pair) return false;
+  pair[0]._occ=L; pair[1]._occ=W; L._stroll=null; W._stroll=null;
+  L._rest={ seat:pair[0], phase:'goto', until:0 }; L._restMate=W; W._rest={ seat:pair[1], phase:'goto', until:0 }; W._restMate=L;
+  _coRestGlobalCd=tt+NPC_STROLL_CD*2+Math.random()*40; _emitMetric('npc_corest',{a:L.res.id,b:W.res.id,hearth:!!pair[0]._hearth}); return true; }
 function _tryPeerNotice(L,tt,force){ if((_ambConv||_festival||document.hidden) && !force) return null;
   if(!force && (L._gt>0 || tt<(L._noticeCd||0) || tt<_peerGlobalCd)) return null;
   let P=null,pd=1e9; for(const O of RESIDENTS_LIVE){ if(O===L || !_peerIdle(O)) continue; if(!force && (O._gt>0 || tt<(O._noticeCd||0))) continue; if(_ambConv && _ambConv.members.indexOf(O)>=0) continue;
@@ -4776,7 +4792,7 @@ function _freeSeat(L){ let best=null,bd=RES_MOVE.seatSeek; const px=L.group.posi
 function _resSit(L,s){ const g=L.group; g.position.set(s.x,SIT_POSE.y,s.z); g.rotation.y=s.rot;
   if(g._legL){ g._legL.rotation.x=SIT_POSE.leg; g._legR.rotation.x=SIT_POSE.leg; } if(g._head) g._head.position.y=2.0; }
 function _resStand(L){ const g=L.group; g.position.y=0; if(g._legL){ g._legL.rotation.x=0; g._legR.rotation.x=0; } }
-function _seatRelease(L){ if(L._rest&&L._rest.seat) L._rest.seat._occ=null; L._rest=null; }
+function _seatRelease(L){ if(L._rest&&L._rest.seat) L._rest.seat._occ=null; L._rest=null; L._restMate=null; }
 function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.elapsedTime; const C=_ambConv, hidden=document.hidden;
   for(const L of RESIDENTS_LIVE){ const g=L.group; const mood=_resMood(L,tt);
     const inConv=C&&C.members.indexOf(L)>=0, speaker=C?C.members[C.si]:null;
@@ -4796,8 +4812,10 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
         if(!hidden && tt>=L._rest.until){ _resStand(L); _seatRelease(L); L._rp=tt+1.5+Math.random()*3; }
         else { g.position.y=SIT_POSE.y; if(g._legL){ g._legL.rotation.x=SIT_POSE.leg; g._legR.rotation.x=SIT_POSE.leg; } g.rotation.y=lerpA(g.rotation.y,L._rest.seat.rot,0.1);
           if(g._armL){ g._armL.rotation.z+=(0.12-g._armL.rotation.z)*0.1; g._armR.rotation.z+=(0.12-g._armR.rotation.z)*0.1; }
-          if(!L._pNear && L._gt<=0 && tt>=(L._comfortCd||0)){ L._comfortCd=tt+RES_COMFORT_CD_MIN+Math.random()*(RES_COMFORT_CD_MAX-RES_COMFORT_CD_MIN);   // a rare, contented at-home murmur while resting (warmer + more likely at the campfire)
-            if(Math.random() < ((L._rest.seat&&L._rest.seat._hearth)?0.85:0.5)){ L.bub.say(_resComfortLine(L), _hex(L.res.color)); L._gt=2.2; } }
+          if(!L._pNear && L._gt<=0 && tt>=(L._comfortCd||0)){ L._comfortCd=tt+RES_COMFORT_CD_MIN+Math.random()*(RES_COMFORT_CD_MAX-RES_COMFORT_CD_MIN);   // a rare, contented murmur while resting — or, with a seated friend beside you, a little chat
+            const mate=L._restMate, mateSeated=mate&&mate._rest&&mate._rest.phase==='sit'&&Math.hypot(mate.group.position.x-g.position.x,mate.group.position.z-g.position.z)<5.5;
+            if(mateSeated && Math.random()<0.85){ L.bub.say(_resSitChatLine(L,mate), _hex(L.res.color)); L._gt=2.2; L._comfortCd=tt+7+Math.random()*7; }   // shorter gap so two friends actually trade a few lines
+            else if(Math.random() < ((L._rest.seat&&L._rest.seat._hearth)?0.85:0.5)){ L.bub.say(_resComfortLine(L), _hex(L.res.color)); L._gt=2.2; } }
           L.bub.update(dt); continue; } }   // stay seated
     }
     if(chatBound && L._joinWalk && !hidden && NPC_CFG.motionEnabled){   // an invited resident steps into the circle, then settles and faces the visitor (chatBound normally freezes them in place)
@@ -4812,8 +4830,12 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
       if(Math.hypot(g.position.x-C.center.x,g.position.z-C.center.z)>RES_MOVE.talkDist){ _resWalk(L,C.center.x,C.center.z,RES_MOVE.meetSpd,dt); moving=true; }   // everyone converges on the shared circle centre, forming a ring (never piles onto one partner)
     } else if(!_festival && !inConv && !chatBound && !hidden && NPC_CFG.motionEnabled){   // wander is NOT gated on LOW_END — low-end just moves slower (RES_MOVE.wanderSpd); only a hidden tab / chat / conversation / festival stops it
       if(L._stroll){ const S=L._stroll, W=S.with;   // 🚶 strolling side-by-side with a friend
-        if(tt>=S.until || !W || !W._stroll || W._stroll.with!==L || W._rest || W._joinWalk){   // stroll's over, or the friend got pulled away
-          if(!L._pNear && S.role==='lead' && tt>=(L._strollSayCd||0) && Math.random()<0.6){ L._strollSayCd=tt+18; L.bub.say(_strollPartLine(L,W), _hex(L.res.color)); L._gt=1.6; } _endStroll(L,tt); }
+        const partnerGone = !W || !W._stroll || W._stroll.with!==L || W._rest || W._joinWalk;
+        if(partnerGone || (S.role==='lead' && tt>=S.until)){   // the follower tracks the lead; only the lead runs the timer
+          let sat=false;
+          if(S.role==='lead' && !partnerGone && !L._pNear && !W._pNear && tt>=_coRestGlobalCd && Math.random()<0.5){   // the lead may steer them both to sit together a while before parting
+            if(_startCoRest(L,W,tt)){ sat=true; L.bub.say(_coRestInviteLine(L,W), _hex(L.res.color)); L._gt=1.8; moving=true; } }
+          if(!sat){ if(!L._pNear && S.role==='lead' && tt>=(L._strollSayCd||0) && Math.random()<0.6){ L._strollSayCd=tt+18; L.bub.say(_strollPartLine(L,W), _hex(L.res.color)); L._gt=1.6; } _endStroll(L,tt); } }
         else { let tx=null,tz=null;
           if(S.role==='lead'){ if(!S.wp || Math.hypot(g.position.x-S.wp.x,g.position.z-S.wp.z)<2.2) S.wp=_resRoamTarget(L)||S.wp; if(S.wp){ tx=S.wp.x; tz=S.wp.z; } }
           else { const th=W.group.rotation.y, sd=S.side||1; tx=W.group.position.x - Math.sin(th)*0.7 + Math.cos(th)*1.7*sd; tz=W.group.position.z - Math.cos(th)*0.7 - Math.sin(th)*1.7*sd; }   // a step beside + just behind the friend, keeping pace
@@ -7030,6 +7052,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__goFriend=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; const t=_bondSeekTarget(L); if(!t) return { ok:false, reason:'no reachable friend' }; if(L._rest) _seatRelease(L); L._rt={x:t.x,z:t.z}; L._toBond=true; L._bondSeekCd=0; return { ok:true, id:L.res.id, friends:_RES_BONDS[L.res.id]||[], target:[+t.x.toFixed(1),+t.z.toFixed(1)] }; };   // send a resident to seek their friend now
   window.__stroll=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; const fid=(_RES_BONDS[L.res.id]||[])[0], F=fid&&RESIDENTS_LIVE.find(x=>x.res.id===fid); if(!F) return { ok:false, reason:'no friend' };   // 🚶 start a side-by-side friend stroll right here, now
     F.group.position.set(L.group.position.x+2.4, 0, L.group.position.z); [L,F].forEach(r=>{ if(r._rest) _seatRelease(r); r._rt=null; r._joinWalk=null; r._stroll=null; }); _strollGlobalCd=0; const ok=_startStroll(L,F); return { ok, lead:L.res.id, follow:F.res.id, until:ok?+L._stroll.until.toFixed(1):null }; };   // send a resident to seek their friend now
+  window.__coRest=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; const fid=(_RES_BONDS[L.res.id]||[])[0], F=fid&&RESIDENTS_LIVE.find(x=>x.res.id===fid); if(!F) return { ok:false, reason:'no friend' };   // 🪑 send two friends to sit together on an adjacent pair of seats now
+    [L,F].forEach(r=>{ if(r._rest) _seatRelease(r); r._rt=null; r._joinWalk=null; r._stroll=null; }); _coRestGlobalCd=0; const ok=_startCoRest(L,F,clock.elapsedTime);
+    return { ok, a:L.res.id, b:F.res.id, seats: ok?[[+L._rest.seat.x.toFixed(1),+L._rest.seat.z.toFixed(1)],[+F._rest.seat.x.toFixed(1),+F._rest.seat.z.toFixed(1)]]:null, hearth: ok?!!L._rest.seat._hearth:null }; };
   window.__greet=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
     L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN);
