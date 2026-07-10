@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.69.0] — 2026-07-10
+
+### 🫂 The residents have close friends — bonds they seek out and greet more warmly
+- **What's new.** The town now has **friendships**, not just neighbours. Each resident has a **close friend** — *Sol ↔ Noa* (the experimenter and the dreamer), *Jun ↔ Tae* (the two quiet craftspeople), *Nari ↔ Rin* (the gardener and the archivist), *Mira ↔ Kai* (the plaza pair) — and now and then they'll **wander off to go find that friend**, then greet them with a **warmer, more personal hello** than a passing acquaintance gets: *"준! 딱 보고 싶었는데 잘 만났다."* → *"태, 나도 반가워요! 같이 있으면 든든해요."*
+- **You can watch bonds form.** Because a resident occasionally heads toward a friend's spot (cooldown-gated), you'll actually **see two friends drift together** across the town and then share their warm exchange — a visible relationship, not just two strangers who happened to be near. If the friend seems tired, the greeting softens to match (*"미라, 피곤해 보여요. 옆에서 좀 쉬었다 가요."*).
+- **How it works.** A small mutual friendship graph (`_RES_BONDS`) rides the fellow-feeling layer shipped in 1.68.0: `_bondSeekTarget` biases a wander toward an idle, reachable friend; on arrival the warm hello is primed to fire promptly; and `_tryPeerNotice`/the reply pick the **bond** greeting/reply banks (via `_isFriend`) instead of the acquaintance ones. Purely scripted, **zero-AI / zero-budget**, and it inherits every guard — only when both are idle and unclaimed, never during a gathering/festival/chat, stops on a hidden tab.
+- **Preserved.** Every earlier layer (moods + fellow-feeling, daily rhythm, cherished haunts, festival, goodbyes, campfire, group chat), budget/env gating, hidden-tab stop. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__bonds()` (each resident's friend + current distance) and `window.__goFriend(id)` (send one to seek their friend now).
+
 ## [1.68.0] — 2026-07-10
 
 ### 💗 The residents have an inner life — moods that drift, and a genuine care for each other

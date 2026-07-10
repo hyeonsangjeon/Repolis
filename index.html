@@ -4547,11 +4547,25 @@ function _peerNoticeLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG===
   const b= ko?[`어, ${nm}! 반가워요.`,`${nm}, 안녕! 오늘 어때요?`,`${nm}, 잘 지내죠?`,`${nm} 얼굴 보니 좋네요.`]:[`Oh, ${nm}! Good to see you.`,`${nm}, hi! How are you?`,`${nm}, keeping well?`,`Nice to run into you, ${nm}.`]; return b[(Math.random()*b.length)|0]; }
 function _peerReplyLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko';
   const b= ko?[`${nm}도요 — 반가워요!`,`${nm}, 마침 보고 싶었어요.`,`고마워요 ${nm}, 힘이 나네요.`,`${nm}랑 마주치면 하루가 좋아져요.`]:[`You too, ${nm} — good to see you!`,`${nm}, I was just hoping to see you.`,`Thanks, ${nm} — that lifts me.`,`Running into you, ${nm}, makes my day.`]; return b[(Math.random()*b.length)|0]; }
+// 🫂 named friendships: each resident has a close friend they seek out and greet more warmly than a passing acquaintance — the town's bonds, not just its proximity
+const _RES_BONDS={ sol:['noa'], noa:['sol'], jun:['tae'], tae:['jun'], nari:['rin'], rin:['nari'], mira:['kai'], kai:['mira'] };
+function _isFriend(a,b){ const f=_RES_BONDS[a.res.id]; return !!(f && b && f.indexOf(b.res.id)>=0); }
+function _bondNoticeLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko', m=_resMood(P);
+  if(m==='dozy' && Math.random()<0.5) return ko?`${nm}, 피곤해 보여요. 옆에서 좀 쉬었다 가요.`:`${nm}, you look worn out — rest here beside me a while.`;
+  const b= ko?[`${nm}! 딱 보고 싶었는데 잘 만났다.`,`역시 ${nm}이네 — 오늘 같이 좀 걸을래요?`,`${nm}, 우리 또 만났네요 ㅎㅎ`,`${nm} 볼 때마다 반가워요.`]:[`${nm}! I was just hoping to run into you.`,`There you are, ${nm} — walk with me a bit?`,`${nm}, together again 🙂`,`Always glad to see you, ${nm}.`]; return b[(Math.random()*b.length)|0]; }
+function _bondReplyLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko';
+  const b= ko?[`${nm}, 나도 반가워요! 같이 있으면 든든해요.`,`역시 ${nm}이야 — 하루가 환해지네요.`,`${nm} 덕분에 힘나요, 늘 고마워요.`,`우리 이따 벤치에서 좀 쉬어요, ${nm}.`]:[`${nm}, you too! I feel steadier with you around.`,`Classic ${nm} — my whole day just brightened.`,`You lift me, ${nm} — thank you, always.`,`Let\u2019s rest on a bench later, ${nm}.`]; return b[(Math.random()*b.length)|0]; }
+function _bondSeekTarget(L){ const ids=_RES_BONDS[L.res.id]; if(!ids||!ids.length) return null; let best=null,bd=Infinity;
+  for(const fid of ids){ const F=RESIDENTS_LIVE.find(x=>x.res.id===fid); if(!F || F._rest || F._joinWalk || F._pNear) continue;   // don't chase a friend who's seated, busy, or greeting the visitor
+    const d=Math.hypot(F.group.position.x-L.group.position.x, F.group.position.z-L.group.position.z); if(d<6 || d>72) continue;   // already together, or too far to bother
+    if(d<bd){ bd=d; best=F; } }
+  if(!best) return null; const fx=best.group.position.x, fz=best.group.position.z, a=Math.atan2(L.group.position.x-fx, L.group.position.z-fz);   // a spot a short step from the friend, on L's side, so they meet nicely
+  return { x:fx+Math.sin(a)*3.0, z:fz+Math.cos(a)*3.0 }; }
 function _tryPeerNotice(L,tt,force){ if((_ambConv||_festival||document.hidden) && !force) return null;
   if(!force && (L._gt>0 || tt<(L._noticeCd||0) || tt<_peerGlobalCd)) return null;
   let P=null,pd=1e9; for(const O of RESIDENTS_LIVE){ if(O===L || !_peerIdle(O)) continue; if(!force && (O._gt>0 || tt<(O._noticeCd||0))) continue; if(_ambConv && _ambConv.members.indexOf(O)>=0) continue;
     const d=Math.hypot(O.group.position.x-L.group.position.x, O.group.position.z-L.group.position.z); if(d<=(force?9999:NPC_PEER_R) && d<pd){ pd=d; P=O; } }
-  if(!P) return null; L.bub.say(_peerNoticeLine(L,P), _hex(L.res.color)); L._gt=2.0; L._facePeer=P; L._facePeerUntil=tt+2.4;
+  if(!P) return null; L.bub.say(_isFriend(L,P)?_bondNoticeLine(L,P):_peerNoticeLine(L,P), _hex(L.res.color)); L._gt=2.0; L._facePeer=P; L._facePeerUntil=tt+2.4;
   const cd=tt+NPC_PEER_CD_MIN+Math.random()*(NPC_PEER_CD_MAX-NPC_PEER_CD_MIN); L._noticeCd=cd; P._noticeCd=cd; _peerGlobalCd=tt+7+Math.random()*8;
   P._replyPeer=L; P._replyAt=tt+1.15+Math.random()*0.5; _emitMetric('npc_peer_notice',{a:L.res.id,b:P.res.id,mood:_resMood(P,tt)}); return P; }
 // 🛋️ contented, self-aware "this town is a comfortable home" murmurs while resting — the residents know they're built from data, yet this place feels like a kind one to be
@@ -4789,12 +4803,15 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
         if(_resWalk(L,L._rest.seat.x,L._rest.seat.z,L._wspd,dt)){ L._rest.phase='sit'; L._rest.until=tt+RES_MOVE.restMin+Math.random()*(RES_MOVE.restMax-RES_MOVE.restMin); _resSit(L,L._rest.seat); L.bub.update(dt); continue; } else moving=true;
       } else {
         if(!L._rt && tt>=L._rp){
-          if(tt>=(L._favCd||0) && Math.random()<0.3){ const f=_resFavSpot(L);   // now and then, slip off to your own cherished haunt
+          const _bt=(tt>=(L._bondSeekCd||0) && Math.random()<0.22)?_bondSeekTarget(L):null;   // now and then, go find a close friend
+          if(_bt){ L._rt={x:_bt.x,z:_bt.z}; L._toBond=true; L._bondSeekCd=tt+60+Math.random()*50; }
+          else if(tt>=(L._favCd||0) && Math.random()<0.3){ const f=_resFavSpot(L);   // now and then, slip off to your own cherished haunt
             if(f){ L._rt={x:f.x,z:f.z}; L._toFav=true; L._favCd=tt+42+Math.random()*44; } else L._rt=_resRoamTarget(L); }
           else { const s=(Math.random()<RES_MOVE.restChance)?_freeSeat(L):null;
             if(s){ s._occ=L; L._rest={ seat:s, phase:'goto', until:0 }; } else L._rt=_resRoamTarget(L); } }
         if(L._rt){ if(_resWalk(L,L._rt.x,L._rt.z,L._wspd,dt)){ L._rt=null;
-            if(L._toFav){ L._toFav=false; L._rp=tt+RES_MOVE.pauseMin*1.8+Math.random()*4;   // linger at the haunt + an occasional fond word about it
+            if(L._toBond){ L._toBond=false; L._rp=tt+RES_MOVE.pauseMin*1.4+Math.random()*3; L._noticeTryAt=0; L._noticeCd=0; }   // arrived beside a friend → let the warm hello fire promptly
+            else if(L._toFav){ L._toFav=false; L._rp=tt+RES_MOVE.pauseMin*1.8+Math.random()*4;   // linger at the haunt + an occasional fond word about it
               if(!L._pNear && tt>=(L._favSayCd||0)){ L._favSayCd=tt+34+Math.random()*30; L.bub.say(_resFavLine(L), _hex(L.res.color)); L._gt=1.8; } }
             else L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } } }
     if(moving){ if(L._gt>0) L._gt-=dt; if(g._armL) g._armL.rotation.z*=0.85; if(g._armR) g._armR.rotation.z*=0.85; L.bub.update(dt); continue; }
@@ -4806,7 +4823,7 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
     // 🤝 residents notice each other: answer a neighbour who just greeted us, or (idle + off-cooldown) greet a nearby idle neighbour by name
     if(!_festival && !inConv && !chatBound && !L._pNear){
       if(L._replyPeer && tt>=(L._replyAt||0)){ const P=L._replyPeer; L._replyPeer=null;
-        if(L._gt<=0 && _peerIdle(L) && P && Math.hypot(P.group.position.x-g.position.x,P.group.position.z-g.position.z)<=NPC_PEER_R+1.5){ L.bub.say(_peerReplyLine(L,P), _hex(L.res.color)); L._gt=1.8; L._facePeer=P; L._facePeerUntil=tt+2.0; } }
+        if(L._gt<=0 && _peerIdle(L) && P && Math.hypot(P.group.position.x-g.position.x,P.group.position.z-g.position.z)<=NPC_PEER_R+1.5){ L.bub.say(_isFriend(L,P)?_bondReplyLine(L,P):_peerReplyLine(L,P), _hex(L.res.color)); L._gt=1.8; L._facePeer=P; L._facePeerUntil=tt+2.0; } }
       else if(L._gt<=0 && tt>=(L._noticeTryAt||0)){ L._noticeTryAt=tt+3+Math.random()*4; _tryPeerNotice(L,tt); } }
     let tgt;
     if(_festival && !chatBound){ tgt=Math.atan2(_festival.center.x-g.position.x, _festival.center.z-g.position.z); }   // face the bonfire
@@ -6989,6 +7006,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__moods=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, mood:_resMood(L), meta:_MOOD_META[_resMood(L)], left:+Math.max(0,(L._moodUntil||0)-clock.elapsedTime).toFixed(0) }));   // 💗 every resident's current inner mood + seconds until it drifts
   window.__mood=(id,key)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; if(key&&_MOOD_META[key]){ L._mood=key; L._moodUntil=clock.elapsedTime+180; } const m=_resMood(L); return { ok:true, id:L.res.id, mood:m, meta:_MOOD_META[m], line:_resMoodLine(L) }; };   // read, or force, a resident's mood
   window.__peerNotice=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0]; if(!L) return { ok:false }; L._noticeCd=0; L._gt=0; _peerGlobalCd=0; const P=_tryPeerNotice(L,clock.elapsedTime,true); return { ok:!!P, from:L.res.id, to:P?P.res.id:null, line:P?null:'no idle neighbour found' }; };   // 🤝 force one resident to greet the nearest idle neighbour now
+  window.__bonds=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, friends:_RES_BONDS[L.res.id]||[], dist:(_RES_BONDS[L.res.id]||[]).map(fid=>{ const F=RESIDENTS_LIVE.find(x=>x.res.id===fid); return F?{ id:fid, d:+Math.hypot(L.group.position.x-F.group.position.x,L.group.position.z-F.group.position.z).toFixed(1) }:null; }) }));   // 🫂 each resident's close friend(s) + current distance
+  window.__goFriend=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; const t=_bondSeekTarget(L); if(!t) return { ok:false, reason:'no reachable friend' }; if(L._rest) _seatRelease(L); L._rt={x:t.x,z:t.z}; L._toBond=true; L._bondSeekCd=0; return { ok:true, id:L.res.id, friends:_RES_BONDS[L.res.id]||[], target:[+t.x.toFixed(1),+t.z.toFixed(1)] }; };   // send a resident to seek their friend now
   window.__greet=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
     L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN);
