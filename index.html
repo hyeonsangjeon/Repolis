@@ -4523,6 +4523,37 @@ function _resTodGreet(){ const p=_partOfDay(), ko=LANG==='ko';
   if(p==='eve')  return ko?'좋은 저녁이에요 🌆':'Good evening 🌆';
   if(p==='night')return ko?'별 밤이네요, 어서 와요 🌙':'A starry night — welcome 🌙';
   return null; }
+// 💗 residents carry an inner mood that quietly drifts through the day (buoyant · calm · wistful · dozy · curious) — it colours what they murmur, tilts their posture a touch, and lets them notice how a passing neighbour seems. Their humanity: a felt inner life, and empathy for one another.
+const _MOOD_META={ bright:{emoji:'😊',ko:'들뜬',en:'buoyant'}, calm:{emoji:'🍃',ko:'차분한',en:'calm'}, wistful:{emoji:'🌙',ko:'아련한',en:'wistful'}, dozy:{emoji:'😪',ko:'나른한',en:'dozy'}, curious:{emoji:'✨',ko:'설레는',en:'curious'} };
+const _RES_MOOD_LINES={
+  bright:{ ko:['오늘은 왠지 기분이 좋아요.','괜히 콧노래가 나오네요 🎵','좋은 일이 생길 것 같아요.','발걸음이 가벼워요.'], en:['Feeling good for no reason today.','I keep humming to myself 🎵','Something nice is coming, I can tell.','My steps feel light.'] },
+  calm:{ ko:['마음이 참 잔잔해요.','이런 평온함이 좋아요.','천천히 가도 괜찮아요.','숨 한 번 크게 쉬어 봐요.'], en:['My heart feels still.','I love this kind of calm.','No rush — slow is fine.','Just take one deep breath.'] },
+  wistful:{ ko:['문득 옛 생각이 나네요.','마음 한켠이 조금 아련해요.','지난 커밋들이 떠올라요.','하늘을 보니 살짝 그리워지네요.'], en:['An old memory just surfaced.','A corner of me feels wistful.','I keep thinking of past commits.','The sky makes me a touch nostalgic.'] },
+  dozy:{ ko:['조금 나른하네요…','오늘은 좀 느긋하게 가요.','살짝 졸려요, 커피 한 잔?','천천히, 무리하지 말고요.'], en:['A little drowsy…','Taking it easy today.','Bit sleepy — coffee, maybe?','Slowly, no pushing it.'] },
+  curious:{ ko:['뭔가 새로운 게 궁금해져요.','이걸 이렇게 바꾸면 어떨까?','설레는 아이디어가 떠올랐어요 ✨','오늘은 뭘 배워볼까요?'], en:['I\u2019m curious about something new.','What if I changed this, like so?','A thrilling idea just landed ✨','What shall I learn today?'] } };
+function _pickMood(L){ const p=(typeof _partOfDay==='function')?_partOfDay():'day';
+  const w = p==='morn'?{bright:3,curious:3,calm:2,dozy:1,wistful:1} : p==='eve'?{calm:3,wistful:3,dozy:2,bright:1,curious:1} : p==='night'?{calm:3,wistful:2,dozy:3,curious:1,bright:1} : {calm:3,bright:2,curious:2,dozy:1,wistful:1};
+  const bag=[]; for(const k in w){ if(k===L._mood) continue; for(let i=0;i<w[k];i++) bag.push(k); } return bag[(Math.random()*bag.length)|0]||'calm'; }
+function _resMood(L,tt){ tt=(tt==null)?clock.elapsedTime:tt; if(!L._mood || tt>=(L._moodUntil||0)){ L._mood=_pickMood(L); L._moodUntil=tt+90+Math.random()*110; } return L._mood; }
+function _resMoodLine(L){ const b=_RES_MOOD_LINES[_resMood(L)]; const a=b&&(b[LANG]||b.ko); return (a&&a.length)?a[(Math.random()*a.length)|0]:_resIdleEmote(); }
+function _moodTell(m){ return m==='dozy'?{droop:0.05,bob:0.018,rate:1.25} : m==='bright'?{droop:0,bob:0.05,rate:2.15} : m==='curious'?{droop:0,bob:0.045,rate:2.0} : m==='wistful'?{droop:0.03,bob:0.022,rate:1.4} : {droop:0.01,bob:0.03,rate:1.7}; }
+// 🤝 fellow-feeling: two residents who are both idle and pass close by turn, greet by name (sometimes remarking on how the other seems), and the other warmly answers back a beat later. Rare, cooldown-gated, zero-AI.
+const NPC_PEER_R=(LOW_END?6.0:6.8), NPC_PEER_CD_MIN=(LOW_END?52:38), NPC_PEER_CD_MAX=(LOW_END?96:74); let _peerGlobalCd=0;
+function _peerIdle(L){ return !!L && !L._rt && !L._rest && !L._joinWalk && (L._stretch||0)<=0 && !L._pNear; }
+function _peerNoticeLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko', m=_resMood(P);
+  if(m==='dozy' && Math.random()<0.6) return ko?`${nm}, 오늘 좀 피곤해 보여요. 쉬엄쉬엄해요.`:`${nm}, you look a bit tired — take it easy.`;
+  if(m==='bright' && Math.random()<0.6) return ko?`${nm}, 표정이 밝네요! 좋은 일 있어요?`:`${nm}, you look bright! Good news?`;
+  if(m==='wistful' && Math.random()<0.5) return ko?`${nm}, 무슨 생각 해요? 표정이 아련하네요.`:`${nm}, lost in thought? You seem wistful.`;
+  const b= ko?[`어, ${nm}! 반가워요.`,`${nm}, 안녕! 오늘 어때요?`,`${nm}, 잘 지내죠?`,`${nm} 얼굴 보니 좋네요.`]:[`Oh, ${nm}! Good to see you.`,`${nm}, hi! How are you?`,`${nm}, keeping well?`,`Nice to run into you, ${nm}.`]; return b[(Math.random()*b.length)|0]; }
+function _peerReplyLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko';
+  const b= ko?[`${nm}도요 — 반가워요!`,`${nm}, 마침 보고 싶었어요.`,`고마워요 ${nm}, 힘이 나네요.`,`${nm}랑 마주치면 하루가 좋아져요.`]:[`You too, ${nm} — good to see you!`,`${nm}, I was just hoping to see you.`,`Thanks, ${nm} — that lifts me.`,`Running into you, ${nm}, makes my day.`]; return b[(Math.random()*b.length)|0]; }
+function _tryPeerNotice(L,tt,force){ if((_ambConv||_festival||document.hidden) && !force) return null;
+  if(!force && (L._gt>0 || tt<(L._noticeCd||0) || tt<_peerGlobalCd)) return null;
+  let P=null,pd=1e9; for(const O of RESIDENTS_LIVE){ if(O===L || !_peerIdle(O)) continue; if(!force && (O._gt>0 || tt<(O._noticeCd||0))) continue; if(_ambConv && _ambConv.members.indexOf(O)>=0) continue;
+    const d=Math.hypot(O.group.position.x-L.group.position.x, O.group.position.z-L.group.position.z); if(d<=(force?9999:NPC_PEER_R) && d<pd){ pd=d; P=O; } }
+  if(!P) return null; L.bub.say(_peerNoticeLine(L,P), _hex(L.res.color)); L._gt=2.0; L._facePeer=P; L._facePeerUntil=tt+2.4;
+  const cd=tt+NPC_PEER_CD_MIN+Math.random()*(NPC_PEER_CD_MAX-NPC_PEER_CD_MIN); L._noticeCd=cd; P._noticeCd=cd; _peerGlobalCd=tt+7+Math.random()*8;
+  P._replyPeer=L; P._replyAt=tt+1.15+Math.random()*0.5; _emitMetric('npc_peer_notice',{a:L.res.id,b:P.res.id,mood:_resMood(P,tt)}); return P; }
 // 🛋️ contented, self-aware "this town is a comfortable home" murmurs while resting — the residents know they're built from data, yet this place feels like a kind one to be
 const _RES_COMFORT={ ko:['여기 앉아 있으면 마음이 놓여요.','이 마을, 우리한테는 참 편한 곳이에요.','가끔은 제가 코드라는 것도 잊고 그냥 쉬어요.','이 도시가 집처럼 느껴져요.','천천히 흐르는 시간이 좋아요.','데이터로 지어졌지만, 이 평온함은 진짜 같아요.','여기선 잠시 아무것도 안 해도 괜찮아요.'],
                      en:["Sitting here, I feel at ease.","This town is a kind place for us to be.","Sometimes I forget I'm just code, and simply rest.","This city feels like home.","I like how slowly the time flows here.","Built from data, sure — but this calm feels real.","Here it's okay to do nothing for a while."] };
@@ -4722,7 +4753,7 @@ function _resSit(L,s){ const g=L.group; g.position.set(s.x,SIT_POSE.y,s.z); g.ro
 function _resStand(L){ const g=L.group; g.position.y=0; if(g._legL){ g._legL.rotation.x=0; g._legR.rotation.x=0; } }
 function _seatRelease(L){ if(L._rest&&L._rest.seat) L._rest.seat._occ=null; L._rest=null; }
 function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.elapsedTime; const C=_ambConv, hidden=document.hidden;
-  for(const L of RESIDENTS_LIVE){ const g=L.group;
+  for(const L of RESIDENTS_LIVE){ const g=L.group; const mood=_resMood(L,tt);
     const inConv=C&&C.members.indexOf(L)>=0, speaker=C?C.members[C.si]:null;
     const chatBound=_resChatActive()&&activeNpc&&(activeNpc.res===L.res || (activeGroupMembers&&activeGroupMembers.indexOf(L)>=0)); let moving=false;
     // warm welcome: the moment the visitor steps up, the resident notices — a wave + a short hello (edge-triggered + cooldown, so it never spams)
@@ -4771,14 +4802,20 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
     if(!_festival && !inConv && !chatBound && !L._pNear && L._gt<=0 && (L._stretch||0)<=0 && tt>=L._emoteCd){
       L._emoteCd=tt+RES_EMOTE_CD_MIN+Math.random()*(RES_EMOTE_CD_MAX-RES_EMOTE_CD_MIN);
       if(_partOfDay()==='morn' && tt>=(L._stretchCd||0)){ L._stretchCd=tt+120+Math.random()*90; L._stretch=1.4; L.bub.say(_resTodLine(), _hex(L.res.color)); }   // 🌅 a slow morning stretch + a good-morning word (the town wakes up)
-      else if(Math.random()<0.7){ L.bub.say(Math.random()<0.55?_resTodLine():_resIdleEmote(), _hex(L.res.color)); L._gt=1.6; } }   // about half the idle chatter reflects the time of day
+      else if(Math.random()<0.7){ const r=Math.random(); L.bub.say(r<0.34?_resMoodLine(L):r<0.67?_resTodLine():_resIdleEmote(), _hex(L.res.color)); L._gt=1.6; } }   // idle chatter mixes an inner-mood murmur, a time-of-day line, and a generic emote
+    // 🤝 residents notice each other: answer a neighbour who just greeted us, or (idle + off-cooldown) greet a nearby idle neighbour by name
+    if(!_festival && !inConv && !chatBound && !L._pNear){
+      if(L._replyPeer && tt>=(L._replyAt||0)){ const P=L._replyPeer; L._replyPeer=null;
+        if(L._gt<=0 && _peerIdle(L) && P && Math.hypot(P.group.position.x-g.position.x,P.group.position.z-g.position.z)<=NPC_PEER_R+1.5){ L.bub.say(_peerReplyLine(L,P), _hex(L.res.color)); L._gt=1.8; L._facePeer=P; L._facePeerUntil=tt+2.0; } }
+      else if(L._gt<=0 && tt>=(L._noticeTryAt||0)){ L._noticeTryAt=tt+3+Math.random()*4; _tryPeerNotice(L,tt); } }
     let tgt;
     if(_festival && !chatBound){ tgt=Math.atan2(_festival.center.x-g.position.x, _festival.center.z-g.position.z); }   // face the bonfire
     else if(inConv && C.phase==='talk'){ const pd=Math.hypot(player.position.x-g.position.x, player.position.z-g.position.z); const f=(pd<6.5)?player.position:((L===speaker)?C.center:speaker.group.position); tgt=Math.atan2(f.x-g.position.x, f.z-g.position.z); }   // listeners turn to whoever's speaking; the whole circle turns to the visitor who steps right up
+    else if(L._facePeer && tt<(L._facePeerUntil||0)){ const P=L._facePeer; tgt=Math.atan2(P.group.position.x-g.position.x, P.group.position.z-g.position.z); }   // turn to the neighbour we're greeting
     else { const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz); tgt=d<14?Math.atan2(dx,dz):L._baseRot+Math.sin(tt*0.4+L._ph)*0.2; }
     g.rotation.y=lerpA(g.rotation.y,tgt,0.06);
     if(g._legL){ g._legL.rotation.x*=0.8; g._legR.rotation.x*=0.8; }
-    if(g._head) g._head.position.y=2.0+Math.sin(tt*1.7+L._ph)*0.03; L.bub.update(dt);
+    if(g._head){ const _mt=_moodTell(mood); g._head.position.y=2.0-_mt.droop+Math.sin(tt*_mt.rate+L._ph)*_mt.bob; } L.bub.update(dt);
     if(g._armL){
       if(L._stretch>0){ L._stretch-=dt; const k=Math.sin(Math.max(0,Math.min(1,(1.4-L._stretch)/1.4))*Math.PI), up=-2.2*k;   // 🌅 a slow morning stretch — both arms rise, then settle back
         g._armL.rotation.x=up; g._armR.rotation.x=up; g._armL.rotation.z=0.18*k; g._armR.rotation.z=-0.18*k; }
@@ -6949,6 +6986,9 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__partOfDay=()=>({ part:_partOfDay(), phase:(typeof SKY_PHASES!=='undefined'&&SKY_PHASES[skyPhaseIdx])?SKY_PHASES[skyPhaseIdx].name:null, isNight, sampleLine:_resTodLine(), greet:_resTodGreet() });   // 🕰️ current daily-rhythm slice + a sample time-flavored line
   window.__stretch=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0]; if(!L) return { ok:false };   // force a morning-style stretch + a good-morning word
     if(L._rest) _seatRelease(L); L._rt=null; L._stretch=1.4; L._stretchCd=clock.elapsedTime+120; const line=_resTodLine(); L.bub.say(line, _hex(L.res.color)); return { ok:true, id:L.res.id, part:_partOfDay(), line }; };
+  window.__moods=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, mood:_resMood(L), meta:_MOOD_META[_resMood(L)], left:+Math.max(0,(L._moodUntil||0)-clock.elapsedTime).toFixed(0) }));   // 💗 every resident's current inner mood + seconds until it drifts
+  window.__mood=(id,key)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; if(key&&_MOOD_META[key]){ L._mood=key; L._moodUntil=clock.elapsedTime+180; } const m=_resMood(L); return { ok:true, id:L.res.id, mood:m, meta:_MOOD_META[m], line:_resMoodLine(L) }; };   // read, or force, a resident's mood
+  window.__peerNotice=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0]; if(!L) return { ok:false }; L._noticeCd=0; L._gt=0; _peerGlobalCd=0; const P=_tryPeerNotice(L,clock.elapsedTime,true); return { ok:!!P, from:L.res.id, to:P?P.res.id:null, line:P?null:'no idle neighbour found' }; };   // 🤝 force one resident to greet the nearest idle neighbour now
   window.__greet=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
     L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN);
