@@ -568,6 +568,15 @@ ok(/const _mt=_moodTell\(mood\); g\._head\.position\.y=2\.0-_mt\.droop/.test(npc
 ok(/const NPC_PEER_R=\(LOW_END\?6\.0:6\.8\)/.test(npcBlock) && /_peerGlobalCd=tt\+7/.test(npcBlock), 'fellow-feeling is cooldown-gated (per-resident + global) so it stays rare and never spams');
 ok(/window\.__moods=\(\)=>/.test(HTML) && /window\.__mood=\(id,key\)=>/.test(HTML) && /window\.__peerNotice=\(id\)=>/.test(HTML), '?dbg __moods/__mood/__peerNotice introspect moods + force a neighbourly hello');
 
+group('residents have named friendships (bonds) they seek out + greet more warmly');
+ok(/const _RES_BONDS=\{[\s\S]*?sol:\['noa'\][\s\S]*?jun:\['tae'\][\s\S]*?nari:\['rin'\][\s\S]*?mira:\['kai'\]/.test(npcBlock), 'four mutual friend pairs are defined (sol↔noa, jun↔tae, nari↔rin, mira↔kai)');
+ok(/function _isFriend\(a,b\)\{/.test(npcBlock) && /function _bondNoticeLine\(L,P\)\{/.test(npcBlock) && /function _bondReplyLine\(L,P\)\{/.test(npcBlock), 'friends get warmer, personal greeting + reply banks (distinct from the acquaintance lines)');
+ok(/L\.bub\.say\(_isFriend\(L,P\)\?_bondNoticeLine\(L,P\):_peerNoticeLine\(L,P\)/.test(npcBlock), 'a peer-notice uses the warm bond greeting when the neighbour is a close friend');
+ok(/L\.bub\.say\(_isFriend\(L,P\)\?_bondReplyLine\(L,P\):_peerReplyLine\(L,P\)/.test(npcBlock), 'the reply is warmer too when answering a close friend');
+ok(/function _bondSeekTarget\(L\)\{[\s\S]*?_RES_BONDS\[L\.res\.id\]/.test(npcBlock) && /const _bt=\(tt>=\(L\._bondSeekCd\|\|0\) && Math\.random\(\)<0\.22\)\?_bondSeekTarget\(L\):null;/.test(npcBlock), 'now and then a resident wanders off to seek a close friend (cooldown-gated)');
+ok(/if\(L\._toBond\)\{ L\._toBond=false;[\s\S]*?L\._noticeTryAt=0; L\._noticeCd=0;/.test(npcBlock), 'on arriving beside a friend, the warm hello is primed to fire promptly');
+ok(/window\.__bonds=\(\)=>/.test(HTML) && /window\.__goFriend=\(id\)=>/.test(HTML), '?dbg __bonds/__goFriend list friendships + send a resident to seek their friend');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
