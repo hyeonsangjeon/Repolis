@@ -598,6 +598,55 @@ ok(/function _seatRelease\(L\)\{[\s\S]*?L\._restMate=null;/.test(npcBlock), 'sta
 ok(/let _coRestGlobalCd=0;/.test(npcBlock) && /_coRestGlobalCd=tt\+NPC_STROLL_CD\*2/.test(npcBlock), 'co-rest is globally cooldown-gated so it stays an occasional beat');
 ok(/window\.__coRest=\(id\)=>/.test(HTML), '?dbg __coRest sits two friends down together on the spot');
 
+group('repository constellation trail — telescope reveals a meaningful 3-house exploration loop');
+// 1.72 selector: execute the real pure metadata selector against the shipped city + small fallback fixtures.
+const trailSelectorSrc = (HTML.match(/\/\*CONSTELLATION_SELECTOR:START\*\/([\s\S]*?)\/\*CONSTELLATION_SELECTOR:END\*\//) || [, ''])[1];
+ok(trailSelectorSrc.length > 0, 'constellation selector block is extractable from index.html');
+let constellationPick = null, trailRepos = [];
+if (trailSelectorSrc) {
+  try {
+    constellationPick = new Function(`${trailSelectorSrc}\nreturn constellationPick;`)();
+    const rj = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
+    trailRepos = Array.isArray(rj) ? rj : (rj.repos || []);
+  } catch (e) { console.log('  ✗ constellation selector harness: ' + e.message); }
+}
+ok(!!(constellationPick && trailRepos.length), 'selector + repos.json load for behavioral checks');
+if (constellationPick && trailRepos.length) {
+  const a = constellationPick(trailRepos, 'hyeonsangjeon', '2026-07-10');
+  const b = constellationPick(trailRepos, 'hyeonsangjeon', '2026-07-10');
+  const names = a && a.stops ? a.stops.map(r => r.repo) : [];
+  ok(!!a && names.length === 3 && new Set(names).size === 3, 'owner town yields exactly three distinct canonical repo stops');
+  ok(JSON.stringify(names) === JSON.stringify(b.stops.map(r => r.repo)) && a.id === b.id, 'same town + day yields the same constellation deterministically');
+  ok(a.kind === 'topic', 'owner town prefers a specific shared topic over a generic language cluster');
+  const related = a.kind === 'topic'
+    ? a.stops.every(r => (r.topics || []).map(x => String(x).toLowerCase()).includes(a.key))
+    : a.kind === 'lang' ? a.stops.every(r => r.lang === a.key) : false;
+  ok(related, 'all three owner stops genuinely share the selected topic/language');
+  const mix = constellationPick([{repo:'a',lang:'A'},{repo:'b',lang:'B'},{repo:'c',lang:'C'}], 'tiny', 'd');
+  ok(!!mix && mix.kind === 'mix' && mix.stops.length === 3, 'a 3-house public town gracefully falls back to a mixed town-signal trail');
+  ok(constellationPick([{repo:'a'},{repo:'b'}], 'tiny', 'd') === null, 'a town with fewer than three houses reports the trail unavailable');
+}
+// World/UI wiring: explicit launch, low-cost visuals, current-target house opening, navigation, reward, cleanup, parity, debug.
+const trailBlock = (HTML.match(/Repository Constellation Trail:[\s\S]*?\/\* ---- 🔭 Observatory modal/) || [''])[0];
+ok(/id=["']starTrailHud["']/.test(HTML) && /id=["']obsTrailStart["']/.test(HTML), 'responsive trail HUD + Observatory launch action are present');
+ok(/#starTrailHud\.hidden\s*\{[^}]*visibility:hidden/.test(HTML), 'inactive trail HUD is removed from focus/accessibility visibility');
+ok(/#starTrailHud\s*\{\s*left:12px;\s*bottom:calc\(100px \+ env\(safe-area-inset-bottom,0px\)\)/.test(HTML), 'touch HUD sits above the bottom interaction prompt and safe area');
+ok(/function startStarTrail\(\)/.test(trailBlock) && /setTimeOfDay\(true\)/.test(trailBlock) && /setNav\(STAR_TRAIL\.stops\[0\]\)/.test(trailBlock), 'launch turns on the night sky and guides to the first house');
+ok(/function buildStarTrailVisuals\(\)/.test(trailBlock) && /new THREE\.LineBasicMaterial/.test(trailBlock) && /new THREE\.SpriteMaterial/.test(trailBlock), 'world trail uses luminous lines + star sprites');
+ok(!/new THREE\.(PointLight|SpotLight|DirectionalLight)/.test(trailBlock), 'constellation adds no scene lights (performance ceiling)');
+ok(/const nodes=\[\], lines=\[\], count=LOW_END\?7:13/.test(trailBlock), 'LOW_END halves arc detail while preserving the visible trail');
+ok(/function updateStarTrail\(t\)\{ if\(!STAR_TRAIL\|\|!STAR_TRAIL\.active\|\|!STAR_TRAIL\.visual\|\|document\.hidden\) return/.test(trailBlock) && /!REDUCED&&i===now/.test(trailBlock), 'trail motion stops when inactive/hidden and respects reduced motion');
+ok(/g\.traverse\(o=>\{ if\(o\.geometry\) o\.geometry\.dispose\(\)/.test(trailBlock), 'replay/end disposes trail geometry + materials instead of leaking GPU objects');
+ok(/function openCard\(repo\)[\s\S]{0,100}starTrailVisit\(repo\)/.test(HTML), 'opening the current repo house advances the trail');
+ok(/STAR_TRAIL\.index\+\+/.test(trailBlock) && /setNav\(STAR_TRAIL\.stops\[done\]\)/.test(trailBlock), 'each found star advances progress and guides to the next house');
+ok(/addStamp\(['"]constellation['"]\)/.test(trailBlock) && /_auroraBoost=Math\.max\(_auroraBoost,12\)/.test(trailBlock) && /fireworksShow/.test(trailBlock), 'completion awards a passport stamp + aurora/fireworks finale');
+ok(/\{id:['"]constellation['"],\s+ico:['"]🌌['"],\s+key:['"]lmConstellation['"]\}/.test(HTML), 'passport catalog includes the earned Repository Constellation stamp');
+ok((HTML.match(/trailKicker:\s*['"]/g) || []).length >= 2 && (HTML.match(/trailComplete:\s*['"]/g) || []).length >= 2
+  && (HTML.match(/lmConstellation:\s*['"]/g) || []).length >= 2, 'trail launch/progress/reward copy has Korean + English parity');
+ok(/window\.__starTrailPlan=/.test(HTML) && /window\.__starTrailStart=/.test(HTML)
+  && /window\.__starTrailNext=/.test(HTML) && /window\.__starTrailEnd=/.test(HTML), '?dbg trail plan/start/advance/end hooks are present');
+ok(/updateStarTrail\(clock\.elapsedTime\)/.test(HTML), 'the main world loop updates the active constellation visuals');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }

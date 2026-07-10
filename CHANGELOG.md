@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.72.0] — 2026-07-10
+
+### 🌌 Repository Constellation Trail — discover a real connection, then walk it across the night
+- **What's new.** The Stargazer's Observatory now finds a **three-repository constellation** from the town's real public metadata: a specific shared topic first (`llm`, `docker`, `aws`, …), a shared language when topics are sparse, and a truthful town-signal sampler only for tiny mixed towns. Press **Begin the starlight trail** and the city turns to night as luminous threads arc from the telescope across the three chosen houses.
+- **A meaningful exploration loop.** A compact cosmic HUD names the current star and the existing compass points to its house; open that repo's door to collect the star, then follow the next thread. The taxi can carry you to the current stop without inventing a parallel travel system. It makes the city useful as a relationship map — visitors discover *why these repos belong together* by physically crossing the town.
+- **A magical finish with a lasting mark.** Completing all three stars turns every node gold, wakes the aurora, launches fireworks, and awards a new **🌌 Repository Constellation** stamp in the existing Explorer Passport. The trail can be replayed from the Observatory and always selects the same route for the same town/day, so it feels authored rather than random.
+- **Well-behaved.** Purely deterministic and client-only: **zero AI, zero network, zero budget**. The trail adds no scene lights, halves arc detail on `LOW_END`, stops its motion when inactive or the tab is hidden, respects reduced motion, and disposes every temporary geometry/material on replay or exit. Towns with fewer than three repos get a clear unavailable state.
+- **Debug.** `?dbg=1` adds `window.__starTrailPlan()`, `__starTrailStart()`, `__starTrailNext()`, and `__starTrailEnd()` for deterministic plan, launch, progression, reward, visual, and cleanup inspection.
+
 ## [1.71.0] — 2026-07-10
 
 ### 🪑 Two friends sit down together — a stroll that ends on a bench, side by side

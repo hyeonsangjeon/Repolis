@@ -324,6 +324,43 @@
   .obsCard .tags { font-size:11.5px; color:#48506a; margin:3px 0 6px; display:flex; flex-wrap:wrap; gap:5px; }
   .obsCard .tags span { background:#e7ecf8; border-radius:999px; padding:2px 8px; }
   .obsCard .bs { font-size:12.5px; color:#4a4438; line-height:1.55; }
+  .obsTrail { position:relative; overflow:hidden; padding:15px; margin-bottom:14px; border-radius:16px;
+    background:linear-gradient(135deg,#172343 0%,#2d2d62 60%,#433270 100%); color:#eef5ff;
+    border:1px solid rgba(174,205,255,.36); box-shadow:0 9px 24px rgba(20,24,62,.22); }
+  .obsTrail::after { content:"✦"; position:absolute; right:13px; top:7px; color:#ffe8a8; font-size:24px; opacity:.72; }
+  .obsTrail .otK { color:#a9cfff; font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .obsTrail .otT { margin-top:3px; padding-right:25px; font-size:16px; font-weight:850; letter-spacing:.01em; }
+  .obsTrail .otD { margin-top:6px; color:#cbd7ef; font-size:12.5px; line-height:1.5; }
+  .obsTrail .otStops { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .obsTrail .otStops span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    padding:4px 8px; border-radius:999px; background:rgba(173,205,255,.12); border:1px solid rgba(173,205,255,.2);
+    color:#e7efff; font-size:10.5px; font-weight:700; }
+  .obsTrail .otStops span.done { color:#ffe7a0; border-color:rgba(255,224,132,.46); background:rgba(255,216,112,.12); }
+  .obsTrail button { width:100%; min-height:40px; margin-top:12px; border:0; border-radius:11px; cursor:pointer;
+    color:#17213b; background:linear-gradient(135deg,#bce8ff,#f6e7a3); font-family:inherit; font-size:12.5px; font-weight:800;
+    box-shadow:0 5px 15px rgba(0,0,0,.2); transition:transform .12s ease,filter .12s ease; }
+  .obsTrail button:hover { filter:brightness(1.05); transform:translateY(-1px); }
+  .obsTrail.empty { background:linear-gradient(135deg,#30384a,#4b4b58); }
+  /* 🌌 Repository Constellation Trail — compact world HUD; leaves the right-side touch actions clear */
+  #starTrailHud { position:fixed; z-index:12; left:14px; bottom:54px; width:min(330px,calc(100vw - 112px));
+    padding:12px 13px 11px; border-radius:16px; color:#eef5ff; background:linear-gradient(145deg,rgba(13,20,48,.94),rgba(48,34,86,.94));
+    border:1px solid rgba(173,211,255,.42); box-shadow:0 12px 34px rgba(6,10,30,.38); backdrop-filter:blur(9px);
+    visibility:visible; transition:opacity .18s ease,transform .18s ease; }
+  #starTrailHud.hidden { opacity:0; transform:translateY(10px); visibility:hidden; pointer-events:none; }
+  #starTrailHud .stClose { position:absolute; top:7px; right:7px; width:29px; height:29px; border:0; border-radius:50%;
+    cursor:pointer; color:#cbd7ef; background:rgba(255,255,255,.09); font-size:13px; }
+  #starTrailHud .stK { color:#a9cfff; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  #starTrailHud .stTheme { padding-right:28px; margin-top:2px; font-size:14px; font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #starTrailHud .stSteps { display:flex; gap:6px; margin:8px 0 7px; }
+  #starTrailHud .stSteps i { flex:1; height:5px; border-radius:4px; background:rgba(174,196,230,.22); box-shadow:inset 0 0 0 1px rgba(255,255,255,.05); }
+  #starTrailHud .stSteps i.done { background:#f0c96b; box-shadow:0 0 9px rgba(255,215,112,.58); }
+  #starTrailHud .stSteps i.now { background:#8fdfff; box-shadow:0 0 10px rgba(123,220,255,.7); }
+  #starTrailHud .stTarget { color:#d7e3f6; font-size:11.5px; line-height:1.45; }
+  #starTrailHud .stTarget b { color:#fff; }
+  #starTrailHud .stActions { display:flex; gap:7px; margin-top:9px; }
+  #starTrailHud .stActions button { flex:1; min-height:36px; border:0; border-radius:10px; cursor:pointer;
+    color:#16213c; background:#bce8ff; font-family:inherit; font-size:11.5px; font-weight:800; }
+  #starTrailHud.complete { background:linear-gradient(145deg,rgba(48,34,72,.95),rgba(91,57,69,.95)); border-color:rgba(255,218,125,.58); }
   .chronoPhilo { font-size:12.5px; font-style:italic; color:#7a6a3a; padding:9px 12px 4px; }
   .chronoCases { padding:4px 8px 8px; display:flex; flex-wrap:wrap; gap:2px; }
   .chronoCase { display:inline-flex; align-items:center; gap:6px; margin:3px 4px 3px 0; padding:7px 12px; border-radius:999px;
@@ -622,6 +659,8 @@
     #intro .langsel button { min-height: 44px; padding: 10px 22px; }
     #introTour { min-height: 48px; }
     .chronoRecapBtn { min-height: 44px; }
+    .obsTrail button, #starTrailHud .stActions button { min-height: 44px; }
+    #starTrailHud { left:12px; bottom:calc(100px + env(safe-area-inset-bottom,0px)); width:min(280px,calc(100vw - 112px)); }
   }
   /* ---- respect prefers-reduced-motion: keep every bit of info, drop the looping motion ---- */
   @media (prefers-reduced-motion: reduce) {
@@ -736,6 +775,14 @@
 </div>
 
 <div id="prompt"></div>
+<div id="starTrailHud" class="hidden" aria-live="polite">
+  <button id="starTrailClose" class="stClose" type="button" aria-label="End trail">✕</button>
+  <div class="stK" id="starTrailKicker"></div>
+  <div class="stTheme" id="starTrailTheme"></div>
+  <div class="stSteps" id="starTrailSteps"></div>
+  <div class="stTarget" id="starTrailTarget"></div>
+  <div class="stActions" id="starTrailActions"><button id="starTrailRide" type="button"></button></div>
+</div>
 
 <div id="modal">
   <div class="card">
@@ -1055,7 +1102,7 @@ const I18N = {
     visitorsWord:'방문자', entriesWord:'입장', entriesUnit:'회', peopleUnit:'명',
     entriesTodayWord:'오늘 입장', entriesTodayShort:'입장', entriesTotalWord:'누적 입장', entriesTotalShort:'누적', uniqueWord:'고유',
     passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프를 모아요.',
-    passportRepos:'방문한 레포', passportHint:'현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.',
+    passportRepos:'방문한 레포', passportHint:'명소를 찾고 전망대의 저장소 별자리 탐사를 완주하면 스탬프를 받아요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
     passportDistricts:'구역별 탐험', passportDistrictsHint:'각 지구의 레포를 방문하면 채워져요.',
     zbSub:'이 구역의 대표 레포와 나의 탐험 진행률', zbBoard:'구역 안내판',
@@ -1064,7 +1111,7 @@ const I18N = {
     courseTitle:'오늘의 코스', courseGo:'🚕 코스 안내', courseAllDone:'🎉 코스 완주!', courseDone:'✓',
     courseBanner:'🗺️ 오늘의 추천 코스 3곳이 정해졌어요! 여권 🛂에서 확인하고 따라가 보세요', courseReward:'🎉 오늘의 코스를 완주했어요! 멋진 탐험이었어요 ✨',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
-    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대',
+    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
     chronoSub:'주제를 입력하면 세 현자(옹호·회의·분석)가 실시간으로 토론하고, 시간의 의장 크로노스가 결론을 내립니다.',
     chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'예시 주제를 골라 채워 보세요', chronoStage:'⚡ 라이브 AI 토론',
@@ -1086,6 +1133,12 @@ const I18N = {
     obsName:'별빛 전망대', obsReached:' — 별빛 전망대. <span class="key">Enter</span> 또는 클릭으로 올라가기',
     obsTitle:'🔭 별빛 전망대', obsSub:'밤하늘 현자들의 별자리를 한자리에서.', obsHint:'밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾',
     obsSign:'OBSERVATORY', obsStar:'으뜸별', obsConstel:'별자리', obsMyth:'신화', obsClose:'닫기',
+    trailKicker:'저장소 별자리 탐사', trailTitle:'망원경이 찾은 연결', trailThemeTopic:'#{theme} 연결', trailThemeLang:'{theme}로 지은 별자리', trailThemeMix:'마을 신호 별자리',
+    trailTopicDesc:'{theme} 주제를 함께 품은 세 저장소가 밤하늘에 이어졌어요.', trailLangDesc:'{theme}로 지어진 세 저장소가 밤하늘에 이어졌어요.', trailMixDesc:'도시의 서로 다른 세 신호를 별길로 엮었어요.',
+    trailStart:'🌌 별빛 탐사 시작', trailResume:'🌌 탐사 계속하기', trailReplay:'↻ 별자리 다시 펼치기', trailUnavailable:'이 마을에는 별자리로 이을 집이 세 곳보다 적어요.',
+    trailProgress:'별 {done}/{total}', trailTarget:'다음 별 · {repo}', trailOpenHint:'집을 열어 별을 수집하세요.', trailRide:'🚕 이 별로 이동', trailStop:'탐사 종료',
+    trailStarted:'🌌 {theme} 별자리가 도시 위에 깨어났어요. 첫 번째 빛을 따라가세요!', trailFound:'✦ {repo}의 별을 찾았어요! ({done}/{total})',
+    trailComplete:'🌌 저장소 별자리 완성! 도시의 연결이 오로라로 빛나요.', trailCompleteTitle:'별자리 완성', trailCompleteSub:'세 저장소의 연결을 모두 발견했어요.',
     lmObs:'별빛 전망대로 모실게요 🔭 별과 현자들을 만나러 가요.', lmDriveObs:'별빛 전망대로 갑니다… 🔭✨', lmArriveObs:'별빛 전망대에 도착했어요. 하늘을 올려다보세요 🔭',
     ferrisName:'대관람차', ferrisReached:' — 마을이 한눈에 보이는 대관람차. <span class="key">Enter</span> 또는 클릭으로 탑승',
     ferrisRiding:'🎡 마을이 한눈에! 한 바퀴 천천히 돌아 내려와요…', ferrisBoard:'🎡 대관람차에 탑승! 위로 올라가며 마을을 둘러보세요', ferrisDone:'🎡 즐거운 탑승이었어요! 또 타러 오세요',
@@ -1200,7 +1253,7 @@ const I18N = {
     visitorsWord:'visitors', entriesWord:'entries', entriesUnit:'', peopleUnit:'',
     entriesTodayWord:'entries today', entriesTodayShort:'entries', entriesTotalWord:'total entries', entriesTotalShort:'total', uniqueWord:'unique',
     passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps.',
-    passportRepos:'Repos visited', passportHint:'Walk up to a scholar, the library, a canal or the plaza to earn a stamp.',
+    passportRepos:'Repos visited', passportHint:'Find landmarks and complete the Observatory\'s Repository Constellation Trail to earn stamps.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
     passportDistricts:'District progress', passportDistrictsHint:'Fills up as you visit each district\'s repos.',
     zbSub:'Representative repos and your exploration here', zbBoard:'district board',
@@ -1209,7 +1262,7 @@ const I18N = {
     courseTitle:'Today\'s course', courseGo:'🚕 Guide me', courseAllDone:'🎉 Course complete!', courseDone:'✓',
     courseBanner:'🗺️ Today\'s 3-stop route is ready! Open your Passport 🛂 to follow it', courseReward:'🎉 You completed today\'s course! Lovely exploring ✨',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
-    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory',
+    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
     chronoSub:'Type a topic and three sages (advocate · skeptic · analyst) debate it live; the Chair of Time, KRONOS, delivers the verdict.',
     chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick an example to fill the box', chronoStage:'⚡ Live AI debate',
@@ -1231,6 +1284,12 @@ const I18N = {
     obsName:'Stargazer\'s Observatory', obsReached:' — the Stargazer\'s Observatory. <span class="key">Enter</span> or click to climb up',
     obsTitle:'🔭 Stargazer\'s Observatory', obsSub:'The night-sky scholars\' constellations, all in one place.', obsHint:'Climb up at night to see the scholars\' constellations at their brightest. ☾',
     obsSign:'OBSERVATORY', obsStar:'Star', obsConstel:'Constellation', obsMyth:'Myth', obsClose:'Close',
+    trailKicker:'Repository Constellation Trail', trailTitle:'A connection in the telescope', trailThemeTopic:'#{theme} thread', trailThemeLang:'Built in {theme}', trailThemeMix:'Town-signal constellation',
+    trailTopicDesc:'Three repos sharing the {theme} theme have joined across the night sky.', trailLangDesc:'Three repos built in {theme} have joined across the night sky.', trailMixDesc:'Three different signals from this town are woven into a trail of stars.',
+    trailStart:'🌌 Begin the starlight trail', trailResume:'🌌 Resume the trail', trailReplay:'↻ Unfurl the constellation again', trailUnavailable:'This town has fewer than three houses to join into a constellation.',
+    trailProgress:'Stars {done}/{total}', trailTarget:'Next star · {repo}', trailOpenHint:'Open the house to collect its star.', trailRide:'🚕 Ride to this star', trailStop:'End trail',
+    trailStarted:'🌌 The {theme} constellation has awakened above the town. Follow its first light!', trailFound:'✦ Found {repo}\'s star! ({done}/{total})',
+    trailComplete:'🌌 Repository constellation complete! Its connections are shining through the aurora.', trailCompleteTitle:'Constellation complete', trailCompleteSub:'You discovered the connection across all three repos.',
     lmObs:'Off to the Stargazer\'s Observatory 🔭 to meet the stars and the scholars.', lmDriveObs:'Driving to the Observatory… 🔭✨', lmArriveObs:'We\'ve reached the Observatory. Look up at the sky 🔭',
     ferrisName:'Grand Ferris Wheel', ferrisReached:' — the grand Ferris wheel over the village. Press <span class="key">Enter</span> or click to board',
     ferrisRiding:'🎡 The whole village at a glance! Riding one slow turn back down…', ferrisBoard:'🎡 Aboard the Ferris wheel! Rise up and take in the village', ferrisDone:'🎡 Hope you enjoyed the ride! Come again',
@@ -1353,6 +1412,7 @@ function applyLang(){
   if(typeof renderPassport==='function' && !document.getElementById('passport').classList.contains('hidden')) renderPassport();
   if(typeof renderChronoCase==='function' && chronoModal && chronoModal.classList.contains('show') && chronoCaseId){ renderChronoCase(chronoCaseId); chronoModalLang=LANG; }
   if(typeof renderObservatory==='function' && typeof obsModal!=='undefined' && obsModal && obsModal.classList.contains('show')) renderObservatory();
+  if(typeof renderStarTrailHud==='function') renderStarTrailHud();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
   if(typeof refreshDistrictSigns==='function') refreshDistrictSigns();
   if(typeof refreshHubSigns==='function') refreshHubSigns();
@@ -4015,11 +4075,116 @@ function closeChrono(){ modalOpen=false; chronoModal.classList.remove('show'); }
 document.getElementById('chronoClose').onclick=closeChrono;
 chronoModal.addEventListener('click',e=>{ if(e.target===chronoModal) closeChrono(); });
 
-/* ---- 🔭 Observatory modal: the active night-sky scholars, their stars, constellations & myths (deterministic, 0 KS) ---- */
+/* ---- 🌌 Repository Constellation Trail: the Observatory reveals a deterministic three-repo connection,
+   then the visitor follows real house metadata through the existing compass/taxi/passport loop (0 AI). ---- */
+/*CONSTELLATION_SELECTOR:START*/
+const TRAIL_TOPIC_STOP = new Set(['github','open-source','opensource','example','examples','sample','samples','tutorial','tutorials','python','javascript','java']);
+function _trailHash(s){ let h=2166136261; for(const c of String(s||'')){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
+function constellationPick(repos,user,dayKey){
+  const clean=(Array.isArray(repos)?repos:[]).filter(r=>r&&r.repo);
+  if(clean.length<3) return null;
+  const topics=new Map(), langs=new Map();
+  for(const r of clean){
+    const seen=new Set();
+    for(const raw of (Array.isArray(r.topics)?r.topics:[])){ const k=String(raw||'').trim().toLowerCase();
+      if(!k||TRAIL_TOPIC_STOP.has(k)||seen.has(k)) continue; seen.add(k); if(!topics.has(k)) topics.set(k,[]); topics.get(k).push(r); }
+    const lang=String(r.lang||'').trim(); if(lang&&lang!=='Other'&&lang!=='—'){ if(!langs.has(lang)) langs.set(lang,[]); langs.get(lang).push(r); }
+  }
+  let candidates=[...topics].filter(([,rs])=>rs.length>=3).map(([key,rs])=>({id:'topic:'+key,kind:'topic',key,repos:rs}));
+  if(!candidates.length) candidates=[...langs].filter(([,rs])=>rs.length>=3).map(([key,rs])=>({id:'lang:'+key,kind:'lang',key,repos:rs}));
+  if(!candidates.length) candidates=[{id:'mix',kind:'mix',key:'mix',repos:clean}];
+  const seed=String(user||'town')+'|'+String(dayKey||'today');
+  candidates.sort((a,b)=>_trailHash(seed+'|'+a.id)-_trailHash(seed+'|'+b.id)||a.id.localeCompare(b.id));
+  const chosen=candidates[0], stops=chosen.repos.slice().sort((a,b)=>_trailHash(seed+'|'+chosen.id+'|'+a.repo)-_trailHash(seed+'|'+chosen.id+'|'+b.repo)||a.repo.localeCompare(b.repo)).slice(0,3);
+  return {id:chosen.id,kind:chosen.kind,key:chosen.key,stops};
+}
+/*CONSTELLATION_SELECTOR:END*/
+let STAR_TRAIL=null;
+const starTrailHud=document.getElementById('starTrailHud');
+function _trailDay(){ return new Date().toISOString().slice(0,10); }
+function dailyConstellation(){ const p=constellationPick(REPOS,currentUser,_trailDay()); if(p) p.day=_trailDay(); return p; }
+function starTrailTheme(plan){ if(!plan) return ''; if(plan.kind==='topic') return tf('trailThemeTopic',{theme:plan.key});
+  if(plan.kind==='lang') return tf('trailThemeLang',{theme:plan.key}); return t('trailThemeMix'); }
+function starTrailDesc(plan){ if(!plan) return t('trailUnavailable'); const theme=plan.kind==='topic'?('#'+plan.key):plan.key;
+  return tf(plan.kind==='topic'?'trailTopicDesc':plan.kind==='lang'?'trailLangDesc':'trailMixDesc',{theme}); }
+function _removeStarTrailVisuals(){ if(!STAR_TRAIL||!STAR_TRAIL.visual) return; const g=STAR_TRAIL.visual.group;
+  g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material){ const mm=Array.isArray(o.material)?o.material:[o.material]; mm.forEach(m=>m.dispose()); } }); scene.remove(g); STAR_TRAIL.visual=null; }
+function _trailRoofPoint(repo){ return new THREE.Vector3(repo._pos.x,Math.min(26,(repo._h||6)+7),repo._pos.z); }
+function buildStarTrailVisuals(){
+  const g=new THREE.Group(); g.name='repository-constellation-trail'; scene.add(g);
+  const nodes=[], lines=[], count=LOW_END?7:13;
+  let from=new THREE.Vector3(OBS?OBS._pos.x:OBS_POS.x,6,OBS?OBS._pos.z:OBS_POS.z);
+  STAR_TRAIL.stops.forEach(repo=>{
+    const to=_trailRoofPoint(repo), pts=[];
+    for(let i=0;i<count;i++){ const f=i/(count-1), p=from.clone().lerp(to,f); p.y+=Math.sin(f*Math.PI)*(4+Math.min(6,from.distanceTo(to)*0.025)); pts.push(p); }
+    const lm=new THREE.LineBasicMaterial({color:0x7384b8,transparent:true,opacity:.24,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending});
+    const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lm); line.frustumCulled=false; g.add(line); lines.push(line);
+    const sm=new THREE.SpriteMaterial({map:STAR_TEX,color:0x8394c8,transparent:true,opacity:.46,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending});
+    const sprite=new THREE.Sprite(sm); sprite.position.copy(to); sprite.scale.set(4.2,4.2,1); sprite.renderOrder=9; g.add(sprite);
+    const rm=new THREE.MeshBasicMaterial({color:0x7181b4,transparent:true,opacity:.2,depthWrite:false,depthTest:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});
+    const ring=new THREE.Mesh(new THREE.RingGeometry(2.7,3.25,32),rm); ring.rotation.x=-Math.PI/2; ring.position.set(to.x,.09,to.z); ring.renderOrder=8; g.add(ring);
+    const bm=new THREE.LineBasicMaterial({color:0x7181b4,transparent:true,opacity:.13,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending});
+    const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(to.x,.15,to.z),to.clone()]),bm); beam.frustumCulled=false; g.add(beam);
+    nodes.push({sprite,ring,beam}); from=to;
+  });
+  STAR_TRAIL.visual={group:g,nodes,lines}; _paintStarTrail();
+}
+function _paintStarTrail(){ if(!STAR_TRAIL||!STAR_TRAIL.visual) return; const done=STAR_TRAIL.index;
+  STAR_TRAIL.visual.nodes.forEach((n,i)=>{ const past=i<done, now=STAR_TRAIL.active&&i===done, col=past?0xffd86b:now?0x9fe8ff:0x7384b8;
+    n.sprite.material.color.setHex(col); n.sprite.material.opacity=past?.95:now?1:.4;
+    n.ring.material.color.setHex(col); n.ring.material.opacity=past?.42:now?.72:.16;
+    n.beam.material.color.setHex(col); n.beam.material.opacity=past?.28:now?.44:.1;
+    const line=STAR_TRAIL.visual.lines[i]; line.material.color.setHex(col); line.material.opacity=past?.62:now?.78:.2; });
+}
+function updateStarTrail(t){ if(!STAR_TRAIL||!STAR_TRAIL.active||!STAR_TRAIL.visual||document.hidden) return; const now=STAR_TRAIL.index;
+  STAR_TRAIL.visual.nodes.forEach((n,i)=>{ const k=(!REDUCED&&i===now)?(1+Math.sin(t*3.1)*.13):1, s=(i===now?5.1:4.2)*k; n.sprite.scale.set(s,s,1);
+    if(!REDUCED) n.ring.rotation.z=t*(i===now?.42:.12)+(i*2.1); }); }
+function renderStarTrailHud(){ if(!starTrailHud) return; if(!STAR_TRAIL){ starTrailHud.classList.add('hidden'); return; }
+  const total=STAR_TRAIL.stops.length, done=STAR_TRAIL.index, complete=STAR_TRAIL.complete;
+  starTrailHud.classList.remove('hidden'); starTrailHud.classList.toggle('complete',!!complete);
+  document.getElementById('starTrailKicker').textContent=t('trailKicker');
+  document.getElementById('starTrailTheme').textContent=complete?t('trailCompleteTitle'):starTrailTheme(STAR_TRAIL.plan);
+  document.getElementById('starTrailSteps').innerHTML=STAR_TRAIL.stops.map((_,i)=>`<i class="${i<done?'done':i===done&&STAR_TRAIL.active?'now':''}"></i>`).join('');
+  const target=STAR_TRAIL.stops[done];
+  document.getElementById('starTrailTarget').innerHTML=complete
+    ? `<b>${_esc(t('trailCompleteSub'))}</b>`
+    : `<b>${_esc(tf('trailTarget',{repo:target.label}))}</b><br>${_esc(t('trailOpenHint'))} · ${_esc(tf('trailProgress',{done,total}))}`;
+  document.getElementById('starTrailActions').style.display=complete?'none':'flex';
+  document.getElementById('starTrailRide').textContent=t('trailRide');
+  document.getElementById('starTrailClose').setAttribute('aria-label',t('trailStop')); }
+function _clearStarTrailNav(){ if(!STAR_TRAIL||!navTarget||STAR_TRAIL.stops.indexOf(navTarget)<0) return;
+  navTarget=null; navHolder.visible=false; document.getElementById('navBadge').style.display='none'; }
+function endStarTrail(){ _clearStarTrailNav(); _removeStarTrailVisuals(); STAR_TRAIL=null; renderStarTrailHud(); track('constellation_end'); }
+function startStarTrail(){
+  const plan=dailyConstellation(); if(!plan) return false;
+  if(STAR_TRAIL&&STAR_TRAIL.active&&STAR_TRAIL.plan.id===plan.id){ closeObservatory(); setTimeOfDay(true); setNav(STAR_TRAIL.stops[STAR_TRAIL.index]); renderStarTrailHud(); return true; }
+  _removeStarTrailVisuals(); STAR_TRAIL={plan,stops:plan.stops,index:0,active:true,complete:false,visual:null};
+  buildStarTrailVisuals(); setTimeOfDay(true); _auroraBoost=Math.max(_auroraBoost,7); closeObservatory(); setNav(STAR_TRAIL.stops[0]); renderStarTrailHud();
+  showWave(tf('trailStarted',{theme:starTrailTheme(plan)}),4200); track('constellation_start',{kind:plan.kind,key:plan.key}); lastAct=performance.now(); return true;
+}
+function starTrailVisit(repo){ if(!STAR_TRAIL||!STAR_TRAIL.active||STAR_TRAIL.stops[STAR_TRAIL.index]!==repo) return false;
+  STAR_TRAIL.index++; const done=STAR_TRAIL.index, total=STAR_TRAIL.stops.length;
+  popSparkle(repo._pos.x,(repo._h||6)+5,repo._pos.z,0xa8eaff); track('constellation_star',{repo:repo.repo,done,total});
+  if(done>=total){ STAR_TRAIL.active=false; STAR_TRAIL.complete=true; _clearStarTrailNav(); _paintStarTrail(); renderStarTrailHud();
+    const fresh=addStamp('constellation'); if(!fresh) fireworksShow(9); _auroraBoost=Math.max(_auroraBoost,12);
+    showWave(t('trailComplete'),4600); track('constellation_complete',{kind:STAR_TRAIL.plan.kind,key:STAR_TRAIL.plan.key}); }
+  else { _paintStarTrail(); setNav(STAR_TRAIL.stops[done]); renderStarTrailHud(); showWave(tf('trailFound',{repo:repo.label,done,total}),3000); }
+  return true;
+}
+document.getElementById('starTrailClose').onclick=endStarTrail;
+document.getElementById('starTrailRide').onclick=()=>{ if(STAR_TRAIL&&STAR_TRAIL.active) taxiTo(STAR_TRAIL.stops[STAR_TRAIL.index]); };
+
+/* ---- 🔭 Observatory modal: launch the repo trail, or meet the active night-sky scholars (deterministic, 0 KS) ---- */
 const obsModal=document.getElementById('obsModal');
 function renderObservatory(){ const body=document.getElementById('obsBody'); if(!body) return; const ko=LANG==='ko';
+  const plan=dailyConstellation(), same=plan&&STAR_TRAIL&&STAR_TRAIL.plan.id===plan.id, done=same?STAR_TRAIL.index:0;
+  const trail=plan
+    ? `<div class="obsTrail"><div class="otK">${_esc(t('trailKicker'))}</div><div class="otT">🌌 ${_esc(starTrailTheme(plan))}</div>`
+      +`<div class="otD">${_esc(starTrailDesc(plan))}</div><div class="otStops">${plan.stops.map((r,i)=>`<span class="${i<done?'done':''}">${i<done?'✦':'·'} ${_esc(r.label)}</span>`).join('')}</div>`
+      +`<button type="button" id="obsTrailStart">${_esc(same&&STAR_TRAIL.active?t('trailResume'):same&&STAR_TRAIL.complete?t('trailReplay'):t('trailStart'))}</button></div>`
+    : `<div class="obsTrail empty"><div class="otK">${_esc(t('trailKicker'))}</div><div class="otT">${_esc(t('trailTitle'))}</div><div class="otD">${_esc(t('trailUnavailable'))}</div></div>`;
   const list=(window.SCHOLARS||[]).filter(s=>s.active);
-  body.innerHTML = list.map(s=>{
+  body.innerHTML = trail+list.map(s=>{
     const epi=ko?(s.epithetKo||''):(s.epithetEn||''), myth=ko?(s.mythKo||''):(s.mythEn||'');
     const con=s.constellation?(ko?(s.constellation.nameKo||''):(s.constellation.nameEn||'')):'';
     const bs=s.backstory?(s.backstory[ko?'ko':'en']||''):'';
@@ -4029,6 +4194,7 @@ function renderObservatory(){ const body=document.getElementById('obsBody'); if(
       +`<div class="tags"><span>🌌 ${t('obsConstel')}: ${_esc(con)}</span><span>📖 ${t('obsMyth')}: ${_esc(myth)}</span></div>`
       +`<div class="bs">${_esc(bs)}</div></div></div>`;
   }).join('');
+  const start=document.getElementById('obsTrailStart'); if(start) start.onclick=startStarTrail;
 }
 function openObservatory(){ modalOpen=true; obsModal.classList.add('show'); renderObservatory(); document.getElementById('obsBody').scrollTop=0; }
 function closeObservatory(){ modalOpen=false; obsModal.classList.remove('show'); }
@@ -5222,6 +5388,7 @@ const PASS_LANDMARKS=[
   {id:'canal',            ico:'🛶', key:'lmCanal'},
   {id:'chrono',           ico:'⏳', key:'lmChrono'},
   {id:'observatory',      ico:'🔭', key:'lmObservatory'},
+  {id:'constellation',    ico:'🌌', key:'lmConstellation'},
   {id:'ferris',           ico:'🎡', key:'ferrisName'},
   {id:'carousel',         ico:'🎠', key:'carouselName'},
 ];
@@ -5500,6 +5667,7 @@ window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=re
   if(k!==(modal._repoKey||'')){ const r=repoByKey(k); if(r) openCard(r); } });
 
 function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
+  starTrailVisit(repo);
   modalOpen=true; modal.classList.add('show'); modal._repoKey=repo.repo||null; setRepoHash(repo);
   document.getElementById('cardTop').style.background=repo.color;
   document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
@@ -6685,6 +6853,7 @@ function animate(){
   updateMeteor(dt);
   updateFireworks(dt);
   updateVisitFx(dt);
+  updateStarTrail(clock.elapsedTime);
   updateNpcs(dt);
   updateResidents(dt);
   updateGlowFlora(clock.elapsedTime);
@@ -6956,6 +7125,15 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__obsOpen=()=>{ openObservatory(); const body=document.getElementById('obsBody'); return { show:obsModal.classList.contains('show'), cards:body.querySelectorAll('.obsCard').length, stars:[...body.querySelectorAll('.obsCard .star')].map(e=>e.textContent.trim()), tags:[...body.querySelectorAll('.obsCard .tags span')].map(e=>e.textContent.trim()) }; };
   window.__obsClose=()=>{ closeObservatory(); return !obsModal.classList.contains('show'); };
   window.__obsScan=()=>{ let mind=Infinity,who=null; for(const b of buildings){ const dx=(b._x!=null?b._x:b.position.x)-OBS_POS.x, dz=(b._z!=null?b._z:b.position.z)-OBS_POS.z; const edge=Math.hypot(dx,dz)-(b._cw||3); if(edge<mind){ mind=edge; who=b.repo; } } return { obsCenterR:+Math.hypot(OBS_POS.x,OBS_POS.z).toFixed(1), nearestBld:who, nearestEdge:+mind.toFixed(1), baseR:7.8 }; };
+  const _starTrailDebug=()=>{ const p=STAR_TRAIL?STAR_TRAIL.plan:dailyConstellation(); return { available:!!p, active:!!(STAR_TRAIL&&STAR_TRAIL.active), complete:!!(STAR_TRAIL&&STAR_TRAIL.complete),
+    kind:p?p.kind:null, key:p?p.key:null, theme:p?starTrailTheme(p):null, index:STAR_TRAIL?STAR_TRAIL.index:0,
+    stops:p?p.stops.map(r=>r.repo):[], current:STAR_TRAIL&&STAR_TRAIL.active?STAR_TRAIL.stops[STAR_TRAIL.index].repo:null,
+    visual:!!(STAR_TRAIL&&STAR_TRAIL.visual), meshes:STAR_TRAIL&&STAR_TRAIL.visual?STAR_TRAIL.visual.group.children.length:0,
+    hud:!starTrailHud.classList.contains('hidden'), stamp:passHasStamp('constellation'), night:isNight }; };
+  window.__starTrailPlan=()=>_starTrailDebug();
+  window.__starTrailStart=()=>{ startStarTrail(); return _starTrailDebug(); };
+  window.__starTrailNext=()=>{ if(STAR_TRAIL&&STAR_TRAIL.active) starTrailVisit(STAR_TRAIL.stops[STAR_TRAIL.index]); return _starTrailDebug(); };
+  window.__starTrailEnd=()=>{ endStarTrail(); return _starTrailDebug(); };
   window.__ferris=()=>({ has:!!FERRIS, pos:FERRIS?{x:+FERRIS._pos.x.toFixed(1),z:+FERRIS._pos.z.toFixed(1)}:null, board:FERRIS?{x:+FERRIS.board.x.toFixed(1),z:+FERRIS.board.z.toFixed(1)}:null, near:!!nearFerris, riding:!!ferris, turned:ferris?+ferris.turned.toFixed(2):0, dist:FERRIS?+player.position.distanceTo(FERRIS.board).toFixed(1):null });
   window.__board=()=>{ if(!FERRIS) return 'no ferris'; const b=FERRIS.board; player.position.set(b.x,0,b.z); return window.__ferris(); };
   window.__carousel=()=>({ has:!!CAROUSEL, pos:CAROUSEL?{x:+CAROUSEL._pos.x.toFixed(1),z:+CAROUSEL._pos.z.toFixed(1)}:null, board:CAROUSEL?{x:+CAROUSEL.board.x.toFixed(1),z:+CAROUSEL.board.z.toFixed(1)}:null, near:!!nearCarousel, riding:!!carousel, turned:carousel?+carousel.turned.toFixed(2):0, dist:CAROUSEL?+player.position.distanceTo(CAROUSEL.board).toFixed(1):null });
