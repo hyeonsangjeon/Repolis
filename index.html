@@ -4561,6 +4561,17 @@ function _bondSeekTarget(L){ const ids=_RES_BONDS[L.res.id]; if(!ids||!ids.lengt
     if(d<bd){ bd=d; best=F; } }
   if(!best) return null; const fx=best.group.position.x, fz=best.group.position.z, a=Math.atan2(L.group.position.x-fx, L.group.position.z-fz);   // a spot a short step from the friend, on L's side, so they meet nicely
   return { x:fx+Math.sin(a)*3.0, z:fz+Math.cos(a)*3.0 }; }
+// 🚶 after two close friends greet, they amble off together for a short side-by-side stroll before parting — the town's friendships, in motion
+const NPC_STROLL_CD=(LOW_END?72:54); let _strollGlobalCd=0;
+function _strollPartLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko';
+  const b= ko?[`잘 걸었어요, ${nm} — 또 봐요!`,`${nm}, 오늘 산책 즐거웠어요.`,`덕분에 좋았어요 ${nm}, 이따 또!`,`${nm}, 살펴 가요. 또 만나요.`]:[`Good walk, ${nm} — see you!`,`${nm}, that stroll was lovely.`,`Enjoyed that, ${nm} — later!`,`Take care, ${nm}, till next time.`]; return b[(Math.random()*b.length)|0]; }
+function _startStroll(lead,follow){ const tt=clock.elapsedTime; if(!lead||!follow||lead._stroll||follow._stroll||tt<_strollGlobalCd) return false;
+  if(lead._rest||follow._rest||lead._joinWalk||follow._joinWalk||_festival) return false;
+  const dur=6.5+Math.random()*5, th=lead.group.rotation.y, rx=Math.cos(th), rz=-Math.sin(th);   // side = whichever side the follower is already on, so they don't cross over to start
+  const rel=(follow.group.position.x-lead.group.position.x)*rx+(follow.group.position.z-lead.group.position.z)*rz, side=rel<0?-1:1;
+  lead._stroll={ with:follow, role:'lead', until:tt+dur, wp:null }; follow._stroll={ with:lead, role:'follow', until:tt+dur, side };
+  _strollGlobalCd=tt+dur+NPC_STROLL_CD+Math.random()*30; _emitMetric('npc_stroll',{lead:lead.res.id,follow:follow.res.id}); return true; }
+function _endStroll(L,tt){ L._stroll=null; L._rt=null; L._rp=tt+RES_MOVE.pauseMin+Math.random()*3; L._noticeCd=tt+24; L._noticeTryAt=tt+8; }   // part warmly, then a beat before either greets again
 function _tryPeerNotice(L,tt,force){ if((_ambConv||_festival||document.hidden) && !force) return null;
   if(!force && (L._gt>0 || tt<(L._noticeCd||0) || tt<_peerGlobalCd)) return null;
   let P=null,pd=1e9; for(const O of RESIDENTS_LIVE){ if(O===L || !_peerIdle(O)) continue; if(!force && (O._gt>0 || tt<(O._noticeCd||0))) continue; if(_ambConv && _ambConv.members.indexOf(O)>=0) continue;
@@ -4770,6 +4781,7 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
   for(const L of RESIDENTS_LIVE){ const g=L.group; const mood=_resMood(L,tt);
     const inConv=C&&C.members.indexOf(L)>=0, speaker=C?C.members[C.si]:null;
     const chatBound=_resChatActive()&&activeNpc&&(activeNpc.res===L.res || (activeGroupMembers&&activeGroupMembers.indexOf(L)>=0)); let moving=false;
+    if(L._stroll && (inConv||chatBound||_festival||L._rest||L._pNear)) _endStroll(L,tt);   // a stroll yields the moment the visitor, a gathering, the festival, or a rest claims either friend
     // warm welcome: the moment the visitor steps up, the resident notices — a wave + a short hello (edge-triggered + cooldown, so it never spams)
     if(!inConv && !chatBound && !hidden){
       const pnear=Math.hypot(player.position.x-g.position.x, player.position.z-g.position.z)<RES_GREET_DIST;
@@ -4799,7 +4811,15 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
     else if(inConv && C.phase==='approach' && !hidden && NPC_CFG.motionEnabled){
       if(Math.hypot(g.position.x-C.center.x,g.position.z-C.center.z)>RES_MOVE.talkDist){ _resWalk(L,C.center.x,C.center.z,RES_MOVE.meetSpd,dt); moving=true; }   // everyone converges on the shared circle centre, forming a ring (never piles onto one partner)
     } else if(!_festival && !inConv && !chatBound && !hidden && NPC_CFG.motionEnabled){   // wander is NOT gated on LOW_END — low-end just moves slower (RES_MOVE.wanderSpd); only a hidden tab / chat / conversation / festival stops it
-      if(L._rest && L._rest.phase==='goto'){   // strolling over to the chosen bench, then sit
+      if(L._stroll){ const S=L._stroll, W=S.with;   // 🚶 strolling side-by-side with a friend
+        if(tt>=S.until || !W || !W._stroll || W._stroll.with!==L || W._rest || W._joinWalk){   // stroll's over, or the friend got pulled away
+          if(!L._pNear && S.role==='lead' && tt>=(L._strollSayCd||0) && Math.random()<0.6){ L._strollSayCd=tt+18; L.bub.say(_strollPartLine(L,W), _hex(L.res.color)); L._gt=1.6; } _endStroll(L,tt); }
+        else { let tx=null,tz=null;
+          if(S.role==='lead'){ if(!S.wp || Math.hypot(g.position.x-S.wp.x,g.position.z-S.wp.z)<2.2) S.wp=_resRoamTarget(L)||S.wp; if(S.wp){ tx=S.wp.x; tz=S.wp.z; } }
+          else { const th=W.group.rotation.y, sd=S.side||1; tx=W.group.position.x - Math.sin(th)*0.7 + Math.cos(th)*1.7*sd; tz=W.group.position.z - Math.cos(th)*0.7 - Math.sin(th)*1.7*sd; }   // a step beside + just behind the friend, keeping pace
+          if(tx!=null) _resWalk(L,tx,tz,L._wspd*0.82,dt); moving=true; }
+      }
+      else if(L._rest && L._rest.phase==='goto'){   // strolling over to the chosen bench, then sit
         if(_resWalk(L,L._rest.seat.x,L._rest.seat.z,L._wspd,dt)){ L._rest.phase='sit'; L._rest.until=tt+RES_MOVE.restMin+Math.random()*(RES_MOVE.restMax-RES_MOVE.restMin); _resSit(L,L._rest.seat); L.bub.update(dt); continue; } else moving=true;
       } else {
         if(!L._rt && tt>=L._rp){
@@ -4823,7 +4843,7 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
     // 🤝 residents notice each other: answer a neighbour who just greeted us, or (idle + off-cooldown) greet a nearby idle neighbour by name
     if(!_festival && !inConv && !chatBound && !L._pNear){
       if(L._replyPeer && tt>=(L._replyAt||0)){ const P=L._replyPeer; L._replyPeer=null;
-        if(L._gt<=0 && _peerIdle(L) && P && Math.hypot(P.group.position.x-g.position.x,P.group.position.z-g.position.z)<=NPC_PEER_R+1.5){ L.bub.say(_isFriend(L,P)?_bondReplyLine(L,P):_peerReplyLine(L,P), _hex(L.res.color)); L._gt=1.8; L._facePeer=P; L._facePeerUntil=tt+2.0; } }
+        if(L._gt<=0 && _peerIdle(L) && P && Math.hypot(P.group.position.x-g.position.x,P.group.position.z-g.position.z)<=NPC_PEER_R+1.5){ L.bub.say(_isFriend(L,P)?_bondReplyLine(L,P):_peerReplyLine(L,P), _hex(L.res.color)); L._gt=1.8; L._facePeer=P; L._facePeerUntil=tt+2.0; if(_isFriend(L,P)) _startStroll(P,L); } }   // close friends amble off together after the hello
       else if(L._gt<=0 && tt>=(L._noticeTryAt||0)){ L._noticeTryAt=tt+3+Math.random()*4; _tryPeerNotice(L,tt); } }
     let tgt;
     if(_festival && !chatBound){ tgt=Math.atan2(_festival.center.x-g.position.x, _festival.center.z-g.position.z); }   // face the bonfire
@@ -7008,6 +7028,8 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
   window.__peerNotice=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0]; if(!L) return { ok:false }; L._noticeCd=0; L._gt=0; _peerGlobalCd=0; const P=_tryPeerNotice(L,clock.elapsedTime,true); return { ok:!!P, from:L.res.id, to:P?P.res.id:null, line:P?null:'no idle neighbour found' }; };   // 🤝 force one resident to greet the nearest idle neighbour now
   window.__bonds=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, friends:_RES_BONDS[L.res.id]||[], dist:(_RES_BONDS[L.res.id]||[]).map(fid=>{ const F=RESIDENTS_LIVE.find(x=>x.res.id===fid); return F?{ id:fid, d:+Math.hypot(L.group.position.x-F.group.position.x,L.group.position.z-F.group.position.z).toFixed(1) }:null; }) }));   // 🫂 each resident's close friend(s) + current distance
   window.__goFriend=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; const t=_bondSeekTarget(L); if(!t) return { ok:false, reason:'no reachable friend' }; if(L._rest) _seatRelease(L); L._rt={x:t.x,z:t.z}; L._toBond=true; L._bondSeekCd=0; return { ok:true, id:L.res.id, friends:_RES_BONDS[L.res.id]||[], target:[+t.x.toFixed(1),+t.z.toFixed(1)] }; };   // send a resident to seek their friend now
+  window.__stroll=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return { ok:false }; const fid=(_RES_BONDS[L.res.id]||[])[0], F=fid&&RESIDENTS_LIVE.find(x=>x.res.id===fid); if(!F) return { ok:false, reason:'no friend' };   // 🚶 start a side-by-side friend stroll right here, now
+    F.group.position.set(L.group.position.x+2.4, 0, L.group.position.z); [L,F].forEach(r=>{ if(r._rest) _seatRelease(r); r._rt=null; r._joinWalk=null; r._stroll=null; }); _strollGlobalCd=0; const ok=_startStroll(L,F); return { ok, lead:L.res.id, follow:F.res.id, until:ok?+L._stroll.until.toFixed(1):null }; };   // send a resident to seek their friend now
   window.__greet=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];
     if(!L) return null; if(_resChatActive()&&activeNpc&&activeNpc.res===L.res) return { who:L.res.id, skipped:'chatBound' };   // never paint a greeting over a resident the visitor is mid-chat with
     L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6; L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN);

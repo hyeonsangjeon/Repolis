@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.70.0] — 2026-07-10
+
+### 🚶 Two friends amble off together — the town's bonds, now in motion
+- **What's new.** The friendships from 1.69.0 now **move**. When two close friends greet each other, they don't just exchange warm words and part — they **stroll off together, side by side**, for a little while before saying goodbye (*"잘 걸었어요, 노아 — 또 봐요!"*). You'll see Sol and Noa, or Jun and Tae, **walking the lanes as a pair**, one gently leading and the other keeping pace at their shoulder — a friendship you can watch, not just overhear.
+- **How it feels.** After the hello-and-reply, the initiator ambles toward a gentle waypoint and their friend falls in **a step beside and just behind** them, matched to their pace; they wander together for ~7–11s, then part with a warm word and drift back into their own routines. It reads exactly like two friends who bumped into each other and decided to walk a bit.
+- **How it works.** A tiny `_stroll` state pairs a **lead** (picks soft `_resRoamTarget` waypoints) with a **follower** (tracks a side-offset spot from the lead's heading, on whichever side they were already standing, so they never cross over to start). Purely scripted, **zero-AI / zero-budget**, at a slightly relaxed pace. It's globally cooldown-gated (stays occasional) and **desync-safe**: it ends the instant the timer runs out or either friend is claimed by the visitor, a gathering, the festival, or a rest — and stops on a hidden tab.
+- **Preserved.** Every earlier layer (named bonds, moods + fellow-feeling, daily rhythm, cherished haunts, festival, goodbyes, campfire, group chat), budget/env gating, hidden-tab stop. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__stroll(id)` (start a friend stroll on the spot).
+
 ## [1.69.0] — 2026-07-10
 
 ### 🫂 The residents have close friends — bonds they seek out and greet more warmly
