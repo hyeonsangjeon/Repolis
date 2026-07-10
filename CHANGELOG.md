@@ -3,6 +3,15 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.68.0] — 2026-07-10
+
+### 💗 The residents have an inner life — moods that drift, and a genuine care for each other
+- **What's new.** The townsfolk now carry **feelings**. Each resident holds an **inner mood** — *buoyant 😊 · calm 🍃 · wistful 🌙 · dozy 😪 · curious ✨* — that **quietly drifts through the day** (mornings lean bright and curious, dusk turns wistful, night grows dozy and calm). Their mood **colours what they murmur** (*"오늘은 왠지 기분이 좋아요."*, *"조금 나른하네요…"*, *"문득 옛 생각이 나네요."*) and **tilts their posture** a touch — a dozy head droops and bobs slow, a buoyant one lifts and bobs livelier.
+- **They notice each other.** The most human part: when two residents are **both idle and happen to pass close by**, they **turn, greet each other by name, and one warmly answers back** — *"어, 준! 반가워요." → "나리도요 — 반가워요!"* — and sometimes they **remark on how the other seems**: *"카이, 오늘 좀 피곤해 보여요. 쉬엄쉬엄해요."*, *"솔, 표정이 밝네요! 좋은 일 있어요?"* It's empathy, not just proximity — they read a neighbour's mood and respond to it.
+- **How it works.** A per-resident mood re-rolls every ~1.5–3 min, weighted by `_partOfDay()`; it feeds the idle murmur bank and a tiny head-bob "tell". Fellow-feeling is a **rare, cooldown-gated, zero-AI** exchange (per-resident + global cooldowns, a reach of ~6.8, one initiator + one reply) that only fires when both are idle, unclaimed, and the visitor isn't right there — so it never spams, never fights a gathering/festival/chat, and stops on a hidden tab.
+- **Preserved.** Every earlier layer (daily rhythm, cherished haunts, festival, graceful goodbyes, returning-visitor warmth, campfire 쉼터, repo reactions, group chat), budget/env gating, hidden-tab stop. Client-only — no worker change.
+- **Debug.** `?dbg` adds `window.__moods()` (every resident's mood + time left), `window.__mood(id, key?)` (read or set a mood), and `window.__peerNotice(id)` (force a neighbourly hello now).
+
 ## [1.67.0] — 2026-07-10
 
 ### 🕰️ The town keeps a daily rhythm — a morning stretch, and words that follow the light

@@ -420,7 +420,7 @@ ok(/const RES_GREET_DIST=5\.2, RES_GREET_CD_MIN=24, RES_GREET_CD_MAX=44;/.test(H
 ok(/if\(pnear && !L\._pNear && tt>=L\._greetCd\)\{ L\.bub\.say\(_resGreetLine\(L\.res\), _hex\(L\.res\.color\)\); L\._gt=2\.6;/.test(HTML), 'proximity greeting is edge-triggered (_pNear), cooldown-gated (_greetCd), and waves (_gt) with a bubble');
 ok(/if\(!inConv && !chatBound && !hidden\)\{/.test(HTML), 'greeting is suppressed during a conversation / bound chat / hidden tab (never clobbers ambient bubbles)');
 ok(/if\(chatBound\) L\.bub\.clear\(\);/.test(HTML), 'a resident the visitor is chatting with hides its floating greeting/emote bubble (no residual bubble lingers into the chat)');
-ok(/function _resIdleEmote\(\)\{/.test(HTML) && /else if\(Math\.random\(\)<0\.7\)\{ L\.bub\.say\(Math\.random\(\)<0\.55\?_resTodLine\(\):_resIdleEmote\(\), _hex\(L\.res\.color\)\); L\._gt=1\.6;/.test(HTML), 'low-frequency solo idle emote adds ambient town life (now half time-flavored)');
+ok(/function _resIdleEmote\(\)\{/.test(HTML) && /else if\(Math\.random\(\)<0\.7\)\{ const r=Math\.random\(\); L\.bub\.say\(r<0\.34\?_resMoodLine\(L\):r<0\.67\?_resTodLine\(\):_resIdleEmote\(\), _hex\(L\.res\.color\)\); L\._gt=1\.6;/.test(HTML), 'low-frequency solo idle emote adds ambient town life (now mood + time-flavored)');
 ok(/if\(!_festival && !inConv && !chatBound && !L\._pNear && L\._gt<=0 && \(L\._stretch\|\|0\)<=0 && tt>=L\._emoteCd\)\{/.test(HTML), 'idle emote only fires when idle, alone, visitor not right here, no festival, not mid-stretch/gesture (greeting has precedence)');
 ok(/const RES_EMOTE_CD_MIN=\(LOW_END\?46:30\), RES_EMOTE_CD_MAX=\(LOW_END\?90:64\);/.test(HTML), 'LOW_END keeps the greeting warmth but spaces solo emotes further (saving stays on the AI side)');
 ok(/window\.__greet=\(id\)=>/.test(HTML) && /greetDist:RES_GREET_DIST, greetCd:\[RES_GREET_CD_MIN,RES_GREET_CD_MAX\]/.test(HTML), '?dbg __greet hook + __npcState greet/emote config present');
@@ -552,10 +552,21 @@ group('the town keeps a daily rhythm (morning stretch → day bustle → dusk hu
 ok(/function _partOfDay\(\)\{ const n=\(typeof SKY_PHASES!=='undefined'&&SKY_PHASES\[skyPhaseIdx\]\)\?SKY_PHASES\[skyPhaseIdx\]\.name:'day'; return n==='dawn'\?'morn':n==='dusk'\?'eve':n==='night'\?'night':'day';/.test(npcBlock), '_partOfDay maps the live sky phase (dawn/day/dusk/night) to the town\'s rhythm slice');
 ok(/const _RES_TOD=\{[\s\S]*?morn:\{[\s\S]*?day:\{[\s\S]*?eve:\{[\s\S]*?night:\{/.test(npcBlock) && /function _resTodLine\(\)/.test(npcBlock) && /function _resTodGreet\(\)/.test(npcBlock), 'time-flavored idle lines + greetings exist for all four parts of the day');
 ok(/if\(_partOfDay\(\)==='morn' && tt>=\(L\._stretchCd\|\|0\)\)\{ L\._stretchCd=tt\+120\+Math\.random\(\)\*90; L\._stretch=1\.4; L\.bub\.say\(_resTodLine\(\)/.test(npcBlock), 'at dawn an idle resident does a cooldown-gated morning stretch + a good-morning word (the town wakes up)');
-ok(/else if\(Math\.random\(\)<0\.7\)\{ L\.bub\.say\(Math\.random\(\)<0\.55\?_resTodLine\(\):_resIdleEmote\(\)/.test(npcBlock), 'about half the ambient idle chatter now reflects the time of day');
+ok(/else if\(Math\.random\(\)<0\.7\)\{ const r=Math\.random\(\); L\.bub\.say\(r<0\.34\?_resMoodLine\(L\):r<0\.67\?_resTodLine\(\):_resIdleEmote\(\)/.test(npcBlock), 'idle chatter now mixes a mood murmur, a time-of-day line, and a generic emote');
 ok(/if\(L\._stretch>0\)\{ L\._stretch-=dt; const k=Math\.sin\([\s\S]*?up=-2\.2\*k;[\s\S]*?g\._armL\.rotation\.x=up; g\._armR\.rotation\.x=up;/.test(npcBlock), 'the morning stretch is a real gesture — both arms rise then settle');
 ok(/\{ const tg=_resTodGreet\(\); if\(tg && Math\.random\(\)<0\.4\) return tg; \}/.test(npcBlock), 'a walk-up greeting sometimes carries a morning/evening/night hello');
 ok(/window\.__partOfDay=\(\)=>/.test(HTML) && /window\.__stretch=\(id\)=>/.test(HTML), '?dbg __partOfDay/__stretch introspect the rhythm + force a morning stretch');
+
+group('residents carry an inner mood + notice each other (humanity: a felt inner life + empathy)');
+ok(/const _MOOD_META=\{ bright:[\s\S]*?calm:[\s\S]*?wistful:[\s\S]*?dozy:[\s\S]*?curious:/.test(npcBlock) && /const _RES_MOOD_LINES=\{/.test(npcBlock), 'five inner moods (buoyant · calm · wistful · dozy · curious), each with first-person murmurs');
+ok(/function _resMood\(L,tt\)\{[\s\S]*?L\._moodUntil=tt\+90/.test(npcBlock) && /function _pickMood\(L\)\{[\s\S]*?_partOfDay/.test(npcBlock), 'each resident carries a mood that quietly drifts (~1.5–3 min), weighted by the time of day');
+ok(/r<0\.34\?_resMoodLine\(L\):r<0\.67\?_resTodLine\(\):_resIdleEmote\(\)/.test(npcBlock), 'a resident\'s current mood surfaces in their idle murmurs');
+ok(/function _tryPeerNotice\(L,tt,force\)\{/.test(npcBlock) && /P\._replyPeer=L; P\._replyAt=/.test(npcBlock), 'two idle residents who pass close by greet by name — and the other warmly answers back a beat later');
+ok(/function _peerNoticeLine\(L,P\)\{[\s\S]*?m==='dozy'[\s\S]*?m==='bright'/.test(npcBlock), 'the greeting can remark on how the neighbour seems (their mood)');
+ok(/L\._facePeer=P; L\._facePeerUntil=/.test(npcBlock) && /else if\(L\._facePeer && tt<\(L\._facePeerUntil\|\|0\)\)/.test(npcBlock), 'residents turn to face the neighbour they greet');
+ok(/const _mt=_moodTell\(mood\); g\._head\.position\.y=2\.0-_mt\.droop/.test(npcBlock), 'mood tilts posture a touch — a dozy head droops, a buoyant one bobs livelier');
+ok(/const NPC_PEER_R=\(LOW_END\?6\.0:6\.8\)/.test(npcBlock) && /_peerGlobalCd=tt\+7/.test(npcBlock), 'fellow-feeling is cooldown-gated (per-resident + global) so it stays rare and never spams');
+ok(/window\.__moods=\(\)=>/.test(HTML) && /window\.__mood=\(id,key\)=>/.test(HTML) && /window\.__peerNotice=\(id\)=>/.test(HTML), '?dbg __moods/__mood/__peerNotice introspect moods + force a neighbourly hello');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
