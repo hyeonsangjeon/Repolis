@@ -647,6 +647,35 @@ ok(/window\.__starTrailPlan=/.test(HTML) && /window\.__starTrailStart=/.test(HTM
   && /window\.__starTrailNext=/.test(HTML) && /window\.__starTrailEnd=/.test(HTML), '?dbg trail plan/start/advance/end hooks are present');
 ok(/updateStarTrail\(clock\.elapsedTime\)/.test(HTML), 'the main world loop updates the active constellation visuals');
 
+group('one deterministic Repolis World Tree stands quietly in the north rest park');
+const memorialTreeBlock = (HTML.match(/\/\*MEMORIAL_TREE:START\*\/([\s\S]*?)\/\*MEMORIAL_TREE:END\*\//) || [, ''])[1];
+ok(memorialTreeBlock.length > 0, 'world-tree procedural block is extractable from index.html');
+ok(/const MEMORIAL_TREE_SEED=0x5eed1979, MEMORIAL_TREE_POS=new THREE\.Vector3\(15,0,48\)/.test(memorialTreeBlock)
+  && /function _memTreeRng\(seed\)/.test(memorialTreeBlock), 'world tree has one fixed seed + an isolated deterministic PRNG');
+ok(!/Math\.random\(/.test(memorialTreeBlock), 'world-tree shape contains no Math.random (reload-stable silhouette)');
+ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
+  && (HTML.match(/if\(memorial\) makeMemorialTree\(cx,cz\)/g) || []).length === 1, 'exactly one memorial tree is requested, at the north rest park centre');
+ok(/stats=\{segments:0,roots:7,branches:0,leaves:0,crowns:0\}/.test(memorialTreeBlock)
+  && /const macro=\[[\s\S]*?\(LOW_END\?macro\.slice\(0,8\):macro\)/.test(memorialTreeBlock), 'seven buttress roots + authored fork hierarchy define the world-tree silhouette');
+ok(/new THREE\.InstancedMesh\(MEM_TREE_LEAF_GEO,MEM_TREE_LEAVES\[bi\],list\.length\)/.test(memorialTreeBlock)
+  && /n:LOW_END\?22:64/.test(memorialTreeBlock) && /n:LOW_END\?28:78/.test(memorialTreeBlock), 'autumn canopy uses smaller, airier instanced clusters with a materially lower LOW_END density');
+ok(/const MEM_TREE_BARK=\[[\s\S]*?MEM_TREE_LEAVES=\[/.test(memorialTreeBlock), 'bark + golden/orange canopy reuse small shared material pools');
+ok(/if\(rr<0\.34\|\|py<1\.0\) layer=[\s\S]*?else if\(py>4\.1\) layer=/.test(memorialTreeBlock), 'autumn colour is spatially layered: rust under-crown, amber middle, gold upper tips');
+ok(/cg\.userData\.sway=\{sp:0\.29\+ci\*0\.055,[\s\S]*?SWAY\.push\(cg\)/.test(memorialTreeBlock)
+  && !/regSway\(root/.test(memorialTreeBlock), 'only crown/twig pivots join the existing wind sway; the great trunk stays rigid');
+ok(/skeleton\.name='WorldTree_StaticSkeleton'/.test(memorialTreeBlock)
+  && /lg\.name='WorldTree_Limb_'/.test(memorialTreeBlock) && /cg\.name='WorldTree_CrownPivot_'/.test(memorialTreeBlock)
+  && /WorldTree_Socket_/.test(memorialTreeBlock), 'named static skeleton, detachable limb groups, crown pivots, and sockets make the tree action-ready');
+ok(/const collider=\{x,z,r:2\.95,_memorialTree:true\}; EXTRA_COLLIDERS\.push\(collider\)/.test(memorialTreeBlock)
+  && /new THREE\.RingGeometry\(memorial\?3\.75:2\.9,memorial\?4\.85:3\.8/.test(HTML), '2.95 world-tree collider covers mound/roots and stays inside the widened 3.75-radius park path');
+ok(/if\(!memorial\)\{ flowerPatch\([\s\S]*?makeRock\([\s\S]*?world-tree path stays fully open/.test(HTML), 'legacy park flowers/rock are omitted from the memorial ring path (no visual clipping or obstruction)');
+ok(!/new THREE\.(PointLight|SpotLight|DirectionalLight|Points)/.test(memorialTreeBlock), 'world tree adds no dynamic light or particle system');
+ok(/Night quality gate: an ancient guide[\s\S]*?guidePool[\s\S]*?guideHalo/.test(memorialTreeBlock)
+  && /if\(MEMORIAL_TREE\)\{ const glow=MEMORIAL_TREE\.guideGlow,[\s\S]*?glow\.pool\.material\.opacity=night\?0\.15:0; glow\.halo\.material\.opacity=night\?0\.075:0;/.test(HTML),
+  'night quality gate: pooled emissive leaves + subtle material-only glow guide residents without a new scene light');
+ok(/window\.__memorialTree=/.test(HTML) && /window\.__tpMemorialTree=/.test(HTML)
+  && /window\.__memorialTreeCollision=/.test(HTML), '?dbg exposes tree spec/bounds, viewpoint, and collider probes');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }
