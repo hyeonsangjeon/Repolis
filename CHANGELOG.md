@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.77.0] — 2026-07-11
+
+### ☀️ Solar Archive World Tree — the plugin flagship, alive inside Repolis
+- **The production tree itself.** Repolis now imports the native `createRepolisHero.js` output from **threejs-sculpt-dna v0.4.0** byte-for-byte (SHA-256 `65bd7fc…d0e3`) and instantiates deterministic **Solar Archive** seed `20260711`. The old hand-authored v3 implementation is removed rather than hidden behind the new model.
+- **Natural canopy continuity.** The former large cyan/brown floating clumps are replaced by **3,016 small instanced leaves** anchored to **15 macro → 56 secondary → 112 merged fine branches**. The gradual diameter ladder, dense overlapping sprays, 10% cyan ratio, and warm Solar palette make one continuous ancient crown while retaining its luminous World Tree identity.
+- **No effect downgrade.** Desktop and mobile both use the factory's `full` stage: 220 moss instances, 72 branch-following glyphs, constellation nodes/links, hanging lights, generated bark PBR, root glow, energy pulse, leaf motion, and living-system sway all remain active. The source factory stays immutable; Repolis owns only a thin placement/integration adapter.
+- **Independent Christmas-tree lighting.** The normal town render remains untouched. A selective pre-pass renders only the factory energy network, glyphs, constellation ornaments, leaf sprays, and pulsing PointLight with the live demo bloom `0.5 / 0.36 / 0.88`; bark, roots, ground, and moss stay town-lit and serve only as depth occluders. Nearby buildings, props, the player, and residents also enter the pre-pass as black depth occluders, so neon cannot overexpose town surfaces or draw hidden branches over foreground objects. Day alone calms ornament intensity and bloom.
+- **Park integration.** Uniform scale `2.0` produces approximately `32.3 × 28.1 × 17.0` instanced-mesh-aware visible bounds at the same north park `(15, 48)`. The complete root island gets an 11.6-radius collider inside a widened 12.2-radius clear ring; benches, lantern, and sign move outside it. Six Repolis compatibility sockets plus eight factory branch sockets preserve 14 action-ready anchors.
+- **Measured cost.** Full Solar Archive generation is roughly 65–95 ms with **68,904 tree triangles / 124 draws** on both desktop and mobile. This intentionally increases the previous mobile v3 tree from 8,666 / 77 to retain all plugin effects. The base town renders directly, while a cached local-occluder bloom pass and one additive quad avoid a second full-town copy; final 390×844 cadence is **58 FPS** (`17.25 ms` average, `17.7 ms` p95), with a nonblank canvas and zero console errors.
+- **Fresh visual gate.** The supplied live mobile screenshots are the acceptance references. Side-by-side review passes root/fork continuity, radial branch hierarchy, gold network, bark readability, constellation ornaments, and mobile crown continuity; the plugin's canonical strict spec and Sculpt DNA validate with zero warnings, and its own 34 tests pass.
+
 ## [1.76.0] — 2026-07-11
 
 ### 🌳 The World Tree completes a full sculpt pipeline — rooted structure, real PBR, restrained radiance
