@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.74.0] — 2026-07-11
+
+### 🌳 The World Tree becomes the village's pillar — a colossal umbrella crown over Repolis
+- **What's changed.** The 1.73 memorial tree was still village-tree scale. It has been resculpted from the supplied World Tree reference into the **literal visual support and roof of Repolis**: a monumental rooted pier beneath an almost circular umbrella crown that rises above nearby towers and spans roughly fifty visible world units. From the plaza, the tree now anchors the skyline instead of reading as park decoration.
+- **Built with the installed skill.** The user-scoped `object-to-threejs-procedural` Copilot skill ran the real workflow against the 1024×1024 reference: technical probe `pass`; semantic verdict `conditional / ultra-complex`; a strict `ObjectSculptSpec` with **41 components, 6 materials, 6 repetition systems, and zero validator warnings**; then iterative blockout screenshots, comparison sheets, AI-vision feature gates, and self-correction. The strict blockout gate passed at 0.83 after refining the umbrella silhouette, rooted pedestal, and plan depth.
+- **New structure.** Seed `1730` deterministically builds eight high buttress roots, a thick pinched trunk pillar, one overlapping crotch mass, eight curved primary bough sweeps, sixteen secondary ribs, eight independent crown-sector pivots, a central canopy bridge, sixteen radial gold fans, seven front-vault ribs, and seventy-two secondary golden veins. Fourteen stable sockets expose taxi arrival, interaction/foundation/crotch/apex/glow anchors, and every bough root for future scripted transformation.
+- **Reference-shaped canopy.** Five radial lobe scales form a shallow dome, descending scalloped perimeter, and concave underside with authored branch windows. Full detail uses roughly 790 deterministic instanced foliage clumps across two pooled green material systems; **mobile and `LOW_END`** preserve the same eight-sector silhouette with 132 clumps, reduced root/bough/rib subdivisions, and no foliage shadows (including high-end tablets where `IS_MOBILE=true` but `LOW_END=false`).
+- **Golden night skeleton, still light-free.** The reference's luminous inner tree is recreated with emissive materials only: gold spine/crotch, radial fans, distributed front vault, batched line veins, and a faint inner core/ground pool. It owns no `PointLight`, particle, sprite, texture fetch, GLB, dependency, or per-frame geometry update.
+- **Ground rules.** The one tree remains at north rest park `(15, 48)`. Its 5.8-radius primitive collider covers the taller root pedestal and sits inside a widened 6.6-radius circular path; benches, sign, lantern, and legacy path props stay outside. The rigid foundation/trunk/boughs never sway — only eight crown pivots move by at most 0.0054 radians (0.0024 on mobile/`LOW_END`; none under reduced motion).
+- **Debug.** `?dbg=1` reports target/actual bounds, sweep/branch/rib/gold/foliage counts, 14 sockets, night material state, performance tier, and collider clearance through `__memorialTree`, `__tpMemorialTree`, `__frameMemorialTree`, and `__memorialTreeCollision`.
+
 ## [1.73.0] — 2026-07-11
 
 ### 🌳 The Repolis World Tree — one ancient autumn memorial tree, sculpted entirely in code
