@@ -3,6 +3,17 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.76.0] — 2026-07-11
+
+### 🌳 The World Tree completes a full sculpt pipeline — rooted structure, real PBR, restrained radiance
+- **Spec → automatic skeleton → hand refinement.** The current live screenshot became explicit failure evidence in a new ultra-complex v3 `ObjectSculptSpec`. The installed Object Sculptor generated every locked factory pass in order, while browser comparison gates advanced blockout → structure → form → material → surface → lighting → interaction → optimization. The final spec and Sculpt DNA validate with zero errors or warnings.
+- **A load path instead of a bowl.** The old single faceted crotch is gone. Eight buttress roots feed a continuous tapered trunk, four overlapping leader sweeps, eight staggered saddle-rooted primary boughs, and sixteen secondary ribs. Gold now follows those bough curves as inset primary/secondary paths rather than exploding from one point as spikes; 14 sockets, the 5.8 collider, 0.8 path clearance, and crown-only micro-sway remain stable.
+- **Layered foliage and bark relief.** Smaller faceted foliage separates into upper dome, mid shell, and warm underside shelves around protected branch windows. Three-leaf alpha clusters enrich the desktop perimeter; tapered ridges and localized bark plates/knots break the trunk at macro, meso, and micro scales without external art.
+- **Independent procedural PBR.** Six pooled `MeshStandardMaterial` systems replace tree-only flat toon materials while preserving Repolis facets and rim response. Bark and foliage each generate independent seeded albedo, roughness, height, and AO channels. Reference extraction passed confidence gates at **0.794 bark / 0.814 foliage**; runtime translates those statistics into tiny local `CanvasTexture` fields, with no texture fetch, GLB, dependency, or build step.
+- **A guide, not a flare.** Day uses a restrained stylized ambient floor; night separates emerald outer leaves, warm olive underside, dark support bark, and amber inner wood. The one existing shadowless guide light is bounded to **88 / range 78** on desktop and **54 / range 56** on touch tiers. Gold retains amber detail under ACES instead of clipping white; no second light, shadow, pulse, particle, sprite, or closed glow dome exists.
+- **Measured optimization.** Desktop tree cost is **35,426 triangles / 119 draws**. Phone and high-end touch tablet use the same lite tier at **8,666 / 77**, with 104 foliage clumps, 22 veins, 8 ribs, four crown twigs, 64px albedo/roughness/AO, no height textures, no leaf cards, and two glow planes. All eight roots, four leaders, eight boughs, eight crown pivots, 14 sockets, collider, and luminous windows survive.
+- **Action-ready debug.** `?dbg=1` reports v3 provenance, PBR/reference confidence, per-object triangle/draw budgets, runtime node/socket metadata, material state, light bounds, and collision clearance.
+
 ## [1.75.0] — 2026-07-11
 
 ### ✨ The World Tree earns luminous leaf texture through a controlled Sculpt DNA variant
