@@ -936,8 +936,10 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { TexturePass } from 'three/addons/postprocessing/TexturePass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { createRepolisHero } from './assets/world-tree/createRepolisHero.js';
 
 /* ====================== REPO DATA + CITY MODE ======================
@@ -1481,40 +1483,68 @@ const detail = n => Math.max(0, Math.round(n*DETAIL));                       // 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xd9e4c8, 150, 460);
 const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, 0.1, 760);
-const treeBloomDpr=matchMedia('(pointer:coarse)').matches?1:renderer.getPixelRatio();
-const treeComposer=new EffectComposer(renderer); treeComposer.renderToScreen=false; treeComposer.setPixelRatio(treeBloomDpr); treeComposer.setSize(innerWidth,innerHeight);
-const treeRenderPass=new RenderPass(scene,camera); treeRenderPass.clearColor=new THREE.Color(0x000000); treeRenderPass.clearAlpha=0; treeComposer.addPass(treeRenderPass);
-const worldBloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),0.5,0.36,0.88); treeComposer.addPass(worldBloom);
-const bloomOverlayScene=new THREE.Scene(),bloomOverlayCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-const bloomOverlay=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial({map:treeComposer.renderTarget2.texture,transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,toneMapped:false})); bloomOverlayScene.add(bloomOverlay);
-const BLOOM_DARK_MATERIAL=new THREE.MeshBasicMaterial({color:0x000000}),BLOOM_DARK_SPRITE=new THREE.SpriteMaterial({color:0x000000,transparent:false,depthTest:false,depthWrite:false}),BLOOM_MATERIALS=new Map();
+const coarsePointer=matchMedia('(pointer:coarse)').matches,baseRenderScale=coarsePointer?1:0.8,treeBloomDpr=coarsePointer?1:renderer.getPixelRatio()*0.75;
+const makeLinearTarget=(width,height)=>{ const target=new THREE.WebGLRenderTarget(width,height,{type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false}); target.texture.colorSpace=THREE.LinearSRGBColorSpace; return target; };
+const baseTarget=makeLinearTarget(Math.round(innerWidth*renderer.getPixelRatio()*baseRenderScale),Math.round(innerHeight*renderer.getPixelRatio()*baseRenderScale));
+const emissiveTarget=makeLinearTarget(Math.round(innerWidth*treeBloomDpr),Math.round(innerHeight*treeBloomDpr));
+const bloomTarget=makeLinearTarget(Math.round(innerWidth*treeBloomDpr),Math.round(innerHeight*treeBloomDpr));
+const treeComposer=new EffectComposer(renderer,bloomTarget); treeComposer.renderToScreen=false; treeComposer.setPixelRatio(1); treeComposer.setSize(Math.round(innerWidth*treeBloomDpr),Math.round(innerHeight*treeBloomDpr));
+const treeInputPass=new TexturePass(emissiveTarget.texture,1); treeComposer.addPass(treeInputPass);
+const worldBloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),0.5,0.36,0.88); worldBloom.renderTargetsHorizontal[0].texture.colorSpace=THREE.LinearSRGBColorSpace; treeComposer.addPass(worldBloom);
+const finalComposer=new EffectComposer(renderer); finalComposer.setPixelRatio(renderer.getPixelRatio()); finalComposer.setSize(innerWidth,innerHeight);
+const finalMix=new ShaderPass(new THREE.ShaderMaterial({uniforms:{baseTexture:{value:baseTarget.texture},bloomTexture:{value:worldBloom.renderTargetsHorizontal[0].texture},emissiveTexture:{value:emissiveTarget.texture},baseWeight:{value:1},bloomWeight:{value:1},emissiveWeight:{value:1}},
+  vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+  fragmentShader:'uniform sampler2D baseTexture; uniform sampler2D bloomTexture; uniform sampler2D emissiveTexture; uniform float baseWeight; uniform float bloomWeight; uniform float emissiveWeight; varying vec2 vUv; void main(){ gl_FragColor=texture2D(baseTexture,vUv)*baseWeight+texture2D(bloomTexture,vUv)*bloomWeight+texture2D(emissiveTexture,vUv)*emissiveWeight; }'}));
+finalComposer.addPass(finalMix); finalComposer.addPass(new OutputPass());
+const BLOOM_DARK_MATERIAL=new THREE.MeshBasicMaterial({color:0x000000});
+let WORLD_TREE_RENDER_MODE='final-composite';
 function _registerWorldTreeOccluderGroup(group){
-  if(!group||!MEMORIAL_TREE) return; group.traverse(o=>{ if((o.isMesh||o.isSprite)&&!MEMORIAL_TREE.occluders.includes(o)){ o.layers.enable(MEM_TREE_LIGHT_LAYER); MEMORIAL_TREE.occluders.push(o); } });
+  if(!group||!MEMORIAL_TREE) return; MEMORIAL_TREE.dynamicOccluderGroups.add(group.isSprite&&group.parent?group.parent:group);
 }
 function _unregisterWorldTreeOccluderGroup(group){
-  if(!group||!MEMORIAL_TREE) return; const remove=new Set(); group.traverse(o=>{ if(o.isMesh||o.isSprite) remove.add(o); }); MEMORIAL_TREE.occluders=MEMORIAL_TREE.occluders.filter(o=>!remove.has(o));
+  if(!group||!MEMORIAL_TREE) return; MEMORIAL_TREE.dynamicOccluderGroups.delete(group.isSprite&&group.parent?group.parent:group);
 }
 function _ensureWorldTreeOccluders(){
   if(!MEMORIAL_TREE||MEMORIAL_TREE.occludersReady) return; scene.updateMatrixWorld(true);
-  const treeBox=_memHeroBox(MEMORIAL_TREE.group).expandByScalar(3),occluders=[];
-  scene.traverse(o=>{ if(!o.isMesh||(o.userData&&o.userData.worldTreeBloom)) return; if(!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-    const box=o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld); if(box.intersectsBox(treeBox)){ o.layers.enable(MEM_TREE_LIGHT_LAYER); occluders.push(o); } });
-  MEMORIAL_TREE.occluders=occluders; _registerWorldTreeOccluderGroup(model); RESIDENTS_LIVE.forEach(L=>_registerWorldTreeOccluderGroup(L.group)); MEMORIAL_TREE.occludersReady=true;
+  const treeBox=_memHeroBox(MEMORIAL_TREE.group).expandByScalar(3),proxyGroup=new THREE.Group(),boxes=[];
+  proxyGroup.name='WorldTree_BloomOccluderProxies'; proxyGroup.layers.set(MEM_TREE_LIGHT_LAYER); scene.add(proxyGroup);
+  for(const b of buildings){ const g=b._group||b._body; if(!g) continue; const box=new THREE.Box3().setFromObject(g); if(box.intersectsBox(treeBox)) boxes.push(box); }
+  if(boxes.length){ const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),BLOOM_DARK_MATERIAL,boxes.length),d=new THREE.Object3D();
+    boxes.forEach((box,i)=>{ const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()).addScalar(0.15); d.position.copy(center); d.scale.copy(size); d.updateMatrix(); mesh.setMatrixAt(i,d.matrix); });
+    mesh.name='WorldTree_BuildingDepthProxies'; mesh.frustumCulled=false; mesh.layers.set(MEM_TREE_LIGHT_LAYER); proxyGroup.add(mesh); }
+  const colliders=EXTRA_COLLIDERS.filter(c=>!c._memorialTree&&Math.hypot(c.x-MEMORIAL_TREE.collider.x,c.z-MEMORIAL_TREE.collider.z)<22);
+  if(colliders.length){ const mesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(1,1,4,8),BLOOM_DARK_MATERIAL,colliders.length),d=new THREE.Object3D();
+    colliders.forEach((c,i)=>{ d.position.set(c.x,2,c.z); d.scale.set(c.r||0.5,1,c.r||0.5); d.updateMatrix(); mesh.setMatrixAt(i,d.matrix); });
+    mesh.name='WorldTree_PropDepthProxies'; mesh.frustumCulled=false; mesh.layers.set(MEM_TREE_LIGHT_LAYER); proxyGroup.add(mesh); }
+  const dynamicProxy=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),BLOOM_DARK_MATERIAL,64); dynamicProxy.name='WorldTree_DynamicDepthProxies'; dynamicProxy.frustumCulled=false; dynamicProxy.layers.set(MEM_TREE_LIGHT_LAYER); dynamicProxy.count=0; proxyGroup.add(dynamicProxy);
+  MEMORIAL_TREE.staticProxyCount=boxes.length+colliders.length; MEMORIAL_TREE.proxyGroup=proxyGroup; MEMORIAL_TREE.dynamicProxy=dynamicProxy;
+  _registerWorldTreeOccluderGroup(model); RESIDENTS_LIVE.forEach(L=>_registerWorldTreeOccluderGroup(L.group)); MEMORIAL_TREE.occludersReady=true;
 }
 function _prepareWorldTreeBloom(){
-  _ensureWorldTreeOccluders(); for(const o of MEMORIAL_TREE.occluders){ BLOOM_MATERIALS.set(o,o.material); o.material=o.isSprite?BLOOM_DARK_SPRITE:BLOOM_DARK_MATERIAL; }
-}
-function _restoreWorldTreeBloom(){
-  BLOOM_MATERIALS.forEach((material,o)=>{ o.material=material; }); BLOOM_MATERIALS.clear();
+  _ensureWorldTreeOccluders(); const mesh=MEMORIAL_TREE.dynamicProxy,d=new THREE.Object3D(),p=new THREE.Vector3(); let count=0;
+  for(const group of MEMORIAL_TREE.dynamicOccluderGroups){ if(!group.parent||count>=mesh.instanceMatrix.count) continue; group.getWorldPosition(p);
+    if(Math.hypot(p.x-MEMORIAL_TREE.collider.x,p.z-MEMORIAL_TREE.collider.z)>26) continue; d.position.set(p.x,p.y+2.6,p.z); d.scale.set(1.7,5.2,1.7); d.updateMatrix(); mesh.setMatrixAt(count++,d.matrix); }
+  mesh.count=count; mesh.instanceMatrix.needsUpdate=true;
 }
 function _renderWorldTreeFrame(refreshTownShadows){
-  if(!MEMORIAL_TREE){ renderer.shadowMap.needsUpdate=refreshTownShadows; renderer.render(scene,camera); return; }
-  const mask=camera.layers.mask; _prepareWorldTreeBloom(); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=true; }); camera.layers.set(MEM_TREE_LIGHT_LAYER);
-  renderer.shadowMap.needsUpdate=MEMORIAL_TREE.treeShadowDirty; treeComposer.render(); MEMORIAL_TREE.treeShadowDirty=false; _restoreWorldTreeBloom();
-  MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=false; }); camera.layers.set(0);
-  renderer.shadowMap.needsUpdate=refreshTownShadows; renderer.setRenderTarget(null); renderer.render(scene,camera);
-  const autoClear=renderer.autoClear; renderer.autoClear=false; renderer.render(bloomOverlayScene,bloomOverlayCamera); renderer.autoClear=autoClear;
-  camera.layers.mask=mask; MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=true; });
+  const savedTone=renderer.toneMapping,savedSpace=renderer.outputColorSpace,savedClear=renderer.getClearColor(new THREE.Color()),savedAlpha=renderer.getClearAlpha(),mask=camera.layers.mask,treeOff=WORLD_TREE_RENDER_MODE==='tree-off',
+    requestedTreeVisible=MEMORIAL_TREE?MEMORIAL_TREE.requestedVisible!==false:false;
+  if(MEMORIAL_TREE){ MEMORIAL_TREE.group.visible=requestedTreeVisible&&!treeOff; MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=false; }); }
+  renderer.toneMapping=THREE.NoToneMapping; renderer.outputColorSpace=THREE.LinearSRGBColorSpace; camera.layers.set(0);
+  renderer.shadowMap.needsUpdate=refreshTownShadows; renderer.setRenderTarget(baseTarget); renderer.clear(); renderer.render(scene,camera);
+  const treeVisible=!!MEMORIAL_TREE&&MEMORIAL_TREE.group.visible,effectPhase=isNight||WORLD_TREE_RENDER_MODE==='emissive-only'||WORLD_TREE_RENDER_MODE==='bloom-only',
+    needEmissive=treeVisible&&effectPhase&&(WORLD_TREE_RENDER_MODE==='emissive-only'||WORLD_TREE_RENDER_MODE==='final-composite'),
+    needBloom=treeVisible&&effectPhase&&(WORLD_TREE_RENDER_MODE==='final-composite'||WORLD_TREE_RENDER_MODE==='bloom-only'),needSource=needEmissive||needBloom,
+    forceProofLayer=!isNight&&(WORLD_TREE_RENDER_MODE==='emissive-only'||WORLD_TREE_RENDER_MODE==='bloom-only');
+  if(needSource&&MEMORIAL_TREE){ _prepareWorldTreeBloom(); camera.layers.set(MEM_TREE_LIGHT_LAYER); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=false; });
+    if(forceProofLayer) MEMORIAL_TREE.bloomRoots.forEach(root=>root.traverse(o=>{ o.layers.set(MEM_TREE_LIGHT_LAYER); }));
+    MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=true; }); renderer.setRenderTarget(emissiveTarget); renderer.setClearColor(0x000000,0); renderer.clear(); renderer.render(scene,camera);
+    if(needBloom) treeComposer.render(); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=false; }); }
+  renderer.toneMapping=savedTone; renderer.outputColorSpace=savedSpace; renderer.setClearColor(savedClear,savedAlpha); camera.layers.mask=mask; renderer.setRenderTarget(null);
+  finalMix.uniforms.baseWeight.value=(WORLD_TREE_RENDER_MODE==='emissive-only'||WORLD_TREE_RENDER_MODE==='bloom-only')?0:1;
+  finalMix.uniforms.bloomWeight.value=needBloom?1:0; finalMix.uniforms.emissiveWeight.value=needEmissive?1:0; finalComposer.render();
+  if(MEMORIAL_TREE){ if(forceProofLayer) MEMORIAL_TREE.bloomRoots.forEach(root=>root.traverse(o=>{ o.layers.set(0); }));
+    MEMORIAL_TREE.group.visible=requestedTreeVisible; MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=true; }); }
 }
 
 /* toon gradient + material factory */
@@ -2769,8 +2799,8 @@ function _memHeroEnvironment(root){
 function _memHeroUpdate(elapsed){
   if(!MEMORIAL_TREE) return; if(!REDUCED) MEMORIAL_TREE.hero.update(elapsed);
   const ratio=MEM_TREE_HERO_SCALE/MEM_TREE_HERO_NATIVE_SCALE,m=MEMORIAL_TREE.hero.materials; MEMORIAL_TREE.light.distance=7*ratio;   // preserve factory pulse intensity; only its authored range follows uniform scale
-  if(isNight){ m.amberLeaf.emissiveIntensity=0.42; m.cyanLeaf.emissiveIntensity=0.75; if(REDUCED){ m.energy.emissiveIntensity=2.85; MEMORIAL_TREE.light.intensity=18; } }
-  else { m.energy.emissiveIntensity=0.32; m.amberLeaf.emissiveIntensity=0.12; m.cyanLeaf.emissiveIntensity=0.18; MEMORIAL_TREE.light.intensity=2; }
+  if(isNight){ m.bark.emissive.setHex(0x160b06); m.bark.emissiveIntensity=0.03; m.amberLeaf.emissiveIntensity=0.42; m.cyanLeaf.emissiveIntensity=0.75; if(REDUCED){ m.energy.emissiveIntensity=2.85; MEMORIAL_TREE.light.intensity=18; } }
+  else { m.bark.emissive.setHex(0x6a3518); m.bark.emissiveIntensity=0.24; m.energy.emissiveIntensity=0.32; m.amberLeaf.emissiveIntensity=0.32; m.cyanLeaf.emissiveIntensity=0.38; MEMORIAL_TREE.light.intensity=2; }
 }
 function makeMemorialTree(x,z){
   if(MEMORIAL_TREE) return MEMORIAL_TREE;
@@ -2780,6 +2810,7 @@ function makeMemorialTree(x,z){
   root.position.set(x,-nativeBox.min.y*MEM_TREE_HERO_SCALE,z); scene.add(root); const environment=_memHeroEnvironment(root); renderer.shadowMap.needsUpdate=true;
   let light=null; root.traverse(o=>{ if(o.isPointLight){ light=o; o.name='WorldTree_GuideLight'; o.castShadow=false; } });
   const crowns=[hero.runtime.meshes['amber-foliage'],hero.runtime.meshes['cyan-foliage']].filter(Boolean);
+  new Set(crowns.map(leaves=>leaves.geometry)).forEach(geometry=>{ geometry.scale(1.22,1.22,1.22); geometry.computeBoundingBox(); geometry.computeBoundingSphere(); });
   const sockets={}, customSockets={TaxiArrival:[0,nativeBox.min.y,-5.4],InteractionFocus:[0,2.4,-3],Foundation:[0,nativeBox.min.y,0],Crotch:[0,4.8,0],CrownApex:[0,nativeBox.max.y,0],GlowFocus:[0,1,1.4]};
   Object.entries(customSockets).forEach(([name,p])=>{ const s=new THREE.Object3D(); s.name='WorldTree_Socket_'+name; s.position.set(...p); root.add(s); sockets[name]=s; });
   ['left-foundation:tip','right-foundation:tip','left-crown:tip','right-crown:tip','center-left-spire:tip','center-right-spire:tip','left-rear:tip','right-rear:tip'].forEach((id,i)=>{ const s=hero.runtime.sockets[id]; if(s) sockets['Bough'+String(i+1).padStart(2,'0')]=s; });
@@ -2787,11 +2818,11 @@ function makeMemorialTree(x,z){
   const size=nativeBox.getSize(new THREE.Vector3()).multiplyScalar(MEM_TREE_HERO_SCALE);
   root.userData.worldTree={seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage,factorySha256:MEM_TREE_FACTORY_SHA,collider,crownOnlySway:false,
     target:{height:+size.y.toFixed(1),crownSpan:+size.x.toFixed(1),crownDepth:+size.z.toFixed(1)},lightPolicy:'factory-emissive-selective-bloom',sockets:Object.keys(sockets)};
-  root.userData.repolisAdapter={factoryUnmodified:true,groundVisible:true,pulseDisabled:false,bloom:{night:[0.5,0.36,0.88],day:[0.04,0.18,0.96]},selectiveBloom:true,depthAware:true,scale:MEM_TREE_HERO_SCALE,qualityMode:'full'};
-  const bloomRoots=[light,...crowns,hero.runtime.nodes['energy-network'],hero.runtime.nodes.constellations,hero.runtime.meshes['gold-code-glyphs'],hero.runtime.meshes['cyan-code-glyphs']].filter(Boolean);
-  bloomRoots.forEach(o=>o.traverse(n=>{ n.userData.worldTreeBloom=true; n.layers.enable(MEM_TREE_LIGHT_LAYER); })); light.layers.set(MEM_TREE_LIGHT_LAYER);
+  root.userData.repolisAdapter={factoryUnmodified:true,groundVisible:true,pulseDisabled:false,leafScale:1.22,bloom:{night:[0.5,0.36,0.88],day:[0.04,0.18,0.96]},selectiveBloom:true,depthAware:true,scale:MEM_TREE_HERO_SCALE,qualityMode:'full'};
+  const bloomRoots=[light,...crowns,hero.runtime.nodes['energy-network'],hero.runtime.meshes['gold-code-glyphs'],hero.runtime.meshes['cyan-code-glyphs']].filter(Boolean);
+  bloomRoots.forEach(o=>o.traverse(n=>{ n.userData.worldTreeBloom=true; n.layers.set(MEM_TREE_LIGHT_LAYER); })); light.layers.set(MEM_TREE_LIGHT_LAYER);
   const bloomLights=[light];
-  MEMORIAL_TREE={hero,group:root,runtime:hero.runtime,crowns,sockets,light,environment,bloomLights,occluders:[],occludersReady:false,treeShadowDirty:false,stats:hero.stats,collider,seed:MEMORIAL_TREE_SEED,nativeBox};
+  MEMORIAL_TREE={hero,group:root,runtime:hero.runtime,crowns,sockets,light,environment,bloomRoots,bloomLights,dynamicOccluderGroups:new Set(),occludersReady:false,requestedVisible:true,treeShadowDirty:false,stats:hero.stats,collider,seed:MEMORIAL_TREE_SEED,nativeBox};
   return MEMORIAL_TREE;
 }
 /*MEMORIAL_TREE:END*/
@@ -4336,6 +4367,7 @@ function setNightState(night){
   if(night===_nightState) return;
   _nightState=night;
   if(MEMORIAL_TREE) MEMORIAL_TREE.treeShadowDirty=true;
+  if(MEMORIAL_TREE) MEMORIAL_TREE.bloomRoots.forEach(root=>root.traverse(o=>{ o.layers.set(night?MEM_TREE_LIGHT_LAYER:0); }));
   worldBloom.strength=night?0.5:0.04; worldBloom.radius=night?0.36:0.18; worldBloom.threshold=night?0.88:0.96;
   renderer.shadowMap.needsUpdate=true; lastAct=performance.now();   // perf: 밤낮 전환 → 그림자 1회 강제 갱신 + 60fps 깨우기
   moon.visible=night; starsGroup.visible=night; fireflyGroup.visible=night;
@@ -6956,7 +6988,9 @@ function animate(){
   _renderWorldTreeFrame(!_idle);                                  // selective tree bloom + independent main-scene shadow refresh
 }
 requestAnimationFrame(animate);
-addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); treeComposer.setSize(innerWidth,innerHeight); });
+addEventListener('resize',()=>{ const dpr=renderer.getPixelRatio(); camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight);
+  baseTarget.setSize(Math.round(innerWidth*dpr*baseRenderScale),Math.round(innerHeight*dpr*baseRenderScale)); emissiveTarget.setSize(Math.round(innerWidth*treeBloomDpr),Math.round(innerHeight*treeBloomDpr));
+  treeComposer.setSize(Math.round(innerWidth*treeBloomDpr),Math.round(innerHeight*treeBloomDpr)); finalComposer.setSize(innerWidth,innerHeight); });
 
 /* ---- Phase 4D: optional realtime multiplayer + live counter (backend-agnostic) ----
    Static GitHub Pages can't host a socket server, so Repolis connects to an
@@ -7046,7 +7080,7 @@ function clearPeers(){ for(const id of [...peers.keys()]) removePeer(id); }
 /* ---- emotes & click-to-greet: tap a nearby visitor → wave; emote bar → broadcast emote; relayed so everyone sees it ---- */
 const EMOJI_TEX={};
 function emojiTex(emoji){ if(EMOJI_TEX[emoji]) return EMOJI_TEX[emoji]; const cv=document.createElement('canvas'); cv.width=cv.height=128; const x=cv.getContext('2d'); x.font='100px serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(emoji,64,76); return EMOJI_TEX[emoji]=new THREE.CanvasTexture(cv); }
-function emoteBubble(group,kind){ if(!group) return; const E=EMOTES[kind]||EMOTES.wave; const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTex(E.emoji),transparent:true,depthTest:false})); sp.scale.set(1.2,1.2,1); sp.position.y=3.9; group.add(sp); _registerWorldTreeOccluderGroup(sp); let t=0; (function fade(){ t+=0.016; sp.position.y=3.9+t*0.7; sp.material.opacity=Math.max(0,1-t/1.4); if(t<1.4) requestAnimationFrame(fade); else { _unregisterWorldTreeOccluderGroup(sp); group.remove(sp); sp.material.dispose(); } })(); }
+function emoteBubble(group,kind){ if(!group) return; const E=EMOTES[kind]||EMOTES.wave; const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTex(E.emoji),transparent:true,depthTest:false})); sp.scale.set(1.2,1.2,1); sp.position.y=3.9; group.add(sp); let t=0; (function fade(){ t+=0.016; sp.position.y=3.9+t*0.7; sp.material.opacity=Math.max(0,1-t/1.4); if(t<1.4) requestAnimationFrame(fade); else { group.remove(sp); sp.material.dispose(); } })(); }
 function playEmote(kind){ const E=EMOTES[kind]; if(!E||emoteT>0.3) return; emoteT=E.dur; emoteKind=kind; emoteBubble(model,kind); rtSend({t:'emote',id:guestId(),kind}); }
 const _ray=new THREE.Raycaster(), _ndc=new THREE.Vector2();
 function peerAtScreen(cx,cy){ if(!peers.size) return null; const r=dom.getBoundingClientRect(); _ndc.x=((cx-r.left)/r.width)*2-1; _ndc.y=-((cy-r.top)/r.height)*2+1; _ray.setFromCamera(_ndc,camera); let best=null,bd=Infinity; for(const [id,p] of peers){ const hit=_ray.intersectObject(p.group,true); if(hit.length&&hit[0].distance<bd){ bd=hit[0].distance; best={id,p}; } } return best; }
@@ -7289,14 +7323,18 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
     return {count:1,name:MEMORIAL_TREE.group.name,seed:MEMORIAL_TREE.seed,at:[+MEMORIAL_TREE.group.position.x.toFixed(1),+MEMORIAL_TREE.group.position.z.toFixed(1)],
       variant:wt.variant,stage:wt.stage,factory:{sha256:wt.factorySha256,unmodified:adapter.factoryUnmodified,scale:adapter.scale,groundVisible:adapter.groundVisible,pulseDisabled:adapter.pulseDisabled,bloom:adapter.bloom},
       macroBranches:s.macroBranches,secondaryBranches:s.secondaryBranches,fineBranches:s.fineBranches,leafInstances:s.leafInstances,mossInstances:s.mossInstances,glyphInstances:s.glyphInstances,branchVertices:s.branchVertices,generationMs:+s.generationMs.toFixed(1),
-      mobile:IS_MOBILE,lowEnd:LOW_END,lite:MEM_TREE_LITE,reduced:REDUCED,runtime:{qualityMode:adapter.qualityMode,nodes:Object.keys(MEMORIAL_TREE.runtime.nodes).length,meshes:Object.keys(MEMORIAL_TREE.runtime.meshes).length,sockets:Object.keys(MEMORIAL_TREE.sockets).length,objectPerf:_memHeroObjectPerf(MEMORIAL_TREE.group)},
+      mobile:IS_MOBILE,lowEnd:LOW_END,lite:MEM_TREE_LITE,reduced:REDUCED,runtime:{qualityMode:adapter.qualityMode,nodes:Object.keys(MEMORIAL_TREE.runtime.nodes).length,meshes:Object.keys(MEMORIAL_TREE.runtime.meshes).length,sockets:Object.keys(MEMORIAL_TREE.sockets).length,dynamicOccluders:MEMORIAL_TREE.dynamicOccluderGroups.size,staticProxies:MEMORIAL_TREE.staticProxyCount||0,objectPerf:_memHeroObjectPerf(MEMORIAL_TREE.group)},
       crownOnlySway:wt.crownOnlySway,sockets:Object.keys(MEMORIAL_TREE.sockets),collider:{x:c.x,z:c.z,r:c.r},target:wt.target,
       nightGuide:{night:isNight,light:+MEMORIAL_TREE.light.intensity.toFixed(1),range:+MEMORIAL_TREE.light.distance.toFixed(1),energy:+MEMORIAL_TREE.hero.materials.energy.emissiveIntensity.toFixed(2),amber:+MEMORIAL_TREE.hero.materials.amberLeaf.emissiveIntensity.toFixed(2),cyan:+MEMORIAL_TREE.hero.materials.cyanLeaf.emissiveIntensity.toFixed(2),environmentLights:1},
       bounds:{min:[+b.min.x.toFixed(1),+b.min.y.toFixed(1),+b.min.z.toFixed(1)],max:[+b.max.x.toFixed(1),+b.max.y.toFixed(1),+b.max.z.toFixed(1)]}}; };
   window.__tpMemorialTree=(back=55)=>{ if(!MEMORIAL_TREE) return null; const p=MEMORIAL_TREE.group.position; player.position.set(p.x,0,p.z-back); camYaw=Math.PI; camPitch=0.08; camDist=22; model.rotation.y=0; return window.__memorialTree(); };
   window.__frameMemorialTree=(back=44,height=15,angle=0)=>{ if(!MEMORIAL_TREE) return null; const p=MEMORIAL_TREE.group.position,dx=Math.sin(angle),dz=Math.cos(angle); player.position.set(p.x-dx*back,height,p.z-dz*back); model.visible=false; camYaw=angle+Math.PI; camPitch=0; camDist=18; return window.__memorialTree(); };
   window.__unframeMemorialTree=()=>{ model.visible=true; player.position.y=0; return true; };
-  window.__memorialTreeVisible=(visible=true)=>{ if(!MEMORIAL_TREE) return false; MEMORIAL_TREE.group.visible=visible!==false; return MEMORIAL_TREE.group.visible; };
+  window.__memorialTreeVisible=(visible=true)=>{ if(!MEMORIAL_TREE) return false; MEMORIAL_TREE.requestedVisible=visible!==false; MEMORIAL_TREE.group.visible=MEMORIAL_TREE.requestedVisible; return MEMORIAL_TREE.requestedVisible; };
+  window.__worldTreeRenderMode=(mode)=>{ const modes=['base-only','emissive-only','bloom-only','final-composite','tree-off']; if(modes.includes(mode)) WORLD_TREE_RENDER_MODE=mode; return {mode:WORLD_TREE_RENDER_MODE,modes}; };
+  window.__worldTreeRenderTargets=()=>({base:{type:'HalfFloatType',colorSpace:baseTarget.texture.colorSpace},emissive:{type:'HalfFloatType',colorSpace:emissiveTarget.texture.colorSpace},
+    bloom:{type:'HalfFloatType',colorSpace:worldBloom.renderTargetsHorizontal[0].texture.colorSpace,source:'UnrealBloomPass.renderTargetsHorizontal[0]'},final:{toneMapping:'ACESFilmicToneMapping',outputColorSpace:renderer.outputColorSpace},scales:{base:baseRenderScale,bloom:treeBloomDpr},outputPasses:1});
+  window.__freezeWorldForExposure=(freeze=true)=>{ if(freeze){ clock.stop(); clock.autoStart=false; } else { clock.autoStart=true; clock.start(); } return {frozen:!clock.running,elapsed:+clock.elapsedTime.toFixed(3)}; };
   window.__memorialTreeCollision=()=>{ if(!MEMORIAL_TREE) return null; const c=MEMORIAL_TREE.collider, p=new THREE.Vector3(c.x+0.05,0,c.z); resolveColliders(p);
     return { radius:c.r, resolved:[+p.x.toFixed(2),+p.z.toFixed(2)], distance:+Math.hypot(p.x-c.x,p.z-c.z).toFixed(2), clearOfPath:12.2-c.r }; };
   window.__act=()=>({prompt:document.getElementById('prompt').classList.contains('show'), btn:document.getElementById('actBtn').classList.contains('avail')});

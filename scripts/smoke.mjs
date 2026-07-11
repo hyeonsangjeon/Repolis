@@ -656,13 +656,17 @@ ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '65bd7fc760
   'Repolis production factory is byte-identical to threejs-sculpt-dna v0.4.0');
 ok(/import \{ createRepolisHero \} from '\.\/assets\/world-tree\/createRepolisHero\.js'/.test(HTML)
   && /import \{ mergeGeometries \} from 'three\/addons\/utils\/BufferGeometryUtils\.js'/.test(WORLD_TREE_FACTORY), 'native Solar Archive factory resolves through the existing Three.js import map');
-ok(/import \{ EffectComposer \}/.test(HTML) && /import \{ UnrealBloomPass \}/.test(HTML)
+ok(/import \{ EffectComposer \}/.test(HTML) && /import \{ TexturePass \}/.test(HTML) && /import \{ UnrealBloomPass \}/.test(HTML)
+  && /import \{ ShaderPass \}/.test(HTML) && /import \{ OutputPass \}/.test(HTML)
   && /new UnrealBloomPass\(new THREE\.Vector2\(innerWidth,innerHeight\),0\.5,0\.36,0\.88\)/.test(HTML)
-  && /treeBloomDpr=matchMedia\('\(pointer:coarse\)'\)\.matches\?1:renderer\.getPixelRatio\(\)/.test(HTML)
-  && /new THREE\.MeshBasicMaterial\(\{map:treeComposer\.renderTarget2\.texture,transparent:true,blending:THREE\.AdditiveBlending/.test(HTML)
+  && /baseRenderScale=coarsePointer\?1:0\.8,treeBloomDpr=coarsePointer\?1:renderer\.getPixelRatio\(\)\*0\.75/.test(HTML)
+  && /type:THREE\.HalfFloatType/.test(HTML) && /target\.texture\.colorSpace=THREE\.LinearSRGBColorSpace/.test(HTML)
+  && /new TexturePass\(emissiveTarget\.texture,1\)/.test(HTML)
+  && /bloomTexture:\{value:worldBloom\.renderTargetsHorizontal\[0\]\.texture\}/.test(HTML)
+  && /finalComposer\.addPass\(finalMix\); finalComposer\.addPass\(new OutputPass\(\)\)/.test(HTML)
   && /_prepareWorldTreeBloom\(\)/.test(HTML)
-  && /_restoreWorldTreeBloom\(\)/.test(HTML)
-  && /renderer\.render\(scene,camera\)[\s\S]*?renderer\.render\(bloomOverlayScene,bloomOverlayCamera\)/.test(HTML), 'direct town render plus one additive bloom quad preserves original exposure without a full-screen base copy');
+  && /renderer\.toneMapping=THREE\.NoToneMapping; renderer\.outputColorSpace=THREE\.LinearSRGBColorSpace/.test(HTML)
+  && (HTML.match(/new OutputPass\(\)/g)||[]).length===1, 'linear HDR base/emissive/bloom targets composite once before the only final OutputPass');
 ok(/const MEMORIAL_TREE_SEED=20260711, MEMORIAL_TREE_POS=new THREE\.Vector3\(15,0,48\)/.test(memorialTreeBlock)
   && /MEM_TREE_HERO_VARIANT='solar-archive'/.test(memorialTreeBlock), 'exactly seeded Solar Archive is selected at the existing north park position');
 ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
@@ -695,26 +699,42 @@ ok(/customSockets=\{TaxiArrival:/.test(memorialTreeBlock)
   && /\['left-foundation:tip','right-foundation:tip','left-crown:tip','right-crown:tip'/.test(memorialTreeBlock), 'adapter preserves six Repolis sockets plus eight action-ready factory bough sockets');
 ok(/root\.userData\.repolisAdapter=\{factoryUnmodified:true,groundVisible:true,pulseDisabled:false[\s\S]*?selectiveBloom:true,depthAware:true/.test(memorialTreeBlock), 'runtime metadata records unchanged full factory effects and depth-aware selective bloom');
 ok(/treeBox=_memHeroBox\(MEMORIAL_TREE\.group\)\.expandByScalar\(3\)/.test(HTML)
-  && /o\.layers\.enable\(MEM_TREE_LIGHT_LAYER\); occluders\.push\(o\)/.test(HTML)
-  && /RESIDENTS_LIVE\.forEach\(L=>_registerWorldTreeOccluderGroup\(L\.group\)\)/.test(HTML), 'bloom pre-pass includes only the tree and nearby/static or moving occluders');
+  && /WorldTree_BuildingDepthProxies/.test(HTML) && /WorldTree_PropDepthProxies/.test(HTML)
+  && (HTML.match(/frustumCulled=false/g)||[]).length>=3
+  && /WorldTree_DynamicDepthProxies/.test(HTML)
+  && /RESIDENTS_LIVE\.forEach\(L=>_registerWorldTreeOccluderGroup\(L\.group\)\)/.test(HTML), 'three instanced proxy draws cover static buildings, props, and nearby moving avatars');
 ok(/_registerWorldTreeOccluderGroup\(g\)/.test(HTML)
   && /_unregisterWorldTreeOccluderGroup\(p\.group\)/.test(HTML)
-  && /_registerWorldTreeOccluderGroup\(sp\)/.test(HTML), 'remote peer meshes, labels, and temporary emotes enter and leave the bloom depth cache without leaks');
-ok(/const bloomRoots=\[light,\.\.\.crowns,hero\.runtime\.nodes\['energy-network'\],hero\.runtime\.nodes\.constellations/.test(memorialTreeBlock)
-  && /n\.userData\.worldTreeBloom=true; n\.layers\.enable\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
-  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'only energy, ornaments, leaves, and the factory PointLight enter exact bloom; bark/root stay town-lit');
+  && /dynamicOccluderGroups\.delete/.test(HTML), 'remote peer avatar proxies enter and leave the bloom depth cache without leaks');
+ok(/const bloomRoots=\[light,\.\.\.crowns,hero\.runtime\.nodes\['energy-network'\],hero\.runtime\.meshes\['gold-code-glyphs'\]/.test(memorialTreeBlock)
+  && /n\.userData\.worldTreeBloom=true; n\.layers\.set\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
+  && !/hero\.runtime\.nodes\.constellations/.test(memorialTreeBlock)
+  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'only energy, glyphs, leaves, and PointLight enter bloom; full constellations remain visible in the base pass');
+ok(/requestedTreeVisible=MEMORIAL_TREE\?MEMORIAL_TREE\.requestedVisible!==false:false/.test(HTML)
+  && /MEMORIAL_TREE\.group\.visible=requestedTreeVisible/.test(HTML)
+  && /finalMix\.uniforms\.bloomWeight\.value=needBloom\?1:0/.test(HTML), 'tree-off or hidden state restores visibility and cannot composite stale bloom targets');
 ok(/ratio=MEM_TREE_HERO_SCALE\/MEM_TREE_HERO_NATIVE_SCALE/.test(memorialTreeBlock)
   && !/MEMORIAL_TREE\.light\.intensity\*=/.test(memorialTreeBlock)
   && /MEMORIAL_TREE\.light\.distance=7\*ratio/.test(memorialTreeBlock), 'factory PointLight keeps its exact pulse intensity while its authored range follows uniform scale');
-ok(/if\(isNight\)\{ m\.amberLeaf\.emissiveIntensity=0\.42; m\.cyanLeaf\.emissiveIntensity=0\.75/.test(memorialTreeBlock)
+ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x160b06\); m\.bark\.emissiveIntensity=0\.03; m\.amberLeaf\.emissiveIntensity=0\.42/.test(memorialTreeBlock)
   && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=2\.85; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
-  && /else \{ m\.energy\.emissiveIntensity=0\.32/.test(memorialTreeBlock)
+  && /else \{ m\.bark\.emissive\.setHex\(0x6a3518\)/.test(memorialTreeBlock)
+  && /m\.amberLeaf\.emissiveIntensity=0\.32; m\.cyanLeaf\.emissiveIntensity=0\.38/.test(memorialTreeBlock)
+  && /MEMORIAL_TREE\.bloomRoots\.forEach\(root=>root\.traverse\(o=>\{ o\.layers\.set\(night\?MEM_TREE_LIGHT_LAYER:0\)/.test(HTML)
   && /worldBloom\.strength=night\?0\.5:0\.04/.test(HTML), 'day calms ornaments while night/reduced-motion restore exact live-demo material and light values');
-ok(/renderer\.shadowMap\.needsUpdate=MEMORIAL_TREE\.treeShadowDirty; treeComposer\.render\(\)/.test(HTML)
-  && /renderer\.shadowMap\.needsUpdate=refreshTownShadows; renderer\.setRenderTarget\(null\); renderer\.render\(scene,camera\)/.test(HTML), 'bloom pre-pass cannot consume the main town shadow refresh');
+ok(/effectPhase=isNight\|\|WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'/.test(HTML), 'day/dawn/dusk final mode skips emissive and bloom HDR passes entirely');
+ok(/forceProofLayer=!isNight&&\(WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'\)/.test(HTML)
+  && /if\(forceProofLayer\) MEMORIAL_TREE\.bloomRoots\.forEach/.test(HTML), 'daytime emissive/bloom proof modes temporarily route glow roots to the effect layer');
+ok(/MEMORIAL_TREE\.bloomLights\.forEach\(light=>\{ light\.visible=true; \}\); renderer\.setRenderTarget\(emissiveTarget\)/.test(HTML), 'factory PointLight contributes only to the isolated emissive source, never the town base');
+ok(/geometry\.scale\(1\.22,1\.22,1\.22\)/.test(memorialTreeBlock)
+  && /leafScale:1\.22/.test(memorialTreeBlock), 'adapter enlarges factory leaf cards without changing their count, anchors, or hierarchy');
+ok(/renderer\.setRenderTarget\(emissiveTarget\)[\s\S]*?renderer\.render\(scene,camera\);[\s\S]*?if\(needBloom\) treeComposer\.render\(\)/.test(HTML)
+  && /renderer\.shadowMap\.needsUpdate=refreshTownShadows; renderer\.setRenderTarget\(baseTarget\)/.test(HTML), 'one linear emissive render feeds bloom without consuming the town-base shadow refresh');
 ok(/window\.__memorialTree=/.test(HTML) && /window\.__tpMemorialTree=/.test(HTML)
   && /_memHeroObjectPerf\(MEMORIAL_TREE\.group\)/.test(HTML) && /window\.__frameMemorialTree=/.test(HTML)
-  && /window\.__memorialTreeVisible=/.test(HTML) && /window\.__memorialTreeCollision=/.test(HTML), '?dbg exposes factory hash/stats/bounds/budget, viewpoints, visibility A/B, and collider probes');
+  && /window\.__worldTreeRenderMode=/.test(HTML) && /window\.__worldTreeRenderTargets=/.test(HTML)
+  && /window\.__freezeWorldForExposure=/.test(HTML)
+  && /window\.__memorialTreeVisible=/.test(HTML) && /window\.__memorialTreeCollision=/.test(HTML), '?dbg exposes five render modes, linear targets, frozen exposure A/B, factory stats, and collision');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
