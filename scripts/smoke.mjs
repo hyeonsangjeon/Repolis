@@ -647,34 +647,40 @@ ok(/window\.__starTrailPlan=/.test(HTML) && /window\.__starTrailStart=/.test(HTM
   && /window\.__starTrailNext=/.test(HTML) && /window\.__starTrailEnd=/.test(HTML), '?dbg trail plan/start/advance/end hooks are present');
 ok(/updateStarTrail\(clock\.elapsedTime\)/.test(HTML), 'the main world loop updates the active constellation visuals');
 
-group('one deterministic Repolis World Tree stands quietly in the north rest park');
+group('one colossal deterministic World Tree Pillar supports the village');
 const memorialTreeBlock = (HTML.match(/\/\*MEMORIAL_TREE:START\*\/([\s\S]*?)\/\*MEMORIAL_TREE:END\*\//) || [, ''])[1];
 ok(memorialTreeBlock.length > 0, 'world-tree procedural block is extractable from index.html');
-ok(/const MEMORIAL_TREE_SEED=0x5eed1979, MEMORIAL_TREE_POS=new THREE\.Vector3\(15,0,48\)/.test(memorialTreeBlock)
-  && /function _memTreeRng\(seed\)/.test(memorialTreeBlock), 'world tree has one fixed seed + an isolated deterministic PRNG');
+ok(/const MEMORIAL_TREE_SEED=1730, MEMORIAL_TREE_POS=new THREE\.Vector3\(15,0,48\)/.test(memorialTreeBlock)
+  && /function _memTreeRng\(seed\)/.test(memorialTreeBlock), 'skill-authored World Tree uses fixed seed 1730 + isolated deterministic PRNG');
 ok(!/Math\.random\(/.test(memorialTreeBlock), 'world-tree shape contains no Math.random (reload-stable silhouette)');
 ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
   && (HTML.match(/if\(memorial\) makeMemorialTree\(cx,cz\)/g) || []).length === 1, 'exactly one memorial tree is requested, at the north rest park centre');
-ok(/stats=\{segments:0,roots:7,branches:0,leaves:0,crowns:0\}/.test(memorialTreeBlock)
-  && /const macro=\[[\s\S]*?\(LOW_END\?macro\.slice\(0,8\):macro\)/.test(memorialTreeBlock), 'seven buttress roots + authored fork hierarchy define the world-tree silhouette');
+ok(/MEM_TREE_LITE=LOW_END\|\|IS_MOBILE/.test(memorialTreeBlock)
+  && /stats=\{segments:0,sweeps:0,roots:8,branches:8,ribs:MEM_TREE_LITE\?8:16,goldFans:MEM_TREE_LITE\?8:16,frontGoldRibs:MEM_TREE_LITE\?5:7,bridgeLeaves:0,leaves:0,crowns:8,veins:MEM_TREE_LITE\?22:72\}/.test(memorialTreeBlock)
+  && /target:\{height:34,crownSpan:44,crownDepth:32\}/.test(memorialTreeBlock), '8 roots + 8 boughs + 8 crown sectors map the skill spec to a 34×44×32 village pillar');
+ok(/new THREE\.CatmullRomCurve3\(pts,false,'centripetal',0\.5\)/.test(memorialTreeBlock)
+  && /computeFrenetFrames\(steps,false\)/.test(memorialTreeBlock) && /geo\.setIndex\(idx\); geo\.computeVertexNormals/.test(memorialTreeBlock), 'limbs use one tapered Frenet sweep per path (not stacked cylinder draw calls)');
 ok(/new THREE\.InstancedMesh\(MEM_TREE_LEAF_GEO,MEM_TREE_LEAVES\[bi\],list\.length\)/.test(memorialTreeBlock)
-  && /n:LOW_END\?22:64/.test(memorialTreeBlock) && /n:LOW_END\?28:78/.test(memorialTreeBlock), 'autumn canopy uses smaller, airier instanced clusters with a materially lower LOW_END density');
-ok(/const MEM_TREE_BARK=\[[\s\S]*?MEM_TREE_LEAVES=\[/.test(memorialTreeBlock), 'bark + golden/orange canopy reuse small shared material pools');
-ok(/if\(rr<0\.34\|\|py<1\.0\) layer=[\s\S]*?else if\(py>4\.1\) layer=/.test(memorialTreeBlock), 'autumn colour is spatially layered: rust under-crown, amber middle, gold upper tips');
-ok(/cg\.userData\.sway=\{sp:0\.29\+ci\*0\.055,[\s\S]*?SWAY\.push\(cg\)/.test(memorialTreeBlock)
-  && !/regSway\(root/.test(memorialTreeBlock), 'only crown/twig pivots join the existing wind sway; the great trunk stays rigid');
+  && /_memLeafMass\(cg,a,MEM_TREE_LITE\?16:100/.test(memorialTreeBlock) && /mesh\.setColorAt\(i,v\.color\)/.test(memorialTreeBlock), '8 instanced crown sectors preserve an 800/full vs 128/mobile-or-LOW_END foliage budget with per-instance colour');
+ok(/const MEM_TREE_MATS=\{[\s\S]*?bark:toon[\s\S]*?cavity:toon[\s\S]*?earth:toon[\s\S]*?foliage:toon[\s\S]*?shadow:toon[\s\S]*?gold:toon/.test(memorialTreeBlock), 'six pooled material systems match the strict ObjectSculptSpec');
+ok(/preserve five-to-nine warm branch windows/.test(memorialTreeBlock) && /WorldTree_GoldenVeinNetwork/.test(memorialTreeBlock)
+  && /WorldTree_PrimaryGoldFans/.test(memorialTreeBlock) && /WorldTree_SecondaryRibs/.test(memorialTreeBlock)
+  && /WorldTree_FrontGoldenVault/.test(memorialTreeBlock) && /WorldTree_InnerGoldSpine/.test(memorialTreeBlock)
+  && /WorldTree_CanopyBridge/.test(memorialTreeBlock) && /WorldTree_InnerGoldCore/.test(memorialTreeBlock), 'negative-space windows reveal broad gold vault/spine, secondary ribs/veins, inner core, and a connected canopy bridge');
+ok(/cg\.userData\.sway=\{sp:0\.22\+i\*0\.018,[\s\S]*?amp:MEM_TREE_LITE\?0\.0024:0\.0054\}; SWAY\.push\(cg\)/.test(memorialTreeBlock)
+  && !/regSway\(root/.test(memorialTreeBlock), 'only 8 crown pivots sway within the skill spec amplitude; roots/trunk/boughs stay rigid');
 ok(/skeleton\.name='WorldTree_StaticSkeleton'/.test(memorialTreeBlock)
-  && /lg\.name='WorldTree_Limb_'/.test(memorialTreeBlock) && /cg\.name='WorldTree_CrownPivot_'/.test(memorialTreeBlock)
-  && /WorldTree_Socket_/.test(memorialTreeBlock), 'named static skeleton, detachable limb groups, crown pivots, and sockets make the tree action-ready');
-ok(/const collider=\{x,z,r:2\.95,_memorialTree:true\}; EXTRA_COLLIDERS\.push\(collider\)/.test(memorialTreeBlock)
-  && /new THREE\.RingGeometry\(memorial\?3\.75:2\.9,memorial\?4\.85:3\.8/.test(HTML), '2.95 world-tree collider covers mound/roots and stays inside the widened 3.75-radius park path');
+  && /WorldTree_TrunkPillar/.test(memorialTreeBlock) && /WorldTree_PrimaryBough_/.test(memorialTreeBlock)
+  && /WorldTree_CrownSectorPivot_/.test(memorialTreeBlock) && /socketDefs\['Bough'\+String/.test(memorialTreeBlock), 'named skeleton, roots, trunk, boughs, crown pivots, and sockets are action-ready');
+ok(/const collider=\{x,z,r:5\.8,_memorialTree:true\}; EXTRA_COLLIDERS\.push\(collider\)/.test(memorialTreeBlock)
+  && /new THREE\.RingGeometry\(memorial\?6\.6:2\.9,memorial\?7\.9:3\.8/.test(HTML), '5.8 root collider stays inside the widened 6.6-radius park path');
 ok(/if\(!memorial\)\{ flowerPatch\([\s\S]*?makeRock\([\s\S]*?world-tree path stays fully open/.test(HTML), 'legacy park flowers/rock are omitted from the memorial ring path (no visual clipping or obstruction)');
-ok(!/new THREE\.(PointLight|SpotLight|DirectionalLight|Points)/.test(memorialTreeBlock), 'world tree adds no dynamic light or particle system');
-ok(/Night quality gate: an ancient guide[\s\S]*?guidePool[\s\S]*?guideHalo/.test(memorialTreeBlock)
-  && /if\(MEMORIAL_TREE\)\{ const glow=MEMORIAL_TREE\.guideGlow,[\s\S]*?glow\.pool\.material\.opacity=night\?0\.15:0; glow\.halo\.material\.opacity=night\?0\.075:0;/.test(HTML),
-  'night quality gate: pooled emissive leaves + subtle material-only glow guide residents without a new scene light');
+ok(!/new THREE\.(PointLight|SpotLight|DirectionalLight|Points|Sprite)/.test(memorialTreeBlock), 'pillar adds no object-owned scene light, particle, or sprite system');
+ok(/Material-only night guidance:[\s\S]*?guidePool/.test(memorialTreeBlock)
+  && /MEM_TREE_GOLD\.emissiveIntensity=night\?1\.15:0\.22/.test(HTML)
+  && /MEMORIAL_TREE\.goldVeins\.material\.opacity=night\?0\.85:0\.34/.test(HTML), 'night gate uses only gold emissive/core/vein/pool material state');
 ok(/window\.__memorialTree=/.test(HTML) && /window\.__tpMemorialTree=/.test(HTML)
-  && /window\.__memorialTreeCollision=/.test(HTML), '?dbg exposes tree spec/bounds, viewpoint, and collider probes');
+  && /window\.__frameMemorialTree=/.test(HTML) && /window\.__memorialTreeCollision=/.test(HTML), '?dbg exposes tree spec/bounds, town/focus viewpoints, and collider probes');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
