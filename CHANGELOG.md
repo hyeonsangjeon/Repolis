@@ -3,6 +3,13 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.77.2] — 2026-07-11
+
+### 🌳 World Tree night legibility — restore the living Solar Archive
+- **Sharp tree surfaces restored.** Energy paths, glyphs, and all 3,016 leaf cards remain in the normal depth-tested base render while also feeding the isolated bloom source. The final composite is now the standard `base + blur bloom`; it no longer replaces the visible tree with a sparse effect-only copy.
+- **Warm bark from every approach.** A restrained tree-local emissive floor restores the generated brown bark and PBR relief at night without adding town-facing lights or changing global exposure. The factory PointLight remains effect-layer-only, so nearby buildings do not brighten.
+- **No factory downgrade.** The Solar Archive production factory file, geometry, 3,016-leaf count, animation, sockets, and SHA remain unchanged; only the Repolis adapter corrects layer routing and the night bark floor.
+
 ## [1.77.1] — 2026-07-11
 
 ### 💡 World Tree HDR isolation — live neon, invariant town exposure

@@ -1537,13 +1537,13 @@ function _renderWorldTreeFrame(refreshTownShadows){
     needBloom=treeVisible&&effectPhase&&(WORLD_TREE_RENDER_MODE==='final-composite'||WORLD_TREE_RENDER_MODE==='bloom-only'),needSource=needEmissive||needBloom,
     forceProofLayer=!isNight&&(WORLD_TREE_RENDER_MODE==='emissive-only'||WORLD_TREE_RENDER_MODE==='bloom-only');
   if(needSource&&MEMORIAL_TREE){ _prepareWorldTreeBloom(); camera.layers.set(MEM_TREE_LIGHT_LAYER); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=false; });
-    if(forceProofLayer) MEMORIAL_TREE.bloomRoots.forEach(root=>root.traverse(o=>{ o.layers.set(MEM_TREE_LIGHT_LAYER); }));
+    if(forceProofLayer) _setWorldTreeGlowLayers(true);
     MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=true; }); renderer.setRenderTarget(emissiveTarget); renderer.setClearColor(0x000000,0); renderer.clear(); renderer.render(scene,camera);
     if(needBloom) treeComposer.render(); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=false; }); }
   renderer.toneMapping=savedTone; renderer.outputColorSpace=savedSpace; renderer.setClearColor(savedClear,savedAlpha); camera.layers.mask=mask; renderer.setRenderTarget(null);
   finalMix.uniforms.baseWeight.value=(WORLD_TREE_RENDER_MODE==='emissive-only'||WORLD_TREE_RENDER_MODE==='bloom-only')?0:1;
-  finalMix.uniforms.bloomWeight.value=needBloom?1:0; finalMix.uniforms.emissiveWeight.value=needEmissive?1:0; finalComposer.render();
-  if(MEMORIAL_TREE){ if(forceProofLayer) MEMORIAL_TREE.bloomRoots.forEach(root=>root.traverse(o=>{ o.layers.set(0); }));
+  finalMix.uniforms.bloomWeight.value=needBloom?1:0; finalMix.uniforms.emissiveWeight.value=WORLD_TREE_RENDER_MODE==='emissive-only'?1:0; finalComposer.render();
+  if(MEMORIAL_TREE){ if(forceProofLayer) _setWorldTreeGlowLayers(false);
     MEMORIAL_TREE.group.visible=requestedTreeVisible; MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=true; }); }
 }
 
@@ -2796,10 +2796,15 @@ function _memHeroObjectPerf(root){
 function _memHeroEnvironment(root){
   camera.layers.enable(MEM_TREE_LIGHT_LAYER); return {lights:1};
 }
+function _setWorldTreeGlowLayers(night){
+  if(!MEMORIAL_TREE) return;
+  MEMORIAL_TREE.bloomRoots.forEach(root=>root.traverse(o=>{ o.layers.set(0); if(night) o.layers.enable(MEM_TREE_LIGHT_LAYER); }));
+  MEMORIAL_TREE.bloomLights.forEach(light=>light.layers.set(MEM_TREE_LIGHT_LAYER));
+}
 function _memHeroUpdate(elapsed){
   if(!MEMORIAL_TREE) return; if(!REDUCED) MEMORIAL_TREE.hero.update(elapsed);
   const ratio=MEM_TREE_HERO_SCALE/MEM_TREE_HERO_NATIVE_SCALE,m=MEMORIAL_TREE.hero.materials; MEMORIAL_TREE.light.distance=7*ratio;   // preserve factory pulse intensity; only its authored range follows uniform scale
-  if(isNight){ m.bark.emissive.setHex(0x160b06); m.bark.emissiveIntensity=0.03; m.amberLeaf.emissiveIntensity=0.42; m.cyanLeaf.emissiveIntensity=0.75; if(REDUCED){ m.energy.emissiveIntensity=2.85; MEMORIAL_TREE.light.intensity=18; } }
+  if(isNight){ m.bark.emissive.setHex(0x7a3f20); m.bark.emissiveIntensity=0.28; m.amberLeaf.emissiveIntensity=0.42; m.cyanLeaf.emissiveIntensity=0.75; if(REDUCED){ m.energy.emissiveIntensity=2.85; MEMORIAL_TREE.light.intensity=18; } }
   else { m.bark.emissive.setHex(0x6a3518); m.bark.emissiveIntensity=0.24; m.energy.emissiveIntensity=0.32; m.amberLeaf.emissiveIntensity=0.32; m.cyanLeaf.emissiveIntensity=0.38; MEMORIAL_TREE.light.intensity=2; }
 }
 function makeMemorialTree(x,z){
@@ -2818,11 +2823,12 @@ function makeMemorialTree(x,z){
   const size=nativeBox.getSize(new THREE.Vector3()).multiplyScalar(MEM_TREE_HERO_SCALE);
   root.userData.worldTree={seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage,factorySha256:MEM_TREE_FACTORY_SHA,collider,crownOnlySway:false,
     target:{height:+size.y.toFixed(1),crownSpan:+size.x.toFixed(1),crownDepth:+size.z.toFixed(1)},lightPolicy:'factory-emissive-selective-bloom',sockets:Object.keys(sockets)};
-  root.userData.repolisAdapter={factoryUnmodified:true,groundVisible:true,pulseDisabled:false,leafScale:1.22,bloom:{night:[0.5,0.36,0.88],day:[0.04,0.18,0.96]},selectiveBloom:true,depthAware:true,scale:MEM_TREE_HERO_SCALE,qualityMode:'full'};
-  const bloomRoots=[light,...crowns,hero.runtime.nodes['energy-network'],hero.runtime.meshes['gold-code-glyphs'],hero.runtime.meshes['cyan-code-glyphs']].filter(Boolean);
-  bloomRoots.forEach(o=>o.traverse(n=>{ n.userData.worldTreeBloom=true; n.layers.set(MEM_TREE_LIGHT_LAYER); })); light.layers.set(MEM_TREE_LIGHT_LAYER);
-  const bloomLights=[light];
+  root.userData.repolisAdapter={factoryUnmodified:true,groundVisible:true,pulseDisabled:false,leafScale:1.22,bloom:{night:[0.5,0.36,0.88],day:[0.04,0.18,0.96]},selectiveBloom:true,sharpGlowInBase:true,depthAware:true,scale:MEM_TREE_HERO_SCALE,qualityMode:'full'};
+  const bloomRoots=[...crowns,hero.runtime.nodes['energy-network'],hero.runtime.meshes['gold-code-glyphs'],hero.runtime.meshes['cyan-code-glyphs']].filter(Boolean);
+  bloomRoots.forEach(o=>o.traverse(n=>{ n.userData.worldTreeBloom=true; }));
+  const bloomLights=[light].filter(Boolean);
   MEMORIAL_TREE={hero,group:root,runtime:hero.runtime,crowns,sockets,light,environment,bloomRoots,bloomLights,dynamicOccluderGroups:new Set(),occludersReady:false,requestedVisible:true,treeShadowDirty:false,stats:hero.stats,collider,seed:MEMORIAL_TREE_SEED,nativeBox};
+  _setWorldTreeGlowLayers(false);
   return MEMORIAL_TREE;
 }
 /*MEMORIAL_TREE:END*/
@@ -4367,7 +4373,7 @@ function setNightState(night){
   if(night===_nightState) return;
   _nightState=night;
   if(MEMORIAL_TREE) MEMORIAL_TREE.treeShadowDirty=true;
-  if(MEMORIAL_TREE) MEMORIAL_TREE.bloomRoots.forEach(root=>root.traverse(o=>{ o.layers.set(night?MEM_TREE_LIGHT_LAYER:0); }));
+  _setWorldTreeGlowLayers(night);
   worldBloom.strength=night?0.5:0.04; worldBloom.radius=night?0.36:0.18; worldBloom.threshold=night?0.88:0.96;
   renderer.shadowMap.needsUpdate=true; lastAct=performance.now();   // perf: 밤낮 전환 → 그림자 1회 강제 갱신 + 60fps 깨우기
   moon.visible=night; starsGroup.visible=night; fireflyGroup.visible=night;
@@ -7325,7 +7331,7 @@ if(location.search.includes('dbg')){ window.__cam=()=>({camYaw,camPitch,charYaw:
       macroBranches:s.macroBranches,secondaryBranches:s.secondaryBranches,fineBranches:s.fineBranches,leafInstances:s.leafInstances,mossInstances:s.mossInstances,glyphInstances:s.glyphInstances,branchVertices:s.branchVertices,generationMs:+s.generationMs.toFixed(1),
       mobile:IS_MOBILE,lowEnd:LOW_END,lite:MEM_TREE_LITE,reduced:REDUCED,runtime:{qualityMode:adapter.qualityMode,nodes:Object.keys(MEMORIAL_TREE.runtime.nodes).length,meshes:Object.keys(MEMORIAL_TREE.runtime.meshes).length,sockets:Object.keys(MEMORIAL_TREE.sockets).length,dynamicOccluders:MEMORIAL_TREE.dynamicOccluderGroups.size,staticProxies:MEMORIAL_TREE.staticProxyCount||0,objectPerf:_memHeroObjectPerf(MEMORIAL_TREE.group)},
       crownOnlySway:wt.crownOnlySway,sockets:Object.keys(MEMORIAL_TREE.sockets),collider:{x:c.x,z:c.z,r:c.r},target:wt.target,
-      nightGuide:{night:isNight,light:+MEMORIAL_TREE.light.intensity.toFixed(1),range:+MEMORIAL_TREE.light.distance.toFixed(1),energy:+MEMORIAL_TREE.hero.materials.energy.emissiveIntensity.toFixed(2),amber:+MEMORIAL_TREE.hero.materials.amberLeaf.emissiveIntensity.toFixed(2),cyan:+MEMORIAL_TREE.hero.materials.cyanLeaf.emissiveIntensity.toFixed(2),environmentLights:1},
+      nightGuide:{night:isNight,light:+MEMORIAL_TREE.light.intensity.toFixed(1),range:+MEMORIAL_TREE.light.distance.toFixed(1),energy:+MEMORIAL_TREE.hero.materials.energy.emissiveIntensity.toFixed(2),amber:+MEMORIAL_TREE.hero.materials.amberLeaf.emissiveIntensity.toFixed(2),cyan:+MEMORIAL_TREE.hero.materials.cyanLeaf.emissiveIntensity.toFixed(2),environmentLights:1,layers:{energy:MEMORIAL_TREE.hero.runtime.nodes['energy-network'].layers.mask,amber:MEMORIAL_TREE.crowns[0].layers.mask,light:MEMORIAL_TREE.light.layers.mask}},
       bounds:{min:[+b.min.x.toFixed(1),+b.min.y.toFixed(1),+b.min.z.toFixed(1)],max:[+b.max.x.toFixed(1),+b.max.y.toFixed(1),+b.max.z.toFixed(1)]}}; };
   window.__tpMemorialTree=(back=55)=>{ if(!MEMORIAL_TREE) return null; const p=MEMORIAL_TREE.group.position; player.position.set(p.x,0,p.z-back); camYaw=Math.PI; camPitch=0.08; camDist=22; model.rotation.y=0; return window.__memorialTree(); };
   window.__frameMemorialTree=(back=44,height=15,angle=0)=>{ if(!MEMORIAL_TREE) return null; const p=MEMORIAL_TREE.group.position,dx=Math.sin(angle),dz=Math.cos(angle); player.position.set(p.x-dx*back,height,p.z-dz*back); model.visible=false; camYaw=angle+Math.PI; camPitch=0; camDist=18; return window.__memorialTree(); };

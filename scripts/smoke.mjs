@@ -697,7 +697,7 @@ ok(/const pulse = 2\.55 \+ Math\.sin\(elapsedSeconds \* 2\.1\) \* 0\.45/.test(WO
   && /livingSystem\.rotation\.z = Math\.sin/.test(WORLD_TREE_FACTORY), 'web keeps the plugin energy, light, foliage, and living-system effects unchanged');
 ok(/customSockets=\{TaxiArrival:/.test(memorialTreeBlock)
   && /\['left-foundation:tip','right-foundation:tip','left-crown:tip','right-crown:tip'/.test(memorialTreeBlock), 'adapter preserves six Repolis sockets plus eight action-ready factory bough sockets');
-ok(/root\.userData\.repolisAdapter=\{factoryUnmodified:true,groundVisible:true,pulseDisabled:false[\s\S]*?selectiveBloom:true,depthAware:true/.test(memorialTreeBlock), 'runtime metadata records unchanged full factory effects and depth-aware selective bloom');
+ok(/root\.userData\.repolisAdapter=\{factoryUnmodified:true,groundVisible:true,pulseDisabled:false[\s\S]*?selectiveBloom:true,sharpGlowInBase:true,depthAware:true/.test(memorialTreeBlock), 'runtime metadata records unchanged full factory effects and sharp-base depth-aware selective bloom');
 ok(/treeBox=_memHeroBox\(MEMORIAL_TREE\.group\)\.expandByScalar\(3\)/.test(HTML)
   && /WorldTree_BuildingDepthProxies/.test(HTML) && /WorldTree_PropDepthProxies/.test(HTML)
   && (HTML.match(/frustumCulled=false/g)||[]).length>=3
@@ -706,25 +706,28 @@ ok(/treeBox=_memHeroBox\(MEMORIAL_TREE\.group\)\.expandByScalar\(3\)/.test(HTML)
 ok(/_registerWorldTreeOccluderGroup\(g\)/.test(HTML)
   && /_unregisterWorldTreeOccluderGroup\(p\.group\)/.test(HTML)
   && /dynamicOccluderGroups\.delete/.test(HTML), 'remote peer avatar proxies enter and leave the bloom depth cache without leaks');
-ok(/const bloomRoots=\[light,\.\.\.crowns,hero\.runtime\.nodes\['energy-network'\],hero\.runtime\.meshes\['gold-code-glyphs'\]/.test(memorialTreeBlock)
-  && /n\.userData\.worldTreeBloom=true; n\.layers\.set\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
+ok(/const bloomRoots=\[\.\.\.crowns,hero\.runtime\.nodes\['energy-network'\],hero\.runtime\.meshes\['gold-code-glyphs'\]/.test(memorialTreeBlock)
+  && /o\.layers\.set\(0\); if\(night\) o\.layers\.enable\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
+  && /bloomLights\.forEach\(light=>light\.layers\.set\(MEM_TREE_LIGHT_LAYER\)\)/.test(memorialTreeBlock)
   && !/hero\.runtime\.nodes\.constellations/.test(memorialTreeBlock)
-  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'only energy, glyphs, leaves, and PointLight enter bloom; full constellations remain visible in the base pass');
+  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'energy, glyphs, and leaves stay sharp in base and also feed bloom; PointLight remains effect-only');
 ok(/requestedTreeVisible=MEMORIAL_TREE\?MEMORIAL_TREE\.requestedVisible!==false:false/.test(HTML)
   && /MEMORIAL_TREE\.group\.visible=requestedTreeVisible/.test(HTML)
-  && /finalMix\.uniforms\.bloomWeight\.value=needBloom\?1:0/.test(HTML), 'tree-off or hidden state restores visibility and cannot composite stale bloom targets');
+  && /finalMix\.uniforms\.bloomWeight\.value=needBloom\?1:0/.test(HTML)
+  && /emissiveWeight\.value=WORLD_TREE_RENDER_MODE==='emissive-only'\?1:0/.test(HTML), 'final uses base plus blur once; tree-off and debug modes cannot composite a duplicate sharp emissive source');
 ok(/ratio=MEM_TREE_HERO_SCALE\/MEM_TREE_HERO_NATIVE_SCALE/.test(memorialTreeBlock)
   && !/MEMORIAL_TREE\.light\.intensity\*=/.test(memorialTreeBlock)
   && /MEMORIAL_TREE\.light\.distance=7\*ratio/.test(memorialTreeBlock), 'factory PointLight keeps its exact pulse intensity while its authored range follows uniform scale');
-ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x160b06\); m\.bark\.emissiveIntensity=0\.03; m\.amberLeaf\.emissiveIntensity=0\.42/.test(memorialTreeBlock)
+ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x7a3f20\); m\.bark\.emissiveIntensity=0\.28; m\.amberLeaf\.emissiveIntensity=0\.42/.test(memorialTreeBlock)
   && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=2\.85; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
   && /else \{ m\.bark\.emissive\.setHex\(0x6a3518\)/.test(memorialTreeBlock)
   && /m\.amberLeaf\.emissiveIntensity=0\.32; m\.cyanLeaf\.emissiveIntensity=0\.38/.test(memorialTreeBlock)
-  && /MEMORIAL_TREE\.bloomRoots\.forEach\(root=>root\.traverse\(o=>\{ o\.layers\.set\(night\?MEM_TREE_LIGHT_LAYER:0\)/.test(HTML)
+  && /_setWorldTreeGlowLayers\(night\)/.test(HTML)
   && /worldBloom\.strength=night\?0\.5:0\.04/.test(HTML), 'day calms ornaments while night/reduced-motion restore exact live-demo material and light values');
 ok(/effectPhase=isNight\|\|WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'/.test(HTML), 'day/dawn/dusk final mode skips emissive and bloom HDR passes entirely');
 ok(/forceProofLayer=!isNight&&\(WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'\)/.test(HTML)
-  && /if\(forceProofLayer\) MEMORIAL_TREE\.bloomRoots\.forEach/.test(HTML), 'daytime emissive/bloom proof modes temporarily route glow roots to the effect layer');
+  && /if\(forceProofLayer\) _setWorldTreeGlowLayers\(true\)/.test(HTML)
+  && /if\(forceProofLayer\) _setWorldTreeGlowLayers\(false\)/.test(HTML), 'daytime emissive/bloom proof modes restore visual dual-layers and keep PointLight effect-only');
 ok(/MEMORIAL_TREE\.bloomLights\.forEach\(light=>\{ light\.visible=true; \}\); renderer\.setRenderTarget\(emissiveTarget\)/.test(HTML), 'factory PointLight contributes only to the isolated emissive source, never the town base');
 ok(/geometry\.scale\(1\.22,1\.22,1\.22\)/.test(memorialTreeBlock)
   && /leafScale:1\.22/.test(memorialTreeBlock), 'adapter enlarges factory leaf cards without changing their count, anchors, or hierarchy');
