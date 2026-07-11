@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.77.1] — 2026-07-11
+
+### 💡 World Tree HDR isolation — live neon, invariant town exposure
+- **Architecture reset.** The normal town and non-emissive tree surfaces render once into a half-float linear-sRGB base target. Energy lines, leaf sprays, glyphs, and the factory PointLight render separately into linear emissive/bloom targets; constellation ornaments remain visible in the base without paying another multi-draw bloom pass. One final shader combines base + sharp emissive + true blur-only bloom, then the sole `OutputPass` applies ACES and sRGB conversion exactly once.
+- **No physical spill into town.** The factory PointLight exists only on the selective bloom layer. Bark, roots, ground, moss, buildings, props, the player, residents, and remote peers keep their normal town lighting; nearby and moving geometry participates only as black depth occluders so hidden neon cannot draw through it.
+- **Five proof modes.** `?dbg=1` exposes `base-only`, `emissive-only`, `bloom-only`, `final-composite`, and `tree-off` from one camera, plus the linear render-target contract and a frozen-clock exposure A/B hook.
+- **Daylight foliage restored.** Dawn, day, and dusk move the 3,016 leaf sprays into the normal PBR base pass, enlarge the factory leaf card geometry by 1.22× without changing anchors/count, and apply warm bark plus amber/cyan emissive floors. The tree remains fully crowned and brown-gold instead of looking transparent, black, or leafless; night returns the original glow layer.
+- **Town Exposure Invariance.** Final frozen same-camera tree-off/on captures, excluding the tree-adjacent mask, measure **0.43% mean** and **0.00% P95** luminance deltas—both below the 5% gate. Town exposure no longer changes when the World Tree is enabled.
+- **Performance preserved.** Instanced-aware bounds turn nearby buildings/props into two instanced depth-proxy draws and all player/resident/peer bodies into one dynamic proxy draw. The already-rendered emissive target feeds bloom through `TexturePass` instead of redrawing the tree, and day/dawn/dusk bypass HDR glow entirely. Full Solar geometry/effects remain unchanged; desktop measures **48.9 FPS day / 33.5 FPS night**, while final 390×844 night cadence is **60.1 FPS** (`16.65 ms` average, `18.6 ms` p95), all above the 30 FPS floor with console errors 0.
+
 ## [1.77.0] — 2026-07-11
 
 ### ☀️ Solar Archive World Tree — the plugin flagship, alive inside Repolis
