@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.75.0] — 2026-07-11
+
+### ✨ The World Tree earns luminous leaf texture through a controlled Sculpt DNA variant
+- **Sculpt DNA, not ad-hoc randomization.** The strict 1.74 `ObjectSculptSpec` was initialized with the `sculpt-dna-variants` skill and reduced to five designer-facing axes: canopy fullness, leaf surface richness, emerald palette, leaf sheen, and gold warmth. Six deterministic variants were generated from root seed `1740`; every constraint and protected component/parent/material/socket/attachment/build-pass/review-target invariant passed. Variant `v006` was promoted for its strongest normal/bump/color breakup while preserving the existing silhouette and tier budgets.
+- **Leaves now read as leaves.** Two tiny seeded procedural `CanvasTexture` atlases paint overlapping almond leaves, midribs, and side veins across the existing instanced dodecahedral foliage. Desktop adds a sparse alpha-tested leaf-card layer derived from the existing clump positions, plus 128px albedo and bump maps; mobile/`LOW_END` uses 64px albedo only and omits the cards. There is no downloaded texture, GLB, runtime network request, dependency, build step, or per-frame texture work.
+- **A brighter but quieter guide.** Emerald/jade foliage, warm inner gold, softer bark radiance, and the existing single shadowless night guide light make the tree illuminate nearby paths and residents. The former uniform canopy dome is replaced by three crossed planes sharing the existing soft glow texture, so the crown glimmers without sitting inside a grey sphere.
+- **Preserved.** Exactly one tree remains at `(15, 48)` with the same roots, bough hierarchy, 14 sockets, 5.8 collider, clear ring path, rigid trunk, crown-only micro-sway, and no particles or animated lighting. `?dbg=1` now reports the selected variant provenance, invariant status, texture tier, map count, and repeat scale.
+
 ## [1.74.0] — 2026-07-11
 
 ### 🌳 The World Tree becomes the village's pillar — a colossal umbrella crown over Repolis
