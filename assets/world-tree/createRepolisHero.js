@@ -43,6 +43,8 @@ export const REPOLIS_STAGES = [
   'full',
 ];
 
+export const REPOLIS_FACTORY_REVISION = 'azimuth-complete-energy-v3-knots';
+
 const STAGE_LEVEL = Object.fromEntries(
   REPOLIS_STAGES.map((stage, index) => [stage, index]),
 );
@@ -231,6 +233,39 @@ function createLeafGeometry() {
   return geometry;
 }
 
+function branchGeometryDetail(importance) {
+  if (importance === 'trunk') {
+    return { tubularSegments: 36, radialSegments: 24, gnarled: 0.12, rootFlare: 0.62 };
+  }
+  if (importance === 'macro') {
+    return { tubularSegments: 24, radialSegments: 16, gnarled: 0.1, rootFlare: 0.18 };
+  }
+  return { tubularSegments: 12, radialSegments: 9, gnarled: 0.055, rootFlare: 0.08 };
+}
+
+function createSurfaceRadius({
+  baseRadius,
+  tipRadius,
+  seed,
+  gnarled,
+  rootFlare,
+}) {
+  const rng = seededRandom(seed);
+  const phaseA = rng.range(0, Math.PI * 2);
+  const phaseB = rng.range(0, Math.PI * 2);
+  return (t, angle) => {
+    const taper = THREE.MathUtils.lerp(baseRadius, tipRadius, Math.pow(t, 0.86));
+    const flare = 1 + rootFlare * Math.exp(-t * 13) * (0.72 + Math.sin(angle * 2 + phaseA) * 0.28);
+    const ridges = (
+      1
+      + Math.sin(angle * 3 + phaseA + t * 5.2) * gnarled * 0.62
+      + Math.sin(angle * 7 + phaseB - t * 9.4) * gnarled * 0.28
+      + Math.sin(t * 37 + angle * 1.3) * gnarled * 0.15
+    );
+    return { radius: taper * flare * ridges, ridges };
+  };
+}
+
 function createBranchGeometry(
   points,
   {
@@ -255,26 +290,22 @@ function createBranchGeometry(
   const colors = [];
   const indices = [];
   const ring = radialSegments + 1;
-  const rng = seededRandom(seed);
-  const phaseA = rng.range(0, Math.PI * 2);
-  const phaseB = rng.range(0, Math.PI * 2);
+  const surfaceRadius = createSurfaceRadius({
+    baseRadius,
+    tipRadius,
+    seed,
+    gnarled,
+    rootFlare,
+  });
 
   for (let segment = 0; segment <= tubularSegments; segment += 1) {
     const t = segment / tubularSegments;
     const center = curve.getPointAt(t);
     const normal = frames.normals[segment];
     const binormal = frames.binormals[segment];
-    const taper = THREE.MathUtils.lerp(baseRadius, tipRadius, Math.pow(t, 0.86));
     for (let side = 0; side <= radialSegments; side += 1) {
       const angle = side / radialSegments * Math.PI * 2;
-      const flare = 1 + rootFlare * Math.exp(-t * 13) * (0.72 + Math.sin(angle * 2 + phaseA) * 0.28);
-      const ridges = (
-        1
-        + Math.sin(angle * 3 + phaseA + t * 5.2) * gnarled * 0.62
-        + Math.sin(angle * 7 + phaseB - t * 9.4) * gnarled * 0.28
-        + Math.sin(t * 37 + angle * 1.3) * gnarled * 0.15
-      );
-      const radius = taper * flare * ridges;
+      const { radius, ridges } = surfaceRadius(t, angle);
       const offset = normal.clone().multiplyScalar(Math.cos(angle) * radius)
         .addScaledVector(binormal, Math.sin(angle) * radius);
       const vertex = center.clone().add(offset);
@@ -462,9 +493,10 @@ function createMaterials(seed, variant, detailed) {
     roughness: 0.24,
     metalness: 0,
     emissive: energyColor,
-    emissiveIntensity: 2.85,
+    emissiveIntensity: 1.4,
     transparent: true,
-    opacity: 0.96,
+    opacity: 0.82,
+    depthTest: true,
     depthWrite: false,
   });
   const amberColor = new THREE.Color(variant.amber);
@@ -538,11 +570,7 @@ function createMaterials(seed, variant, detailed) {
 function addBranchNode(spec, parentNode, parentOrigin, material, runtime, seed) {
   const origin = spec.points[0].clone();
   const localPoints = spec.points.map((point) => point.clone().sub(origin));
-  const detail = spec.importance === 'trunk'
-    ? { tubularSegments: 36, radialSegments: 24, gnarled: 0.12, rootFlare: 0.62 }
-    : spec.importance === 'macro'
-      ? { tubularSegments: 24, radialSegments: 16, gnarled: 0.1, rootFlare: 0.18 }
-      : { tubularSegments: 12, radialSegments: 9, gnarled: 0.055, rootFlare: 0.08 };
+  const detail = branchGeometryDetail(spec.importance);
   const { geometry, curve } = createBranchGeometry(localPoints, {
     baseRadius: spec.baseRadius,
     tipRadius: spec.tipRadius,
@@ -720,38 +748,150 @@ function createFoliage(seed, variant, materials, anchors, root) {
   return { amberLeaves, cyanLeaves, count: targetCount, geometry };
 }
 
-function createEnergyNetwork(seed, variant, materials, specs, root) {
-  const energyGroup = new THREE.Group();
-  energyGroup.name = 'repolis-gold-energy-network';
-  const selected = specs.filter((spec) => (
-    spec.importance === 'trunk'
-    || spec.id.includes('foundation')
-    || spec.id.includes('crown')
-    || spec.id.includes('spire')
-  ));
-  for (const spec of selected) {
-    const curve = new THREE.CatmullRomCurve3(
-      spec.points.map((point) => point.clone().add(new THREE.Vector3(0, 0, spec.importance === 'trunk' ? 0.92 : 0.05))),
-      false,
-      'centripetal',
-      0.42,
-    );
-    const mesh = new THREE.Mesh(
-      new THREE.TubeGeometry(curve, spec.importance === 'trunk' ? 64 : 32, spec.importance === 'trunk' ? 0.075 : 0.032, 7, false),
-      materials.energy,
-    );
-    mesh.name = `${spec.id}__energy`;
-    energyGroup.add(mesh);
+function withLegacyEnergyRandomBudget(seed, build) {
+  const globalRandom = Math.random;
+  const local = seededRandom(`${seed}/azimuth-complete-energy-v3-knots/object-ids`);
+  Math.random = () => local.next();
+  let value;
+  try {
+    value = build();
+  } finally {
+    Math.random = globalRandom;
   }
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.3, 24, 16), materials.energy);
-  core.position.set(0, 0.55, 0.98);
-  core.name = 'repolis-energy-core';
-  energyGroup.add(core);
-  const rootLight = new THREE.PointLight(new THREE.Color(variant.energy), 18, 7, 2);
-  rootLight.position.set(0, 1.0, 1.4);
-  energyGroup.add(rootLight);
-  root.add(energyGroup);
-  return { group: energyGroup, core, light: rootLight };
+  // V1 created 19 UUID-bearing objects, including PointLight's shadow camera.
+  for (let index = 0; index < 76; index += 1) globalRandom();
+  return value;
+}
+
+function createEnergyNetwork(seed, variant, materials, specs, root) {
+  return withLegacyEnergyRandomBudget(seed, () => {
+    const energyGroup = new THREE.Group();
+    energyGroup.name = 'repolis-gold-energy-network';
+    const selected = specs.filter((spec) => (
+      spec.importance === 'trunk'
+      || spec.id.includes('foundation')
+      || spec.id.includes('crown')
+      || spec.id.includes('spire')
+      || spec.id.includes('rear')
+    ));
+    const veinGeometries = [];
+    const knots = [];
+    let copyCount = 0;
+    for (const spec of selected) {
+      const detail = branchGeometryDetail(spec.importance);
+      const tubularSegments = spec.importance === 'trunk' ? 64 : 36;
+      const curve = new THREE.CatmullRomCurve3(
+        spec.points.map((point) => point.clone()),
+        false,
+        'centripetal',
+        0.42,
+      );
+      const frames = curve.computeFrenetFrames(tubularSegments, false);
+      const surfaceRadius = createSurfaceRadius({
+        baseRadius: spec.baseRadius,
+        tipRadius: spec.tipRadius,
+        seed: hashString(`${seed}/${spec.id}`),
+        gnarled: detail.gnarled,
+        rootFlare: detail.rootFlare,
+      });
+      const veinRng = seededRandom(`${seed}/${spec.id}/azimuth-complete-energy-v2`);
+      const radialCopies = spec.importance === 'trunk' || spec.id.includes('foundation') ? 3 : 2;
+      const phase = veinRng.range(0, Math.PI * 2);
+      const twist = veinRng.range(-0.28, 0.28);
+      const v2TubeRadius = spec.importance === 'trunk' ? 0.042 : spec.id.includes('foundation') ? 0.023 : 0.02;
+      const tubeRadius = spec.importance === 'trunk' ? 0.036 : spec.id.includes('foundation') ? 0.0205 : 0.0175;
+      const surfaceGap = v2TubeRadius * 1.22;
+      for (let copy = 0; copy < radialCopies; copy += 1) {
+        const points = [];
+        for (let segment = 0; segment <= tubularSegments; segment += 1) {
+          const t = segment / tubularSegments;
+          const angle = phase + copy / radialCopies * Math.PI * 2
+            + twist * (t - 0.5)
+            + Math.sin(t * Math.PI * 2 + copy * 1.7) * 0.045;
+          const center = curve.getPointAt(t);
+          const { radius } = surfaceRadius(t, angle);
+          const offset = frames.normals[segment].clone().multiplyScalar(Math.cos(angle) * (radius + surfaceGap))
+            .addScaledVector(frames.binormals[segment], Math.sin(angle) * (radius + surfaceGap));
+          const point = center.clone().add(offset);
+          points.push(point);
+        }
+        const rootIndex = spec.importance === 'trunk' ? 4 : Math.max(2, Math.round(tubularSegments * 0.1));
+        const secondaryT = 0.54 + (hashString(`${spec.id}/${copy}/energy-knot`) % 3) * 0.055;
+        const secondaryIndex = Math.min(tubularSegments - 2, Math.round(tubularSegments * secondaryT));
+        knots.push({
+          center: points[rootIndex].clone(),
+          size: spec.importance === 'trunk' ? 0.15 : 0.1,
+          role: 'root-junction',
+          specId: spec.id,
+          copy,
+          t: rootIndex / tubularSegments,
+        });
+        knots.push({
+          center: points[secondaryIndex].clone(),
+          size: spec.importance === 'trunk' ? 0.1 : 0.065,
+          role: 'secondary-gathering',
+          specId: spec.id,
+          copy,
+          t: secondaryIndex / tubularSegments,
+        });
+        const surfaceCurve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.35);
+        veinGeometries.push(new THREE.TubeGeometry(surfaceCurve, tubularSegments, tubeRadius, 6, false));
+        copyCount += 1;
+      }
+    }
+    const mergedVeins = mergeGeometries(veinGeometries, false);
+    if (!mergedVeins) throw new Error('Unable to merge azimuth-complete energy veins');
+    veinGeometries.forEach((geometry) => geometry.dispose());
+    const veins = new THREE.Mesh(mergedVeins, materials.energy);
+    veins.name = 'repolis-energy-veins-v3-knots';
+    energyGroup.add(veins);
+
+    const coreAnchor = knots[0]?.center ?? new THREE.Vector3(0, 0.55, 0.98);
+    const coreGeometries = knots.map((knot) => {
+      const geometry = new THREE.SphereGeometry(knot.size, 10, 7);
+      geometry.translate(
+        knot.center.x - coreAnchor.x,
+        knot.center.y - coreAnchor.y,
+        knot.center.z - coreAnchor.z,
+      );
+      return geometry;
+    });
+    const mergedCore = mergeGeometries(coreGeometries, false);
+    if (!mergedCore) throw new Error('Unable to merge azimuth-complete energy cores');
+    coreGeometries.forEach((geometry) => geometry.dispose());
+    const core = new THREE.Mesh(mergedCore, materials.energy);
+    core.position.copy(coreAnchor);
+    core.name = 'repolis-energy-core';
+    energyGroup.add(core);
+
+    const rootLight = new THREE.PointLight(new THREE.Color(variant.energy), 18, 7, 2);
+    rootLight.position.set(0, 1.0, 1.4);
+    energyGroup.add(rootLight);
+    energyGroup.userData.energyRevision = REPOLIS_FACTORY_REVISION;
+    energyGroup.userData.veinCopies = copyCount;
+    energyGroup.userData.knotCount = knots.length;
+    energyGroup.userData.knotDistribution = 'one-root-junction-and-one-secondary-per-vein';
+    energyGroup.userData.knotSizes = [0.065, 0.1, 0.15];
+    energyGroup.userData.knotSizeCounts = {
+      small: knots.filter((knot) => knot.size === 0.065).length,
+      medium: knots.filter((knot) => knot.size === 0.1).length,
+      large: knots.filter((knot) => knot.size === 0.15).length,
+    };
+    energyGroup.userData.drawMeshes = 2;
+    energyGroup.userData.depthOcclusion = 'bark-surface-depth-tested';
+    root.add(energyGroup);
+    return {
+      group: energyGroup,
+      core,
+      light: rootLight,
+      veins,
+      copyCount,
+      knotCount: knots.length,
+      knotDistribution: energyGroup.userData.knotDistribution,
+      knotSizes: energyGroup.userData.knotSizes,
+      revision: REPOLIS_FACTORY_REVISION,
+    };
+  });
 }
 
 function createCodeGlyphs(seed, materials, specs, root) {
@@ -972,6 +1112,7 @@ export function createRepolisHero({
     energy = createEnergyNetwork(seed, variantConfig, materials, macroSpecs, livingSystem);
     runtime.nodes['energy-network'] = energy.group;
     runtime.sockets['energy:root'] = energy.core;
+    runtime.meshes['energy-veins'] = energy.veins;
   }
   if (stageLevel >= STAGE_LEVEL['material-pass']) {
     foliage = createFoliage(seed, variantConfig, materials, anchors, livingSystem);
@@ -1001,6 +1142,7 @@ export function createRepolisHero({
     variantId: variantConfig.id,
     variantLabel: variantConfig.label,
     stage,
+    energyNetworkRevision: energy?.revision ?? null,
     invariantPolicy: [
       'component-ids',
       'parent-links',
@@ -1019,6 +1161,11 @@ export function createRepolisHero({
     mossInstances: moss?.count ?? 0,
     branchVertices: vertexCount,
     glyphInstances: glyphs?.count ?? 0,
+    energyVeinCopies: energy?.copyCount ?? 0,
+    energyKnotCount: energy?.knotCount ?? 0,
+    energyKnotDistribution: energy?.knotDistribution ?? null,
+    energyKnotSizes: energy?.knotSizes ?? [],
+    energyDrawMeshes: energy ? 2 : 0,
     importedMeshes: 0,
     stage,
   };
@@ -1026,7 +1173,7 @@ export function createRepolisHero({
 
   const update = (elapsedSeconds) => {
     if (energy) {
-      const pulse = 2.55 + Math.sin(elapsedSeconds * 2.1) * 0.45;
+      const pulse = 1.4 + Math.sin(elapsedSeconds * 2.1) * 0.16;
       materials.energy.emissiveIntensity = pulse;
       energy.light.intensity = 16 + Math.sin(elapsedSeconds * 1.7) * 3;
     }

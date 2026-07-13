@@ -651,22 +651,42 @@ ok(/updateStarTrail\(clock\.elapsedTime\)/.test(HTML), 'the main world loop upda
 
 group('one colossal deterministic World Tree Pillar supports the village');
 const memorialTreeBlock = (HTML.match(/\/\*MEMORIAL_TREE:START\*\/([\s\S]*?)\/\*MEMORIAL_TREE:END\*\//) || [, ''])[1];
+const visualLodBlock = (HTML.match(/\/\*VISUAL_LOD:START\*\/([\s\S]*?)\/\*VISUAL_LOD:END\*\//) || [, ''])[1];
+const staticInstanceBlock = (HTML.match(/\/\*STATIC_INSTANCES:START\*\/([\s\S]*?)\/\*STATIC_INSTANCES:END\*\//) || [, ''])[1];
+const buildingLodPrototypeBlock = (HTML.match(/\/\*BUILDING_LOD_PROTOTYPE:START\*\/([\s\S]*?)\/\*BUILDING_LOD_PROTOTYPE:END\*\//) || [, ''])[1];
+const buildingLodUpdateBlock = (HTML.match(/function _updateBuildingLodPrototype\(frame,force=false\)\{([\s\S]*?)\n\}\nfunction _syncBuildingLodFacade/) || [, ''])[1];
+const worldTreeBloomPrepBlock = (HTML.match(/function _prepareWorldTreeBloom\(\)\{([\s\S]*?)\n\}\nfunction _renderWorldTreeFrame/) || [, ''])[1];
 ok(memorialTreeBlock.length > 0, 'world-tree procedural block is extractable from index.html');
-ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '65bd7fc76013ee0f11898174095556d581be64ea8f15e76e090fb8955a17d0e3',
-  'Repolis production factory is byte-identical to threejs-sculpt-dna v0.4.0');
-ok(/import \{ createRepolisHero \} from '\.\/assets\/world-tree\/createRepolisHero\.js'/.test(HTML)
+ok(visualLodBlock.length > 0, 'projected-size visual LOD block is extractable from index.html');
+ok(staticInstanceBlock.length > 0, 'exact-static instance block is extractable from index.html');
+ok(buildingLodPrototypeBlock.length > 0, '2C-A representative building LOD block is extractable from index.html');
+ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '0d9310ba5a5f70f8ac95a9771a09ca66364c07d9bb15a74b3e8ce6a6972f6a56',
+  'Repolis factory provenance is pinned to azimuth-complete-energy-v3-knots');
+ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-complete-energy-v3-knots-r2'/.test(HTML)
   && /import \{ mergeGeometries \} from 'three\/addons\/utils\/BufferGeometryUtils\.js'/.test(WORLD_TREE_FACTORY), 'native Solar Archive factory resolves through the existing Three.js import map');
 ok(/import \{ EffectComposer \}/.test(HTML) && /import \{ TexturePass \}/.test(HTML) && /import \{ UnrealBloomPass \}/.test(HTML)
   && /import \{ ShaderPass \}/.test(HTML) && /import \{ OutputPass \}/.test(HTML)
-  && /new UnrealBloomPass\(new THREE\.Vector2\(innerWidth,innerHeight\),0\.5,0\.36,0\.88\)/.test(HTML)
-  && /baseRenderScale=coarsePointer\?1:0\.8,treeBloomDpr=coarsePointer\?1:renderer\.getPixelRatio\(\)\*0\.75/.test(HTML)
+  && /new UnrealBloomPass\(new THREE\.Vector2\(innerWidth,innerHeight\),1\.35,0\.58,0\.06\)/.test(HTML)
+  && /baseTargetDpr=_cappedTargetDpr\(1\.25,3200000\)/.test(HTML)
+  && /treeEmissiveDpr=_cappedTargetDpr\(0\.75,1200000\)/.test(HTML)
+  && /treeBloomDpr=_cappedTargetDpr\(LOW_END\?0\.5:0\.625,900000\)/.test(HTML)
+  && /finalCompositeDpr=_cappedTargetDpr\(1\.25,3200000\)/.test(HTML)
+  && /const _rendererDpr=\(\)=>Math\.min\(devicePixelRatio,1\.25,Math\.sqrt\(3200000\//.test(HTML)
+  && (HTML.match(/renderer\.setPixelRatio\(_rendererDpr\(\)\)/g)||[]).length===2
+  && /finalComposer\.setPixelRatio\(finalCompositeDpr\)/.test(HTML)
   && /type:THREE\.HalfFloatType/.test(HTML) && /target\.texture\.colorSpace=THREE\.LinearSRGBColorSpace/.test(HTML)
+  && /const bloomTarget=makeLinearTarget\([^;\n]+,false\);/.test(HTML)
+  && /bloomInternalTargets\.forEach\(target=>\{ target\.depthBuffer=false; target\.stencilBuffer=false; \}\)/.test(HTML)
+  && /const finalTarget=makeLinearTarget\([^;\n]+,false\);/.test(HTML)
+  && /new EffectComposer\(renderer,finalTarget\)/.test(HTML)
+  && /const finalMix=new ShaderPass\(new THREE\.ShaderMaterial\(\{uniforms:\{[\s\S]*?\n\s*depthTest:false,depthWrite:false,\n\s*vertexShader:/.test(HTML)
   && /new TexturePass\(emissiveTarget\.texture,1\)/.test(HTML)
   && /bloomTexture:\{value:worldBloom\.renderTargetsHorizontal\[0\]\.texture\}/.test(HTML)
+  && !/emissiveTexture:\{value:emissiveTarget\.texture\}/.test(HTML)
   && /finalComposer\.addPass\(finalMix\); finalComposer\.addPass\(new OutputPass\(\)\)/.test(HTML)
   && /_prepareWorldTreeBloom\(\)/.test(HTML)
   && /renderer\.toneMapping=THREE\.NoToneMapping; renderer\.outputColorSpace=THREE\.LinearSRGBColorSpace/.test(HTML)
-  && (HTML.match(/new OutputPass\(\)/g)||[]).length===1, 'linear HDR base/emissive/bloom targets composite once before the only final OutputPass');
+  && (HTML.match(/new OutputPass\(\)/g)||[]).length===1, 'linear HDR base/emissive/bloom targets use independent cost caps and composite once before the only final OutputPass');
 ok(/const MEMORIAL_TREE_SEED=20260711, MEMORIAL_TREE_POS=new THREE\.Vector3\(15,0,48\)/.test(memorialTreeBlock)
   && /MEM_TREE_HERO_VARIANT='solar-archive'/.test(memorialTreeBlock), 'exactly seeded Solar Archive is selected at the existing north park position');
 ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
@@ -675,15 +695,127 @@ ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
 ok(/macroBranchSpecs\(\)/.test(WORLD_TREE_FACTORY) && /secondaryBranches\(spec, seed/.test(WORLD_TREE_FACTORY)
   && /fineBranches\(spec, seed\)/.test(WORLD_TREE_FACTORY) && /mergedFineGeometry/.test(WORLD_TREE_FACTORY), 'factory preserves macro → secondary → merged fine branch hierarchy');
+ok(/REPOLIS_FACTORY_REVISION = 'azimuth-complete-energy-v3-knots'/.test(WORLD_TREE_FACTORY)
+  && /function createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
+  && /const surfaceRadius = createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
+  && /const \{ radius, ridges \} = surfaceRadius\(t, angle\)/.test(WORLD_TREE_FACTORY)
+  && /const \{ radius \} = surfaceRadius\(t, angle\)/.test(WORLD_TREE_FACTORY), 'bark and energy veins share one deterministic Frenet-frame surface-radius profile');
+ok(/radialCopies = spec\.importance === 'trunk' \|\| spec\.id\.includes\('foundation'\) \? 3 : 2/.test(WORLD_TREE_FACTORY)
+  && /spec\.id\.includes\('rear'\)/.test(WORLD_TREE_FACTORY)
+  && /mergeGeometries\(veinGeometries, false\)/.test(WORLD_TREE_FACTORY)
+  && /mergeGeometries\(coreGeometries, false\)/.test(WORLD_TREE_FACTORY)
+  && /energyGroup\.userData\.drawMeshes = 2/.test(WORLD_TREE_FACTORY)
+  && /depthTest: true/.test(WORLD_TREE_FACTORY)
+  && !/spec\.importance === 'trunk' \? 0\.92 : 0\.05/.test(WORLD_TREE_FACTORY), 'energy v3 preserves bounded azimuth copies, natural bark depth, and two merged draw meshes without the fixed +Z offset');
+ok(/function withLegacyEnergyRandomBudget\(seed, build\)/.test(WORLD_TREE_FACTORY)
+  && /index < 76/.test(WORLD_TREE_FACTORY)
+  && /runtime\.nodes\['energy-network'\] = energy\.group/.test(WORLD_TREE_FACTORY)
+  && /runtime\.sockets\['energy:root'\] = energy\.core/.test(WORLD_TREE_FACTORY), 'energy v3 preserves the procedural RNG boundary and stable action-ready node/socket IDs');
+ok(/const v2TubeRadius = spec\.importance === 'trunk' \? 0\.042/.test(WORLD_TREE_FACTORY)
+  && /const tubeRadius = spec\.importance === 'trunk' \? 0\.036/.test(WORLD_TREE_FACTORY)
+  && /const surfaceGap = v2TubeRadius \* 1\.22/.test(WORLD_TREE_FACTORY), 'v3 thins veins without moving the accepted v2 bark-surface path centers');
+ok(/role: 'root-junction'/.test(WORLD_TREE_FACTORY)
+  && /role: 'secondary-gathering'/.test(WORLD_TREE_FACTORY)
+  && /new THREE\.SphereGeometry\(knot\.size, 10, 7\)/.test(WORLD_TREE_FACTORY)
+  && /knotCount = knots\.length/.test(WORLD_TREE_FACTORY)
+  && /knotDistribution = 'one-root-junction-and-one-secondary-per-vein'/.test(WORLD_TREE_FACTORY)
+  && /knotSizes = \[0\.065, 0\.1, 0\.15\]/.test(WORLD_TREE_FACTORY), 'v3 adds two deterministic three-size bark-attached energy knots per vein into the existing core mesh');
 ok(/Math\.round\(2600 \* variant\.foliageDensity\)/.test(WORLD_TREE_FACTORY)
-  && /id: 'solar-archive'[\s\S]*?foliageDensity: 1\.16[\s\S]*?cyanRatio: 0\.1/.test(WORLD_TREE_FACTORY), 'Solar Archive supplies 3,016 small instanced leaves with restrained cyan distribution');
+  && /id: 'solar-archive'[\s\S]*?foliageDensity: 1\.16[\s\S]*?cyanRatio: 0\.1/.test(WORLD_TREE_FACTORY)
+  && /const geometry = createLeafGeometry\(\);[\s\S]*?new THREE\.InstancedMesh\(geometry, materials\.amberLeaf, amberCount\)[\s\S]*?new THREE\.InstancedMesh\(geometry, materials\.cyanLeaf, cyanCount\)/.test(WORLD_TREE_FACTORY),
+  'Solar Archive supplies 3,016 leaves as two draw-batched instanced sets sharing one geometry');
+ok(/const VISUAL_LOD=\{outlines:\[\],effects:\[\]/.test(visualLodBlock)
+  && /_registerOutlineLod\(o,mesh,th\)/.test(HTML)
+  && /entry\.projectedPx<1\.25&&entry\.distance>45/.test(visualLodBlock)
+  && /entry\.projectedPx>1\.75\|\|entry\.distance<40/.test(visualLodBlock)
+  && /VISUAL_LOD\.nearBypass=camera\.position\.distanceTo\(_lodHeroCenter\)<40/.test(visualLodBlock)
+  && /frame-VISUAL_LOD\.lastFrame<8/.test(visualLodBlock)
+  && !/scene\.traverse/.test(visualLodBlock) && !/new THREE\.Box3/.test(visualLodBlock), 'outline LOD uses cached projected diameter, hysteresis, and an 8-rendered-frame cadence without scene traversal');
+ok(/_registerEffectLod\(halo,'street-lamp-halo',0\.18\)/.test(HTML)
+  && /_registerEffectLod\(pool,'street-lamp-pool',0\.30\)/.test(HTML)
+  && /_registerEffectLod\(halo,'glow-flora-halo',0\.22\)/.test(HTML)
+  && /_registerEffectLod\(glowPool,'repo-glow-pool',0\.25\)/.test(HTML)
+  && /entry\.projectedPx<1\.5&&entry\.distance>50&&entry\.signal<0\.22/.test(visualLodBlock), 'only explicitly registered low-signal lamp/flora/repo pools receive projected-size effect LOD');
+ok(/protect\(MEMORIAL_TREE&&MEMORIAL_TREE\.group\)/.test(visualLodBlock)
+  && /protect\(player\)/.test(visualLodBlock) && /protect\(navHolder\)/.test(visualLodBlock)
+  && /ZONE_HUBS\.forEach\(h=>protect\(h\.group\)\)/.test(visualLodBlock)
+  && /RESIDENTS_LIVE\.forEach\(L=>protect\(L\.group\)\)/.test(visualLodBlock), 'World Tree, navigation, landmarks, player, NPCs, residents, and hubs are excluded from 2A');
+ok(/const STATIC_INSTANCES=\{cellSize:64,minBucket:4,candidates:\[\]/.test(staticInstanceBlock)
+  && /mesh\.geometry\.uuid\}\|\$\{mesh\.material\.uuid\}/.test(staticInstanceBlock)
+  && /mesh\.castShadow\?1:0/.test(staticInstanceBlock) && /mesh\.receiveShadow\?1:0/.test(staticInstanceBlock)
+  && /mesh\.layers\.mask/.test(staticInstanceBlock) && /mesh\.renderOrder/.test(staticInstanceBlock)
+  && !/Math\.random/.test(staticInstanceBlock), '2B-1 buckets preserve deterministic insertion order and split by cell, geometry, material, and render state without random calls');
+ok(/let PATCH_FLOWER_GEO=null[\s\S]*?KNOB_GEO=null,FLAG_GEO=null/.test(HTML)
+  && /function _adoptStaticGeometry\(mesh,canonical\)/.test(HTML)
+  && /new THREE\.Mesh\(new THREE\.CylinderGeometry\(0\.02,0\.03,0\.4,4\),toon\(0x70875a\)\)/.test(HTML)
+  && /new THREE\.Mesh\(new THREE\.SphereGeometry\(0\.1,8,6\),MAT_KNOB\)/.test(HTML)
+  && /rngBeforeFinalize=window\.__rngProbe\(\)\.count/.test(staticInstanceBlock), 'canonical assets adopt the first original while later original constructors still consume the same procedural RNG sequence');
+ok(/new THREE\.InstancedMesh\(bucket\.geometry,bucket\.material,bucket\.items\.length\)/.test(staticInstanceBlock)
+  && /batch\.computeBoundingBox\(\); batch\.computeBoundingSphere\(\)/.test(staticInstanceBlock)
+  && /if\(!batch\.boundingBox\|\|!batch\.boundingSphere/.test(staticInstanceBlock)
+  && /bucket\.items\.forEach\(_detachStaticOriginal\)/.test(staticInstanceBlock)
+  && /catch\(error\)\{ if\(batch&&batch\.parent\) batch\.parent\.remove\(batch\)/.test(staticInstanceBlock), 'originals detach only after a validated InstancedMesh batch; failures remain explicit');
+ok(/mesh\.children\.length\)\{ STATIC_INSTANCES\.fallbacks\.push\(\{family:candidate\.family,reason:'child-or-outline'\}/.test(staticInstanceBlock)
+  && /reason:'mutable-building-root'/.test(staticInstanceBlock)
+  && !/_registerStaticInstance\([^)]*GARLAND/.test(HTML), 'outlined children and animated release garlands never enter static batches');
+ok(/_registerStaticInstance\(stem,'lavender-row-stem'\)/.test(HTML)
+  && /_registerStaticInstance\(sp,'lavender-clump-spike'\)/.test(HTML)
+  && /_registerStaticInstance\(f,'bloom-flower'\)/.test(HTML)
+  && /_registerStaticInstance\(f,'patch-flower'\)/.test(HTML)
+  && /_registerStaticInstance\(crown,'yard-crown'\)/.test(HTML)
+  && /_registerStaticInstance\(knob,'door-knob'\)/.test(HTML)
+  && /_registerStaticInstance\(fl,'building-flag'\)/.test(HTML)
+  && /_registerStaticInstance\(st,'building-star'\)/.test(HTML), '2B-1 retains approved global candidates and safely rejects mutable building-root descendants');
+ok((HTML.match(/_finalizeStaticInstances\(\);/g)||[]).length===1
+  && /invalidateTownShadows\('static-instances'\)/.test(staticInstanceBlock)
+  && /window\.__staticInstances=/.test(HTML), 'static instances finalize once, invalidate frozen shadows once, and expose rollback diagnostics');
+ok(/function _reattachAllStaticOriginals\(\)/.test(staticInstanceBlock)
+  && /items\.sort\(\(a,b\)=>a\.parentIndex-b\.parentIndex\); items\.forEach\(_reattachStaticOriginal\)/.test(staticInstanceBlock), 'originals-only rollback restores each parent in ascending original sibling order');
+ok(!/BUILDING_INSTANCES|_registerBuildingInstance|_finalizeBuildingInstances|__buildingInstances|__buildingVisualDelta/.test(HTML),
+  'failed 2B-2 local-instancing implementation and debug surfaces are physically absent');
+ok(/canaries:new Set\(\['threejs-sculpt-dna','FSI-Gameday-General-Immersion-Day','Repolis'\]\)/.test(buildingLodPrototypeBlock)
+  && /samples:new Set\(\['threejs-sculpt-dna','FSI-Gameday-General-Immersion-Day','Repolis','foundry-iq-demo-suite','Amazon-Bedrock-Guardrails-Toolkit','ECS-Immersion-Day','Deep-Learning-Hyperparameter-optimization','jenkins-dind','ISO-3166-alpha2-alpha3-korean'\]\)/.test(buildingLodPrototypeBlock)
+  && /supportedKinds:new Set\(\['cabin','cottage','house','shop','tower','villa','manor','mansion'\]\)/.test(buildingLodPrototypeBlock)
+  && /supportedRoofs:new Set\(\['flat','gable','hip','mansard','barrel','shed','aframe','gambrel'\]\)/.test(buildingLodPrototypeBlock)
+  && /reason:'unsupported-typology'/.test(buildingLodPrototypeBlock), '2C-B retains permanent canaries and explicit full-visual fallback diagnostics for unknown typologies');
+ok(/function _withBuildingLodPrivateRandom\(fn\)/.test(buildingLodPrototypeBlock)
+  && /finally \{ Math\.random=globalRandom; \}/.test(buildingLodPrototypeBlock)
+  && /memoryBudget:1024\*1024/.test(buildingLodPrototypeBlock)
+  && /proxy-memory-budget-exceeded/.test(buildingLodPrototypeBlock), '2C-A constructors consume private RNG and enforce a two-megabyte proxy budget');
+ok(/fullEnter:280,fullLeave:240,midEnter:60,midLeave:48,settle:3,cadence:8,minDwellFrames:24/.test(buildingLodPrototypeBlock)
+  && /entry\.pendingCount>=BUILDING_LOD_PROTO\.thresholds\.settle/.test(buildingLodUpdateBlock)
+  && !/(?:traverse|Box3|new THREE|sort\()/.test(buildingLodUpdateBlock), 'projected-size hysteresis updates without traversal, geometry, sorting, or allocation');
+ok(/const functional=new THREE\.Group\(\),full=new THREE\.Group\(\),mid=new THREE\.Group\(\),far=new THREE\.Group\(\),active=new THREE\.Group\(\)/.test(buildingLodPrototypeBlock)
+  && /repo\._lodPrototype=entry/.test(buildingLodPrototypeBlock)
+  && /repo\._body=body/.test(HTML) && /repo\._windows=\[\]/.test(HTML) && /repo\._group=g; repo\._pos=/.test(HTML), '2C-A preserves stable functional and action references under the existing repository root');
+ok(/attribute float aLit; attribute float aJitter; attribute float aActivity/.test(buildingLodPrototypeBlock)
+  && /BUILDING_LOD_NIGHT\.value=night\?1:0/.test(HTML)
+  && /_syncBuildingLodFacade\(repo\)/.test(HTML)
+  && /THREE\.UniformsUtils\.clone\(THREE\.UniformsLib\.fog\)/.test(buildingLodPrototypeBlock)
+  && (buildingLodPrototypeBlock.match(/fog:true/g)||[]).length===2
+  && /originalSign:repo\._sign/.test(buildingLodPrototypeBlock), 'one shared facade shader preserves day/night window state and exact sign/emblem textures');
+ok(/BuildingLOD_ShadowProxy/.test(buildingLodPrototypeBlock)
+  && /shadowProxy\.scale\.set\(\.985,1,\.985\)/.test(buildingLodPrototypeBlock)
+  && /depthPacking:THREE\.RGBADepthPacking/.test(buildingLodPrototypeBlock)
+  && /shadowDepthMaterial\.polygonOffset=true/.test(buildingLodPrototypeBlock)
+  && /shadowProxy\.layers\.set\(BUILDING_LOD_SHADOW_LAYER\)/.test(buildingLodPrototypeBlock)
+  && /sun\.shadow\.camera\.layers\.enable\(BUILDING_LOD_SHADOW_LAYER\)/.test(buildingLodPrototypeBlock)
+  && /if\(refreshTownShadows\) camera\.layers\.enable\(BUILDING_LOD_SHADOW_LAYER\)/.test(HTML)
+  && /renderer\.render\(scene,camera\); camera\.layers\.set\(0\); _recordRenderPass\('base'/.test(HTML)
+  && /_updateBuildingLodPrototype\(renderedFrame\)/.test(HTML), 'stable inset shadow proxies are independent of ordinary visual-tier updates');
+ok(/_disposeBuildingLodPrototype\(\)/.test(buildingLodPrototypeBlock)
+  && /resources\?\.geometries\.forEach\(geometry=>geometry\.dispose\(\)\)/.test(buildingLodPrototypeBlock)
+  && /webglcontextrestored/.test(buildingLodPrototypeBlock), '2C-A owns and disposes proxy resources while retaining context lifecycle diagnostics');
+ok(/gpu:frame\?_beginGpuTimer\(name,frame\):null/.test(HTML), 'GPU timers begin only inside an owned render-metrics frame');
+ok(/invalidateTownShadows\('visit-bob-complete'\)/.test(HTML), 'visit bob completion refreshes the frozen town shadow exactly once');
 ok(/createBarkTextures\(seed\)/.test(WORLD_TREE_FACTORY)
   && /roughnessMap: textures\?\.roughness/.test(WORLD_TREE_FACTORY) && /normalMap: textures\?\.normal/.test(WORLD_TREE_FACTORY)
   && /aoMap: textures\?\.ao/.test(WORLD_TREE_FACTORY) && !/(fetch|TextureLoader|GLTFLoader)\s*\(/.test(WORLD_TREE_FACTORY), 'factory generates independent bark PBR channels with no mesh/texture fetch');
 ok(!/hero\.ground\.(ground|rocks)\.visible=false/.test(memorialTreeBlock)
   && /root\.scale\.setScalar\(MEM_TREE_HERO_SCALE\)/.test(memorialTreeBlock)
   && /scene\.add\(root\)/.test(memorialTreeBlock), 'thin adapter keeps the full factory in the main depth scene for correct occlusion');
-ok(/if\(o\.isInstancedMesh\)\{ o\.computeBoundingBox\(\); local=o\.boundingBox; \}/.test(memorialTreeBlock), 'tree bounds include every instanced leaf, moss, glyph, and ornament transform');
+ok(/if\(!o\.visible\|\|!o\.geometry\|\|o\.isSprite\) return/.test(memorialTreeBlock)
+  && /if\(o\.isInstancedMesh\)\{ o\.computeBoundingBox\(\); local=o\.boundingBox; \}/.test(memorialTreeBlock), 'tree bounds include every instanced transform but exclude view-facing glow sprites');
 ok(/root\.traverse\(o=>\{ if\(o\.isMesh\) o\.castShadow=false; \}/.test(memorialTreeBlock), 'live factory motion cannot leave stale tree shadows under the town frozen-shadow policy');
 ok(/const collider=\{x,z,r:11\.6,_memorialTree:true\}; EXTRA_COLLIDERS\.push\(collider\)/.test(memorialTreeBlock)
   && /new THREE\.RingGeometry\(memorial\?12\.2:2\.9,memorial\?13\.6:3\.8/.test(HTML), '11.6 Solar root-island collider stays inside the widened 12.2-radius park path');
@@ -692,13 +824,15 @@ ok((WORLD_TREE_FACTORY.match(/new THREE\.PointLight/g)||[]).length===1
   && /o\.name='WorldTree_GuideLight'; o\.castShadow=false/.test(memorialTreeBlock)
   && /MEMORIAL_TREE\.hero\.update\(elapsed\)/.test(memorialTreeBlock)
   && /_memHeroUpdate\(clock\.elapsedTime\)/.test(HTML), 'factory owns one shadowless guide light and runs its original pulse + living-tree update');
-ok(/const pulse = 2\.55 \+ Math\.sin\(elapsedSeconds \* 2\.1\) \* 0\.45/.test(WORLD_TREE_FACTORY)
+ok(/const pulse = 1\.4 \+ Math\.sin\(elapsedSeconds \* 2\.1\) \* 0\.16/.test(WORLD_TREE_FACTORY)
   && /energy\.light\.intensity = 16 \+ Math\.sin\(elapsedSeconds \* 1\.7\) \* 3/.test(WORLD_TREE_FACTORY)
-  && /livingSystem\.rotation\.z = Math\.sin/.test(WORLD_TREE_FACTORY), 'web keeps the plugin energy, light, foliage, and living-system effects unchanged');
+  && /livingSystem\.rotation\.z = Math\.sin/.test(WORLD_TREE_FACTORY), 'energy copies use a bounded pulse while the guide light, foliage, and living-system motion remain intact');
 ok(/customSockets=\{TaxiArrival:/.test(memorialTreeBlock)
   && /\['left-foundation:tip','right-foundation:tip','left-crown:tip','right-crown:tip'/.test(memorialTreeBlock), 'adapter preserves six Repolis sockets plus eight action-ready factory bough sockets');
-ok(/root\.userData\.repolisAdapter=\{factoryUnmodified:true,groundVisible:true,pulseDisabled:false[\s\S]*?selectiveBloom:true,sharpGlowInBase:true,depthAware:true/.test(memorialTreeBlock), 'runtime metadata records unchanged full factory effects and sharp-base depth-aware selective bloom');
+ok(/root\.userData\.repolisAdapter=\{factoryUnmodified:false,factorySourceModified:true,factoryRevision:REPOLIS_FACTORY_REVISION,energyRevision:hero\.runtime\.nodes\['energy-network'\]\?\.userData\.energyRevision\|\|REPOLIS_FACTORY_REVISION,groundVisible:true,pulseDisabled:false[\s\S]*?selectiveBloom:true,sharpGlowInBase:true,depthAware:true,unlitExtraction:true,distanceCompensated:false,emissionPolicy:'constant-world-luminance'/.test(memorialTreeBlock),
+  'runtime metadata records the energy-v2 source revision and constant-luminance depth-aware selective bloom');
 ok(/treeBox=_memHeroBox\(MEMORIAL_TREE\.group\)\.expandByScalar\(3\)/.test(HTML)
+  && /const g=b\._body\|\|b\._group/.test(HTML)
   && /WorldTree_BuildingDepthProxies/.test(HTML) && /WorldTree_PropDepthProxies/.test(HTML)
   && (HTML.match(/frustumCulled=false/g)||[]).length>=3
   && /WorldTree_DynamicDepthProxies/.test(HTML)
@@ -707,37 +841,141 @@ ok(/_registerWorldTreeOccluderGroup\(g\)/.test(HTML)
   && /_unregisterWorldTreeOccluderGroup\(p\.group\)/.test(HTML)
   && /dynamicOccluderGroups\.delete/.test(HTML), 'remote peer avatar proxies enter and leave the bloom depth cache without leaks');
 ok(/const bloomRoots=\[\.\.\.crowns,hero\.runtime\.nodes\['energy-network'\],hero\.runtime\.meshes\['gold-code-glyphs'\]/.test(memorialTreeBlock)
-  && /o\.layers\.set\(0\); if\(night\) o\.layers\.enable\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
+  && /const bloomMeshes=new Set\(\)/.test(memorialTreeBlock) && /const bloomBySource=new Map/.test(memorialTreeBlock)
+  && /if\(o\.isMesh\)\{ o\.layers\.set\(0\); if\(night&&MEMORIAL_TREE\.bloomExtractMeshSet\.has\(o\)\) o\.layers\.enable\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
+  && /depthMaterials=new Set\(\[hero\.materials\.bark,hero\.materials\.ground,hero\.materials\.cutWood\]\)/.test(memorialTreeBlock)
   && /bloomLights\.forEach\(light=>light\.layers\.set\(MEM_TREE_LIGHT_LAYER\)\)/.test(memorialTreeBlock)
   && !/hero\.runtime\.nodes\.constellations/.test(memorialTreeBlock)
-  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'energy, glyphs, and leaves stay sharp in base and also feed bloom; PointLight remains effect-only');
+  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'branch depth and warm bark extraction occlude energy, glyph, and leaf glow without unrelated tree draws');
 ok(/requestedTreeVisible=MEMORIAL_TREE\?MEMORIAL_TREE\.requestedVisible!==false:false/.test(HTML)
   && /MEMORIAL_TREE\.group\.visible=requestedTreeVisible/.test(HTML)
   && /finalMix\.uniforms\.bloomWeight\.value=needBloom\?1:0/.test(HTML)
-  && /emissiveWeight\.value=WORLD_TREE_RENDER_MODE==='emissive-only'\?1:0/.test(HTML), 'final uses base plus blur once; tree-off and debug modes cannot composite a duplicate sharp emissive source');
+  && /finalMix\.uniforms\.baseTexture\.value=emissiveOnly\?emissiveTarget\.texture:baseTarget\.texture/.test(HTML)
+  && /WORLD_TREE_RENDER_MODE==='bloom-only'\|\|\(emissiveOnly&&!treeVisible\)\?0:1/.test(HTML)
+  && !/emissiveWeight/.test(HTML), 'production final composite samples only base + bloom; emissive-only reuses the base sampler for debug');
+ok(/bloomBounds:\{value:new THREE\.Vector4\(0,0,1,1\)\}/.test(HTML)
+  && /bounds\.set\(Math\.max\(0,minU-padU\)/.test(HTML)
+  && /float signal=smoothstep\(0\.018,0\.05,max\(bloom\.r,max\(bloom\.g,bloom\.b\)\)\)/.test(HTML)
+  && /color\+=bloom\*\(bloomWeight\*mx\*my\*signal\)/.test(HTML)
+  && /gl_FragColor=vec4\(color,1\.0\)/.test(HTML),
+  'tree bloom is softly bounded to the projected tree screen rectangle instead of lifting town exposure globally');
 ok(/ratio=MEM_TREE_HERO_SCALE\/MEM_TREE_HERO_NATIVE_SCALE/.test(memorialTreeBlock)
   && !/MEMORIAL_TREE\.light\.intensity\*=/.test(memorialTreeBlock)
-  && /MEMORIAL_TREE\.light\.distance=7\*ratio/.test(memorialTreeBlock), 'factory PointLight keeps its exact pulse intensity while its authored range follows uniform scale');
-ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x7a3f20\); m\.bark\.emissiveIntensity=0\.28; m\.amberLeaf\.emissiveIntensity=0\.42/.test(memorialTreeBlock)
-  && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=2\.85; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
+  && /MEMORIAL_TREE\.light\.distance=7\*ratio/.test(memorialTreeBlock), 'factory PointLight keeps its authored local range and exact pulse intensity');
+ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x8a4520\); m\.bark\.emissiveIntensity=0\.48; m\.amberLeaf\.emissiveIntensity=0\.72; m\.cyanLeaf\.emissiveIntensity=1\.05/.test(memorialTreeBlock)
+  && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=1\.4; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
   && /else \{ m\.bark\.emissive\.setHex\(0x6a3518\)/.test(memorialTreeBlock)
   && /m\.amberLeaf\.emissiveIntensity=0\.32; m\.cyanLeaf\.emissiveIntensity=0\.38/.test(memorialTreeBlock)
   && /_setWorldTreeGlowLayers\(night\)/.test(HTML)
-  && /worldBloom\.strength=night\?0\.5:0\.04/.test(HTML), 'day calms ornaments while night/reduced-motion restore exact live-demo material and light values');
+  && /worldBloom\.strength=night\?1\.35:0\.04/.test(HTML), 'day calms ornaments while night gives every amber/cyan leaf a readable emissive base');
 ok(/effectPhase=isNight\|\|WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'/.test(HTML), 'day/dawn/dusk final mode skips emissive and bloom HDR passes entirely');
 ok(/forceProofLayer=!isNight&&\(WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'\)/.test(HTML)
   && /if\(forceProofLayer\) _setWorldTreeGlowLayers\(true\)/.test(HTML)
   && /if\(forceProofLayer\) _setWorldTreeGlowLayers\(false\)/.test(HTML), 'daytime emissive/bloom proof modes restore visual dual-layers and keep PointLight effect-only');
-ok(/MEMORIAL_TREE\.bloomLights\.forEach\(light=>\{ light\.visible=true; \}\); renderer\.setRenderTarget\(emissiveTarget\)/.test(HTML), 'factory PointLight contributes only to the isolated emissive source, never the town base');
+ok((HTML.match(/bloomLights\.forEach\(light=>\{ light\.visible=requestedTreeVisible/g)||[]).length>=2
+  && /guideLightInBase:false[\s\S]*?emissiveHalos:2/.test(memorialTreeBlock)
+  && /light\.layers\.set\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
+  && /_beginWorldTreeBloomExtraction\(\)/.test(HTML) && /finally\{ _endWorldTreeBloomExtraction\(\); \}/.test(HTML),
+  'factory PointLight stays local to layer 2 while additive halos preserve ambient radiance without town spill');
+ok(/const distance=camera\.position\.distanceTo\(MEMORIAL_TREE\.glowWorld\),far=THREE\.MathUtils\.clamp\(\(distance-35\)\/95,0,1\)/.test(HTML)
+  && /worldBloom\.strength=1\.35; worldBloom\.radius=0\.58; worldBloom\.threshold=0\.06/.test(HTML)
+  && /distanceCompensated:false,emissionPolicy:'constant-world-luminance'/.test(memorialTreeBlock),
+  'distance is diagnostic only; branch/leaf/glyph bloom luminance stays constant near and far');
+ok(/MEM_TREE_BLOOM_HZ=LOW_END\?20:30/.test(HTML)
+  && /sourceDue=needSource&&MEMORIAL_TREE&&\(WORLD_TREE_RENDER_MODE!=='final-composite'\|\|MEMORIAL_TREE\.bloomDirty\|\|now-MEMORIAL_TREE\.lastBloomAt>=1000\/MEM_TREE_BLOOM_HZ\)/.test(HTML),
+  'the invariant glow cache refreshes at 20–30Hz while the base scene remains responsive');
+ok(/pulse=REDUCED\?1:\(0\.93\+Math\.sin\(elapsed\*1\.5\)\*0\.07\)/.test(memorialTreeBlock),
+  'reduced-motion keeps the additive world-tree halos steady');
 ok(/geometry\.scale\(1\.22,1\.22,1\.22\)/.test(memorialTreeBlock)
   && /leafScale:1\.22/.test(memorialTreeBlock), 'adapter enlarges factory leaf cards without changing their count, anchors, or hierarchy');
-ok(/renderer\.setRenderTarget\(emissiveTarget\)[\s\S]*?renderer\.render\(scene,camera\);[\s\S]*?if\(needBloom\) treeComposer\.render\(\)/.test(HTML)
-  && /renderer\.shadowMap\.needsUpdate=refreshTownShadows; renderer\.setRenderTarget\(baseTarget\)/.test(HTML), 'one linear emissive render feeds bloom without consuming the town-base shadow refresh');
+ok(/renderer\.setRenderTarget\(emissiveTarget\)[\s\S]*?renderer\.render\(scene,camera\);[\s\S]*?_recordRenderPass\('emissive'[\s\S]*?treeComposer\.render\(\)/.test(HTML)
+  && /renderer\.shadowMap\.needsUpdate=refreshTownShadows; renderer\.setRenderTarget\(baseTarget\)/.test(HTML)
+  && /renderer\.shadowMap\.needsUpdate=false/.test(HTML), 'one measured linear emissive render feeds bloom after the optional town shadow refresh is consumed');
+ok(/const _DIAGNOSTICS = _DBG \|\| _QUERY\.get\('perf'\)==='1'/.test(HTML)
+  && /renderer\.info\.autoReset = !_DIAGNOSTICS/.test(HTML)
+  && /function _beginRenderMetrics\(idle\)\{\n  if\(!_DIAGNOSTICS\) return;/.test(HTML)
+  && /function _beginMeasuredPass\(name\)\{ if\(!_DIAGNOSTICS\) return null;/.test(HTML)
+  && /function _recordRenderPass\(name,token\)\{ if\(!_DIAGNOSTICS\|\|!RENDER_METRICS\.current\) return;/.test(HTML)
+  && /function _endRenderMetrics\(\)\{\n  if\(!_DIAGNOSTICS\) return;/.test(HTML)
+  && /if\(_DIAGNOSTICS\) _installGpuTimer\(\)/.test(HTML)
+  && /if\(_DIAGNOSTICS\) _installShadowMetrics\(\)/.test(HTML)
+  && /renderer\.info\.reset\(\)/.test(HTML)
+  && /GPU_TIMER\.ext=typeof WebGL2RenderingContext!=='undefined'[\s\S]*?getExtension\('EXT_disjoint_timer_query_webgl2'\)/.test(HTML)
+  && /function _suspendGpuTimer\(\)\{ GPU_TIMER\.supported=false; GPU_TIMER\.ext=null; GPU_TIMER\.pending\.length=0; GPU_TIMER\.active=false; \}/.test(HTML)
+  && /webglcontextlost'[\s\S]*?_suspendGpuTimer\(\)/.test(HTML)
+  && /GPU_TIMER\.gl\.isContextLost\(\)/.test(HTML)
+  && /pass\.cpuMs=\+\(performance\.now\(\)-token\.startedAt\)\.toFixed\(3\)/.test(HTML)
+  && /token\.frame\.gpuMs\[token\.name\]/.test(HTML)
+  && /if\(!document\.hidden\) RENDER_METRICS\.lastStartedAt=0/.test(HTML)
+  && /function _installShadowMetrics\(\)/.test(HTML)
+  && /wrapped\.__repolisMetrics=true; shadowMap\.render=wrapped/.test(HTML)
+  && /webglcontextrestored'[\s\S]*?invalidateTownShadows\('context-restored'\)/.test(HTML)
+  && /_recordRenderPass\('base'/.test(HTML) && /_recordRenderPass\('bloom'/.test(HTML) && /_recordRenderPass\('final'/.test(HTML)
+  && /base\.calls=Math\.max\(0,base\.calls-shadow\.calls\)/.test(HTML)
+  && /base\.cpuMs=Math\.max\(0,base\.cpuMs-shadow\.cpuMs\)/.test(HTML)
+  && /window\.__perfHistory=/.test(HTML) && /window\.__perfReset=/.test(HTML)
+  && /window\.__perfDiagnostics=/.test(HTML)
+  && /if\(_DIAGNOSTICS\)\{ const _debugVec=/.test(HTML), 'production render diagnostics take a no-allocation fast path while dbg/perf preserves full pass metrics');
+ok(/const WORLD_TREE_SAVED_CLEAR=new THREE\.Color\(\)/.test(HTML)
+  && /renderer\.getClearColor\(WORLD_TREE_SAVED_CLEAR\)/.test(HTML)
+  && /lastFrame=_now; renderedFrame\+\+/.test(HTML), 'production reuses the clear-color temp and keeps a standalone rendered-frame LOD cadence counter');
+ok(/const CAMERA_FOLLOW_TARGET=new THREE\.Vector3\(\)/.test(HTML)
+  && /CAMERA_FOLLOW_TARGET\.set\([^)]+\); camera\.position\.lerp\(CAMERA_FOLLOW_TARGET,0\.12\)/.test(HTML)
+  && !/camera\.position\.lerp\(new THREE\.Vector3/.test(HTML), 'camera follow reuses one non-escaping target vector per frame');
+ok(/WORLD_TREE_BLOOM_POSITION=new THREE\.Vector3\(\)[\s\S]*?WORLD_TREE_BLOOM_WORLD=new THREE\.Vector3\(\)/.test(HTML)
+  && /bloomMaterialList:Object\.values\(bloomMaterials\)/.test(HTML)
+  && !/(?:new THREE|Object\.values|\[min\.|\[max\.)/.test(worldTreeBloomPrepBlock)
+  && /for\(let corner=0;corner<8;corner\+\+\)/.test(worldTreeBloomPrepBlock), '30Hz World Tree bloom preparation reuses matrix/vector/material/corner storage without steady allocations');
+ok(/window\.__cam=\(\)=>\(\{[\s\S]*?camera:\{position:_debugVec\(camera\.position\),quaternion:/.test(HTML)
+  && /window\.__setPerfPose=/.test(HTML)
+  && /window\.__perfActivity=/.test(HTML)
+  && /window\.__rtPause=/.test(HTML)
+  && /const _effectiveIdle=\(now=performance\.now\(\)\)=>DEBUG_FORCE_ACTIVITY===null\?\(now-lastAct\)>1200:!DEBUG_FORCE_ACTIVITY/.test(HTML)
+  && /idleCap:_effectiveIdle\(\)/.test(HTML)
+  && /window\.__sceneCensus=/.test(HTML)
+  && /coverageSumPct:/.test(HTML)
+  && /window\.__worldTreeHaloPixels=/.test(HTML), 'P0 debug probes expose actual camera pose, contributor census, and apparent halo pixels');
+ok(/const TOWN_SHADOW=\{dirty:true,reason:'initial-scene'[\s\S]*?minIntervalMs:125,minAngle:0\.004/.test(HTML)
+  && /function applySky\(t,forceShadow=false\)/.test(HTML)
+  && /_trackSunShadowDirection\(sun\.position,forceShadow\)/.test(HTML)
+  && /applySky\(skyT,skyT===skyTarget\)/.test(HTML)
+  && /applySky\(skyT,true\); setNightState\(night\)/.test(HTML)
+  && /invalidateTownShadows\('night-state'\)/.test(HTML)
+  && /invalidateTownShadows\('world-tree-added'\)/.test(HTML)
+  && /_beginRenderMetrics\(_idle\); _renderWorldTreeFrame\(\); _endRenderMetrics\(\)/.test(HTML)
+  && !/_renderWorldTreeFrame\(!_idle\)/.test(HTML)
+  && (HTML.match(/renderer\.shadowMap\.needsUpdate=true/g)||[]).length===0, 'shadow invalidation follows sun/topology/night state, never user activity');
+ok(/b\.g\._bobbing=false; BOBS\.splice\(i,1\); invalidateTownShadows\('visit-bob-complete'\)/.test(HTML),
+  'building visit bob keeps the frozen shadow during motion and refreshes once after exact scale restoration');
+ok(/function disableDynamicShadowCasters\(root\)\{ root\.traverse\(o=>\{ if\(o\.isMesh\) o\.castShadow=false; \}\)/.test(HTML)
+  && /function regSway\(g,amp\)\{ g\.userData\.sway=/.test(HTML)
+  && !/function regSway\(g,amp\)\{ disableDynamicShadowCasters\(g\)/.test(HTML)
+  && /return disableDynamicShadowCasters\(c\)/.test(HTML)
+  && /disableDynamicShadowCasters\(wheel\)/.test(HTML) && /disableDynamicShadowCasters\(spin\)/.test(HTML)
+  && /disableDynamicShadowCasters\(taxi\)/.test(HTML) && /disableDynamicShadowCasters\(model\)/.test(HTML)
+  && /disableDynamicShadowCasters\(g\); scene\.add\(g\)/.test(HTML)
+  && /return disableDynamicShadowCasters\(g\)/.test(HTML), 'moving avatars, NPCs, pets, and rides use blob/contact shadows while gently swaying town trees retain their frozen static shadows');
+ok(/AURORA_OP\.value=Math\.min\(0\.55\+\(_auroraBoost>0\?0\.45:0\), AURORA_OP\.value\+dt\*0\.5\)/.test(HTML),
+  'Aurora keeps the 1.77.2 night intensity; performance work does not dim the global night art');
+ok(/pointLightRole:'runtime-topology-only'/.test(memorialTreeBlock)
+  && /haloMode:'world-space-constant-emission'/.test(memorialTreeBlock)
+  && /branchGlow:'all-bark-branch-meshes'/.test(memorialTreeBlock)
+  && /bark:_worldTreeBloomMaterial\(0xff6a18,0\.42,true/.test(memorialTreeBlock)
+  && /branchGlowMeshes=bloomExtractEntries\.filter\(entry=>entry\.baseMaterial===hero\.materials\.bark\)\.length/.test(memorialTreeBlock),
+  'metadata states that PointLight is topology-only and current halos are world-space, not fixed-pixel LOD');
 ok(/window\.__memorialTree=/.test(HTML) && /window\.__tpMemorialTree=/.test(HTML)
   && /_memHeroObjectPerf\(MEMORIAL_TREE\.group\)/.test(HTML) && /window\.__frameMemorialTree=/.test(HTML)
   && /window\.__worldTreeRenderMode=/.test(HTML) && /window\.__worldTreeRenderTargets=/.test(HTML)
   && /window\.__freezeWorldForExposure=/.test(HTML)
   && /window\.__memorialTreeVisible=/.test(HTML) && /window\.__memorialTreeCollision=/.test(HTML), '?dbg exposes five render modes, linear targets, frozen exposure A/B, factory stats, and collision');
+ok(/const SKY_DETAIL=LOW_END\?0\.42:\(IS_MOBILE\?0\.58:0\.72\)/.test(HTML)
+  && /for\(let i=0;i<skyDetail\(3200\);i\+\+\)/.test(HTML), 'night star and Milky Way density scale below the hero scene detail budget');
+ok(/const nebulaLayer=\(count,core\)=>/.test(HTML)
+  && /nebulaLayer\(skyDetail\(95\),false\); nebulaLayer\(skyDetail\(26\),true\)/.test(HTML), '121 nebula sprites collapse into two additive point batches');
+ok(/new THREE\.InstancedMesh\(CLOUD_GEO,CLOUD_MAT,cloudPuffs\.length\)/.test(HTML)
+  && /instanceMatrix\.setUsage\(THREE\.DynamicDrawUsage\)/.test(HTML)
+  && /CLOUD_MAT=new THREE\.MeshBasicMaterial\(\{[^}]*depthWrite:false/.test(HTML)
+  && /if\(!force&&cloudStep<0\.05\) return/.test(HTML), 'cloud puffs share one instanced draw and update at 20Hz');
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

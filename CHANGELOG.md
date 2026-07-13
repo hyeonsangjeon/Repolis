@@ -3,6 +3,16 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.78.0] — 2026-07-13
+
+### 🌳 World Tree v3 midpoint — readable energy from every approach
+- **The buried-vein root cause is fixed.** Veins previously used a fixed global-Z offset, so paths on other bark faces sat inside the trunk and disappeared by approach angle. All 21 copies now follow the local bark surface with natural depth testing and no x-ray rendering.
+- **The real 45° blackout is removed.** An oversized whole-building AABB depth proxy—not the energy material—was masking the emissive network. Local occlusion now preserves all-angle luminance while keeping the town exposure balance and ordinary foreground depth.
+- **One isolated living-tree bloom.** Leaves, glyphs, core knots, and veins feed the same selective bloom source; the two energy meshes remain depth-aware and cannot spill light or exposure into buildings, props, residents, or terrain.
+- **Measurement is representative.** Real headed Chrome at 60 Hz is the release reference; headless scheduler and thermally throttled runs were misleading. Stable headed cadence is approximately **60 FPS by day** and **51–54 FPS at night**, with about **15.8% direction spread** and a **25.2–25.5 ms p95** caveat.
+- **Measured visual gates pass.** All-angle energy coverage has a minimum of **0.78**, P90 luminance spread is approximately **0.92%**, saturation is **0**, and town exposure delta is approximately **0.10% mean / 0 P95**.
+- **Validated midpoint scope.** P0, 2A, 2B-1, 2C, 2D, and 2E are retained with no visual or action regression. The failed 2B-2 experiment and its complexity are physically removed rather than hidden or left dormant.
+
 ## [1.77.2] — 2026-07-11
 
 ### 🌳 World Tree night legibility — restore the living Solar Archive
