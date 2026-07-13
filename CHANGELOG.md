@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.78.2] — 2026-07-13
+
+### 🌳 World Tree broad pillar glow — warm load-bearing radiance
+- **A brighter structural body.** Fifteen existing load-bearing meshes—the trunk, foundation roots, and primary branches—now contribute a broad warm-gold bloom beneath the sharper painterly energy detail.
+- **Depth and hierarchy preserved.** The other 57 secondary/fine branch meshes remain black bloom-depth occluders, while the accepted 21 veins, 21 organic knots, leaves, glyphs, and core retain their coordinated luminous order.
+- **No production-structure increase.** The change reuses the existing extraction path with no new geometry, draws, textures, sprites, or lights; base bark PBR, actions, LOD, and day rendering remain unchanged.
+- **Visual isolation remains bounded.** Eight-angle and mobile checks retain natural depth with zero white/channel clipping, while frozen tree-off/on measurement keeps town exposure isolated.
+
 ## [1.78.1] — 2026-07-13
 
 ### 🌳 World Tree v3 final polish — painterly gold, organic junctions

@@ -1579,9 +1579,9 @@ let WORLD_TREE_RENDER_MODE='final-composite';
 const WORLD_TREE_SAVED_CLEAR=new THREE.Color();
 const WORLD_TREE_BLOOM_POSITION=new THREE.Vector3(),WORLD_TREE_BLOOM_SCALE=new THREE.Vector3(),WORLD_TREE_BLOOM_ROTATION=new THREE.Quaternion(),
   WORLD_TREE_BLOOM_MATRIX=new THREE.Matrix4(),WORLD_TREE_BLOOM_PROJECTED=new THREE.Vector3(),WORLD_TREE_BLOOM_WORLD=new THREE.Vector3();
-function _worldTreeBloomMaterial(color,intensity,vertexColors=false,side=THREE.FrontSide){
+function _worldTreeBloomMaterial(color,intensity,vertexColors=false,side=THREE.FrontSide,category='detail'){
   const material=new THREE.MeshBasicMaterial({color:new THREE.Color(color).multiplyScalar(intensity),vertexColors,side,fog:false,toneMapped:false});
-  material.userData.worldTreeBaseColor=material.color.clone(); return material;
+  material.userData.worldTreeBaseColor=material.color.clone(); material.userData.worldTreeCategoryColor=material.color.clone(); material.userData.worldTreeCategory=category; return material;
 }
 function _beginWorldTreeBloomExtraction(){
   if(!MEMORIAL_TREE||MEMORIAL_TREE.extractingBloom) return;
@@ -3047,6 +3047,9 @@ function makeRiver(ctrl, opt={}){
 const MEMORIAL_TREE_SEED=20260711, MEMORIAL_TREE_POS=new THREE.Vector3(15,0,48), MEM_TREE_LITE=LOW_END||IS_MOBILE;
 let MEMORIAL_TREE=null;
 const MEM_TREE_HERO_SCALE=2, MEM_TREE_HERO_NATIVE_SCALE=0.96, MEM_TREE_LIGHT_LAYER=2, MEM_TREE_HERO_VARIANT='solar-archive', MEM_TREE_FACTORY_SHA='307c48d6ea5bc1bda8abc3074df64a663f3ad6f1c4f6d894206d12372d24b97a';
+const MEM_TREE_BROAD_GLOW_BRANCH_IDS=Object.freeze(['trunk-core','left-foundation','right-foundation','left-crown','right-crown','center-left-spire','center-right-spire','left-rear','right-rear',
+  'root-left-front','root-right-front','root-left-rear','root-right-rear','root-center-front','root-center-rear']);
+const MEM_TREE_BROAD_GLOW_CANDIDATES=Object.freeze({low:0.16,medium:0.24}),MEM_TREE_BROAD_GLOW_DEFAULT='medium',MEM_TREE_BLOOM_CATEGORY_MODES=Object.freeze(['combined','broad-only','detail-only']);
 function _memHeroBox(root){
   root.updateMatrixWorld(true); const box=new THREE.Box3();
   root.traverse(o=>{ if(!o.visible||!o.geometry||o.isSprite) return; let local;
@@ -3062,6 +3065,27 @@ function _memHeroObjectPerf(root){
 }
 function _memHeroEnvironment(root){
   camera.layers.enable(MEM_TREE_LIGHT_LAYER); return {lights:1};
+}
+function _syncWorldTreeBloomCategory(){
+  if(!MEMORIAL_TREE) return null; const mode=MEMORIAL_TREE.bloomCategory;
+  MEMORIAL_TREE.bloomMaterialList.forEach(material=>{ const broad=material.userData.worldTreeCategory==='broad-branches',enabled=mode==='combined'||(mode==='broad-only'?broad:!broad);
+    material.userData.worldTreeBaseColor.copy(enabled?material.userData.worldTreeCategoryColor:BLOOM_DARK_MATERIAL.color); });
+  MEMORIAL_TREE.bloomDirty=true; return {mode,categories:MEM_TREE_BLOOM_CATEGORY_MODES};
+}
+function _setWorldTreeBroadGlowCandidate(candidate){
+  if(!MEMORIAL_TREE) return null;
+  if(candidate===undefined) return {selected:MEMORIAL_TREE.broadGlowCandidate,intensity:MEM_TREE_BROAD_GLOW_CANDIDATES[MEMORIAL_TREE.broadGlowCandidate],candidates:MEM_TREE_BROAD_GLOW_CANDIDATES};
+  if(!Object.hasOwn(MEM_TREE_BROAD_GLOW_CANDIDATES,candidate)) return {error:'unknown broad-glow candidate',selected:MEMORIAL_TREE.broadGlowCandidate,candidates:MEM_TREE_BROAD_GLOW_CANDIDATES};
+  const intensity=MEM_TREE_BROAD_GLOW_CANDIDATES[candidate],material=MEMORIAL_TREE.bloomMaterials.loadBearing;
+  material.userData.worldTreeCategoryColor.set(MEMORIAL_TREE.hero.variant.energy).multiplyScalar(intensity);
+  MEMORIAL_TREE.broadGlowCandidate=candidate; MEMORIAL_TREE.group.userData.repolisAdapter.broadGlow.selected=candidate; MEMORIAL_TREE.group.userData.repolisAdapter.broadGlow.intensity=intensity;
+  _syncWorldTreeBloomCategory(); return {selected:candidate,intensity,candidates:MEM_TREE_BROAD_GLOW_CANDIDATES};
+}
+function _setWorldTreeBloomCategory(mode){
+  if(!MEMORIAL_TREE) return null;
+  if(mode===undefined) return {mode:MEMORIAL_TREE.bloomCategory,categories:MEM_TREE_BLOOM_CATEGORY_MODES};
+  if(!MEM_TREE_BLOOM_CATEGORY_MODES.includes(mode)) return {error:'unknown bloom category',mode:MEMORIAL_TREE.bloomCategory,categories:MEM_TREE_BLOOM_CATEGORY_MODES};
+  MEMORIAL_TREE.bloomCategory=mode; return _syncWorldTreeBloomCategory();
 }
 function _setWorldTreeGlowLayers(night){
   if(!MEMORIAL_TREE) return;
@@ -3097,28 +3121,38 @@ function makeMemorialTree(x,z){
     target:{height:+size.y.toFixed(1),crownSpan:+size.x.toFixed(1),crownDepth:+size.z.toFixed(1)},lightPolicy:'distance-invariant-emissive-extraction',sockets:Object.keys(sockets)};
   root.userData.repolisAdapter={factoryUnmodified:false,factorySourceModified:true,factoryRevision:REPOLIS_FACTORY_REVISION,energyRevision:hero.runtime.nodes['energy-network']?.userData.energyRevision||REPOLIS_FACTORY_REVISION,groundVisible:true,pulseDisabled:false,leafScale:1.22,bloom:{constant:[1.35,0.58,0.06],hz:MEM_TREE_BLOOM_HZ},
     selectiveBloom:true,sharpGlowInBase:true,depthAware:true,unlitExtraction:true,distanceCompensated:false,emissionPolicy:'constant-world-luminance',guideLightInBase:false,pointLightRole:'runtime-topology-only',
-    emissiveHalos:2,haloMode:'world-space-constant-emission',branchGlow:'base-emissive-only',bloomSources:['leaves','glyphs','energy-core-knots','energy-veins'],
+    emissiveHalos:2,haloMode:'world-space-constant-emission',releaseCandidate:'1.78.2',branchGlow:'load-bearing-bloom-extraction',
+    broadGlow:{selected:MEM_TREE_BROAD_GLOW_DEFAULT,intensity:MEM_TREE_BROAD_GLOW_CANDIDATES[MEM_TREE_BROAD_GLOW_DEFAULT],candidates:MEM_TREE_BROAD_GLOW_CANDIDATES,branchIds:MEM_TREE_BROAD_GLOW_BRANCH_IDS,count:MEM_TREE_BROAD_GLOW_BRANCH_IDS.length},
+    bloomSources:['load-bearing-bark','leaves','glyphs','energy-core-knots','energy-veins'],
     scale:MEM_TREE_HERO_SCALE,qualityMode:'full'};
   const bloomRoots=[...crowns,hero.runtime.nodes['energy-network'],hero.runtime.meshes['gold-code-glyphs'],hero.runtime.meshes['cyan-code-glyphs']].filter(Boolean);
   const bloomMeshes=new Set(); bloomRoots.forEach(o=>o.traverse(n=>{ n.userData.worldTreeBloom=true; if(n.isMesh) bloomMeshes.add(n); }));
+  const broadGlowBranchMeshes=MEM_TREE_BROAD_GLOW_BRANCH_IDS.map(id=>hero.runtime.meshes[id]),missingBroadGlowBranchIds=MEM_TREE_BROAD_GLOW_BRANCH_IDS.filter((id,i)=>!broadGlowBranchMeshes[i]);
+  if(missingBroadGlowBranchIds.length) throw new Error(`Missing World Tree broad-glow branches: ${missingBroadGlowBranchIds.join(', ')}`);
+  const broadGlowMeshSet=new Set(broadGlowBranchMeshes);
   const bloomMaterials={
     amber:_worldTreeBloomMaterial(hero.variant.amber,0.4,true,THREE.DoubleSide),
     cyan:_worldTreeBloomMaterial(hero.variant.cyan,0.55,true,THREE.DoubleSide),
     energy:_worldTreeBloomMaterial(hero.variant.energy,4,true,THREE.FrontSide),
     glyphGold:_worldTreeBloomMaterial(hero.variant.energy,1.75,false,THREE.DoubleSide),
-    glyphCyan:_worldTreeBloomMaterial(hero.variant.cyan,1.9,false,THREE.DoubleSide)
+    glyphCyan:_worldTreeBloomMaterial(hero.variant.cyan,1.9,false,THREE.DoubleSide),
+    loadBearing:_worldTreeBloomMaterial(hero.variant.energy,MEM_TREE_BROAD_GLOW_CANDIDATES[MEM_TREE_BROAD_GLOW_DEFAULT],true,THREE.DoubleSide,'broad-branches')
   };
   const bloomBySource=new Map([[hero.materials.amberLeaf,bloomMaterials.amber],[hero.materials.cyanLeaf,bloomMaterials.cyan],[hero.materials.energy,bloomMaterials.energy],
     [hero.materials.glyphGold,bloomMaterials.glyphGold],[hero.materials.glyphCyan,bloomMaterials.glyphCyan]]);
   const depthMaterials=new Set([hero.materials.bark,hero.materials.ground,hero.materials.cutWood]),bloomExtractEntries=[]; root.traverse(mesh=>{ if(!mesh.isMesh) return;
     if(bloomMeshes.has(mesh)) bloomExtractEntries.push({mesh,baseMaterial:mesh.material,bloomMaterial:bloomBySource.get(mesh.material)||bloomMaterials.energy});
-    else if(depthMaterials.has(mesh.material)) bloomExtractEntries.push({mesh,baseMaterial:mesh.material,bloomMaterial:BLOOM_DARK_MATERIAL}); });
+    else if(depthMaterials.has(mesh.material)) bloomExtractEntries.push({mesh,baseMaterial:mesh.material,bloomMaterial:mesh.material===hero.materials.bark&&broadGlowMeshSet.has(mesh)?bloomMaterials.loadBearing:BLOOM_DARK_MATERIAL}); });
   const bloomExtractMeshSet=new Set(bloomExtractEntries.map(entry=>entry.mesh));
-  const branchGlowMeshes=0, branchDepthMeshes=bloomExtractEntries.filter(entry=>entry.baseMaterial===hero.materials.bark).length;
+  const branchGlowIds=[...MEM_TREE_BROAD_GLOW_BRANCH_IDS],branchDepthIds=bloomExtractEntries.filter(entry=>entry.baseMaterial===hero.materials.bark&&entry.bloomMaterial===BLOOM_DARK_MATERIAL)
+    .map(entry=>entry.mesh.name==='repolis-fine-branches-merged'?'fine-branches':entry.mesh.name.replace(/__mesh$/,'')).sort();
+  const branchGlowMeshes=branchGlowIds.length,branchDepthMeshes=branchDepthIds.length;
   const bloomLights=[light].filter(Boolean);
   MEMORIAL_TREE={hero,group:root,runtime:hero.runtime,crowns,sockets,light,environment,bloomRoots,bloomLights,bloomMaterials,bloomMaterialList:Object.values(bloomMaterials),bloomExtractEntries,bloomExtractMeshSet,extractingBloom:false,
-    branchGlowMeshes,branchDepthMeshes,glowHalos,glowWorld:new THREE.Vector3(),distanceLod:0,glowDistance:0,lastBloomAt:-Infinity,bloomDirty:true,
+    branchGlowMeshes,branchGlowIds,branchDepthMeshes,branchDepthIds,broadGlowCandidate:MEM_TREE_BROAD_GLOW_DEFAULT,bloomCategory:'combined',
+    glowHalos,glowWorld:new THREE.Vector3(),distanceLod:0,glowDistance:0,lastBloomAt:-Infinity,bloomDirty:true,
     dynamicOccluderGroups:new Set(),occludersReady:false,requestedVisible:true,treeShadowDirty:false,stats:hero.stats,collider,seed:MEMORIAL_TREE_SEED,nativeBox};
+  _syncWorldTreeBloomCategory();
   _setWorldTreeGlowLayers(false);
   return MEMORIAL_TREE;
 }
@@ -7913,7 +7947,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     return {count:1,name:MEMORIAL_TREE.group.name,seed:MEMORIAL_TREE.seed,at:[+MEMORIAL_TREE.group.position.x.toFixed(1),+MEMORIAL_TREE.group.position.z.toFixed(1)],
       variant:wt.variant,stage:wt.stage,factory:{sha256:wt.factorySha256,revision:wt.factoryRevision,unmodified:adapter.factoryUnmodified,sourceModified:adapter.factorySourceModified,scale:adapter.scale,groundVisible:adapter.groundVisible,pulseDisabled:adapter.pulseDisabled,bloom:adapter.bloom},
       macroBranches:s.macroBranches,secondaryBranches:s.secondaryBranches,fineBranches:s.fineBranches,leafInstances:s.leafInstances,mossInstances:s.mossInstances,glyphInstances:s.glyphInstances,branchVertices:s.branchVertices,generationMs:+s.generationMs.toFixed(1),
-      mobile:IS_MOBILE,lowEnd:LOW_END,lite:MEM_TREE_LITE,reduced:REDUCED,runtime:{qualityMode:adapter.qualityMode,nodes:Object.keys(MEMORIAL_TREE.runtime.nodes).length,meshes:Object.keys(MEMORIAL_TREE.runtime.meshes).length,sockets:Object.keys(MEMORIAL_TREE.sockets).length,bloomExtractMeshes:MEMORIAL_TREE.bloomExtractEntries.length,branchGlowMeshes:MEMORIAL_TREE.branchGlowMeshes,branchDepthMeshes:MEMORIAL_TREE.branchDepthMeshes,energyRevision:adapter.energyRevision,energyVeinCopies:s.energyVeinCopies,energyKnotCount:s.energyKnotCount,energyKnotDistribution:s.energyKnotDistribution,energyKnotSizes:s.energyKnotSizes,energyKnotRoles:s.energyKnotRoles,energyDrawMeshes:s.energyDrawMeshes,bloomHz:MEM_TREE_BLOOM_HZ,dynamicOccluders:MEMORIAL_TREE.dynamicOccluderGroups.size,staticProxies:MEMORIAL_TREE.staticProxyCount||0,objectPerf:_memHeroObjectPerf(MEMORIAL_TREE.group)},
+      mobile:IS_MOBILE,lowEnd:LOW_END,lite:MEM_TREE_LITE,reduced:REDUCED,runtime:{qualityMode:adapter.qualityMode,nodes:Object.keys(MEMORIAL_TREE.runtime.nodes).length,meshes:Object.keys(MEMORIAL_TREE.runtime.meshes).length,sockets:Object.keys(MEMORIAL_TREE.sockets).length,bloomExtractMeshes:MEMORIAL_TREE.bloomExtractEntries.length,branchGlowMeshes:MEMORIAL_TREE.branchGlowMeshes,branchGlowIds:MEMORIAL_TREE.branchGlowIds,branchDepthMeshes:MEMORIAL_TREE.branchDepthMeshes,branchDepthIds:MEMORIAL_TREE.branchDepthIds,broadGlow:{selected:MEMORIAL_TREE.broadGlowCandidate,intensity:MEM_TREE_BROAD_GLOW_CANDIDATES[MEMORIAL_TREE.broadGlowCandidate],candidates:MEM_TREE_BROAD_GLOW_CANDIDATES,category:MEMORIAL_TREE.bloomCategory},energyRevision:adapter.energyRevision,energyVeinCopies:s.energyVeinCopies,energyKnotCount:s.energyKnotCount,energyKnotDistribution:s.energyKnotDistribution,energyKnotSizes:s.energyKnotSizes,energyKnotRoles:s.energyKnotRoles,energyDrawMeshes:s.energyDrawMeshes,bloomHz:MEM_TREE_BLOOM_HZ,dynamicOccluders:MEMORIAL_TREE.dynamicOccluderGroups.size,staticProxies:MEMORIAL_TREE.staticProxyCount||0,objectPerf:_memHeroObjectPerf(MEMORIAL_TREE.group)},
       crownOnlySway:wt.crownOnlySway,sockets:Object.keys(MEMORIAL_TREE.sockets),collider:{x:c.x,z:c.z,r:c.r},target:wt.target,
       nightGuide:{night:isNight,light:+MEMORIAL_TREE.light.intensity.toFixed(1),rendered:MEMORIAL_TREE.light.visible,range:+MEMORIAL_TREE.light.distance.toFixed(1),energy:+MEMORIAL_TREE.hero.materials.energy.emissiveIntensity.toFixed(2),amber:+MEMORIAL_TREE.hero.materials.amberLeaf.emissiveIntensity.toFixed(2),cyan:+MEMORIAL_TREE.hero.materials.cyanLeaf.emissiveIntensity.toFixed(2),
         distance:+MEMORIAL_TREE.glowDistance.toFixed(1),distanceLod:+MEMORIAL_TREE.distanceLod.toFixed(2),halos:MEMORIAL_TREE.glowHalos.length,haloMode:adapter.haloMode,pointLightRole:adapter.pointLightRole,environmentLights:0,
@@ -7924,6 +7958,8 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__unframeMemorialTree=()=>{ model.visible=true; player.position.y=0; return true; };
   window.__memorialTreeVisible=(visible=true)=>{ if(!MEMORIAL_TREE) return false; MEMORIAL_TREE.requestedVisible=visible!==false; MEMORIAL_TREE.group.visible=MEMORIAL_TREE.requestedVisible; MEMORIAL_TREE.bloomDirty=true; return MEMORIAL_TREE.requestedVisible; };
   window.__worldTreeRenderMode=(mode)=>{ const modes=['base-only','emissive-only','bloom-only','final-composite','tree-off']; if(modes.includes(mode)){ WORLD_TREE_RENDER_MODE=mode; if(MEMORIAL_TREE) MEMORIAL_TREE.bloomDirty=true; } return {mode:WORLD_TREE_RENDER_MODE,modes}; };
+  window.__worldTreeBroadGlow=(candidate)=>_setWorldTreeBroadGlowCandidate(candidate);
+  window.__worldTreeBloomCategory=(mode)=>_setWorldTreeBloomCategory(mode);
   window.__worldTreeRenderTargets=()=>({base:{type:'HalfFloatType',colorSpace:baseTarget.texture.colorSpace,depth:true,size:[baseTarget.width,baseTarget.height]},emissive:{type:'HalfFloatType',colorSpace:emissiveTarget.texture.colorSpace,mode:'unlit-depth-aware',depth:true,size:[emissiveTarget.width,emissiveTarget.height]},
     bloom:{type:'HalfFloatType',colorSpace:worldBloom.renderTargetsHorizontal[0].texture.colorSpace,source:'UnrealBloomPass.renderTargetsHorizontal[0]',hz:MEM_TREE_BLOOM_HZ,depth:false,size:[worldBloom.renderTargetsHorizontal[0].width,worldBloom.renderTargetsHorizontal[0].height]},
     final:{toneMapping:'ACESFilmicToneMapping',outputColorSpace:renderer.outputColorSpace,textures:2,boundedBloom:true,size:[finalComposer.readBuffer.width,finalComposer.readBuffer.height]},
