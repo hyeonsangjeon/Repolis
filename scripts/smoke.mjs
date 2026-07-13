@@ -651,8 +651,6 @@ ok(/updateStarTrail\(clock\.elapsedTime\)/.test(HTML), 'the main world loop upda
 
 group('one colossal deterministic World Tree Pillar supports the village');
 const memorialTreeBlock = (HTML.match(/\/\*MEMORIAL_TREE:START\*\/([\s\S]*?)\/\*MEMORIAL_TREE:END\*\//) || [, ''])[1];
-const broadGlowIdSource = (memorialTreeBlock.match(/MEM_TREE_BROAD_GLOW_BRANCH_IDS=Object\.freeze\(\[([\s\S]*?)\]\)/) || [, ''])[1];
-const broadGlowIds = [...broadGlowIdSource.matchAll(/'([^']+)'/g)].map((match) => match[1]);
 const visualLodBlock = (HTML.match(/\/\*VISUAL_LOD:START\*\/([\s\S]*?)\/\*VISUAL_LOD:END\*\//) || [, ''])[1];
 const staticInstanceBlock = (HTML.match(/\/\*STATIC_INSTANCES:START\*\/([\s\S]*?)\/\*STATIC_INSTANCES:END\*\//) || [, ''])[1];
 const buildingLodPrototypeBlock = (HTML.match(/\/\*BUILDING_LOD_PROTOTYPE:START\*\/([\s\S]*?)\/\*BUILDING_LOD_PROTOTYPE:END\*\//) || [, ''])[1];
@@ -690,11 +688,7 @@ ok(/import \{ EffectComposer \}/.test(HTML) && /import \{ TexturePass \}/.test(H
   && /renderer\.toneMapping=THREE\.NoToneMapping; renderer\.outputColorSpace=THREE\.LinearSRGBColorSpace/.test(HTML)
   && (HTML.match(/new OutputPass\(\)/g)||[]).length===1, 'linear HDR base/emissive/bloom targets use independent cost caps and composite once before the only final OutputPass');
 ok(/const MEMORIAL_TREE_SEED=20260711, MEMORIAL_TREE_POS=new THREE\.Vector3\(15,0,48\)/.test(memorialTreeBlock)
-  && /MEM_TREE_HERO_VARIANT='solar-archive'/.test(memorialTreeBlock)
-  && broadGlowIds.length===15
-  && broadGlowIds.join(',')==='trunk-core,left-foundation,right-foundation,left-crown,right-crown,center-left-spire,center-right-spire,left-rear,right-rear,root-left-front,root-right-front,root-left-rear,root-right-rear,root-center-front,root-center-rear'
-  && /MEM_TREE_BROAD_GLOW_CANDIDATES=Object\.freeze\(\{low:0\.16,medium:0\.24\}\),MEM_TREE_BROAD_GLOW_DEFAULT='medium'/.test(memorialTreeBlock),
-  'seeded Solar Archive selects exactly 15 existing load-bearing branches and two bounded broad-glow candidates');
+  && /MEM_TREE_HERO_VARIANT='solar-archive'/.test(memorialTreeBlock), 'exactly seeded Solar Archive is selected at the existing north park position');
 ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
   && (HTML.match(/if\(memorial\) makeMemorialTree\(cx,cz\)/g) || []).length === 1, 'exactly one memorial tree is requested, at the north rest park centre');
 ok(/const stage='full'/.test(memorialTreeBlock)
@@ -846,7 +840,7 @@ ok(/const pulse = 1\.48 \+ Math\.sin\(elapsedSeconds \* 2\.1\) \* 0\.1/.test(WOR
 ok(/customSockets=\{TaxiArrival:/.test(memorialTreeBlock)
   && /\['left-foundation:tip','right-foundation:tip','left-crown:tip','right-crown:tip'/.test(memorialTreeBlock), 'adapter preserves six Repolis sockets plus eight action-ready factory bough sockets');
 ok(/root\.userData\.repolisAdapter=\{factoryUnmodified:false,factorySourceModified:true,factoryRevision:REPOLIS_FACTORY_REVISION,energyRevision:hero\.runtime\.nodes\['energy-network'\]\?\.userData\.energyRevision\|\|REPOLIS_FACTORY_REVISION,groundVisible:true,pulseDisabled:false[\s\S]*?selectiveBloom:true,sharpGlowInBase:true,depthAware:true,unlitExtraction:true,distanceCompensated:false,emissionPolicy:'constant-world-luminance'/.test(memorialTreeBlock),
-  'runtime metadata records the factory source revision and constant-luminance depth-aware selective bloom');
+  'runtime metadata records the energy-v2 source revision and constant-luminance depth-aware selective bloom');
 ok(/treeBox=_memHeroBox\(MEMORIAL_TREE\.group\)\.expandByScalar\(3\)/.test(HTML)
   && /const g=b\._body\|\|b\._group/.test(HTML)
   && /WorldTree_BuildingDepthProxies/.test(HTML) && /WorldTree_PropDepthProxies/.test(HTML)
@@ -858,24 +852,17 @@ ok(/_registerWorldTreeOccluderGroup\(g\)/.test(HTML)
   && /dynamicOccluderGroups\.delete/.test(HTML), 'remote peer avatar proxies enter and leave the bloom depth cache without leaks');
 ok(/const bloomRoots=\[\.\.\.crowns,hero\.runtime\.nodes\['energy-network'\],hero\.runtime\.meshes\['gold-code-glyphs'\]/.test(memorialTreeBlock)
   && /const bloomMeshes=new Set\(\)/.test(memorialTreeBlock) && /const bloomBySource=new Map/.test(memorialTreeBlock)
-  && /const broadGlowBranchMeshes=MEM_TREE_BROAD_GLOW_BRANCH_IDS\.map\(id=>hero\.runtime\.meshes\[id\]\)/.test(memorialTreeBlock)
-  && /if\(missingBroadGlowBranchIds\.length\) throw new Error/.test(memorialTreeBlock)
-  && /const broadGlowMeshSet=new Set\(broadGlowBranchMeshes\)/.test(memorialTreeBlock)
   && /amber:_worldTreeBloomMaterial\(hero\.variant\.amber,0\.4,true/.test(memorialTreeBlock)
   && /cyan:_worldTreeBloomMaterial\(hero\.variant\.cyan,0\.55,true/.test(memorialTreeBlock)
   && /energy:_worldTreeBloomMaterial\(hero\.variant\.energy,4,true/.test(memorialTreeBlock)
   && /glyphGold:_worldTreeBloomMaterial\(hero\.variant\.energy,1\.75,false/.test(memorialTreeBlock)
   && /glyphCyan:_worldTreeBloomMaterial\(hero\.variant\.cyan,1\.9,false/.test(memorialTreeBlock)
-  && /loadBearing:_worldTreeBloomMaterial\(hero\.variant\.energy,MEM_TREE_BROAD_GLOW_CANDIDATES\[MEM_TREE_BROAD_GLOW_DEFAULT\],true,THREE\.DoubleSide,'broad-branches'\)/.test(memorialTreeBlock)
-  && /worldTreeCategoryColor\.set\(MEMORIAL_TREE\.hero\.variant\.energy\)\.multiplyScalar\(intensity\)/.test(memorialTreeBlock)
   && /if\(o\.isMesh\)\{ o\.layers\.set\(0\); if\(night&&MEMORIAL_TREE\.bloomExtractMeshSet\.has\(o\)\) o\.layers\.enable\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
   && /depthMaterials=new Set\(\[hero\.materials\.bark,hero\.materials\.ground,hero\.materials\.cutWood\]\)/.test(memorialTreeBlock)
-  && /mesh\.material===hero\.materials\.bark&&broadGlowMeshSet\.has\(mesh\)\?bloomMaterials\.loadBearing:BLOOM_DARK_MATERIAL/.test(memorialTreeBlock)
-  && /branchGlowMeshes=branchGlowIds\.length,branchDepthMeshes=branchDepthIds\.length/.test(memorialTreeBlock)
+  && /else if\(depthMaterials\.has\(mesh\.material\)\) bloomExtractEntries\.push\(\{mesh,baseMaterial:mesh\.material,bloomMaterial:BLOOM_DARK_MATERIAL\}\)/.test(memorialTreeBlock)
   && /bloomLights\.forEach\(light=>light\.layers\.set\(MEM_TREE_LIGHT_LAYER\)\)/.test(memorialTreeBlock)
   && !/hero\.runtime\.nodes\.constellations/.test(memorialTreeBlock)
-  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock),
-  'one selective pass reuses 15 load-bearing bark meshes for broad gold while secondary/fine bark stays black depth');
+  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'one energy-led leaf/glyph/knot/vein hierarchy uses dark branch depth occlusion without unrelated tree draws');
 ok(/requestedTreeVisible=MEMORIAL_TREE\?MEMORIAL_TREE\.requestedVisible!==false:false/.test(HTML)
   && /MEMORIAL_TREE\.group\.visible=requestedTreeVisible/.test(HTML)
   && /finalMix\.uniforms\.bloomWeight\.value=needBloom\?1:0/.test(HTML)
@@ -963,10 +950,7 @@ ok(/window\.__cam=\(\)=>\(\{[\s\S]*?camera:\{position:_debugVec\(camera\.positio
   && /idleCap:_effectiveIdle\(\)/.test(HTML)
   && /window\.__sceneCensus=/.test(HTML)
   && /coverageSumPct:/.test(HTML)
-  && /window\.__worldTreeHaloPixels=/.test(HTML)
-  && /window\.__worldTreeBroadGlow=\(candidate\)=>_setWorldTreeBroadGlowCandidate\(candidate\)/.test(HTML)
-  && /window\.__worldTreeBloomCategory=\(mode\)=>_setWorldTreeBloomCategory\(mode\)/.test(HTML),
-  'P0 debug probes expose camera/census metrics plus bounded broad-glow and category-isolation controls');
+  && /window\.__worldTreeHaloPixels=/.test(HTML), 'P0 debug probes expose actual camera pose, contributor census, and apparent halo pixels');
 ok(/const TOWN_SHADOW=\{dirty:true,reason:'initial-scene'[\s\S]*?minIntervalMs:125,minAngle:0\.004/.test(HTML)
   && /function applySky\(t,forceShadow=false\)/.test(HTML)
   && /_trackSunShadowDirection\(sun\.position,forceShadow\)/.test(HTML)
@@ -991,20 +975,16 @@ ok(/AURORA_OP\.value=Math\.min\(0\.55\+\(_auroraBoost>0\?0\.45:0\), AURORA_OP\.v
   'Aurora keeps the 1.77.2 night intensity; performance work does not dim the global night art');
 ok(/pointLightRole:'runtime-topology-only'/.test(memorialTreeBlock)
   && /haloMode:'world-space-constant-emission'/.test(memorialTreeBlock)
-  && /releaseCandidate:'1\.78\.2',branchGlow:'load-bearing-bloom-extraction'/.test(memorialTreeBlock)
-  && /broadGlow:\{selected:MEM_TREE_BROAD_GLOW_DEFAULT,intensity:MEM_TREE_BROAD_GLOW_CANDIDATES\[MEM_TREE_BROAD_GLOW_DEFAULT\],candidates:MEM_TREE_BROAD_GLOW_CANDIDATES,branchIds:MEM_TREE_BROAD_GLOW_BRANCH_IDS,count:MEM_TREE_BROAD_GLOW_BRANCH_IDS\.length\}/.test(memorialTreeBlock)
-  && /bloomSources:\['load-bearing-bark','leaves','glyphs','energy-core-knots','energy-veins'\]/.test(memorialTreeBlock)
+  && /branchGlow:'base-emissive-only'/.test(memorialTreeBlock)
+  && /bloomSources:\['leaves','glyphs','energy-core-knots','energy-veins'\]/.test(memorialTreeBlock)
   && !/bark:_worldTreeBloomMaterial/.test(memorialTreeBlock)
-  && /branchGlowIds=\[\.\.\.MEM_TREE_BROAD_GLOW_BRANCH_IDS\],branchDepthIds=bloomExtractEntries\.filter\(entry=>entry\.baseMaterial===hero\.materials\.bark&&entry\.bloomMaterial===BLOOM_DARK_MATERIAL\)/.test(memorialTreeBlock)
-  && /branchGlowIds:MEMORIAL_TREE\.branchGlowIds,branchDepthMeshes:MEMORIAL_TREE\.branchDepthMeshes,branchDepthIds:MEMORIAL_TREE\.branchDepthIds/.test(HTML),
-  'runtime metadata separates exact broad-glow load-bearing IDs from black secondary/fine depth branches');
+  && /branchGlowMeshes=0, branchDepthMeshes=bloomExtractEntries\.filter\(entry=>entry\.baseMaterial===hero\.materials\.bark\)\.length/.test(memorialTreeBlock),
+  'metadata records the tree-only emissive hierarchy while bark remains a dark depth occluder');
 ok(/window\.__memorialTree=/.test(HTML) && /window\.__tpMemorialTree=/.test(HTML)
   && /_memHeroObjectPerf\(MEMORIAL_TREE\.group\)/.test(HTML) && /window\.__frameMemorialTree=/.test(HTML)
   && /window\.__worldTreeRenderMode=/.test(HTML) && /window\.__worldTreeRenderTargets=/.test(HTML)
-  && /window\.__worldTreeBroadGlow=/.test(HTML) && /window\.__worldTreeBloomCategory=/.test(HTML)
   && /window\.__freezeWorldForExposure=/.test(HTML)
-  && /window\.__memorialTreeVisible=/.test(HTML) && /window\.__memorialTreeCollision=/.test(HTML),
-  '?dbg exposes five render modes, broad/detail isolation, bounded intensity candidates, frozen exposure A/B, factory stats, and collision');
+  && /window\.__memorialTreeVisible=/.test(HTML) && /window\.__memorialTreeCollision=/.test(HTML), '?dbg exposes five render modes, linear targets, frozen exposure A/B, factory stats, and collision');
 ok(/const SKY_DETAIL=LOW_END\?0\.42:\(IS_MOBILE\?0\.58:0\.72\)/.test(HTML)
   && /for\(let i=0;i<skyDetail\(3200\);i\+\+\)/.test(HTML), 'night star and Milky Way density scale below the hero scene detail budget');
 ok(/const nebulaLayer=\(count,core\)=>/.test(HTML)

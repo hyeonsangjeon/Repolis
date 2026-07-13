@@ -3,13 +3,19 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.78.3] — 2026-07-13
+
+### 🌳 World Tree 1.78.2 visual rollback — restore the painterly baseline
+- **Broad whole-branch bloom removed.** The 1.78.2 interpretation made the trunk and load-bearing branches direct bloom sources, so it is rolled back to the protected 1.78.1 painterly-knots runtime. The intended reference language is instead one thick dominant energy vein, a subtle vein-derived bark halo, and thin subordinate support/rear veins.
+- **Structure remains protected.** The rollback restores revision `azimuth-complete-energy-v3-painterly-knots` and factory SHA `307c48d6…24b97a` without changing tree geometry, draws, textures, lights, branch hierarchy, leaves, knots, sockets, actions, LOD, or town isolation.
+
 ## [1.78.2] — 2026-07-13
 
 ### 🌳 World Tree broad pillar glow — warm load-bearing radiance
-- **A brighter structural body.** Fifteen existing load-bearing meshes—the trunk, foundation roots, and primary branches—now contribute a broad warm-gold bloom beneath the sharper painterly energy detail.
-- **Depth and hierarchy preserved.** The other 57 secondary/fine branch meshes remain black bloom-depth occluders, while the accepted 21 veins, 21 organic knots, leaves, glyphs, and core retain their coordinated luminous order.
-- **No production-structure increase.** The change reuses the existing extraction path with no new geometry, draws, textures, sprites, or lights; base bark PBR, actions, LOD, and day rendering remain unchanged.
-- **Visual isolation remains bounded.** Eight-angle and mobile checks retain natural depth with zero white/channel clipping, while frozen tree-off/on measurement keeps town exposure isolated.
+- **A brighter structural body.** Fifteen existing load-bearing meshes—the trunk, foundation roots, and primary branches—contributed a broad warm-gold bloom beneath the sharper painterly energy detail.
+- **Depth and hierarchy preserved.** The other 57 secondary/fine branch meshes remained black bloom-depth occluders, while the accepted 21 veins, 21 organic knots, leaves, glyphs, and core retained their coordinated luminous order.
+- **No production-structure increase.** The change reused the existing extraction path with no new geometry, draws, textures, sprites, or lights; base bark PBR, actions, LOD, and day rendering remained unchanged.
+- **Visual isolation remained bounded.** Eight-angle and mobile checks retained natural depth with zero white/channel clipping, while frozen tree-off/on measurement kept town exposure isolated.
 
 ## [1.78.1] — 2026-07-13
 
