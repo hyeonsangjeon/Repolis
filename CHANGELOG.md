@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.78.4] — 2026-07-13
+
+### 🌳 World Tree Sculpt DNA correction — one rooted living current
+- **One dominant energy spine.** A thick warm-gold camera-facing vein now leads the trunk, foundations, and major crown paths; much thinner, dimmer rear and side copies preserve 360-degree continuity without reading as twin front lines.
+- **Depth-aware painterly hierarchy.** Bark remains a depth-only PBR surface with only a restrained vein-derived halo, while 21 organic knots and the 18 existing branch-end pendants retain their anchored warm highlights.
+- **Every leaf is branch-seated.** All 3,016 leaf cards now overlap exact fine-branch curve contacts, scale about their root pivots, and share branch motion so the crown no longer reads as floating or vertically hung decoration.
+- **Production and town contracts hold.** The correction adds no renderer pass, light, texture, imported mesh, or draw-count regression; all-angle natural depth, zero clipping, and isolated town exposure remain intact.
+
 ## [1.78.3] — 2026-07-13
 
 ### 🌳 World Tree 1.78.2 visual rollback — restore the painterly baseline

@@ -660,9 +660,9 @@ ok(memorialTreeBlock.length > 0, 'world-tree procedural block is extractable fro
 ok(visualLodBlock.length > 0, 'projected-size visual LOD block is extractable from index.html');
 ok(staticInstanceBlock.length > 0, 'exact-static instance block is extractable from index.html');
 ok(buildingLodPrototypeBlock.length > 0, '2C-A representative building LOD block is extractable from index.html');
-ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '307c48d6ea5bc1bda8abc3074df64a663f3ad6f1c4f6d894206d12372d24b97a',
-  'Repolis factory provenance is pinned to azimuth-complete-energy-v3-painterly-knots');
-ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-complete-energy-v3-painterly-knots-r1'/.test(HTML)
+ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '90f71db1389eac63a6585036400c8777bf34fefb698bed56be792e4146246715',
+  'Repolis factory provenance is pinned to dominant-vein candidate B with attached leaves and hanging lights');
+ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-energy-v4-dominant-b-attached-leaves-r3'/.test(HTML)
   && /import \{ mergeGeometries \} from 'three\/addons\/utils\/BufferGeometryUtils\.js'/.test(WORLD_TREE_FACTORY), 'native Solar Archive factory resolves through the existing Three.js import map');
 ok(/import \{ EffectComposer \}/.test(HTML) && /import \{ TexturePass \}/.test(HTML) && /import \{ UnrealBloomPass \}/.test(HTML)
   && /import \{ ShaderPass \}/.test(HTML) && /import \{ OutputPass \}/.test(HTML)
@@ -695,27 +695,63 @@ ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
 ok(/macroBranchSpecs\(\)/.test(WORLD_TREE_FACTORY) && /secondaryBranches\(spec, seed/.test(WORLD_TREE_FACTORY)
   && /fineBranches\(spec, seed\)/.test(WORLD_TREE_FACTORY) && /mergedFineGeometry/.test(WORLD_TREE_FACTORY), 'factory preserves macro → secondary → merged fine branch hierarchy');
-ok(/REPOLIS_FACTORY_REVISION = 'azimuth-complete-energy-v3-painterly-knots'/.test(WORLD_TREE_FACTORY)
+ok(/REPOLIS_FACTORY_REVISION = 'azimuth-energy-v4-dominant-b-attached-leaves'/.test(WORLD_TREE_FACTORY)
   && /function createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
   && /const surfaceRadius = createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
   && /const \{ radius, ridges \} = surfaceRadius\(t, angle\)/.test(WORLD_TREE_FACTORY)
   && /const \{ radius \} = surfaceRadius\(t, angle\)/.test(WORLD_TREE_FACTORY), 'bark and energy veins share one deterministic Frenet-frame surface-radius profile');
 ok(/radialCopies = spec\.importance === 'trunk' \|\| spec\.id\.includes\('foundation'\) \? 3 : 2/.test(WORLD_TREE_FACTORY)
+  && /const dominant = copy === 0/.test(WORLD_TREE_FACTORY)
+  && /const canonicalFront = new THREE\.Vector3\(\.\.\.REPOLIS_ENERGY_PROFILE\.canonicalFront\)/.test(WORLD_TREE_FACTORY)
+  && /const frontAngle = Math\.hypot\(projectedX, projectedY\) > 0\.08/.test(WORLD_TREE_FACTORY)
+  && /const supportKind = dominant \? null : copy === 1 \? 'rear' : 'side'/.test(WORLD_TREE_FACTORY)
+  && /const supportOffset = supportKind === 'rear'[\s\S]*?\? Math\.PI[\s\S]*?Math\.PI \* 0\.5/.test(WORLD_TREE_FACTORY)
   && /spec\.id\.includes\('rear'\)/.test(WORLD_TREE_FACTORY)
   && /mergeGeometries\(veinGeometries, false\)/.test(WORLD_TREE_FACTORY)
   && /mergeGeometries\(coreGeometries, false\)/.test(WORLD_TREE_FACTORY)
   && /energyGroup\.userData\.drawMeshes = 2/.test(WORLD_TREE_FACTORY)
   && /depthTest: true/.test(WORLD_TREE_FACTORY)
-  && !/spec\.importance === 'trunk' \? 0\.92 : 0\.05/.test(WORLD_TREE_FACTORY), 'energy v3 preserves bounded azimuth copies, natural bark depth, and two merged draw meshes without the fixed +Z offset');
+  && !/spec\.importance === 'trunk' \? 0\.92 : 0\.05/.test(WORLD_TREE_FACTORY), 'energy v4 keeps one canonical-facing dominant copy plus bounded support/rear copies in two depth-tested merged meshes');
 ok(/function withLegacyEnergyRandomBudget\(seed, build\)/.test(WORLD_TREE_FACTORY)
   && /index < 76/.test(WORLD_TREE_FACTORY)
   && /runtime\.nodes\['energy-network'\] = energy\.group/.test(WORLD_TREE_FACTORY)
   && /runtime\.sockets\['energy:root'\] = energy\.core/.test(WORLD_TREE_FACTORY), 'energy v3 preserves the procedural RNG boundary and stable action-ready node/socket IDs');
-ok(/const v2TubeRadius = spec\.importance === 'trunk' \? 0\.042/.test(WORLD_TREE_FACTORY)
-  && /const tubeRadius = spec\.importance === 'trunk' \? 0\.033 : spec\.id\.includes\('foundation'\) \? 0\.019 : 0\.016/.test(WORLD_TREE_FACTORY)
-  && /const surfaceGap = v2TubeRadius \* 1\.22/.test(WORLD_TREE_FACTORY)
+ok(/const REPOLIS_ENERGY_PROFILE = Object\.freeze\(\{/.test(WORLD_TREE_FACTORY)
+  && /id: 'dominant-main-vein-b'/.test(WORLD_TREE_FACTORY)
+  && /canonicalFront: Object\.freeze\(\[0, 0, -1\]\)/.test(WORLD_TREE_FACTORY)
+  && /trunk: 0\.078,[\s\S]*?foundation: 0\.044,[\s\S]*?macro: 0\.036/.test(WORLD_TREE_FACTORY)
+  && /rearSupportRadius: Object\.freeze\(\{[\s\S]*?trunk: 0\.015,[\s\S]*?foundation: 0\.009,[\s\S]*?macro: 0\.0075/.test(WORLD_TREE_FACTORY)
+  && /sideSupportRadius: Object\.freeze\(\{[\s\S]*?trunk: 0\.006,[\s\S]*?foundation: 0\.0045,[\s\S]*?macro: 0\.004/.test(WORLD_TREE_FACTORY)
+  && /dominantSourceWeight: 1/.test(WORLD_TREE_FACTORY)
+  && /rearSupportSourceWeight: 0\.24/.test(WORLD_TREE_FACTORY)
+  && /sideSupportSourceWeight: 0\.1/.test(WORLD_TREE_FACTORY)
+  && /barkHaloPolicy: 'vein-bloom-only-no-branch-extraction'/.test(WORLD_TREE_FACTORY)
   && /function shapePainterlyVein\(/.test(WORLD_TREE_FACTORY)
-  && /geometry\.setAttribute\('color', new THREE\.BufferAttribute\(colors, 3\)\)/.test(WORLD_TREE_FACTORY), 'v3 uses thinner variable-weight pigment while keeping the accepted v2 bark-surface path centers');
+  && /\) \* sourceWeight;/.test(WORLD_TREE_FACTORY)
+  && /geometry\.setAttribute\('color', new THREE\.BufferAttribute\(colors, 3\)\)/.test(WORLD_TREE_FACTORY), 'candidate B strengthens the main path while separating one rear support from an ultra-thin side continuity copy');
+ok(/dominantVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
+  && /supportVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
+  && /rearSupportVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
+  && /sideSupportVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
+  && /energyGroup\.userData\.dominantVeinCount = dominantVeinIds\.length/.test(WORLD_TREE_FACTORY)
+  && /energyGroup\.userData\.supportVeinCount = supportVeinIds\.length/.test(WORLD_TREE_FACTORY)
+  && /energyDominantVeinCount:s\.energyDominantVeinCount/.test(HTML)
+  && /energySupportVeinCount:s\.energySupportVeinCount/.test(HTML)
+  && /energyRearSupportVeinCount:s\.energyRearSupportVeinCount/.test(HTML)
+  && /energySideSupportVeinCount:s\.energySideSupportVeinCount/.test(HTML)
+  && /energyBarkHaloPolicy:s\.energyBarkHaloPolicy/.test(HTML),
+  'runtime metadata reports exact dominant/rear/side support IDs, counts, radii, weights, and vein-only bark halo policy');
+ok(/function withPrivateRandom\(seed, build\)/.test(WORLD_TREE_FACTORY)
+  && /const ornamentEnergy = withPrivateRandom\(`\$\{seed\}\/ornament-material`, \(\) => energy\.clone\(\)\)/.test(WORLD_TREE_FACTORY),
+  'pendant material UUID creation is isolated from the protected global procedural RNG sequence');
+ok(/ornamentEnergy\.name = 'repolis-hanging-ornament-energy'/.test(WORLD_TREE_FACTORY)
+  && /ornamentEnergy\.emissiveIntensity = 1\.9/.test(WORLD_TREE_FACTORY)
+  && /new THREE\.TubeGeometry\(curve, 4, 0\.016, 5, false\),[\s\S]*?materials\.ornamentEnergy/.test(WORLD_TREE_FACTORY)
+  && /new THREE\.SphereGeometry\(0\.075, 10, 8\), materials\.ornamentEnergy/.test(WORLD_TREE_FACTORY)
+  && /hangingLightCount: constellations\?\.hangingLightCount \?\? 0/.test(WORLD_TREE_FACTORY)
+  && /hangingLightPolicy:s\.hangingLightPolicy/.test(HTML)
+  && /branchEndOrnaments:'bright-base-emissive-no-extra-bloom-draws'/.test(memorialTreeBlock),
+  '18 existing branch-end pendants gain a brighter base-emissive material without entering the extra bloom draw list');
 ok(/function createOrganicEnergyKnotGeometry\(knot, seed\)/.test(WORLD_TREE_FACTORY)
   && /new THREE\.SphereGeometry\(1, 9, 6\)/.test(WORLD_TREE_FACTORY)
   && /knotAt\(rootIndex,[^\n]+, 'root-junction'\)/.test(WORLD_TREE_FACTORY)
@@ -734,6 +770,36 @@ ok(/Math\.round\(2600 \* variant\.foliageDensity\)/.test(WORLD_TREE_FACTORY)
   && /id: 'solar-archive'[\s\S]*?foliageDensity: 1\.16[\s\S]*?cyanRatio: 0\.1/.test(WORLD_TREE_FACTORY)
   && /const geometry = createLeafGeometry\(\);[\s\S]*?new THREE\.InstancedMesh\(geometry, materials\.amberLeaf, amberCount\)[\s\S]*?new THREE\.InstancedMesh\(geometry, materials\.cyanLeaf, cyanCount\)/.test(WORLD_TREE_FACTORY),
   'Solar Archive supplies 3,016 leaves as two draw-batched instanced sets sharing one geometry');
+ok(/const REPOLIS_LEAF_ATTACHMENT = Object\.freeze\(\{/.test(WORLD_TREE_FACTORY)
+  && /parentSocket: 'fine-branch-contact-anchor'/.test(WORLD_TREE_FACTORY)
+  && /rootLocalY: -0\.42/.test(WORLD_TREE_FACTORY)
+  && /contactType: 'embedded-tip-fan'/.test(WORLD_TREE_FACTORY)
+  && /embedDepth: 0\.075/.test(WORLD_TREE_FACTORY)
+  && /gapTolerance: 0\.015/.test(WORLD_TREE_FACTORY)
+  && /rootPivotScale: 1\.22/.test(WORLD_TREE_FACTORY)
+  && /bladeWidthScale: 1\.18/.test(WORLD_TREE_FACTORY)
+  && /bladeLengthScale: \[1\.6, 2\]/.test(WORLD_TREE_FACTORY)
+  && /maxRadialFraction: 0\.45/.test(WORLD_TREE_FACTORY)
+  && /const leafLength = scale \* bladeLengthScale/.test(WORLD_TREE_FACTORY)
+  && /-REPOLIS_LEAF_ATTACHMENT\.rootLocalY \* leafLength/.test(WORLD_TREE_FACTORY)
+  && /rollQuaternion\.setFromAxisAngle\(up, roll\)/.test(WORLD_TREE_FACTORY)
+  && /anchor\.curve\.getPointAt\(contactT, contact\)/.test(WORLD_TREE_FACTORY)
+  && /anchor\.curve\.getTangentAt\(contactT, contactDirection\)\.normalize\(\)/.test(WORLD_TREE_FACTORY)
+  && /conservativeSurfaceRadius \* REPOLIS_LEAF_ATTACHMENT\.maxRadialFraction/.test(WORLD_TREE_FACTORY)
+  && /position\.copy\(contact\)\.addScaledVector\([\s\S]*?-REPOLIS_LEAF_ATTACHMENT\.rootLocalY \* leafLength/.test(WORLD_TREE_FACTORY)
+  && /transformedRoot\.copy\(localRoot\)\.applyMatrix4\(matrix\)\.distanceTo\(contact\)/.test(WORLD_TREE_FACTORY)
+  && /verifiedRootedInstances: targetCount/.test(WORLD_TREE_FACTORY)
+  && /rootGapPass: maxRootGap <= REPOLIS_LEAF_ATTACHMENT\.gapTolerance/.test(WORLD_TREE_FACTORY)
+  && /surfaceContactPass: minSurfaceInset >= 0/.test(WORLD_TREE_FACTORY)
+  && /finalTransformPolicy: 'shared-living-system-no-independent-foliage-sway'/.test(WORLD_TREE_FACTORY)
+  && !/foliage\.amberLeaves\.rotation|foliage\.cyanLeaves\.rotation/.test(WORLD_TREE_FACTORY)
+  && /const REPOLIS_LEAF_ANCHOR_SAMPLES = Object\.freeze\(\[[\s\S]*?0\.18, 0\.3, 0\.42, 0\.54, 0\.66, 0\.76, 0\.84, 0\.92, 1/.test(WORLD_TREE_FACTORY)
+  && /const leafAnchorSamples = REPOLIS_LEAF_ANCHOR_SAMPLES/.test(WORLD_TREE_FACTORY)
+  && /const leafAnchors = anchorSpecs\.flatMap/.test(WORLD_TREE_FACTORY)
+  && /foliage = createFoliage\(seed, variantConfig, materials, leafAnchors, livingSystem\)/.test(WORLD_TREE_FACTORY)
+  && /sourceSystem: 'deterministic-fine-branch-contact-samples'/.test(WORLD_TREE_FACTORY)
+  && /leafRootedInstances: foliage\?\.attachmentContract\.rootedInstances \?\? 0/.test(WORLD_TREE_FACTORY),
+  'all 3,016 leaf-card roots seat into deterministic branch-tip anchors with explicit overlap and direction contracts');
 ok(/const VISUAL_LOD=\{outlines:\[\],effects:\[\]/.test(visualLodBlock)
   && /_registerOutlineLod\(o,mesh,th\)/.test(HTML)
   && /entry\.projectedPx<1\.25&&entry\.distance>45/.test(visualLodBlock)
@@ -839,8 +905,8 @@ ok(/const pulse = 1\.48 \+ Math\.sin\(elapsedSeconds \* 2\.1\) \* 0\.1/.test(WOR
   && /livingSystem\.rotation\.z = Math\.sin/.test(WORLD_TREE_FACTORY), 'energy copies use a bounded pulse while the guide light, foliage, and living-system motion remain intact');
 ok(/customSockets=\{TaxiArrival:/.test(memorialTreeBlock)
   && /\['left-foundation:tip','right-foundation:tip','left-crown:tip','right-crown:tip'/.test(memorialTreeBlock), 'adapter preserves six Repolis sockets plus eight action-ready factory bough sockets');
-ok(/root\.userData\.repolisAdapter=\{factoryUnmodified:false,factorySourceModified:true,factoryRevision:REPOLIS_FACTORY_REVISION,energyRevision:hero\.runtime\.nodes\['energy-network'\]\?\.userData\.energyRevision\|\|REPOLIS_FACTORY_REVISION,groundVisible:true,pulseDisabled:false[\s\S]*?selectiveBloom:true,sharpGlowInBase:true,depthAware:true,unlitExtraction:true,distanceCompensated:false,emissionPolicy:'constant-world-luminance'/.test(memorialTreeBlock),
-  'runtime metadata records the energy-v2 source revision and constant-luminance depth-aware selective bloom');
+ok(/root\.userData\.repolisAdapter=\{factoryUnmodified:false,factorySourceModified:true,factoryRevision:REPOLIS_FACTORY_REVISION,energyRevision:hero\.runtime\.nodes\['energy-network'\]\?\.userData\.energyRevision\|\|REPOLIS_FACTORY_REVISION,energyProfile:hero\.stats\.energyProfile,groundVisible:true,pulseDisabled:false[\s\S]*?selectiveBloom:true,sharpGlowInBase:true,depthAware:true,unlitExtraction:true,distanceCompensated:false,emissionPolicy:'constant-world-luminance'/.test(memorialTreeBlock),
+  'runtime metadata records the selected energy profile and constant-luminance depth-aware selective bloom');
 ok(/treeBox=_memHeroBox\(MEMORIAL_TREE\.group\)\.expandByScalar\(3\)/.test(HTML)
   && /const g=b\._body\|\|b\._group/.test(HTML)
   && /WorldTree_BuildingDepthProxies/.test(HTML) && /WorldTree_PropDepthProxies/.test(HTML)
@@ -878,10 +944,10 @@ ok(/bloomBounds:\{value:new THREE\.Vector4\(0,0,1,1\)\}/.test(HTML)
 ok(/ratio=MEM_TREE_HERO_SCALE\/MEM_TREE_HERO_NATIVE_SCALE/.test(memorialTreeBlock)
   && !/MEMORIAL_TREE\.light\.intensity\*=/.test(memorialTreeBlock)
   && /MEMORIAL_TREE\.light\.distance=7\*ratio/.test(memorialTreeBlock), 'factory PointLight keeps its authored local range and exact pulse intensity');
-ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x4f240c\); m\.bark\.emissiveIntensity=0\.14; m\.amberLeaf\.emissiveIntensity=0\.58; m\.cyanLeaf\.emissiveIntensity=0\.78/.test(memorialTreeBlock)
+ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x4f240c\); m\.bark\.emissiveIntensity=0\.14; m\.ornamentEnergy\.emissiveIntensity=1\.9\+Math\.sin\(elapsed\*2\.3\)\*0\.08; m\.amberLeaf\.emissiveIntensity=0\.58; m\.cyanLeaf\.emissiveIntensity=0\.78/.test(memorialTreeBlock)
   && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=1\.3; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
   && /else \{ m\.bark\.emissive\.setHex\(0x603016\)/.test(memorialTreeBlock)
-  && /m\.amberLeaf\.emissiveIntensity=0\.28; m\.cyanLeaf\.emissiveIntensity=0\.34/.test(memorialTreeBlock)
+  && /m\.energy\.emissiveIntensity=0\.28; m\.ornamentEnergy\.emissiveIntensity=0\.36; m\.amberLeaf\.emissiveIntensity=0\.28; m\.cyanLeaf\.emissiveIntensity=0\.34/.test(memorialTreeBlock)
   && /_setWorldTreeGlowLayers\(night\)/.test(HTML)
   && /worldBloom\.strength=night\?1\.35:0\.04/.test(HTML), 'day calms ornaments while night gives every amber/cyan leaf a readable emissive base');
 ok(/effectPhase=isNight\|\|WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'/.test(HTML), 'day/dawn/dusk final mode skips emissive and bloom HDR passes entirely');
@@ -902,8 +968,12 @@ ok(/MEM_TREE_BLOOM_HZ=LOW_END\?20:30/.test(HTML)
   'the invariant glow cache refreshes at 20–30Hz while the base scene remains responsive');
 ok(/pulse=REDUCED\?1:\(0\.93\+Math\.sin\(elapsed\*1\.5\)\*0\.07\)/.test(memorialTreeBlock),
   'reduced-motion keeps the additive world-tree halos steady');
-ok(/geometry\.scale\(1\.22,1\.22,1\.22\)/.test(memorialTreeBlock)
-  && /leafScale:1\.22/.test(memorialTreeBlock), 'adapter enlarges factory leaf cards without changing their count, anchors, or hierarchy');
+ok(/geometry\.translate\(0, -REPOLIS_LEAF_ATTACHMENT\.rootLocalY, 0\)/.test(WORLD_TREE_FACTORY)
+  && /REPOLIS_LEAF_ATTACHMENT\.rootPivotScale/.test(WORLD_TREE_FACTORY)
+  && /geometry\.translate\(0, REPOLIS_LEAF_ATTACHMENT\.rootLocalY, 0\)/.test(WORLD_TREE_FACTORY)
+  && !/geometry\.scale\(1\.22,1\.22,1\.22\)/.test(memorialTreeBlock)
+  && /leafScale:1\.22,leafScaleMode:'factory-root-pivot'/.test(memorialTreeBlock),
+  'factory enlarges leaf cards around their root pivot while the adapter leaves attachment geometry unchanged');
 ok(/renderer\.setRenderTarget\(emissiveTarget\)[\s\S]*?renderer\.render\(scene,camera\);[\s\S]*?_recordRenderPass\('emissive'[\s\S]*?treeComposer\.render\(\)/.test(HTML)
   && /renderer\.shadowMap\.needsUpdate=refreshTownShadows; renderer\.setRenderTarget\(baseTarget\)/.test(HTML)
   && /renderer\.shadowMap\.needsUpdate=false/.test(HTML), 'one measured linear emissive render feeds bloom after the optional town shadow refresh is consumed');

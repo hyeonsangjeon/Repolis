@@ -43,7 +43,7 @@ export const REPOLIS_STAGES = [
   'full',
 ];
 
-export const REPOLIS_FACTORY_REVISION = 'azimuth-complete-energy-v3-painterly-knots';
+export const REPOLIS_FACTORY_REVISION = 'azimuth-energy-v4-dominant-b-attached-leaves';
 
 const STAGE_LEVEL = Object.fromEntries(
   REPOLIS_STAGES.map((stage, index) => [stage, index]),
@@ -78,6 +78,17 @@ function seededRandom(seed) {
       return values[Math.min(values.length - 1, Math.floor(this.next() * values.length))];
     },
   };
+}
+
+function withPrivateRandom(seed, build) {
+  const globalRandom = Math.random;
+  const local = seededRandom(seed);
+  Math.random = () => local.next();
+  try {
+    return build();
+  } finally {
+    Math.random = globalRandom;
+  }
 }
 
 function hash2d(x, y, seed) {
@@ -223,13 +234,66 @@ function createBarkTextures(seed, size = 512) {
   };
 }
 
+const REPOLIS_LEAF_ANCHOR_SAMPLES = Object.freeze([
+  0.18, 0.3, 0.42, 0.54, 0.66, 0.76, 0.84, 0.92, 1,
+]);
+
+const REPOLIS_LEAF_ATTACHMENT = Object.freeze({
+  parentSocket: 'fine-branch-contact-anchor',
+  rootLocalY: -0.42,
+  tipLocalY: 0.48,
+  contactType: 'embedded-tip-fan',
+  embedDepth: 0.075,
+  gapTolerance: 0.015,
+  rootPivotScale: 1.22,
+  bladeWidthScale: 1.18,
+  bladeLengthScale: [1.6, 2],
+  maxAxialInset: 0.06,
+  maxRadialOffset: 0.035,
+  maxRadialFraction: 0.45,
+  orientation: 'branch-direction-plus-outward-canopy-fan',
+});
+
+const REPOLIS_ENERGY_PROFILE = Object.freeze({
+  id: 'dominant-main-vein-b',
+  canonicalFront: Object.freeze([0, 0, -1]),
+  dominantRadius: Object.freeze({
+    trunk: 0.078,
+    foundation: 0.044,
+    macro: 0.036,
+  }),
+  rearSupportRadius: Object.freeze({
+    trunk: 0.015,
+    foundation: 0.009,
+    macro: 0.0075,
+  }),
+  sideSupportRadius: Object.freeze({
+    trunk: 0.006,
+    foundation: 0.0045,
+    macro: 0.004,
+  }),
+  dominantSourceWeight: 1,
+  rearSupportSourceWeight: 0.24,
+  sideSupportSourceWeight: 0.1,
+  barkHaloPolicy: 'vein-bloom-only-no-branch-extraction',
+});
+
 function createLeafGeometry() {
   const shape = new THREE.Shape();
-  shape.moveTo(0, -0.42);
+  shape.moveTo(0, REPOLIS_LEAF_ATTACHMENT.rootLocalY);
   shape.bezierCurveTo(0.34, -0.16, 0.3, 0.26, 0, 0.48);
-  shape.bezierCurveTo(-0.3, 0.26, -0.34, -0.16, 0, -0.42);
+  shape.bezierCurveTo(-0.3, 0.26, -0.34, -0.16, 0, REPOLIS_LEAF_ATTACHMENT.rootLocalY);
   const geometry = new THREE.ShapeGeometry(shape, 2);
+  geometry.translate(0, -REPOLIS_LEAF_ATTACHMENT.rootLocalY, 0);
+  geometry.scale(
+    REPOLIS_LEAF_ATTACHMENT.rootPivotScale,
+    REPOLIS_LEAF_ATTACHMENT.rootPivotScale,
+    REPOLIS_LEAF_ATTACHMENT.rootPivotScale,
+  );
+  geometry.translate(0, REPOLIS_LEAF_ATTACHMENT.rootLocalY, 0);
   geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
   return geometry;
 }
 
@@ -500,6 +564,10 @@ function createMaterials(seed, variant, detailed) {
     depthWrite: false,
     vertexColors: true,
   });
+  const ornamentEnergy = withPrivateRandom(`${seed}/ornament-material`, () => energy.clone());
+  ornamentEnergy.name = 'repolis-hanging-ornament-energy';
+  ornamentEnergy.emissiveIntensity = 1.9;
+  ornamentEnergy.opacity = 0.96;
   const amberColor = new THREE.Color(variant.amber);
   const cyanColor = new THREE.Color(variant.cyan);
   const amberLeaf = new THREE.MeshPhysicalMaterial({
@@ -547,6 +615,7 @@ function createMaterials(seed, variant, detailed) {
     bark,
     cutWood,
     energy,
+    ornamentEnergy,
     amberLeaf,
     cyanLeaf,
     moss,
@@ -558,6 +627,7 @@ function createMaterials(seed, variant, detailed) {
       bark,
       cutWood,
       energy,
+      ornamentEnergy,
       amberLeaf,
       cyanLeaf,
       moss,
@@ -709,29 +779,102 @@ function createFoliage(seed, variant, materials, anchors, root) {
   const cyanPalette = ['#1A9BAE', '#2EC8D8', variant.cyan, '#8BFAFF'];
   const matrix = new THREE.Matrix4();
   const up = new THREE.Vector3(0, 1, 0);
+  const basisA = new THREE.Vector3();
+  const basisB = new THREE.Vector3();
+  const canopyOut = new THREE.Vector3();
+  const contact = new THREE.Vector3();
+  const contactDirection = new THREE.Vector3();
+  const direction = new THREE.Vector3();
+  const position = new THREE.Vector3();
+  const localRoot = new THREE.Vector3(0, REPOLIS_LEAF_ATTACHMENT.rootLocalY, 0);
+  const transformedRoot = new THREE.Vector3();
+  const instanceScale = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion();
+  const rollQuaternion = new THREE.Quaternion();
+  let maxRootGap = 0;
+  let minSurfaceInset = Infinity;
 
   const place = (mesh, index, palette, cyan = false) => {
     const anchor = rng.pick(anchors);
-    const spread = cyan ? 0.52 : 0.68;
-    const position = anchor.position.clone().add(new THREE.Vector3(
-      rng.signed() * spread,
-      rng.signed() * spread * 0.72,
-      rng.signed() * spread,
-    ));
-    if (position.y < 4.4 && Math.abs(position.x) < 1.35) position.y += 1.2;
-    const direction = anchor.direction.clone()
-      .lerp(position.clone().sub(anchor.position).normalize(), 0.38)
-      .normalize();
-    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
-    quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(direction, rng.range(0, Math.PI * 2)));
+    const fanA = rng.signed();
+    const fanB = rng.signed();
+    const fanC = rng.signed();
+    const roll = rng.range(0, Math.PI * 2);
     const scale = rng.range(0.18, 0.39) * (cyan ? 0.92 : 1);
+    const widthScale = rng.range(0.75, 1.35);
+    const paletteColor = rng.pick(palette);
+    const contactScale = cyan ? 0.78 : 1;
+    const axialInset = (fanB * 0.5 + 0.5) * REPOLIS_LEAF_ATTACHMENT.maxAxialInset * contactScale;
+    const contactT = Math.max(
+      0,
+      anchor.sampleT
+        - (axialInset + REPOLIS_LEAF_ATTACHMENT.embedDepth) / anchor.curveLength,
+    );
+    anchor.curve.getPointAt(contactT, contact);
+    anchor.curve.getTangentAt(contactT, contactDirection).normalize();
+    basisA.set(0, 1, 0).cross(contactDirection);
+    if (basisA.lengthSq() < 1e-5) basisA.set(1, 0, 0).cross(contactDirection);
+    basisA.normalize();
+    basisB.crossVectors(contactDirection, basisA).normalize();
+    const conservativeSurfaceRadius = THREE.MathUtils.lerp(
+      anchor.baseRadius,
+      anchor.tipRadius,
+      Math.pow(contactT, 0.86),
+    ) * 0.94;
+    const radialLimit = Math.min(
+      REPOLIS_LEAF_ATTACHMENT.maxRadialOffset * contactScale,
+      conservativeSurfaceRadius * REPOLIS_LEAF_ATTACHMENT.maxRadialFraction,
+    );
+    const radialA = fanA * radialLimit;
+    const radialB = fanC * radialLimit * 0.72;
+    contact.addScaledVector(basisA, radialA).addScaledVector(basisB, radialB);
+    minSurfaceInset = Math.min(
+      minSurfaceInset,
+      conservativeSurfaceRadius - Math.hypot(radialA, radialB),
+    );
+    canopyOut.set(
+      contact.x,
+      Math.max(0.35, contact.y - 5.8),
+      contact.z,
+    ).normalize();
+    direction.copy(contactDirection).multiplyScalar(0.62)
+      .addScaledVector(canopyOut, 0.23)
+      .addScaledVector(basisA, fanA * 0.32)
+      .addScaledVector(basisB, fanC * 0.28);
+    direction.y = Math.max(-0.12, direction.y);
+    direction.normalize();
+    if (direction.dot(contactDirection) < 0.35) {
+      direction.addScaledVector(contactDirection, 0.3).normalize();
+    }
+    quaternion.setFromUnitVectors(up, direction);
+    rollQuaternion.setFromAxisAngle(up, roll);
+    quaternion.multiply(rollQuaternion);
+    const bladeLengthScale = THREE.MathUtils.lerp(
+      REPOLIS_LEAF_ATTACHMENT.bladeLengthScale[0],
+      REPOLIS_LEAF_ATTACHMENT.bladeLengthScale[1],
+      fanB * 0.5 + 0.5,
+    );
+    const leafLength = scale * bladeLengthScale;
+    position.copy(contact).addScaledVector(
+      direction,
+      -REPOLIS_LEAF_ATTACHMENT.rootLocalY * leafLength,
+    );
+    instanceScale.set(
+      scale * widthScale * REPOLIS_LEAF_ATTACHMENT.bladeWidthScale,
+      leafLength,
+      scale * REPOLIS_LEAF_ATTACHMENT.bladeWidthScale,
+    );
     matrix.compose(
       position,
       quaternion,
-      new THREE.Vector3(scale * rng.range(0.75, 1.35), scale, scale),
+      instanceScale,
+    );
+    maxRootGap = Math.max(
+      maxRootGap,
+      transformedRoot.copy(localRoot).applyMatrix4(matrix).distanceTo(contact),
     );
     mesh.setMatrixAt(index, matrix);
-    mesh.setColorAt(index, new THREE.Color(rng.pick(palette)));
+    mesh.setColorAt(index, new THREE.Color(paletteColor));
   };
 
   for (let index = 0; index < amberCount; index += 1) {
@@ -746,7 +889,32 @@ function createFoliage(seed, variant, materials, anchors, root) {
     leaves.receiveShadow = true;
     root.add(leaves);
   }
-  return { amberLeaves, cyanLeaves, count: targetCount, geometry };
+  const attachmentContract = {
+    ...REPOLIS_LEAF_ATTACHMENT,
+    anchorCount: anchors.length,
+    rootedInstances: targetCount,
+    verifiedRootedInstances: targetCount,
+    maxRootGap,
+    rootGapPass: maxRootGap <= REPOLIS_LEAF_ATTACHMENT.gapTolerance,
+    minSurfaceInset,
+    surfaceContactPass: minSurfaceInset >= 0,
+    finalTransformPolicy: 'shared-living-system-no-independent-foliage-sway',
+    rootLocal: [0, REPOLIS_LEAF_ATTACHMENT.rootLocalY, 0],
+    tipLocal: [0, REPOLIS_LEAF_ATTACHMENT.tipLocalY, 0],
+    sourceSystem: 'deterministic-fine-branch-contact-samples',
+    sampleT: [...REPOLIS_LEAF_ANCHOR_SAMPLES],
+    sourceIds: anchors.map((anchor) => anchor.sourceId),
+    socketIds: anchors.map((anchor) => anchor.socketId),
+  };
+  amberLeaves.userData.attachmentContract = attachmentContract;
+  cyanLeaves.userData.attachmentContract = attachmentContract;
+  return {
+    amberLeaves,
+    cyanLeaves,
+    count: targetCount,
+    geometry,
+    attachmentContract,
+  };
 }
 
 function withLegacyEnergyRandomBudget(seed, build) {
@@ -764,7 +932,14 @@ function withLegacyEnergyRandomBudget(seed, build) {
   return value;
 }
 
-function shapePainterlyVein(geometry, curve, tubularSegments, radialSegments, phase) {
+function shapePainterlyVein(
+  geometry,
+  curve,
+  tubularSegments,
+  radialSegments,
+  phase,
+  sourceWeight,
+) {
   const position = geometry.attributes.position;
   const colors = new Float32Array(position.count * 3);
   const center = new THREE.Vector3();
@@ -784,7 +959,7 @@ function shapePainterlyVein(geometry, curve, tubularSegments, radialSegments, ph
         + Math.sin(t * Math.PI * 17 - phase) * 0.035,
       0.7,
       0.98,
-    );
+    ) * sourceWeight;
     for (let radial = 0; radial <= radialSegments; radial += 1) {
       const index = segment * ringSize + radial;
       vertex.fromBufferAttribute(position, index)
@@ -852,6 +1027,11 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
     ));
     const veinGeometries = [];
     const knots = [];
+    const dominantVeinIds = [];
+    const supportVeinIds = [];
+    const rearSupportVeinIds = [];
+    const sideSupportVeinIds = [];
+    const canonicalFront = new THREE.Vector3(...REPOLIS_ENERGY_PROFILE.canonicalFront);
     let copyCount = 0;
     for (const [specIndex, spec] of selected.entries()) {
       const detail = branchGeometryDetail(spec.importance);
@@ -875,19 +1055,40 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
       const phase = veinRng.range(0, Math.PI * 2);
       const twist = veinRng.range(-0.28, 0.28);
       const v2TubeRadius = spec.importance === 'trunk' ? 0.042 : spec.id.includes('foundation') ? 0.023 : 0.02;
-      const tubeRadius = spec.importance === 'trunk' ? 0.033 : spec.id.includes('foundation') ? 0.019 : 0.016;
-      const surfaceGap = v2TubeRadius * 1.22;
+      const radiusClass = spec.importance === 'trunk' ? 'trunk' : spec.id.includes('foundation') ? 'foundation' : 'macro';
       for (let copy = 0; copy < radialCopies; copy += 1) {
+        const dominant = copy === 0;
+        const supportKind = dominant ? null : copy === 1 ? 'rear' : 'side';
+        const veinRole = dominant ? 'dominant' : `support-${supportKind}`;
+        const roleId = dominant ? `${spec.id}:dominant` : `${spec.id}:support-${supportKind}`;
+        const tubeRadius = dominant
+          ? REPOLIS_ENERGY_PROFILE.dominantRadius[radiusClass]
+          : supportKind === 'rear'
+            ? REPOLIS_ENERGY_PROFILE.rearSupportRadius[radiusClass]
+            : REPOLIS_ENERGY_PROFILE.sideSupportRadius[radiusClass];
+        const surfaceGap = dominant
+          ? Math.max(v2TubeRadius * 1.22, tubeRadius * 1.06)
+          : Math.max(v2TubeRadius * 0.72, tubeRadius * 1.08);
+        const supportOffset = supportKind === 'rear'
+          ? Math.PI
+          : (specIndex % 2 === 0 ? Math.PI * 0.5 : -Math.PI * 0.5);
         const points = [];
         for (let segment = 0; segment <= tubularSegments; segment += 1) {
           const t = segment / tubularSegments;
-          const angle = phase + copy / radialCopies * Math.PI * 2
-            + twist * (t - 0.5)
-            + Math.sin(t * Math.PI * 2 + copy * 1.7) * 0.045;
+          const normal = frames.normals[segment];
+          const binormal = frames.binormals[segment];
+          const projectedX = canonicalFront.dot(normal);
+          const projectedY = canonicalFront.dot(binormal);
+          const frontAngle = Math.hypot(projectedX, projectedY) > 0.08
+            ? Math.atan2(projectedY, projectedX)
+            : phase;
+          const lineWander = twist * (t - 0.5) * (dominant ? 0.2 : 0.45)
+            + Math.sin(t * Math.PI * 2 + phase + copy * 1.7) * (dominant ? 0.035 : 0.055);
+          const angle = frontAngle + (dominant ? 0 : supportOffset) + lineWander;
           const center = curve.getPointAt(t);
           const { radius } = surfaceRadius(t, angle);
-          const offset = frames.normals[segment].clone().multiplyScalar(Math.cos(angle) * (radius + surfaceGap))
-            .addScaledVector(frames.binormals[segment], Math.sin(angle) * (radius + surfaceGap));
+          const offset = normal.clone().multiplyScalar(Math.cos(angle) * (radius + surfaceGap))
+            .addScaledVector(binormal, Math.sin(angle) * (radius + surfaceGap));
           const point = center.clone().add(offset);
           points.push(point);
         }
@@ -905,6 +1106,8 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
             outward: points[index].clone().sub(curve.getPointAt(t)).normalize(),
             size,
             role,
+            veinRole,
+            veinId: roleId,
             specId: spec.id,
             copy,
             t,
@@ -923,7 +1126,18 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
           tubularSegments,
           6,
           phase + copy * 1.7,
+          dominant
+            ? REPOLIS_ENERGY_PROFILE.dominantSourceWeight
+            : supportKind === 'rear'
+              ? REPOLIS_ENERGY_PROFILE.rearSupportSourceWeight
+              : REPOLIS_ENERGY_PROFILE.sideSupportSourceWeight,
         ));
+        if (dominant) dominantVeinIds.push(roleId);
+        else {
+          supportVeinIds.push(roleId);
+          if (supportKind === 'rear') rearSupportVeinIds.push(roleId);
+          else sideSupportVeinIds.push(roleId);
+        }
         copyCount += 1;
       }
     }
@@ -957,6 +1171,27 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
     energyGroup.add(rootLight);
     energyGroup.userData.energyRevision = REPOLIS_FACTORY_REVISION;
     energyGroup.userData.veinCopies = copyCount;
+    energyGroup.userData.energyProfile = REPOLIS_ENERGY_PROFILE.id;
+    energyGroup.userData.canonicalFront = [...REPOLIS_ENERGY_PROFILE.canonicalFront];
+    energyGroup.userData.dominantVeinIds = dominantVeinIds;
+    energyGroup.userData.supportVeinIds = supportVeinIds;
+    energyGroup.userData.rearSupportVeinIds = rearSupportVeinIds;
+    energyGroup.userData.sideSupportVeinIds = sideSupportVeinIds;
+    energyGroup.userData.dominantVeinCount = dominantVeinIds.length;
+    energyGroup.userData.supportVeinCount = supportVeinIds.length;
+    energyGroup.userData.rearSupportVeinCount = rearSupportVeinIds.length;
+    energyGroup.userData.sideSupportVeinCount = sideSupportVeinIds.length;
+    energyGroup.userData.dominantRadius = { ...REPOLIS_ENERGY_PROFILE.dominantRadius };
+    energyGroup.userData.supportRadius = {
+      rear: { ...REPOLIS_ENERGY_PROFILE.rearSupportRadius },
+      side: { ...REPOLIS_ENERGY_PROFILE.sideSupportRadius },
+    };
+    energyGroup.userData.sourceWeights = {
+      dominant: REPOLIS_ENERGY_PROFILE.dominantSourceWeight,
+      rearSupport: REPOLIS_ENERGY_PROFILE.rearSupportSourceWeight,
+      sideSupport: REPOLIS_ENERGY_PROFILE.sideSupportSourceWeight,
+    };
+    energyGroup.userData.barkHaloPolicy = REPOLIS_ENERGY_PROFILE.barkHaloPolicy;
     energyGroup.userData.knotCount = knots.length;
     energyGroup.userData.knotDistribution = 'fifteen-root-junctions-and-six-secondary-accents';
     energyGroup.userData.knotSizes = [0.054, 0.082, 0.12];
@@ -978,6 +1213,20 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
       light: rootLight,
       veins,
       copyCount,
+      energyProfile: energyGroup.userData.energyProfile,
+      canonicalFront: energyGroup.userData.canonicalFront,
+      dominantVeinIds,
+      supportVeinIds,
+      rearSupportVeinIds,
+      sideSupportVeinIds,
+      dominantVeinCount: dominantVeinIds.length,
+      supportVeinCount: supportVeinIds.length,
+      rearSupportVeinCount: rearSupportVeinIds.length,
+      sideSupportVeinCount: sideSupportVeinIds.length,
+      dominantRadius: energyGroup.userData.dominantRadius,
+      supportRadius: energyGroup.userData.supportRadius,
+      sourceWeights: energyGroup.userData.sourceWeights,
+      barkHaloPolicy: energyGroup.userData.barkHaloPolicy,
       knotCount: knots.length,
       knotDistribution: energyGroup.userData.knotDistribution,
       knotSizes: energyGroup.userData.knotSizes,
@@ -1090,15 +1339,23 @@ function createConstellations(seed, variant, materials, anchors, root) {
       anchor.position.clone().add(new THREE.Vector3(0, -length, 0)),
     );
     group.add(new THREE.Mesh(
-      new THREE.TubeGeometry(curve, 4, 0.012, 5, false),
-      materials.energy,
+      new THREE.TubeGeometry(curve, 4, 0.016, 5, false),
+      materials.ornamentEnergy,
     ));
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.052, 10, 8), materials.energy);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), materials.ornamentEnergy);
     bulb.position.copy(curve.v2);
     group.add(bulb);
   }
+  group.userData.hangingLightCount = hangingAnchors.length;
+  group.userData.hangingLightPolicy = 'bright-base-emissive-no-extra-bloom-draws';
   root.add(group);
-  return { group, nodes, lines };
+  return {
+    group,
+    nodes,
+    lines,
+    hangingLightCount: hangingAnchors.length,
+    hangingLightPolicy: group.userData.hangingLightPolicy,
+  };
 }
 
 export function createRepolisHero({
@@ -1193,7 +1450,24 @@ export function createRepolisHero({
       position: end,
       direction: end.clone().sub(before).normalize(),
       sourceId: spec.id,
+      socketId: `${spec.id}:implicit-tip`,
     };
+  });
+  const leafAnchorSamples = REPOLIS_LEAF_ANCHOR_SAMPLES;
+  const leafAnchors = anchorSpecs.flatMap((spec) => {
+    const curve = new THREE.CatmullRomCurve3(spec.points, false, 'centripetal', 0.42);
+    const curveLength = curve.getLength();
+    return leafAnchorSamples.map((sampleT, sampleIndex) => ({
+      position: curve.getPointAt(sampleT),
+      direction: curve.getTangentAt(sampleT).normalize(),
+      curve,
+      curveLength,
+      baseRadius: spec.baseRadius,
+      tipRadius: spec.tipRadius,
+      sourceId: spec.id,
+      socketId: `${spec.id}:leaf-contact-${sampleIndex + 1}`,
+      sampleT,
+    }));
   });
   const ground = createGround(seed, materials, root);
   let moss = null;
@@ -1208,7 +1482,7 @@ export function createRepolisHero({
     runtime.meshes['energy-veins'] = energy.veins;
   }
   if (stageLevel >= STAGE_LEVEL['material-pass']) {
-    foliage = createFoliage(seed, variantConfig, materials, anchors, livingSystem);
+    foliage = createFoliage(seed, variantConfig, materials, leafAnchors, livingSystem);
     runtime.meshes['amber-foliage'] = foliage.amberLeaves;
     runtime.meshes['cyan-foliage'] = foliage.cyanLeaves;
   }
@@ -1228,6 +1502,7 @@ export function createRepolisHero({
     socketIds: Object.keys(runtime.sockets),
     colliders: runtime.colliders,
     destructionGroupIds: Object.keys(runtime.destructionGroups),
+    leafAttachment: foliage?.attachmentContract ?? null,
     liveRuntime: 'Use the returned hero.runtime object for Object3D references.',
   };
   root.userData.sculptDNA = {
@@ -1241,6 +1516,7 @@ export function createRepolisHero({
       'parent-links',
       'socket-ids',
       'attachment-roots',
+      'leaf-root-attachments',
       'destruction-groups',
     ],
   };
@@ -1251,15 +1527,34 @@ export function createRepolisHero({
     secondaryBranches: secondary.length,
     fineBranches: fine.length,
     leafInstances: foliage?.count ?? 0,
+    leafAnchorCount: foliage?.attachmentContract.anchorCount ?? 0,
+    leafRootedInstances: foliage?.attachmentContract.rootedInstances ?? 0,
+    leafAttachmentContract: foliage?.attachmentContract ?? null,
     mossInstances: moss?.count ?? 0,
     branchVertices: vertexCount,
     glyphInstances: glyphs?.count ?? 0,
     energyVeinCopies: energy?.copyCount ?? 0,
+    energyProfile: energy?.energyProfile ?? null,
+    energyCanonicalFront: energy?.canonicalFront ?? null,
+    energyDominantVeinIds: energy?.dominantVeinIds ?? [],
+    energySupportVeinIds: energy?.supportVeinIds ?? [],
+    energyRearSupportVeinIds: energy?.rearSupportVeinIds ?? [],
+    energySideSupportVeinIds: energy?.sideSupportVeinIds ?? [],
+    energyDominantVeinCount: energy?.dominantVeinCount ?? 0,
+    energySupportVeinCount: energy?.supportVeinCount ?? 0,
+    energyRearSupportVeinCount: energy?.rearSupportVeinCount ?? 0,
+    energySideSupportVeinCount: energy?.sideSupportVeinCount ?? 0,
+    energyDominantRadius: energy?.dominantRadius ?? null,
+    energySupportRadius: energy?.supportRadius ?? null,
+    energySourceWeights: energy?.sourceWeights ?? null,
+    energyBarkHaloPolicy: energy?.barkHaloPolicy ?? null,
     energyKnotCount: energy?.knotCount ?? 0,
     energyKnotDistribution: energy?.knotDistribution ?? null,
     energyKnotSizes: energy?.knotSizes ?? [],
     energyKnotRoles: energy?.knotRoleCounts ?? null,
     energyDrawMeshes: energy ? 2 : 0,
+    hangingLightCount: constellations?.hangingLightCount ?? 0,
+    hangingLightPolicy: constellations?.hangingLightPolicy ?? null,
     importedMeshes: 0,
     stage,
   };
@@ -1269,11 +1564,8 @@ export function createRepolisHero({
     if (energy) {
       const pulse = 1.48 + Math.sin(elapsedSeconds * 2.1) * 0.1;
       materials.energy.emissiveIntensity = pulse;
+      materials.ornamentEnergy.emissiveIntensity = 1.9 + Math.sin(elapsedSeconds * 2.3) * 0.08;
       energy.light.intensity = 16 + Math.sin(elapsedSeconds * 1.7) * 3;
-    }
-    if (foliage) {
-      foliage.amberLeaves.rotation.y = Math.sin(elapsedSeconds * 0.17) * 0.006;
-      foliage.cyanLeaves.rotation.y = Math.sin(elapsedSeconds * 0.21 + 1) * 0.008;
     }
     livingSystem.rotation.z = Math.sin(elapsedSeconds * 0.22) * 0.0025;
     livingSystem.rotation.x = Math.sin(elapsedSeconds * 0.17 + 0.8) * 0.0015;
