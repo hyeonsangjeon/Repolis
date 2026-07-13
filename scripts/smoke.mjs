@@ -660,9 +660,9 @@ ok(memorialTreeBlock.length > 0, 'world-tree procedural block is extractable fro
 ok(visualLodBlock.length > 0, 'projected-size visual LOD block is extractable from index.html');
 ok(staticInstanceBlock.length > 0, 'exact-static instance block is extractable from index.html');
 ok(buildingLodPrototypeBlock.length > 0, '2C-A representative building LOD block is extractable from index.html');
-ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '0d9310ba5a5f70f8ac95a9771a09ca66364c07d9bb15a74b3e8ce6a6972f6a56',
-  'Repolis factory provenance is pinned to azimuth-complete-energy-v3-knots');
-ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-complete-energy-v3-knots-r2'/.test(HTML)
+ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '307c48d6ea5bc1bda8abc3074df64a663f3ad6f1c4f6d894206d12372d24b97a',
+  'Repolis factory provenance is pinned to azimuth-complete-energy-v3-painterly-knots');
+ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-complete-energy-v3-painterly-knots-r1'/.test(HTML)
   && /import \{ mergeGeometries \} from 'three\/addons\/utils\/BufferGeometryUtils\.js'/.test(WORLD_TREE_FACTORY), 'native Solar Archive factory resolves through the existing Three.js import map');
 ok(/import \{ EffectComposer \}/.test(HTML) && /import \{ TexturePass \}/.test(HTML) && /import \{ UnrealBloomPass \}/.test(HTML)
   && /import \{ ShaderPass \}/.test(HTML) && /import \{ OutputPass \}/.test(HTML)
@@ -695,7 +695,7 @@ ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
 ok(/macroBranchSpecs\(\)/.test(WORLD_TREE_FACTORY) && /secondaryBranches\(spec, seed/.test(WORLD_TREE_FACTORY)
   && /fineBranches\(spec, seed\)/.test(WORLD_TREE_FACTORY) && /mergedFineGeometry/.test(WORLD_TREE_FACTORY), 'factory preserves macro → secondary → merged fine branch hierarchy');
-ok(/REPOLIS_FACTORY_REVISION = 'azimuth-complete-energy-v3-knots'/.test(WORLD_TREE_FACTORY)
+ok(/REPOLIS_FACTORY_REVISION = 'azimuth-complete-energy-v3-painterly-knots'/.test(WORLD_TREE_FACTORY)
   && /function createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
   && /const surfaceRadius = createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
   && /const \{ radius, ridges \} = surfaceRadius\(t, angle\)/.test(WORLD_TREE_FACTORY)
@@ -712,14 +712,24 @@ ok(/function withLegacyEnergyRandomBudget\(seed, build\)/.test(WORLD_TREE_FACTOR
   && /runtime\.nodes\['energy-network'\] = energy\.group/.test(WORLD_TREE_FACTORY)
   && /runtime\.sockets\['energy:root'\] = energy\.core/.test(WORLD_TREE_FACTORY), 'energy v3 preserves the procedural RNG boundary and stable action-ready node/socket IDs');
 ok(/const v2TubeRadius = spec\.importance === 'trunk' \? 0\.042/.test(WORLD_TREE_FACTORY)
-  && /const tubeRadius = spec\.importance === 'trunk' \? 0\.036/.test(WORLD_TREE_FACTORY)
-  && /const surfaceGap = v2TubeRadius \* 1\.22/.test(WORLD_TREE_FACTORY), 'v3 thins veins without moving the accepted v2 bark-surface path centers');
-ok(/role: 'root-junction'/.test(WORLD_TREE_FACTORY)
-  && /role: 'secondary-gathering'/.test(WORLD_TREE_FACTORY)
-  && /new THREE\.SphereGeometry\(knot\.size, 10, 7\)/.test(WORLD_TREE_FACTORY)
+  && /const tubeRadius = spec\.importance === 'trunk' \? 0\.033 : spec\.id\.includes\('foundation'\) \? 0\.019 : 0\.016/.test(WORLD_TREE_FACTORY)
+  && /const surfaceGap = v2TubeRadius \* 1\.22/.test(WORLD_TREE_FACTORY)
+  && /function shapePainterlyVein\(/.test(WORLD_TREE_FACTORY)
+  && /geometry\.setAttribute\('color', new THREE\.BufferAttribute\(colors, 3\)\)/.test(WORLD_TREE_FACTORY), 'v3 uses thinner variable-weight pigment while keeping the accepted v2 bark-surface path centers');
+ok(/function createOrganicEnergyKnotGeometry\(knot, seed\)/.test(WORLD_TREE_FACTORY)
+  && /new THREE\.SphereGeometry\(1, 9, 6\)/.test(WORLD_TREE_FACTORY)
+  && /knotAt\(rootIndex,[^\n]+, 'root-junction'\)/.test(WORLD_TREE_FACTORY)
+  && /knotAt\(secondaryIndex,[^\n]+, 'secondary-accent'\)/.test(WORLD_TREE_FACTORY)
+  && /spec\.importance === 'trunk' \|\| spec\.id\.includes\('foundation'\) \|\| copy === 0/.test(WORLD_TREE_FACTORY)
+  && /\(specIndex \* 2 \+ copy\) % 4 === 0/.test(WORLD_TREE_FACTORY)
   && /knotCount = knots\.length/.test(WORLD_TREE_FACTORY)
-  && /knotDistribution = 'one-root-junction-and-one-secondary-per-vein'/.test(WORLD_TREE_FACTORY)
-  && /knotSizes = \[0\.065, 0\.1, 0\.15\]/.test(WORLD_TREE_FACTORY), 'v3 adds two deterministic three-size bark-attached energy knots per vein into the existing core mesh');
+  && /knotDistribution = 'fifteen-root-junctions-and-six-secondary-accents'/.test(WORLD_TREE_FACTORY)
+  && /knotSizes = \[0\.054, 0\.082, 0\.12\]/.test(WORLD_TREE_FACTORY)
+  && /knotRoleCounts = \{/.test(WORLD_TREE_FACTORY)
+  && /const readabilityLift = root \? 1\.12 : 1\.15/.test(WORLD_TREE_FACTORY)
+  && /const radialLift = 1 \+ \(readabilityLift - 1\) \* 0\.6/.test(WORLD_TREE_FACTORY)
+  && /const depthLift = 1 \+ \(readabilityLift - 1\) \* 0\.35/.test(WORLD_TREE_FACTORY),
+  'v3 merges 21 deterministic asymmetric seed/flame knots with a bounded, non-spherical readability lift');
 ok(/Math\.round\(2600 \* variant\.foliageDensity\)/.test(WORLD_TREE_FACTORY)
   && /id: 'solar-archive'[\s\S]*?foliageDensity: 1\.16[\s\S]*?cyanRatio: 0\.1/.test(WORLD_TREE_FACTORY)
   && /const geometry = createLeafGeometry\(\);[\s\S]*?new THREE\.InstancedMesh\(geometry, materials\.amberLeaf, amberCount\)[\s\S]*?new THREE\.InstancedMesh\(geometry, materials\.cyanLeaf, cyanCount\)/.test(WORLD_TREE_FACTORY),
@@ -824,7 +834,7 @@ ok((WORLD_TREE_FACTORY.match(/new THREE\.PointLight/g)||[]).length===1
   && /o\.name='WorldTree_GuideLight'; o\.castShadow=false/.test(memorialTreeBlock)
   && /MEMORIAL_TREE\.hero\.update\(elapsed\)/.test(memorialTreeBlock)
   && /_memHeroUpdate\(clock\.elapsedTime\)/.test(HTML), 'factory owns one shadowless guide light and runs its original pulse + living-tree update');
-ok(/const pulse = 1\.4 \+ Math\.sin\(elapsedSeconds \* 2\.1\) \* 0\.16/.test(WORLD_TREE_FACTORY)
+ok(/const pulse = 1\.48 \+ Math\.sin\(elapsedSeconds \* 2\.1\) \* 0\.1/.test(WORLD_TREE_FACTORY)
   && /energy\.light\.intensity = 16 \+ Math\.sin\(elapsedSeconds \* 1\.7\) \* 3/.test(WORLD_TREE_FACTORY)
   && /livingSystem\.rotation\.z = Math\.sin/.test(WORLD_TREE_FACTORY), 'energy copies use a bounded pulse while the guide light, foliage, and living-system motion remain intact');
 ok(/customSockets=\{TaxiArrival:/.test(memorialTreeBlock)
@@ -842,11 +852,17 @@ ok(/_registerWorldTreeOccluderGroup\(g\)/.test(HTML)
   && /dynamicOccluderGroups\.delete/.test(HTML), 'remote peer avatar proxies enter and leave the bloom depth cache without leaks');
 ok(/const bloomRoots=\[\.\.\.crowns,hero\.runtime\.nodes\['energy-network'\],hero\.runtime\.meshes\['gold-code-glyphs'\]/.test(memorialTreeBlock)
   && /const bloomMeshes=new Set\(\)/.test(memorialTreeBlock) && /const bloomBySource=new Map/.test(memorialTreeBlock)
+  && /amber:_worldTreeBloomMaterial\(hero\.variant\.amber,0\.4,true/.test(memorialTreeBlock)
+  && /cyan:_worldTreeBloomMaterial\(hero\.variant\.cyan,0\.55,true/.test(memorialTreeBlock)
+  && /energy:_worldTreeBloomMaterial\(hero\.variant\.energy,4,true/.test(memorialTreeBlock)
+  && /glyphGold:_worldTreeBloomMaterial\(hero\.variant\.energy,1\.75,false/.test(memorialTreeBlock)
+  && /glyphCyan:_worldTreeBloomMaterial\(hero\.variant\.cyan,1\.9,false/.test(memorialTreeBlock)
   && /if\(o\.isMesh\)\{ o\.layers\.set\(0\); if\(night&&MEMORIAL_TREE\.bloomExtractMeshSet\.has\(o\)\) o\.layers\.enable\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
   && /depthMaterials=new Set\(\[hero\.materials\.bark,hero\.materials\.ground,hero\.materials\.cutWood\]\)/.test(memorialTreeBlock)
+  && /else if\(depthMaterials\.has\(mesh\.material\)\) bloomExtractEntries\.push\(\{mesh,baseMaterial:mesh\.material,bloomMaterial:BLOOM_DARK_MATERIAL\}\)/.test(memorialTreeBlock)
   && /bloomLights\.forEach\(light=>light\.layers\.set\(MEM_TREE_LIGHT_LAYER\)\)/.test(memorialTreeBlock)
   && !/hero\.runtime\.nodes\.constellations/.test(memorialTreeBlock)
-  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'branch depth and warm bark extraction occlude energy, glyph, and leaf glow without unrelated tree draws');
+  && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'one energy-led leaf/glyph/knot/vein hierarchy uses dark branch depth occlusion without unrelated tree draws');
 ok(/requestedTreeVisible=MEMORIAL_TREE\?MEMORIAL_TREE\.requestedVisible!==false:false/.test(HTML)
   && /MEMORIAL_TREE\.group\.visible=requestedTreeVisible/.test(HTML)
   && /finalMix\.uniforms\.bloomWeight\.value=needBloom\?1:0/.test(HTML)
@@ -862,10 +878,10 @@ ok(/bloomBounds:\{value:new THREE\.Vector4\(0,0,1,1\)\}/.test(HTML)
 ok(/ratio=MEM_TREE_HERO_SCALE\/MEM_TREE_HERO_NATIVE_SCALE/.test(memorialTreeBlock)
   && !/MEMORIAL_TREE\.light\.intensity\*=/.test(memorialTreeBlock)
   && /MEMORIAL_TREE\.light\.distance=7\*ratio/.test(memorialTreeBlock), 'factory PointLight keeps its authored local range and exact pulse intensity');
-ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x8a4520\); m\.bark\.emissiveIntensity=0\.48; m\.amberLeaf\.emissiveIntensity=0\.72; m\.cyanLeaf\.emissiveIntensity=1\.05/.test(memorialTreeBlock)
-  && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=1\.4; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
-  && /else \{ m\.bark\.emissive\.setHex\(0x6a3518\)/.test(memorialTreeBlock)
-  && /m\.amberLeaf\.emissiveIntensity=0\.32; m\.cyanLeaf\.emissiveIntensity=0\.38/.test(memorialTreeBlock)
+ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x4f240c\); m\.bark\.emissiveIntensity=0\.14; m\.amberLeaf\.emissiveIntensity=0\.58; m\.cyanLeaf\.emissiveIntensity=0\.78/.test(memorialTreeBlock)
+  && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=1\.3; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
+  && /else \{ m\.bark\.emissive\.setHex\(0x603016\)/.test(memorialTreeBlock)
+  && /m\.amberLeaf\.emissiveIntensity=0\.28; m\.cyanLeaf\.emissiveIntensity=0\.34/.test(memorialTreeBlock)
   && /_setWorldTreeGlowLayers\(night\)/.test(HTML)
   && /worldBloom\.strength=night\?1\.35:0\.04/.test(HTML), 'day calms ornaments while night gives every amber/cyan leaf a readable emissive base');
 ok(/effectPhase=isNight\|\|WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'/.test(HTML), 'day/dawn/dusk final mode skips emissive and bloom HDR passes entirely');
@@ -959,10 +975,11 @@ ok(/AURORA_OP\.value=Math\.min\(0\.55\+\(_auroraBoost>0\?0\.45:0\), AURORA_OP\.v
   'Aurora keeps the 1.77.2 night intensity; performance work does not dim the global night art');
 ok(/pointLightRole:'runtime-topology-only'/.test(memorialTreeBlock)
   && /haloMode:'world-space-constant-emission'/.test(memorialTreeBlock)
-  && /branchGlow:'all-bark-branch-meshes'/.test(memorialTreeBlock)
-  && /bark:_worldTreeBloomMaterial\(0xff6a18,0\.42,true/.test(memorialTreeBlock)
-  && /branchGlowMeshes=bloomExtractEntries\.filter\(entry=>entry\.baseMaterial===hero\.materials\.bark\)\.length/.test(memorialTreeBlock),
-  'metadata states that PointLight is topology-only and current halos are world-space, not fixed-pixel LOD');
+  && /branchGlow:'base-emissive-only'/.test(memorialTreeBlock)
+  && /bloomSources:\['leaves','glyphs','energy-core-knots','energy-veins'\]/.test(memorialTreeBlock)
+  && !/bark:_worldTreeBloomMaterial/.test(memorialTreeBlock)
+  && /branchGlowMeshes=0, branchDepthMeshes=bloomExtractEntries\.filter\(entry=>entry\.baseMaterial===hero\.materials\.bark\)\.length/.test(memorialTreeBlock),
+  'metadata records the tree-only emissive hierarchy while bark remains a dark depth occluder');
 ok(/window\.__memorialTree=/.test(HTML) && /window\.__tpMemorialTree=/.test(HTML)
   && /_memHeroObjectPerf\(MEMORIAL_TREE\.group\)/.test(HTML) && /window\.__frameMemorialTree=/.test(HTML)
   && /window\.__worldTreeRenderMode=/.test(HTML) && /window\.__worldTreeRenderTargets=/.test(HTML)

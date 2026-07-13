@@ -19,7 +19,7 @@ export const REPOLIS_VARIANTS = [
     cyanRatio: 0.1,
     amber: '#F5BD54',
     cyan: '#79F3FF',
-    energy: '#FFE39A',
+    energy: '#F6B64A',
     branchWarmth: 1.08,
   },
   {
@@ -43,7 +43,7 @@ export const REPOLIS_STAGES = [
   'full',
 ];
 
-export const REPOLIS_FACTORY_REVISION = 'azimuth-complete-energy-v3-knots';
+export const REPOLIS_FACTORY_REVISION = 'azimuth-complete-energy-v3-painterly-knots';
 
 const STAGE_LEVEL = Object.fromEntries(
   REPOLIS_STAGES.map((stage, index) => [stage, index]),
@@ -490,14 +490,15 @@ function createMaterials(seed, variant, detailed) {
   const energyColor = new THREE.Color(variant.energy);
   const energy = new THREE.MeshPhysicalMaterial({
     color: energyColor,
-    roughness: 0.24,
+    roughness: 0.34,
     metalness: 0,
     emissive: energyColor,
-    emissiveIntensity: 1.4,
+    emissiveIntensity: 1.48,
     transparent: true,
-    opacity: 0.82,
+    opacity: 0.88,
     depthTest: true,
     depthWrite: false,
+    vertexColors: true,
   });
   const amberColor = new THREE.Color(variant.amber);
   const cyanColor = new THREE.Color(variant.cyan);
@@ -529,7 +530,7 @@ function createMaterials(seed, variant, detailed) {
   const glyphGold = new THREE.MeshBasicMaterial({
     color: variant.energy,
     transparent: true,
-    opacity: 0.82,
+    opacity: 0.72,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     side: THREE.DoubleSide,
@@ -537,7 +538,7 @@ function createMaterials(seed, variant, detailed) {
   const glyphCyan = new THREE.MeshBasicMaterial({
     color: variant.cyan,
     transparent: true,
-    opacity: 0.78,
+    opacity: 0.68,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     side: THREE.DoubleSide,
@@ -750,7 +751,7 @@ function createFoliage(seed, variant, materials, anchors, root) {
 
 function withLegacyEnergyRandomBudget(seed, build) {
   const globalRandom = Math.random;
-  const local = seededRandom(`${seed}/azimuth-complete-energy-v3-knots/object-ids`);
+  const local = seededRandom(`${seed}/azimuth-complete-energy-v3-painterly/object-ids`);
   Math.random = () => local.next();
   let value;
   try {
@@ -761,6 +762,81 @@ function withLegacyEnergyRandomBudget(seed, build) {
   // V1 created 19 UUID-bearing objects, including PointLight's shadow camera.
   for (let index = 0; index < 76; index += 1) globalRandom();
   return value;
+}
+
+function shapePainterlyVein(geometry, curve, tubularSegments, radialSegments, phase) {
+  const position = geometry.attributes.position;
+  const colors = new Float32Array(position.count * 3);
+  const center = new THREE.Vector3();
+  const vertex = new THREE.Vector3();
+  const ringSize = radialSegments + 1;
+  for (let segment = 0; segment <= tubularSegments; segment += 1) {
+    const t = segment / tubularSegments;
+    curve.getPointAt(t, center);
+    const taper = 0.72 + Math.pow(Math.sin(Math.PI * t), 0.42) * 0.28;
+    const handWeight = THREE.MathUtils.clamp(
+      taper * (0.96 + Math.sin(t * Math.PI * 5 + phase) * 0.04),
+      0.68,
+      1.02,
+    );
+    const pigment = THREE.MathUtils.clamp(
+      0.82 + Math.sin(t * Math.PI * 7 + phase * 1.7) * 0.1
+        + Math.sin(t * Math.PI * 17 - phase) * 0.035,
+      0.7,
+      0.98,
+    );
+    for (let radial = 0; radial <= radialSegments; radial += 1) {
+      const index = segment * ringSize + radial;
+      vertex.fromBufferAttribute(position, index)
+        .sub(center)
+        .multiplyScalar(handWeight)
+        .add(center);
+      position.setXYZ(index, vertex.x, vertex.y, vertex.z);
+      colors[index * 3] = pigment;
+      colors[index * 3 + 1] = pigment;
+      colors[index * 3 + 2] = pigment;
+    }
+  }
+  position.needsUpdate = true;
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function createOrganicEnergyKnotGeometry(knot, seed) {
+  const geometry = new THREE.SphereGeometry(1, 9, 6);
+  const position = geometry.attributes.position;
+  const rng = seededRandom(`${seed}/${knot.specId}/${knot.copy}/${knot.role}/organic-knot`);
+  const phase = rng.range(0, Math.PI * 2);
+  const root = knot.role === 'root-junction';
+  const readabilityLift = root ? 1.12 : 1.15;
+  const radialLift = 1 + (readabilityLift - 1) * 0.6;
+  const depthLift = 1 + (readabilityLift - 1) * 0.35;
+  const width = knot.size * (root ? 0.82 : 0.7) * radialLift;
+  const depth = knot.size * (root ? 0.52 : 0.44) * depthLift;
+  const length = knot.size * (root ? 1.55 : 1.38) * readabilityLift;
+  for (let index = 0; index < position.count; index += 1) {
+    const x = position.getX(index);
+    const y = position.getY(index);
+    const z = position.getZ(index);
+    const middle = Math.max(0, 1 - y * y);
+    const taper = 1 - Math.max(0, y) * 0.38;
+    const sway = Math.sin((y + 1) * Math.PI * 1.3 + phase) * middle * 0.11;
+    const asymmetry = 1 + Math.sin(y * Math.PI * 2.2 - phase) * 0.08;
+    position.setXYZ(
+      index,
+      (x * taper * asymmetry + sway) * width,
+      y * length,
+      z * taper * (2 - asymmetry) * depth,
+    );
+  }
+  const axis = knot.tangent.clone().lerp(knot.outward, root ? 0.24 : 0.34).normalize();
+  const align = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+  align.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), phase));
+  geometry.applyQuaternion(align);
+  geometry.computeVertexNormals();
+  return geometry;
 }
 
 function createEnergyNetwork(seed, variant, materials, specs, root) {
@@ -777,7 +853,7 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
     const veinGeometries = [];
     const knots = [];
     let copyCount = 0;
-    for (const spec of selected) {
+    for (const [specIndex, spec] of selected.entries()) {
       const detail = branchGeometryDetail(spec.importance);
       const tubularSegments = spec.importance === 'trunk' ? 64 : 36;
       const curve = new THREE.CatmullRomCurve3(
@@ -799,7 +875,7 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
       const phase = veinRng.range(0, Math.PI * 2);
       const twist = veinRng.range(-0.28, 0.28);
       const v2TubeRadius = spec.importance === 'trunk' ? 0.042 : spec.id.includes('foundation') ? 0.023 : 0.02;
-      const tubeRadius = spec.importance === 'trunk' ? 0.036 : spec.id.includes('foundation') ? 0.0205 : 0.0175;
+      const tubeRadius = spec.importance === 'trunk' ? 0.033 : spec.id.includes('foundation') ? 0.019 : 0.016;
       const surfaceGap = v2TubeRadius * 1.22;
       for (let copy = 0; copy < radialCopies; copy += 1) {
         const points = [];
@@ -818,24 +894,36 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
         const rootIndex = spec.importance === 'trunk' ? 4 : Math.max(2, Math.round(tubularSegments * 0.1));
         const secondaryT = 0.54 + (hashString(`${spec.id}/${copy}/energy-knot`) % 3) * 0.055;
         const secondaryIndex = Math.min(tubularSegments - 2, Math.round(tubularSegments * secondaryT));
-        knots.push({
-          center: points[rootIndex].clone(),
-          size: spec.importance === 'trunk' ? 0.15 : 0.1,
-          role: 'root-junction',
-          specId: spec.id,
-          copy,
-          t: rootIndex / tubularSegments,
-        });
-        knots.push({
-          center: points[secondaryIndex].clone(),
-          size: spec.importance === 'trunk' ? 0.1 : 0.065,
-          role: 'secondary-gathering',
-          specId: spec.id,
-          copy,
-          t: secondaryIndex / tubularSegments,
-        });
         const surfaceCurve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.35);
-        veinGeometries.push(new THREE.TubeGeometry(surfaceCurve, tubularSegments, tubeRadius, 6, false));
+        const knotAt = (index, size, role) => {
+          const t = index / tubularSegments;
+          knots.push({
+            center: points[index].clone(),
+            tangent: points[Math.min(tubularSegments, index + 1)].clone()
+              .sub(points[Math.max(0, index - 1)])
+              .normalize(),
+            outward: points[index].clone().sub(curve.getPointAt(t)).normalize(),
+            size,
+            role,
+            specId: spec.id,
+            copy,
+            t,
+          });
+        };
+        if (spec.importance === 'trunk' || spec.id.includes('foundation') || copy === 0) {
+          knotAt(rootIndex, spec.importance === 'trunk' ? 0.12 : 0.082, 'root-junction');
+        }
+        if ((specIndex * 2 + copy) % 4 === 0) {
+          knotAt(secondaryIndex, spec.importance === 'trunk' ? 0.082 : 0.054, 'secondary-accent');
+        }
+        const veinGeometry = new THREE.TubeGeometry(surfaceCurve, tubularSegments, tubeRadius, 6, false);
+        veinGeometries.push(shapePainterlyVein(
+          veinGeometry,
+          surfaceCurve,
+          tubularSegments,
+          6,
+          phase + copy * 1.7,
+        ));
         copyCount += 1;
       }
     }
@@ -843,12 +931,12 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
     if (!mergedVeins) throw new Error('Unable to merge azimuth-complete energy veins');
     veinGeometries.forEach((geometry) => geometry.dispose());
     const veins = new THREE.Mesh(mergedVeins, materials.energy);
-    veins.name = 'repolis-energy-veins-v3-knots';
+    veins.name = 'repolis-energy-veins-v3-painterly';
     energyGroup.add(veins);
 
     const coreAnchor = knots[0]?.center ?? new THREE.Vector3(0, 0.55, 0.98);
     const coreGeometries = knots.map((knot) => {
-      const geometry = new THREE.SphereGeometry(knot.size, 10, 7);
+      const geometry = createOrganicEnergyKnotGeometry(knot, seed);
       geometry.translate(
         knot.center.x - coreAnchor.x,
         knot.center.y - coreAnchor.y,
@@ -870,12 +958,16 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
     energyGroup.userData.energyRevision = REPOLIS_FACTORY_REVISION;
     energyGroup.userData.veinCopies = copyCount;
     energyGroup.userData.knotCount = knots.length;
-    energyGroup.userData.knotDistribution = 'one-root-junction-and-one-secondary-per-vein';
-    energyGroup.userData.knotSizes = [0.065, 0.1, 0.15];
+    energyGroup.userData.knotDistribution = 'fifteen-root-junctions-and-six-secondary-accents';
+    energyGroup.userData.knotSizes = [0.054, 0.082, 0.12];
     energyGroup.userData.knotSizeCounts = {
-      small: knots.filter((knot) => knot.size === 0.065).length,
-      medium: knots.filter((knot) => knot.size === 0.1).length,
-      large: knots.filter((knot) => knot.size === 0.15).length,
+      small: knots.filter((knot) => knot.size === 0.054).length,
+      medium: knots.filter((knot) => knot.size === 0.082).length,
+      large: knots.filter((knot) => knot.size === 0.12).length,
+    };
+    energyGroup.userData.knotRoleCounts = {
+      root: knots.filter((knot) => knot.role === 'root-junction').length,
+      secondary: knots.filter((knot) => knot.role === 'secondary-accent').length,
     };
     energyGroup.userData.drawMeshes = 2;
     energyGroup.userData.depthOcclusion = 'bark-surface-depth-tested';
@@ -889,6 +981,7 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
       knotCount: knots.length,
       knotDistribution: energyGroup.userData.knotDistribution,
       knotSizes: energyGroup.userData.knotSizes,
+      knotRoleCounts: energyGroup.userData.knotRoleCounts,
       revision: REPOLIS_FACTORY_REVISION,
     };
   });
@@ -1165,6 +1258,7 @@ export function createRepolisHero({
     energyKnotCount: energy?.knotCount ?? 0,
     energyKnotDistribution: energy?.knotDistribution ?? null,
     energyKnotSizes: energy?.knotSizes ?? [],
+    energyKnotRoles: energy?.knotRoleCounts ?? null,
     energyDrawMeshes: energy ? 2 : 0,
     importedMeshes: 0,
     stage,
@@ -1173,7 +1267,7 @@ export function createRepolisHero({
 
   const update = (elapsedSeconds) => {
     if (energy) {
-      const pulse = 1.4 + Math.sin(elapsedSeconds * 2.1) * 0.16;
+      const pulse = 1.48 + Math.sin(elapsedSeconds * 2.1) * 0.1;
       materials.energy.emissiveIntensity = pulse;
       energy.light.intensity = 16 + Math.sin(elapsedSeconds * 1.7) * 3;
     }

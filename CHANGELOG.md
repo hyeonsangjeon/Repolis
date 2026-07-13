@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.78.1] — 2026-07-13
+
+### 🌳 World Tree v3 final polish — painterly gold, organic junctions
+- **Warmer, hand-weighted veins.** All 21 accepted bark-surface paths now use thinner variable-width amber-gold pigment instead of pale mechanical tubes, while preserving natural depth and eight-angle continuity.
+- **Sparse organic knots.** Twenty-one deterministic seed/flame junctions—15 root and 6 secondary accents—replace repeated spherical beads; a bounded 12–15% longitudinal lift keeps them readable at town and mobile distance without a pearl-necklace or white-flare effect.
+- **One tree-only luminous hierarchy.** Veins and knots lead restrained glyph and leaf radiance through the existing selective bloom path. Bark remains a depth occluder, and frozen tree-off/on measurement retains zero P95 town exposure spill.
+- **Performance structure unchanged.** The final tree remains two merged energy meshes, 118 draws, and 76,570 triangles, with no added production pass, texture, material, or light and no LOD, collider, socket, or action regression.
+
 ## [1.78.0] — 2026-07-13
 
 ### 🌳 World Tree v3 midpoint — readable energy from every approach
