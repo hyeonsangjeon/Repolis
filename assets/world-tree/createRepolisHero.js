@@ -43,7 +43,7 @@ export const REPOLIS_STAGES = [
   'full',
 ];
 
-export const REPOLIS_FACTORY_REVISION = 'azimuth-energy-v4-dominant-b-attached-leaves';
+export const REPOLIS_FACTORY_REVISION = 'azimuth-energy-v5-dual-face-b-attached-leaves';
 
 const STAGE_LEVEL = Object.fromEntries(
   REPOLIS_STAGES.map((stage, index) => [stage, index]),
@@ -255,25 +255,25 @@ const REPOLIS_LEAF_ATTACHMENT = Object.freeze({
 });
 
 const REPOLIS_ENERGY_PROFILE = Object.freeze({
-  id: 'dominant-main-vein-b',
+  id: 'dual-face-main-vein-b',
   canonicalFront: Object.freeze([0, 0, -1]),
-  dominantRadius: Object.freeze({
+  frontDominantRadius: Object.freeze({
     trunk: 0.078,
     foundation: 0.044,
     macro: 0.036,
   }),
-  rearSupportRadius: Object.freeze({
-    trunk: 0.015,
-    foundation: 0.009,
-    macro: 0.0075,
+  rearDominantRadius: Object.freeze({
+    trunk: 0.069,
+    foundation: 0.039,
+    macro: 0.032,
   }),
   sideSupportRadius: Object.freeze({
     trunk: 0.006,
     foundation: 0.0045,
     macro: 0.004,
   }),
-  dominantSourceWeight: 1,
-  rearSupportSourceWeight: 0.24,
+  frontDominantSourceWeight: 1,
+  rearDominantSourceWeight: 0.86,
   sideSupportSourceWeight: 0.1,
   barkHaloPolicy: 'vein-bloom-only-no-branch-extraction',
 });
@@ -1028,8 +1028,9 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
     const veinGeometries = [];
     const knots = [];
     const dominantVeinIds = [];
+    const frontDominantVeinIds = [];
+    const rearDominantVeinIds = [];
     const supportVeinIds = [];
-    const rearSupportVeinIds = [];
     const sideSupportVeinIds = [];
     const canonicalFront = new THREE.Vector3(...REPOLIS_ENERGY_PROFILE.canonicalFront);
     let copyCount = 0;
@@ -1057,21 +1058,26 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
       const v2TubeRadius = spec.importance === 'trunk' ? 0.042 : spec.id.includes('foundation') ? 0.023 : 0.02;
       const radiusClass = spec.importance === 'trunk' ? 'trunk' : spec.id.includes('foundation') ? 'foundation' : 'macro';
       for (let copy = 0; copy < radialCopies; copy += 1) {
-        const dominant = copy === 0;
-        const supportKind = dominant ? null : copy === 1 ? 'rear' : 'side';
-        const veinRole = dominant ? 'dominant' : `support-${supportKind}`;
-        const roleId = dominant ? `${spec.id}:dominant` : `${spec.id}:support-${supportKind}`;
-        const tubeRadius = dominant
-          ? REPOLIS_ENERGY_PROFILE.dominantRadius[radiusClass]
-          : supportKind === 'rear'
-            ? REPOLIS_ENERGY_PROFILE.rearSupportRadius[radiusClass]
+        const frontDominant = copy === 0;
+        const rearDominant = copy === 1;
+        const dominant = frontDominant || rearDominant;
+        const dominantFace = frontDominant ? 'front' : rearDominant ? 'rear' : null;
+        const supportKind = dominant ? null : 'side';
+        const veinRole = dominant ? `dominant-${dominantFace}` : 'support-side';
+        const roleId = dominant ? `${spec.id}:dominant-${dominantFace}` : `${spec.id}:support-side`;
+        const tubeRadius = frontDominant
+          ? REPOLIS_ENERGY_PROFILE.frontDominantRadius[radiusClass]
+          : rearDominant
+            ? REPOLIS_ENERGY_PROFILE.rearDominantRadius[radiusClass]
             : REPOLIS_ENERGY_PROFILE.sideSupportRadius[radiusClass];
         const surfaceGap = dominant
           ? Math.max(v2TubeRadius * 1.22, tubeRadius * 1.06)
           : Math.max(v2TubeRadius * 0.72, tubeRadius * 1.08);
-        const supportOffset = supportKind === 'rear'
-          ? Math.PI
-          : (specIndex % 2 === 0 ? Math.PI * 0.5 : -Math.PI * 0.5);
+        const radialOffset = frontDominant
+          ? 0
+          : rearDominant
+            ? Math.PI
+            : (specIndex % 2 === 0 ? Math.PI * 0.5 : -Math.PI * 0.5);
         const points = [];
         for (let segment = 0; segment <= tubularSegments; segment += 1) {
           const t = segment / tubularSegments;
@@ -1084,7 +1090,7 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
             : phase;
           const lineWander = twist * (t - 0.5) * (dominant ? 0.2 : 0.45)
             + Math.sin(t * Math.PI * 2 + phase + copy * 1.7) * (dominant ? 0.035 : 0.055);
-          const angle = frontAngle + (dominant ? 0 : supportOffset) + lineWander;
+          const angle = frontAngle + radialOffset + lineWander;
           const center = curve.getPointAt(t);
           const { radius } = surfaceRadius(t, angle);
           const offset = normal.clone().multiplyScalar(Math.cos(angle) * (radius + surfaceGap))
@@ -1126,17 +1132,20 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
           tubularSegments,
           6,
           phase + copy * 1.7,
-          dominant
-            ? REPOLIS_ENERGY_PROFILE.dominantSourceWeight
-            : supportKind === 'rear'
-              ? REPOLIS_ENERGY_PROFILE.rearSupportSourceWeight
+          frontDominant
+            ? REPOLIS_ENERGY_PROFILE.frontDominantSourceWeight
+            : rearDominant
+              ? REPOLIS_ENERGY_PROFILE.rearDominantSourceWeight
               : REPOLIS_ENERGY_PROFILE.sideSupportSourceWeight,
         ));
-        if (dominant) dominantVeinIds.push(roleId);
+        if (dominant) {
+          dominantVeinIds.push(roleId);
+          if (frontDominant) frontDominantVeinIds.push(roleId);
+          else rearDominantVeinIds.push(roleId);
+        }
         else {
           supportVeinIds.push(roleId);
-          if (supportKind === 'rear') rearSupportVeinIds.push(roleId);
-          else sideSupportVeinIds.push(roleId);
+          sideSupportVeinIds.push(roleId);
         }
         copyCount += 1;
       }
@@ -1174,21 +1183,23 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
     energyGroup.userData.energyProfile = REPOLIS_ENERGY_PROFILE.id;
     energyGroup.userData.canonicalFront = [...REPOLIS_ENERGY_PROFILE.canonicalFront];
     energyGroup.userData.dominantVeinIds = dominantVeinIds;
+    energyGroup.userData.frontDominantVeinIds = frontDominantVeinIds;
+    energyGroup.userData.rearDominantVeinIds = rearDominantVeinIds;
     energyGroup.userData.supportVeinIds = supportVeinIds;
-    energyGroup.userData.rearSupportVeinIds = rearSupportVeinIds;
     energyGroup.userData.sideSupportVeinIds = sideSupportVeinIds;
     energyGroup.userData.dominantVeinCount = dominantVeinIds.length;
+    energyGroup.userData.frontDominantVeinCount = frontDominantVeinIds.length;
+    energyGroup.userData.rearDominantVeinCount = rearDominantVeinIds.length;
     energyGroup.userData.supportVeinCount = supportVeinIds.length;
-    energyGroup.userData.rearSupportVeinCount = rearSupportVeinIds.length;
     energyGroup.userData.sideSupportVeinCount = sideSupportVeinIds.length;
-    energyGroup.userData.dominantRadius = { ...REPOLIS_ENERGY_PROFILE.dominantRadius };
-    energyGroup.userData.supportRadius = {
-      rear: { ...REPOLIS_ENERGY_PROFILE.rearSupportRadius },
-      side: { ...REPOLIS_ENERGY_PROFILE.sideSupportRadius },
+    energyGroup.userData.dominantRadius = {
+      front: { ...REPOLIS_ENERGY_PROFILE.frontDominantRadius },
+      rear: { ...REPOLIS_ENERGY_PROFILE.rearDominantRadius },
     };
+    energyGroup.userData.supportRadius = { side: { ...REPOLIS_ENERGY_PROFILE.sideSupportRadius } };
     energyGroup.userData.sourceWeights = {
-      dominant: REPOLIS_ENERGY_PROFILE.dominantSourceWeight,
-      rearSupport: REPOLIS_ENERGY_PROFILE.rearSupportSourceWeight,
+      frontDominant: REPOLIS_ENERGY_PROFILE.frontDominantSourceWeight,
+      rearDominant: REPOLIS_ENERGY_PROFILE.rearDominantSourceWeight,
       sideSupport: REPOLIS_ENERGY_PROFILE.sideSupportSourceWeight,
     };
     energyGroup.userData.barkHaloPolicy = REPOLIS_ENERGY_PROFILE.barkHaloPolicy;
@@ -1216,12 +1227,14 @@ function createEnergyNetwork(seed, variant, materials, specs, root) {
       energyProfile: energyGroup.userData.energyProfile,
       canonicalFront: energyGroup.userData.canonicalFront,
       dominantVeinIds,
+      frontDominantVeinIds,
+      rearDominantVeinIds,
       supportVeinIds,
-      rearSupportVeinIds,
       sideSupportVeinIds,
       dominantVeinCount: dominantVeinIds.length,
+      frontDominantVeinCount: frontDominantVeinIds.length,
+      rearDominantVeinCount: rearDominantVeinIds.length,
       supportVeinCount: supportVeinIds.length,
-      rearSupportVeinCount: rearSupportVeinIds.length,
       sideSupportVeinCount: sideSupportVeinIds.length,
       dominantRadius: energyGroup.userData.dominantRadius,
       supportRadius: energyGroup.userData.supportRadius,
@@ -1537,12 +1550,14 @@ export function createRepolisHero({
     energyProfile: energy?.energyProfile ?? null,
     energyCanonicalFront: energy?.canonicalFront ?? null,
     energyDominantVeinIds: energy?.dominantVeinIds ?? [],
+    energyFrontDominantVeinIds: energy?.frontDominantVeinIds ?? [],
+    energyRearDominantVeinIds: energy?.rearDominantVeinIds ?? [],
     energySupportVeinIds: energy?.supportVeinIds ?? [],
-    energyRearSupportVeinIds: energy?.rearSupportVeinIds ?? [],
     energySideSupportVeinIds: energy?.sideSupportVeinIds ?? [],
     energyDominantVeinCount: energy?.dominantVeinCount ?? 0,
+    energyFrontDominantVeinCount: energy?.frontDominantVeinCount ?? 0,
+    energyRearDominantVeinCount: energy?.rearDominantVeinCount ?? 0,
     energySupportVeinCount: energy?.supportVeinCount ?? 0,
-    energyRearSupportVeinCount: energy?.rearSupportVeinCount ?? 0,
     energySideSupportVeinCount: energy?.sideSupportVeinCount ?? 0,
     energyDominantRadius: energy?.dominantRadius ?? null,
     energySupportRadius: energy?.supportRadius ?? null,

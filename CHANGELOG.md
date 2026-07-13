@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.78.5] — 2026-07-13
+
+### 🌳 World Tree dual-face current — one dominant vein from either approach
+- **A thick main current now anchors both faces.** Nine front and nine rear surface-following paths carry the same warm-gold trunk, foundation, and major-branch language; natural depth reveals only the facing dominant line instead of producing twin front lines.
+- **Side continuity stays subordinate.** Three ultra-thin, dim support paths bridge oblique approaches without forming a neon cage, while the accepted organic knots, pendants, bark depth, and subtle vein-derived halo remain unchanged.
+- **All leaves remain rooted.** The complete 3,016-leaf crown retains exact branch contact, root-pivot scaling, canopy motion, and the accepted amber/cyan hierarchy.
+- **Performance and town isolation hold.** Desktop-only DPR, bloom-cadence, and low-signal LOD guards reduce frame drops without changing mobile behavior; the release adds no pass, light, texture, draw, or triangle regression and preserves bounded town exposure.
+
 ## [1.78.4] — 2026-07-13
 
 ### 🌳 World Tree Sculpt DNA correction — one rooted living current

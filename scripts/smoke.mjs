@@ -660,20 +660,25 @@ ok(memorialTreeBlock.length > 0, 'world-tree procedural block is extractable fro
 ok(visualLodBlock.length > 0, 'projected-size visual LOD block is extractable from index.html');
 ok(staticInstanceBlock.length > 0, 'exact-static instance block is extractable from index.html');
 ok(buildingLodPrototypeBlock.length > 0, '2C-A representative building LOD block is extractable from index.html');
-ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '90f71db1389eac63a6585036400c8777bf34fefb698bed56be792e4146246715',
-  'Repolis factory provenance is pinned to dominant-vein candidate B with attached leaves and hanging lights');
-ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-energy-v4-dominant-b-attached-leaves-r3'/.test(HTML)
+ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '58dcf04d4052c4e86da755bfaac63852d08a33bc5a8b7dd9d7bc9ec4ff5c4836',
+  'Repolis factory provenance is pinned to dual-face dominant-vein candidate B with attached leaves and hanging lights');
+ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-energy-v5-dual-face-b-r2'/.test(HTML)
   && /import \{ mergeGeometries \} from 'three\/addons\/utils\/BufferGeometryUtils\.js'/.test(WORLD_TREE_FACTORY), 'native Solar Archive factory resolves through the existing Three.js import map');
 ok(/import \{ EffectComposer \}/.test(HTML) && /import \{ TexturePass \}/.test(HTML) && /import \{ UnrealBloomPass \}/.test(HTML)
   && /import \{ ShaderPass \}/.test(HTML) && /import \{ OutputPass \}/.test(HTML)
   && /new UnrealBloomPass\(new THREE\.Vector2\(innerWidth,innerHeight\),1\.35,0\.58,0\.06\)/.test(HTML)
   && /baseTargetDpr=_cappedTargetDpr\(1\.25,3200000\)/.test(HTML)
-  && /treeEmissiveDpr=_cappedTargetDpr\(0\.75,1200000\)/.test(HTML)
-  && /treeBloomDpr=_cappedTargetDpr\(LOW_END\?0\.5:0\.625,900000\)/.test(HTML)
+  && /const _desktopFinePointer=matchMedia\('\(pointer:fine\)'\)/.test(HTML)
+  && /const _desktopFrameDropGuard=\(\)=>_desktopFinePointer\.matches&&innerWidth\*innerHeight>=900000/.test(HTML)
+  && /const _treeEmissiveTargetDpr=\(\)=>_cappedTargetDpr\(_desktopFrameDropGuard\(\)\?0\.55:0\.75,_desktopFrameDropGuard\(\)\?700000:1200000\)/.test(HTML)
+  && /const _treeBloomTargetDpr=\(\)=>_cappedTargetDpr\(_desktopFrameDropGuard\(\)\?0\.45:LOW_END\?0\.5:0\.625,_desktopFrameDropGuard\(\)\?500000:900000\)/.test(HTML)
+  && /treeEmissiveDpr=_treeEmissiveTargetDpr\(\)/.test(HTML)
+  && /treeBloomDpr=_treeBloomTargetDpr\(\)/.test(HTML)
   && /finalCompositeDpr=_cappedTargetDpr\(1\.25,3200000\)/.test(HTML)
-  && /const _rendererDpr=\(\)=>Math\.min\(devicePixelRatio,1\.25,Math\.sqrt\(3200000\//.test(HTML)
+  && /const _rendererDpr=\(\)=>Math\.min\(devicePixelRatio,_desktopFrameDropGuard\(\)\?1:1\.25,Math\.sqrt\(3200000\//.test(HTML)
   && (HTML.match(/renderer\.setPixelRatio\(_rendererDpr\(\)\)/g)||[]).length===2
   && /finalComposer\.setPixelRatio\(finalCompositeDpr\)/.test(HTML)
+  && /_desktopFinePointer\.addEventListener\?\.\('change',_resizeViewportQuality\)/.test(HTML)
   && /type:THREE\.HalfFloatType/.test(HTML) && /target\.texture\.colorSpace=THREE\.LinearSRGBColorSpace/.test(HTML)
   && /const bloomTarget=makeLinearTarget\([^;\n]+,false\);/.test(HTML)
   && /bloomInternalTargets\.forEach\(target=>\{ target\.depthBuffer=false; target\.stencilBuffer=false; \}\)/.test(HTML)
@@ -695,52 +700,59 @@ ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
 ok(/macroBranchSpecs\(\)/.test(WORLD_TREE_FACTORY) && /secondaryBranches\(spec, seed/.test(WORLD_TREE_FACTORY)
   && /fineBranches\(spec, seed\)/.test(WORLD_TREE_FACTORY) && /mergedFineGeometry/.test(WORLD_TREE_FACTORY), 'factory preserves macro → secondary → merged fine branch hierarchy');
-ok(/REPOLIS_FACTORY_REVISION = 'azimuth-energy-v4-dominant-b-attached-leaves'/.test(WORLD_TREE_FACTORY)
+ok(/REPOLIS_FACTORY_REVISION = 'azimuth-energy-v5-dual-face-b-attached-leaves'/.test(WORLD_TREE_FACTORY)
   && /function createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
   && /const surfaceRadius = createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
   && /const \{ radius, ridges \} = surfaceRadius\(t, angle\)/.test(WORLD_TREE_FACTORY)
   && /const \{ radius \} = surfaceRadius\(t, angle\)/.test(WORLD_TREE_FACTORY), 'bark and energy veins share one deterministic Frenet-frame surface-radius profile');
 ok(/radialCopies = spec\.importance === 'trunk' \|\| spec\.id\.includes\('foundation'\) \? 3 : 2/.test(WORLD_TREE_FACTORY)
-  && /const dominant = copy === 0/.test(WORLD_TREE_FACTORY)
+  && /const frontDominant = copy === 0/.test(WORLD_TREE_FACTORY)
+  && /const rearDominant = copy === 1/.test(WORLD_TREE_FACTORY)
+  && /const dominant = frontDominant \|\| rearDominant/.test(WORLD_TREE_FACTORY)
   && /const canonicalFront = new THREE\.Vector3\(\.\.\.REPOLIS_ENERGY_PROFILE\.canonicalFront\)/.test(WORLD_TREE_FACTORY)
   && /const frontAngle = Math\.hypot\(projectedX, projectedY\) > 0\.08/.test(WORLD_TREE_FACTORY)
-  && /const supportKind = dominant \? null : copy === 1 \? 'rear' : 'side'/.test(WORLD_TREE_FACTORY)
-  && /const supportOffset = supportKind === 'rear'[\s\S]*?\? Math\.PI[\s\S]*?Math\.PI \* 0\.5/.test(WORLD_TREE_FACTORY)
+  && /const dominantFace = frontDominant \? 'front' : rearDominant \? 'rear' : null/.test(WORLD_TREE_FACTORY)
+  && /const supportKind = dominant \? null : 'side'/.test(WORLD_TREE_FACTORY)
+  && /const radialOffset = frontDominant[\s\S]*?\? 0[\s\S]*?rearDominant[\s\S]*?\? Math\.PI[\s\S]*?Math\.PI \* 0\.5/.test(WORLD_TREE_FACTORY)
   && /spec\.id\.includes\('rear'\)/.test(WORLD_TREE_FACTORY)
   && /mergeGeometries\(veinGeometries, false\)/.test(WORLD_TREE_FACTORY)
   && /mergeGeometries\(coreGeometries, false\)/.test(WORLD_TREE_FACTORY)
   && /energyGroup\.userData\.drawMeshes = 2/.test(WORLD_TREE_FACTORY)
   && /depthTest: true/.test(WORLD_TREE_FACTORY)
-  && !/spec\.importance === 'trunk' \? 0\.92 : 0\.05/.test(WORLD_TREE_FACTORY), 'energy v4 keeps one canonical-facing dominant copy plus bounded support/rear copies in two depth-tested merged meshes');
+  && !/spec\.importance === 'trunk' \? 0\.92 : 0\.05/.test(WORLD_TREE_FACTORY), 'energy v5 keeps one front and one rear dominant copy plus an ultra-thin side support in two depth-tested merged meshes');
 ok(/function withLegacyEnergyRandomBudget\(seed, build\)/.test(WORLD_TREE_FACTORY)
   && /index < 76/.test(WORLD_TREE_FACTORY)
   && /runtime\.nodes\['energy-network'\] = energy\.group/.test(WORLD_TREE_FACTORY)
   && /runtime\.sockets\['energy:root'\] = energy\.core/.test(WORLD_TREE_FACTORY), 'energy v3 preserves the procedural RNG boundary and stable action-ready node/socket IDs');
 ok(/const REPOLIS_ENERGY_PROFILE = Object\.freeze\(\{/.test(WORLD_TREE_FACTORY)
-  && /id: 'dominant-main-vein-b'/.test(WORLD_TREE_FACTORY)
+  && /id: 'dual-face-main-vein-b'/.test(WORLD_TREE_FACTORY)
   && /canonicalFront: Object\.freeze\(\[0, 0, -1\]\)/.test(WORLD_TREE_FACTORY)
-  && /trunk: 0\.078,[\s\S]*?foundation: 0\.044,[\s\S]*?macro: 0\.036/.test(WORLD_TREE_FACTORY)
-  && /rearSupportRadius: Object\.freeze\(\{[\s\S]*?trunk: 0\.015,[\s\S]*?foundation: 0\.009,[\s\S]*?macro: 0\.0075/.test(WORLD_TREE_FACTORY)
+  && /frontDominantRadius: Object\.freeze\(\{[\s\S]*?trunk: 0\.078,[\s\S]*?foundation: 0\.044,[\s\S]*?macro: 0\.036/.test(WORLD_TREE_FACTORY)
+  && /rearDominantRadius: Object\.freeze\(\{[\s\S]*?trunk: 0\.069,[\s\S]*?foundation: 0\.039,[\s\S]*?macro: 0\.032/.test(WORLD_TREE_FACTORY)
   && /sideSupportRadius: Object\.freeze\(\{[\s\S]*?trunk: 0\.006,[\s\S]*?foundation: 0\.0045,[\s\S]*?macro: 0\.004/.test(WORLD_TREE_FACTORY)
-  && /dominantSourceWeight: 1/.test(WORLD_TREE_FACTORY)
-  && /rearSupportSourceWeight: 0\.24/.test(WORLD_TREE_FACTORY)
+  && /frontDominantSourceWeight: 1/.test(WORLD_TREE_FACTORY)
+  && /rearDominantSourceWeight: 0\.86/.test(WORLD_TREE_FACTORY)
   && /sideSupportSourceWeight: 0\.1/.test(WORLD_TREE_FACTORY)
   && /barkHaloPolicy: 'vein-bloom-only-no-branch-extraction'/.test(WORLD_TREE_FACTORY)
   && /function shapePainterlyVein\(/.test(WORLD_TREE_FACTORY)
   && /\) \* sourceWeight;/.test(WORLD_TREE_FACTORY)
-  && /geometry\.setAttribute\('color', new THREE\.BufferAttribute\(colors, 3\)\)/.test(WORLD_TREE_FACTORY), 'candidate B strengthens the main path while separating one rear support from an ultra-thin side continuity copy');
+  && /geometry\.setAttribute\('color', new THREE\.BufferAttribute\(colors, 3\)\)/.test(WORLD_TREE_FACTORY), 'candidate B gives both front and rear one continuous dominant source while retaining an ultra-thin side continuity copy');
 ok(/dominantVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
+  && /frontDominantVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
+  && /rearDominantVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
   && /supportVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
-  && /rearSupportVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
   && /sideSupportVeinIds\.push\(roleId\)/.test(WORLD_TREE_FACTORY)
   && /energyGroup\.userData\.dominantVeinCount = dominantVeinIds\.length/.test(WORLD_TREE_FACTORY)
+  && /energyGroup\.userData\.frontDominantVeinCount = frontDominantVeinIds\.length/.test(WORLD_TREE_FACTORY)
+  && /energyGroup\.userData\.rearDominantVeinCount = rearDominantVeinIds\.length/.test(WORLD_TREE_FACTORY)
   && /energyGroup\.userData\.supportVeinCount = supportVeinIds\.length/.test(WORLD_TREE_FACTORY)
   && /energyDominantVeinCount:s\.energyDominantVeinCount/.test(HTML)
+  && /energyFrontDominantVeinCount:s\.energyFrontDominantVeinCount/.test(HTML)
+  && /energyRearDominantVeinCount:s\.energyRearDominantVeinCount/.test(HTML)
   && /energySupportVeinCount:s\.energySupportVeinCount/.test(HTML)
-  && /energyRearSupportVeinCount:s\.energyRearSupportVeinCount/.test(HTML)
   && /energySideSupportVeinCount:s\.energySideSupportVeinCount/.test(HTML)
   && /energyBarkHaloPolicy:s\.energyBarkHaloPolicy/.test(HTML),
-  'runtime metadata reports exact dominant/rear/side support IDs, counts, radii, weights, and vein-only bark halo policy');
+  'runtime metadata reports exact front/rear dominant and side support IDs, counts, radii, weights, and vein-only bark halo policy');
 ok(/function withPrivateRandom\(seed, build\)/.test(WORLD_TREE_FACTORY)
   && /const ornamentEnergy = withPrivateRandom\(`\$\{seed\}\/ornament-material`, \(\) => energy\.clone\(\)\)/.test(WORLD_TREE_FACTORY),
   'pendant material UUID creation is isolated from the protected global procedural RNG sequence');
@@ -804,14 +816,17 @@ ok(/const VISUAL_LOD=\{outlines:\[\],effects:\[\]/.test(visualLodBlock)
   && /_registerOutlineLod\(o,mesh,th\)/.test(HTML)
   && /entry\.projectedPx<1\.25&&entry\.distance>45/.test(visualLodBlock)
   && /entry\.projectedPx>1\.75\|\|entry\.distance<40/.test(visualLodBlock)
-  && /VISUAL_LOD\.nearBypass=camera\.position\.distanceTo\(_lodHeroCenter\)<40/.test(visualLodBlock)
+  && /VISUAL_LOD\.nearBypass=false/.test(visualLodBlock)
+  && !/_lodHeroCenter/.test(visualLodBlock)
   && /frame-VISUAL_LOD\.lastFrame<8/.test(visualLodBlock)
-  && !/scene\.traverse/.test(visualLodBlock) && !/new THREE\.Box3/.test(visualLodBlock), 'outline LOD uses cached projected diameter, hysteresis, and an 8-rendered-frame cadence without scene traversal');
+  && !/scene\.traverse/.test(visualLodBlock) && !/new THREE\.Box3/.test(visualLodBlock), 'outline LOD uses cached projected diameter and hysteresis without globally waking the town near the protected tree');
 ok(/_registerEffectLod\(halo,'street-lamp-halo',0\.18\)/.test(HTML)
   && /_registerEffectLod\(pool,'street-lamp-pool',0\.30\)/.test(HTML)
   && /_registerEffectLod\(halo,'glow-flora-halo',0\.22\)/.test(HTML)
   && /_registerEffectLod\(glowPool,'repo-glow-pool',0\.25\)/.test(HTML)
-  && /entry\.projectedPx<1\.5&&entry\.distance>50&&entry\.signal<0\.22/.test(visualLodBlock), 'only explicitly registered low-signal lamp/flora/repo pools receive projected-size effect LOD');
+  && /VISUAL_LOD_DESKTOP_EFFECT_SHOW_DISTANCE=140,VISUAL_LOD_DESKTOP_EFFECT_HIDE_DISTANCE=160/.test(visualLodBlock)
+  && /desktopLowSignal=_desktopFrameDropGuard\(\)&&entry\.signal<0\.22/.test(visualLodBlock)
+  && /entry\.projectedPx<1\.5&&entry\.distance>50&&entry\.signal<0\.22/.test(visualLodBlock), 'explicit low-signal lamp/flora/repo pools receive projected-size LOD plus bounded desktop distance culling');
 ok(/protect\(MEMORIAL_TREE&&MEMORIAL_TREE\.group\)/.test(visualLodBlock)
   && /protect\(player\)/.test(visualLodBlock) && /protect\(navHolder\)/.test(visualLodBlock)
   && /ZONE_HUBS\.forEach\(h=>protect\(h\.group\)\)/.test(visualLodBlock)
@@ -963,9 +978,13 @@ ok(/const distance=camera\.position\.distanceTo\(MEMORIAL_TREE\.glowWorld\),far=
   && /worldBloom\.strength=1\.35; worldBloom\.radius=0\.58; worldBloom\.threshold=0\.06/.test(HTML)
   && /distanceCompensated:false,emissionPolicy:'constant-world-luminance'/.test(memorialTreeBlock),
   'distance is diagnostic only; branch/leaf/glyph bloom luminance stays constant near and far');
-ok(/MEM_TREE_BLOOM_HZ=LOW_END\?20:30/.test(HTML)
-  && /sourceDue=needSource&&MEMORIAL_TREE&&\(WORLD_TREE_RENDER_MODE!=='final-composite'\|\|MEMORIAL_TREE\.bloomDirty\|\|now-MEMORIAL_TREE\.lastBloomAt>=1000\/MEM_TREE_BLOOM_HZ\)/.test(HTML),
-  'the invariant glow cache refreshes at 20–30Hz while the base scene remains responsive');
+ok(/MEM_TREE_BLOOM_HZ=LOW_END\?20:30, MEM_TREE_DESKTOP_BLOOM_MIN_FRAME_GAP=3/.test(HTML)
+  && /const _treeBloomMinFrameGap=\(\)=>_desktopFrameDropGuard\(\)\?MEM_TREE_DESKTOP_BLOOM_MIN_FRAME_GAP:0/.test(HTML)
+  && /bloomFrameGap=_treeBloomMinFrameGap\(\)/.test(HTML)
+  && /\(!bloomFrameGap\|\|renderedFrame-MEMORIAL_TREE\.lastBloomFrame>=bloomFrameGap\)&&now-MEMORIAL_TREE\.lastBloomAt>=1000\/MEM_TREE_BLOOM_HZ/.test(HTML)
+  && /lastBloomAt:-Infinity,lastBloomFrame:-Infinity,bloomDirty:true/.test(memorialTreeBlock)
+  && /MEMORIAL_TREE\.lastBloomFrame=renderedFrame/.test(HTML),
+  'the glow cache keeps its 20–30Hz ceiling, adds a slow-frame guard only on fine-pointer desktop, and keeps mobile time-driven');
 ok(/pulse=REDUCED\?1:\(0\.93\+Math\.sin\(elapsed\*1\.5\)\*0\.07\)/.test(memorialTreeBlock),
   'reduced-motion keeps the additive world-tree halos steady');
 ok(/geometry\.translate\(0, -REPOLIS_LEAF_ATTACHMENT\.rootLocalY, 0\)/.test(WORLD_TREE_FACTORY)
