@@ -362,8 +362,10 @@ ok(/window\.__npcBudget=/.test(HTML) && /window\.__npcTranscript=/.test(HTML), '
 let WORKER = '';
 try { WORKER = readFileSync(join(ROOT, 'cloudflare-taxi/src/grounded.js'), 'utf8'); } catch (e) { console.log('  ✗ grounded.js load: ' + e.message); }
 ok(WORKER.length > 0, 'grounded.js worker source loaded');
-ok(/if \(body && body\.npc_action\) return npcHandler\(body, request, env\)/.test(WORKER), 'fetch router dispatches body.npc_action to npcHandler (existing actions untouched)');
+ok(/if \(body && body\.npc_action\) return npcHandler\(body, request, env, ctx\)/.test(WORKER), 'fetch router dispatches body.npc_action to npcHandler with execution context');
 ok(/async function npcHandler\(/.test(WORKER), 'npcHandler() exists');
+ok(/grounded_mcp_mslearn/.test(WORKER) && /grounded_mcp_deepwiki/.test(WORKER) && /grounded_kb_taxi/.test(WORKER), 'grounded AI routes use the report taxonomy');
+ok(/tokensIn: u\.prompt_tokens/.test(WORKER) && /cachedTokens: u\.cached_tokens/.test(WORKER) && /tokensOut: u\.completion_tokens/.test(WORKER), 'provider usage emits input, cached-input, and output tokens');
 ok(/action === "npcConfig"/.test(WORKER) && /action === "npcBudget"/.test(WORKER) && /"npcAmbientTurn"/.test(WORKER) && /"npcPlayerChat"/.test(WORKER), 'all four npc actions (config/budget/ambientTurn/playerChat) handled');
 ok(/if \(!aiEnabled\) return null/.test(WORKER), 'hard ceiling: npcModelCall returns null unless the resolved aiEnabled is true');
 ok(/async function npcResolveFlags\(/.test(WORKER), 'npcResolveFlags() resolves the effective NPC flags (env vs live KV)');

@@ -394,6 +394,7 @@ async function chatLLM(who, history, question, lang, env) {
   if (!env.AAD_CLIENT_ID || !env.AAD_CLIENT_SECRET || !env.AAD_TENANT || !env.AOAI_ENDPOINT) return null;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), Number(env.LLM_TIMEOUT_MS || 20000));
+  const started = Date.now();
   try {
     const token = await aadToken(env);
     const dep = env.AOAI_DEPLOYMENT || "gpt-5.4-mini";
@@ -417,7 +418,12 @@ async function chatLLM(who, history, question, lang, env) {
     if (!r.ok) return null;
     const j = await r.json();
     const txt = j.choices?.[0]?.message?.content;
-    return (txt && txt.trim()) || null;
+    return txt && txt.trim() ? {
+      text: txt.trim(),
+      usage: normalizeModelUsage(j.usage),
+      model: dep,
+      ms: Date.now() - started,
+    } : null;
   } catch {
     clearTimeout(timer);
     return null;
@@ -472,7 +478,19 @@ async function groundedRetrieve(cfg, messages, env) {
     const mcpMs = (data.activity || [])
       .filter((a) => a.type === "mcpServer")
       .reduce((s, a) => s + (a.elapsedMs || 0), 0);
-    return { ok: true, status: r.status, data, answer, tools, mcpMs, totalMs: Date.now() - started };
+    const modelActivities = (data.activity || []).filter((a) =>
+      a && (a.type === "modelQueryPlanning" || a.type === "modelAnswerSynthesis")
+    ).map((a) => ({
+      phase: a.type === "modelQueryPlanning" ? "retrieval_planning" : "answer_synthesis",
+      model: String(a.modelName || "unknown").slice(0, 80),
+      ms: Math.max(0, Number(a.elapsedMs) || 0),
+      usage: normalizeModelUsage({
+        prompt_tokens: a.inputTokens,
+        completion_tokens: a.outputTokens,
+        prompt_tokens_details: { cached_tokens: a.cachedInputTokens || 0 },
+      }),
+    }));
+    return { ok: true, status: r.status, data, answer, tools, mcpMs, modelActivities, totalMs: Date.now() - started };
   } catch (e) {
     clearTimeout(timer);
     const reason = e.name === "AbortError" ? "timeout " + timeoutMs + "ms" : String(e).slice(0, 160);
@@ -764,10 +782,26 @@ function npcDeployment(env, role) {
   return (role === "ambient" && env.NPC_MODEL_AMBIENT) || (role === "player" && env.NPC_MODEL_PLAYER)
     || env.NPC_MODEL_DEFAULT || "gpt-5.4-mini";
 }
-function npcCostUsd(env, usage) {
+function normalizeModelUsage(usage) {
+  const u = usage && typeof usage === "object" ? usage : {};
+  const details = u.prompt_tokens_details || u.input_tokens_details || {};
+  return {
+    prompt_tokens: Math.max(0, Number(u.prompt_tokens ?? u.input_tokens) || 0),
+    cached_tokens: Math.max(0, Number(details.cached_tokens ?? u.cached_tokens) || 0),
+    completion_tokens: Math.max(0, Number(u.completion_tokens ?? u.output_tokens) || 0),
+  };
+}
+function modelCostUsd(env, usage) {
   if (!usage) return Number(env.NPC_TURN_COST_USD || 0.0003);
-  const inK = (usage.prompt_tokens || 0) / 1000, outK = (usage.completion_tokens || 0) / 1000;
-  return inK * Number(env.NPC_PRICE_IN_PER_1K || 0.00015) + outK * Number(env.NPC_PRICE_OUT_PER_1K || 0.0006);
+  const u = normalizeModelUsage(usage);
+  const input = Math.max(0, u.prompt_tokens - u.cached_tokens);
+  const priceIn = Number(env.MODEL_PRICE_IN_PER_1M_USD || 0.75);
+  const priceCached = Number(env.MODEL_PRICE_CACHED_IN_PER_1M_USD || 0.075);
+  const priceOut = Number(env.MODEL_PRICE_OUT_PER_1M_USD || 4.5);
+  return input / 1000000 * priceIn + u.cached_tokens / 1000000 * priceCached + u.completion_tokens / 1000000 * priceOut;
+}
+function npcCostUsd(env, usage) {
+  return modelCostUsd(env, usage);
 }
 // Fire-and-forget metrics to a private collector; text is redacted to lengths only (public-safe).
 function npcRedact(m) {
@@ -778,10 +812,53 @@ function npcRedact(m) {
     else o[k] = v; }
   return o;
 }
-function npcMetric(env, name, meta) {
+function npcMetric(env, name, meta, ctx) {
   try { const url = env.METRICS_URL; if (!url) return;
-    fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ev: name, t: Date.now(), ...npcRedact(meta) }) }).catch(() => {});
+    const task = fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ev: name, ts: Date.now(), ...npcRedact(meta) }) }).catch(() => {});
+    if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(task);
+    return task;
   } catch { /* metrics never break a turn */ }
+}
+function metricContext(body, request) {
+  const rawOrigin = body?.instanceOrigin === "remote" ? "external" : body?.instanceOrigin;
+  const origin = ["external", "clone-local", "owner-dev"].includes(rawOrigin) ? rawOrigin :
+    (/^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::|\/|$)/i.test(request.headers.get("Origin") || "") ? "clone-local" : "external");
+  const instanceId = /^[a-f0-9-]{16,64}$/i.test(String(body?.instanceId || "")) ? String(body.instanceId).slice(0, 64) : "";
+  return {
+    instanceOrigin: origin,
+    instanceId,
+    cityUser: String(body?.cityUser || "").slice(0, 39),
+    cityMode: String(body?.cityMode || "").slice(0, 16),
+  };
+}
+function groundedRoute(who) {
+  if (who === "msdocs") return "grounded_mcp_mslearn";
+  if (who === "deepwiki") return "grounded_mcp_deepwiki";
+  return "grounded_kb_taxi";
+}
+function personaRoute(role) {
+  return role === "ambient" ? "persona_ambient" : "persona_visitor";
+}
+function emitProviderUsage(env, ctx, route, ks, npc, activity, base) {
+  if (!activity || !activity.usage) return;
+  const u = normalizeModelUsage(activity.usage);
+  npcMetric(env, "ai_chat_turn", {
+    route,
+    phase: activity.phase || "model_call",
+    ks: ks || "none",
+    npc: npc || "unknown",
+    model: activity.model || "unknown",
+    ms: activity.ms,
+    ok: true,
+    ai: true,
+    providerCall: true,
+    answer: false,
+    tokensIn: u.prompt_tokens,
+    cachedTokens: u.cached_tokens,
+    tokensOut: u.completion_tokens,
+    costUsd: modelCostUsd(env, u),
+    ...(base || {}),
+  }, ctx);
 }
 // Provider adapter. Hard ceiling: with the effective aiEnabled false this returns null WITHOUT calling any model.
 async function npcModelCall(env, role, sys, userMsg, aiEnabled) {
@@ -789,6 +866,7 @@ async function npcModelCall(env, role, sys, userMsg, aiEnabled) {
   if (!env.AAD_CLIENT_ID || !env.AAD_CLIENT_SECRET || !env.AAD_TENANT || !env.AOAI_ENDPOINT) return null;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), Number(env.NPC_TIMEOUT_MS || 12000));
+  const started = Date.now();
   try {
     const token = await aadToken(env);
     const dep = npcDeployment(env, role);
@@ -804,7 +882,7 @@ async function npcModelCall(env, role, sys, userMsg, aiEnabled) {
     if (!r.ok) return null;
     const j = await r.json();
     const txt = j.choices?.[0]?.message?.content;
-    return txt && txt.trim() ? { text: txt.trim(), usage: j.usage || null } : null;
+    return txt && txt.trim() ? { text: txt.trim(), usage: j.usage || null, ms: Date.now() - started } : null;
   } catch { clearTimeout(timer); return null; }
 }
 // --- Live flag resolver. NPC_LIVE_TOGGLE is the master kill-switch. When it is NOT "true",
@@ -837,7 +915,7 @@ async function npcResolveFlags(env) {
     source: "kv", liveToggle: true,
   };
 }
-async function npcHandler(body, request, env) {
+async function npcHandler(body, request, env, ctx) {
   const action = body.npc_action;
   const lang = String(body.lang || "ko").toLowerCase().startsWith("en") ? "en" : "ko";
   const flags = await npcResolveFlags(env);
@@ -859,23 +937,42 @@ async function npcHandler(body, request, env) {
     const featureOn = role === "ambient" ? ambientOn : playerOn;
     const budget = npcBudgetState(env);
     // Env-off ceiling → never a model call; client falls back to its free scripted bank.
-    if (!featureOn) { npcMetric(env, "npc_fallback_used", { where: role, reason: "disabled" }); return json({ ok: true, fallback: true, reason: "npc_ai_disabled", budget }, 200, env); }
-    if (budget.blocked) { npcMetric(env, "npc_budget_blocked", { where: role }); return json({ ok: false, fallback: true, reason: "npc_budget_exhausted", budget }, 200, env); }
+    const requestMeta = metricContext(body, request);
+    if (!featureOn) { npcMetric(env, "npc_fallback_used", { where: role, route: personaRoute(role), reason: "disabled", ...requestMeta }, ctx); return json({ ok: true, fallback: true, reason: "npc_ai_disabled", budget }, 200, env); }
+    if (budget.blocked) { npcMetric(env, "npc_budget_blocked", { where: role, route: personaRoute(role), reason: "npc_budget_exhausted", ...requestMeta }, ctx); return json({ ok: false, fallback: true, reason: "npc_budget_exhausted", budget }, 200, env); }
     const sys = role === "ambient" ? npcAmbientPrompt(body.speaker, body.listener, body.topic, lang) : npcPlayerPrompt(body.speaker, lang, { chime: !!body.chime, prev: body.prev });
     const userMsg = role === "ambient" ? npcAmbientUser(body, lang) : npcPlayerUser(body, lang);
     const out = await npcModelCall(env, role, sys, userMsg, aiEnabled);
-    if (!out) { npcMetric(env, "npc_fallback_used", { where: role, reason: "model_unavailable" }); return json({ ok: true, fallback: true, reason: "model_unavailable", budget }, 200, env); }
+    if (!out) { npcMetric(env, "npc_fallback_used", { where: role, route: personaRoute(role), reason: "model_unavailable", ...requestMeta }, ctx); return json({ ok: true, fallback: true, reason: "model_unavailable", budget }, 200, env); }
     const cost = npcCostUsd(env, out.usage);
     npcChargeTurn(env, cost);
     const budget2 = npcBudgetState(env);
-    npcMetric(env, role === "ambient" ? "npc_ambient_turn" : "npc_player_chat", { where: role, ai: true, line: out.text, spent: cost });
-    return json({ ok: true, line: capLine(out.text, role === "ambient" ? 90 : 180), budget: budget2 }, 200, env);
+    const usage = normalizeModelUsage(out.usage);
+    npcMetric(env, role === "ambient" ? "npc_ambient_turn" : "npc_player_chat", {
+      where: role,
+      route: personaRoute(role),
+      phase: "persona",
+      npc: String(body.speaker || "resident"),
+      model: npcDeployment(env, role),
+      providerCall: true,
+      answer: true,
+      ok: true,
+      ai: true,
+      line: out.text,
+      ms: out.ms,
+      tokensIn: usage.prompt_tokens,
+      cachedTokens: usage.cached_tokens,
+      tokensOut: usage.completion_tokens,
+      costUsd: cost,
+      ...requestMeta,
+    }, ctx);
+    return json({ ok: true, line: capLine(out.text, role === "ambient" ? 90 : 180), usage, model: npcDeployment(env, role), budget: budget2 }, 200, env);
   }
   return json({ error: "unknown npc_action" }, 400, env);
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const headers = corsHeaders(env);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
     if (request.method === "GET") {
@@ -896,7 +993,7 @@ export default {
     // Free-topic LIVE debate streamed as SSE (popup closes, watch in 3D, KRONOS verdict).
     if (body && body.action === "councilLive") return councilStreamHandler(body, request, env);
     // 🧑‍🌾 Resident NPC social layer — townspeople config/budget/ambient/player-chat (no `question`).
-    if (body && body.npc_action) return npcHandler(body, request, env);
+    if (body && body.npc_action) return npcHandler(body, request, env, ctx);
 
     if (!question) return json({ error: "question required" }, 400, env);
 
@@ -905,18 +1002,35 @@ export default {
     const who = npc && scholarConfig(npc, env) ? npc : "taxi";
     const cfg = scholarConfig(who, env);
     const messages = buildMessages(history, question);
+    const requestMeta = metricContext(body, request);
 
     // Explicit small-talk / general intent (the client decided this isn't a repo or doc
     // lookup) → answer straight from the model in the scholar's voice, no KB retrieval.
     if (chat) {
       const g = await chatLLM(who, history, question, lang, env);
-      if (g) return json({
-        repo: null, message: g, general: true,
+      if (g) {
+        emitProviderUsage(env, ctx, "persona_visitor", "none", who, { phase: "persona", model: g.model, usage: g.usage, ms: g.ms }, requestMeta);
+        return json({
+        repo: null, message: g.text, general: true, usage: g.usage, model: g.model,
         trace: { general: true, model: env.AOAI_DEPLOYMENT || "gpt-5.4-mini" },
-      }, 200, env);
+      }, 200, env); }
     }
 
     const out = await groundedRetrieve(cfg, messages, env);
+    const route = groundedRoute(who);
+    for (const activity of out.modelActivities || []) {
+      emitProviderUsage(env, ctx, route, cfg.ks, who, activity, {
+        refs: Array.isArray(out.data?.references) ? out.data.references.length : 0,
+        ...requestMeta,
+      });
+    }
+    const usage = (out.modelActivities || []).reduce((sum, a) => {
+      const u = normalizeModelUsage(a.usage);
+      sum.prompt_tokens += u.prompt_tokens;
+      sum.cached_tokens += u.cached_tokens;
+      sum.completion_tokens += u.completion_tokens;
+      return sum;
+    }, { prompt_tokens: 0, cached_tokens: 0, completion_tokens: 0 });
 
     // KB unreachable / slow / unconfigured / empty. A scholar with its own public MCP falls
     // back to a direct keyless call (clone-friendly); the taxi tells the client to use Local.
@@ -932,6 +1046,7 @@ export default {
       return json({
         repo,
         message: out.answer,
+        usage,
         trace: { ks: cfg.ks, tools: out.tools, refs: refs.slice(0, 6), mcpMs: out.mcpMs, totalMs: out.totalMs, partial: out.status === 206 },
       }, 200, env);
     }
@@ -943,14 +1058,17 @@ export default {
     // so the user sees the sources they asked for instead of an unsourced "general" reply.
     if (!docs.length) {
       const g = await chatLLM(who, history, question, lang, env);
-      if (g) return json({
-        repo: null, message: g, general: true,
+      if (g) {
+        emitProviderUsage(env, ctx, "persona_visitor", "none", who, { phase: "persona", model: g.model, usage: g.usage, ms: g.ms }, requestMeta);
+        return json({
+        repo: null, message: g.text, general: true, usage: g.usage, model: g.model,
         trace: { general: true, model: env.AOAI_DEPLOYMENT || "gpt-5.4-mini" },
-      }, 200, env);
+      }, 200, env); }
     }
     return json({
       repo: null,
       message: out.answer,
+      usage,
       trace: { ks: cfg.ks, tools: out.tools, refs: docs.slice(0, 6), docs: true, mcpMs: out.mcpMs, totalMs: out.totalMs, partial: out.status === 206 },
     }, 200, env);
   },

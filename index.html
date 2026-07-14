@@ -973,12 +973,19 @@ const _DBG = _QUERY.has('dbg');
 const _DIAGNOSTICS = _DBG || _QUERY.get('perf')==='1';
 const SESSION_ID = (()=>{ try{ return (crypto.randomUUID && crypto.randomUUID()) || (Date.now()+'-'+Math.random().toString(36).slice(2)); }
   catch(e){ return Date.now()+'-'+Math.random().toString(36).slice(2); } })();
+const INSTANCE_ID = (()=>{ const key='repolis:anonymous-instance:v1'; try{ let id=localStorage.getItem(key);
+  if(!/^[a-f0-9-]{16,64}$/i.test(id||'')){ id=(crypto.randomUUID&&crypto.randomUUID())||(Date.now().toString(16)+'-'+Math.random().toString(16).slice(2)); localStorage.setItem(key,id); }
+  return id; }catch(e){ return SESSION_ID; } })();
+function instanceOrigin(){ const local=/^(localhost|127\.0\.0\.1|::1)$/i.test(location.hostname);
+  if(!local) return 'external'; return currentUser.toLowerCase()===OWNER.toLowerCase()?'owner-dev':'clone-local'; }
+function analyticsIdentity(){ return { instanceId:INSTANCE_ID, instanceOrigin:instanceOrigin(), cityUser:currentUser, cityMode }; }
 const recentAnalyticsEvents = [];
 function track(eventName, payload){
   try{
     const _now = new Date();
     const ev = Object.assign({ ev:eventName, cityUser:currentUser, cityMode,
-      repoCount:(REPOS && REPOS.length) || 0, source:dataSource, sessionId:SESSION_ID, ts:_now.getTime(), h:_now.getHours(), wd:_now.getDay() }, payload||{});
+      repoCount:(REPOS && REPOS.length) || 0, source:dataSource, sessionId:SESSION_ID, instanceId:INSTANCE_ID,
+      instanceOrigin:instanceOrigin(), ts:_now.getTime(), h:_now.getHours(), wd:_now.getDay() }, payload||{});
     recentAnalyticsEvents.push(ev); if(recentAnalyticsEvents.length > 150) recentAnalyticsEvents.shift();
     if(_DBG) console.debug('[track]', eventName, ev);
     if(ANALYTICS_ENDPOINT){ try{
@@ -5655,7 +5662,7 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
   _festivalTick(tt); _ambientTick(); }
 
 // ---- optional worker turns (npcAmbientTurn / npcPlayerChat) — any failure returns null → scripted fallback ----
-async function _npcFetch(payload){ const url=NPC_CFG.worker; if(!url) return null;
+async function _npcFetch(payload){ const url=NPC_CFG.worker; if(!url) return null; payload=Object.assign({},payload,analyticsIdentity());
   const ctrl=new AbortController(), to=setTimeout(()=>ctrl.abort(),9000);
   try{ const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal}); clearTimeout(to);
     if(!res.ok) return null; const data=await res.json(); if(data&&data.budget) _applyBudget(data.budget); return data; }
@@ -6598,8 +6605,15 @@ function chatMeta(extra){ const npc=npcKindOf(extra&&extra.npc); return Object.a
 }, extra||{}); }
 function traceRefCount(tr){ return tr&&Array.isArray(tr.refs) ? tr.refs.length : 0; }
 function trackChatEvent(name, extra){ track(name, chatMeta(extra)); }
-function trackAiTurn(route, npc, q, start, outcome){ trackChatEvent('ai_chat_turn', Object.assign({
-  route, npc:npcKindOf(npc), qLen:qLenBucket(q), ms:elapsedMs(start)
+function canonicalAiRoute(route,npc){ const who=npcKindOf(npc);
+  if(route==='grounded') return 'grounded_kb_taxi';
+  if(route==='scholar_grounded') return who==='msdocs'?'grounded_mcp_mslearn':who==='deepwiki'?'grounded_mcp_deepwiki':'persona_visitor';
+  if(route==='general_chat'||route==='scholar') return 'persona_visitor';
+  return route; }
+function aiRequestPayload(payload){ return Object.assign({},payload,analyticsIdentity()); }
+function trackAiTurn(route, npc, q, start, outcome){ const canonical=canonicalAiRoute(route,npc); trackChatEvent('ai_chat_turn', Object.assign({
+  route:canonical, legacyRoute:canonical===route?undefined:route, phase:'answer', answer:true, providerCall:false,
+  npc:npcKindOf(npc), qLen:qLenBucket(q), ms:elapsedMs(start)
 }, outcome||{})); }
 function stripHtml(h){ const d=document.createElement('div'); d.innerHTML=String(h||''); return (d.textContent||d.innerText||'').replace(/\s+/g,' ').trim().slice(0,600); }
 function pushHist(role,text){ const s=stripHtml(text); if(!s) return; chatHistory.push({role,text:s}); if(chatHistory.length>12) chatHistory=chatHistory.slice(-12); }
@@ -6989,7 +7003,7 @@ async function generalChat(q, npc){
   const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||20000;
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),tmo);
   try{
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,npc,chat:true,history:priorHist(),lang:LANG}),signal:ctrl.signal});
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(aiRequestPayload({question:q,npc,chat:true,history:priorHist(),lang:LANG})),signal:ctrl.signal});
     clearTimeout(to); if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json(); sb.remove();
     if(data.message){ trackAiTurn('general_chat', npc, q, aiStarted, { ok:true, refs:traceRefCount(data.trace), general:!!(data.trace&&data.trace.general) });
@@ -7012,7 +7026,7 @@ async function groundedAsk(q){
   const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||9500;  // configurable (Pro: raise w/ maxDuration)
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), tmo);
   try{
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,history:priorHist(),lang:LANG}),signal:ctrl.signal});
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(aiRequestPayload({question:q,history:priorHist(),lang:LANG})),signal:ctrl.signal});
     clearTimeout(to);
     if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json();
@@ -7065,7 +7079,7 @@ async function askScholar(q, npc){
   const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||30000;   // KB synthesis / DeepWiki can take ~5–20s
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),tmo);
   try{
-    const body={question:q,npc,history:priorHist(),lang:LANG}; if(repoName) body.repoName=repoName;
+    const body=aiRequestPayload({question:q,npc,history:priorHist(),lang:LANG}); if(repoName) body.repoName=repoName;
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});
     clearTimeout(to); if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json(); sb.remove();

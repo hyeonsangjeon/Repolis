@@ -38,6 +38,14 @@ GROUNDED_TIMEOUT_MS = "25000"
 AOAI_DEPLOYMENT = "gpt-5.4-mini"
 AOAI_API_VERSION = "2025-04-01-preview"
 
+# Private aggregate telemetry target and model-cost attribution assumptions.
+# The prices match the observed Foundry Models input/cached-input/output meters
+# and are shown verbatim in the private Observatory methodology panel.
+METRICS_URL = "https://repolis-metrics.wingnut0310.workers.dev/event"
+MODEL_PRICE_IN_PER_1M_USD = "0.75"
+MODEL_PRICE_CACHED_IN_PER_1M_USD = "0.075"
+MODEL_PRICE_OUT_PER_1M_USD = "4.5"
+
 # Set your Azure AI Search endpoint (not secret, but account-specific). Either
 # uncomment + edit here, or keep it out of git with `wrangler secret put SEARCH_ENDPOINT`:
 # SEARCH_ENDPOINT = "https://<your-search>.search.windows.net"
