@@ -43,7 +43,8 @@ export const REPOLIS_STAGES = [
   'full',
 ];
 
-export const REPOLIS_FACTORY_REVISION = 'azimuth-energy-v5-dual-face-b-attached-leaves';
+export const REPOLIS_FACTORY_REVISION = 'azimuth-energy-v6-dual-face-b-pendant-bloom';
+const MERGED_HANGING_LIGHT_REMOVED_UUIDS = 34;
 
 const STAGE_LEVEL = Object.fromEntries(
   REPOLIS_STAGES.map((stage, index) => [stage, index]),
@@ -1345,28 +1346,39 @@ function createConstellations(seed, variant, materials, anchors, root) {
   const hangingAnchors = anchors
     .filter((anchor) => anchor.position.y > 5 && Math.abs(anchor.position.x) > 2.4)
     .slice(0, 18);
+  const hangingGeometries = [];
   for (const [index, anchor] of hangingAnchors.entries()) {
     const length = 0.45 + (index % 5) * 0.17;
     const curve = new THREE.LineCurve3(
       anchor.position.clone(),
       anchor.position.clone().add(new THREE.Vector3(0, -length, 0)),
     );
-    group.add(new THREE.Mesh(
-      new THREE.TubeGeometry(curve, 4, 0.016, 5, false),
-      materials.ornamentEnergy,
-    ));
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), materials.ornamentEnergy);
-    bulb.position.copy(curve.v2);
-    group.add(bulb);
+    hangingGeometries.push(new THREE.TubeGeometry(curve, 4, 0.016, 5, false));
+    const bulb = new THREE.SphereGeometry(0.075, 10, 8);
+    bulb.translate(curve.v2.x, curve.v2.y, curve.v2.z);
+    hangingGeometries.push(bulb);
   }
+  const hangingGeometry = mergeGeometries(hangingGeometries, false);
+  if (!hangingGeometry) throw new Error('Unable to merge branch-end hanging ornaments');
+  hangingGeometries.forEach((geometry) => geometry.dispose());
+  const hangingLights = new THREE.Mesh(hangingGeometry, materials.ornamentEnergy);
+  hangingLights.name = 'repolis-hanging-ornaments-merged';
+  group.add(hangingLights);
+  // Preserve the caller's legacy RNG position after replacing 36 meshes with one.
+  for (let index = 0; index < MERGED_HANGING_LIGHT_REMOVED_UUIDS * 4; index += 1) Math.random();
   group.userData.hangingLightCount = hangingAnchors.length;
-  group.userData.hangingLightPolicy = 'bright-base-emissive-no-extra-bloom-draws';
+  group.userData.hangingLightMeshCount = 1;
+  group.userData.hangingLightPartCount = hangingGeometries.length;
+  group.userData.hangingLightPolicy = 'merged-attached-stem-bulb-selective-bloom-source';
   root.add(group);
   return {
     group,
     nodes,
     lines,
+    hangingLights,
     hangingLightCount: hangingAnchors.length,
+    hangingLightMeshCount: group.userData.hangingLightMeshCount,
+    hangingLightPartCount: group.userData.hangingLightPartCount,
     hangingLightPolicy: group.userData.hangingLightPolicy,
   };
 }
@@ -1569,6 +1581,8 @@ export function createRepolisHero({
     energyKnotRoles: energy?.knotRoleCounts ?? null,
     energyDrawMeshes: energy ? 2 : 0,
     hangingLightCount: constellations?.hangingLightCount ?? 0,
+    hangingLightMeshCount: constellations?.hangingLightMeshCount ?? 0,
+    hangingLightPartCount: constellations?.hangingLightPartCount ?? 0,
     hangingLightPolicy: constellations?.hangingLightPolicy ?? null,
     importedMeshes: 0,
     stage,

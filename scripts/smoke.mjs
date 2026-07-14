@@ -658,13 +658,14 @@ const staticInstanceBlock = (HTML.match(/\/\*STATIC_INSTANCES:START\*\/([\s\S]*?
 const buildingLodPrototypeBlock = (HTML.match(/\/\*BUILDING_LOD_PROTOTYPE:START\*\/([\s\S]*?)\/\*BUILDING_LOD_PROTOTYPE:END\*\//) || [, ''])[1];
 const buildingLodUpdateBlock = (HTML.match(/function _updateBuildingLodPrototype\(frame,force=false\)\{([\s\S]*?)\n\}\nfunction _syncBuildingLodFacade/) || [, ''])[1];
 const worldTreeBloomPrepBlock = (HTML.match(/function _prepareWorldTreeBloom\(\)\{([\s\S]*?)\n\}\nfunction _renderWorldTreeFrame/) || [, ''])[1];
+const worldTreeBloomProjectionBlock = (HTML.match(/function _updateWorldTreeBloomProjection\(\)\{([\s\S]*?)\n\}\nfunction _captureWorldTreeBloomProjection/) || [, ''])[1];
 ok(memorialTreeBlock.length > 0, 'world-tree procedural block is extractable from index.html');
 ok(visualLodBlock.length > 0, 'projected-size visual LOD block is extractable from index.html');
 ok(staticInstanceBlock.length > 0, 'exact-static instance block is extractable from index.html');
 ok(buildingLodPrototypeBlock.length > 0, '2C-A representative building LOD block is extractable from index.html');
-ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === '58dcf04d4052c4e86da755bfaac63852d08a33bc5a8b7dd9d7bc9ec4ff5c4836',
+ok(createHash('sha256').update(WORLD_TREE_FACTORY).digest('hex') === 'e2ba93eac7c13517005dd4ab4203a05b6b568ebf8f9b17a353b8cf39012281df',
   'Repolis factory provenance is pinned to dual-face dominant-vein candidate B with attached leaves and hanging lights');
-ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-energy-v5-dual-face-b-r2'/.test(HTML)
+ok(/import \{ createRepolisHero, REPOLIS_FACTORY_REVISION \} from '\.\/assets\/world-tree\/createRepolisHero\.js\?v=azimuth-energy-v6-dual-face-b-pendant-bloom-r1'/.test(HTML)
   && /import \{ mergeGeometries \} from 'three\/addons\/utils\/BufferGeometryUtils\.js'/.test(WORLD_TREE_FACTORY), 'native Solar Archive factory resolves through the existing Three.js import map');
 ok(/import \{ EffectComposer \}/.test(HTML) && /import \{ TexturePass \}/.test(HTML) && /import \{ UnrealBloomPass \}/.test(HTML)
   && /import \{ ShaderPass \}/.test(HTML) && /import \{ OutputPass \}/.test(HTML)
@@ -702,7 +703,7 @@ ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
 ok(/macroBranchSpecs\(\)/.test(WORLD_TREE_FACTORY) && /secondaryBranches\(spec, seed/.test(WORLD_TREE_FACTORY)
   && /fineBranches\(spec, seed\)/.test(WORLD_TREE_FACTORY) && /mergedFineGeometry/.test(WORLD_TREE_FACTORY), 'factory preserves macro → secondary → merged fine branch hierarchy');
-ok(/REPOLIS_FACTORY_REVISION = 'azimuth-energy-v5-dual-face-b-attached-leaves'/.test(WORLD_TREE_FACTORY)
+ok(/REPOLIS_FACTORY_REVISION = 'azimuth-energy-v6-dual-face-b-pendant-bloom'/.test(WORLD_TREE_FACTORY)
   && /function createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
   && /const surfaceRadius = createSurfaceRadius\(/.test(WORLD_TREE_FACTORY)
   && /const \{ radius, ridges \} = surfaceRadius\(t, angle\)/.test(WORLD_TREE_FACTORY)
@@ -760,12 +761,21 @@ ok(/function withPrivateRandom\(seed, build\)/.test(WORLD_TREE_FACTORY)
   'pendant material UUID creation is isolated from the protected global procedural RNG sequence');
 ok(/ornamentEnergy\.name = 'repolis-hanging-ornament-energy'/.test(WORLD_TREE_FACTORY)
   && /ornamentEnergy\.emissiveIntensity = 1\.9/.test(WORLD_TREE_FACTORY)
-  && /new THREE\.TubeGeometry\(curve, 4, 0\.016, 5, false\),[\s\S]*?materials\.ornamentEnergy/.test(WORLD_TREE_FACTORY)
-  && /new THREE\.SphereGeometry\(0\.075, 10, 8\), materials\.ornamentEnergy/.test(WORLD_TREE_FACTORY)
+  && /hangingGeometries\.push\(new THREE\.TubeGeometry\(curve, 4, 0\.016, 5, false\)\)/.test(WORLD_TREE_FACTORY)
+  && /const bulb = new THREE\.SphereGeometry\(0\.075, 10, 8\)/.test(WORLD_TREE_FACTORY)
+  && /const hangingGeometry = mergeGeometries\(hangingGeometries, false\)/.test(WORLD_TREE_FACTORY)
+  && /const hangingLights = new THREE\.Mesh\(hangingGeometry, materials\.ornamentEnergy\)/.test(WORLD_TREE_FACTORY)
+  && /const MERGED_HANGING_LIGHT_REMOVED_UUIDS = 34/.test(WORLD_TREE_FACTORY)
+  && /index < MERGED_HANGING_LIGHT_REMOVED_UUIDS \* 4/.test(WORLD_TREE_FACTORY)
   && /hangingLightCount: constellations\?\.hangingLightCount \?\? 0/.test(WORLD_TREE_FACTORY)
+  && /hangingLightMeshCount: constellations\?\.hangingLightMeshCount \?\? 0/.test(WORLD_TREE_FACTORY)
+  && /hangingLightPartCount: constellations\?\.hangingLightPartCount \?\? 0/.test(WORLD_TREE_FACTORY)
+  && /hangingLightMeshCount:s\.hangingLightMeshCount/.test(HTML)
+  && /hangingLightPartCount:s\.hangingLightPartCount/.test(HTML)
   && /hangingLightPolicy:s\.hangingLightPolicy/.test(HTML)
-  && /branchEndOrnaments:'bright-base-emissive-no-extra-bloom-draws'/.test(memorialTreeBlock),
-  '18 existing branch-end pendants gain a brighter base-emissive material without entering the extra bloom draw list');
+  && /hangingLightPolicy = 'merged-attached-stem-bulb-selective-bloom-source'/.test(WORLD_TREE_FACTORY)
+  && /branchEndOrnaments:'attached-stem-bulb-selective-soft-bloom-1\.35'/.test(memorialTreeBlock),
+  '18 exact stem/bulb pendants merge to one draw and expose one dedicated selective-bloom source');
 ok(/function createOrganicEnergyKnotGeometry\(knot, seed\)/.test(WORLD_TREE_FACTORY)
   && /new THREE\.SphereGeometry\(1, 9, 6\)/.test(WORLD_TREE_FACTORY)
   && /knotAt\(rootIndex,[^\n]+, 'root-junction'\)/.test(WORLD_TREE_FACTORY)
@@ -938,13 +948,18 @@ ok(/const bloomRoots=\[\.\.\.crowns,hero\.runtime\.nodes\['energy-network'\],her
   && /amber:_worldTreeBloomMaterial\(hero\.variant\.amber,0\.4,true/.test(memorialTreeBlock)
   && /cyan:_worldTreeBloomMaterial\(hero\.variant\.cyan,0\.55,true/.test(memorialTreeBlock)
   && /energy:_worldTreeBloomMaterial\(hero\.variant\.energy,4,true/.test(memorialTreeBlock)
+  && /function _withWorldTreePrivateRandom\(fn\)/.test(HTML)
+  && /pendant:_withWorldTreePrivateRandom\(\(\)=>_worldTreeBloomMaterial\(hero\.variant\.energy,1\.35,true/.test(memorialTreeBlock)
   && /glyphGold:_worldTreeBloomMaterial\(hero\.variant\.energy,1\.75,false/.test(memorialTreeBlock)
   && /glyphCyan:_worldTreeBloomMaterial\(hero\.variant\.cyan,1\.9,false/.test(memorialTreeBlock)
   && /if\(o\.isMesh\)\{ o\.layers\.set\(0\); if\(night&&MEMORIAL_TREE\.bloomExtractMeshSet\.has\(o\)\) o\.layers\.enable\(MEM_TREE_LIGHT_LAYER\)/.test(memorialTreeBlock)
   && /depthMaterials=new Set\(\[hero\.materials\.bark,hero\.materials\.ground,hero\.materials\.cutWood\]\)/.test(memorialTreeBlock)
   && /else if\(depthMaterials\.has\(mesh\.material\)\) bloomExtractEntries\.push\(\{mesh,baseMaterial:mesh\.material,bloomMaterial:BLOOM_DARK_MATERIAL\}\)/.test(memorialTreeBlock)
+  && /hero\.runtime\.nodes\.constellations\?\.traverse\(n=>\{ if\(n\.isMesh&&n\.material===hero\.materials\.ornamentEnergy\)/.test(memorialTreeBlock)
+  && /\[hero\.materials\.ornamentEnergy,bloomMaterials\.pendant\]/.test(memorialTreeBlock)
+  && /pendantBloomMeshes=bloomExtractEntries\.filter\(entry=>entry\.baseMaterial===hero\.materials\.ornamentEnergy\)\.length/.test(memorialTreeBlock)
   && /bloomLights\.forEach\(light=>light\.layers\.set\(MEM_TREE_LIGHT_LAYER\)\)/.test(memorialTreeBlock)
-  && !/hero\.runtime\.nodes\.constellations/.test(memorialTreeBlock)
+  && !/const bloomRoots=\[[^\n]*constellations/.test(memorialTreeBlock)
   && !/WorldTree_(Key|CoolRim|WarmFill|FrontFill)/.test(memorialTreeBlock), 'one energy-led leaf/glyph/knot/vein hierarchy uses dark branch depth occlusion without unrelated tree draws');
 ok(/requestedTreeVisible=MEMORIAL_TREE\?MEMORIAL_TREE\.requestedVisible!==false:false/.test(HTML)
   && /MEMORIAL_TREE\.group\.visible=requestedTreeVisible/.test(HTML)
@@ -952,10 +967,23 @@ ok(/requestedTreeVisible=MEMORIAL_TREE\?MEMORIAL_TREE\.requestedVisible!==false:
   && /finalMix\.uniforms\.baseTexture\.value=emissiveOnly\?emissiveTarget\.texture:baseTarget\.texture/.test(HTML)
   && /WORLD_TREE_RENDER_MODE==='bloom-only'\|\|\(emissiveOnly&&!treeVisible\)\?0:1/.test(HTML)
   && !/emissiveWeight/.test(HTML), 'production final composite samples only base + bloom; emissive-only reuses the base sampler for debug');
+ok(/bloomUvScale:\{value:new THREE\.Vector2\(1,1\)\}/.test(HTML)
+  && /bloomUvOffset:\{value:new THREE\.Vector2\(\)\}/.test(HTML)
+  && /vec2 bloomUv=vUv\*bloomUvScale\+bloomUvOffset/.test(HTML)
+  && /function _updateWorldTreeBloomProjection\(\)/.test(HTML)
+  && /function _captureWorldTreeBloomProjection\(\)/.test(HTML)
+  && /bloomCaptureBounds\.copy\(MEMORIAL_TREE\.bloomCurrentBounds\)/.test(HTML)
+  && /shiftPx>Math\.max\(innerWidth,innerHeight\)\*0\.35/.test(HTML)
+  && /MEMORIAL_TREE\.bloomReprojectionRejectedFrames\+\+/.test(HTML)
+  && /else if\(needBloom&&MEMORIAL_TREE&&MEMORIAL_TREE\.bloomCaptureValid&&MEMORIAL_TREE\.bloomReprojectionPx>0\.01\) MEMORIAL_TREE\.bloomReprojectedFrames\+\+/.test(HTML)
+  && /bloomMotion:adapter\.bloomMotion/.test(HTML)
+  && /bloomReprojectionMaxPx:\+MEMORIAL_TREE\.bloomReprojectionMaxPx\.toFixed\(2\)/.test(HTML)
+  && /bloomMotion:'captured-bounds-current-camera-uv-reprojection'/.test(memorialTreeBlock),
+  'throttled bloom is reprojected from captured tree bounds into the current camera projection without another render pass');
 ok(/bloomBounds:\{value:new THREE\.Vector4\(0,0,1,1\)\}/.test(HTML)
-  && /bounds\.set\(Math\.max\(0,minU-padU\)/.test(HTML)
+  && /bounds\.set\(Math\.max\(0,current\.x\)/.test(HTML)
   && /float signal=smoothstep\(0\.018,0\.05,max\(bloom\.r,max\(bloom\.g,bloom\.b\)\)\)/.test(HTML)
-  && /color\+=bloom\*\(bloomWeight\*mx\*my\*signal\)/.test(HTML)
+  && /color\+=bloom\*\(bloomWeight\*mx\*my\*signal\*uvMask\)/.test(HTML)
   && /gl_FragColor=vec4\(color,1\.0\)/.test(HTML),
   'tree bloom is softly bounded to the projected tree screen rectangle instead of lifting town exposure globally');
 ok(/ratio=MEM_TREE_HERO_SCALE\/MEM_TREE_HERO_NATIVE_SCALE/.test(memorialTreeBlock)
@@ -1032,7 +1060,8 @@ ok(/const CAMERA_FOLLOW_TARGET=new THREE\.Vector3\(\)/.test(HTML)
 ok(/WORLD_TREE_BLOOM_POSITION=new THREE\.Vector3\(\)[\s\S]*?WORLD_TREE_BLOOM_WORLD=new THREE\.Vector3\(\)/.test(HTML)
   && /bloomMaterialList:Object\.values\(bloomMaterials\)/.test(HTML)
   && !/(?:new THREE|Object\.values|\[min\.|\[max\.)/.test(worldTreeBloomPrepBlock)
-  && /for\(let corner=0;corner<8;corner\+\+\)/.test(worldTreeBloomPrepBlock), '30Hz World Tree bloom preparation reuses matrix/vector/material/corner storage without steady allocations');
+  && !/(?:new THREE|Object\.values|\[min\.|\[max\.)/.test(worldTreeBloomProjectionBlock)
+  && /for\(let corner=0;corner<8;corner\+\+\)/.test(worldTreeBloomProjectionBlock), 'World Tree bloom preparation and per-frame camera reprojection reuse matrix/vector/material/corner storage without steady allocations');
 ok(/window\.__cam=\(\)=>\(\{[\s\S]*?camera:\{position:_debugVec\(camera\.position\),quaternion:/.test(HTML)
   && /window\.__setPerfPose=/.test(HTML)
   && /window\.__perfActivity=/.test(HTML)
@@ -1067,7 +1096,7 @@ ok(/AURORA_OP\.value=Math\.min\(0\.55\+\(_auroraBoost>0\?0\.45:0\), AURORA_OP\.v
 ok(/pointLightRole:'runtime-topology-only'/.test(memorialTreeBlock)
   && /haloMode:'world-space-constant-emission'/.test(memorialTreeBlock)
   && /branchGlow:'base-emissive-only'/.test(memorialTreeBlock)
-  && /bloomSources:\['leaves','glyphs','energy-core-knots','energy-veins'\]/.test(memorialTreeBlock)
+  && /bloomSources:\['leaves','glyphs','energy-core-knots','energy-veins','branch-end-ornaments'\]/.test(memorialTreeBlock)
   && !/bark:_worldTreeBloomMaterial/.test(memorialTreeBlock)
   && /branchGlowMeshes=0, branchDepthMeshes=bloomExtractEntries\.filter\(entry=>entry\.baseMaterial===hero\.materials\.bark\)\.length/.test(memorialTreeBlock),
   'metadata records the tree-only emissive hierarchy while bark remains a dark depth occluder');

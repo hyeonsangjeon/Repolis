@@ -940,7 +940,7 @@ import { TexturePass } from 'three/addons/postprocessing/TexturePass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree/createRepolisHero.js?v=azimuth-energy-v5-dual-face-b-r2';
+import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree/createRepolisHero.js?v=azimuth-energy-v6-dual-face-b-pendant-bloom-r1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1580,10 +1580,10 @@ bloomInternalTargets.forEach(target=>{ target.depthBuffer=false; target.stencilB
 const finalTarget=makeLinearTarget(Math.round(innerWidth*finalCompositeDpr),Math.round(innerHeight*finalCompositeDpr),false);
 const finalComposer=new EffectComposer(renderer,finalTarget); finalComposer.setPixelRatio(finalCompositeDpr); finalComposer.setSize(innerWidth,innerHeight);
 const finalMix=new ShaderPass(new THREE.ShaderMaterial({uniforms:{baseTexture:{value:baseTarget.texture},bloomTexture:{value:worldBloom.renderTargetsHorizontal[0].texture},baseWeight:{value:1},bloomWeight:{value:1},
-  bloomBounds:{value:new THREE.Vector4(0,0,1,1)},bloomFeather:{value:new THREE.Vector2(0.02,0.02)}},
+  bloomBounds:{value:new THREE.Vector4(0,0,1,1)},bloomFeather:{value:new THREE.Vector2(0.02,0.02)},bloomUvScale:{value:new THREE.Vector2(1,1)},bloomUvOffset:{value:new THREE.Vector2()}},
   depthTest:false,depthWrite:false,
   vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
-  fragmentShader:'uniform sampler2D baseTexture; uniform sampler2D bloomTexture; uniform float baseWeight; uniform float bloomWeight; uniform vec4 bloomBounds; uniform vec2 bloomFeather; varying vec2 vUv; void main(){ vec3 color=vec3(0.0); if(baseWeight>0.0) color+=texture2D(baseTexture,vUv).rgb*baseWeight; if(bloomWeight>0.0){ float mx=smoothstep(bloomBounds.x,bloomBounds.x+bloomFeather.x,vUv.x)*(1.0-smoothstep(bloomBounds.z-bloomFeather.x,bloomBounds.z,vUv.x)); float my=smoothstep(bloomBounds.y,bloomBounds.y+bloomFeather.y,vUv.y)*(1.0-smoothstep(bloomBounds.w-bloomFeather.y,bloomBounds.w,vUv.y)); vec3 bloom=texture2D(bloomTexture,vUv).rgb; float signal=smoothstep(0.018,0.05,max(bloom.r,max(bloom.g,bloom.b))); color+=bloom*(bloomWeight*mx*my*signal); } gl_FragColor=vec4(color,1.0); }'}));
+  fragmentShader:'uniform sampler2D baseTexture; uniform sampler2D bloomTexture; uniform float baseWeight; uniform float bloomWeight; uniform vec4 bloomBounds; uniform vec2 bloomFeather; uniform vec2 bloomUvScale; uniform vec2 bloomUvOffset; varying vec2 vUv; void main(){ vec3 color=vec3(0.0); if(baseWeight>0.0) color+=texture2D(baseTexture,vUv).rgb*baseWeight; if(bloomWeight>0.0){ float mx=smoothstep(bloomBounds.x,bloomBounds.x+bloomFeather.x,vUv.x)*(1.0-smoothstep(bloomBounds.z-bloomFeather.x,bloomBounds.z,vUv.x)); float my=smoothstep(bloomBounds.y,bloomBounds.y+bloomFeather.y,vUv.y)*(1.0-smoothstep(bloomBounds.w-bloomFeather.y,bloomBounds.w,vUv.y)); vec2 bloomUv=vUv*bloomUvScale+bloomUvOffset; float uvMask=step(0.0,bloomUv.x)*step(0.0,bloomUv.y)*step(bloomUv.x,1.0)*step(bloomUv.y,1.0); vec3 bloom=texture2D(bloomTexture,clamp(bloomUv,vec2(0.0),vec2(1.0))).rgb; float signal=smoothstep(0.018,0.05,max(bloom.r,max(bloom.g,bloom.b))); color+=bloom*(bloomWeight*mx*my*signal*uvMask); } gl_FragColor=vec4(color,1.0); }'}));
 finalComposer.addPass(finalMix); finalComposer.addPass(new OutputPass());
 const BLOOM_DARK_MATERIAL=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.DoubleSide,fog:false,toneMapped:false});
 const MEM_TREE_BLOOM_HZ=LOW_END?20:30, MEM_TREE_DESKTOP_BLOOM_MIN_FRAME_GAP=3;
@@ -1592,6 +1592,11 @@ let WORLD_TREE_RENDER_MODE='final-composite';
 const WORLD_TREE_SAVED_CLEAR=new THREE.Color();
 const WORLD_TREE_BLOOM_POSITION=new THREE.Vector3(),WORLD_TREE_BLOOM_SCALE=new THREE.Vector3(),WORLD_TREE_BLOOM_ROTATION=new THREE.Quaternion(),
   WORLD_TREE_BLOOM_MATRIX=new THREE.Matrix4(),WORLD_TREE_BLOOM_PROJECTED=new THREE.Vector3(),WORLD_TREE_BLOOM_WORLD=new THREE.Vector3();
+function _withWorldTreePrivateRandom(fn){
+  const globalRandom=Math.random; let state=0x17850006;
+  Math.random=()=>{ state=(Math.imul(state,1664525)+1013904223)>>>0; return state/4294967296; };
+  try{ return fn(); } finally { Math.random=globalRandom; }
+}
 function _worldTreeBloomMaterial(color,intensity,vertexColors=false,side=THREE.FrontSide){
   const material=new THREE.MeshBasicMaterial({color:new THREE.Color(color).multiplyScalar(intensity),vertexColors,side,fog:false,toneMapped:false});
   material.userData.worldTreeBaseColor=material.color.clone(); return material;
@@ -1628,6 +1633,36 @@ function _ensureWorldTreeOccluders(){
   MEMORIAL_TREE.staticProxyCount=boxes.length+colliders.length; MEMORIAL_TREE.proxyGroup=proxyGroup; MEMORIAL_TREE.dynamicProxy=dynamicProxy;
   _registerWorldTreeOccluderGroup(model); RESIDENTS_LIVE.forEach(L=>_registerWorldTreeOccluderGroup(L.group)); MEMORIAL_TREE.occludersReady=true;
 }
+function _updateWorldTreeBloomProjection(){
+  if(!MEMORIAL_TREE) return;
+  const box=MEMORIAL_TREE.nativeBox,min=box.min,max=box.max,projected=WORLD_TREE_BLOOM_PROJECTED,world=WORLD_TREE_BLOOM_WORLD,
+    bounds=finalMix.uniforms.bloomBounds.value,current=MEMORIAL_TREE.bloomCurrentBounds,scale=finalMix.uniforms.bloomUvScale.value,offset=finalMix.uniforms.bloomUvOffset.value;
+  let minU=1,minV=1,maxU=0,maxV=0,visibleCorners=0;
+  for(let corner=0;corner<8;corner++){
+    world.set(corner&1?max.x:min.x,corner&2?max.y:min.y,corner&4?max.z:min.z); MEMORIAL_TREE.group.localToWorld(world); projected.copy(world).project(camera);
+    if(projected.z<-1||projected.z>1) continue; visibleCorners++;
+    const u=projected.x*0.5+0.5,v=projected.y*0.5+0.5; minU=Math.min(minU,u); minV=Math.min(minV,v); maxU=Math.max(maxU,u); maxV=Math.max(maxV,v); }
+  const padU=64/innerWidth,padV=64/innerHeight,valid=visibleCorners&&maxU>=0&&minU<=1&&maxV>=0&&minV<=1;
+  if(!valid){ bounds.set(0,0,0,0); current.set(0,0,0,0); MEMORIAL_TREE.bloomCurrentValid=false; scale.set(1,1); offset.set(0,0); MEMORIAL_TREE.bloomReprojectionPx=0; return; }
+  current.set(minU-padU,minV-padV,maxU+padU,maxV+padV);
+  bounds.set(Math.max(0,current.x),Math.max(0,current.y),Math.min(1,current.z),Math.min(1,current.w));
+  MEMORIAL_TREE.bloomCurrentValid=true;
+  if(!MEMORIAL_TREE.bloomCaptureValid){ scale.set(1,1); offset.set(0,0); MEMORIAL_TREE.bloomReprojectionPx=0; return; }
+  const capture=MEMORIAL_TREE.bloomCaptureBounds,cw=Math.max(0.0001,current.z-current.x),ch=Math.max(0.0001,current.w-current.y),
+    sw=Math.max(0.0001,capture.z-capture.x),sh=Math.max(0.0001,capture.w-capture.y),sx=sw/cw,sy=sh/ch,
+    ccx=(current.x+current.z)*0.5,ccy=(current.y+current.w)*0.5,scx=(capture.x+capture.z)*0.5,scy=(capture.y+capture.w)*0.5,
+    shiftPx=Math.hypot((scx-ccx)*innerWidth,(scy-ccy)*innerHeight);
+  if(!Number.isFinite(sx)||!Number.isFinite(sy)||sx<0.5||sx>2||sy<0.5||sy>2||shiftPx>Math.max(innerWidth,innerHeight)*0.35){
+    scale.set(1,1); offset.set(0,0); MEMORIAL_TREE.bloomReprojectionPx=0; MEMORIAL_TREE.bloomReprojectionRejectedFrames++; return; }
+  scale.set(sx,sy); offset.set(scx-ccx*sx,scy-ccy*sy); MEMORIAL_TREE.bloomReprojectionPx=shiftPx;
+  MEMORIAL_TREE.bloomReprojectionMaxPx=Math.max(MEMORIAL_TREE.bloomReprojectionMaxPx,shiftPx);
+}
+function _captureWorldTreeBloomProjection(){
+  if(!MEMORIAL_TREE) return;
+  MEMORIAL_TREE.bloomCaptureValid=MEMORIAL_TREE.bloomCurrentValid;
+  if(MEMORIAL_TREE.bloomCurrentValid) MEMORIAL_TREE.bloomCaptureBounds.copy(MEMORIAL_TREE.bloomCurrentBounds);
+  finalMix.uniforms.bloomUvScale.value.set(1,1); finalMix.uniforms.bloomUvOffset.value.set(0,0); MEMORIAL_TREE.bloomReprojectionPx=0;
+}
 function _prepareWorldTreeBloom(){
   _ensureWorldTreeOccluders(); const mesh=MEMORIAL_TREE.dynamicProxy,p=WORLD_TREE_BLOOM_POSITION; let count=0;
   for(const group of MEMORIAL_TREE.dynamicOccluderGroups){ if(!group.parent||count>=mesh.instanceMatrix.count) continue; group.getWorldPosition(p);
@@ -1639,15 +1674,6 @@ function _prepareWorldTreeBloom(){
   MEMORIAL_TREE.distanceLod=far; MEMORIAL_TREE.glowDistance=distance;
   MEMORIAL_TREE.bloomMaterialList.forEach(material=>material.color.copy(material.userData.worldTreeBaseColor));
   worldBloom.strength=1.35; worldBloom.radius=0.58; worldBloom.threshold=0.06;
-  const box=MEMORIAL_TREE.nativeBox,min=box.min,max=box.max,projected=WORLD_TREE_BLOOM_PROJECTED,world=WORLD_TREE_BLOOM_WORLD,bounds=finalMix.uniforms.bloomBounds.value;
-  let minU=1,minV=1,maxU=0,maxV=0,visibleCorners=0;
-  for(let corner=0;corner<8;corner++){
-    world.set(corner&1?max.x:min.x,corner&2?max.y:min.y,corner&4?max.z:min.z); MEMORIAL_TREE.group.localToWorld(world); projected.copy(world).project(camera);
-    if(projected.z<-1||projected.z>1) continue; visibleCorners++;
-    const u=projected.x*0.5+0.5,v=projected.y*0.5+0.5; minU=Math.min(minU,u); minV=Math.min(minV,v); maxU=Math.max(maxU,u); maxV=Math.max(maxV,v); }
-  const padU=64/innerWidth,padV=64/innerHeight;
-  if(!visibleCorners||maxU<0||minU>1||maxV<0||minV>1) bounds.set(0,0,0,0);
-  else bounds.set(Math.max(0,minU-padU),Math.max(0,minV-padV),Math.min(1,maxU+padU),Math.min(1,maxV+padV));
   finalMix.uniforms.bloomFeather.value.set(Math.min(0.04,32/innerWidth),Math.min(0.04,32/innerHeight));
 }
 function _renderWorldTreeFrame(){
@@ -1667,9 +1693,10 @@ function _renderWorldTreeFrame(){
     needEmissive=treeVisible&&effectPhase&&(WORLD_TREE_RENDER_MODE==='emissive-only'||WORLD_TREE_RENDER_MODE==='final-composite'),
     needBloom=treeVisible&&effectPhase&&(WORLD_TREE_RENDER_MODE==='final-composite'||WORLD_TREE_RENDER_MODE==='bloom-only'),needSource=needEmissive||needBloom,
     forceProofLayer=!isNight&&(WORLD_TREE_RENDER_MODE==='emissive-only'||WORLD_TREE_RENDER_MODE==='bloom-only'),
-    bloomFrameGap=_treeBloomMinFrameGap(),
-    sourceDue=needSource&&MEMORIAL_TREE&&(WORLD_TREE_RENDER_MODE!=='final-composite'||MEMORIAL_TREE.bloomDirty
-      || ((!bloomFrameGap||renderedFrame-MEMORIAL_TREE.lastBloomFrame>=bloomFrameGap)&&now-MEMORIAL_TREE.lastBloomAt>=1000/MEM_TREE_BLOOM_HZ));
+    bloomFrameGap=_treeBloomMinFrameGap();
+  if(needSource&&MEMORIAL_TREE) _updateWorldTreeBloomProjection();
+  const sourceDue=needSource&&MEMORIAL_TREE&&(WORLD_TREE_RENDER_MODE!=='final-composite'||MEMORIAL_TREE.bloomDirty
+    || ((!bloomFrameGap||renderedFrame-MEMORIAL_TREE.lastBloomFrame>=bloomFrameGap)&&now-MEMORIAL_TREE.lastBloomAt>=1000/MEM_TREE_BLOOM_HZ));
   if(sourceDue){ _prepareWorldTreeBloom(); camera.layers.set(MEM_TREE_LIGHT_LAYER);
     if(forceProofLayer) _setWorldTreeGlowLayers(true);
     _beginWorldTreeBloomExtraction();
@@ -1678,7 +1705,9 @@ function _renderWorldTreeFrame(){
     finally{ _endWorldTreeBloomExtraction(); }
     _recordRenderPass('emissive',emissiveToken);
     if(needBloom){ const bloomToken=_beginMeasuredPass('bloom'); treeComposer.render(); _recordRenderPass('bloom',bloomToken); }
+    _captureWorldTreeBloomProjection();
     MEMORIAL_TREE.lastBloomAt=now; MEMORIAL_TREE.lastBloomFrame=renderedFrame; MEMORIAL_TREE.bloomDirty=false; }
+  else if(needBloom&&MEMORIAL_TREE&&MEMORIAL_TREE.bloomCaptureValid&&MEMORIAL_TREE.bloomReprojectionPx>0.01) MEMORIAL_TREE.bloomReprojectedFrames++;
   renderer.toneMapping=savedTone; renderer.outputColorSpace=savedSpace; renderer.setClearColor(savedClear,savedAlpha); camera.layers.mask=mask; renderer.setRenderTarget(null);
   const emissiveOnly=WORLD_TREE_RENDER_MODE==='emissive-only';
   finalMix.uniforms.baseTexture.value=emissiveOnly?emissiveTarget.texture:baseTarget.texture;
@@ -3061,7 +3090,7 @@ function makeRiver(ctrl, opt={}){
 // 🌳 Solar Archive — one dominant front vein, one rear support, rooted leaves, and bright branch-end ornaments.
 const MEMORIAL_TREE_SEED=20260711, MEMORIAL_TREE_POS=new THREE.Vector3(15,0,48), MEM_TREE_LITE=LOW_END||IS_MOBILE;
 let MEMORIAL_TREE=null;
-const MEM_TREE_HERO_SCALE=2, MEM_TREE_HERO_NATIVE_SCALE=0.96, MEM_TREE_LIGHT_LAYER=2, MEM_TREE_HERO_VARIANT='solar-archive', MEM_TREE_FACTORY_SHA='58dcf04d4052c4e86da755bfaac63852d08a33bc5a8b7dd9d7bc9ec4ff5c4836';
+const MEM_TREE_HERO_SCALE=2, MEM_TREE_HERO_NATIVE_SCALE=0.96, MEM_TREE_LIGHT_LAYER=2, MEM_TREE_HERO_VARIANT='solar-archive', MEM_TREE_FACTORY_SHA='e2ba93eac7c13517005dd4ab4203a05b6b568ebf8f9b17a353b8cf39012281df';
 function _memHeroBox(root){
   root.updateMatrixWorld(true); const box=new THREE.Box3();
   root.traverse(o=>{ if(!o.visible||!o.geometry||o.isSprite) return; let local;
@@ -3111,28 +3140,32 @@ function makeMemorialTree(x,z){
   root.userData.worldTree={seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage,factorySha256:MEM_TREE_FACTORY_SHA,factoryRevision:REPOLIS_FACTORY_REVISION,collider,crownOnlySway:false,leafAttachment:hero.stats.leafAttachmentContract,
     target:{height:+size.y.toFixed(1),crownSpan:+size.x.toFixed(1),crownDepth:+size.z.toFixed(1)},lightPolicy:'distance-invariant-emissive-extraction',sockets:Object.keys(sockets)};
   root.userData.repolisAdapter={factoryUnmodified:false,factorySourceModified:true,factoryRevision:REPOLIS_FACTORY_REVISION,energyRevision:hero.runtime.nodes['energy-network']?.userData.energyRevision||REPOLIS_FACTORY_REVISION,energyProfile:hero.stats.energyProfile,groundVisible:true,pulseDisabled:false,leafScale:1.22,bloom:{constant:[1.35,0.58,0.06],hz:MEM_TREE_BLOOM_HZ},
-    selectiveBloom:true,sharpGlowInBase:true,depthAware:true,unlitExtraction:true,distanceCompensated:false,emissionPolicy:'constant-world-luminance',guideLightInBase:false,pointLightRole:'runtime-topology-only',
-    emissiveHalos:2,haloMode:'world-space-constant-emission',branchGlow:'base-emissive-only',branchEndOrnaments:'bright-base-emissive-no-extra-bloom-draws',bloomSources:['leaves','glyphs','energy-core-knots','energy-veins'],
+    selectiveBloom:true,sharpGlowInBase:true,depthAware:true,unlitExtraction:true,distanceCompensated:false,emissionPolicy:'constant-world-luminance',bloomMotion:'captured-bounds-current-camera-uv-reprojection',guideLightInBase:false,pointLightRole:'runtime-topology-only',
+    emissiveHalos:2,haloMode:'world-space-constant-emission',branchGlow:'base-emissive-only',branchEndOrnaments:'attached-stem-bulb-selective-soft-bloom-1.35',bloomSources:['leaves','glyphs','energy-core-knots','energy-veins','branch-end-ornaments'],
     scale:MEM_TREE_HERO_SCALE,leafScale:1.22,leafScaleMode:'factory-root-pivot',qualityMode:'full',bloomMinFrameGap:_treeBloomMinFrameGap()};
   const bloomRoots=[...crowns,hero.runtime.nodes['energy-network'],hero.runtime.meshes['gold-code-glyphs'],hero.runtime.meshes['cyan-code-glyphs']].filter(Boolean);
   const bloomMeshes=new Set(); bloomRoots.forEach(o=>o.traverse(n=>{ n.userData.worldTreeBloom=true; if(n.isMesh) bloomMeshes.add(n); }));
+  hero.runtime.nodes.constellations?.traverse(n=>{ if(n.isMesh&&n.material===hero.materials.ornamentEnergy){ n.userData.worldTreeBloom=true; bloomMeshes.add(n); } });
   const bloomMaterials={
     amber:_worldTreeBloomMaterial(hero.variant.amber,0.4,true,THREE.DoubleSide),
     cyan:_worldTreeBloomMaterial(hero.variant.cyan,0.55,true,THREE.DoubleSide),
     energy:_worldTreeBloomMaterial(hero.variant.energy,4,true,THREE.FrontSide),
+    pendant:_withWorldTreePrivateRandom(()=>_worldTreeBloomMaterial(hero.variant.energy,1.35,true,THREE.FrontSide)),
     glyphGold:_worldTreeBloomMaterial(hero.variant.energy,1.75,false,THREE.DoubleSide),
     glyphCyan:_worldTreeBloomMaterial(hero.variant.cyan,1.9,false,THREE.DoubleSide)
   };
   const bloomBySource=new Map([[hero.materials.amberLeaf,bloomMaterials.amber],[hero.materials.cyanLeaf,bloomMaterials.cyan],[hero.materials.energy,bloomMaterials.energy],
-    [hero.materials.glyphGold,bloomMaterials.glyphGold],[hero.materials.glyphCyan,bloomMaterials.glyphCyan]]);
+    [hero.materials.ornamentEnergy,bloomMaterials.pendant],[hero.materials.glyphGold,bloomMaterials.glyphGold],[hero.materials.glyphCyan,bloomMaterials.glyphCyan]]);
   const depthMaterials=new Set([hero.materials.bark,hero.materials.ground,hero.materials.cutWood]),bloomExtractEntries=[]; root.traverse(mesh=>{ if(!mesh.isMesh) return;
     if(bloomMeshes.has(mesh)) bloomExtractEntries.push({mesh,baseMaterial:mesh.material,bloomMaterial:bloomBySource.get(mesh.material)||bloomMaterials.energy});
     else if(depthMaterials.has(mesh.material)) bloomExtractEntries.push({mesh,baseMaterial:mesh.material,bloomMaterial:BLOOM_DARK_MATERIAL}); });
   const bloomExtractMeshSet=new Set(bloomExtractEntries.map(entry=>entry.mesh));
-  const branchGlowMeshes=0, branchDepthMeshes=bloomExtractEntries.filter(entry=>entry.baseMaterial===hero.materials.bark).length;
+  const branchGlowMeshes=0, branchDepthMeshes=bloomExtractEntries.filter(entry=>entry.baseMaterial===hero.materials.bark).length,
+    pendantBloomMeshes=bloomExtractEntries.filter(entry=>entry.baseMaterial===hero.materials.ornamentEnergy).length;
   const bloomLights=[light].filter(Boolean);
   MEMORIAL_TREE={hero,group:root,runtime:hero.runtime,crowns,sockets,light,environment,bloomRoots,bloomLights,bloomMaterials,bloomMaterialList:Object.values(bloomMaterials),bloomExtractEntries,bloomExtractMeshSet,extractingBloom:false,
-    branchGlowMeshes,branchDepthMeshes,glowHalos,glowWorld:new THREE.Vector3(),distanceLod:0,glowDistance:0,lastBloomAt:-Infinity,lastBloomFrame:-Infinity,bloomDirty:true,
+    branchGlowMeshes,branchDepthMeshes,pendantBloomMeshes,glowHalos,glowWorld:new THREE.Vector3(),distanceLod:0,glowDistance:0,lastBloomAt:-Infinity,lastBloomFrame:-Infinity,bloomDirty:true,
+    bloomCurrentBounds:new THREE.Vector4(),bloomCaptureBounds:new THREE.Vector4(),bloomCurrentValid:false,bloomCaptureValid:false,bloomReprojectionPx:0,bloomReprojectionMaxPx:0,bloomReprojectedFrames:0,bloomReprojectionRejectedFrames:0,
     dynamicOccluderGroups:new Set(),occludersReady:false,requestedVisible:true,treeShadowDirty:false,stats:hero.stats,collider,seed:MEMORIAL_TREE_SEED,nativeBox};
   _setWorldTreeGlowLayers(false);
   return MEMORIAL_TREE;
@@ -7943,7 +7976,16 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     return {count:1,name:MEMORIAL_TREE.group.name,seed:MEMORIAL_TREE.seed,at:[+MEMORIAL_TREE.group.position.x.toFixed(1),+MEMORIAL_TREE.group.position.z.toFixed(1)],
       variant:wt.variant,stage:wt.stage,factory:{sha256:wt.factorySha256,revision:wt.factoryRevision,unmodified:adapter.factoryUnmodified,sourceModified:adapter.factorySourceModified,scale:adapter.scale,groundVisible:adapter.groundVisible,pulseDisabled:adapter.pulseDisabled,bloom:adapter.bloom},
       macroBranches:s.macroBranches,secondaryBranches:s.secondaryBranches,fineBranches:s.fineBranches,leafInstances:s.leafInstances,leafAnchorCount:s.leafAnchorCount,leafRootedInstances:s.leafRootedInstances,mossInstances:s.mossInstances,glyphInstances:s.glyphInstances,branchVertices:s.branchVertices,generationMs:+s.generationMs.toFixed(1),
-      mobile:IS_MOBILE,lowEnd:LOW_END,lite:MEM_TREE_LITE,reduced:REDUCED,runtime:{qualityMode:adapter.qualityMode,nodes:Object.keys(MEMORIAL_TREE.runtime.nodes).length,meshes:Object.keys(MEMORIAL_TREE.runtime.meshes).length,sockets:Object.keys(MEMORIAL_TREE.sockets).length,bloomExtractMeshes:MEMORIAL_TREE.bloomExtractEntries.length,branchGlowMeshes:MEMORIAL_TREE.branchGlowMeshes,branchDepthMeshes:MEMORIAL_TREE.branchDepthMeshes,leafAttachment:s.leafAttachmentContract,energyRevision:adapter.energyRevision,energyProfile:s.energyProfile,energyCanonicalFront:s.energyCanonicalFront,energyVeinCopies:s.energyVeinCopies,energyDominantVeinCount:s.energyDominantVeinCount,energyDominantVeinIds:s.energyDominantVeinIds,energyFrontDominantVeinCount:s.energyFrontDominantVeinCount,energyFrontDominantVeinIds:s.energyFrontDominantVeinIds,energyRearDominantVeinCount:s.energyRearDominantVeinCount,energyRearDominantVeinIds:s.energyRearDominantVeinIds,energySupportVeinCount:s.energySupportVeinCount,energySupportVeinIds:s.energySupportVeinIds,energySideSupportVeinCount:s.energySideSupportVeinCount,energySideSupportVeinIds:s.energySideSupportVeinIds,energyDominantRadius:s.energyDominantRadius,energySupportRadius:s.energySupportRadius,energySourceWeights:s.energySourceWeights,energyBarkHaloPolicy:s.energyBarkHaloPolicy,energyKnotCount:s.energyKnotCount,energyKnotDistribution:s.energyKnotDistribution,energyKnotSizes:s.energyKnotSizes,energyKnotRoles:s.energyKnotRoles,energyDrawMeshes:s.energyDrawMeshes,hangingLightCount:s.hangingLightCount,hangingLightPolicy:s.hangingLightPolicy,bloomHz:MEM_TREE_BLOOM_HZ,bloomMinFrameGap:_treeBloomMinFrameGap(),dynamicOccluders:MEMORIAL_TREE.dynamicOccluderGroups.size,staticProxies:MEMORIAL_TREE.staticProxyCount||0,objectPerf:_memHeroObjectPerf(MEMORIAL_TREE.group)},
+      mobile:IS_MOBILE,lowEnd:LOW_END,lite:MEM_TREE_LITE,reduced:REDUCED,runtime:{
+        qualityMode:adapter.qualityMode,nodes:Object.keys(MEMORIAL_TREE.runtime.nodes).length,meshes:Object.keys(MEMORIAL_TREE.runtime.meshes).length,sockets:Object.keys(MEMORIAL_TREE.sockets).length,
+        bloomExtractMeshes:MEMORIAL_TREE.bloomExtractEntries.length,branchGlowMeshes:MEMORIAL_TREE.branchGlowMeshes,branchDepthMeshes:MEMORIAL_TREE.branchDepthMeshes,pendantBloomMeshes:MEMORIAL_TREE.pendantBloomMeshes,
+        bloomMotion:adapter.bloomMotion,bloomSourceAgeFrames:Number.isFinite(MEMORIAL_TREE.lastBloomFrame)?Math.max(0,renderedFrame-MEMORIAL_TREE.lastBloomFrame):0,bloomReprojectionPx:+MEMORIAL_TREE.bloomReprojectionPx.toFixed(2),bloomReprojectionMaxPx:+MEMORIAL_TREE.bloomReprojectionMaxPx.toFixed(2),bloomReprojectedFrames:MEMORIAL_TREE.bloomReprojectedFrames,bloomReprojectionRejectedFrames:MEMORIAL_TREE.bloomReprojectionRejectedFrames,
+        bloomUvScale:[+finalMix.uniforms.bloomUvScale.value.x.toFixed(4),+finalMix.uniforms.bloomUvScale.value.y.toFixed(4)],bloomUvOffset:[+finalMix.uniforms.bloomUvOffset.value.x.toFixed(5),+finalMix.uniforms.bloomUvOffset.value.y.toFixed(5)],leafAttachment:s.leafAttachmentContract,
+        energyRevision:adapter.energyRevision,energyProfile:s.energyProfile,energyCanonicalFront:s.energyCanonicalFront,energyVeinCopies:s.energyVeinCopies,energyDominantVeinCount:s.energyDominantVeinCount,energyDominantVeinIds:s.energyDominantVeinIds,
+        energyFrontDominantVeinCount:s.energyFrontDominantVeinCount,energyFrontDominantVeinIds:s.energyFrontDominantVeinIds,energyRearDominantVeinCount:s.energyRearDominantVeinCount,energyRearDominantVeinIds:s.energyRearDominantVeinIds,
+        energySupportVeinCount:s.energySupportVeinCount,energySupportVeinIds:s.energySupportVeinIds,energySideSupportVeinCount:s.energySideSupportVeinCount,energySideSupportVeinIds:s.energySideSupportVeinIds,energyDominantRadius:s.energyDominantRadius,energySupportRadius:s.energySupportRadius,energySourceWeights:s.energySourceWeights,energyBarkHaloPolicy:s.energyBarkHaloPolicy,
+        energyKnotCount:s.energyKnotCount,energyKnotDistribution:s.energyKnotDistribution,energyKnotSizes:s.energyKnotSizes,energyKnotRoles:s.energyKnotRoles,energyDrawMeshes:s.energyDrawMeshes,hangingLightCount:s.hangingLightCount,hangingLightMeshCount:s.hangingLightMeshCount,hangingLightPartCount:s.hangingLightPartCount,hangingLightPolicy:s.hangingLightPolicy,
+        bloomHz:MEM_TREE_BLOOM_HZ,bloomMinFrameGap:_treeBloomMinFrameGap(),dynamicOccluders:MEMORIAL_TREE.dynamicOccluderGroups.size,staticProxies:MEMORIAL_TREE.staticProxyCount||0,objectPerf:_memHeroObjectPerf(MEMORIAL_TREE.group)},
       crownOnlySway:wt.crownOnlySway,sockets:Object.keys(MEMORIAL_TREE.sockets),collider:{x:c.x,z:c.z,r:c.r},target:wt.target,
       nightGuide:{night:isNight,light:+MEMORIAL_TREE.light.intensity.toFixed(1),rendered:MEMORIAL_TREE.light.visible,range:+MEMORIAL_TREE.light.distance.toFixed(1),energy:+MEMORIAL_TREE.hero.materials.energy.emissiveIntensity.toFixed(2),amber:+MEMORIAL_TREE.hero.materials.amberLeaf.emissiveIntensity.toFixed(2),cyan:+MEMORIAL_TREE.hero.materials.cyanLeaf.emissiveIntensity.toFixed(2),
         distance:+MEMORIAL_TREE.glowDistance.toFixed(1),distanceLod:+MEMORIAL_TREE.distanceLod.toFixed(2),halos:MEMORIAL_TREE.glowHalos.length,haloMode:adapter.haloMode,pointLightRole:adapter.pointLightRole,environmentLights:0,

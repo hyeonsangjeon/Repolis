@@ -3,6 +3,14 @@
 All notable changes to **Repolis** are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/); dates are UTC.
 
+## [1.78.6] — 2026-07-14
+
+### 🌳 World Tree pendant radiance — stable glow while the camera moves
+- **All 18 branch-end pendants now glow.** Their existing 36 stem-and-bulb parts retain exact branch-tip attachments and merge into one warm, tree-only selective-bloom mesh; the accepted dual-face veins and all 3,016 rooted leaves remain unchanged.
+- **Throttled desktop bloom follows the live camera.** Between the existing every-third-frame source updates, captured tree bounds are reprojected into the current camera view so the halo no longer lags, shakes, or jumps during orbit and approach motion. Mobile keeps its existing zero-frame-gap source path.
+- **Depth and safety remain natural.** Invalid, offscreen, or extreme mappings use bounded masking and identity fallback instead of forcing another render, preserving no-x-ray depth, front/rear/side continuity, and town isolation.
+- **Production cost stays bounded.** The release adds no pass, render target, texture, light, geometry, draw, or triangle regression: the tree remains 83 draws / 76,570 triangles, while integrated headed desktop motion retained a 0.333 bloom-source ratio, 60.01 FPS median, and 17.7 ms P95.
+
 ## [1.78.5] — 2026-07-13
 
 ### 🌳 World Tree dual-face current — one dominant vein from either approach
