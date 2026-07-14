@@ -439,7 +439,7 @@ async function groundedRetrieve(cfg, messages, env) {
   const apiVersion = env.SEARCH_API_VERSION || "2026-05-01-preview";
   const timeoutMs = Number(env.GROUNDED_TIMEOUT_MS || 25000); // CF: no ~10s wall, let the slow KB finish
   const maxRuntime = Number(env.GROUNDED_MAX_RUNTIME_S || 30); // KB requires 11–599
-  if (!endpoint || !key || !cfg.kb) return { fallback: true, reason: "grounding not configured" };
+  if (!endpoint || !key || !cfg.kb) return { fallback: true, attempted: false, reason: "grounding not configured" };
 
   const ksList = (cfg.ks || "").split(",").map((s) => s.trim()).filter(Boolean);
   const url = `${endpoint.replace(/\/$/, "")}/knowledgebases/${cfg.kb}/retrieve?api-version=${apiVersion}`;
@@ -467,7 +467,7 @@ async function groundedRetrieve(cfg, messages, env) {
     // 200 OK or 206 Partial (ran the budget but returned usable refs) are both fine.
     if (r.status !== 200 && r.status !== 206) {
       const detail = (await r.text().catch(() => "")).slice(0, 200);
-      return { fallback: true, reason: "kb " + r.status, detail };
+      return { fallback: true, attempted: true, reason: "kb " + r.status, detail, totalMs: Date.now() - started };
     }
     const data = await r.json();
     const blocks = data.response?.[0]?.content || [];
@@ -490,11 +490,11 @@ async function groundedRetrieve(cfg, messages, env) {
         prompt_tokens_details: { cached_tokens: a.cachedInputTokens || 0 },
       }),
     }));
-    return { ok: true, status: r.status, data, answer, tools, mcpMs, modelActivities, totalMs: Date.now() - started };
+    return { ok: true, attempted: true, status: r.status, data, answer, tools, mcpMs, modelActivities, totalMs: Date.now() - started };
   } catch (e) {
     clearTimeout(timer);
     const reason = e.name === "AbortError" ? "timeout " + timeoutMs + "ms" : String(e).slice(0, 160);
-    return { fallback: true, reason };
+    return { fallback: true, attempted: true, reason, totalMs: Date.now() - started };
   }
 }
 
@@ -860,6 +860,21 @@ function emitProviderUsage(env, ctx, route, ks, npc, activity, base) {
     ...(base || {}),
   }, ctx);
 }
+function emitKbQuery(env, ctx, route, cfg, npc, out, base) {
+  if (!out?.attempted) return;
+  const refs = Array.isArray(out?.data?.references) ? out.data.references.length : 0;
+  npcMetric(env, "ai_kb_query", {
+    route,
+    phase: "kb_retrieve",
+    ks: cfg?.ks || "none",
+    kb: cfg?.kb || "none",
+    npc: npc || "unknown",
+    ms: Math.max(0, Number(out?.totalMs) || 0),
+    refs,
+    ok: !!out?.ok,
+    ...base,
+  }, ctx);
+}
 // Provider adapter. Hard ceiling: with the effective aiEnabled false this returns null WITHOUT calling any model.
 async function npcModelCall(env, role, sys, userMsg, aiEnabled) {
   if (!aiEnabled) return null;
@@ -1018,6 +1033,7 @@ export default {
 
     const out = await groundedRetrieve(cfg, messages, env);
     const route = groundedRoute(who);
+    emitKbQuery(env, ctx, route, cfg, who, out, requestMeta);
     for (const activity of out.modelActivities || []) {
       emitProviderUsage(env, ctx, route, cfg.ks, who, activity, {
         refs: Array.isArray(out.data?.references) ? out.data.references.length : 0,
