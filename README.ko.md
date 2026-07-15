@@ -10,6 +10,7 @@
 [![Pages](https://img.shields.io/github/deployments/hyeonsangjeon/Repolis/github-pages?style=for-the-badge&label=Pages&logo=githubpages&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
 [![매일 갱신](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=for-the-badge&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
+[![GitHub Copilot 플러그인](https://img.shields.io/badge/GitHub%20Copilot%20plugin-threejs--sculpt--dna-8957e5?style=for-the-badge&logo=githubcopilot&logoColor=white)](https://github.com/hyeonsangjeon/threejs-sculpt-dna)
 [![Single file](https://img.shields.io/badge/build-single%20index.html-83bb59?style=for-the-badge)](index.html)
 [![Last commit](https://img.shields.io/github/last-commit/hyeonsangjeon/Repolis?style=for-the-badge&color=b3a07f)](https://github.com/hyeonsangjeon/Repolis/commits)
 [![Stars](https://img.shields.io/github/stars/hyeonsangjeon/Repolis?style=for-the-badge&logo=github&color=f5c542&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/stargazers)
@@ -19,6 +20,8 @@
 
 **내 GitHub 레포는 목록이 아니라 걸어다니는 도시예요.** 집 하나하나가 레포이고, 높이·밝기·화려함·마당은 ⭐가 아니라 **실제 트래픽**(방문자·클론·포크·조회수)으로 자라요.
 어디로 갈지 모르겠다면? 🚕 **LLM 택시기사**에게 말만 하세요 — _"제일 인기있는 레포로 데려다줘"_ 하면 택시가 **내 옆까지 와서 태우고** 그 레포의 집까지 곧장 데려다줍니다.
+
+🌳 라이브 **월드 트리**는 품질 게이트를 갖춘 코드 네이티브 Three.js 재구성과 결정적 변형 패밀리를 위한 **GitHub Copilot 플러그인** [**threejs-sculpt-dna**](https://github.com/hyeonsangjeon/threejs-sculpt-dna)로 절차 조형했습니다.
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis: 내 GitHub 레포가 3D 도시로 — 택시에게 &quot;제일 인기있는 레포&quot;라고 말해 그 집까지 타고 가서 카드를 열고 GitHub로 바로 이동하는 데모" width="86%"></a>
 

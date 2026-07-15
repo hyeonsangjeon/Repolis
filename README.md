@@ -10,6 +10,7 @@
 [![Pages](https://img.shields.io/github/deployments/hyeonsangjeon/Repolis/github-pages?style=for-the-badge&label=Pages&logo=githubpages&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
 [![Daily refresh](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=for-the-badge&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
+[![GitHub Copilot plugin](https://img.shields.io/badge/GitHub%20Copilot%20plugin-threejs--sculpt--dna-8957e5?style=for-the-badge&logo=githubcopilot&logoColor=white)](https://github.com/hyeonsangjeon/threejs-sculpt-dna)
 [![Single file](https://img.shields.io/badge/build-single%20index.html-83bb59?style=for-the-badge)](index.html)
 [![Last commit](https://img.shields.io/github/last-commit/hyeonsangjeon/Repolis?style=for-the-badge&color=b3a07f)](https://github.com/hyeonsangjeon/Repolis/commits)
 [![Stars](https://img.shields.io/github/stars/hyeonsangjeon/Repolis?style=for-the-badge&logo=github&color=f5c542&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/stargazers)
@@ -19,6 +20,8 @@
 
 **Your GitHub repos aren't a list — they're a city you can walk.** Every house is a repo, and its height, brightness, ornaments and garden grow from **real traffic** (visitors · clones · forks · views), not ⭐.
 Don't know where to go? Just tell the 🚕 **LLM taxi driver** — say _"take me to the most popular repo"_ and the cab **drives over, picks you up, and carries you straight to that repo's house.**
+
+🌳 The live **World Tree** was procedurally sculpted with [**threejs-sculpt-dna**](https://github.com/hyeonsangjeon/threejs-sculpt-dna), a **GitHub Copilot plugin** for quality-gated, code-native Three.js reconstruction and deterministic variant families.
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis: see your GitHub repos as a 3D city, tell the taxi &quot;most popular&quot;, ride to that repo's house, open its card, and jump straight to it on GitHub" width="86%"></a>
 
