@@ -86,7 +86,7 @@ features:
   - id: topic-districts
     summary: Deterministic districts with hubs, boards, map navigation, and progress.
   - id: living-village
-    summary: Residents have routines, moods, friendships, haunts, gatherings, rest, and festivals.
+    summary: Residents have routines, relationships, haunts, gatherings, festivals, and specialist handoffs.
   - id: exploration
     summary: Explorer Passport, district progress, daily Village Chronicle, and Repository Constellation Trail.
   - id: village-chronicle
@@ -94,7 +94,9 @@ features:
   - id: gitber-taxi
     summary: Natural-language repo finder that physically drives to a selected house.
   - id: scholars
-    summary: POLARIS, VEGA via Microsoft Learn, and RIGEL via DeepWiki with trace panels.
+    summary: POLARIS, VEGA/MS Learn, RIGEL/DeepWiki, roaming MIRA/Context7, and roaming LYRA/Hugging Face.
+  - id: resident-scholar-handoff
+    summary: Specialist resident questions become compass-guided walks to the matching live scholar position.
   - id: landmarks
     summary: Contribution Library, Chronopolis, Observatory, World Tree, canals, parks, and fairground.
   - id: shareable-towns

@@ -27,6 +27,10 @@ SEARCH_KS_NAME = "github-repos-mcp-ks"
 # knowledge source (see SCHOLARS.md). Defaults are baked into src/grounded.js — override here:
 MSDOCS_KB_NAME = "repolis-mslearn-kb"
 MSDOCS_KS_NAME = "microsoft-learn-mcp-ks"
+# MIRA/Context7 and LYRA/Hugging Face use official direct MCP endpoints anonymously.
+# Optional higher-quota secrets (never commit values):
+#   wrangler secret put CONTEXT7_API_KEY
+#   wrangler secret put HF_TOKEN
 SEARCH_API_VERSION = "2026-05-01-preview"
 GROUNDED_MAX_RUNTIME_S = "30"
 GROUNDED_TIMEOUT_MS = "25000"

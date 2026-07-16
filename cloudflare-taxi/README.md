@@ -2,7 +2,7 @@
 
 The **live backend** behind Repolis. This Worker is what answers AI questions on the
 public site (https://hyeonsangjeon.github.io/Repolis/) — the Vercel functions in
-[`../api`](../api) are optional fork-only alternatives. It does two things:
+[`../api`](../api) are optional fork-only alternatives. It does three things:
 
 1. **Grounded repo Q&A** (the **🛰️ AI Foundry Live** taxi mode) — forwards a free-form
    question to your **Azure AI Search Knowledge Base**, which calls the **GitHub hosted
@@ -12,11 +12,13 @@ public site (https://hyeonsangjeon.github.io/Repolis/) — the Vercel functions 
    or the KB returns nothing, the Worker answers *in the scholar's voice* via a direct
    **Azure OpenAI** chat completion, authenticated **keyless** with an **Entra ID service
    principal** (no Azure OpenAI api-key anywhere). This is the `chat:true` / fallback path.
+3. **Direct public MCP scholars** — RIGEL calls DeepWiki, MIRA resolves and reads current
+   library docs through Context7, and LYRA searches Hugging Face models, datasets, and papers.
+   Their results keep source links and can be synthesized in the visitor's language.
 
-It also serves **multiple scholar NPCs** (POLARIS the taxi, VEGA · MS Learn, RIGEL ·
-DeepWiki) from one shared pipeline — each just points at its own KB + MCP knowledge
-source. See [`../SCHOLARS.md`](../SCHOLARS.md) for the roster and the `npc → { kb, ks }`
-map in [`src/grounded.js`](src/grounded.js).
+It serves **five specialist scholars**: POLARIS, VEGA · MS Learn, RIGEL · DeepWiki,
+MIRA · Context7, and LYRA · Hugging Face. See [`../SCHOLARS.md`](../SCHOLARS.md) and
+the hybrid `scholarConfig` / `MCP_NPCS` maps in [`src/grounded.js`](src/grounded.js).
 
 This is a **separate** Worker from the realtime presence server in [`../cloudflare`](../cloudflare).
 The grounding logic mirrors the Vercel function [`../api/taxi-grounded.js`](../api/taxi-grounded.js),
@@ -32,7 +34,7 @@ wait for the slow KB to finish. Free plan, no card, and you already run a Worker
 
 ## What it holds (and what it doesn't)
 
-The Worker holds exactly **two secrets**:
+The Worker needs **two secrets** for the live KB/persona path:
 
 - your **Azure AI Search key** (`SEARCH_API_KEY`) — for KB retrieval, and
 - an **Entra ID service-principal secret** (`AAD_CLIENT_SECRET`) — so it can call Azure
@@ -42,6 +44,9 @@ It never holds an **Azure OpenAI api-key** and never holds the **GitHub PAT** �
 stay server-side: the OpenAI access for KB answer-synthesis and the GitHub PAT both live
 inside the Knowledge Source on Azure, never touching this Worker or the browser. The
 service principal only has the `Cognitive Services OpenAI User` role on your AOAI resource.
+
+MIRA and LYRA work anonymously. For higher third-party quotas you may additionally set
+`CONTEXT7_API_KEY` and `HF_TOKEN` as Worker secrets. They remain server-side and are optional.
 
 Deterministic navigation ("take me to the most popular repo") is handled in the client
 and never reaches here. If the KB is unreachable / slow / unconfigured, the Worker returns
@@ -95,6 +100,13 @@ npx wrangler deploy
 > `SEARCH_KS_NAME` a comma-separated list, and add a scholar by following
 > [`../SCHOLARS.md`](../SCHOLARS.md).
 
+Optional direct-MCP quota secrets:
+
+```bash
+npx wrangler secret put CONTEXT7_API_KEY
+npx wrangler secret put HF_TOKEN
+```
+
 ## Turn it on for every visitor
 
 Open `../index.html`, find `GROUNDED_DEFAULT`, and paste your Worker URL:
@@ -130,6 +142,9 @@ AOAI_DEPLOYMENT=gpt-5.4-mini
 AAD_TENANT=<tenant-id>
 AAD_CLIENT_ID=<sp-app-id>
 AAD_CLIENT_SECRET=<sp-password>
+# Optional direct-MCP quota upgrades (MIRA/LYRA work without them):
+CONTEXT7_API_KEY=<context7-key>
+HF_TOKEN=<hugging-face-token>
 ```
 
 ```bash
@@ -150,7 +165,10 @@ curl -s -X POST http://localhost:8788/ \
 
 ```jsonc
 // grounded repo question (taxi):            { "question": "…" }
-// scholar grounded question:                { "question": "…", "npc": "msdocs" }   // or "deepwiki" (needs repoName)
+// scholar grounded question:                { "question": "…", "npc": "msdocs" }
+// direct public MCP scholar:                { "question": "React 19 useEffect", "npc": "context7", "lang": "ko" }
+// Hugging Face model/dataset/paper search:   { "question": "VLM papers", "npc": "huggingface", "lang": "en" }
+// DeepWiki repo map:                        { "question": "how does it work?", "npc": "deepwiki", "repoName": "facebook/react" }
 // in-persona general / small talk:          { "question": "…", "npc": "taxi", "chat": true, "history": [], "lang": "ko" }
 ```
 
@@ -167,13 +185,16 @@ Responses:
 // scholar grounded answer (e.g. VEGA · MS Learn):
 { "repo": null, "message": "…", "trace": { "ks": "microsoft-learn-mcp-ks", "docs": true, … } }
 // DeepWiki direct MCP (RIGEL): { "kind": "docs", "message": "…", "repoName": "…", "items": [ … ], "trace": { … } }
+// Context7 / Hugging Face direct MCP (MIRA / LYRA):
+{ "kind": "docs", "message": "…", "items": [ /* source links */ ],
+  "trace": { "ks": "Context7 (MCP)", "tools": ["resolve-library-id", "query-docs"], "direct": true } }
 // use Local search instead:
 { "fallback": true, "reason": "timeout 25000ms" }
 ```
 
 ## 🧑‍🌾 Resident NPC social layer (optional, budget-capped)
 
-The city's **townspeople** (7 residents — distinct from the plaza scholars and Gitber the taxi) trade
+The city's **townspeople** (8 residents — distinct from the specialist scholars and Gitber the taxi) trade
 short turn-by-turn ambient lines and chat with the visitor. **This is off by default and costs nothing:**
 `index.html` ships them as deterministic **scripted** residents (zero network). The Worker only produces
 real model turns when you opt in *and* the daily budget allows — otherwise every action returns
@@ -260,4 +281,3 @@ NPC_PLAYER_CHAT_ENABLED=true
 NPC_DAY_CAP_USD=1
 # reuses AOAI_ENDPOINT + AAD_* from the scholar-chat block above
 ```
-

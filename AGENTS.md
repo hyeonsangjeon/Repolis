@@ -30,7 +30,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 |---|---|---|
 | **`index.html`** | Primary app runtime — 3D engine, UI, navigation, residents, exploration, i18n, day/night. | Any UI / gameplay / client behavior change. |
 | **`repos.json`** | Generated array of repo objects that build the current owner city. **Do not hand-edit.** | Never directly; regenerate (see below). |
-| **`scholars.js`** | `window.SCHOLARS` roster (classic script, no build): POLARIS · VEGA · RIGEL. | Adding / editing an NPC scholar. |
+| **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
 | **`scripts/build_repos.py`** | Rebuilds `repos.json` from `data/logs/*` traffic + `gh api`. | Refreshing the city data locally. |
 | **`scripts/smoke.mjs`** | Hermetic static and behavioral regression guards for the city runtime. | Any client feature, navigation, or generated-module integration change. |
@@ -139,7 +139,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | Change districts, Village Chronicle, passport, or exploration loops | `index.html` + the matching behavioral groups in `scripts/smoke.mjs`. |
 | Change resident routines, moods, friendships, or haunts | The resident social layer in `index.html`; preserve visitor/chat/festival/hidden-tab ownership guards. |
 | Fix / improve a scholar's answer or references | `cloudflare-taxi/src/grounded.js` (server) + the trace panel in `index.html`. |
-| Add a new scholar NPC | `scholars.js` (data) + the `npc → {kb, ks}` map in `cloudflare-taxi/src/grounded.js`; document in `SCHOLARS.md`. |
+| Add a new scholar NPC | `scholars.js` + `scholarConfig`/`MCP_NPCS` in `cloudflare-taxi/src/grounded.js`; choose KB-backed or direct MCP deliberately; document in `SCHOLARS.md`. |
 | Tune the taxi's repo search/intent routing | `index.html` (Local search: inverted index + intent agent). |
 | Touch the debate/verdict engine | `council/` — and keep `node council/test*.mjs` green. |
 | Add a UI string | both `ko` and `en` i18n dictionaries in `index.html`. |
@@ -153,5 +153,7 @@ A daily Action turns the owner's **public repos + committed traffic logs** into 
 turns that array into metric-shaped buildings, topic districts, routes, maps, and exploration progress.
 Residents add moods, routines, friendships, haunts, gatherings, and festivals; landmarks include the
 Contribution Library, Chronopolis, Observatory, and imported procedural World Tree. Gitber/POLARIS and the
-scholars (VEGA · MS Learn, RIGEL · DeepWiki) add natural-language navigation and grounded answers. Everything
+scholars (VEGA · MS Learn, RIGEL · DeepWiki, MIRA · Context7, LYRA · Hugging Face) add natural-language
+navigation and grounded answers. Residents hand specialist questions to the right scholar instead of gaining
+their own MCP access. Everything
 degrades gracefully to keyless Local search and solo play.

@@ -16,7 +16,7 @@
 - [index.html](index.html): primary Three.js runtime, UI, navigation, residents, exploration, i18n, and day/night.
 - [repos.json](repos.json): generated repository/traffic array; never hand-edit.
 - [scripts/build_repos.py](scripts/build_repos.py): rebuilds `repos.json` from committed traffic logs plus `gh api`.
-- [scholars.js](scholars.js): POLARIS, VEGA, and RIGEL scholar roster.
+- [scholars.js](scholars.js): POLARIS, VEGA, RIGEL, MIRA, and LYRA scholar roster.
 - [assets/world-tree/createRepolisHero.js](assets/world-tree/createRepolisHero.js): procedural World Tree factory.
 - [assets/contribution-library.json](assets/contribution-library.json): generated bilingual Contribution Library data.
 
@@ -24,9 +24,9 @@
 
 - Metric-shaped repository houses and deterministic topic districts with hubs, boards, and a world map.
 - Explorer Passport, district progress, the daily resident→haunt→repo/district Village Chronicle, and the Repository Constellation Trail.
-- Eight residents with routines, moods, friendships, cherished haunts, conversations, rest, and festivals.
+- Eight residents with routines, moods, friendships, cherished haunts, conversations, rest, festivals, and deterministic specialist handoffs.
 - Gitber/POLARIS taxi: keyless Local search by default; optional WebLLM and grounded AI.
-- VEGA via Microsoft Learn and RIGEL via DeepWiki, both with answer traces.
+- VEGA via Microsoft Learn, RIGEL via DeepWiki, roaming MIRA via Context7, and roaming LYRA via Hugging Face, all with answer traces.
 - Contribution Library, Chronopolis Council, Observatory, World Tree, canals, parks, and fairground.
 - Optional realtime visitors and counters; absent backend means solo play.
 
