@@ -2,257 +2,155 @@
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/banner.svg" alt="Repolis — the City of Repos" width="100%"></a>
 
-# 🏙️ Repolis — the City of Repos
+# Repolis — the City of Repos
 
-**Your GitHub isn't a 6‑pin grid — it's a 3D city you can walk, and a taxi drives you to any repo you name.**
+**Your GitHub is not a list. It is a living 3D town you can walk.**
 
-[![Live demo](https://img.shields.io/badge/Live%20demo-Repolis-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
-[![Pages](https://img.shields.io/github/deployments/hyeonsangjeon/Repolis/github-pages?style=for-the-badge&label=Pages&logo=githubpages&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
+[![Live demo](https://img.shields.io/badge/Live-Repolis-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
 [![Daily refresh](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=for-the-badge&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
-[![GitHub Copilot plugin](https://img.shields.io/badge/GitHub%20Copilot%20plugin-threejs--sculpt--dna-8957e5?style=for-the-badge&logo=githubcopilot&logoColor=white)](https://github.com/hyeonsangjeon/threejs-sculpt-dna)
-[![Single file](https://img.shields.io/badge/build-single%20index.html-83bb59?style=for-the-badge)](index.html)
-[![Last commit](https://img.shields.io/github/last-commit/hyeonsangjeon/Repolis?style=for-the-badge&color=b3a07f)](https://github.com/hyeonsangjeon/Repolis/commits)
-[![Stars](https://img.shields.io/github/stars/hyeonsangjeon/Repolis?style=for-the-badge&logo=github&color=f5c542&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/stargazers)
+[![Zero build](https://img.shields.io/badge/runtime-zero%20build-83bb59?style=for-the-badge)](index.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-a0a0a0?style=for-the-badge)](LICENSE)
 
 [English](README.md) · [한국어](README.ko.md)
 
-**Your GitHub repos aren't a list — they're a city you can walk.** Every house is a repo, and its height, brightness, ornaments and garden grow from **real traffic** (visitors · clones · forks · views), not ⭐.
-Don't know where to go? Just tell the 🚕 **LLM taxi driver** — say _"take me to the most popular repo"_ and the cab **drives over, picks you up, and carries you straight to that repo's house.**
+Every house is a public repository. Real traffic shapes its architecture, residents live between the districts, and **Gitber**, the town taxi, drives you to the repo you describe.
 
-🌳 The live **World Tree** was procedurally sculpted with [**threejs-sculpt-dna**](https://github.com/hyeonsangjeon/threejs-sculpt-dna), a **GitHub Copilot plugin** for quality-gated, code-native Three.js reconstruction and deterministic variant families.
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Walk through Repolis, ask Gitber for a repository, and ride to its house" width="86%"></a>
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis: see your GitHub repos as a 3D city, tell the taxi &quot;most popular&quot;, ride to that repo's house, open its card, and jump straight to it on GitHub" width="86%"></a>
+**[Open the live town](https://hyeonsangjeon.github.io/Repolis/)** · **[Visit any public GitHub town](https://hyeonsangjeon.github.io/Repolis/?user=mrdoob)** · **[Run locally](#run-in-60-seconds)**
 
-<b>Start here →</b>&nbsp; ▶ <a href="https://hyeonsangjeon.github.io/Repolis/"><b>Live demo</b></a> &nbsp;·&nbsp; 💻 <a href="#try-it-locally-no-build-step"><b>Run locally</b></a> &nbsp;·&nbsp; 🏙️ <a href="#-run-your-own"><b>Fork / build your own city</b></a>
-
-<sub>No sign‑up, no build step · Built with Three.js · one single <code>index.html</code></sub>
+<sub>No sign-up · no build step · keyboard, touch, and mobile controls</sub>
 
 </div>
 
----
+## A city built from repository data
 
-## ✨ What's inside
+Repolis turns public GitHub metadata and cumulative traffic into a place instead of another dashboard.
 
-- 🚶 **Walkable open world** — stroll a hand-built low-poly city with WASD / arrows / on-screen joystick. **Houses are solid** — walk *around* them, down brown dirt paths and along asphalt ring-roads with painted lane lines. Reach a house (repo) and its card opens (with the GitHub **social preview** image when set).
-- 🏙️ **Downtown & Hometown districts** — the most popular repos rise as inner‑city towers; the rest become cozy cottages in the outer hometown, along ring roads and radial avenues.
-- 📊 **Metrics _are_ the architecture** — the data builds the city:
-  | Metric | Shows up as |
-  |---|---|
-  | 👁 unique visitors | building **height** |
-  | ⑂ forks | building **width** (lot size) |
-  | ⬇ clones | **ornamentation** (banners · gold trim) |
-  | 📈 views | **garden** · fence size |
-  | ★ stars | **gold-star** ornaments on the roof |
-  | 🌙 activity _(recent push · clones · views)_ | **window glow at night** |
-- 🗓️ **Cumulative since move‑in day** — visitors & clones are lifetime totals, counted from the day each house was "built" (first seen in the data). The card shows a _"since YYYY‑MM‑DD"_ note, plus **live GitHub badges** — license, open issues and the latest release tag, shown when present.
-- 🚕 **LLM taxi driver that actually drives you** — ask in natural language; it picks the best‑matching repo, explains it, then the cab **comes to your spot, you board, and it carries you** to the house. Three modes:
-  - **Local search** (default · no key · instant) — synonym‑expanded intent search, also metric‑aware (_"most cloned"_, _"most visited"_, _"most forked"_); a strong topic match always beats generic metric sorting, and you always get a few alternatives to pick from.
-  - **WebLLM** (in‑browser AI · no key · WebGPU)
-  - **🛰️ AI Foundry Live** (optional · grounded) — live questions about your repos route through an Azure AI Search Knowledge Base + GitHub's hosted MCP server; **falls back to Local automatically** when no backend is set, so a keyless clone still works.
-- 📘 **Named scholars you can talk to** — beyond the taxi, the plaza's NPCs are **named night‑sky stars**, each grounded by **one live MCP knowledge source**: **POLARIS · the Wayfinder** (your taxi driver), **VEGA · the Archivist** — the **MS Docs engineer**, and **RIGEL · the Cartographer**. Walk up to VEGA and ask about Azure, .NET or Copilot — it searches the **official Microsoft Learn docs in real time** through an Azure AI Search **Foundry MCP Knowledge Source**, and `gpt-5.4-mini` writes the answer back **in your own language** with a trace panel linking every doc. Walk up to **RIGEL** instead and name a public repo (`facebook/react`, `langchain-ai/langchain`) — carrying the spirit of *Ariadne*, it unspools a thread through the code via the **keyless DeepWiki MCP** and maps how the repo works inside. Each scholar also **knows who it is** — ask _"who are you?"_, _"what is this place?"_ or _"who else is here?"_ and it answers **in‑character** (its myth, this city, its owner) instantly, with no knowledge‑source call. The chat keeps **multi‑turn context**, and every scholar is registered in **[`SCHOLARS.md`](SCHOLARS.md)** — add your own with one script. And every scholar — **the taxi POLARIS included** — can also just **chat**: ask something off‑topic or small‑talk and it replies **in‑persona from general starlit knowledge** (Azure AI Foundry `gpt-5.4-mini`), no repo pushed, with a ✦ _how I answered_ panel.
-- 🏡 **Six house tiers, not just taller boxes** — by traffic rank each repo becomes a `cabin → cottage → house → villa → manor → portico mansion`, with wings, columns, porticos, dormers, balconies and cupolas. Top repos get grand columned 저택; quiet ones get cosy cabins.
-- 🌳 **A city that feels alive** — **procedurally textured houses** (brick · siding · stone · shingle roofs — *zero image assets*), gardens, a **Colmar‑style flower quarter** (Petite‑Venise canals threading the whole map, rose arches, flower carts & market stalls), **roaming chow‑chow pets in three coats** (ivory · brown · black), street trees, street lamps, **rest pavilions you can sit in** (and stand back up), and **koi ponds & driveway garages** for your most active repos. Category logos on the roofs (AI / Data / Software / …) and proper town‑house roads.
-- 🌙 **Day & night, with living windows** — flip the 🌙 / ☀️ switch in the HUD. At night the sky turns navy, lamps and stars switch on, and **each repo's windows glow by how active it is** (recent pushes · clones · views) — so your busiest repos literally light up the skyline. Overhead, each scholar's **myth‑constellation** (POLARIS in Ursa Minor, VEGA in Lyra, RIGEL in Orion) twinkles on the dome, above a glowing **rune‑circle and drifting star‑dust** in the plaza.
-- 🟢 **Realtime multiplayer** — see other visitors walking around as avatars with name tags, plus a **live · today · all-time unique-visitor counter** (🟢 현재 · 오늘 · 누적) in the HUD. It's **already live on the demo above**; a fork stays solo until you add one free server (below).
-- 🌐 **English / 한국어 toggle** — switch the whole UI language live from the HUD.
+| Signal | What it becomes |
+|---|---|
+| unique visitors | building height |
+| forks | lot and building width |
+| clones | banners and gold trim |
+| views | garden and fence size |
+| stars | roof ornaments |
+| recent activity | window glow at night |
 
-> 💬 **Try asking the taxi:** _"most popular repo"_ · _"a repo about AI agents"_ · _"most cloned"_ · _"a Korean STT project"_ · _"anything"_ — it picks the best match, explains why, then drives you there.
+Repositories are grouped into topic districts with roads, signs, hubs, and a world map. The owner town refreshes daily from committed traffic history plus the GitHub API; `?user=<login>` can build a lighter town from any user's public repositories.
 
-## 🧠 How it works (data flow)
+## A village that lives
 
-```
-github-traffic-monitor (private)          Repolis (public)
-  └ daily cumulative traffic (logs/*.csv) ──┐
-                                            ├─▶ .github/workflows/refresh.yml (daily)
-  gh api: your public repos (+ committed forks) ─┘  └ scripts/build_repos.py
-                                                       └─▶ repos.json ──▶ index.html (Three.js 3D city)
-```
+- **Residents have lives, not idle loops.** Eight townspeople wander their districts, keep daily rhythms, carry changing moods, visit cherished haunts, recognize friends, stroll and sit together, gather around the campfire, and sometimes celebrate a recent repository release.
+- **Exploration has continuity.** The Explorer Passport records houses and landmarks, district progress shows what remains, and the daily **Village Chronicle** connects one resident to their cherished haunt and a truthful related repo or district.
+- **Repositories form relationships.** The Stargazer's Observatory finds a truthful three-repo connection from shared topics or languages and draws it as a nighttime Constellation Trail.
+- **Landmarks carry the project story.** The Contribution Library archives papers, talks, open-source work, and awards; Chronopolis hosts the Council of Time; the canal, plaza, observatory, park, and fairground make the city worth walking.
+- **The World Tree anchors the skyline.** It is a deterministic, code-native Three.js sculpture generated through the [threejs-sculpt-dna](https://github.com/hyeonsangjeon/threejs-sculpt-dna) Copilot plugin, with rooted foliage, living motion, and tree-isolated bloom.
 
-- **Your public repos** — everything you created, **plus any fork you've actually committed to** (untouched mirror forks are skipped). A private repo name is never exposed on the public site.
-- Traffic totals are the **cumulative values** gathered by [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor). (GitHub's own traffic API only keeps a rolling 14‑day window — this is why a daily collector is needed to build lifetime totals.)
+## Ask the city
 
-### 🌌 How a scholar answers — grounding vs. starlit chat
+| Guide | What to ask | How it answers |
+|---|---|---|
+| **Gitber · POLARIS** | “Take me to an AI agent repo” or “most cloned” | local indexed search by default, then drives to the selected house |
+| **VEGA · Archivist** | Azure, .NET, Copilot, Microsoft products | grounded Microsoft Learn search with references |
+| **RIGEL · Cartographer** | how a public repository works | grounded DeepWiki exploration |
+| **Council of Time** | a technical trade-off or disputed claim | deterministic curated verdicts, plus optional live debate clearly marked unverified |
 
-![How the Repolis scholars answer — knowledge‑base grounding versus starlit general chat](assets/scholar-grounding.svg)
+The town works without a backend. **Local** search is instant and keyless; **WebLLM** is optional in-browser inference; the live demo adds grounded answers through a Cloudflare Worker. Missing services degrade to Local search or solo play.
 
-Talk to any scholar and your question forks two ways. A **repo / docs question** runs **KB retrieval** through that scholar's MCP knowledge source (MS Learn · DeepWiki · Azure AI Search) and comes back **grounded, with references**. An **off‑topic / small‑talk question** — or a knowledge‑base miss — is answered **in persona** by **Azure AI Foundry `gpt-5.4-mini`**: _starlit_ general knowledge, no repo pushed. Every reply carries a trace panel (🔎 _how I found this_ / ✦ _how I answered_) so you can see which path it took.
-
-### ⏳ How the Kronos Council decides — debate as theater, verdict as math
-
-![How the Kronos Council decides — three sages testify and cross-examine, the Chair KRONOS lets the newest living source deliver a deterministic verdict](assets/chrono-council.svg)
-
-In a domed rotunda on the edge of town, three debate‑sages argue **docs vs. code** — 📜 **Olddoc** quotes the manual, 🌿 **Livewire** trusts the running source, 🌀 **Hearsay** echoes the crowd. The Chair, ⏳ **KRONOS**, weighs every claim by **source × recency** and lets **Time** — the newest living source — deliver the verdict. The banter is theater; the verdict is **always the deterministic engine** (byte‑identical, 52 tests green). **Ambient** (walk up & watch) is free and runs 0 LLM; **Live** debate is an optional, guarded paid LLM (`LIVE_ENABLED=false` by default, silent fallback when no key is set).
-
-
-### 🧠 The pattern behind it — horizontal multi‑agent deliberation
-
-Type *any* topic — even a single noun like `reasoning ratio` — and three **peer** sages debate it **live** over SSE: 🌿 **Livewire** the *advocate*, 📜 **Olddoc** the *skeptic*, 🌀 **Hearsay** the *analyst*, reacting and rebutting each other **by name** across rounds, **paced to human reading speed** so you can actually follow it. Then the **Chair of Time** reads the whole transcript and rules. Under the hood the live debate runs on **Azure AI Foundry** — the three sages and the adjudicator on `gpt-5.4-mini`, and the Chair on the stronger `gpt-5.4` (+ reasoning) for the final ruling; the models are config‑swappable in [`council/council.config.json`](council/council.config.json), never hard‑coded. Free‑topic verdicts are **AI inference**, so they always wear a **⚡ unverified** badge — while the six curated cases keep their **deterministic** math verdict. It's a small, honest take on the *multi‑agent debate → judge* pattern.
-
-![Horizontal multi-agent deliberation — three equal role agents debate as peers and a chair agent aggregates the whole transcript into a verdict](assets/council-pattern.svg)
-
-**→ Deep‑dive: [`COUNCIL_PATTERN.md`](COUNCIL_PATTERN.md)** — the diagram, the roles, the golden rule (verified vs. unverified), and the pattern's lineage (Multi‑Agent Debate · Mixture‑of‑Agents · LLM‑as‑a‑Judge · Society of Mind).
-
-
-## 🚀 Run your own
-
-1. **Fork / copy this repo.** You also need a daily traffic source — keep a collector like [`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor) running.
-2. **Add a secret** — `Settings → Secrets and variables → Actions`:
-   - `GH_PAT` : a `repo`‑scoped Personal Access Token (to check out the private traffic‑monitor + list your repos).
-3. **Enable GitHub Pages** — `Settings → Pages → Source: Deploy from a branch → main / (root)`.
-4. **Run the Action** — `Actions → Refresh Repolis data → Run workflow` (then it auto‑refreshes daily).
-5. Done — your city opens at `https://<you>.github.io/Repolis/`.
-
-### Try it locally (no build step)
-
-It's one static file — clone and serve:
+## Run in 60 seconds
 
 ```bash
-git clone https://github.com/hyeonsangjeon/Repolis && cd Repolis
-python3 -m http.server 8000      # or: npx serve .
+git clone https://github.com/hyeonsangjeon/Repolis
+cd Repolis
+python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
-Rebuild the city from **your** repos (needs the GitHub CLI, logged in):
+There is no install or build step. Three.js is loaded from a CDN import map; local data and modules are served as static files.
+
+To rebuild the owner city from GitHub plus collected traffic history:
 
 ```bash
 gh auth login
-GTM_DIR=data python3 scripts/build_repos.py   # regenerates repos.json
+GTM_DIR=data python3 scripts/build_repos.py
 ```
 
-### 🚕 AI taxi driver — modes, intent routing & indexing
+`repos.json` is generated. Change the builder, never the generated JSON by hand.
 
-The driver turns a free‑text question into the right house through a small **retrieval pipeline**, so it stays accurate even on a tiny in‑browser model:
+## Build your own city
 
-```
-your question
-  └▶ ① intent agent (deterministic) ─ "library / 도서관", "most popular", "most stars",
-  │      landmark & metric routing      "recent", "most cloned·forked·viewed", "random"
-  │      → answered directly, no LLM     → exact, zero hallucination
-  └▶ ② search index (inverted index) ─ tokens(name·label·lang·desc·topics) + synonyms,
-  │      candidate retrieval             built once, lazily → top‑K shortlist
-  └▶ ③ ranking ────────────────────── name‑hit ≫ token‑hit ≫ substring, +topic, +popularity,
-  │                                      and your *own* word in a repo name wins
-  └▶ ④ LLM picks from candidates (RAG)─ WebLLM / proxy choose ONLY among the shortlist → "PICK: <repo>"
-  └▶ ⑤ multiple suggestions ────────── the remaining candidates become one‑tap chips you can pick from
-```
+The quickest preview needs no fork: open `https://hyeonsangjeon.github.io/Repolis/?user=<login>`.
 
-Why it matters: *"take me to the library"* is a **navigation** intent, not a repo search — step ① catches it and drives you to the Contribution Library instead of guessing a random repo (the bug you'd hit when the question went straight to the model). Free‑form questions ("an AI agent repo", "speech‑to‑text") flow through ②–⑤.
+For a persistent city with cumulative traffic:
 
-**Three modes** — switch from the chat header:
+1. Fork the repository and keep a daily collector such as [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor).
+2. Configure the `GH_PAT` Actions secret required by the refresh workflow.
+3. Enable GitHub Pages from `main` at the repository root.
+4. Run **Refresh Repolis data** once; the workflow continues daily.
 
-| Mode | Engine | Key? | Notes |
-|---|---|---|---|
-| **Local** | synonym + metric search | none | **default** · instant · fully offline — *what every fresh clone ships with* |
-| **WebLLM** | in‑browser LLM (WebGPU) | none | downloads ~1 GB once; picks from the index shortlist |
-| **🛰️ AI Foundry Live** | Cloudflare Worker → Azure AI Search KB → GitHub MCP | server‑side | optional · live, grounded repo Q&A **+ in‑persona general chat**. **Unconfigured → silent Local fallback** |
+Only public repositories are rendered. Untouched mirror forks are filtered out, and private repository names never enter the public data.
 
-> 🔌 **No backend required.** A fresh clone runs entirely in the browser: **Local** is the default and needs no key, and **WebLLM** runs on‑device. **AI Foundry Live** is 100% optional — if you don't deploy it, selecting that mode just **falls back to Local search** (no errors, no setup). Deploy to GitHub Pages and everything works. _(A simpler `api/taxi.js` Azure‑OpenAI proxy is also available — see below.)_
+## Architecture
 
-The browser always does retrieval first and hands the model only the **shortlisted candidates** — so a WebLLM/grounded agent just has to choose one:
-
-```jsonc
-// POST /api/taxi — request the city sends (already shortlisted, not the full catalog)
-{
-  "question": "show me a repo about an AI agent",
-  "repos": [
-    { "repo": "multi-agent-orchestration-observability", "lang": "Python",
-      "stars": 12, "topics": ["agent","observability","llm"], "desc": "…" },
-    { "repo": "strands-bedrock-agents-cookbook", "lang": "Jupyter Notebook", "…": "…" }
-  ]
-}
+```text
+traffic history + GitHub API
+             │
+             ▼
+ scripts/build_repos.py ──▶ repos.json
+                                │
+                                ▼
+                    index.html + local modules
+                         Three.js town
+                         ├─ Local search
+                         ├─ optional grounded AI Worker
+                         └─ optional realtime Worker
 ```
 
-```js
-// api/taxi.js — minimal agent: pick ONE from the candidates, return strict JSON
-export default async function handler(req, res) {
-  const { question, repos } = req.body;
-  const sys = `You are the Repolis taxi driver. Choose the single best repo for the user
-ONLY from this candidate list (never invent one). Reply warmly in one or two sentences.
-Return strict JSON {"repo":"<repo-name>","message":"<reply>"}.
-Candidates:\n${repos.map(r => `- ${r.repo} | ${r.lang} | ${(r.topics||[]).join(',')} | ${r.desc}`).join('\n')}`;
+Repolis stays a **zero-build static web app**. The main runtime remains in `index.html`; specialized local files hold generated data, the scholar roster, the World Tree factory, and deterministic Council logic.
 
-  const r = await fetch(`${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=${process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview'}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': process.env.AZURE_OPENAI_KEY },
-    body: JSON.stringify({
-      messages: [{ role: 'system', content: sys }, { role: 'user', content: question }],
-      temperature: 0.4, max_tokens: 200, response_format: { type: 'json_object' }
-    })
-  }).then(x => x.json());
+| Path | Purpose |
+|---|---|
+| [`index.html`](index.html) | 3D world, UI, navigation, residents, exploration, i18n |
+| [`repos.json`](repos.json) | generated repository and traffic data |
+| [`scholars.js`](scholars.js) | scholar roster |
+| [`assets/world-tree/`](assets/world-tree/) | procedural World Tree factory |
+| [`cloudflare-taxi/`](cloudflare-taxi/) | grounded AI and optional resident dialogue Worker |
+| [`cloudflare/`](cloudflare/) | realtime presence Worker |
+| [`council/`](council/) | deterministic Council engine and guards |
+| [`scripts/`](scripts/) | data builders and regression checks |
 
-  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOW_ORIGIN || '*');
-  res.json(JSON.parse(r.choices[0].message.content)); // → { repo, message }
-}
-```
+## Optional services
 
-Return `{ "repo": "<repo-name>", "message": "<reply>" }`; the city drives there and offers the remaining candidates as one‑tap alternatives. If the endpoint is unreachable, the driver silently falls back to local search.
+| Capability | Setup |
+|---|---|
+| Grounded taxi and scholars | [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md) |
+| Realtime visitors and counters | [`cloudflare/README.md`](cloudflare/README.md) |
+| Vercel taxi alternatives | [`api/`](api/) and [`.env.example`](.env.example) |
+| Copy-paste integrations | [`examples/`](examples/) |
 
-### (Optional) AI backends for the taxi
-
-Both backends are **opt‑in** — the city is fully usable without them. All configuration lives in [`.env.example`](.env.example): copy it to `.env` for local `vercel dev`, or paste the values into **Vercel → Settings → Environment Variables**.
-
-#### 🛰️ AI Foundry Live (grounded) — live answers about your repos
-
-**The live site is powered by the Cloudflare Worker in [`cloudflare-taxi/`](cloudflare-taxi/)** (the recommended path — see below); [`api/taxi-grounded.js`](api/taxi-grounded.js) is the equivalent **Vercel** function. Either one routes a free‑text question through an **Azure AI Search Knowledge Base** whose **MCP Knowledge Source** calls **GitHub's hosted MCP server**, then synthesises the answer with a small model — all server‑side. The **Vercel** function only ever holds a **Search key** (your Azure OpenAI key and GitHub PAT stay inside the Knowledge Source on Azure, never in the browser). The **Worker** additionally uses a **keyless Entra ID service principal** to answer off‑KB questions **in the scholar's persona** (general chat / small talk) — a superset the Vercel function doesn't have. The chat shows a live **trace panel** — knowledge source · MCP tools · reference repos — for each grounded answer.
-
-1. **Azure AI Search** — create a service, then a **Knowledge Base** (e.g. `repolis-github-kb`) with a **Knowledge Source** of kind *MCP server* pointing at GitHub's hosted MCP (`https://api.githubcopilot.com/mcp/`, with a **read‑only** PAT in its header). Give the search service a **managed identity** with access to an Azure OpenAI deployment for answer synthesis.
-2. **Deploy** `api/taxi-grounded.js` to Vercel (import the repo → you get `/api/taxi-grounded`).
-3. **Set env vars** (see [`.env.example`](.env.example)): `SEARCH_ENDPOINT`, `SEARCH_API_KEY`, `SEARCH_KB_NAME`, `SEARCH_KS_NAME` (comma‑separated to attach more MCPs), plus optional `SEARCH_API_VERSION`, `GROUNDED_TIMEOUT_MS`, `GROUNDED_MAX_RUNTIME_S`, `ALLOW_ORIGIN`.
-4. In the taxi, pick **🛰️ AI Foundry Live** and paste your URL (`https://<project>.vercel.app/api/taxi-grounded`). Leave it blank to stay on Local.
-
-> ⏱️ **Vercel Hobby caveat:** the KB can take 6–21 s on cold/complex queries, but Hobby caps a function at ~10 s. `GROUNDED_TIMEOUT_MS` (9000) aborts just before that and the taxi **silently falls back to Local** — so it never hangs, but slow queries won't show grounded results. For consistently grounded answers, deploy on **Vercel Pro** and raise `maxDuration` (and `localStorage.taxiGroundedTimeoutMs` in the browser).
-
-> ☁️ **Recommended — and what the live site actually runs — Cloudflare Workers (no ~10 s wall).** Workers bill *CPU time*, not the wall‑clock spent awaiting a subrequest, so the slow KB call finishes instead of being cut off — far fewer Local fallbacks, on the **free** plan (no card). It's also a **superset** of the Vercel function: the same grounding **plus** in‑persona general chat (keyless Entra service principal → Azure OpenAI) and multiple scholar NPCs. The ready‑to‑deploy Worker lives in [`cloudflare-taxi/`](cloudflare-taxi/): `wrangler secret put SEARCH_ENDPOINT && wrangler secret put SEARCH_API_KEY && wrangler deploy` (add the Entra SP secrets for general chat). Paste the resulting Worker URL into the taxi, or into **`GROUNDED_DEFAULT`** in `index.html` to enable it for **every visitor**. Full setup + the secret list: [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md).
-
-#### 🌐 AI proxy (simple) — one Azure OpenAI call
-
-Prefer a lightweight LLM picker over the full grounding stack? `api/taxi.js` takes the shortlist the browser already retrieved and asks Azure OpenAI to choose one repo. Deploy it to Vercel, set `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_DEPLOYMENT` / `AZURE_OPENAI_KEY` (see [`.env.example`](.env.example)), and point the taxi at `/api/taxi`. If the endpoint is unreachable, the driver falls back to Local search. _(This mode isn't in the default dropdown; it stays available for forks that prefer it.)_
-
-### (Optional) Realtime multiplayer
-
-The static site is solo by default. To let visitors meet each other, run one tiny WebSocket server and point the world at it:
-
-- **PartyKit (one command):** `npx partykit deploy` (uses `party/repolis.js` + `partykit.json`). You'll get a URL like `wss://repolis.<you>.partykit.dev/parties/main/world`.
-- **Cloudflare Workers (most reliable):** `cd cloudflare && npx wrangler login && npx wrangler deploy`. Deploys the same server straight to your own Cloudflare account on the **free** plan (SQLite Durable Objects, no credit card). You'll get `wss://repolis-rt.<you>.workers.dev`. See `cloudflare/README.md`. Handy when PartyKit's hosted login is having a bad day.
-- **Self‑host:** `node scripts/dev_realtime.mjs` (needs `npm i ws`) → listens on `ws://localhost:1999`.
-- **Point the world at it** with any one of:
-  - URL query: `?rt=wss://…`
-  - `localStorage.setItem('repolisRT','wss://…')`
-  - `window.REPOLIS_RT = 'wss://…'`
-- **Count *every* visitor (not just you):** the three options above only affect whoever sets them. To bake it in for all visitors, set `const RT_DEFAULT='wss://…'` near the realtime block in `index.html` and push. The HUD then shows **🟢 live · today · all‑time** for everyone. On PartyKit the cumulative total is kept in room storage, so it survives restarts (the self‑host `ws` server keeps counts in memory only).
-
-> Privacy: the traffic logs that drive the city are committed publicly, and only your **public** repos — the ones you created, plus forks you've committed to — are ever shown. Private repos never appear.
-
-## 🎮 Controls (WoW‑style camera)
+## Controls
 
 | Input | Action |
 |---|---|
-| `W A S D` / arrows / joystick | Walk |
-| 📱 **Mobile** | **Left stick** move · **right 👁️ stick** look & turn · center **🚪** opens the repo |
-| **Left‑drag** | Orbit camera (free look) |
-| **Right‑drag** | Steer character · WoW‑style · wheel = zoom |
-| `Enter` / click | Open the repo you're standing at |
-| 🚕 button | Ask the taxi driver |
-| ☰ button | Wayfinding menu (search) |
-| 🌐 button | Switch English / 한국어 |
-| 🌙 / ☀️ button | Toggle day / night (night = activity-lit windows) |
+| `W A S D`, arrows, or left touch stick | walk |
+| mouse drag or right touch stick | look and turn |
+| wheel | zoom |
+| `Enter`, click, or the mobile door button | open the nearby place |
+| taxi button | ask Gitber |
+| menu / map / passport buttons | navigate and track exploration |
+| language and sun/moon buttons | switch language and time of day |
 
-## 🛠 Tech
+## Documentation
 
-Three.js (r0.160) · toon shading + inverted-hull outlines · **Fresnel rim light** via `onBeforeCompile` · **procedural canvas textures** — walls, roofs, grass & asphalt are all generated in code, **no image assets** · ACES tone mapping · day/night lighting · circle-collision walking · **one dependency‑free `index.html` (~2,300 lines, zero build step)** · GitHub Actions · (optional) Vercel + Azure OpenAI · **Azure AI Search + GitHub MCP grounding** · WebLLM · (optional) PartyKit / Cloudflare Workers for realtime.
+- [`AGENTS.md`](AGENTS.md) — contributor and agent operating contract
+- [`docs/domain-model.md`](docs/domain-model.md) — repository data and feature model
+- [`docs/known-limitations.md`](docs/known-limitations.md) — intentional constraints
+- [`SCHOLARS.md`](SCHOLARS.md) — scholar roster and grounding roles
+- [`COUNCIL_PATTERN.md`](COUNCIL_PATTERN.md) — the debate-to-judge pattern
+- [`CHANGELOG.md`](CHANGELOG.md) — recent releases and archive links
+- [`repolis.yaml`](repolis.yaml) / [`llms.txt`](llms.txt) — machine-readable project entry points
 
-## ⭐ Like it?
+## License
 
-Only six pins on your profile — but **all** your repos can be a city. If that made you smile, **[give it a star](https://github.com/hyeonsangjeon/Repolis)** so more people stumble onto Repolis. New here? See [`CHANGELOG.md`](CHANGELOG.md) for what shipped.
-
-## 🙏 Credits
-
-Data: [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor) · social previews: `opengraph.githubassets.com`.
-
-## 📄 License
-
-MIT © [Hyeonsang Jeon](https://github.com/hyeonsangjeon) — see [`LICENSE`](LICENSE).
-
-<div align="center"><sub>Made with ☕ &amp; Three.js — only 6 pins, but your repos become a whole city. 🏙️</sub></div>
+MIT © [Hyeonsang Jeon](https://github.com/hyeonsangjeon). Data collection credit: [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor).

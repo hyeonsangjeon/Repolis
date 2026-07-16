@@ -39,18 +39,21 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 
 ## Client / rendering
 
-- **Single static `index.html`, on purpose.** No bundler, no `package.json`, no `node_modules` for the
-  site. Don't add a build step — it's a feature, and tooling that assumes one will not find it.
+- **Zero-build static runtime, on purpose.** `index.html` remains the primary runtime and imports a few
+  local modules/assets directly. There is no bundler, `package.json`, or `node_modules` requirement for
+  the site. Don't add a build step — it is a feature.
 - **Three.js loads from a CDN import map** (jsDelivr). Fully offline first-loads won't render until the
   module is cached; there is no local copy of Three.js in the repo.
 - **WebLLM needs WebGPU** and a ~1 GB one-time download; unsupported browsers simply don't offer that mode.
-- **No automated UI tests.** `index.html` has no unit harness — UI changes are verified by serving locally
-  and driving the page (Chrome DevTools), checking for 0 console errors on mobile + desktop.
-- **Owner town is fixed at 62 repos** at the current data snapshot; that number tracks the owner's public
-  repos and changes only when the data refreshes.
+- **No full browser automation suite.** `scripts/smoke.mjs` guards many static and extracted behavioral
+  contracts, but visual and interaction changes still require serving locally and driving the page in
+  Chrome DevTools with 0 console errors on mobile + desktop.
+- **Owner-town size is a snapshot, not a contract.** Its repository count changes whenever the daily
+  public data refresh adds, removes, or filters a repository.
 
 ## Tooling
 
-- **Tests cover the Council only.** `node council/test*.mjs` are hermetic and authoritative for that engine;
-  the city build, taxi UI, and workers have no equivalent unit suite — verify those by running them.
+- **Coverage is layered, not end-to-end.** `node council/test*.mjs` is authoritative for the Council;
+  `node scripts/smoke.mjs` guards the static client and selected extracted behavior. Workers and rendered
+  interactions still need their targeted syntax/runtime checks.
 - **No linter/formatter is configured.** Match the surrounding code style by hand.

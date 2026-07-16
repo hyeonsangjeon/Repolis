@@ -78,7 +78,7 @@
   #passport { position: fixed; z-index: 12; top: 70px; right: 14px; width: 300px; max-width: calc(100vw - 28px);
     background: rgba(255,251,242,.96); backdrop-filter: blur(10px); border-radius: 18px;
     box-shadow: 0 12px 40px rgba(70,40,15,.26); padding: 14px; transform-origin: top right;
-    transition: opacity .18s ease, transform .18s ease; }
+    max-height: calc(100vh - 88px); overflow-y: auto; transition: opacity .18s ease, transform .18s ease; }
   #passport.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #passport h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 2px 2px 4px; display: flex; align-items: center; gap: 6px; }
@@ -174,6 +174,7 @@
   .courseHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
   .courseHead .ct { font-size: 11px; font-weight: 800; letter-spacing: .03em; color: #9a6e1e; text-transform: uppercase; }
   .courseHead .cp { font-size: 11px; font-weight: 800; color: #b78327; background: #fff3d6; border: 1px solid #ecd49a; border-radius: 999px; padding: 2px 8px; }
+  .courseStory { font-size: 10.5px; color: #9b7b49; line-height: 1.4; margin: -1px 2px 8px; }
   .courseBar { height: 5px; border-radius: 3px; background: #efdcb0; overflow: hidden; margin-bottom: 9px; }
   .courseBar > i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg,#e8b34a,#d98f2e); transition: width .4s ease; }
   .courseItem { display: flex; align-items: center; gap: 8px; padding: 6px 6px; border-radius: 10px; cursor: pointer;
@@ -186,6 +187,7 @@
   .courseItem.done .ci { background: #eef9f2; border-color: #79c6a0; }
   .courseItem.done .cn { color: #2f7d5b; text-decoration: line-through; text-decoration-color: rgba(47,125,91,.4); }
   .courseItem.done .cs { color: #2f9d6a; }
+  .courseItem.locked { opacity: .5; cursor: default; }
   .courseItem .czTag { flex: 0 0 auto; font-size: 9.5px; font-weight: 700; color: #b08a54; background: #fff3d6;
     border: 1px solid #edd8a6; border-radius: 999px; padding: 1px 6px; max-width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .courseGo { display: block; width: 100%; margin-top: 9px; min-height: 38px; border: 0; cursor: pointer; border-radius: 10px;
@@ -1116,15 +1118,20 @@ const I18N = {
     visited:'탐험', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
     visitorsWord:'방문자', entriesWord:'입장', entriesUnit:'회', peopleUnit:'명',
     entriesTodayWord:'오늘 입장', entriesTodayShort:'입장', entriesTotalWord:'누적 입장', entriesTotalShort:'누적', uniqueWord:'고유',
-    passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프를 모아요.',
-    passportRepos:'방문한 레포', passportHint:'명소를 찾고 전망대의 저장소 별자리 탐사를 완주하면 스탬프를 받아요.',
+    passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프와 이야기를 모아요.',
+    passportRepos:'방문한 레포', passportHint:'명소와 레포를 찾고, 저장소 별자리와 오늘의 마을 이야기를 완성해 보세요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
     passportDistricts:'구역별 탐험', passportDistrictsHint:'각 지구의 레포를 방문하면 채워져요.',
     zbSub:'이 구역의 대표 레포와 나의 탐험 진행률', zbBoard:'구역 안내판',
     zbReps:'대표 레포', zbRide:'🚕 대표 레포로 이동', zbUnseen:'🧭 아직 안 본 레포 안내',
     zbAsk:'❓ 이 구역이 궁금해요', zbAllSeen:'이 구역의 레포를 모두 둘러봤어요! 🎉', zbHubHint:'구역 안내판 열기',
-    courseTitle:'오늘의 코스', courseGo:'🚕 코스 안내', courseAllDone:'🎉 코스 완주!', courseDone:'✓',
-    courseBanner:'🗺️ 오늘의 추천 코스 3곳이 정해졌어요! 여권 🛂에서 확인하고 따라가 보세요', courseReward:'🎉 오늘의 코스를 완주했어요! 멋진 탐험이었어요 ✨',
+    courseTitle:'오늘의 마을 이야기', courseGo:'🚕 다음 장면 안내', courseAllDone:'🎉 이야기 완성!', courseDone:'✓',
+    courseBanner:'📖 오늘의 마을 이야기가 열렸어요! 여권 🛂에서 주민부터 만나 보세요', courseReward:'🎉 오늘의 마을 이야기를 완성했어요! 한 사람의 삶과 레포가 이어졌네요 ✨',
+    chronicleSub:'주민을 만나 아지트를 지나, 그 삶과 이어진 레포 또는 구역을 발견하세요.',
+    chronicleMeet:'{name} 만나기', chronicleHaunt:'{name}의 아지트 · {place}',
+    chronicleRepo:'{name}의 구역에서 {repo} 발견', chronicleZone:'{name}이 안내하는 {zone}',
+    chronicleMet:'📖 {name}을 만나 오늘의 이야기를 시작했어요.', chronicleHauntFound:'🏞️ {name}이 아끼는 {place}에 도착했어요.',
+    chronicleZoneFound:'🧭 {name}이 알려준 {zone}에 도착했어요.',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
     lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
@@ -1143,7 +1150,7 @@ const I18N = {
     tourCap1:'레포들의 도시에 오신 걸 환영해요! 광장의 현자 <b>POLARIS</b>가 인사를 건네네요. 🚕 그 옆은 깃버 정류장이에요.',
     tourCap2:'🚕 깃버에게 주제를 말하면 그 레포 집까지 데려다줘요. 도착하면 집에 불이 켜지고 스탬프를 받아요.',
     tourCap3:'⏳ <b>Chronopolis</b> — 세 현자가 토론하고, <b>시간</b>(가장 최신 출처)이 승부를 가려요.',
-    tourCap4:'🛂 여권에 방문 스탬프를 모으고, <b>오늘의 코스</b> 3곳을 따라가 보세요!',
+    tourCap4:'🛂 여권에 방문 스탬프를 모으고, 주민부터 시작하는 <b>오늘의 마을 이야기</b>를 따라가 보세요!',
     tourEnd:'투어 끝! 이제 자유롭게 마을을 누벼보세요. 🌟',
     obsName:'별빛 전망대', obsReached:' — 별빛 전망대. <span class="key">Enter</span> 또는 클릭으로 올라가기',
     obsTitle:'🔭 별빛 전망대', obsSub:'밤하늘 현자들의 별자리를 한자리에서.', obsHint:'밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾',
@@ -1267,15 +1274,20 @@ const I18N = {
     visited:'Explored', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
     visitorsWord:'visitors', entriesWord:'entries', entriesUnit:'', peopleUnit:'',
     entriesTodayWord:'entries today', entriesTodayShort:'entries', entriesTotalWord:'total entries', entriesTotalShort:'total', uniqueWord:'unique',
-    passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps.',
-    passportRepos:'Repos visited', passportHint:'Find landmarks and complete the Observatory\'s Repository Constellation Trail to earn stamps.',
+    passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps and stories.',
+    passportRepos:'Repos visited', passportHint:'Find landmarks and repos, then complete the Repository Constellation and today\'s Village Chronicle.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
     passportDistricts:'District progress', passportDistrictsHint:'Fills up as you visit each district\'s repos.',
     zbSub:'Representative repos and your exploration here', zbBoard:'district board',
     zbReps:'Representative repos', zbRide:'🚕 Ride to a top repo', zbUnseen:'🧭 Guide me to an unseen one',
     zbAsk:'❓ Tell me about this district', zbAllSeen:'You\'ve visited every repo in this district! 🎉', zbHubHint:'open district board',
-    courseTitle:'Today\'s course', courseGo:'🚕 Guide me', courseAllDone:'🎉 Course complete!', courseDone:'✓',
-    courseBanner:'🗺️ Today\'s 3-stop route is ready! Open your Passport 🛂 to follow it', courseReward:'🎉 You completed today\'s course! Lovely exploring ✨',
+    courseTitle:'Village Chronicle', courseGo:'🚕 Guide the next scene', courseAllDone:'🎉 Chronicle complete!', courseDone:'✓',
+    courseBanner:'📖 Today\'s Village Chronicle is open! Meet its resident from your Passport 🛂', courseReward:'🎉 You completed today\'s Village Chronicle — one life and one repo now connect ✨',
+    chronicleSub:'Meet a resident, visit their cherished haunt, then discover the repo or district connected to their life.',
+    chronicleMeet:'Meet {name}', chronicleHaunt:'{name}\'s haunt · {place}',
+    chronicleRepo:'Discover {repo} in {name}\'s district', chronicleZone:'Follow {name} to {zone}',
+    chronicleMet:'📖 You met {name} and began today\'s story.', chronicleHauntFound:'🏞️ You reached {place}, cherished by {name}.',
+    chronicleZoneFound:'🧭 You reached {zone}, recommended by {name}.',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
     lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
@@ -1294,7 +1306,7 @@ const I18N = {
     tourCap1:'Welcome to the City of Repos! <b>POLARIS</b>, the scholar at the plaza, waves hello. 🚕 The Gitber taxi stand is right beside them.',
     tourCap2:'🚕 Tell Gitber a topic and it drives you to that repo\u2019s house. On arrival the house lights up and you earn a stamp.',
     tourCap3:'⏳ <b>Chronopolis</b> — three scholars debate, and <b>time</b> (the freshest source) decides who wins.',
-    tourCap4:'🛂 Collect visit stamps in your passport, then follow <b>today\u2019s 3-stop course</b>!',
+    tourCap4:'🛂 Collect visit stamps, then follow today\u2019s <b>Village Chronicle</b> from its resident onward!',
     tourEnd:'Tour complete! Now roam the town freely. 🌟',
     obsName:'Stargazer\'s Observatory', obsReached:' — the Stargazer\'s Observatory. <span class="key">Enter</span> or click to climb up',
     obsTitle:'🔭 Stargazer\'s Observatory', obsSub:'The night-sky scholars\' constellations, all in one place.', obsHint:'Climb up at night to see the scholars\' constellations at their brightest. ☾',
@@ -5418,10 +5430,11 @@ const _RES_FAV={ sol:{ko:'볕 잘 드는 실험 자리',en:'a sunny spot to tink
   nari:{ko:'꽃이 제일 많이 핀 골목',en:'the alley where the flowers bloom thickest'}, tae:{ko:'아무도 안 오는 조용한 구석',en:'a quiet corner nobody visits'},
   rin:{ko:'도서관 계단',en:'the library steps'}, mira:{ko:'노을이 제일 고운 폐허 언덕',en:'the ruin-hill with the best sunset'},
   kai:{ko:'광장 한복판',en:'the heart of the plaza'}, noa:{ko:'별이 잘 보이는 모닥불 곁',en:'the campfire under the stars'} };
+function _resFavPhase(res){ let h=0; const s=String(res&&res.id||''); for(let i=0;i<s.length;i++) h=(Math.imul(h,31)+s.charCodeAt(i))>>>0; return (h%360)*Math.PI/180; }
 function _resFavSpot(L){ if(L._fav) return L._fav; const F=_RES_FAV[L.res.id]; if(!F) return null; let x, z;
   if(L.res.id==='noa' && typeof HEARTH!=='undefined' && HEARTH){ x=HEARTH.x-2.6; z=HEARTH.z; }             // noa's haunt is the campfire itself
   else { const h=L.home; let got=null;                                                                     // a stable, distinctive spot a little way from home (homes sit in-zone, so it fits the descriptor)
-    for(let k=0;k<12;k++){ const a=(k*Math.PI/6)+(L._ph||0), r=8+(k%3)*2.5, nx=h.x+Math.cos(a)*r, nz=h.z+Math.sin(a)*r;
+    for(let k=0;k<12;k++){ const a=(k*Math.PI/6)+_resFavPhase(L.res), r=8+(k%3)*2.5, nx=h.x+Math.cos(a)*r, nz=h.z+Math.sin(a)*r;
       if(nx*nx+nz*nz<400 || Math.hypot(nx,nz)>206 || _hubGap(nx,nz)<4.0) continue; got={x:nx,z:nz}; break; }
     if(got){ x=got.x; z=got.z; } else { x=h.x+7; z=h.z; } }
   L._fav={ x:+x.toFixed(2), z:+z.toFixed(2), ko:F.ko, en:F.en }; return L._fav; }
@@ -5754,6 +5767,7 @@ async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) retu
 
 // ---- player joins a gathering: walk up to a cluster (or step into an active circle) and the whole group talks with you ----
 let activeGroupMembers=null;                                   // live residents in a player-facing group chat (frozen + turned to you)
+function _isGroupChat(n){ return !!(n&&n.chatGroup===true&&n.resident===true); }   // never confuse a scholar's Three.js `group` object with the resident-circle marker
 function _liveOf(npc){ return (npc&&npc.res&&npc.res._live)||null; }
 function _groupNear(npc){ const seed=_liveOf(npc); if(!seed) return null; let members;
   if(_ambConv && _ambConv.members.indexOf(seed)>=0) members=_ambConv.members.slice();      // you stepped into an active circle → join exactly that circle
@@ -5765,8 +5779,9 @@ function _groupNear(npc){ const seed=_liveOf(npc); if(!seed) return null; let me
 function _releaseGroup(){ if(!activeGroupMembers) return; const until=clock.elapsedTime+8+Math.random()*6;
   for(const m of activeGroupMembers) _resCd.set(m.res.id,until); activeGroupMembers=null; _ambNextAt=clock.elapsedTime+5+Math.random()*6; }   // members rest a beat, then town life resumes
 function openGroupChat(members){ if(_ambConv && members.some(m=>_ambConv.members.indexOf(m)>=0)) _endAmb('player-joined');
+  const story=courseCurrentItem(); if(story&&story.type==='resident'&&members.some(m=>m.res.id===story.id)) courseMark('resident',story.id);
   activeGroupMembers=members.slice();
-  openChat({ resident:true, group:true, id:'group', kind:'resident', res:members[0].res, live:members.slice(), members:members.map(m=>m.res), gi:0 }); }
+  openChat({ resident:true, chatGroup:true, id:'group', kind:'resident', res:members[0].res, live:members.slice(), members:members.map(m=>m.res), gi:0 }); }
 function _groupNames(ms){ return ms.map(m=>{ const n=m.res[LANG]||m.res.ko; return `<b style="color:${_hex(m.res.color)}">${esc(n.name)}</b>`; }).join(' \u00b7 '); }
 function _groupChip(res){ const n=res[LANG]||res.ko; return `<b style="color:${_hex(res.color)}">${esc(n.name)}</b> `; }
 function _groupPromptHtml(ms){ return (LANG==='ko'?`<b>\uD83D\uDC65 ${ms.length}\uBA85\uC774 \uBAA8\uC5EC \uC788\uC5B4\uC694</b> \u00b7 <span class="key">Enter</span>/\uD074\uB9AD\uC73C\uB85C <b>\uB300\uD654\uC5D0 \uB07C\uAE30</b> \uD83D\uDCAC`:`<b>\uD83D\uDC65 a gathering of ${ms.length}</b> \u00b7 <span class="key">Enter</span>/click to <b>join in</b> \uD83D\uDCAC`); }
@@ -5792,9 +5807,9 @@ function _placeJoiner(L){ const ms=(activeGroupMembers||[]).filter(m=>m!==L); if
 function _inviteResident(res){ const L=res&&res._live; if(!L) return false;
   if(_ambConv && _ambConv.members.indexOf(L)>=0) _endAmb('invited');
   const wrap=activeNpc; if(!wrap) return false;
-  if(wrap.group){ if(wrap.live.some(m=>m&&m.res&&m.res.id===res.id)) return false; wrap.live.push(L); wrap.members.push(res); }
+  if(_isGroupChat(wrap)){ if(wrap.live.some(m=>m&&m.res&&m.res.id===res.id)) return false; wrap.live.push(L); wrap.members.push(res); }
   else if(wrap.resident&&wrap.res){ const curL=wrap.res._live; if(!curL||curL===L) return false;   // upgrade a 1:1 into a 모임 in place (keeps the open log + shared thread)
-    wrap.group=true; wrap.id='group'; wrap.kind='resident'; wrap.live=[curL,L]; wrap.members=[curL.res,res]; wrap.gi=wrap.gi||0; }
+    wrap.chatGroup=true; wrap.id='group'; wrap.kind='resident'; wrap.live=[curL,L]; wrap.members=[curL.res,res]; wrap.gi=wrap.gi||0; }
   else return false;
   activeGroupMembers=wrap.live.slice(); _placeJoiner(L); _resCd.delete(res.id); L._greetCd=clock.elapsedTime+RES_GREET_CD_MIN; L.bub.clear();
   applyNpcChrome(wrap); return true; }
@@ -5802,7 +5817,7 @@ function _inviteGreetLine(res){ const ko=LANG==='ko', b= ko?['저도 껴도 될�
                                               :['Mind if I join? Nice to meet you!','You called? I hurried over.','Hi — let me talk with you too!','Oh, you were looking for me? Hello!'];
   return b[(Math.random()*b.length)|0]; }
 async function _maybeInvite(q){ const cand=_inviteTarget(q); if(!cand) return false;
-  const cap=Math.max(2, Math.min(NPC_CFG.maxGroup, RESIDENTS_LIVE.length)), wasGroup=!!(activeNpc&&activeNpc.group);
+  const cap=Math.max(2, Math.min(NPC_CFG.maxGroup, RESIDENTS_LIVE.length)), wasGroup=_isGroupChat(activeNpc);
   _resHistPush('visitor',q);
   if(wasGroup && (activeGroupMembers||[]).length>=cap){ const spk=activeGroupMembers[0].res;      // circle is full — say so instead of overflowing it
     const full=LANG==='ko'?`지금은 자리가 꽉 찼어요. 한 명이 쉬러 가면 ${esc(cand.ko.name)} 부를게요.`:`We're full right now — once someone steps away we'll bring ${esc(cand.en.name)} in.`;
@@ -5822,7 +5837,7 @@ function _farewellLine(res){ const ko=LANG==='ko', b= ko?['살펴 가요 — 또
 function _leaveLine(res){ const ko=LANG==='ko', b= ko?['나 이만 가볼게요, 또 얘기해요!','저는 슬슬 가봐야겠어요. 즐거웠어요!','먼저 일어날게요 — 다음에 또!','저쪽 좀 둘러보고 올게요.']
                                      :['I should head off — let\u2019s talk again!','I\u2019ll slip away now, this was fun!','Gonna get going — catch you later!','I\u2019ll go look around over there.'];
   return b[(Math.random()*b.length)|0]; }
-function _residentLeave(L){ const wrap=activeNpc; if(!wrap||!wrap.group||!activeGroupMembers||activeGroupMembers.length<=2||!L) return false;   // never shrink a circle below 2
+function _residentLeave(L){ const wrap=activeNpc; if(!_isGroupChat(wrap)||!activeGroupMembers||activeGroupMembers.length<=2||!L) return false;   // never shrink a circle below 2
   const res=L.res; wrap.live=wrap.live.filter(m=>m!==L); wrap.members=wrap.members.filter(r=>r!==res); activeGroupMembers=wrap.live.slice();
   if(wrap.res===res && wrap.live[0]) wrap.res=wrap.live[0].res;                                   // if the primary left, hand the lead to someone still here
   wrap.gi=(wrap.gi||0)%Math.max(1,wrap.live.length); applyNpcChrome(wrap);
@@ -5831,7 +5846,7 @@ function _residentLeave(L){ const wrap=activeNpc; if(!wrap||!wrap.group||!active
 async function _maybeFarewell(q){ if(!_RES_BYE_CUE.test(String(q||''))) return false;
   const wrap=activeNpc; if(!wrap||!wrap.resident) return false; _resHistPush('visitor',q);
   const ms=(activeGroupMembers||[]).filter(m=>m&&m.res);
-  if(wrap.group && ms.length){                                                                   // the whole circle says goodbye, waves, then gently parts
+  if(_isGroupChat(wrap) && ms.length){                                                           // the whole circle says goodbye, waves, then gently parts
     const speakers=ms.slice(0, Math.min(2, ms.length));
     for(let i=0;i<speakers.length;i++){ if(i){ await new Promise(r=>setTimeout(r,460)); if(!activeGroupMembers) return true; }
       const L=speakers[i], line=_farewellLine(L.res); addMsg('bot',_groupChip(L.res)+esc(line)); _resHistPush(L.res.id,_plain(line)); L._gt=2.6; }
@@ -6144,15 +6159,15 @@ function openZoneBoard(id){ if(!zoneBoard) return; modalOpen=true; zoneBoard.cla
 function closeZoneBoard(){ if(!zoneBoard) return; modalOpen=false; zoneBoard.classList.remove('show'); zoneBoard._zid=null; }
 if(zoneBoard){ const zc=document.getElementById('zbClose'); if(zc) zc.onclick=closeZoneBoard;
   zoneBoard.addEventListener('click',e=>{ if(e.target===zoneBoard) closeZoneBoard(); }); }
-/* ───────── 🗺️ Daily Course — today's deterministic 3-stop route (local-only, no PII) ───────── */
+/* ───────── 📖 Village Chronicle — resident → cherished haunt → related repo/district (local-only, no PII) ───────── */
 const COURSE_KEY='repolisCourse';
-const COURSE_V=2;   // v2 = district-aware course; bump forces a safe rebuild (progress lives in passport, not here)
+const COURSE_V=3;   // v3 = town-scoped Village Chronicle; the existing key safely rebuilds older route payloads
 let course=null;
 function _todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function _seedFrom(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function _rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let x=Math.imul(seed^seed>>>15,1|seed); x=x+Math.imul(x^x>>>7,61|x)^x; return ((x^x>>>14)>>>0)/4294967296; }; }
-function _shuffle(arr,rng){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const tmp=a[i]; a[i]=a[j]; a[j]=tmp; } return a; }
-const COURSE_LM=[{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'plaza',ico:'⛲'},{id:'library',ico:'📚'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
+function _courseTownKey(){ const login=String(currentUser||'owner').toLowerCase();
+  const catalog=REPOS.map(r=>String(r.repo||'').toLowerCase()).sort().join('|'); return login+':'+_seedFrom(catalog).toString(36); }
 function lmCourseDest(id){ switch(id){
   case 'chrono': return (typeof CHRONO!=='undefined'&&CHRONO)?{label:t('lmChrono'),_pos:CHRONO._pos,_landmark:'chrono'}:null;
   case 'observatory': return (typeof OBS!=='undefined'&&OBS)?{label:t('obsName'),_pos:OBS._pos,_landmark:'obs'}:null;
@@ -6162,34 +6177,63 @@ function lmCourseDest(id){ switch(id){
   case 'plaza': return {label:t('lmPlaza'),_pos:new THREE.Vector3(0,0,0),_landmark:'plaza'};
   case 'library': return (typeof LIB!=='undefined'&&LIB)?{label:LIB.label,_pos:LIB._pos,_isLibrary:true}:null;
 } return null; }
-function _zoneVisitRatio(z){ const reps=zoneReposOf(z); if(!reps.length) return {reps,vis:0,ratio:1};
-  const vis=reps.filter(r=>passport.repos.indexOf(r.repo)>=0).length; return {reps, vis, ratio:vis/reps.length}; }
-function _zoneRepresentative(z){ const reps=zoneReposOf(z).slice().sort((a,b)=>(a.rank||0)-(b.rank||0));
-  return reps.find(r=>passport.repos.indexOf(r.repo)<0) || reps[0] || null; }   // prefer an unvisited standout, else the best-ranked
-function buildCourse(){ const rng=_rng(_seedFrom('course:'+_todayKey()));
-  let items=[];
-  if(typeof ZONES!=='undefined' && ZONES && ZONES.length){                       // 🧭 district-aware: cross two least-explored districts
-    const zs=ZONES.map(z=>({z, v:_zoneVisitRatio(z)})).filter(o=>o.v.reps.length);
-    zs.sort((a,b)=> (a.v.ratio-b.v.ratio) || (rng()-0.5));                        // least-visited first, seeded jitter to vary ties daily
-    zs.slice(0,2).forEach(o=>{ const r=_zoneRepresentative(o.z); if(r && !items.some(it=>it.id===r.repo)) items.push({type:'repo',id:r.repo,ico:'🏠',zone:o.z.id}); });
-  }
-  if(!items.length){ const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.stars||0)).slice(0,12);   // fallback: classic popular pick
-    const repo=pop.length?pop[Math.floor(rng()*pop.length)]:null; if(repo) items.push({type:'repo',id:repo.repo,ico:'🏠',zone:repo._zone}); }
-  const lms=_shuffle(COURSE_LM.filter(l=>lmCourseDest(l.id)),rng).slice(0,1);     // one landmark stop keeps the tour varied
-  lms.forEach(l=>items.push({type:'lm',id:l.id,ico:l.ico}));
-  items=_shuffle(items,rng);
-  return {date:_todayKey(), v:COURSE_V, items, rewarded:false}; }
-function getCourse(){ if(course&&course.date===_todayKey()&&course.v===COURSE_V) return course;
-  try{ const c=JSON.parse(localStorage.getItem(COURSE_KEY)); if(c&&c.date===_todayKey()&&c.v===COURSE_V&&Array.isArray(c.items)&&c.items.length){ course=c; return course; } }catch(e){}
-  course=buildCourse(); try{ localStorage.setItem(COURSE_KEY,JSON.stringify(course)); }catch(e){} return course; }
-function courseItemDone(it){ return it.type==='repo'?passport.repos.indexOf(it.id)>=0:passHasStamp(it.id); }
-function courseItemLabel(it){ if(it.type==='repo'){ const r=REPOS.find(x=>x.repo===it.id); return r?r.label:it.id; }
-  const lm=PASS_LANDMARKS.find(l=>l.id===it.id); return lm?t(lm.key).split(' · ')[0]:it.id; }
+function _residentLive(id){ return RESIDENTS_LIVE.find(L=>L.res.id===id)||null; }
+function _chronicleResidents(){ const active=new Set(ZONES.map(z=>z.id));
+  return RESIDENTS.filter(r=>(r.zone==='plaza'||active.has(r.zone))&&_residentLive(r.id)); }
+function _chronicleZone(res,rng){ if(res&&res.zone!=='plaza'){ const own=zoneCatById(res.zone); if(own&&zoneReposOf(own).length) return own; }
+  const zs=ZONES.filter(z=>zoneReposOf(z).length); return zs.length?zs[Math.floor(rng()*zs.length)]:null; }
+function _chronicleRepo(z,res){ const terms=(res&&res.topics)||[]; const reps=zoneReposOf(z).slice();
+  function score(r){ const text=(r.repo+' '+(r.desc||'')+' '+((r.topics||[]).join(' '))+' '+(r.lang||'')).toLowerCase();
+    return terms.reduce((n,k)=>n+(text.includes(String(k).toLowerCase())?1:0),0); }
+  reps.sort((a,b)=>score(b)-score(a) || (a.rank==null?9999:a.rank)-(b.rank==null?9999:b.rank) || String(a.repo).localeCompare(String(b.repo))); return reps[0]||null; }
+function buildCourse(){ const date=_todayKey(), town=_courseTownKey(), rng=_rng(_seedFrom('chronicle:'+town+':'+date));
+  const unavailable=()=>({date,town,v:COURSE_V,items:[],completed:[],rewarded:false,available:false});
+  if(!REPOS.length) return unavailable();
+  const residents=_chronicleResidents(), res=residents.length?residents[Math.floor(rng()*residents.length)]:null, items=[];
+  if(res){ items.push({type:'resident',id:res.id,ico:'🧑‍🌾',resident:res.id});
+    items.push({type:'haunt',id:res.id,ico:'🏞️',resident:res.id});
+    const z=_chronicleZone(res,rng), repo=(res.zone==='plaza'||!z)?null:_chronicleRepo(z,res);
+    if(repo) items.push({type:'repo',id:repo.repo,ico:'🏠',zone:z.id,resident:res.id});
+    else if(z) items.push({type:'zone',id:z.id,ico:z.icon,resident:res.id});
+    else if(REPOS[0]) items.push({type:'repo',id:REPOS[0].repo,ico:'🏠',zone:REPOS[0]._zone,resident:res.id}); }
+  return items.length===3?{date,town,v:COURSE_V,items,completed:[],rewarded:false,available:true}:unavailable(); }
+function _validCourse(c,date,town){ const shape=c&&Array.isArray(c.items)&&((c.available===true&&c.items.length===3)||(c.available===false&&c.items.length===0));
+  return !!(shape&&c.date===date&&c.town===town&&c.v===COURSE_V&&Array.isArray(c.completed)); }
+function _saveCourse(){ try{ localStorage.setItem(COURSE_KEY,JSON.stringify(course)); }catch(e){} }
+function getCourse(){ const date=_todayKey(), town=_courseTownKey(); if(_validCourse(course,date,town)) return course;
+  try{ const c=JSON.parse(localStorage.getItem(COURSE_KEY)); if(_validCourse(c,date,town)){ course=c; return course; } }catch(e){}
+  course=buildCourse(); _saveCourse(); return course; }
+function courseItemKey(it){ return it.type+':'+it.id; }
+function courseItemDone(it){ const c=getCourse(); return c.completed.indexOf(courseItemKey(it))>=0; }
+function courseResident(it){ return RESIDENTS.find(r=>r.id===(it.resident||it.id))||null; }
+function courseItemLabel(it){ const res=courseResident(it), name=res?(res[LANG]||res.ko).name:'';
+  if(it.type==='resident') return tf('chronicleMeet',{name});
+  if(it.type==='haunt'){ const L=_residentLive(it.id), f=L&&_resFavSpot(L); return tf('chronicleHaunt',{name,place:f?(LANG==='ko'?f.ko:f.en):''}); }
+  if(it.type==='zone') return tf('chronicleZone',{name,zone:zoneNameById(it.id)});
+  if(it.type==='repo'){ const r=REPOS.find(x=>x.repo===it.id); return tf('chronicleRepo',{name,repo:r?r.label:it.id}); }
+  return it.id; }
 function courseProgress(){ const c=getCourse(); let d=0; c.items.forEach(it=>{ if(courseItemDone(it)) d++; }); return {done:d,total:c.items.length}; }
-function courseDestOf(it){ if(it.type==='repo'){ return REPOS.find(x=>x.repo===it.id)||null; } return lmCourseDest(it.id); }
+function courseCurrentItem(){ const c=getCourse(); return c.items.find(it=>!courseItemDone(it))||null; }
+function courseMark(type,id){ const c=getCourse(); if(!c.available) return false; const idx=c.items.findIndex(it=>it.type===type&&it.id===id); if(idx<0) return false;
+  for(let i=0;i<idx;i++) if(!courseItemDone(c.items[i])) return false;
+  const key=courseItemKey(c.items[idx]); if(c.completed.indexOf(key)>=0) return false; c.completed.push(key); _saveCourse(); flashPassport();
+  if(!passportEl.classList.contains('hidden')) renderCourse(); if(typeof track==='function') track('village_chronicle_step',{step:type,index:idx});
+  onCourseProgress(); return true; }
+function courseDestOf(it){ if(it.type==='repo') return REPOS.find(x=>x.repo===it.id)||null;
+  if(it.type==='resident'){ const L=_residentLive(it.id), res=courseResident(it); if(!L||!res) return null;
+    return {label:(res[LANG]||res.ko).name,_pos:L.group.position,_courseResident:it.id}; }
+  if(it.type==='haunt'){ const L=_residentLive(it.id), res=courseResident(it), f=L&&_resFavSpot(L); if(!L||!res||!f) return null;
+    return {label:tf('chronicleHaunt',{name:(res[LANG]||res.ko).name,place:LANG==='ko'?f.ko:f.en}),_pos:new THREE.Vector3(f.x,0,f.z),_courseHaunt:it.id}; }
+  if(it.type==='zone'){ const z=zoneCatById(it.id); if(!z) return null; const d=zoneDest(z); d._courseZone=it.id; d._courseResident=it.resident; return d; }
+  return null; }
 function courseGuideTo(it){ const d=courseDestOf(it); if(!d) return; passportEl.classList.add('hidden');
   if(typeof taxiTo==='function') taxiTo(d); else if(typeof setNav==='function') setNav(d); }
 function courseGuideNext(){ const c=getCourse(); const nx=c.items.find(it=>!courseItemDone(it)); if(nx) courseGuideTo(nx); }
+function courseProximityTick(){ if(!course||!course.available||ride) return; const it=courseCurrentItem(); if(!it||(it.type!=='haunt'&&it.type!=='zone')) return;
+  const d=courseDestOf(it); if(!d||player.position.distanceTo(d._pos)>6) return; const res=courseResident(it), name=res?(res[LANG]||res.ko).name:'';
+  if(!courseMark(it.type,it.id)) return; popSparkle(d._pos.x,2.8,d._pos.z,it.type==='haunt'?0x9bd8a8:0xffd06a);
+  if(it.type==='haunt'){ const L=_residentLive(it.id), f=L&&_resFavSpot(L); showWave(tf('chronicleHauntFound',{name,place:f?(LANG==='ko'?f.ko:f.en):''}),3200); }
+  else showWave(tf('chronicleZoneFound',{name,zone:zoneNameById(it.id)}),3200); }
 /* ---- Guided onboarding tour: a ~30s self-driving showcase (welcome → repo house → Chronopolis → passport) ---- */
 let tour=null, _tourBoost=false;
 function tourCap(dot,html){ const e=document.getElementById('tourCap'); if(!e) return;
@@ -6225,16 +6269,17 @@ function endTour(showEnd){ if(!tour) return; if(tour._timer) clearTimeout(tour._
   if(showEnd){ tourCap('✨', t('tourEnd')); setTimeout(hideTourCap,3400); } else hideTourCap(); tour=null; }
 function renderCourse(){ const box=document.getElementById('courseBox'); if(!box) return;
   if(!REPOS.length){ box.style.display='none'; return; }
-  const c=getCourse(), pr=courseProgress(), all=pr.done>=pr.total&&pr.total>0; box.style.display='';
-  let rows=''; c.items.forEach((it,i)=>{ const done=courseItemDone(it); const isRepo=it.type==='repo';
-    const ico=isRepo?(zoneIconById(it.zone)||it.ico):it.ico;
-    const zn=isRepo&&it.zone?zoneNameById(it.zone):'';
+  const c=getCourse(); if(!c.available||!c.items.length){ box.style.display='none'; return; }
+  const pr=courseProgress(), all=pr.done>=pr.total&&pr.total>0; box.style.display='';
+  const current=c.items.findIndex(it=>!courseItemDone(it)); let rows=''; c.items.forEach((it,i)=>{ const done=courseItemDone(it), locked=!done&&current>=0&&i>current, isRepo=it.type==='repo';
+    const ico=isRepo?(zoneIconById(it.zone)||it.ico):(it.type==='zone'?(zoneIconById(it.id)||it.ico):it.ico);
+    const zn=(isRepo&&it.zone)?zoneNameById(it.zone):(it.type==='zone'?zoneNameById(it.id):'');
     const ztag=zn?`<span class="czTag">${_esc(zn)}</span>`:'';
-    rows+=`<div class="courseItem${done?' done':''}" data-ci="${i}"${zn?` title="${_esc(zn)}"`:''}><div class="ci">${ico}</div><div class="cn">${_esc(courseItemLabel(it))}</div>${ztag}<div class="cs">${done?t('courseDone'):'→'}</div></div>`; });
+    rows+=`<div class="courseItem${done?' done':''}${locked?' locked':''}" data-ci="${i}"${zn?` title="${_esc(zn)}"`:''}><div class="ci">${ico}</div><div class="cn">${_esc(courseItemLabel(it))}</div>${ztag}<div class="cs">${done?t('courseDone'):(locked?'·':'→')}</div></div>`; });
   box.innerHTML=`<div class="courseHead"><span class="ct">🗺️ ${_esc(t('courseTitle'))}</span><span class="cp">${pr.done}/${pr.total}</span></div>`
-    +`<div class="courseBar"><i style="width:${pr.total?Math.round(pr.done/pr.total*100):0}%"></i></div>`+rows
+    +`<div class="courseStory">${_esc(t('chronicleSub'))}</div><div class="courseBar"><i style="width:${pr.total?Math.round(pr.done/pr.total*100):0}%"></i></div>`+rows
     +`<button class="courseGo${all?' alldone':''}" id="courseGoBtn">${all?_esc(t('courseAllDone')):_esc(t('courseGo'))}</button>`;
-  box.querySelectorAll('.courseItem').forEach(el=>{ el.onclick=()=>courseGuideTo(c.items[+el.dataset.ci]); });
+  box.querySelectorAll('.courseItem').forEach(el=>{ el.onclick=()=>{ const wanted=c.items[+el.dataset.ci], nx=courseCurrentItem(); courseGuideTo(courseItemDone(wanted)||wanted===nx?wanted:nx); }; });
   const gb=document.getElementById('courseGoBtn'); if(gb) gb.onclick=()=>{ if(all) passportEl.classList.add('hidden'); else courseGuideNext(); }; }
 function onCourseProgress(){ if(!REPOS.length) return; if(!passportEl.classList.contains('hidden')) renderCourse();
   const pr=courseProgress(); if(pr.total>0&&pr.done>=pr.total&&course&&!course.rewarded){ course.rewarded=true;
@@ -6315,7 +6360,7 @@ window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=re
   if(k!==(modal._repoKey||'')){ const r=repoByKey(k); if(r) openCard(r); } });
 
 function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
-  starTrailVisit(repo);
+  starTrailVisit(repo); courseMark('repo',repo.repo);
   modalOpen=true; modal.classList.add('show'); modal._repoKey=repo.repo||null; setRepoHash(repo);
   document.getElementById('cardTop').style.background=repo.color;
   document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
@@ -6488,7 +6533,7 @@ const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null
 let nearInviteCircle=null;   // an active gathering that has waved you over (join it with Enter from a little further out than the walk-up reach)
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const _g=_groupNear(nearResident); if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -6496,7 +6541,7 @@ function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; playe
 function standUp(){ sitting=null; }
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
   const rb=VISITOR.returning; if(rb){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} }, 850); }   // welcome a familiar face back before the daily-course banner
-  try{ if(REPOS.length){ getCourse(); setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, rb?4700:1000); } }catch(e){}
+  try{ if(REPOS.length){ const c=getCourse(); if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, rb?4700:1000); } }catch(e){}
   setTimeout(()=>{ try{ openRepoFromHash(); }catch(e){} }, 480); };
 (function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
     document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
@@ -6729,13 +6774,14 @@ function fallbackCopy(url, ok){ try{ const ta=document.createElement('textarea')
   document.execCommand('copy'); document.body.removeChild(ta); ok&&ok(); }catch(_){ } }
 const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
 function scholarPersona(kind, slot){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(sc&&sc.active&&sc.persona){ const p=sc.persona[LANG]||sc.persona.ko; if(p&&p[slot]) return p[slot]; } return null; }
-function npcGreet(n){ if(n&&n.group) return groupGreet(n); if(n&&n.resident) return residentGreet(n.res); const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
-function applyNpcChrome(n){ if(n&&n.group){ if(chatHeadTtl) chatHeadTtl.innerHTML=_groupNames(n.live||[])+' \u00b7 '+(LANG==='ko'?'\uBAA8\uC784':'circle'); modeSel.style.display='none'; chatText.placeholder=(LANG==='ko'?'\uBAA8\uC784\uC5D0 \uB9D0 \uAC78\uAE30\u2026':'Say something to the circle\u2026'); return; }
+function npcGreet(n){ if(_isGroupChat(n)) return groupGreet(n); if(n&&n.resident) return residentGreet(n.res); const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
+function applyNpcChrome(n){ if(_isGroupChat(n)){ if(chatHeadTtl) chatHeadTtl.innerHTML=_groupNames(n.live||[])+' \u00b7 '+(LANG==='ko'?'\uBAA8\uC784':'circle'); modeSel.style.display='none'; chatText.placeholder=(LANG==='ko'?'\uBAA8\uC784\uC5D0 \uB9D0 \uAC78\uAE30\u2026':'Say something to the circle\u2026'); return; }
   if(n&&n.resident){ if(chatHeadTtl) chatHeadTtl.innerHTML=residentTitle(n.res); modeSel.style.display='none'; chatText.placeholder=residentPh(n.res); return; }
   const scholar = n && n.kind!=='taxi';
   if(chatHeadTtl) chatHeadTtl.innerHTML = scholar ? (scholarPersona(n.kind,'title')||t('engTitle')) : t('taxiTitle');
   modeSel.style.display = scholar?'none':''; chatText.placeholder = scholar ? (scholarPersona(n.kind,'ph')||t('engPh')) : t('chatPh'); }
-function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); if(activeGroupMembers && !(npc&&npc.group)) _releaseGroup(); chatEl.classList.remove('hidden');
+function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); if(activeGroupMembers && !_isGroupChat(npc)) _releaseGroup(); chatEl.classList.remove('hidden');
+  if(npc&&npc.resident) courseMark('resident',npc.id);
   if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; chatHistory=[]; _resHist=[]; }   // switching NPC resets the thread + memory (scholar + resident/group transcripts)
   applyNpcChrome(npc);
   if(!chatGreeted){ chatGreeted=true; addMsg('bot', npcGreet(npc), {noHist:true}); }
@@ -7165,7 +7211,7 @@ async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; b
   trackChatEvent('chat_submit', { npc, qLen });
   let ok=false;
   addMsg('me',q.replace(/</g,'&lt;'));
-  try{ if(activeNpc&&activeNpc.group){ await groupSay(q); } else if(activeNpc&&activeNpc.resident){ await residentSay(q); } else { await askDriver(q); } ok=true; }
+  try{ if(_isGroupChat(activeNpc)){ await groupSay(q); } else if(activeNpc&&activeNpc.resident){ await residentSay(q); } else { await askDriver(q); } ok=true; }
   finally{ trackChatEvent('chat_turn_done', { npc, qLen, ok, ms:elapsedMs(started) }); busy=false; chatText.focus(); } }
 
 /* ---- taxi ride: the cab drives to you, picks you up, carries you there ---- */
@@ -7180,9 +7226,16 @@ function taxiTo(repo){ standUp(); ride={repo, phase:'coming', t:0}; setNav(repo)
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
-function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; openChat();
+function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true;
+  if(repo._courseResident){ const L=_residentLive(repo._courseResident), res=L&&L.res; if(L&&res){ const met=courseMark('resident',res.id); openChat(L._npc);
+      if(met) showWave(tf('chronicleMet',{name:(res[LANG]||res.ko).name}),2800); } else openChat(); return; }
+  openChat();
+  if(repo._courseHaunt){ const L=_residentLive(repo._courseHaunt), res=L&&L.res, f=L&&_resFavSpot(L), name=res?(res[LANG]||res.ko).name:'';
+    if(courseMark('haunt',repo._courseHaunt)){ popSparkle(repo._pos.x,2.8,repo._pos.z,0x9bd8a8);
+      addMsg('bot',tf('chronicleHauntFound',{name,place:f?(LANG==='ko'?f.ko:f.en):''}),{noHist:true}); } return; }
   if(repo._zoneDest){                                                 // 🧭 arrived at a repo-district hub (no card, no landmark)
     const z=ZONES.find(x=>x.id===repo._zone), name=z?(LANG==='ko'?z.ko:z.en):repo.label;
+    if(repo._courseZone) courseMark('zone',repo._courseZone);
     const n=z&&z.repos?z.repos.length:0, rs=z&&z.repos?z.repos.slice(0,3).map(r=>r.label).join(', '):'';
     const hub=z&&z._hub;
     addMsg('bot',(LANG==='ko'
@@ -7457,6 +7510,7 @@ function animate(){
     if(nearChrono && !passHasStamp('chrono')){ if(addStamp('chrono')) popSparkle(CHRONO._pos.x,4,CHRONO._pos.z,0xffd86b); }
     if(nearObs && !passHasStamp('observatory')){ if(addStamp('observatory')) popSparkle(OBS._pos.x,5,OBS._pos.z,0x9fd0ff); }
     if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ if(addStamp('canal')) popSparkle(c.x,2.6,c.z,0x7fe3da); break; } } } }
+  courseProximityTick();
   if(ferris){ promptEl.innerHTML = t('ferrisRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
   else if(carousel){ promptEl.innerHTML = t('carouselRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
   else if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
@@ -7794,7 +7848,11 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__emote=(kind='clap')=>{ playEmote(kind); return {emoteT:+emoteT.toFixed(2), kind:emoteKind}; };
   window.__peerEmote=(kind='dance',id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'emote',id:t,kind}); const p=peers.get(t); return {by:t, emoteT:+(p?.emoteT||0).toFixed(2), kind:p?.emoteKind, armL:!!p?.group._armL}; };
   window.__emotes=()=>Object.keys(EMOTES);  window.__meteor=(az)=>{ spawnMeteor(az); return true; };
-  window.__course=()=>{ const c=getCourse(); return {date:c.date, v:c.v, items:c.items.map(it=>({type:it.type,id:it.id,zone:it.zone||null,label:courseItemLabel(it),done:courseItemDone(it)})), districts:[...new Set(c.items.filter(it=>it.type==='repo').map(it=>it.zone).filter(Boolean))], prog:courseProgress()}; };
+  window.__course=()=>{ const c=getCourse(); return {date:c.date,town:c.town,v:c.v,available:c.available,completed:c.completed.slice(),items:c.items.map(it=>({type:it.type,id:it.id,resident:it.resident||null,zone:it.zone||null,label:courseItemLabel(it),done:courseItemDone(it)})),districts:[...new Set(c.items.map(it=>it.type==='zone'?it.id:it.zone).filter(Boolean))],prog:courseProgress()}; };
+  window.__chronicle=window.__course;
+  window.__chronicleStep=()=>{ const it=courseCurrentItem(); if(!it) return window.__course(); if(it.type==='resident') courseMark(it.type,it.id);
+    else if(it.type==='repo'){ const r=repoByKey(it.id); if(r) openCard(r); }
+    else { const d=courseDestOf(it); if(d){ player.position.set(d._pos.x,0,d._pos.z); courseProximityTick(); } } return window.__course(); };
   window.__passport=()=>({repos:passport.repos.slice(), stamps:passport.stamps.slice(), repoCount:passport.repos.length, stampCount:passport.stamps.length, districts:districtProgress()});
   window.__districtProgress=()=>districtProgress();
   window.__courseNext=()=>{ courseGuideNext(); return ride?ride.phase:'idle'; };
@@ -8077,10 +8135,10 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     else { const seed=RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0]; mem=seed?_groupNear(seed._npc):null; }
     if(!mem||mem.length<2) return { ok:false, reason:'no cluster' }; openGroupChat(mem);
     return { ok:!!activeGroupMembers, members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], title:chatHeadTtl?chatHeadTtl.textContent:null, ph:chatText?chatText.placeholder:null }; };
-  window.__groupChat=()=>({ active:!!activeGroupMembers, open:!!(chatEl&&!chatEl.classList.contains('hidden')), members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], primary:(activeNpc&&activeNpc.group)?activeNpc.res.id:null, gi:(activeNpc&&activeNpc.group)?activeNpc.gi:null, hist:_resHist.length });
+  window.__groupChat=()=>({ active:!!activeGroupMembers, open:!!(chatEl&&!chatEl.classList.contains('hidden')), members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):[], primary:_isGroupChat(activeNpc)?activeNpc.res.id:null, gi:_isGroupChat(activeNpc)?activeNpc.gi:null, hist:_resHist.length });
   window.__resTranscript=()=>_resHist.slice(-12);   // shared resident/group thread the speakers answer on top of
   window.__inviteResident=(id)=>{ const res=RESIDENTS.find(r=>r.id===id); if(!res||!res._live) return { ok:false, reason:'no such live resident' };   // force an invite: the named resident joins the open resident/group chat and walks in
-    if(!(activeNpc&&(activeNpc.group||activeNpc.resident))) return { ok:false, reason:'no active resident chat' };
+    if(!(activeNpc&&(_isGroupChat(activeNpc)||activeNpc.resident===true))) return { ok:false, reason:'no active resident chat' };
     const ok=_inviteResident(res); if(ok){ const g=_inviteGreetLine(res); addMsg('bot',_groupChip(res)+esc(g)); _resHistPush(res.id,g); }
     return { ok, joined:id, walking:!!res._live._joinWalk, members:activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null, title:chatHeadTtl?chatHeadTtl.textContent:null }; };
   window.__inviteMatch=(q)=>{ const c=_inviteTarget(q); return { cue:_RES_INV_CUE.test(String(q||'')), match:c?c.id:null }; };   // introspect the name+cue detector without side effects

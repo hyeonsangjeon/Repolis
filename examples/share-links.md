@@ -6,7 +6,7 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 
 | Link | Opens |
 |---|---|
-| `https://hyeonsangjeon.github.io/Repolis/` | The owner's city (62 repos), byte-identical each load. |
+| `https://hyeonsangjeon.github.io/Repolis/` | The owner's generated city snapshot. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob` | A town built live from `mrdoob`'s public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=torvalds` | A town built from `torvalds`' public repos. |
 

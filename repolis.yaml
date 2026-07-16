@@ -1,15 +1,14 @@
-# repolis.yaml — machine-readable project manifest
-# A compact, stable description of Repolis for AI agents and tooling.
+# repolis.yaml — stable machine-readable project manifest
 # Human guide: README.md · Agent contract: AGENTS.md
 schema: repolis/manifest@1
 
 name: Repolis
-tagline: The city of repos — your GitHub as a walkable 3D town.
+tagline: The city of repos — your GitHub as a living, walkable 3D town.
 description: >-
-  A single-file 3D web app that renders every public GitHub repo of its owner as a
-  walkable low-poly house whose architecture is built from real traffic (visitors,
-  clones, forks, views). An LLM taxi and star-named scholar NPCs answer questions
-  and drive you to any repo. Runs from one index.html with no build step.
+  A zero-build static Three.js app that renders public GitHub repositories as
+  metric-shaped houses in topic districts. Residents live between them, exploration
+  systems connect them, and Gitber plus star-named scholars provide natural-language
+  navigation and optional grounded answers.
 owner:
   name: Hyeon Sang Jeon
   github: hyeonsangjeon
@@ -19,37 +18,46 @@ repository: https://github.com/hyeonsangjeon/Repolis
 languages: [en, ko]
 
 runtime:
-  kind: static-web-app
-  build: none            # no bundler, no package.json, no install step
+  kind: zero-build-static-web-app
+  build: none
   entrypoint: index.html
   serve: python3 -m http.server 8000
-  renderer: three.js@0.160     # loaded via CDN import map (jsdelivr)
-  node_for_tooling: ">=20"     # tested on v24; only for tests/scripts, not the site
+  renderer: three.js@0.160
+  module_source: jsdelivr import map
+  package_manager: none
+  node_for_tooling: ">=20"
 
 data:
-  file: repos.json
-  shape: array
-  generated: true
-  generator: scripts/build_repos.py
-  generate_cmd: GTM_DIR=data python3 scripts/build_repos.py
-  note: Do not hand-edit; regenerate from data/logs/* + `gh api`.
+  repositories:
+    file: repos.json
+    shape: array
+    generated: true
+    generator: scripts/build_repos.py
+    generate_cmd: GTM_DIR=data python3 scripts/build_repos.py
+    note: Do not hand-edit; regenerate from data/logs/* plus gh api.
+  contribution_library:
+    file: assets/contribution-library.json
+    generated: true
+    generator: scripts/build-contribution-library.mjs
 
 entrypoints:
   app: index.html
   scholars: scholars.js
+  world_tree: assets/world-tree/createRepolisHero.js
   data_builder: scripts/build_repos.py
-  library_builder: scripts/build-contribution-library.mjs   # → assets/contribution-library.json (generated, daily)
+  library_builder: scripts/build-contribution-library.mjs
   grounding_worker: cloudflare-taxi/src/grounded.js
   realtime_worker: cloudflare/src
   council_engine: council/engine.js
+  client_regression: scripts/smoke.mjs
 
 deploy:
   site:
     target: github-pages
     branch: main
-    dir: /            # root, .nojekyll present
+    dir: /
     command: git push origin main
-    rule: "rebase onto origin/main first (a daily Action pushes `chore: refresh`)"
+    rule: Rebase onto origin/main first because the daily refresh Action also pushes.
   grounding_worker:
     target: cloudflare-workers
     name: repolis-taxi
@@ -63,48 +71,57 @@ endpoints:
   grounding:
     url: https://repolis-taxi.wingnut0310.workers.dev/
     method: POST
-    body: '{ "question": "<text>", "npc": "taxi|msdocs|deepwiki", "lang": "ko|en", "history": [] }'
     wired_in: index.html (GROUNDED_DEFAULT)
-    required: false      # absent backend → silent Local fallback
+    required: false
+    fallback: keyless Local search
   realtime:
     url: wss://repolis-rt.wingnut0310.workers.dev
     wired_in: index.html (RT_DEFAULT)
-    required: false      # absent backend → solo city
+    required: false
+    fallback: solo town
 
 features:
-  - id: walkable-city
-    summary: WoW-style camera; metrics drive building height/width/ornament/glow.
-  - id: llm-taxi
-    summary: Natural-language repo finder that drives you to the house (Local · WebLLM · AI Foundry Live).
+  - id: data-built-city
+    summary: Repository traffic and metadata shape houses, gardens, ornaments, and night glow.
+  - id: topic-districts
+    summary: Deterministic districts with hubs, boards, map navigation, and progress.
+  - id: living-village
+    summary: Residents have routines, moods, friendships, haunts, gatherings, rest, and festivals.
+  - id: exploration
+    summary: Explorer Passport, district progress, daily Village Chronicle, and Repository Constellation Trail.
+  - id: village-chronicle
+    summary: A deterministic town/day story connects one resident to their cherished haunt and a related repo or district.
+  - id: gitber-taxi
+    summary: Natural-language repo finder that physically drives to a selected house.
   - id: scholars
-    summary: Star-named MCP-grounded NPCs (POLARIS taxi, VEGA · MS Learn, RIGEL · DeepWiki) with trace panels.
+    summary: POLARIS, VEGA via Microsoft Learn, and RIGEL via DeepWiki with trace panels.
+  - id: landmarks
+    summary: Contribution Library, Chronopolis, Observatory, World Tree, canals, parks, and fairground.
   - id: shareable-towns
-    summary: '?user=<login> rebuilds the town from any public GitHub user.'
+    summary: "?user=<login> rebuilds a lighter town from any public GitHub user's repositories."
   - id: realtime
-    summary: Optional multiplayer presence + live visitor counter.
-  - id: kronos-council
-    summary: Deterministic multi-agent debate→verdict engine (council/), 130+56 hermetic checks.
-  - id: i18n-daynight
-    summary: Live English/한국어 toggle and day/night with activity-lit windows.
+    summary: Optional multiplayer presence and visitor counters.
+  - id: bilingual-daynight
+    summary: Live English/Korean switching and a continuous day/night cycle.
 
 verify:
-  golden_rule: All tests below must pass before any deploy (hermetic — no net/clock/LLM/cost).
+  golden_rule: All commands must pass before deploy.
   commands:
-    - node council/test.mjs        # → ALL GREEN — 130 checks passed
-    - node council/test-live.mjs   # → 56 passed, 0 failed
-    - node scripts/smoke.mjs       # → ALL GREEN — index.html static regression guards
+    - node council/test.mjs
+    - node council/test-live.mjs
+    - node scripts/smoke.mjs
     - node --check scholars.js
     - node --check cloudflare-taxi/src/grounded.js
-  ui: serve locally and drive the page in Chrome DevTools; require 0 console errors (mobile 390x844 + desktop).
+  ui: Serve locally and exercise changed flows in Chrome DevTools on desktop and 390x844 mobile with no console errors.
 
 constraints:
-  git_author: Hyeon Sang Jeon <wingnut0310@gmail.com>
-  commit_trailer: "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
-  public_safe: Only public repos are shown; never expose private repo names or secrets.
-  generated_data: Edit scripts/build_repos.py, not repos.json directly.
-  no_build_step: Keep the site a single dependency-free static index.html.
+  git_identity: Hyeon Sang Jeon <wingnut0310@gmail.com>
+  public_safe: Only public repositories are rendered; never expose private names or secrets.
+  generated_data: Edit generators, not repos.json or assets/contribution-library.json directly.
+  no_build_step: Keep the browser runtime static and free of a package-manager requirement.
+  no_heavy_runtime_dependencies: Prefer existing Three.js and local deterministic systems.
 
-do_not_touch:   # local/secret, gitignored — never commit
+do_not_touch:
   - "*.local.md"
   - cloudflare-taxi/.dev.vars
   - CLAUDE.md
