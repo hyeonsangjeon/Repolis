@@ -47,6 +47,8 @@ service principal only has the `Cognitive Services OpenAI User` role on your AOA
 
 MIRA and LYRA work anonymously. For higher third-party quotas you may additionally set
 `CONTEXT7_API_KEY` and `HF_TOKEN` as Worker secrets. They remain server-side and are optional.
+If Context7's anonymous MCP quota is exhausted, MIRA falls back to that library's public
+Context7 `llms.txt` page rather than returning an ungrounded answer.
 
 Deterministic navigation ("take me to the most popular repo") is handled in the client
 and never reaches here. If the KB is unreachable / slow / unconfigured, the Worker returns

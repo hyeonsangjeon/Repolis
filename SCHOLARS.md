@@ -144,3 +144,5 @@ git‑ignored `cloudflare-taxi/SECRETS.local.md`; the full secret list + the one
 
 MIRA and LYRA work anonymously. Optional `CONTEXT7_API_KEY` and `HF_TOKEN` Worker
 secrets only raise third-party quotas; they are never sent to the browser.
+When Context7's shared anonymous MCP quota is exhausted, MIRA uses the resolved library's
+public Context7 `llms.txt` document as a bounded fallback and keeps the same source trace.
