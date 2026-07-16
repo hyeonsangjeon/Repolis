@@ -6,6 +6,17 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.80.1] — 2026-07-16
+
+### 📚 Fix: MIRA survives Context7's shared anonymous MCP quota
+
+- Context7 remains MIRA's primary oracle, but a production Cloudflare egress can share an exhausted anonymous
+  monthly quota. Known library identities now retain their canonical Context7 IDs.
+- If resolve or query returns a quota/rate-limit response, the Worker reads the same library's bounded public
+  Context7 `llms.txt` document, preserves source links, and applies the same grounded synthesis rules.
+- Unsupported libraries still fail explicitly; the fallback never substitutes general model knowledge for
+  missing documentation.
+
 ## [1.80.0] — 2026-07-16
 
 ### 🧭 Residents introduce roaming MCP scholars — find expertise by walking the town

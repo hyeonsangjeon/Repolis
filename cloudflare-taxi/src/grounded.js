@@ -192,24 +192,27 @@ function refsFromMarkdown(text, fallbackUrl, fallbackName) {
 }
 
 const CONTEXT7_NAMES = [
-  ["next.js", /(?:next\.?js|nextjs)/i], ["react", /\breact(?:\.?js)?\b/i], ["vue", /\bvue(?:\.?js)?\b/i],
-  ["svelte", /\bsvelte(?:kit)?\b/i], ["angular", /\bangular\b/i], ["three.js", /(?:three\.?js|threejs)/i],
-  ["express", /\bexpress(?:\.?js)?\b/i], ["fastapi", /\bfastapi\b/i], ["django", /\bdjango\b/i],
-  ["flask", /\bflask\b/i], ["spring boot", /\bspring\s*boot\b/i], ["tailwind css", /\btailwind(?:\s*css)?\b/i],
-  ["supabase", /\bsupabase\b/i], ["langchain", /\blangchain\b/i], ["transformers", /\btransformers\b/i],
-  ["pytorch", /\b(?:pytorch|torch)\b/i], ["tensorflow", /\btensorflow\b/i], ["node.js", /(?:node\.?js|nodejs)/i],
-  ["cloudflare workers", /\bcloudflare\s+workers?\b/i], ["redis", /\bredis\b/i], ["postgresql", /\b(?:postgres|postgresql)\b/i],
+  ["next.js", "/vercel/next.js", /(?:next\.?js|nextjs)/i], ["react", "/reactjs/react.dev", /\breact(?:\.?js)?\b/i],
+  ["supabase", "/supabase/supabase", /\bsupabase\b/i], ["mongodb", "/mongodb/docs", /\bmongo(?:db)?\b/i],
+  ["vue", "", /\bvue(?:\.?js)?\b/i], ["svelte", "", /\bsvelte(?:kit)?\b/i], ["angular", "", /\bangular\b/i],
+  ["three.js", "", /(?:three\.?js|threejs)/i], ["express", "", /\bexpress(?:\.?js)?\b/i],
+  ["fastapi", "", /\bfastapi\b/i], ["django", "", /\bdjango\b/i], ["flask", "", /\bflask\b/i],
+  ["spring boot", "", /\bspring\s*boot\b/i], ["tailwind css", "", /\btailwind(?:\s*css)?\b/i],
+  ["langchain", "", /\blangchain\b/i], ["transformers", "", /\btransformers\b/i],
+  ["pytorch", "", /\b(?:pytorch|torch)\b/i], ["tensorflow", "", /\btensorflow\b/i],
+  ["node.js", "", /(?:node\.?js|nodejs)/i], ["cloudflare workers", "", /\bcloudflare\s+workers?\b/i],
+  ["redis", "", /\bredis\b/i], ["postgresql", "", /\b(?:postgres|postgresql)\b/i],
 ];
 
 function context7Target(question) {
   const q = String(question || "").slice(0, 500);
   const direct = q.match(/(?:^|\s)(\/[\w.-]+\/[\w.-]+(?:\/[\w.-]+)?)(?=\s|$)/);
-  if (direct) return { libraryId: direct[1], libraryName: direct[1].split("/").filter(Boolean).slice(-1)[0] };
-  for (const [name, re] of CONTEXT7_NAMES) if (re.test(q)) return { libraryId: "", libraryName: name };
+  if (direct) return { libraryId: direct[1], fallbackId: direct[1], libraryName: direct[1].split("/").filter(Boolean).slice(-1)[0] };
+  for (const [name, id, re] of CONTEXT7_NAMES) if (re.test(q)) return { libraryId: "", fallbackId: id, libraryName: name };
   const candidates = q.match(/@?[\w.-]+(?:\/[\w.-]+)?/g) || [];
   const stop = new Set(["how", "what", "which", "with", "from", "using", "use", "version", "latest", "docs", "api"]);
   const picked = candidates.find((x) => x.length >= 3 && !stop.has(x.toLowerCase()) && /[A-Za-z]/.test(x));
-  return { libraryId: "", libraryName: picked || q.slice(0, 80) };
+  return { libraryId: "", fallbackId: "", libraryName: picked || q.slice(0, 80) };
 }
 
 function hfSearchType(question) {
@@ -271,27 +274,38 @@ async function context7Ask(question, env, extra) {
       null, false, ctrl.signal, headers);
     const sid = init.sid;
     if (sid) await mcpRpc(cfg.url, "notifications/initialized", null, sid, true, ctrl.signal, headers);
-    const target = context7Target(question);
+    const target = context7Target(question), tools = [];
     let libraryId = target.libraryId, resolveText = "";
     if (!libraryId) {
+      tools.push("resolve-library-id");
       const resolved = await mcpRpc(cfg.url, "tools/call", {
         name: "resolve-library-id", arguments: { libraryName: target.libraryName, query: String(question).slice(0, 500) },
       }, sid, false, ctrl.signal, headers);
       resolveText = mcpText(resolved);
       libraryId = (resolveText.match(/Context7-compatible library ID:\s*(\/[^\s]+)/i) || [])[1] || "";
+      if (!libraryId && /quota exceeded|rate limit|too many requests/i.test(resolveText)) libraryId = target.fallbackId;
     }
     if (!libraryId) {
       clearTimeout(timer);
       return json({ kind: "docs", notFound: true, items: [], trace: { ks: cfg.source, tools: ["resolve-library-id"] } }, 200, env);
     }
+    tools.push("query-docs");
     const docs = await mcpRpc(cfg.url, "tools/call", {
       name: "query-docs", arguments: { libraryId, query: String(question).slice(0, 500) },
     }, sid, false, ctrl.signal, headers);
+    let text = mcpText(docs);
+    if (!text || /quota exceeded|rate limit|too many requests/i.test(text)) {
+      const publicUrl = `https://context7.com${libraryId}/llms.txt?topic=${encodeURIComponent(String(question).slice(0, 180))}&tokens=3500`;
+      const publicDocs = await fetch(publicUrl, { signal: ctrl.signal });
+      if (publicDocs.ok) { text = await publicDocs.text(); tools.push("context7-llms"); }
+    }
     clearTimeout(timer);
-    const text = mcpText(docs);
     if (!text) return json({ fallback: true, reason: "empty Context7 docs" }, 200, env);
+    if (/quota exceeded|rate limit|too many requests/i.test(text)) {
+      return json({ fallback: true, reason: "Context7 quota exceeded" }, 200, env);
+    }
     const refs = refsFromMarkdown(text, `https://context7.com/${libraryId.replace(/^\//, "")}`, libraryId);
-    return directMcpResponse("context7", question, text, refs, ["resolve-library-id", "query-docs"], env, extra, started);
+    return directMcpResponse("context7", question, text, refs, tools, env, extra, started);
   } catch (e) {
     clearTimeout(timer);
     return json({ fallback: true, reason: e?.name === "AbortError" ? `timeout ${timeoutMs}ms` : String(e).slice(0, 160) }, 200, env);

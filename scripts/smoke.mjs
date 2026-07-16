@@ -411,6 +411,7 @@ ok(/LYRA · 창조의 대장장이/.test(SCHOLARS_SRC) && /LYRA · the Forgemast
 ok(/url: "https:\/\/mcp\.context7\.com\/mcp"[\s\S]*?adapter: "context7"/.test(WORKER), 'Context7 official remote MCP endpoint is registered');
 ok(/url: "https:\/\/huggingface\.co\/mcp"[\s\S]*?adapter: "huggingface"/.test(WORKER), 'Hugging Face official remote MCP endpoint is registered');
 ok(/async function context7Ask\([\s\S]*?"resolve-library-id"[\s\S]*?"query-docs"/.test(WORKER), 'MIRA performs Context7 resolve → versioned docs retrieval');
+ok(/context7\.com\$\{libraryId\}\/llms\.txt\?topic=/.test(WORKER) && /tools\.push\("context7-llms"\)/.test(WORKER), 'Context7 anonymous quota exhaustion falls back to the same library public llms docs');
 ok(/async function huggingFaceAsk\([\s\S]*?type === "paper" \? "hf_fs" : "hub_repo_search"/.test(WORKER), 'LYRA uses Hub repo search for models/datasets and hf_fs for papers');
 ok(/No \(\?:repositories\|papers\) found/.test(WORKER) && /notFound: true/.test(WORKER), 'empty Hugging Face searches surface as not-found instead of a fake generic result');
 ok(/env\.CONTEXT7_API_KEY \? \{ CONTEXT7_API_KEY: env\.CONTEXT7_API_KEY \} : \{\}/.test(WORKER), 'Context7 is anonymous by default with an optional quota key');
