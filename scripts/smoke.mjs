@@ -18,6 +18,7 @@ import { createHash } from 'crypto';
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HTML = readFileSync(join(ROOT, 'index.html'), 'utf8');
+const SCHOLARS_SRC = readFileSync(join(ROOT, 'scholars.js'), 'utf8');
 const WORLD_TREE_FACTORY = readFileSync(join(ROOT, 'assets/world-tree/createRepolisHero.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
@@ -399,6 +400,56 @@ ok(/reason: "npc_budget_exhausted"/.test(WORKER), 'over-budget returns npc_budge
 ok(/NPC_MODEL_DEFAULT \|\| "gpt-5\.4-mini"/.test(WORKER), 'provider adapter falls back to gpt-5.4-mini when no NPC_MODEL_* alias is set');
 ok(/env\.NPC_DAY_CAP_USD/.test(WORKER) && !/COUNCIL_[A-Z_]*\s*\|\|\s*env\.NPC_/.test(WORKER), 'NPC budget uses the NPC_* namespace (separate from COUNCIL_*)');
 ok(/function npcMetric\(/.test(WORKER) && /env\.METRICS_URL/.test(WORKER), 'redacted fire-and-forget metrics emit (env.METRICS_URL) present');
+
+group('roaming MCP scholars + resident-to-specialist handoff');
+// Scholar contracts: two active, fully bilingual direct-MCP specialists.
+ok(/\{[\s\S]*?id: 'mira', kind: 'context7', active: true[\s\S]*?ks: 'context7-direct'/.test(SCHOLARS_SRC), 'MIRA is active and bound to the direct Context7 oracle');
+ok(/\{[\s\S]*?id: 'lyra', kind: 'huggingface', active: true[\s\S]*?ks: 'huggingface-direct'/.test(SCHOLARS_SRC), 'LYRA is active and bound to the direct Hugging Face oracle');
+ok(/MIRA · 시간지기/.test(SCHOLARS_SRC) && /MIRA · the Timekeeper/.test(SCHOLARS_SRC), 'MIRA carries complete Korean/English persona chrome');
+ok(/LYRA · 창조의 대장장이/.test(SCHOLARS_SRC) && /LYRA · the Forgemaster/.test(SCHOLARS_SRC), 'LYRA carries complete Korean/English persona chrome');
+// Worker adapters: official endpoints, correct tools, bounded/safe synthesis, optional secrets only.
+ok(/url: "https:\/\/mcp\.context7\.com\/mcp"[\s\S]*?adapter: "context7"/.test(WORKER), 'Context7 official remote MCP endpoint is registered');
+ok(/url: "https:\/\/huggingface\.co\/mcp"[\s\S]*?adapter: "huggingface"/.test(WORKER), 'Hugging Face official remote MCP endpoint is registered');
+ok(/async function context7Ask\([\s\S]*?"resolve-library-id"[\s\S]*?"query-docs"/.test(WORKER), 'MIRA performs Context7 resolve → versioned docs retrieval');
+ok(/async function huggingFaceAsk\([\s\S]*?type === "paper" \? "hf_fs" : "hub_repo_search"/.test(WORKER), 'LYRA uses Hub repo search for models/datasets and hf_fs for papers');
+ok(/No \(\?:repositories\|papers\) found/.test(WORKER) && /notFound: true/.test(WORKER), 'empty Hugging Face searches surface as not-found instead of a fake generic result');
+ok(/env\.CONTEXT7_API_KEY \? \{ CONTEXT7_API_KEY: env\.CONTEXT7_API_KEY \} : \{\}/.test(WORKER), 'Context7 is anonymous by default with an optional quota key');
+ok(/env\.HF_TOKEN \? \{ Authorization: `Bearer \$\{env\.HF_TOKEN\}` \} : \{\}/.test(WORKER), 'Hugging Face is anonymous by default with an optional token');
+ok(/groundedPersonaPrompt\([\s\S]*?untrusted external data[\s\S]*?Do not invent facts/.test(WORKER), 'direct MCP synthesis treats retrieved text as untrusted evidence and forbids unsupported claims');
+ok(/function personaPrompt\([\s\S]*?\n\}\n\nfunction groundedPersonaPrompt\(/.test(WORKER) && /grounded \? groundedPersonaPrompt\(who, lang\) : personaPrompt\(who, lang\)/.test(WORKER), 'grounded synthesis prompt is a module-scope sibling reachable from chatLLM');
+ok(/grounded_mcp_context7/.test(WORKER) && /grounded_mcp_huggingface/.test(WORKER), 'new scholar routes have distinct telemetry taxonomy');
+ok(/function hfSearchQuery\([\s\S]*?Korean[\s\S]*?speech recognition[\s\S]*?replace\(\/\[가-힣\]\+\/g/.test(WORKER), 'Korean Hugging Face asks are normalized into searchable public-Hub terms');
+ok(/const normalized = q\.replace[\s\S]*?return normalized \|\| original/.test(WORKER), 'unknown Korean terms fall back to the original query instead of browsing with an empty search');
+// MIRA/LYRA roam real districts and remain reachable.
+ok(/function _scholarPatrol\(kind\)\{ const zid=kind==='context7'\?'library':'ai'/.test(HTML), 'MIRA and LYRA patrol the Library and AI districts, not the plaza');
+ok(/_hubGap\(x,z\)<4\.2/.test(HTML) && /EXTRA_COLLIDERS\.some\(c=>Math\.hypot\(x-c\.x,z-c\.z\)<\(c\.r\|\|0\)\+2\.4\)/.test(HTML), 'patrol points keep building and runtime-collider clearance');
+ok(/const MIRA_NPC=buildRoamingScholar\('context7'\), LYRA_NPC=buildRoamingScholar\('huggingface'\)/.test(HTML), 'both roaming scholar models are instantiated');
+ok(/pos:g\.position,kind,reach:4\.6,patrol:/.test(HTML), 'roaming NPC navigation follows the live Three.js position');
+ok(/n\.patrol && !chatting && !document\.hidden && d>6\.2/.test(HTML), 'patrol pauses near visitors, during chat, and on hidden tabs');
+ok(/speed:LOW_END\?0\.62:0\.88/.test(HTML), 'LOW_END keeps a slower but living scholar patrol');
+ok(/scholar:context7/.test(HTML) && /scholar:huggingface/.test(HTML), 'Explorer Passport includes MIRA and LYRA');
+ok(/window\.__scholarRoutes=/.test(HTML) && /window\.__tpScholar=/.test(HTML), 'debug hooks expose routes and teleport-to-scholar');
+// Resident handoff: deterministic specialist classification, no resident model call, compass-only discovery.
+const handoffSrc=(HTML.match(/function scholarHandoffKind\(q\)\{[\s\S]*?return null; \}/)||[''])[0];
+ok(!!handoffSrc, 'resident specialist classifier is extractable');
+if(handoffSrc){
+  const classify=new Function(`${handoffSrc}; return scholarHandoffKind;`)();
+  ok(classify('Azure AI Search 문서')==='msdocs', 'Microsoft questions hand off to VEGA');
+  ok(classify('facebook/react 내부 구조')==='deepwiki', 'repo architecture questions hand off to RIGEL');
+  ok(classify('한국어 STT 모델')==='huggingface' && classify('VLM 최신 논문')==='huggingface', 'model/dataset/paper questions hand off to LYRA');
+  ok(classify('React 19 useEffect API')==='context7', 'library/version API questions hand off to MIRA');
+  ok(classify('오늘 기분 어때?')===null, 'ordinary town conversation stays with residents');
+}
+ok((HTML.match(/if\(_maybeScholarHandoff\(q\)\) return;/g)||[]).length===2, 'solo and circle resident chat short-circuit before resident AI for specialist questions');
+const residentSaySrc=(HTML.match(/async function residentSay\(q\)\{[\s\S]*?\n\}/)||[''])[0];
+const groupSaySrc=(HTML.match(/async function groupSay\(q\)\{[\s\S]*?\n\}/)||[''])[0];
+ok([residentSaySrc,groupSaySrc].every(src=>src.indexOf('_maybeFarewell(q)')<src.indexOf('_maybeScholarHandoff(q)')&&src.indexOf('_maybeScholarHandoff(q)')<src.indexOf('_maybeInvite(q)')), 'specialist handoff wins before resident-name invites (MIRA scholar vs Mira resident collision)');
+ok(/if\(opts&&opts\.handoff\)[\s\S]*?startScholarHandoff\(kind\)/.test(HTML), 'chat messages can render a specialist handoff action');
+const startHandoffSrc=(HTML.match(/function startScholarHandoff\(kind\)\{[\s\S]*?return true; \}/)||[''])[0];
+ok(/setNav\(\{label:sc\.star[\s\S]*?_pos:n\.group\.position/.test(startHandoffSrc), 'handoff compass follows the scholar live position');
+ok(!/taxiTo\(/.test(startHandoffSrc) && /closeChat\(\)/.test(startHandoffSrc), 'handoff closes resident chat but never taxis or auto-opens the scholar');
+ok((HTML.match(/handoffGo:\s*['"]/g)||[]).length>=2 && (HTML.match(/handoffNav:\s*['"]/g)||[]).length>=2, 'handoff action and navigation copy are bilingual');
+ok(/window\.__handoffKind=/.test(HTML) && /window\.__handoffStart=/.test(HTML), 'debug hooks expose handoff classification and navigation');
 
 // 13 — realtime ghost cleanup: client reconciles against the server's authoritative roster
 ok(/m\.t==='sync'/.test(HTML) && /for\(const id of \[\.\.\.peers\.keys\(\)\]\) if\(!ids\.has\(id\)\) removePeer\(id\)/.test(HTML), "client drops any avatar missing from the server's authoritative sync roster (self-healing ghost cleanup)");

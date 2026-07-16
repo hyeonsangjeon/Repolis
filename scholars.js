@@ -130,35 +130,109 @@
         en: 'The cartographer in the plaza of ' + OWNER_EN + '\'s Repolis. By the light of Orion\'s blue-white star RIGEL and Ariadne\'s thread, reads the inner structure and architecture of any public GitHub repo in real time through the deepwiki-mcp-ks oracle, charting it like a map.'
       }
     },
-    /* —— 아직 소환되지 않은 현자들 (밤하늘에 별자리 좌표만 예약) —— */
     {
-      id: 'mira', kind: 'context7', active: false, emoji: '⏳',
+      id: 'mira', kind: 'context7', active: true, emoji: '📚',
       star: 'MIRA', epithetEn: 'the Timekeeper', epithetKo: '시간지기',
       mythEn: 'Kairos', mythKo: '카이로스',
       color: 0xffd9b0, auraColor: 0xffc890,
       domainKo: '라이브러리의 최신·버전', domainEn: 'libraries\' latest versions',
-      ks: '(context7-mcp-ks)', kb: '',
-      constellation: { // 고래자리(Cetus) — MIRA는 맥동하는 심장(변광성)
+      ks: 'context7-direct', kb: '',
+      constellation: {
+        nameKo: '고래자리', nameEn: 'Cetus',
         az: 3.90, el: 0.42,
         nodes: [[0, 0], [0.050, 0.030], [0.100, 0.010], [0.140, 0.050], [0.082, -0.044], [0.030, -0.060]],
         edges: [[0, 1], [1, 2], [2, 3], [1, 4], [0, 5]],
         primary: 0
+      },
+      persona: {
+        ko: {
+          greet: '시간의 책갈피를 넘기며 인사드려요 📚 저는 <b>MIRA</b> · 시간지기예요. 오래된 기억 대신 <b>Context7</b>에서 지금 버전의 라이브러리 문서를 찾아드려요. React 19, Next.js 15, Three.js API처럼 라이브러리와 버전을 함께 물어보세요.',
+          who: '저는 <b>MIRA</b> · the Timekeeper 📚 순간을 붙잡는 <i>카이로스</i>의 혼을 품은 고래자리의 변광성이에요. 문서·학습관 골목을 거닐며 Context7 신탁으로 라이브러리의 최신 API와 버전별 예제를 읽어요.',
+          help: '라이브러리 이름과 궁금한 API·버전을 함께 말해 주세요 📚 예: “React 19 useEffect cleanup”, “Next.js 15 middleware”, “Three.js r160 WebGPU”. Context7의 현재 문서와 코드 예제로 답해요.',
+          title: '📚 MIRA · 시간지기',
+          ph: '어떤 라이브러리의 현재 문서가 궁금하세요?',
+          searching: 'Context7의 최신 책장을 넘겨볼게요 📚⏳',
+          none: '그 라이브러리의 현재 문서를 찾지 못했어요. 라이브러리 이름과 버전을 조금 더 정확히 알려주세요.',
+          err: '최신 문서를 펼치는 중 책갈피가 어긋났어요 😅 잠시 후 다시 물어봐 주세요.',
+          noBackend: 'Context7 신탁을 잇는 백엔드가 연결돼 있지 않아요. 라이브 사이트에서 찾아주세요 📚',
+          thanks: '도움이 됐다니 기뻐요 📚 버전이 바뀌면 다시 찾아와 주세요.',
+          bye: '좋은 빌드 되세요 📚 최신 페이지가 필요하면 다시 불러주세요.',
+          how: '문서·학습관의 시간표를 따라 걷고 있었어요 📚 어떤 라이브러리의 지금이 궁금하세요?',
+          nice: '고마워요 😊 다음엔 어떤 API의 시간을 맞춰볼까요?'
+        },
+        en: {
+          greet: 'Turning a bookmark through time 📚 I\'m <b>MIRA</b> · the Timekeeper. Instead of old memory, I read the current, version-specific library docs through <b>Context7</b>. Ask about a library and version — React 19, Next.js 15, or a Three.js API.',
+          who: 'I\'m <b>MIRA</b> · the Timekeeper 📚 the variable star of Cetus carrying the spirit of <i>Kairos</i>, the right moment. I roam the Library district and read current APIs and versioned examples through the Context7 oracle.',
+          help: 'Name the library, API, and version when you can 📚 Try “React 19 useEffect cleanup”, “Next.js 15 middleware”, or “Three.js r160 WebGPU”. I answer from Context7\'s current docs and examples.',
+          title: '📚 MIRA · the Timekeeper',
+          ph: 'Which library\'s current docs do you need?',
+          searching: 'Turning through Context7\'s latest pages 📚⏳',
+          none: 'I could not resolve that library\'s current docs. Try a more exact library name and version.',
+          err: 'The bookmark slipped while opening the current docs 😅 Please try again.',
+          noBackend: 'The Context7 oracle backend is not connected. Try it on the live site 📚',
+          thanks: 'Glad that helped 📚 Come back whenever the version changes.',
+          bye: 'Good build 📚 Call again when you need the latest page.',
+          how: 'I was following the Library district\'s timeline 📚 Which library\'s present do you need?',
+          nice: 'Thank you 😊 Which API shall we bring into the present next?'
+        }
+      },
+      backstory: {
+        ko: OWNER_KO + '님의 Repolis 문서·학습관을 순회하는 시간지기. 카이로스의 순간과 고래자리 MIRA의 맥동으로, Context7 직접 MCP에서 최신·버전별 라이브러리 문서를 찾아 읽는다.',
+        en: 'The roaming Timekeeper of ' + OWNER_EN + '\'s Library district. By Kairos\' moment and variable-star MIRA\'s pulse, reads current version-specific library docs through the direct Context7 MCP.'
       }
     },
     {
-      id: 'lyra', kind: 'huggingface', active: false, emoji: '🔥',
+      id: 'lyra', kind: 'huggingface', active: true, emoji: '🤗',
       star: 'LYRA', epithetEn: 'the Forgemaster', epithetKo: '창조의 대장장이',
       mythEn: 'Orpheus', mythKo: '오르페우스',
       color: 0xffe0c0, auraColor: 0xff9a6a,
       domainKo: '모델·데이터셋·논문', domainEn: 'models, datasets and papers',
-      ks: '(huggingface-mcp-ks)', kb: '',
-      constellation: { // 거문고자리의 리라(오르페우스의 현악기)
+      ks: 'huggingface-direct', kb: '',
+      constellation: {
+        nameKo: '오르페우스의 리라', nameEn: 'Orpheus\' Lyre',
         az: 2.60, el: 0.62,
         nodes: [[0, 0], [0.030, -0.052], [0.072, -0.040], [0.060, -0.094], [0.018, -0.104]],
         edges: [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4]],
         primary: 0
+      },
+      persona: {
+        ko: {
+          greet: '모델의 불씨를 두드리며 인사드려요 🤗 저는 <b>LYRA</b> · 창조의 대장장이예요. <b>Hugging Face</b> 신탁에서 공개 모델·데이터셋·ML 논문을 찾아 비교해 드려요. 무엇을 만들고 있나요?',
+          who: '저는 <b>LYRA</b> · the Forgemaster 🤗 노래로 길을 연 <i>오르페우스</i>의 혼과 리라의 불꽃을 품은 대장장이예요. AI 연구구역을 돌아다니며 Hugging Face Hub의 모델·데이터셋·논문을 찾아 새 작업의 재료를 골라드려요.',
+          help: '모델, 데이터셋, 논문 중 무엇을 찾는지 말해 주세요 🤗 예: “한국어 STT 모델”, “의료 영상 데이터셋”, “vision-language model 최신 논문”. 공개 Hugging Face MCP 검색 결과와 링크를 보여드려요.',
+          title: '🤗 LYRA · 창조의 대장장이',
+          ph: '어떤 모델·데이터셋·논문을 찾으세요?',
+          searching: 'Hugging Face의 공개 불씨를 골라볼게요 🤗🔥',
+          none: '맞는 모델·데이터셋·논문을 찾지 못했어요. 용도나 언어, 태스크를 조금 더 알려주세요.',
+          err: '검색하던 불씨가 잠시 꺼졌어요 😅 잠시 후 다시 찾아볼게요.',
+          noBackend: 'Hugging Face 신탁을 잇는 백엔드가 연결돼 있지 않아요. 라이브 사이트에서 찾아주세요 🤗',
+          thanks: '좋은 재료를 찾았다니 기뻐요 🤗 멋진 것을 만들어 주세요.',
+          bye: '대장간 불은 계속 지켜둘게요 🔥 또 재료가 필요하면 찾아와요.',
+          how: 'AI 연구구역을 돌며 새 모델과 논문을 살피고 있었어요 🤗 무엇을 만들고 있나요?',
+          nice: '고마워요 😊 다음엔 어떤 재료를 벼려볼까요?'
+        },
+        en: {
+          greet: 'Tending the sparks of new models 🤗 I\'m <b>LYRA</b> · the Forgemaster. Through the <b>Hugging Face</b> oracle I find and compare public models, datasets, and ML papers. What are you building?',
+          who: 'I\'m <b>LYRA</b> · the Forgemaster 🤗 carrying the spirit of <i>Orpheus</i>, whose lyre opened paths. I roam the AI district and select models, datasets, and papers from the Hugging Face Hub as materials for new work.',
+          help: 'Tell me whether you need a model, dataset, or paper 🤗 Try “Korean STT models”, “medical imaging datasets”, or “recent vision-language model papers”. I return public Hugging Face MCP results with links.',
+          title: '🤗 LYRA · the Forgemaster',
+          ph: 'Which model, dataset, or paper are you seeking?',
+          searching: 'Searching the Hugging Face forge for useful sparks 🤗🔥',
+          none: 'I could not find a fitting model, dataset, or paper. Add the task, language, or intended use.',
+          err: 'The search spark went out for a moment 😅 Please try again.',
+          noBackend: 'The Hugging Face oracle backend is not connected. Try it on the live site 🤗',
+          thanks: 'Glad we found good material 🤗 Build something wonderful with it.',
+          bye: 'I\'ll keep the forge warm 🔥 Return whenever you need more material.',
+          how: 'I was circling the AI district, inspecting new models and papers 🤗 What are you making?',
+          nice: 'Thank you 😊 What shall we forge next?'
+        }
+      },
+      backstory: {
+        ko: OWNER_KO + '님의 Repolis AI 연구구역을 순회하는 창조의 대장장이. 오르페우스의 리라와 불꽃으로, Hugging Face 직접 MCP에서 공개 모델·데이터셋·ML 논문을 찾아 새 프로젝트의 재료를 고른다.',
+        en: 'The roaming Forgemaster of ' + OWNER_EN + '\'s AI district. With Orpheus\' lyre and a forge spark, searches public models, datasets, and ML papers through the direct Hugging Face MCP.'
       }
     },
+    /* —— 아직 소환되지 않은 현자들 (밤하늘에 별자리 좌표만 예약) —— */
     {
       id: 'deneb', kind: 'memory', active: false, emoji: '🧠',
       star: 'DENEB', epithetEn: 'the Rememberer', epithetKo: '기억지기',

@@ -94,14 +94,16 @@ github-traffic-monitor (private, daily)        Repolis (public)
 
 ## 5. Scholars & the taxi (NPCs)
 
-Each scholar in `scholars.js` is *a star + a myth + one MCP knowledge source*. `active: true` ones are
-summoned into the plaza and drawn in the night sky as their constellation.
+Each scholar in `scholars.js` is *a star + a myth + one MCP knowledge source*. Active scholars are drawn
+in the night sky; POLARIS/VEGA/RIGEL stay around the plaza while MIRA and LYRA patrol their domain districts.
 
 | Scholar | `kind` | Myth | Knowledge source (`ks` / `kb`) | Role |
 |---|---|---|---|---|
 | **POLARIS** · the Wayfinder | `taxi` | Hermes | `github-repos-mcp-ks` / `repolis-github-kb` | Finds a repo and **drives** you to its house. |
 | **VEGA** · the Archivist | `msdocs` | Daidalos | `microsoft-learn-mcp-ks` / `repolis-mslearn-kb` | Answers Azure/.NET/Copilot from **Microsoft Learn**, with references. |
 | **RIGEL** · the Cartographer | `deepwiki` | (Ariadne's thread) | DeepWiki MCP | Maps how a named public repo works (keyless). |
+| **MIRA** · the Timekeeper | `context7` | Kairos | Context7 direct MCP | Reads current, version-specific library docs while patrolling the Library district. |
+| **LYRA** · the Forgemaster | `huggingface` | Orpheus | Hugging Face direct MCP | Finds public models, datasets, and papers while patrolling the AI district. |
 
 ### How a scholar answers (two paths)
 
@@ -114,9 +116,14 @@ your question
                         no repo pushed, marked "✦ how I answered · general knowledge"
 ```
 
-The grounding Worker (`cloudflare-taxi/src/grounded.js`) routes `npc → {kb, ks}`. If the KB returns
-**zero** documents it takes the starlit path; if it returns documents they are **always surfaced** as
-references (the answer never silently drops grounded sources).
+The grounding Worker (`cloudflare-taxi/src/grounded.js`) supports two grounded paths: Azure AI Search KB
+synthesis for POLARIS/VEGA, and direct public MCP adapters for RIGEL/MIRA/LYRA. Direct MCP text is treated
+as untrusted evidence, optionally synthesized into the user's language, and always surfaced with references.
+Off-topic chat still uses the starlit persona path.
+
+Residents do not own MCP tools. `scholarHandoffKind()` recognizes only clear specialist intent, adds a
+bilingual handoff action to resident or circle chat, and points the existing compass at the scholar's live
+position. It never calls the taxi or opens the specialist chat automatically.
 
 ### Taxi search pipeline (client, in `index.html`)
 

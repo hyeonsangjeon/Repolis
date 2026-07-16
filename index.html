@@ -569,6 +569,7 @@
   .msg .ride { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; cursor: pointer;
     background: #ffd23f; color: #6a4a22; font-weight: 800; font-size: 12px; padding: 7px 12px; border-radius: 10px; }
   .msg .ride:hover { filter: brightness(1.05); }
+  .msg .ride.handoff { background: linear-gradient(135deg,#cfe0ff,#ffd8b8); color: #49365f; }
   .msg .alt { display: inline-block; margin: 4px 5px 0 0; font-size: 11px; font-weight: 700; color: #3a6fb0;
     background: #e7eef8; padding: 4px 9px; border-radius: 8px; cursor: pointer; }
   .msg .trace { margin-top: 8px; font-size: 11px; }
@@ -1132,7 +1133,8 @@ const I18N = {
     chronicleRepo:'{name}의 구역에서 {repo} 발견', chronicleZone:'{name}이 안내하는 {zone}',
     chronicleMet:'📖 {name}을 만나 오늘의 이야기를 시작했어요.', chronicleHauntFound:'🏞️ {name}이 아끼는 {place}에 도착했어요.',
     chronicleZoneFound:'🧭 {name}이 알려준 {zone}에 도착했어요.',
-    lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자',
+    handoffGo:'🧭 {name} 찾으러 가기', handoffNav:'🧭 나침반이 {name}의 현재 위치를 가리켜요. 직접 찾아가 보세요!',
+    lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자', lmMira:'MIRA · 시간지기', lmLyra:'LYRA · 창조의 대장장이',
     lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
     chronoSub:'주제를 입력하면 세 현자(옹호·회의·분석)가 실시간으로 토론하고, 시간의 의장 크로노스가 결론을 내립니다.',
@@ -1288,7 +1290,8 @@ const I18N = {
     chronicleRepo:'Discover {repo} in {name}\'s district', chronicleZone:'Follow {name} to {zone}',
     chronicleMet:'📖 You met {name} and began today\'s story.', chronicleHauntFound:'🏞️ You reached {place}, cherished by {name}.',
     chronicleZoneFound:'🧭 You reached {zone}, recommended by {name}.',
-    lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer',
+    handoffGo:'🧭 Find {name}', handoffNav:'🧭 The compass now follows {name}\'s live position. Walk out and find them!',
+    lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer', lmMira:'MIRA · Timekeeper', lmLyra:'LYRA · Forgemaster',
     lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
     chronoSub:'Type a topic and three sages (advocate · skeptic · analyst) debate it live; the Chair of Time, KRONOS, delivers the verdict.',
@@ -5110,15 +5113,52 @@ const rigel=new THREE.Group(); rigel.position.set(6.5,0,-9.5);
 rigel.rotation.y=-0.6; disableDynamicShadowCasters(rigel); scene.add(rigel);
 NPCS.push({ group:rigel, pos:rigel.position.clone(), kind:'deepwiki', reach:4.6 });
 
+/* ---- roaming scholars — MIRA patrols the Library district; LYRA patrols the AI district instead of waiting in the plaza ---- */
+function _scholarPatrol(kind){ const zid=kind==='context7'?'library':'ai', hub=ZONE_HUBS.find(h=>h.id===zid);
+  const base=hub?hub.pos:new THREE.Vector3(kind==='context7'?-74:72,0,kind==='context7'?62:58);
+  const phase=kind==='context7'?0.38:2.12, pts=[];
+  for(const r of [7.5,9.5,11.5,14,17]){ for(let k=0;k<8;k++){ const a=phase+k*Math.PI/4, x=base.x+Math.cos(a)*r, z=base.z+Math.sin(a)*r;
+      if(Math.hypot(x,z)>205 || Math.hypot(x,z)<24 || _hubGap(x,z)<4.2) continue;
+      if(ZONE_HUBS.some(h=>Math.hypot(x-h.x,z-h.z)<4.8)) continue;
+      if(typeof EXTRA_COLLIDERS!=='undefined'&&EXTRA_COLLIDERS.some(c=>Math.hypot(x-c.x,z-c.z)<(c.r||0)+2.4)) continue;
+      pts.push(new THREE.Vector3(+x.toFixed(2),0,+z.toFixed(2))); if(pts.length>=4) return pts; } }
+  return [new THREE.Vector3(base.x+6,0,base.z),new THREE.Vector3(base.x,0,base.z+6),new THREE.Vector3(base.x-6,0,base.z)]; }
+function buildRoamingScholar(kind){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(!sc||!sc.active) return null;
+  const mira=kind==='context7', ROBE=mira?0x6a4050:0x7a4324, DEEP=mira?0x34203d:0x3d2117, ACC=sc.color, SK=0xf0c79a, HR=0x2b2118;
+  const g=new THREE.Group(), skirt=new THREE.Mesh(new THREE.ConeGeometry(0.62,1.16,18),toon(DEEP)); skirt.position.y=0.62; g.add(skirt);
+  const body=capsule(0.43,0.48,ROBE); body.position.y=1.34; body.scale.z=0.84; outline(body,0.04); g.add(body);
+  const head=ball(0.5,SK,18); head.position.y=2.12; head.scale.set(1,0.98,0.96); outline(head,0.04); g.add(head);
+  const hair=ball(0.53,HR,16); hair.position.set(0,2.34,-0.04); hair.scale.set(1.04,0.56,1.06); outline(hair,0.03); g.add(hair);
+  [[-0.2],[0.2]].forEach(([ex])=>{ const e=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,10),basic(0x2a2320)); e.position.set(ex,2.12,0.46); e.scale.z=0.5; g.add(e);
+    const hl=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6),basic(0xffffff)); hl.position.set(ex+0.035,2.16,0.5); g.add(hl); });
+  { const m=new THREE.Mesh(new THREE.TorusGeometry(0.085,0.022,8,16,Math.PI),basic(0x8a4f44)); m.position.set(0,1.92,0.46); m.rotation.z=Math.PI; g.add(m); }
+  const al=capsule(0.14,0.4,ROBE); al.position.set(-0.54,1.4,0); outline(al,0.03); g.add(al); const ar=al.clone(); ar.position.x=0.54; g.add(ar);
+  const ll=capsule(0.16,0.32,0x252332); ll.position.set(-0.18,0.47,0); g.add(ll); const lr=ll.clone(); lr.position.x=0.18; g.add(lr);
+  const cape=new THREE.Mesh(new THREE.ConeGeometry(0.6,1.4,18,1,true),toon(DEEP)); cape.material.side=THREE.DoubleSide; cape.position.set(0,1.44,-0.18); g.add(cape);
+  if(mira){ const book=rbox(0.58,0.72,0.1,0xf0d7b0,0.03); book.position.set(0.5,1.18,0.32); book.rotation.set(-0.45,0,0.12); g.add(book);
+    const dial=new THREE.Mesh(new THREE.TorusGeometry(0.18,0.035,8,20),basic(ACC)); dial.position.set(-0.42,1.28,0.38); g.add(dial);
+    const hand=rbox(0.025,0.13,0.025,0xfff1d8,0.01); hand.position.set(-0.42,1.32,0.4); hand.rotation.z=0.65; g.add(hand);
+  } else { const hammerHead=rbox(0.5,0.22,0.22,0xffd27a,0.04); hammerHead.position.set(0.5,1.38,0.3); hammerHead.rotation.z=0.28; g.add(hammerHead);
+    const handle=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.72,8),toon(0x66422a)); handle.position.set(0.36,1.06,0.28); handle.rotation.z=-0.35; g.add(handle);
+    const spark=new THREE.Sprite(new THREE.SpriteMaterial({map:GLINT_TEX,color:ACC,transparent:true,opacity:0.9,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); spark.scale.set(0.58,0.58,1); spark.position.set(0.68,1.65,0.34); g.add(spark); }
+  g._head=head; g._armL=al; g._armR=ar; g._legL=ll; g._legR=lr; npcFaces.add(head.material);
+  const points=_scholarPatrol(kind); g.position.copy(points[0]); g.rotation.y=Math.atan2(-g.position.x,-g.position.z); disableDynamicShadowCasters(g); scene.add(g);
+  const npc={group:g,pos:g.position,kind,reach:4.6,patrol:{points,index:1,waitUntil:0,speed:LOW_END?0.62:0.88}}; NPCS.push(npc); return npc; }
+const MIRA_NPC=buildRoamingScholar('context7'), LYRA_NPC=buildRoamingScholar('huggingface');
+
 /* ---- NPCs feel alive: breathing bob, look-around, occasional wave + speech bubble (near-only) ---- */
-const NPC_COL={taxi:'#f0c069',msdocs:'#7fa8ee',deepwiki:'#4fc8bd'};
+const NPC_COL={taxi:'#f0c069',msdocs:'#7fa8ee',deepwiki:'#4fc8bd',context7:'#d79a7a',huggingface:'#e88954'};
 const NPC_LINES={
   taxi:   { ko:['어디로 모실까요? 🚕','레포 이름만 말해요','북극성이 길을 알죠','타세요, 모실게요','제일 인기있는 곳?'],
             en:['Need a ride? 🚕','Just name a repo','Polaris knows the way','Hop in!','Most popular spot?'] },
   msdocs: { ko:['문서라면 제게 📘','무엇을 만들어요?','Microsoft Learn 찾아드려요','별빛에 지식이 깃들죠','뭐든 물어보세요'],
             en:['Ask me the docs 📘','What are you building?','I read Microsoft Learn','Knowledge in starlight','Go ahead, ask'] },
   deepwiki:{ ko:['레포 미궁? 지도 드려요 🗺️','구조를 그려드려요','owner/repo 말해봐요','길 잃었나요?','어떤 코드가 궁금해요?'],
-            en:['Lost in a repo? 🗺️','I chart its structure','Try owner/repo','Need a map?','Which codebase?'] } };
+            en:['Lost in a repo? 🗺️','I chart its structure','Try owner/repo','Need a map?','Which codebase?'] },
+  context7:{ ko:['최신 문서를 찾나요? 📚','버전도 함께 알려줘요','Context7 책장 순회 중','API의 지금을 읽어요','오래된 예제는 넘겨두죠'],
+            en:['Need the current docs? 📚','Name the version too','Patrolling Context7 shelves','I read the API as it is now','Old examples stay shelved'] },
+  huggingface:{ ko:['어떤 모델을 벼릴까요? 🤗','데이터셋도 찾아드려요','새 논문 불씨가 보여요','AI 연구구역 순회 중','좋은 재료를 골라봐요'],
+            en:['Which model shall we forge? 🤗','I find datasets too','Fresh paper sparks ahead','Patrolling the AI district','Let us choose good material'] } };
 function makeNpcBubble(x,z){ const cv=document.createElement('canvas'); cv.width=320; cv.height=140; const c=cv.getContext('2d');
   const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false}));
   sp.scale.set(5.6,2.45,1); sp.position.set(x,3.55,z); sp.renderOrder=18; scene.add(sp);
@@ -5138,13 +5178,19 @@ for(const n of NPCS){ const g=n.group; g._baseRot=g.rotation.y; g._ph=Math.rando
 function updateNpcs(dt){ const tt=clock.elapsedTime;
   for(const n of NPCS){ const g=n.group;
     const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz);
-    const tgt = d<16 ? Math.atan2(dx,dz) : g._baseRot + Math.sin(tt*0.5+g._ph)*0.18;   // face you when near, else gently look around
+    const chatting=activeNpc===n && typeof chatEl!=='undefined' && chatEl && !chatEl.classList.contains('hidden');
+    let walking=false, walkYaw=g.rotation.y;
+    if(n.patrol && !chatting && !document.hidden && d>6.2 && tt>=(n.patrol.waitUntil||0)){ const p=n.patrol.points[n.patrol.index], px=p.x-g.position.x, pz=p.z-g.position.z, pd=Math.hypot(px,pz);
+      if(pd<0.7){ n.patrol.index=(n.patrol.index+1)%n.patrol.points.length; n.patrol.waitUntil=tt+2.8+n.patrol.index*0.55; }
+      else { const step=Math.min(pd,n.patrol.speed*dt); g.position.x+=px/pd*step; g.position.z+=pz/pd*step; walkYaw=Math.atan2(px,pz); walking=true; } }
+    const tgt = walking ? walkYaw : (d<16 ? Math.atan2(dx,dz) : g._baseRot + Math.sin(tt*0.5+g._ph)*0.18);   // patrol, face you when near, else gently look around
     g.rotation.y=lerpA(g.rotation.y,tgt,0.06);
     if(g._head) g._head.position.y = g._head._baseY + Math.sin(tt*1.8+g._ph)*0.03;       // breathing
+    if(g._legL){ const swing=walking?Math.sin(tt*7)*0.55:0; g._legL.rotation.x+=(swing-g._legL.rotation.x)*0.22; g._legR.rotation.x+=(-swing-g._legR.rotation.x)*0.22; }
     g._bt-=dt;
     if(g._bt<=0){ if(d<42){ const arr=(NPC_LINES[n.kind]||{})[LANG]||['…']; g._bub.say(arr[(Math.random()*arr.length)|0], n.kind); g._gt=2.6; }
       g._bt=9+Math.random()*9; }
-    g._bub.update(dt);
+    g._bub.sprite.position.x=g.position.x; g._bub.sprite.position.z=g.position.z; g._bub.update(dt);
     if(g._armL){ if(g._gt>0){ g._gt-=dt; g._armL.rotation.z=1.0-Math.sin(tt*7)*0.3; }    // wave while speaking
                  else g._armL.rotation.z += (0-g._armL.rotation.z)*0.1; } }
 }
@@ -5755,8 +5801,28 @@ function residentReply(res,q){ const ql=String(q||'').toLowerCase().trim(), ko=L
   if(why.test(ql)){ const w=_ZWHY[res.zone]?(_ZWHY[res.zone][LANG]||_ZWHY[res.zone].ko):''; return { html: esc((ko?`${zn}엔 ${w} 관련 레포가 모여 있어요.`:`${zn} gathers repos about ${w}.`)+(reps[0]?(ko?` 예: ${reps[0].repo}.`:` e.g. ${reps[0].repo}.`):'')) }; }
   const g=residentGreet(res), cnt=z.repos.length;
   return { html: (g?g+' ':'')+esc(ko?`여기는 ${zn}, ${L.role}로서 제가 돌보는 곳이에요. 레포 ${cnt}채가 있어요.`:`This is ${zn}, my patch as the ${L.role}. ${cnt} repo-houses stand here.`) }; }
+function scholarHandoffKind(q){ const s=String(q||'');
+  if(/azure|microsoft|ms\s*learn|\.net|dotnet|copilot|파운드리|애저|마이크로소프트/i.test(s)) return 'msdocs';
+  if(/\b[A-Za-z0-9][\w.-]*\/[A-Za-z0-9][\w.-]+\b/.test(s) || /레포|repo|repository/i.test(s) && /내부|구조|아키텍처|architecture|internals?|source\s*code|동작\s*원리/i.test(s)) return 'deepwiki';
+  if(/hugging\s*face|허깅\s*페이스|모델|model|데이터셋|dataset|corpus|코퍼스|논문|paper|arxiv|파인튜닝\s*재료/i.test(s)) return 'huggingface';
+  const lib=/(?:react|next\.?js|nextjs|vue|svelte|angular|three\.?js|threejs|express|fastapi|django|flask|spring\s*boot|tailwind|supabase|langchain|transformers|pytorch|tensorflow|node\.?js|cloudflare\s+workers?|redis|postgres)/i.test(s);
+  const docs=/버전|version|api|문서|docs?|사용법|설치|설정|마이그레이션|migration|upgrade|middleware|hook|메서드|method/i.test(s);
+  if(lib||docs&&/(라이브러리|library|framework|package|npm|pip)/i.test(s)) return 'context7';
+  return null; }
+function _handoffLine(kind){ const sc=window.scholarByKind&&window.scholarByKind(kind), star=sc?sc.star:kind;
+  const roaming=kind==='context7'||kind==='huggingface';
+  if(LANG==='ko'){ const domain=kind==='msdocs'?'Microsoft 공식 문서':kind==='deepwiki'?'공개 레포의 내부 구조':kind==='context7'?'최신 라이브러리·버전 문서':'모델·데이터셋·ML 논문';
+    return `이건 ${star}가 맡은 ${domain} 질문이에요.${roaming?' 광장에 서 있지 않고 구역을 순회 중이니, 나침반을 따라 직접 찾아가 보세요.':' 제가 위치를 알려드릴게요.'}`; }
+  const domain=kind==='msdocs'?'official Microsoft docs':kind==='deepwiki'?'public repository internals':kind==='context7'?'current library and version docs':'models, datasets, and ML papers';
+  return `This belongs to ${star}'s ${domain}.${roaming?' They roam their district instead of waiting in the plaza — follow the compass and find them.':" I'll point you to them."}`; }
+function _maybeScholarHandoff(q){ const kind=scholarHandoffKind(q), sc=kind&&window.scholarByKind&&window.scholarByKind(kind), target=kind&&NPCS.find(n=>n.kind===kind);
+  if(!kind||!sc||!sc.active||!target) return false; const res=activeNpc&&activeNpc.res; if(!res) return false;
+  const line=_handoffLine(kind), html=_isGroupChat(activeNpc)?_groupChip(res)+esc(line):esc(line);
+  _resHistPush('visitor',q); _resHistPush(res.id,line); addMsg('bot',html,{handoff:{kind}});
+  trackChatEvent('scholar_handoff_offer',{from:res.id,to:kind}); return true; }
 async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) return; _guestCdUntil=clock.elapsedTime + NPC_CFG.guestCooldownSec;
   if(await _maybeFarewell(q)) return;                                                            // "잘 가요" → a warm goodbye + wave, and the chat gently closes
+  if(_maybeScholarHandoff(q)) return;                                                          // specialist question → resident introduces an oracle; no resident AI/model call
   if(await _maybeInvite(q)) return;                                                            // name another resident (with an invite cue) → this 1:1 grows into a 모임 they both join
   const last=_resHistWindow(); _resHistPush('visitor',q);                                     // record the question after snapshotting the prior thread (the worker appends it as the ask)
   const useAI = NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
@@ -5858,6 +5924,7 @@ async function _maybeFarewell(q){ if(!_RES_BYE_CUE.test(String(q||''))) return f
 async function groupSay(q){ const wrap=activeNpc, ms=((wrap&&wrap.live)||[]).filter(m=>m&&m.res); if(!ms.length){ await residentSay(q); return; }
   _guestCdUntil=clock.elapsedTime+NPC_CFG.guestCooldownSec;
   if(await _maybeFarewell(q)) return;                                                            // "잘 가!" → the circle waves you off and gently parts
+  if(_maybeScholarHandoff(q)) return;                                                            // one circle member introduces the right specialist; no resident model call
   if(await _maybeInvite(q)) return;                                                              // "린도 부를까?" → the named resident walks in and joins the circle
 
   const useAI=NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
@@ -6046,6 +6113,8 @@ const PASS_LANDMARKS=[
   {id:'scholar:taxi',     ico:'🧭', key:'lmPolaris'},
   {id:'scholar:msdocs',   ico:'📘', key:'lmVega'},
   {id:'scholar:deepwiki', ico:'🗺️', key:'lmRigel'},
+  {id:'scholar:context7', ico:'📚', key:'lmMira'},
+  {id:'scholar:huggingface', ico:'🤗', key:'lmLyra'},
   {id:'library',          ico:'📚', key:'lmLibrary'},
   {id:'plaza',            ico:'⛲', key:'lmPlaza'},
   {id:'canal',            ico:'🛶', key:'lmCanal'},
@@ -6705,6 +6774,9 @@ function addMsg(who,html,opts){
     opts.alts.forEach(a=>{ const c=document.createElement('span'); c.className='alt'; c.textContent=a.label;
       c.onclick=()=>{ addMsg('me',a.label); replyFor(a,t('soLead')); }; wrap.appendChild(c); });
     m.appendChild(wrap); }
+  if(opts&&opts.handoff){ const kind=typeof opts.handoff==='string'?opts.handoff:opts.handoff.kind, sc=window.scholarByKind&&window.scholarByKind(kind);
+    if(sc){ const h=document.createElement('div'); h.className='ride handoff'; h.textContent=tf('handoffGo',{name:sc.star});
+      h.onclick=()=>startScholarHandoff(kind); m.appendChild(document.createElement('br')); m.appendChild(h); } }
   if(opts&&opts.trace){ m.appendChild(buildTracePanel(opts.trace)); }
   chatLog.appendChild(m); scrollChat();
   if(!(opts&&opts.noHist)){                                          // record real turns; skip "searching…"/typing/greeting chrome
@@ -6713,6 +6785,9 @@ function addMsg(who,html,opts){
   }
   return m;
 }
+function startScholarHandoff(kind){ const n=NPCS.find(x=>x.kind===kind), sc=window.scholarByKind&&window.scholarByKind(kind); if(!n||!sc) return false;
+  closeChat(); setNav({label:sc.star+' · '+(LANG==='ko'?sc.epithetKo:sc.epithetEn),_pos:n.group.position,_scholarHandoff:kind});
+  showWave(tf('handoffNav',{name:sc.star}),3400); trackChatEvent('scholar_handoff_start',{npc:kind}); return true; }
 function showTyping(m){ if(!m) return m; m.classList.add('typing');
   if(!m.querySelector('.tdots')){ const d=document.createElement('span'); d.className='tdots'; d.setAttribute('aria-hidden','true'); d.innerHTML='<i></i><i></i><i></i>'; m.appendChild(d); scrollChat(); }
   return m; }
@@ -7891,6 +7966,13 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__tourNext=()=>{ tourNext(); return window.__tour(); };
   window.__tourEnd=()=>{ endTour(false); return window.__tour(); };
   window.__npcPos=()=>NPCS.map(n=>({kind:n.kind,x:+n.pos.x.toFixed(1),z:+n.pos.z.toFixed(1)}));
+  window.__scholarRoutes=()=>NPCS.filter(n=>n.patrol).map(n=>({kind:n.kind,pos:[+n.group.position.x.toFixed(1),+n.group.position.z.toFixed(1)],index:n.patrol.index,
+    target:n.patrol.points[n.patrol.index]?[+n.patrol.points[n.patrol.index].x.toFixed(1),+n.patrol.points[n.patrol.index].z.toFixed(1)]:null,
+    points:n.patrol.points.map(p=>[+p.x.toFixed(1),+p.z.toFixed(1)]),chatting:activeNpc===n&&!chatEl.classList.contains('hidden'),hidden:document.hidden}));
+  window.__tpScholar=(kind)=>{ const n=NPCS.find(x=>x.kind===kind); if(!n) return null; player.position.set(n.group.position.x+3.6,0,n.group.position.z+3.6);
+    camYaw=Math.atan2(n.group.position.x-player.position.x,n.group.position.z-player.position.z)+Math.PI; camPitch=0.22; camDist=13; return {kind,x:+n.group.position.x.toFixed(1),z:+n.group.position.z.toFixed(1)}; };
+  window.__handoffKind=(q)=>scholarHandoffKind(q);
+  window.__handoffStart=(kind)=>startScholarHandoff(kind);
   window.__talk=(kind)=>{ const n=NPCS.find(x=>x.kind===kind); if(!n) return null; openChat(n); return {active:activeNpc?activeNpc.kind:null, title:chatHeadTtl?chatHeadTtl.textContent:null, modeHidden:modeSel.style.display==='none', ph:chatText.placeholder}; };
   window.__trace=(refs)=>{ const n=NPCS.find(x=>x.kind==='msdocs'); if(n) openChat(n);
     refs=refs||[{name:'Azure AI Search docs',url:'https://learn.microsoft.com/azure/search/'},{name:'evil',url:'javascript:alert(1)'},{name:'no-url ref'}];

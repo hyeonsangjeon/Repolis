@@ -1,29 +1,25 @@
-# 🏛️ Repolis Scholars — Foundry MCP Knowledge Sources
+# 🏛️ Repolis Scholars — MCP Oracles
 
-Every NPC you can talk to in Repolis is a **scholar**: one town character grounded by
-exactly **one public MCP server**. Each MCP is registered as an Azure AI Search
-**Knowledge Source (KS)** and answered through a shared **Knowledge Base (KB)** pipeline —
-GPT answer‑synthesis, multi‑turn memory, and a "how I found this" trace. Walk up to an
-NPC and only *that* NPC's MCP is consulted.
+Every specialist scholar in Repolis is one star, one myth, and exactly **one MCP oracle**.
+POLARIS and VEGA use Azure AI Search Knowledge Sources/Knowledge Bases; RIGEL, MIRA, and
+LYRA call official public MCP servers directly. Both paths return a "how I found this"
+trace. Ordinary residents stay social and deterministic: they introduce the right scholar
+and point the compass there instead of receiving MCP tools themselves.
 
-> **Add a scholar = register one KS + persona KB, add one row here, add one line in the worker map.**
-> This file is the single source of truth. The worker's `npc → { kb, ks }` map
-> (`cloudflare-taxi/src/grounded.js`) and the registration script
-> (`scripts/register_scholar_ks.sh`) mirror this table.
+> **Add a scholar = choose one oracle path, add one roster entry, one Worker adapter/config,
+> one world encounter, and one row here.** This file is the human source of truth.
 
 ---
 
 ## 🗺️ How a scholar answers
 
 ```
-You ─▶ NPC chat ─▶ Cloudflare Worker ─▶ Azure AI Search  Knowledge Base
-                                          │   • answerInstructions = NPC persona
-                                          │   • replies in the user's own language
-                                          │   • outputMode: answerSynthesis
-                                          ├▶ Knowledge Source  (kind: mcpServer)
-                                          │     └▶ public MCP server  (tools/call)
-                                          └▶ Azure OpenAI  gpt-5.4-mini  (synthesis)
-                              ◀────────── grounded answer + trace refs
+You ─▶ scholar chat ─▶ Cloudflare Worker
+                         ├─ POLARIS / VEGA ─▶ Azure AI Search KB ─▶ MCP Knowledge Source
+                         └─ RIGEL / MIRA / LYRA ─▶ official public MCP directly
+                                      │
+                                      ├─ optional Foundry synthesis in the user's language
+                                      └─ grounded answer + trace refs
 ```
 
 **Clone‑friendly.** A fresh clone with no Azure works too: if a scholar's KB is not
@@ -57,21 +53,21 @@ ever spending a Knowledge‑Source call.
 | Scholar | Plays | Domain | MCP server | Auth | Key tool(s) | Knowledge Source | Knowledge Base | Status |
 |---------|-------|--------|------------|------|-------------|------------------|----------------|--------|
 | 🚕 **POLARIS** · the Wayfinder<br><sub>_Hermes · Ursa Minor_</sub> | Taxi driver | The owner's GitHub repos | [GitHub MCP](https://api.githubcopilot.com/mcp/readonly) | `storedHeaders` (PAT, server‑side) | `search_repositories`, `get_file_contents`, `list_commits`, `list_issues` | `github-repos-mcp-ks` | `repolis-github-kb` | ✅ live |
-| 📘 **VEGA** · the Archivist<br><sub>_Daidalos · Lyra_</sub> | MS Docs engineer | Microsoft · Azure · .NET docs | [Microsoft Learn MCP](https://learn.microsoft.com/api/mcp) | keyless (no auth) | `microsoft_docs_search` | `microsoft-learn-mcp-ks` | `repolis-mslearn-kb` | ✅ live |
+| 📘 **VEGA** · the Archivist<br><sub>_Daidalos · Lyra_</sub> | MS Docs engineer | Microsoft · Azure · .NET docs | [Microsoft Learn MCP](https://learn.microsoft.com/api/mcp) | keyless (no auth) | `microsoft_docs_search` | `microsoft-learn-mcp-ks` | `repolis-mslearn-kb` | ✅ plaza |
 | 🗺️ **RIGEL** · the Cartographer<br><sub>_Ariadne · Orion_</sub> | DeepWiki cartographer | Any public repo's inner architecture | [DeepWiki MCP](https://mcp.deepwiki.com/mcp) | keyless (no auth) | `ask_question` | _direct MCP — no KS_ | _direct MCP — no KB_ | ✅ live |
+| 📚 **MIRA** · the Timekeeper<br><sub>_Kairos · Cetus_</sub> | Version librarian | Current library/API docs | [Context7 MCP](https://mcp.context7.com/mcp) | anonymous; optional API key | `resolve-library-id` → `query-docs` | _direct MCP_ | _direct MCP_ | ✅ roaming · Library |
+| 🤗 **LYRA** · the Forgemaster<br><sub>_Orpheus · the Lyre_</sub> | AI material finder | Models · datasets · ML papers | [Hugging Face MCP](https://huggingface.co/mcp) | anonymous; optional token | `hub_repo_search`, `hf_fs` | _direct MCP_ | _direct MCP_ | ✅ roaming · AI |
 
 ---
 
 ## 🔭 Candidate scholars (curated — not yet wired)
 
-Excellent public MCP servers that would make great town scholars. Pick one, register a KS,
-add a row above:
+Excellent public MCP servers that would make great town scholars. Pick one, choose a KB-backed
+or direct path, then add a row above:
 
 | Idea NPC | Domain | MCP server | Auth | Notes |
 |----------|--------|------------|------|-------|
-| 🤗 **AI scholar** | ML models & datasets | [Hugging Face MCP](https://huggingface.co/mcp) | token (some tools) | model / dataset / paper search |
 | ☁️ **Cloud scholar** | AWS service docs | [AWS Knowledge MCP](https://github.com/awslabs/mcp) | keyless | hosted AWS documentation lookup |
-| 📚 **Librarian** | Up‑to‑date library docs | [Context7 MCP](https://mcp.context7.com/mcp) | keyless | version‑accurate API docs |
 
 ---
 
@@ -127,9 +123,9 @@ Each scholar gets its **own** KB so its voice and retrieval rules don't bleed in
 ## ➕ Add a new scholar (5 steps)
 
 1. **Find** a public MCP server and its primary search tool.
-2. **Register** the KS + persona KB in your Azure AI Search:
-   `scripts/register_scholar_ks.sh <name> <serverURL> <searchTool> "<persona>"`
-3. **Map** it in `cloudflare-taxi/src/grounded.js` → `SCHOLARS[npc] = { kb, ks }`.
+2. **Choose the path:** register a KS + persona KB when answer synthesis needs Azure retrieval, or
+   implement a bounded direct adapter when the public MCP already has a useful read-only result.
+3. **Map** it in `cloudflare-taxi/src/grounded.js` → `scholarConfig` and, for direct calls, `MCP_NPCS`.
 4. **Build** the NPC in `index.html` (`NPCS.push({ …, kind:'<npc>' })`) + persona i18n keys.
 5. **Document** — add a row to the *Active scholars* table above. Done. 🎉
 
@@ -139,9 +135,12 @@ Each scholar gets its **own** KB so its voice and retrieval rules don't bleed in
 
 KS/KB definitions hold the GitHub PAT and the KB answer‑synthesis model access
 **server‑side on Azure** — never in this repo or the browser. The Cloudflare Worker
-holds two things: the Azure AI **Search** key (`wrangler secret put SEARCH_API_KEY`)
+holds two required things for the KB/persona path: the Azure AI **Search** key (`wrangler secret put SEARCH_API_KEY`)
 for KB retrieval, and an **Entra ID service‑principal secret** (`AAD_CLIENT_SECRET`)
 that lets it call Azure OpenAI **keyless** for the in‑persona general‑chat fallback —
 no Azure OpenAI api‑key ever lives on the Worker. Real endpoint/key values live in the
 git‑ignored `cloudflare-taxi/SECRETS.local.md`; the full secret list + the one‑line
 `az ad sp create-for-rbac` setup are in [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md).
+
+MIRA and LYRA work anonymously. Optional `CONTEXT7_API_KEY` and `HF_TOKEN` Worker
+secrets only raise third-party quotas; they are never sent to the browser.

@@ -41,7 +41,7 @@ Repositories are grouped into topic districts with roads, signs, hubs, and a wor
 
 ## A village that lives
 
-- **Residents have lives, not idle loops.** Eight townspeople wander their districts, keep daily rhythms, carry changing moods, visit cherished haunts, recognize friends, stroll and sit together, gather around the campfire, and sometimes celebrate a recent repository release.
+- **Residents have lives, not idle loops.** Eight townspeople wander their districts, keep daily rhythms, carry changing moods, visit cherished haunts, recognize friends, stroll and sit together, gather around the campfire, and sometimes celebrate a recent repository release. Ask a specialist question and they introduce the right scholar instead of pretending to know: follow the compass and find that scholar in the world.
 - **Exploration has continuity.** The Explorer Passport records houses and landmarks, district progress shows what remains, and the daily **Village Chronicle** connects one resident to their cherished haunt and a truthful related repo or district.
 - **Repositories form relationships.** The Stargazer's Observatory finds a truthful three-repo connection from shared topics or languages and draws it as a nighttime Constellation Trail.
 - **Landmarks carry the project story.** The Contribution Library archives papers, talks, open-source work, and awards; Chronopolis hosts the Council of Time; the canal, plaza, observatory, park, and fairground make the city worth walking.
@@ -54,9 +54,11 @@ Repositories are grouped into topic districts with roads, signs, hubs, and a wor
 | **Gitber · POLARIS** | “Take me to an AI agent repo” or “most cloned” | local indexed search by default, then drives to the selected house |
 | **VEGA · Archivist** | Azure, .NET, Copilot, Microsoft products | grounded Microsoft Learn search with references |
 | **RIGEL · Cartographer** | how a public repository works | grounded DeepWiki exploration |
+| **MIRA · Timekeeper** | current library APIs and version-specific examples | direct Context7 lookup; roams the Library district |
+| **LYRA · Forgemaster** | public models, datasets, and ML papers | direct Hugging Face search; roams the AI district |
 | **Council of Time** | a technical trade-off or disputed claim | deterministic curated verdicts, plus optional live debate clearly marked unverified |
 
-The town works without a backend. **Local** search is instant and keyless; **WebLLM** is optional in-browser inference; the live demo adds grounded answers through a Cloudflare Worker. Missing services degrade to Local search or solo play.
+The town works without a backend. **Local** search is instant and keyless; **WebLLM** is optional in-browser inference; the live demo adds grounded answers and official public MCP lookups through a Cloudflare Worker. Missing services degrade to Local search or solo play.
 
 ## Run in 60 seconds
 

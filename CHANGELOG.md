@@ -6,6 +6,30 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.80.0] — 2026-07-16
+
+### 🧭 Residents introduce roaming MCP scholars — find expertise by walking the town
+
+- **Residents now know who knows.** Clear Microsoft, repo-internals, library/version, and
+  model/dataset/paper questions are handed to VEGA, RIGEL, MIRA, or LYRA before resident AI runs. The
+  handoff action closes the resident conversation and points the existing compass at the specialist's live
+  position; it never auto-opens chat or summons the taxi.
+- **MIRA · the Timekeeper joins through Context7.** She resolves a library and then reads current,
+  version-specific docs through the official anonymous Context7 MCP, with an optional Worker API key only
+  for higher quotas. She patrols a collision-safe loop in the Documentation/Library district.
+- **LYRA · the Forgemaster joins through Hugging Face.** She searches public models and datasets with
+  `hub_repo_search` and ML papers through anonymous `hf_fs`, preserving Hub and paper links. Korean search
+  terms receive deterministic English keyword normalization. She patrols the AI Research district.
+- **Search is not an exit anymore.** Both specialists move instead of waiting in the plaza, pause when a
+  visitor approaches or starts chatting, and resume afterward. Their live Three.js positions drive the
+  compass, speech bubbles, debug routes, and new Explorer Passport stamps.
+- **Grounding remains bounded and honest.** Direct MCP output is treated as untrusted evidence. Existing
+  Foundry synthesis may summarize it in the visitor's language but cannot follow retrieved instructions or
+  invent unsupported claims; a no-secret clone receives a compact direct result instead.
+- **Regression surface expanded.** Hermetic guards lock official endpoints/tools, optional-secret behavior,
+  collision clearance, LOW_END patrols, deterministic routing, no-taxi handoff UX, bilingual copy, and
+  debug hooks.
+
 ## [1.79.1] — 2026-07-16
 
 ### 📘 Fix: VEGA and the scholars answer again
