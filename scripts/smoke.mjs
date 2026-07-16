@@ -222,7 +222,7 @@ if (zcSrc && normSrc) {
   }
 }
 
-/* ── 10) World Loop Integration v1: passport district progress · district-aware course ──
+/* ── 10) World Loop Integration: passport district progress · Village Chronicle ──
  *    repo-card actions/questions · deterministic zoneWhy · station-vs-district naming · debug hooks.
  *    All wired to REUSE the existing passport/course/taxi flow — no new localStorage key, no new backend. */
 group('passport + course + card district loop (World Loop Integration v1)');
@@ -232,11 +232,33 @@ ok(/function districtProgress\(\)\{[\s\S]*?passport\.repos/.test(HTML), 'distric
 ok(/id=["']pDistricts["']/.test(HTML), 'passport #pDistricts progress DOM present');
 ok(/function renderPassport\(\)[\s\S]*?renderDistrictProgress\(\)/.test(HTML), 'renderPassport() renders district progress');
 ok(/passportDistricts:\s*['"]/.test(HTML) && (HTML.match(/passportDistricts:\s*['"]/g) || []).length >= 2, 'passportDistricts i18n present in ko + en');
-// 10b — Today's Course is district-aware, with a safe version gate
-ok(/const COURSE_V\s*=\s*2\b/.test(HTML), 'COURSE_V version gate exists');
-ok(/function buildCourse\(\)\{[\s\S]*?ZONES[\s\S]*?zone:\s*o\.z\.id/.test(HTML), 'buildCourse crosses ZONES districts (carries zone id on repo stops)');
-ok(/function getCourse\(\)\{[\s\S]*?c\.v===COURSE_V/.test(HTML), 'getCourse gates on course version (safe migration/rebuild)');
+// 10b — Village Chronicle is town/day deterministic, sequential, and reuses course state + navigation
+const chronicleBlock = (HTML.match(/Village Chronicle — resident[\s\S]*?Guided onboarding tour/) || [''])[0];
+ok(chronicleBlock.length > 0, 'Village Chronicle block is extractable');
+ok(/const COURSE_V\s*=\s*3\b/.test(chronicleBlock), 'COURSE_V v3 safely rebuilds older Today\'s Course payloads');
+ok(/function _courseTownKey\(\)\{[\s\S]*?currentUser[\s\S]*?REPOS\.map[\s\S]*?sort\(\)\.join/.test(chronicleBlock), 'course cache is scoped by town login + sorted repository catalog');
+ok(/_seedFrom\('chronicle:'\+town\+':'\+date\)/.test(chronicleBlock), 'the daily story seed includes both town and local date');
+ok(/const unavailable=\(\)=>\(\{date,town,v:COURSE_V,items:\[\],completed:\[\],rewarded:false,available:false\}\)/.test(chronicleBlock), 'empty/suppressed towns produce one stable unavailable payload');
+ok(/if\(!REPOS\.length\) return unavailable\(\)/.test(chronicleBlock), 'a zero-repo public town never tries to build a partial Chronicle');
+ok(/c\.available===true&&c\.items\.length===3/.test(chronicleBlock) && /c\.available===false&&c\.items\.length===0/.test(chronicleBlock), 'cached story accepts exactly three available scenes or a zero-scene unavailable state');
+ok(/c\.date===date&&c\.town===town&&c\.v===COURSE_V&&Array\.isArray\(c\.completed\)/.test(chronicleBlock), 'cached story validates town, date, schema, and completion state');
+ok(/items\.push\(\{type:'resident'[\s\S]*?items\.push\(\{type:'haunt'[\s\S]*?type:'repo'[\s\S]*?type:'zone'/.test(chronicleBlock), 'buildCourse creates resident → haunt → truthful repo/district scenes');
+ok(/function _chronicleRepo\(z,res\)\{[\s\S]*?res\.topics[\s\S]*?text\.includes/.test(chronicleBlock), 'a resident-zone repo is selected from real metadata topic overlap');
+ok(/items\.length===3\?\{date,town,v:COURSE_V,items,completed:\[\],rewarded:false,available:true\}:unavailable\(\)/.test(chronicleBlock), 'progress stays in the existing repolisCourse payload (no new storage key)');
+ok(/for\(let i=0;i<idx;i\+\+\) if\(!courseItemDone\(c\.items\[i\]\)\) return false/.test(chronicleBlock), 'courseMark enforces narrative scene order');
+ok(/function courseDestOf\(it\)\{[\s\S]*?_residentLive\(it\.id\)[\s\S]*?_resFavSpot\(L\)[\s\S]*?zoneDest\(z\)/.test(chronicleBlock), 'resident, cherished-haunt, and district destinations reuse live town systems');
+ok(/function courseProximityTick\(\)\{[\s\S]*?it\.type!=='haunt'&&it\.type!=='zone'[\s\S]*?courseMark\(it\.type,it\.id\)/.test(chronicleBlock), 'walking to a haunt or district hub advances the current scene');
+ok(/function courseProximityTick\(\)\{ if\(!course\|\|!course\.available\|\|ride\) return/.test(chronicleBlock), 'unavailable towns never enter the per-frame Chronicle progression path');
+ok(/if\(!c\.available\|\|!c\.items\.length\)\{ box\.style\.display='none'; return; \}/.test(HTML), 'unavailable Chronicle UI stays hidden');
+ok(/const c=getCourse\(\); if\(c\.available\) setTimeout/.test(HTML), 'the intro only announces a Chronicle that can actually run');
+ok(!/fetch\(|groundedAsk|webllmAsk|proxyAsk|await /.test(chronicleBlock), 'Village Chronicle is deterministic and client-only (no AI/network)');
 ok(/zoneIconById\(it\.zone\)/.test(HTML), 'renderCourse shows the district icon for repo stops');
+ok(/class="courseItem\$\{done\?' done':''\}\$\{locked\?' locked':''\}"/.test(HTML), 'future scenes render locked until the current scene is complete');
+ok(/#passport\s*\{[^}]*max-height:\s*calc\(100vh - 88px\);[^}]*overflow-y:\s*auto/.test(HTML), 'the taller Chronicle stays scrollable inside the mobile viewport');
+ok((HTML.match(/chronicleSub:\s*['"]/g) || []).length >= 2 && (HTML.match(/chronicleMeet:\s*['"]/g) || []).length >= 2, 'Village Chronicle copy is present in Korean + English');
+ok(/courseMark\('repo',repo\.repo\)/.test(HTML) && /courseMark\('resident',nearResident\.id\)/.test(HTML), 'opening the target repo or meeting the target resident advances the story');
+ok(/_courseHaunt[\s\S]*?courseMark\('haunt'/.test(HTML) && /_courseZone[\s\S]*?courseMark\('zone'/.test(HTML), 'Gitber arrival advances haunt and district scenes');
+ok(/window\.__chronicle=window\.__course/.test(HTML) && /window\.__chronicleStep=/.test(HTML), 'debug hooks expose and advance the Village Chronicle');
 // 10c — repo-card actions + suggested questions, wired into the existing chat flow
 ok(/id=["']cardAsk["']/.test(HTML), 'repo card #cardAsk section DOM present');
 ok(/function renderCardAsk\(repo\)/.test(HTML), 'renderCardAsk() builds the card actions');
@@ -312,7 +334,7 @@ ok(/\{ id:'noa', zone:'plaza'/.test(npcBlock), 'the plaza dreamer Noa is in the 
 ok(/RESIDENTS\.slice\(0,MAX_RESIDENTS\)/.test(npcBlock), 'placement is clamped to the max-resident cap');
 // 12b — prompt priority: residents sit BELOW buildings + hubs (no repo-door / district-board hijack)
 ok(/nearResident=null; if\(!nearest && !nearHub\)\{/.test(HTML), 'nearResident is detected only when no building AND no hub is in reach');
-ok(/openZoneBoard\(nearHub\.id\); else if\(nearResident\)\{ const _g=_groupNear\(nearResident\)/.test(HTML), 'doAct() checks nearResident AFTER nearHub (buildings + hubs win)');
+ok(/openZoneBoard\(nearHub\.id\); else if\(nearResident\)\{ const met=courseMark\('resident',nearResident\.id\), _g=_groupNear\(nearResident\)/.test(HTML), 'doAct() checks nearResident AFTER nearHub and records a Chronicle meeting');
 ok(/else if\(nearResident&&!modalOpen\)\{ const _g=_groupNear\(nearResident\); promptEl\.innerHTML=_g\?_groupPromptHtml\(_g\):residentPromptHtml/.test(HTML), 'resident prompt is emitted after the hub prompt branch');
 ok(/const RES_REACH=3\.4/.test(npcBlock), 'residents use a small walk-up reach (3.4)');
 // 12b-2 — living town: residents wander around home and walk toward one another before talking (not static statues)
@@ -446,6 +468,12 @@ ok(/if\(document\.hidden\)\{ if\(_ambConv\) _endAmb\('hidden'\); return; \}/.tes
 // 18 — the visitor can JOIN a gathering: walk up to a circle (or cluster) and the whole group chats back, round-robin
 group('resident player group chat (visitor joins a gathering)');
 ok(/let activeGroupMembers=null/.test(npcBlock), 'a module-level activeGroupMembers holds the residents in a player-facing circle');
+const groupGuardSrc=(npcBlock.match(/function _isGroupChat\(n\)\{[^}]+\}/)||[''])[0];
+ok(!!groupGuardSrc, 'resident circles have an explicit chatGroup type guard');
+if(groupGuardSrc){
+  const isGroupChat=new Function(`${groupGuardSrc}; return _isGroupChat;`)();
+  ok(isGroupChat({resident:true,chatGroup:true}) && !isGroupChat({kind:'msdocs',group:{isObject3D:true}}), 'a Three.js scholar group can never be mistaken for a resident chat circle');
+}
 ok(/joinR:\(LOW_END\?7:9\)/.test(npcBlock), 'RES_MOVE carries a joinR walk-up radius (smaller than groupR) so a circle only forms when folk are genuinely clustered');
 ok(/function _groupNear\(npc\)\{[\s\S]*?_ambConv\.members\.indexOf\(seed\)>=0/.test(npcBlock), '_groupNear joins an existing circle if the seed is mid-conversation, else gathers the nearby cluster');
 ok(/function openGroupChat\(members\)\{[\s\S]*?_endAmb\('player-joined'\)/.test(npcBlock), "opening a group chat ends the residents' auto-conversation so they turn to the visitor");
@@ -456,9 +484,11 @@ ok(/const chatBound=_resChatActive\(\)&&activeNpc&&\(activeNpc\.res===L\.res \|\
 ok(/pd<6\.5\)\?player\.position/.test(npcBlock), 'residents in a circle turn to face the visitor who steps right up (pd<6.5)');
 ok(/if\(_ambConv!==C\)\{ C\.pending=false; return; \}/.test(npcBlock), "a stale in-flight ambient turn can't paint a bubble after the visitor joins (done() guards on _ambConv)");
 ok(/function _releaseGroup\(\)\{/.test(npcBlock) && /_releaseGroup\(\);/.test(HTML), 'closing/ switching the chat releases the circle (members rest a beat, then town life resumes)');
-ok(/if\(n&&n\.group\) return groupGreet\(n\)/.test(HTML) && /if\(n&&n\.group\)\{/.test(HTML), 'the chat panel has a group branch for greeting + chrome (names header, no mode selector)');
-ok(/if\(activeNpc&&activeNpc\.group\)\{ await groupSay\(q\)/.test(HTML), 'sendChat routes to groupSay when a gathering is active (before the 1:1 resident + taxi paths)');
-ok(/const _g=_groupNear\(nearResident\); if\(_g\) openGroupChat\(_g\); else openChat\(nearResident\)/.test(HTML), 'pressing Enter/💬 by a cluster opens the group chat, else falls back to a 1:1');
+ok(/if\(_isGroupChat\(n\)\) return groupGreet\(n\)/.test(HTML) && /if\(_isGroupChat\(n\)\)\{/.test(HTML), 'the chat panel uses the strict resident-circle guard for greeting + chrome');
+ok(/if\(_isGroupChat\(activeNpc\)\)\{ await groupSay\(q\)/.test(HTML), 'sendChat routes only a real resident circle to groupSay');
+ok(/else \{ await askDriver\(q\); \}/.test(HTML) && /if\(activeNpc&&activeNpc\.kind!=='taxi'\) return askScholar\(q, activeNpc\.kind\)/.test(HTML), 'VEGA/RIGEL bypass resident groupSay and route through askScholar');
+ok(/_g=_groupNear\(nearResident\);[\s\S]{0,260}?if\(_g\) openGroupChat\(_g\); else openChat\(nearResident\)/.test(HTML), 'pressing Enter/💬 by a cluster opens the group chat, else falls back to a 1:1');
+ok(/function openGroupChat\(members\)\{[\s\S]*?members\.some\(m=>m\.res\.id===story\.id\)[\s\S]*?courseMark\('resident',story\.id\)/.test(npcBlock), 'joining a circle that contains today\'s resident also counts as meeting them');
 ok(/promptEl\.innerHTML=_g\?_groupPromptHtml\(_g\):residentPromptHtml\(nearResident\)/.test(HTML), 'the walk-up prompt shows "join in / 대화에 끼기" for a cluster');
 ok(/window\.__joinGroup=/.test(HTML) && /window\.__groupChat=/.test(HTML), '?dbg __joinGroup/__groupChat hooks force + inspect a player group chat');
 
@@ -478,7 +508,7 @@ ok(/npcPlayerPrompt\(body\.speaker, ?lang, ?\{[\s\S]*?chime:[\s\S]*?prev:/.test(
 group('resident invite-to-group (name a resident mid-chat → they walk over and join)');
 ok(/const _RES_INV_CUE=\/\(부르\|부를\|불러\|초대/.test(npcBlock) && /function _resNamedIn\(q, ?excludeIds\)/.test(npcBlock), 'name+cue detection: an invite/talk CUE plus a resident name (KO name + person particle, or EN word) is required to summon anyone');
 ok(/function _inviteTarget\(q\)\{ if\(!_RES_INV_CUE\.test\(String\(q\|\|''\)\)\) return null/.test(npcBlock), 'a bare name mention without an invite cue never triggers an invite (avoids false positives like a passing name)');
-ok(/function _inviteResident\(res\)\{/.test(npcBlock) && /wrap\.live\.push\(L\); wrap\.members\.push\(res\)/.test(npcBlock) && /wrap\.group=true; wrap\.id='group'; wrap\.kind='resident'; wrap\.live=\[curL,L\]/.test(npcBlock), '_inviteResident adds to an open circle, or upgrades a 1:1 into a 모임 in place (preserving the open log + shared thread)');
+ok(/function _inviteResident\(res\)\{/.test(npcBlock) && /wrap\.live\.push\(L\); wrap\.members\.push\(res\)/.test(npcBlock) && /wrap\.chatGroup=true; wrap\.id='group'; wrap\.kind='resident'; wrap\.live=\[curL,L\]/.test(npcBlock), '_inviteResident adds to an open circle, or upgrades a 1:1 into a 모임 in place (preserving the open log + shared thread)');
 ok(/async function _maybeInvite\(q\)\{/.test(npcBlock) && /const cap=Math\.max\(2, ?Math\.min\(NPC_CFG\.maxGroup, ?RESIDENTS_LIVE\.length\)\)/.test(npcBlock), '_maybeInvite caps the circle at NPC_CFG.maxGroup — a full circle says so instead of overflowing');
 ok(/async function groupSay\(q\)\{[\s\S]*?if\(await _maybeInvite\(q\)\) return;/.test(npcBlock) && /async function residentSay\(q\)\{[\s\S]*?if\(await _maybeInvite\(q\)\) return;/.test(npcBlock), 'both groupSay and residentSay check for an invite first, so naming a resident routes to the join flow');
 ok(/if\(chatBound && L\._joinWalk && !hidden && NPC_CFG\.motionEnabled\)\{[\s\S]*?_resWalk\(L,L\._joinWalk\.x,L\._joinWalk\.z,RES_MOVE\.meetSpd,dt\)/.test(npcBlock), 'an invited resident actually walks into the circle (chatBound + _joinWalk branch) instead of freezing in place');
@@ -529,7 +559,7 @@ group('graceful goodbyes — the circle waves you off, and no gathering is a tra
 ok(/const _RES_BYE_CUE=\/\(잘\\s\*가/.test(npcBlock) && /function _farewellLine\(res\)/.test(npcBlock), 'a farewell detector + warm goodbye bank back the "say bye and they wave you off" flow');
 ok(/async function _maybeFarewell\(q\)\{ if\(!_RES_BYE_CUE\.test/.test(npcBlock) && /setTimeout\(\(\)=>\{ try\{ closeChat\(\); \}catch\(e\)\{\} \}, ?1500\)/.test(npcBlock), 'a goodbye makes the circle say farewell + wave, then the chat gently closes (closeChat releases the group)');
 ok(/async function groupSay\(q\)\{[\s\S]*?if\(await _maybeFarewell\(q\)\) return;/.test(npcBlock) && /async function residentSay\(q\)\{[\s\S]*?if\(await _maybeFarewell\(q\)\) return;/.test(npcBlock), 'both groupSay and residentSay honour a goodbye before anything else');
-ok(/function _residentLeave\(L\)\{ const wrap=activeNpc; if\(!wrap\|\|!wrap\.group\|\|!activeGroupMembers\|\|activeGroupMembers\.length<=2/.test(npcBlock), '_residentLeave never shrinks a circle below 2, and hands the lead on if the primary leaves');
+ok(/function _residentLeave\(L\)\{ const wrap=activeNpc; if\(!_isGroupChat\(wrap\)\|\|!activeGroupMembers\|\|activeGroupMembers\.length<=2/.test(npcBlock), '_residentLeave never shrinks a circle below 2, and hands the lead on if the primary leaves');
 ok(/if\(ms\.length>2 && \(wrap\.gi\|\|0\)>=3 && activeGroupMembers && activeGroupMembers\.length>2 && Math\.random\(\)<0\.22\)/.test(npcBlock) && /_residentLeave\(leaver\)/.test(npcBlock), 'after a few turns in a 3+ circle, a non-primary resident may excuse themselves and wander off');
 ok(/L\._gt=2\.6; L\._rt=null; L\._rp=clock\.elapsedTime;/.test(npcBlock), 'a leaving resident waves, then (no longer chatBound) resumes wandering on their own');
 ok(/window\.__farewell=\(q\)=>/.test(HTML) && /window\.__byeMatch=\(q\)=>/.test(HTML) && /window\.__leaveGroup=\(id\)=>/.test(HTML), '?dbg __farewell/__byeMatch/__leaveGroup drive + introspect the goodbye and member-leave flows');
@@ -546,7 +576,8 @@ ok(/window\.__festival=\(repo\)=>/.test(HTML) && /window\.__festState=\(\)=>/.te
 
 group('every resident has a cherished haunt (아지트) they visit and love');
 ok(/const _RES_FAV=\{ sol:\{ko:'볕 잘 드는 실험 자리'/.test(npcBlock) && /noa:\{ko:'별이 잘 보이는 모닥불 곁'/.test(npcBlock), 'each of the eight residents has a persona-fitting favourite place');
-ok(/function _resFavSpot\(L\)\{ if\(L\._fav\) return L\._fav;/.test(npcBlock) && /if\(L\.res\.id==='noa' && typeof HEARTH!=='undefined' && HEARTH\)/.test(npcBlock), '_resFavSpot resolves a stable, cached haunt (noa\'s is the campfire; others get a distinctive in-zone spot)');
+ok(/function _resFavPhase\(res\)\{[\s\S]*?res&&res\.id/.test(npcBlock) && /function _resFavSpot\(L\)\{ if\(L\._fav\) return L\._fav;/.test(npcBlock) && /_resFavPhase\(L\.res\)/.test(npcBlock), '_resFavSpot resolves a reload-stable deterministic haunt phase');
+ok(/if\(L\.res\.id==='noa' && typeof HEARTH!=='undefined' && HEARTH\)/.test(npcBlock), 'Noa\'s cherished haunt remains the campfire');
 ok(/function _resFavLine\(L\)\{ const f=L\._fav, ?d=f\?\(LANG==='ko'\?f\.ko:f\.en\):''/.test(npcBlock), '_resFavLine speaks fondly of that spot, weaving in its descriptor');
 ok(/if\(tt>=\(L\._favCd\|\|0\) && Math\.random\(\)<0\.3\)\{ const f=_resFavSpot\(L\);/.test(npcBlock) && /L\._toFav=true; L\._favCd=tt\+42\+Math\.random\(\)\*44;/.test(npcBlock), 'now and then (cooldown-gated) a wandering resident heads for their haunt instead of a random waypoint');
 ok(/if\(L\._toFav\)\{ L\._toFav=false; L\._rp=tt\+RES_MOVE\.pauseMin\*1\.8\+Math\.random\(\)\*4;/.test(npcBlock) && /_resFavLine\(L\)/.test(npcBlock), 'on arrival they linger longer at the haunt and let an occasional fond word slip (hushed when the visitor is right there)');

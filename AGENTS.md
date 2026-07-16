@@ -1,11 +1,11 @@
 # AGENTS.md — operating manual for AI agents working on Repolis
 
 > **You are an AI agent. Read this once and you can run, change, verify, and ship Repolis correctly.**
-> Repolis is a **single-file 3D "city of repos"** web app. Humans get [`README.md`](README.md);
+> Repolis is a **zero-build static 3D "city of repos"** web app. Humans get [`README.md`](README.md);
 > this file is the machine-readable contract. If something here disagrees with a comment in code, trust this file and flag it.
 
 - **Live:** https://hyeonsangjeon.github.io/Repolis/
-- **What it is:** one `index.html` (Three.js, ~5.2k lines) renders every GitHub repo of the owner as a walkable 3D town; an LLM "taxi" + star-named scholar NPCs answer questions and drive you to a repo.
+- **What it is:** `index.html` is the primary Three.js runtime for a walkable town built from public GitHub repos; local modules and generated assets provide the World Tree, scholars, Council, and data. Gitber + star-named scholar NPCs answer questions and guide visitors through it.
 - **Owner / required git identity:** `Hyeon Sang Jeon <wingnut0310@gmail.com>` · GitHub `hyeonsangjeon`
 - **License:** MIT
 
@@ -20,7 +20,7 @@ python3 -m http.server 8000          # any static server works (npx serve . etc.
 ```
 
 There is **no build step, no bundler, no `package.json`, no `npm install`.** The page boots from a
-CDN import map (Three.js r0.160 via jsDelivr) and three local data/script files. Open the file, it runs.
+CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modules served as static files.
 
 ---
 
@@ -28,10 +28,12 @@ CDN import map (Three.js r0.160 via jsDelivr) and three local data/script files.
 
 | Path | What it is | Touch it when… |
 |---|---|---|
-| **`index.html`** | The entire app — 3D engine, UI, taxi, scholars, i18n, day/night. ~5.2k lines, zero deps bundled. | Any UI / gameplay / client behavior change. |
-| **`repos.json`** | Generated data — array of 62 repo objects that build the city. **Do not hand-edit.** | Never directly; regenerate (see below). |
+| **`index.html`** | Primary app runtime — 3D engine, UI, navigation, residents, exploration, i18n, day/night. | Any UI / gameplay / client behavior change. |
+| **`repos.json`** | Generated array of repo objects that build the current owner city. **Do not hand-edit.** | Never directly; regenerate (see below). |
 | **`scholars.js`** | `window.SCHOLARS` roster (classic script, no build): POLARIS · VEGA · RIGEL. | Adding / editing an NPC scholar. |
+| **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
 | **`scripts/build_repos.py`** | Rebuilds `repos.json` from `data/logs/*` traffic + `gh api`. | Refreshing the city data locally. |
+| **`scripts/smoke.mjs`** | Hermetic static and behavioral regression guards for the city runtime. | Any client feature, navigation, or generated-module integration change. |
 | **`.github/workflows/refresh.yml`** | "Refresh Repolis data" — daily Action that regenerates `repos.json` and pushes `chore: refresh`. | CI / data-refresh changes. |
 | **`scripts/build-contribution-library.mjs` + `assets/contribution-library.json`** | Generates the in-app **Contribution Library** JSON from the sibling `Hyeonsang-AI-Contributions` README (KO/EN); `index.html` fetches it at runtime. JSON is **generated — do not hand-edit.** Daily via `.github/workflows/update-contribution-library.yml`. | Changing the library landmark's data/source. |
 | **`cloudflare-taxi/`** | **The live AI backend** — Worker `repolis-taxi` (`src/grounded.js`): grounded repo/docs Q&A + in-persona chat. | Grounding / scholar answer logic. |
@@ -39,7 +41,7 @@ CDN import map (Three.js r0.160 via jsDelivr) and three local data/script files.
 | **`party/` + `partykit.json`** | PartyKit realtime server (alternative to `cloudflare/`). | Forks that prefer PartyKit. |
 | **`api/taxi.js`, `api/taxi-grounded.js`** | **Optional** Vercel functions — fork-only alternatives to the Worker. | Only if maintaining the Vercel path. |
 | **`council/`** | Kronos Council deterministic decision engine + hermetic tests. | The debate/verdict feature. |
-| **`docs/`** | Agent-facing specs: [`domain-model.md`](docs/domain-model.md), [`known-limitations.md`](docs/known-limitations.md). | Understanding the data/feature model. |
+| **`docs/`** | Agent-facing specs, known limitations, and archived release history. | Understanding the data/feature model or historical context. |
 | **`examples/`** | Copy-paste recipes (curl the worker, share links, embed). | Learning the public surface fast. |
 | **`README.md` / `README.ko.md`** | Human docs (EN / KO). | User-facing narrative. |
 | **`SCHOLARS.md`** | Human roster of the scholar NPCs. | Documenting a new scholar. |
@@ -96,9 +98,9 @@ Worker secrets live in Cloudflare (set via `npx wrangler secret put …`) and lo
 zero LLM, zero cost — so run them freely:
 
 ```bash
-node council/test.mjs        # deterministic council crosscheck   → "ALL GREEN — 130 checks passed"
-node council/test-live.mjs   # live guards + state machine         → "56 passed, 0 failed"
-node scripts/smoke.mjs       # index.html static regression guards  → "ALL GREEN" (viewport / CTA / key-stuck / library / module syntax)
+node council/test.mjs        # deterministic Council crosscheck
+node council/test-live.mjs   # live guards + state machine
+node scripts/smoke.mjs       # city/runtime static + behavioral regression guards
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js
 ```
@@ -114,11 +116,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 
 ## 🚫 Hard rules — do not break these
 
-1. **Git identity.** Author every commit as `Hyeon Sang Jeon <wingnut0310@gmail.com>` (GitHub `hyeonsangjeon`)
-   and append the trailer:
-   ```
-   Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
-   ```
+1. **Git identity.** Author every commit as `Hyeon Sang Jeon <wingnut0310@gmail.com>` (GitHub `hyeonsangjeon`).
 2. **Rebase before pushing `main`.** A daily Action (`refresh.yml`) pushes `chore: refresh` to `main`.
    Always `git fetch origin && git rebase origin/main` before `git push`, or you'll be rejected.
 3. **Tests green before deploy.** Run the verify block above. A red council test blocks the deploy — no exceptions.
@@ -128,8 +126,8 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
    never get exposed. Do not add private infrastructure, analytics, or dashboards to public docs/code.
 6. **`repos.json` is generated.** Change the data by editing `scripts/build_repos.py` and regenerating,
    not by hand-editing the JSON.
-7. **No new heavy deps / build step.** The "single static `index.html`, zero build" property is a feature.
-   Don't introduce a bundler or `node_modules` runtime requirement for the site.
+7. **No new heavy deps / build step.** The zero-build static runtime is a feature. Don't introduce a
+   bundler or `node_modules` runtime requirement for the site.
 
 ---
 
@@ -138,6 +136,8 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | You want to… | Start here |
 |---|---|
 | Change how a repo becomes a building (height/size/ornaments) | `index.html` (city-build section) + score/rank in `scripts/build_repos.py`; model in [`docs/domain-model.md`](docs/domain-model.md). |
+| Change districts, Village Chronicle, passport, or exploration loops | `index.html` + the matching behavioral groups in `scripts/smoke.mjs`. |
+| Change resident routines, moods, friendships, or haunts | The resident social layer in `index.html`; preserve visitor/chat/festival/hidden-tab ownership guards. |
 | Fix / improve a scholar's answer or references | `cloudflare-taxi/src/grounded.js` (server) + the trace panel in `index.html`. |
 | Add a new scholar NPC | `scholars.js` (data) + the `npc → {kb, ks}` map in `cloudflare-taxi/src/grounded.js`; document in `SCHOLARS.md`. |
 | Tune the taxi's repo search/intent routing | `index.html` (Local search: inverted index + intent agent). |
@@ -150,8 +150,8 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 ## 🧩 One-paragraph mental model
 
 A daily Action turns the owner's **public repos + committed traffic logs** into `repos.json`. `index.html`
-reads that array and procedurally builds a 3D town (metrics → architecture: visitors→height, forks→width,
-clones→ornament, views→garden, stars→roof stars, recent activity→night-window glow). Visitors walk it in a
-WoW-style camera; an LLM **taxi** (POLARIS) and **scholars** (VEGA · MS Learn, RIGEL · DeepWiki) answer in
-natural language — grounded via the `repolis-taxi` Cloudflare Worker (Azure AI Search KB + MCP), or in-persona
-"starlit" chat when off-topic, always with a trace panel. Everything degrades gracefully to keyless Local mode.
+turns that array into metric-shaped buildings, topic districts, routes, maps, and exploration progress.
+Residents add moods, routines, friendships, haunts, gatherings, and festivals; landmarks include the
+Contribution Library, Chronopolis, Observatory, and imported procedural World Tree. Gitber/POLARIS and the
+scholars (VEGA · MS Learn, RIGEL · DeepWiki) add natural-language navigation and grounded answers. Everything
+degrades gracefully to keyless Local search and solo play.

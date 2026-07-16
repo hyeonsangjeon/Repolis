@@ -12,6 +12,9 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 |---|---|---|
 | **Repo** | one object in `repos.json` | The unit of the world — becomes one house. |
 | **City / Town** | derived in `index.html` at load | The whole 3D scene built from the `repos.json` array. |
+| **District** | deterministic `zoneOf(repo)` result | A topic-shaped neighborhood with a hub, board, map destination, and progress. |
+| **Resident** | resident roster in `index.html` | A district-local townsperson with mood, routine, relationships, and a cherished haunt. |
+| **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, and constellation completion. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
 | **Taxi** | the POLARIS scholar (`kind: taxi`) | Finds a repo and physically drives you there. |
 | **Grounding Worker** | `cloudflare-taxi/` (`repolis-taxi`) | Server brain: KB retrieval + in-persona chat. |
@@ -64,11 +67,10 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | ⭐ stars | **gold-star** roof ornaments |
 | 🌙 recent push · clones · views | **window glow** at night |
 
-`score` / `rank` are computed in `scripts/build_repos.py` from these signals. Rank then chooses:
-
-- **District** — top ranks rise as **Downtown** towers; the rest are **Hometown** cottages on ring roads.
-- **House tier** — by rank a repo is `cabin → cottage → house → villa → manor → portico mansion`,
-  adding wings, columns, porticos, dormers, balconies and cupolas as it climbs.
+`score` / `rank` are computed in `scripts/build_repos.py` from these signals. Rank chooses the house tier
+(`cabin → cottage → house → villa → manor → portico mansion`), while the client-side deterministic
+`zoneOf(repo)` classifier chooses a topic district from repository name, description, topics, and language.
+Every active district receives a map region, walkable hub, board, and representative repositories.
 
 Counts are **cumulative since move-in day** (`first_seen`/`tracked`), because GitHub's traffic API only
 keeps a rolling 14-day window — a daily collector accumulates the lifetime totals offline.
@@ -135,7 +137,7 @@ Three modes: **Local** (default, keyless, instant) · **WebLLM** (on-device WebG
 
 | Mode | URL | Behavior |
 |---|---|---|
-| **Owner town** | bare URL | The owner's 62 repos, byte-identical every load. The taxi + scholars are fully live. |
+| **Owner town** | bare URL | The generated owner snapshot from `repos.json`. The taxi + scholars are fully live. |
 | **Public town** | `?user=<login>` | Rebuilds the town from any public GitHub user's repos (cached in `localStorage`, stale-fallback). Cross-town taxi driving is disabled; a "go home" button returns to the owner city. |
 
 Public mode only activates for a **valid, non-owner** username; the bare URL always loads the owner city unchanged.
@@ -148,5 +150,20 @@ Public mode only activates for a **valid, non-owner** username; the bare URL alw
 three peer sages (Olddoc · Livewire · Hearsay) argue, and the Chair **KRONOS** weighs claims by
 `source × recency` for a **deterministic** verdict. Curated cases keep a math verdict; free-topic verdicts
 are AI inference and wear a `⚡ unverified` badge. Its determinism is locked by
-`node council/test.mjs` (130 checks) + `node council/test-live.mjs` (56 checks) — see
-[`COUNCIL_PATTERN.md`](../COUNCIL_PATTERN.md).
+`node council/test.mjs` + `node council/test-live.mjs` — see [`COUNCIL_PATTERN.md`](../COUNCIL_PATTERN.md).
+
+---
+
+## 8. Village Chronicle
+
+The daily Village Chronicle is a deterministic three-scene exploration loop stored in the existing
+`repolisCourse` payload:
+
+1. meet one resident who exists in the current town,
+2. visit that resident's reload-stable cherished haunt,
+3. discover either a metadata-related repo in their district or, for a plaza guide, a real active district.
+
+Its seed includes the local date, public-town login, and sorted repository catalog. The payload stores
+identifiers and completion keys rather than rendered text, so language switching remains live. Progress is
+strictly sequential and reuses resident chat, the compass/Gitber ride, district hubs, repo cards, and the
+Explorer Passport UI. It adds no AI call, backend, timer loop, or storage namespace.
