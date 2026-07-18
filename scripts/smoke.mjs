@@ -51,7 +51,7 @@ ok(/!e\.repeat\s*&&\s*MOVE\.has\(e\.code\)\s*&&\s*keys\[e\.code\]/.test(HTML), '
 ok(/const\s+clearKeys\s*=/.test(HTML), 'clearKeys() helper exists');
 ok(/addEventListener\(['"]blur['"]\s*,\s*clearKeys/.test(HTML), 'blur clears keys');
 ok(/['"]pagehide['"]\s*,\s*clearKeys/.test(HTML), 'pagehide clears keys');
-ok(/visibilitychange['"]\s*,\s*\(\)=>\{\s*if\(document\.hidden\)\s*clearKeys/.test(HTML), 'visibilitychange(hidden) clears keys');
+ok(/visibilitychange['"]\s*,\s*\(\)=>\{\s*if\(document\.hidden\)\s*\{\s*clearKeys/.test(HTML), 'visibilitychange(hidden) clears keys');
 ok(/contextmenu[\s\S]{0,80}clearKeys\(\)/.test(HTML), 'contextmenu suppression also clears keys');
 
 /* ── 4) contribution library load is non-blocking (no startup stall) ── */
@@ -617,7 +617,7 @@ ok(/function _repoReactLine\(res, ?repo\)\{/.test(npcBlock) && /zoneMatch=repo\.
 ok(/if\(repo\.archived\)/.test(npcBlock) && /if\(st>=40\)/.test(npcBlock) && /if\(vv>=200\)/.test(npcBlock) && /if\(fk>=8\)/.test(npcBlock) && /if\(recent\)/.test(npcBlock), 'the remark picks a TRUE standout of that repo — archived / stars / visitors / forks / recent activity — never invented praise');
 ok(/isNight\?`\$\{nm\}는 최근에 손봤어요 — 밤에도 창이 켜져 있죠/.test(npcBlock), 'recent-activity lines carry day/night flavor (windows glow at night)');
 ok(/function _residentReactToRepo\(repo\)\{ if\(!repo\|\|!repo\.repo\|\|repo\._isLibrary\|\|document\.hidden\) return;/.test(npcBlock), '_residentReactToRepo skips the library + a hidden tab, and only the nearest FREE local (not mid ambient/player chat) within reach speaks');
-ok(/const score=raw-\(\(repo\._zone && repo\._zone===L\.res\.zone\)\?4:0\); if\(score<bestScore\)/.test(npcBlock), 'the district caretaker is preferred (zone-match bias) but the reach cap (raw>RES_REACT_R) is still hard');
+ok(/if\(raw>RES_REACT_R\) continue;[\s\S]{0,140}const score=raw-\(\(repo\._zone && repo\._zone===L\.res\.zone\)\?4:0\)/.test(npcBlock), 'the district caretaker is preferred (zone-match bias) but the reach cap (raw>RES_REACT_R) is still hard');
 ok(/if\(typeof _residentReactToRepo==='function'\) _residentReactToRepo\(b\);/.test(HTML), 'greetBuilding fires the reaction on first walk-up to a house (once per building, in the open world — not behind the card modal)');
 ok(/window\.__reactLine=\(id,name\)=>/.test(HTML) && /window\.__resReact=\(name\)=>/.test(HTML), '?dbg __reactLine/__resReact introspect + force a resident\'s repo reaction');
 
@@ -653,8 +653,8 @@ ok(/window\.__farewell=\(q\)=>/.test(HTML) && /window\.__byeMatch=\(q\)=>/.test(
 
 group('plaza bonfire festival — once a session the whole town gathers to celebrate');
 ok(/let _festival=null, ?_festDone=false, ?_festNextAt=\(LOW_END\?150:80\)\+Math\.random\(\)\*80/.test(npcBlock), 'the festival is a once-a-session event, armed for a while into the visit (later on LOW_END)');
-ok(/function startFestival\(repo\)\{ if\(_festival\) return false; if\(_ambConv\) _endAmb\('festival'\)/.test(npcBlock) && /fireworksShow\(LOW_END\?4:6\)/.test(npcBlock) && /_festDone=true/.test(npcBlock), 'startFestival ends any ambient chat, kicks off fireworks + a toast, and marks the session done (never repeats on its own)');
-ok(/function _festivalTick\(tt\)\{/.test(npcBlock) && /launchFirework\(F\.center\.x\+Math\.cos\(a\)\*r, ?F\.center\.z\+Math\.sin\(a\)\*r/.test(npcBlock) && /if\(_festDone \|\| document\.hidden \|\| _resChatActive\(\) \|\| !NPC_CFG\.motionEnabled \|\| RESIDENTS_LIVE\.length<2 \|\| tt<_festNextAt\) return;/.test(npcBlock), '_festivalTick blooms fireworks over the plaza and only auto-starts once (not hidden, not mid-chat, motion on)');
+ok(/function startFestival\(repo\)\{ if\(_festival\) return false; if\(_sharedJoy\) _endSharedJoy\('festival'\); if\(_ambConv\) _endAmb\('festival'\)/.test(npcBlock) && /fireworksShow\(LOW_END\?4:6\)/.test(npcBlock) && /_festDone=true/.test(npcBlock), 'startFestival ends shared joy/ambient chat, kicks off fireworks + a toast, and marks the session done');
+ok(/function _festivalTick\(tt\)\{/.test(npcBlock) && /launchFirework\(F\.center\.x\+Math\.cos\(a\)\*r, ?F\.center\.z\+Math\.sin\(a\)\*r/.test(npcBlock) && /if\(_festDone \|\| _sharedJoy \|\| document\.hidden \|\| _resChatActive\(\) \|\| !NPC_CFG\.motionEnabled \|\| RESIDENTS_LIVE\.length<2 \|\| tt<_festNextAt\) return;/.test(npcBlock), '_festivalTick never auto-starts over an active shared excursion');
 ok(/if\(_festival\) return;\s*\/\/ no ambient chatter during the festival/.test(npcBlock), 'ambient chatter is suspended during the festival — everyone is at the bonfire');
 ok(/if\(_festival && !chatBound && !hidden && NPC_CFG\.motionEnabled\)\{[\s\S]*?_resWalk\(L,fx,fz,RES_MOVE\.meetSpd,dt\)/.test(npcBlock) && /if\(_festival\.phase==='celebrate' && !L\._pNear\)\{[\s\S]*?_festLine\(L\.res\)/.test(npcBlock), 'every free resident walks to a ring slot around the fire, then (in the celebrate phase) waves + cheers');
 ok(/if\(inConv\|\|chatBound\|\|_festival\)\{ _resStand\(L\); _seatRelease\(L\); \}/.test(npcBlock) && /if\(_festival && !chatBound\)\{ tgt=Math\.atan2\(_festival\.center\.x-g\.position\.x, ?_festival\.center\.z-g\.position\.z\); \}/.test(npcBlock), 'a festival stands resting residents up and turns everyone to face the bonfire');
@@ -719,6 +719,33 @@ ok(/function _resSitChatLine\(L,W\)\{[\s\S]*?function _coRestInviteLine/.test(np
 ok(/function _seatRelease\(L\)\{[\s\S]*?L\._restMate=null;/.test(npcBlock), 'standing up clears the rest-mate link (no dangling pairing)');
 ok(/let _coRestGlobalCd=0;/.test(npcBlock) && /_coRestGlobalCd=tt\+NPC_STROLL_CD\*2/.test(npcBlock), 'co-rest is globally cooldown-gated so it stays an occasional beat');
 ok(/window\.__coRest=\(id\)=>/.test(HTML), '?dbg __coRest sits two friends down together on the spot');
+
+group('Resident Agency — autonomous shared joy excursions');
+const joyBlock=(npcBlock.match(/Resident Agency — one pair[\s\S]*?function _tryPeerNotice/)||[''])[0];
+ok(joyBlock.length>0, 'Shared Joy agency block is extractable');
+ok(/const JOY_CFG=\{ firstMin:\(LOW_END\?90:42\)[\s\S]*?pairCool:\(LOW_END\?180:125\)/.test(joyBlock), 'one LOW_END-aware cadence and pair memory bound autonomous starts');
+ok(/const _JOY_PREF=\{[\s\S]*?sol:\['repo','stargaze'\][\s\S]*?nari:\['flower','repo'\]/.test(joyBlock), 'activity choice carries resident persona preferences');
+ok(/_partOfDay\(\)[\s\S]*?_resMood\(A,tt\)[\s\S]*?_seedFrom\(_joyKey\(A,B\)/.test(joyBlock), 'choice is deterministic from pair, time slice, time of day, and moods');
+ok(/function _joyTarget\(A,B,type,seed\)[\s\S]*?GLOW_FLORA[\s\S]*?_resReps\(A,8\)[\s\S]*?MEMORIAL_TREE/.test(joyBlock), 'flower, real-repo, and stargazing targets reuse existing town places');
+ok(/function _joyClear\(x,z,gap=3\.0,minR=20\)[\s\S]*?_hubGap\(x,z\)<gap[\s\S]*?EXTRA_COLLIDERS/.test(joyBlock), 'shared targets keep building, world-bound, and runtime-collider clearance');
+ok(/type==='flower'[\s\S]*?_joyClear\(p\.x,p\.z,2\.4,7\.5\)/.test(joyBlock), 'LOW_END plaza blossoms remain valid truthful flower-walk targets');
+ok(/let _sharedJoy=null/.test(joyBlock)&&/if\(_sharedJoy\|\|!A\|\|!B/.test(joyBlock), 'at most one resident pair owns Shared Joy');
+ok(/const J=\{members:\[A,B\],type,target,phase:'go'/.test(joyBlock)&&/J\.phase='enjoy'/.test(npcBlock)&&/_endSharedJoy\('complete'/.test(joyBlock), 'excursion lifecycle is go → enjoy → complete');
+ok(/maxDistance\/minSpeed\+7/.test(joyBlock)&&/travelElapsed:0/.test(joyBlock)&&/J\.travelElapsed\+=Math\.max\(0,dt\)/.test(joyBlock)
+  &&/_sharedJoyTick\(tt,dt\)/.test(npcBlock), 'arrival timeout derives from actual pair distance and advances with the same capped simulation time as movement');
+ok(/_festival\|\|_ambConv\|\|_resChatActive\(\)\|\|document\.hidden\|\|!NPC_CFG\.motionEnabled/.test(joyBlock), 'festival, chat, ambient gathering, hidden tab, and motion-off own cancellation');
+ok(/visibilitychange['"],\(\)=>\{ if\(document\.hidden\)\{ clearKeys\(\); if\(_sharedJoy\) _endSharedJoy\('hidden'\)/.test(HTML), 'visibilitychange ends Shared Joy synchronously before browsers suspend animation frames');
+ok(/if\(L\._joy && \(inConv\|\|chatBound\|\|_festival\|\|L\._rest\|\|L\._pNear\|\|hidden\)\) _endSharedJoy\('claimed',tt\)/.test(npcBlock), 'participant immediately yields to visitor proximity or any stronger resident owner');
+ok(/let best=null, bestScore=Infinity, joyBest=null, joyScore=Infinity/.test(npcBlock)
+  &&/if\(!best&&joyBest\)\{ _endSharedJoy\('repo-visit',now\); best=joyBest; \}/.test(npcBlock), 'a first repo visit can claim a nearby excursion participant instead of permanently losing the resident reaction');
+ok(/const part=_partOfDay\(\), starsUp=isNight/.test(joyBlock)
+  &&/filter\(x=>starsUp\|\|x!=='stargaze'\)/.test(joyBlock)
+  &&/\.\.\.\(\(isNight\|\|forcedType==='stargaze'\)\?\['stargaze'\]:\[\]\)/.test(joyBlock), 'autonomous stargazing is excluded while the town stars are hidden; only an explicit debug force may override it');
+ok(/if\(!LOW_END\) popSparkle/.test(npcBlock)&&/function _joySpeed\(L\)\{ return Math\.max\(L\._wspd\*1\.1,LOW_END\?1\.0:1\.25\)/.test(joyBlock)
+  &&/_resWalk\(L,tx,tz,_joySpeed\(L\),dt\)/.test(npcBlock), 'LOW_END keeps purposeful movement and dialogue but skips the extra sparkle');
+ok(/function _ambientAllowed\(\)\{ return NPC_CFG\.modeEnabled && !_sharedJoy/.test(npcBlock), 'ambient gatherings never start over Shared Joy');
+ok(/window\.__joyState=/.test(HTML)&&/window\.__joy=/.test(HTML)&&/window\.__joyTick=/.test(HTML)&&/window\.__endJoy=/.test(HTML), 'debug hooks inspect, force, tick, and end every activity');
+ok(!/fetch\(|_npcFetch|npcModelCall|AOAI|SEARCH_API/.test(joyBlock), 'resident agency adds zero network/model/env dependency');
 
 group('repository constellation trail — telescope reveals a meaningful 3-house exploration loop');
 // 1.72 selector: execute the real pure metadata selector against the shipped city + small fallback fixtures.
