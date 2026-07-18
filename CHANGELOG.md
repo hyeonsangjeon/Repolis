@@ -6,6 +6,25 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.81.0] — 2026-07-18
+
+### 📰 Town Gazette — see what changed since the last visit
+
+- **Daily refresh becomes visible.** A new Passport card compares the current public repo data with the last
+  snapshot this browser marked read, surfacing new/departed repos, available release tags, pushes, and
+  positive traffic, star, or fork growth. Lightweight public towns do not fetch release metadata.
+- **A return loop, not another dashboard.** Up to five ranked changes fit above the Village Chronicle. Current
+  repos point the existing compass at their houses; departed repos remain an honest, non-clickable record.
+  Explicit `Mark read` advances the baseline and clears the Passport news indicator.
+- **No backend, AI, or frame cost.** One O(n) diff runs at load. Snapshots stay in `localStorage`, are scoped
+  independently to owner and public-user towns, and are capped to five towns.
+- **Return greetings stay calm.** A returning visitor sees the existing welcome first, then exactly one
+  deferred Gazette toast instead of stacking it with the Chronicle announcement. First visits and no-change
+  visits preserve the previous flow.
+- **Behavior is locked down.** Pure fixtures cover order invariance, additions/removals, release/push/growth
+  ranking, and negative corrections. Debug hooks simulate growth/mixed reports and mark-read behavior for
+  desktop/mobile visual checks.
+
 ## [1.80.1] — 2026-07-16
 
 ### 📚 Fix: MIRA survives Context7's shared anonymous MCP quota

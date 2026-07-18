@@ -50,6 +50,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   Chrome DevTools with 0 console errors on mobile + desktop.
 - **Owner-town size is a snapshot, not a contract.** Its repository count changes whenever the daily
   public data refresh adds, removes, or filters a repository.
+- **Town Gazette is browser-local.** It compares public repo fields against the last snapshot marked read
+  in this browser, keeps at most five towns, and does not sync across devices. Negative metric corrections
+  are ignored rather than presented as losses. Release-tag changes are available in the owner town's
+  generated data; lightweight `?user=` towns do not fetch release metadata.
 
 ## Tooling
 

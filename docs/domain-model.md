@@ -14,7 +14,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **City / Town** | derived in `index.html` at load | The whole 3D scene built from the `repos.json` array. |
 | **District** | deterministic `zoneOf(repo)` result | A topic-shaped neighborhood with a hub, board, map destination, and progress. |
 | **Resident** | resident roster in `index.html` | A district-local townsperson with mood, routine, relationships, and a cherished haunt. |
-| **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, and constellation completion. |
+| **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, Town Gazette baselines, and constellation completion. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
 | **Taxi** | the POLARIS scholar (`kind: taxi`) | Finds a repo and physically drives you there. |
 | **Grounding Worker** | `cloudflare-taxi/` (`repolis-taxi`) | Server brain: KB retrieval + in-persona chat. |
@@ -174,3 +174,16 @@ Its seed includes the local date, public-town login, and sorted repository catal
 identifiers and completion keys rather than rendered text, so language switching remains live. Progress is
 strictly sequential and reuses resident chat, the compass/Gitber ride, district hubs, repo cards, and the
 Explorer Passport UI. It adds no AI call, backend, timer loop, or storage namespace.
+
+---
+
+## 9. Town Gazette
+
+The Gazette compares a compact public-repo snapshot with the last snapshot explicitly marked read for the
+same town. Canonical repo names make ordering irrelevant. It detects additions, removals, push timestamps,
+positive visitor/view/clone/star/fork deltas, and release tags when the source provides them (owner data;
+lightweight public towns do not fetch releases). Negative corrections are ignored.
+
+Snapshots are local-only, capped to the five most recently visited owner/public towns, and never sent to a
+backend. The comparison runs once at load. Gazette rows reuse compass navigation, while `Mark read` advances
+the baseline and clears the Passport notification.
