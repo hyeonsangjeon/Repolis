@@ -168,6 +168,32 @@
     border-radius: 12px; border: none; color: #fff; background: linear-gradient(150deg,#e8b34a,#d98f2e); }
   #cityError .ceActions button.alt { color: #8a6f4e; background: #fffdf8; border: 1.5px solid #e3d2b6; }
   #townLabel { background: rgba(217,143,46,.16) !important; color: #9a5e16 !important; }
+  /* 📰 Town Gazette — public repo changes since this browser last marked the town read */
+  .freshBox { border-radius: 14px; padding: 10px 11px 11px; margin: 0 0 11px;
+    background: linear-gradient(150deg,#edf8f4 0%,#e7f0fb 100%); border: 1px solid #b9d9d1; }
+  .freshHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+  .freshHead .ft { font-size: 11px; font-weight: 800; letter-spacing: .03em; color: #327866; text-transform: uppercase; }
+  .freshHead .fc { font-size: 11px; font-weight: 800; color: #367d8f; background: rgba(255,255,255,.72);
+    border: 1px solid #b9d9d1; border-radius: 999px; padding: 2px 8px; }
+  .freshSub { font-size: 10.5px; color: #6d8d86; line-height: 1.4; margin: 0 2px 7px; }
+  .freshSummary { font-size: 10px; color: #78958e; margin: 0 2px 6px; }
+  .freshItem { width: 100%; display: flex; align-items: center; gap: 7px; border: 0; background: transparent; padding: 6px;
+    border-radius: 10px; color: #405f58; font: inherit; text-align: left; }
+  button.freshItem { cursor: pointer; }
+  button.freshItem:hover { background: rgba(70,145,125,.09); }
+  .freshItem.removed { opacity: .66; }
+  .freshItem .fi { flex: 0 0 auto; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 8px;
+    background: rgba(255,255,255,.72); border: 1px solid #c8ded8; font-size: 14px; }
+  .freshItem .fm { flex: 1; min-width: 0; }
+  .freshItem .fn { display: block; font-size: 11.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .freshItem .fd { display: block; font-size: 9.5px; color: #77958d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .freshItem .fg { flex: 0 0 auto; color: #3b8b76; font-size: 12px; font-weight: 800; }
+  .freshRead { width: 100%; min-height: 36px; margin-top: 7px; border-radius: 10px; border: 1px solid #b9d9d1;
+    background: rgba(255,255,255,.74); color: #397565; font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
+  #passBtn { position: relative; }
+  #passBtn.news { box-shadow: 0 0 0 2px #72bea7, 0 4px 14px rgba(47,157,106,.28); }
+  #passBtn.news::after { content: ""; position: absolute; top: 4px; right: 5px; width: 7px; height: 7px; border-radius: 50%;
+    background: #ef7b45; box-shadow: 0 0 0 2px rgba(255,255,255,.88); }
   /* 🗺️ Daily course — today's recommended 3-stop route (sits atop the passport) */
   .courseBox { border-radius: 14px; padding: 10px 11px 11px; margin: 0 0 11px;
     background: linear-gradient(150deg,#fff6e2 0%,#fbeccb 100%); border: 1px solid #ecd49a; }
@@ -656,6 +682,8 @@
     #station .sclose { width: 36px; height: 36px; font-size: 15px; }
     #stationBtn { min-height: 44px; display: inline-flex; align-items: center; }
     #station .squick button { min-height: 36px; }
+    .freshItem { min-height: 40px; }
+    .freshRead { min-height: 42px; }
     .chatIn button { min-width: 48px; min-height: 44px; }
     .msg .ride { min-height: 38px; }
     .msg .alt { display: inline-flex; align-items: center; min-height: 32px; }
@@ -721,6 +749,7 @@
 <div id="passport" class="hidden">
   <h3>🛂 <span data-i18n="passportTitle">탐험 여권</span></h3>
   <div class="psub" data-i18n="passportSub">마을을 거닐며 스탬프를 모아요.</div>
+  <div class="freshBox" id="freshBox" style="display:none;"></div>
   <div class="courseBox" id="courseBox" style="display:none;"></div>
   <div class="stampGrid" id="stampGrid"></div>
   <div class="pRow"><span data-i18n="passportRepos">방문한 레포</span> <b><span id="pRepoN">0</span>/<span id="pRepoT">0</span></b></div>
@@ -1060,8 +1089,9 @@ async function _loadPublicCity(user){
 track('page_load');
 
 if(cityMode === 'owner'){
-  try { REPOS = await fetch('repos.json', { cache:'no-cache' }).then(r=>r.json()); }
-  catch(e){ console.error('repos.json load failed', e); }
+  try { const res=await fetch('repos.json', { cache:'no-cache' }); if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json(); if(!Array.isArray(data)) throw new Error('repos.json is not an array'); REPOS=data; }
+  catch(e){ cityError={status:0,reason:'data_load'}; console.error('repos.json load failed', e); }
   track(REPOS.length ? 'city_data_load_success' : 'city_data_load_fail', { repoCount:REPOS.length });
 } else {
   try{ const _l = (function(){ let l=localStorage.getItem('repolisLang'); if(l!=='ko'&&l!=='en') l=(navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; return l; })();
@@ -1123,6 +1153,10 @@ const I18N = {
     passportRepos:'방문한 레포', passportHint:'명소와 레포를 찾고, 저장소 별자리와 오늘의 마을 이야기를 완성해 보세요.',
     passportZonesLeft:'아직 안 가본 곳: ', passportAllZones:'모든 명소를 방문했어요! 🎉',
     passportDistricts:'구역별 탐험', passportDistrictsHint:'각 지구의 레포를 방문하면 채워져요.',
+    freshTitle:'마을 소식', freshSince:'{date} 방문 이후', freshSummary:'업데이트 {updated} · 새 레포 {added} · 떠난 레포 {removed}',
+    freshAdded:'새 레포가 마을에 들어왔어요', freshRemoved:'이 레포는 마을을 떠났어요', freshRelease:'새 릴리스 {tag}',
+    freshPushed:'새 커밋 활동', freshGrowth:'지표가 자랐어요', freshRead:'✓ 소식 읽음으로 표시',
+    freshBanner:'📰 지난 방문 이후 레포 {count}곳에 변화가 있어요. 여권에서 마을 소식을 확인하세요!', freshNav:'🧭 {repo}의 현재 집을 가리킬게요.',
     zbSub:'이 구역의 대표 레포와 나의 탐험 진행률', zbBoard:'구역 안내판',
     zbReps:'대표 레포', zbRide:'🚕 대표 레포로 이동', zbUnseen:'🧭 아직 안 본 레포 안내',
     zbAsk:'❓ 이 구역이 궁금해요', zbAllSeen:'이 구역의 레포를 모두 둘러봤어요! 🎉', zbHubHint:'구역 안내판 열기',
@@ -1280,6 +1314,10 @@ const I18N = {
     passportRepos:'Repos visited', passportHint:'Find landmarks and repos, then complete the Repository Constellation and today\'s Village Chronicle.',
     passportZonesLeft:'Not yet visited: ', passportAllZones:'You\'ve visited every landmark! 🎉',
     passportDistricts:'District progress', passportDistrictsHint:'Fills up as you visit each district\'s repos.',
+    freshTitle:'Town Gazette', freshSince:'Since your {date} visit', freshSummary:'Updated {updated} · new {added} · departed {removed}',
+    freshAdded:'A new repo moved into town', freshRemoved:'This repo left the town', freshRelease:'New release {tag}',
+    freshPushed:'Fresh commit activity', freshGrowth:'Its metrics grew', freshRead:'✓ Mark Gazette read',
+    freshBanner:'📰 {count} repos changed since your last visit. Open the Passport for the Town Gazette!', freshNav:'🧭 Pointing to {repo}\'s current house.',
     zbSub:'Representative repos and your exploration here', zbBoard:'district board',
     zbReps:'Representative repos', zbRide:'🚕 Ride to a top repo', zbUnseen:'🧭 Guide me to an unseen one',
     zbAsk:'❓ Tell me about this district', zbAllSeen:'You\'ve visited every repo in this district! 🎉', zbHubHint:'open district board',
@@ -6138,6 +6176,43 @@ let VISITOR = (function(){ const KEY='repolisVisits'; let v={ n:0, first:0, last
   const awayDays = prevLast ? Math.floor((now-prevLast)/86400000) : 0;
   return { visits:v.n, firstTime:v.n<=1, returning:v.n>1, awayDays, longAway:(v.n>1 && awayDays>=7) };
 })();
+/*FRESHNESS:START*/
+function _freshNum(v){ v=Number(v); return Number.isFinite(v)?Math.max(0,v):0; }
+function diffRepoFreshness(previous,current){ const old=(previous&&previous.repos)||{}, now=(current&&current.repos)||{}, items=[];
+  let added=0,removed=0,updated=0;
+  for(const name of Object.keys(now).sort()){ const cur=now[name], prev=old[name];
+    if(!prev){ added++; items.push({repo:name,type:'added',score:2000000,deltas:{}}); continue; }
+    const deltas={ visitors:Math.max(0,_freshNum(cur.visitors)-_freshNum(prev.visitors)),
+      views:Math.max(0,_freshNum(cur.views)-_freshNum(prev.views)), clones:Math.max(0,_freshNum(cur.clones)-_freshNum(prev.clones)),
+      stars:Math.max(0,_freshNum(cur.stars)-_freshNum(prev.stars)), forks:Math.max(0,_freshNum(cur.forks)-_freshNum(prev.forks)) };
+    const release=!!cur.release_tag&&cur.release_tag!==prev.release_tag, pushed=!!cur.pushed&&cur.pushed!==prev.pushed;
+    const growth=deltas.visitors+deltas.views+deltas.clones+deltas.stars+deltas.forks;
+    if(!release&&!pushed&&!growth) continue; updated++;
+    const metricScore=Math.min(199999,deltas.stars*10000+deltas.forks*5000+deltas.clones*100+deltas.visitors*10+deltas.views);
+    const score=(release?1500000:pushed?1100000:800000)+metricScore;
+    items.push({repo:name,type:release?'release':pushed?'pushed':'growth',release:release?cur.release_tag:'',pushed,deltas,score}); }
+  for(const name of Object.keys(old).sort()){ if(now[name]) continue; removed++; items.push({repo:name,type:'removed',score:700000,deltas:{}}); }
+  items.sort((a,b)=>b.score-a.score||a.repo.localeCompare(b.repo));
+  return {from:(previous&&previous.at)||0,to:(current&&current.at)||0,added,removed,updated,total:added+removed+updated,items}; }
+/*FRESHNESS:END*/
+const FRESHNESS_KEY='repolisFreshness:v1', FRESHNESS_MAX_TOWNS=5;
+function _freshTownKey(){ return (cityMode==='owner'?'owner:':'public:')+String(currentUser||OWNER).toLowerCase(); }
+function _freshRepoState(r){ return {visitors:_freshNum(r.visitors),views:_freshNum(r.views),clones:_freshNum(r.clones),stars:_freshNum(r.stars),forks:_freshNum(r.forks),
+  pushed:String(r.pushed||''),release_tag:String(r.release_tag||'')}; }
+function _freshCapture(at=Date.now()){ const repos={}; for(const r of REPOS) if(r&&r.repo) repos[r.repo]=_freshRepoState(r); return {at,repos}; }
+function _freshLoad(){ try{ const x=JSON.parse(localStorage.getItem(FRESHNESS_KEY)||'null');
+    if(x&&x.v===1&&x.towns&&typeof x.towns==='object'&&Array.isArray(x.order)) return x; }catch(e){} return {v:1,towns:{},order:[]}; }
+let freshnessStore=_freshLoad(), freshnessTown=_freshTownKey(), freshnessCurrent=_freshCapture(), freshnessBaseline=freshnessStore.towns[freshnessTown]||null;
+const freshnessTrackable=REPOS.length>0&&!cityError;
+let repoFreshness=freshnessTrackable&&freshnessBaseline?diffRepoFreshness(freshnessBaseline,freshnessCurrent):diffRepoFreshness(null,{at:freshnessCurrent.at,repos:{}});
+function _freshSaveStore(){ try{ localStorage.setItem(FRESHNESS_KEY,JSON.stringify(freshnessStore)); }catch(e){} }
+function _freshSetBaseline(snapshot){ freshnessStore.towns[freshnessTown]=snapshot;
+  freshnessStore.order=[freshnessTown].concat(freshnessStore.order.filter(k=>k!==freshnessTown)).slice(0,FRESHNESS_MAX_TOWNS);
+  for(const k of Object.keys(freshnessStore.towns)) if(freshnessStore.order.indexOf(k)<0) delete freshnessStore.towns[k]; _freshSaveStore(); }
+if(!freshnessBaseline&&freshnessTrackable){ freshnessBaseline=freshnessCurrent; _freshSetBaseline(freshnessBaseline); }
+function hasFreshness(){ return !!(freshnessTrackable&&freshnessBaseline&&repoFreshness&&repoFreshness.total>0); }
+function markFreshnessRead(){ if(!freshnessTrackable) return false; freshnessCurrent=_freshCapture(); freshnessBaseline=freshnessCurrent; _freshSetBaseline(freshnessBaseline);
+  repoFreshness=diffRepoFreshness(freshnessBaseline,freshnessCurrent); syncFreshnessNotice(); renderFreshness(); track('town_gazette_read'); return true; }
 const passportEl=document.getElementById('passport');
 function flashPassport(){ const b=document.getElementById('passBtn'); if(!b) return; b.classList.add('glow'); clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('glow'),2200); }
 function addStamp(id){ if(passHasStamp(id)) return false; passport.stamps.push(id); savePassport(); flashPassport(); if(!passportEl.classList.contains('hidden')) renderPassport();
@@ -6165,7 +6240,30 @@ function renderDistrictProgress(){ const box=document.getElementById('pDistricts
       +`<span class="pdN">${d.visited}/${d.total}</span></div>`; });
   html+=`<div class="pdHint">${_esc(t('passportDistrictsHint'))}</div>`;
   box.innerHTML=html; }
-function renderPassport(){ renderCourse(); const grid=document.getElementById('stampGrid'); if(!grid) return;
+function _freshDate(ts){ if(!ts) return ''; try{ return new Date(ts).toLocaleDateString(LANG==='ko'?'ko-KR':'en-US',{month:'short',day:'numeric'}); }catch(e){ return ''; } }
+function _freshDetail(item){ const d=item.deltas||{}, bits=[];
+  if(item.type==='added') bits.push(t('freshAdded')); else if(item.type==='removed') bits.push(t('freshRemoved'));
+  else if(item.release) bits.push(tf('freshRelease',{tag:item.release})); else if(item.pushed) bits.push(t('freshPushed')); else bits.push(t('freshGrowth'));
+  if(d.visitors) bits.push('👁 +'+d.visitors); if(d.views) bits.push('↗ +'+d.views); if(d.clones) bits.push('⬇ +'+d.clones);
+  if(d.stars) bits.push('★ +'+d.stars); if(d.forks) bits.push('⑂ +'+d.forks); return bits.join(' · '); }
+function syncFreshnessNotice(){ const b=document.getElementById('passBtn'); if(b) b.classList.toggle('news',hasFreshness()); }
+function renderFreshness(){ const box=document.getElementById('freshBox'); if(!box) return; syncFreshnessNotice();
+  if(!hasFreshness()){ box.style.display='none'; box.innerHTML=''; return; } box.style.display='';
+  const rows=repoFreshness.items.slice(0,5), from=_freshDate(repoFreshness.from);
+  let html=`<div class="freshHead"><span class="ft">📰 ${_esc(t('freshTitle'))}</span><span class="fc">${repoFreshness.total}</span></div>`
+    +`<div class="freshSub">${_esc(tf('freshSince',{date:from||'—'}))}</div>`
+    +`<div class="freshSummary">${_esc(tf('freshSummary',{updated:repoFreshness.updated,added:repoFreshness.added,removed:repoFreshness.removed}))}</div>`;
+  for(const item of rows){ const repo=REPOS.find(r=>r.repo===item.repo), name=repo?repo.label:item.repo;
+    const ico=item.type==='added'?'✨':item.type==='removed'?'−':item.type==='release'?'🏷️':item.type==='pushed'?'🚀':'📈';
+    const tag=repo?'button':'div', cls='freshItem'+(repo?'':' removed');
+    html+=`<${tag} class="${cls}"${repo?` data-repo="${_esc(repo.repo)}" type="button"`:''}><span class="fi">${ico}</span>`
+      +`<span class="fm"><span class="fn">${_esc(name)}</span><span class="fd">${_esc(_freshDetail(item))}</span></span>`
+      +(repo?'<span class="fg">›</span>':'')+`</${tag}>`; }
+  html+=`<button class="freshRead" id="freshReadBtn" type="button">${_esc(t('freshRead'))}</button>`; box.innerHTML=html;
+  box.querySelectorAll('button.freshItem').forEach(btn=>{ btn.onclick=()=>{ const repo=repoByKey(btn.dataset.repo); if(!repo) return;
+      passportEl.classList.add('hidden'); setNav(repo); showWave(tf('freshNav',{repo:repo.label}),2800); track('town_gazette_nav',{repo:repo.repo}); }; });
+  const read=document.getElementById('freshReadBtn'); if(read) read.onclick=markFreshnessRead; }
+function renderPassport(){ renderFreshness(); renderCourse(); const grid=document.getElementById('stampGrid'); if(!grid) return;
   grid.innerHTML='';
   for(const lm of PASS_LANDMARKS){ const got=passHasStamp(lm.id);
     const d=document.createElement('div'); d.className='stamp'+(got?' got':'');
@@ -6177,6 +6275,7 @@ function renderPassport(){ renderCourse(); const grid=document.getElementById('s
     ? (t('passportZonesLeft')+missing.map(l=>`<span class="z">${t(l.key).split(' · ')[0]}</span>`).join(', '))
     : t('passportAllZones');
   renderDistrictProgress(); }
+syncFreshnessNotice();
 /* ───────── 🪧 District board — the hub info panel (reuses the passport/course district data, no new backend) ───────── */
 const zoneBoard=document.getElementById('zoneBoard');
 function zoneBasis(z){ // deterministic "why this district" line — top keyword hits + dominant language across its repos (no LLM)
@@ -6609,8 +6708,10 @@ function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.
 function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; player.position.set(seat.x,0,seat.z); model.rotation.y=seat.rot; camYaw=seat.rot+Math.PI; walk=0; }
 function standUp(){ sitting=null; }
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
-  const rb=VISITOR.returning; if(rb){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} }, 850); }   // welcome a familiar face back before the daily-course banner
-  try{ if(REPOS.length){ const c=getCourse(); if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} }, rb?4700:1000); } }catch(e){}
+  const rb=VISITOR.returning, news=hasFreshness(); if(rb){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} }, 850); }   // welcome a familiar face back before Gazette / Chronicle
+  try{ if(REPOS.length){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
+      if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
+      else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
   setTimeout(()=>{ try{ openRepoFromHash(); }catch(e){} }, 480); };
 (function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
     document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
@@ -7924,6 +8025,18 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__peerEmote=(kind='dance',id)=>{ const t=id||[...peers.keys()][0]; if(!t) return null; rtHandle({t:'emote',id:t,kind}); const p=peers.get(t); return {by:t, emoteT:+(p?.emoteT||0).toFixed(2), kind:p?.emoteKind, armL:!!p?.group._armL}; };
   window.__emotes=()=>Object.keys(EMOTES);  window.__meteor=(az)=>{ spawnMeteor(az); return true; };
   window.__course=()=>{ const c=getCourse(); return {date:c.date,town:c.town,v:c.v,available:c.available,completed:c.completed.slice(),items:c.items.map(it=>({type:it.type,id:it.id,resident:it.resident||null,zone:it.zone||null,label:courseItemLabel(it),done:courseItemDone(it)})),districts:[...new Set(c.items.map(it=>it.type==='zone'?it.id:it.zone).filter(Boolean))],prog:courseProgress()}; };
+  window.__freshness=()=>({town:freshnessTown,baselineAt:freshnessBaseline?freshnessBaseline.at:0,currentAt:freshnessCurrent.at,
+    added:repoFreshness.added,removed:repoFreshness.removed,updated:repoFreshness.updated,total:repoFreshness.total,
+    items:repoFreshness.items.map(x=>({repo:x.repo,type:x.type,release:x.release||'',pushed:!!x.pushed,deltas:{...(x.deltas||{})}})),storedTowns:freshnessStore.order.slice()});
+  window.__freshnessSeed=(name,mode='growth')=>{ const repo=repoByKey(name)||REPOS[0]; if(!repo) return {ok:false}; const snap=_freshCapture(Date.now()-86400000);
+    if(mode==='added'||mode==='mixed') delete snap.repos[repo.repo];
+    if(mode==='growth'||mode==='mixed'){ const target=mode==='mixed'?(REPOS[1]||repo):repo, r=snap.repos[target.repo]; if(r){
+        r.visitors=Math.max(0,r.visitors-7); r.views=Math.max(0,r.views-11); r.clones=Math.max(0,r.clones-2);
+        r.stars=Math.max(0,r.stars-1); r.pushed='2000-01-01T00:00:00Z'; if(target.release_tag) r.release_tag='__previous__'; } }
+    if(mode==='removed'||mode==='mixed') snap.repos['departed-demo-repo']={visitors:1,views:1,clones:0,stars:0,forks:0,pushed:'',release_tag:''};
+    freshnessBaseline=snap; _freshSetBaseline(snap); freshnessCurrent=_freshCapture(); repoFreshness=diffRepoFreshness(freshnessBaseline,freshnessCurrent);
+    if(!passportEl.classList.contains('hidden')) renderFreshness(); else syncFreshnessNotice(); return {ok:true,report:window.__freshness()}; };
+  window.__freshnessRead=()=>{ markFreshnessRead(); return window.__freshness(); };
   window.__chronicle=window.__course;
   window.__chronicleStep=()=>{ const it=courseCurrentItem(); if(!it) return window.__course(); if(it.type==='resident') courseMark(it.type,it.id);
     else if(it.type==='repo'){ const r=repoByKey(it.id); if(r) openCard(r); }

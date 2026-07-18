@@ -91,6 +91,8 @@ features:
     summary: Explorer Passport, district progress, daily Village Chronicle, and Repository Constellation Trail.
   - id: village-chronicle
     summary: A deterministic town/day story connects one resident to their cherished haunt and a related repo or district.
+  - id: town-gazette
+    summary: A bounded local per-town snapshot makes daily public-repo changes visible on return.
   - id: gitber-taxi
     summary: Natural-language repo finder that physically drives to a selected house.
   - id: scholars

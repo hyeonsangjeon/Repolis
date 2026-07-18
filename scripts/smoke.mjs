@@ -251,7 +251,7 @@ ok(/function courseDestOf\(it\)\{[\s\S]*?_residentLive\(it\.id\)[\s\S]*?_resFavS
 ok(/function courseProximityTick\(\)\{[\s\S]*?it\.type!=='haunt'&&it\.type!=='zone'[\s\S]*?courseMark\(it\.type,it\.id\)/.test(chronicleBlock), 'walking to a haunt or district hub advances the current scene');
 ok(/function courseProximityTick\(\)\{ if\(!course\|\|!course\.available\|\|ride\) return/.test(chronicleBlock), 'unavailable towns never enter the per-frame Chronicle progression path');
 ok(/if\(!c\.available\|\|!c\.items\.length\)\{ box\.style\.display='none'; return; \}/.test(HTML), 'unavailable Chronicle UI stays hidden');
-ok(/const c=getCourse\(\); if\(c\.available\) setTimeout/.test(HTML), 'the intro only announces a Chronicle that can actually run');
+ok(/if\(news\) setTimeout[\s\S]*?else if\(c\.available\) setTimeout/.test(HTML), 'the intro announces Gazette first, otherwise only an available Chronicle');
 ok(!/fetch\(|groundedAsk|webllmAsk|proxyAsk|await /.test(chronicleBlock), 'Village Chronicle is deterministic and client-only (no AI/network)');
 ok(/zoneIconById\(it\.zone\)/.test(HTML), 'renderCourse shows the district icon for repo stops');
 ok(/class="courseItem\$\{done\?' done':''\}\$\{locked\?' locked':''\}"/.test(HTML), 'future scenes render locked until the current scene is complete');
@@ -282,6 +282,40 @@ ok(/🚉 명소로 바로 이동/.test(HTML) && /🚉 Landmark stops/.test(HTML)
 // 10f — debug helpers
 ok(/window\.__passport\s*=/.test(HTML) && /window\.__districtProgress\s*=/.test(HTML), 'debug helpers __passport() + __districtProgress() present');
 ok(/window\.__course=\(\)=>\{[\s\S]*?districts:/.test(HTML), '__course() reports district info');
+
+group('Town Gazette — public repo changes since the last marked-read visit');
+const freshnessSrc=(HTML.match(/\/\*FRESHNESS:START\*\/([\s\S]*?)\/\*FRESHNESS:END\*\//)||[,''])[1];
+ok(freshnessSrc.length>0, 'pure freshness diff block is extractable');
+if(freshnessSrc){
+  const {diffRepoFreshness}=new Function(`${freshnessSrc}; return {diffRepoFreshness};`)();
+  const state=(o={})=>({visitors:0,views:0,clones:0,stars:0,forks:0,pushed:'',release_tag:'',...o});
+  const prev={at:100,repos:{alpha:state({visitors:10,views:20,stars:2,pushed:'2026-01-01'}),gone:state({stars:1})}};
+  const reordered={at:200,repos:{gone:state({stars:1}),alpha:state({visitors:10,views:20,stars:2,pushed:'2026-01-01'})}};
+  ok(diffRepoFreshness(prev,reordered).total===0, 'repo array/object order alone never becomes Gazette news');
+  const cur={at:300,repos:{alpha:state({visitors:14,views:18,stars:3,pushed:'2026-02-01',release_tag:'v2'}),brandNew:state({stars:1})}};
+  const d=diffRepoFreshness(prev,cur), alpha=d.items.find(x=>x.repo==='alpha');
+  ok(d.added===1&&d.removed===1&&d.updated===1&&d.total===3, 'Gazette counts added, removed, and updated repos independently');
+  ok(alpha&&alpha.type==='release'&&alpha.pushed&&alpha.deltas.visitors===4&&alpha.deltas.stars===1&&alpha.deltas.views===0, 'release/push/growth combine while negative metric corrections are ignored');
+  ok(d.items.map(x=>x.repo).join(',')==='brandNew,alpha,gone', 'Gazette ranking is deterministic: new → release/update → departed');
+  const viral=diffRepoFreshness({at:1,repos:{viral:state({stars:5})}},{at:2,repos:{viral:state({stars:500}),newRepo:state()}});
+  ok(viral.items[0].repo==='newRepo', 'extreme metric growth is capped and cannot outrank a newly arrived repo');
+  const correction=diffRepoFreshness({at:1,repos:{alpha:state({visitors:10})}},{at:2,repos:{alpha:state({visitors:2})}});
+  ok(correction.total===0, 'negative-only metric corrections never become misleading loss news');
+}
+ok(/const FRESHNESS_KEY='repolisFreshness:v1', FRESHNESS_MAX_TOWNS=5/.test(HTML), 'freshness snapshots use one versioned local-only store capped at five towns');
+ok(/function _freshTownKey\(\)\{ return \(cityMode==='owner'\?'owner:':'public:'\)\+String\(currentUser/.test(HTML), 'owner and public-user town baselines are independently scoped');
+ok(/freshnessStore\.order=\[freshnessTown\][\s\S]*?slice\(0,FRESHNESS_MAX_TOWNS\)/.test(HTML), 'snapshot LRU pruning is wired');
+ok(/cityError=\{status:0,reason:'data_load'\}/.test(HTML), 'owner repos.json failure becomes an explicit city load error');
+ok(/const freshnessTrackable=REPOS\.length>0&&!cityError/.test(HTML)&&/if\(!freshnessBaseline&&freshnessTrackable\)/.test(HTML), 'only a successful non-empty town load can diff or establish a baseline');
+ok(/function hasFreshness\(\)\{ return !!\(freshnessTrackable&&/.test(HTML), 'failed/empty loads can never announce mass-removal news');
+ok(/function markFreshnessRead\(\)[\s\S]*?_freshSetBaseline\(freshnessBaseline\)[\s\S]*?town_gazette_read/.test(HTML), 'baseline advances only through explicit mark-read');
+ok(/id="freshBox"/.test(HTML)&&/function renderFreshness\(\)/.test(HTML)&&/function renderPassport\(\)\{ renderFreshness\(\); renderCourse\(\)/.test(HTML), 'Gazette renders above Chronicle inside the existing Passport');
+ok(/passportEl\.classList\.add\('hidden'\); setNav\(repo\)/.test(HTML)&&!/function renderFreshness\(\)[\s\S]*?taxiTo\(/.test((HTML.match(/function renderFreshness\(\)[\s\S]*?\nfunction renderPassport/)||[''])[0]), 'Gazette rows use walking navigation, never taxi');
+ok(/#passBtn\.news::after/.test(HTML)&&/classList\.toggle\('news',hasFreshness\(\)\)/.test(HTML), 'Passport gets a compact unread-news indicator');
+ok((HTML.match(/freshTitle:\s*['"]/g)||[]).length>=2&&(HTML.match(/freshBanner:\s*['"]/g)||[]).length>=2, 'Gazette card and return toast are bilingual');
+ok(/window\.__freshness=/.test(HTML)&&/window\.__freshnessSeed=/.test(HTML)&&/window\.__freshnessRead=/.test(HTML), 'debug hooks inspect, seed, and acknowledge Gazette news');
+ok(/if\(mode==='growth'\|\|mode==='mixed'\)/.test(HTML)&&!/if\(mode==='added'\|\|mode==='mixed'\)[\s\S]{0,200}else \{/.test(HTML), 'removed-only debug fixtures do not also mutate a growth repo');
+ok(!/fetch\(|groundedAsk|webllmAsk|proxyAsk|await /.test(freshnessSrc), 'freshness diff is local, synchronous, and zero-network');
 
 /* ── 11) District Landmark Hubs v1: one walkable hub + info board per active district ──
  *    procedural (shared geometry), placed clear of buildings, checked AFTER houses (no door hijack),
@@ -604,7 +638,8 @@ ok(/const now=Date\.now\(\), ?prevLast=v\.last, ?fresh=!prevLast \|\| \(now-prev
 ok(/returning:v\.n>1/.test(HTML) && /longAway:\(v\.n>1 && awayDays>=7\)/.test(HTML), 'the memory derives returning (2nd+ visit) and longAway (returning after a 7-day gap)');
 ok(/if\(VISITOR\.returning && Math\.random\(\)<0\.6\)\{/.test(npcBlock) && /VISITOR\.longAway \?/.test(npcBlock), 'a returning visitor gets a warmer resident hello ~60% of the time — with an extra-warm variant after a long absence');
 ok(/function _welcomeBackLine\(\)\{/.test(npcBlock) && /n>=5\?/.test(npcBlock) && /visit #\$\{n\}/.test(npcBlock), 'a one-time welcome-back toast greets a returning visitor (with a little milestone note from the 5th visit)');
-ok(/const rb=VISITOR\.returning; if\(rb\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML) && /}, ?rb\?4700:1000\)/.test(HTML), 'entering town shows the welcome-back toast first, and defers the daily-course banner so the two never clash');
+ok(/const rb=VISITOR\.returning, news=hasFreshness\(\); if\(rb\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML)
+  && /const c=getCourse\(\), delay=rb\?4700:/.test(HTML), 'entering town shows welcome-back first, then a single deferred Gazette/Chronicle toast');
 ok(/window\.__visitor=\(\)=>/.test(HTML) && /window\.__setVisitor=\(o\)=>/.test(HTML) && /window\.__welcomeBack=\(\)=>/.test(HTML), '?dbg __visitor/__setVisitor/__welcomeBack read + preview the returning-visitor warmth without a reload');
 
 group('graceful goodbyes — the circle waves you off, and no gathering is a trap');
