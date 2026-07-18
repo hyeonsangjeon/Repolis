@@ -6,6 +6,22 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.82.0] — 2026-07-18
+
+### 🎈 Resident Agency — Shared Joy excursions
+
+- **Residents choose joy for themselves.** One idle pair at a time selects a short flower walk, stargazing
+  pause, or real-repo visit from friendship, mood, time of day, persona preferences, and recent pair memory.
+- **The destination is always part of the current town.** Flower walks use placed luminous flora, repo visits
+  name and approach a real rendered house, and autonomous stargazing only starts while the stars are visible.
+  Two stable arrival slots prevent the pair from stacking.
+- **Existing social ownership stays authoritative.** Visitor proximity, repo reactions, resident/group chat,
+  ambient gatherings, festivals, seating, hidden tabs, and disabled motion end or block the excursion cleanly.
+  Travel budgets advance with capped simulation time, so LOW_END and slow frames do not time out early.
+- **No new cost or heavy runtime work.** Shared Joy reuses resident movement, bubbles, poses, and town props;
+  it adds no model, MCP, fetch, asset, light, or persistence. LOW_END keeps the activity at a calmer cadence
+  and skips its optional arrival sparkle.
+
 ## [1.81.0] — 2026-07-18
 
 ### 📰 Town Gazette — see what changed since the last visit

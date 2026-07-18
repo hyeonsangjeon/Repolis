@@ -54,6 +54,9 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   in this browser, keeps at most five towns, and does not sync across devices. Negative metric corrections
   are ignored rather than presented as losses. Release-tag changes are available in the owner town's
   generated data; lightweight `?user=` towns do not fetch release metadata.
+- **Resident Shared Joy is bounded and session-local.** At most one pair takes a scripted excursion at a
+  time; it is not remembered across reloads and does not use a model. Stargazing starts autonomously only
+  while stars are visible, and visitor/chat/festival ownership intentionally interrupts an outing.
 
 ## Tooling
 

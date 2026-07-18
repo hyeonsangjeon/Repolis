@@ -187,3 +187,23 @@ lightweight public towns do not fetch releases). Negative corrections are ignore
 Snapshots are local-only, capped to the five most recently visited owner/public towns, and never sent to a
 backend. The comparison runs once at load. Gazette rows reuse compass navigation, while `Mark read` advances
 the baseline and clears the Passport notification.
+
+---
+
+## 10. Resident Agency — Shared Joy
+
+Shared Joy is a single session-local pair state in the resident social layer. When no stronger owner is
+active, a deterministic time-slice planner chooses two compatible idle residents, preferring named friends.
+Persona preferences, current moods, time of day, and recent pair memory select one activity:
+
+- a flower walk to an existing `GLOW_FLORA` patch,
+- stargazing while the town's stars are visible, or
+- a visit to a real rendered repo house.
+
+The lifecycle is `go → enjoy → complete`. Participants travel to separate arrival slots, alternate scripted
+bilingual lines, and reuse existing low-cost poses. LOW_END keeps the same behavior with a longer cadence,
+shorter enjoyment, purposeful movement, and no arrival sparkle.
+
+Shared Joy yields immediately to visitor proximity, repo reactions, resident/group chat, ambient gatherings,
+festivals, seating, hidden tabs, or disabled motion. Travel timeout uses the same capped simulation delta as
+resident movement. The state is not persisted and makes no AI, MCP, network, asset, or storage request.

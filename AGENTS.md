@@ -138,7 +138,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | Change how a repo becomes a building (height/size/ornaments) | `index.html` (city-build section) + score/rank in `scripts/build_repos.py`; model in [`docs/domain-model.md`](docs/domain-model.md). |
 | Change districts, Village Chronicle, passport, or exploration loops | `index.html` + the matching behavioral groups in `scripts/smoke.mjs`. |
 | Change Town Gazette / return-visit freshness | `/*FRESHNESS*/` + Passport render/start flow in `index.html`; keep snapshots local, bounded, per-town, and explicit-read only. |
-| Change resident routines, moods, friendships, or haunts | The resident social layer in `index.html`; preserve visitor/chat/festival/hidden-tab ownership guards. |
+| Change resident routines, moods, friendships, haunts, or Shared Joy | The resident social layer in `index.html`; preserve one-pair bounds and visitor/repo-reaction/chat/festival/hidden-tab ownership guards. |
 | Fix / improve a scholar's answer or references | `cloudflare-taxi/src/grounded.js` (server) + the trace panel in `index.html`. |
 | Add a new scholar NPC | `scholars.js` + `scholarConfig`/`MCP_NPCS` in `cloudflare-taxi/src/grounded.js`; choose KB-backed or direct MCP deliberately; document in `SCHOLARS.md`. |
 | Tune the taxi's repo search/intent routing | `index.html` (Local search: inverted index + intent agent). |
@@ -152,7 +152,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 
 A daily Action turns the owner's **public repos + committed traffic logs** into `repos.json`. `index.html`
 turns that array into metric-shaped buildings, topic districts, routes, maps, and exploration progress.
-Residents add moods, routines, friendships, haunts, gatherings, and festivals; landmarks include the
+Residents add moods, routines, friendships, haunts, Shared Joy excursions, gatherings, and festivals; landmarks include the
 Contribution Library, Chronopolis, Observatory, and imported procedural World Tree. Gitber/POLARIS and the
 scholars (VEGA · MS Learn, RIGEL · DeepWiki, MIRA · Context7, LYRA · Hugging Face) add natural-language
 navigation and grounded answers. Residents hand specialist questions to the right scholar instead of gaining
