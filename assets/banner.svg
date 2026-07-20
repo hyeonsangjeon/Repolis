@@ -127,6 +127,6 @@
   <g>
     <text x="64" y="92" font-size="62" font-weight="800" fill="#1d3b3f" letter-spacing="-1">Repolis</text>
     <text x="66" y="128" font-size="22" font-weight="700" fill="#2f5b52">the City of Repos · 레포들의 도시</text>
-    <text x="66" y="158" font-size="16.5" font-weight="600" fill="#3a5a52" opacity="0.92">A walkable 3D city where every GitHub repo is a house — with an LLM 🚕 taxi driver.</text>
+    <text x="66" y="158" font-size="16.5" font-weight="600" fill="#3a5a52" opacity="0.92">Traffic-shaped repo houses · living residents · Gitber taxi</text>
   </g>
 </svg>

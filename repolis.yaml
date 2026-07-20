@@ -3,12 +3,11 @@
 schema: repolis/manifest@1
 
 name: Repolis
-tagline: The city of repos — your GitHub as a living, walkable 3D town.
+tagline: Public GitHub repos become a walkable 3D town.
 description: >-
-  A zero-build static Three.js app that renders public GitHub repositories as
-  metric-shaped houses in topic districts. Residents live between them, exploration
-  systems connect them, and Gitber plus star-named scholars provide natural-language
-  navigation and optional grounded answers.
+  Traffic shapes the buildings, residents live there, and Gitber drives visitors to
+  the right project. Repolis is a zero-build static Three.js app with topic districts,
+  exploration systems, and optional grounded scholars.
 owner:
   name: Hyeon Sang Jeon
   github: hyeonsangjeon

@@ -1,26 +1,24 @@
 <div align="center">
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/banner.svg" alt="Repolis — the City of Repos" width="100%"></a>
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/banner.svg" alt="Repolis — the City of Repos" width="80%"></a>
 
 # Repolis — the City of Repos
 
-**Your GitHub is not a list. It is a living 3D town you can walk.**
-
-[![Live demo](https://img.shields.io/badge/Live-Repolis-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
-[![Daily refresh](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=for-the-badge&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
-[![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
-[![Zero build](https://img.shields.io/badge/runtime-zero%20build-83bb59?style=for-the-badge)](index.html)
-[![License: MIT](https://img.shields.io/badge/License-MIT-a0a0a0?style=for-the-badge)](LICENSE)
-
 [English](README.md) · [한국어](README.ko.md)
 
-Every house is a public repository. Real traffic shapes its architecture, residents live between the districts, and **Gitber**, the town taxi, drives you to the repo you describe.
+**Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.**
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Walk through Repolis, ask Gitber for a repository, and ride to its house" width="86%"></a>
+[![Open the live town](https://img.shields.io/badge/Open-Live%20Town-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
+**[Visit any public GitHub town →](https://hyeonsangjeon.github.io/Repolis/?user=mrdoob)**
 
-**[Open the live town](https://hyeonsangjeon.github.io/Repolis/)** · **[Visit any public GitHub town](https://hyeonsangjeon.github.io/Repolis/?user=mrdoob)** · **[Run locally](#run-in-60-seconds)**
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis demo: a living traffic-shaped GitHub town, Gitber search, taxi ride, and real repository card" width="92%"></a>
 
-<sub>No sign-up · no build step · keyboard, touch, and mobile controls</sub>
+<sub>No sign-up · no build step · keyboard, touch, and mobile controls · <strong><a href="#run-in-60-seconds">Run locally</a></strong></sub>
+
+[![Daily refresh](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=flat-square&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
+[![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
+[![Zero build](https://img.shields.io/badge/runtime-zero%20build-83bb59?style=flat-square)](index.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-a0a0a0?style=flat-square)](LICENSE)
 
 </div>
 

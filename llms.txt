@@ -1,6 +1,6 @@
 # Repolis
 
-> Repolis is a zero-build static Three.js town generated from public GitHub repositories and cumulative traffic. Repositories become metric-shaped houses in topic districts; residents live between them; Gitber and star-named scholars provide natural-language navigation and grounded answers.
+> Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project. Repolis stays a zero-build static Three.js app with optional grounded scholars.
 
 ## Start here
 

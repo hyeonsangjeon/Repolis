@@ -1,26 +1,24 @@
 <div align="center">
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/banner.svg" alt="Repolis — 레포들의 도시" width="100%"></a>
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/banner.svg" alt="Repolis — 레포들의 도시" width="80%"></a>
 
 # Repolis — 레포들의 도시
 
-**내 GitHub은 목록이 아니라, 직접 걸어 다니는 살아 있는 3D 마을입니다.**
-
-[![라이브 데모](https://img.shields.io/badge/Live-Repolis-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
-[![매일 갱신](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=for-the-badge&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
-[![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
-[![빌드 없음](https://img.shields.io/badge/runtime-zero%20build-83bb59?style=for-the-badge)](index.html)
-[![License: MIT](https://img.shields.io/badge/License-MIT-a0a0a0?style=for-the-badge)](LICENSE)
-
 [English](README.md) · [한국어](README.ko.md)
 
-집 하나하나가 공개 레포입니다. 실제 트래픽이 건축을 만들고, 주민들이 구역 사이를 살아가며, 마을 택시 **깃버**는 말로 찾은 레포까지 직접 태워다 줍니다.
+**Repolis는 공개 GitHub 레포를 직접 걸어 다니는 3D 마을로 바꿉니다. 트래픽이 건물을 만들고, 주민이 살아가며, 깃버가 원하는 프로젝트까지 데려갑니다.**
 
-<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis를 걷고, 깃버에게 레포를 물어본 뒤 그 집까지 타고 가는 모습" width="86%"></a>
+[![라이브 마을 열기](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EB%B8%8C-%EB%A7%88%EC%9D%84%20%EC%97%B4%EA%B8%B0-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
+**[공개 GitHub 마을 방문 →](https://hyeonsangjeon.github.io/Repolis/?user=mrdoob)**
 
-**[라이브 마을 열기](https://hyeonsangjeon.github.io/Repolis/)** · **[공개 GitHub 마을 방문](https://hyeonsangjeon.github.io/Repolis/?user=mrdoob)** · **[로컬 실행](#60초-로컬-실행)**
+<a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis 데모: 트래픽으로 지은 살아 있는 GitHub 마을, 깃버 검색과 택시 이동, 실제 레포 카드" width="92%"></a>
 
-<sub>가입 없음 · 빌드 없음 · 키보드, 터치, 모바일 조작 지원</sub>
+<sub>가입 없음 · 빌드 없음 · 키보드, 터치, 모바일 조작 지원 · <strong><a href="#60초-로컬-실행">로컬 실행</a></strong></sub>
+
+[![매일 갱신](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=flat-square&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
+[![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
+[![빌드 없음](https://img.shields.io/badge/runtime-zero%20build-83bb59?style=flat-square)](index.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-a0a0a0?style=flat-square)](LICENSE)
 
 </div>
 
