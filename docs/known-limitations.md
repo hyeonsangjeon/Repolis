@@ -61,7 +61,9 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   occupancy, or offline simulation. Residents finish any stronger social owner before commuting, so a
   festival or conversation can intentionally delay home/work arrival. Long commutes use purposeful speed
   plus existing circle-collider resolution rather than authored road splines. Its trees and gardens are
-  procedural scenery rather than a persistent gardening simulation; LOW_END intentionally uses fewer plants.
+  procedural scenery rather than a persistent gardening simulation; cottage styles are fixed to resident
+  identity rather than user-customizable, and LOW_END intentionally uses fewer plants and omits canopy,
+  chimney, and finial detail.
 
 ## Tooling
 
