@@ -87,7 +87,7 @@ features:
   - id: living-village
     summary: Residents have named homes, home-work routines, relationships, haunts, bounded shared excursions, gatherings, festivals, and specialist handoffs.
   - id: resident-quarter
-    summary: Starlight Row gives all eight residents a named cottage, colored front garden, shared flower commons, tree canopy, porch seat, warm windows, and session-local home-work commute.
+    summary: Starlight Row gives all eight residents a named, individually styled cottage with three batched roof families, facade details, colored gardens, tree canopy, and session-local home-work commute.
   - id: resident-shared-joy
     summary: One idle pair autonomously visits real flowers, visible night stars, or a rendered repo house without AI or network calls.
   - id: exploration

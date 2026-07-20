@@ -748,20 +748,43 @@ const homeLandscapeBlock=(homesBlock.match(/function buildResidentQuarterLandsca
 const homeRadii=Array.from({length:8},(_,i)=>{ const a=i/8*Math.PI*2+Math.PI/8; return Math.hypot(130+Math.cos(a)*13,130+Math.sin(a)*13); });
 const broadAngles=[0.05,0.66,1.25,1.86,2.48,4.48,5.04,5.58,6.04];
 const broadVisualMax=Math.max(...broadAngles.map((a,i)=>Math.hypot(130+Math.cos(a)*19.2,130+Math.sin(a)*19.2)+1.58*(0.9+(i%3)*0.08)));
+const canopyPostSeatGap=Math.hypot(-1.25-(-0.95),3.2-(2.1*1.04+0.06+0.38));
+const canopyOuterRadius=Math.hypot(2.35/2,2.1*1.04+0.06+0.24+0.82/2);
+const minWindowCanopyGap=(2.92*0.94+0.05-0.14/2)-(2.35*0.94+0.98/2);
 ok(homesBlock.length>0, 'resident-quarter geometry block is extractable');
 ok(/const RES_QUARTER_SITE=Object\.freeze\(\{x:130,z:130,reserve:42\}\)/.test(HTML)
   &&/const RES_QUARTER_POS=new THREE\.Vector3\(RES_QUARTER_SITE\.x,0,RES_QUARTER_SITE\.z\), RES_HOME_RING=13/.test(homesBlock)
   &&Math.min(...homeRadii)>165&&Math.max(...homeRadii)<205, 'all eight homes occupy the north-east outer clearing inside the 205-unit map radius');
 ok(/overflow\.some\(s=>Math\.hypot\(s\.x-RES_QUARTER_SITE\.x,s\.z-RES_QUARTER_SITE\.z\)<RES_QUARTER_SITE\.reserve\)/.test(HTML)
   &&/overflow\.length=0; const qa=Math\.atan2\(RES_QUARTER_SITE\.z,RES_QUARTER_SITE\.x\)/.test(HTML), 'public-town overflow slots redistribute around the reserved residential clearing');
-ok(/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(5,3\.2,4\.2\)[\s\S]*?new THREE\.InstancedMesh\(new THREE\.ConeGeometry\(3\.8,2\.1,4\)/.test(homesBlock)
+ok(/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(5,3\.2,4\.2\)[\s\S]*?roofHip=new THREE\.InstancedMesh\(new THREE\.ConeGeometry\(3\.8,2\.1,4\)/.test(homesBlock)
+  &&/roofGable=new THREE\.InstancedMesh\(_gableHomeRoofGeometry\(\)/.test(homesBlock)
+  &&/roofHex=new THREE\.InstancedMesh\(new THREE\.ConeGeometry\(3\.55,2\.3,6\)/.test(homesBlock)
   &&/new THREE\.InstancedMesh\(new THREE\.PlaneGeometry\(0\.84,0\.98\)/.test(homesBlock), 'walls, roofs, and sixteen windows stay draw-batched');
+ok(/const RES_HOME_STYLES=Object\.freeze\(\{[\s\S]*?sol:\{roof:'hip'\}[\s\S]*?jun:\{roof:'gable',chimney:true\}[\s\S]*?nari:\{roof:'hex',canopy:true,boxes:true\}/.test(homesBlock)
+  &&/roofCounts=\{hip:0,gable:0,hex:0\}; styles\.forEach\(s=>roofCounts\[s\.roof\]\+\+\)/.test(homesBlock), 'resident IDs deterministically resolve to three bounded roof-style batches');
+ok(/function _gableHomeRoofGeometry\(\)[\s\S]*?g\.setIndex\(\[0,1,2,4,3,5/.test(homesBlock)
+  &&/const hard=g\.toNonIndexed\(\); g\.dispose\(\);[\s\S]*?hard\.computeVertexNormals\(\); hard\.computeBoundingSphere\(\)/.test(homesBlock), 'gable cottages duplicate hard-face vertices before computing normals and bounds');
 ok(/for\(let i=0;i<RESIDENTS\.length;i\+\+\)[\s\S]*?RESIDENT_HOMES\.push\(home\)/.test(homesBlock)
   &&/signTexture\('🏠 '\+\(res\[LANG\]\|\|res\.ko\)\.name,res\.color\)/.test(homesBlock), 'the roster truthfully creates one colored, named cottage per resident');
 ok(/_addResidentQuarterCollider\(\{x:wx,z:wz,r:3\.15,_residentHome:res\.id\}\)/.test(homesBlock)
   &&/function _addResidentQuarterCollider\(c\)\{ RES_QUARTER_COLLIDERS\.push\(c\); EXTRA_COLLIDERS\.push\(c\); COLLIDERS\.push\(c\)/.test(homesBlock), 'every cottage and landscape obstacle joins resident-target and player collision registries');
-ok(/if\(!LOW_END\) q\.add\(chimney\)/.test(homesBlock)&&/if\(!LOW_END\) makeGlowFlowers/.test(homesBlock)
-  &&!/PointLight|fetch\(|_npcFetch|npcModelCall/.test(homesBlock), 'LOW_END drops optional cottage detail and the quarter adds no light, network, or model call');
+ok(/q\.add\(yard,body,roofHip,roofGable,roofHex,door,windows,shutters,transoms,windowBoxes\)/.test(homesBlock)
+  &&/if\(!LOW_END\) q\.add\(canopies,canopyPosts,chimneys,finials\)/.test(homesBlock)
+  &&/batches:LOW_END\?6:10/.test(homesBlock)&&/if\(!LOW_END\) makeGlowFlowers/.test(homesBlock)
+  &&!/PointLight|fetch\(|_npcFetch|npcModelCall/.test(homesBlock), 'LOW_END keeps core style batches, drops four optional batches, and adds no light, network, or model call');
+ok(/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(0\.22,0\.94,0\.1\)/.test(homesBlock)
+  &&/new THREE\.InstancedMesh\(new THREE\.PlaneGeometry\(0\.58,0\.34\),winMat,RESIDENTS\.length\)/.test(homesBlock)
+  &&/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(1\.0,0\.22,0\.34\)/.test(homesBlock)
+  &&/facadeZ=2\.1\*wallZ\+0\.06/.test(homesBlock), 'shutters, transoms, and selected window boxes remain one batch each and sit outside scaled facades');
+ok(/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(2\.35,0\.14,0\.82\)/.test(homesBlock)
+  &&/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(0\.14,1,0\.14\)/.test(homesBlock)
+  &&/new THREE\.OctahedronGeometry\(0\.25,0\)/.test(homesBlock), 'desktop canopies, support posts, and roof finials stay shared and instanced');
+ok(/const sp=_homeLocal\(lx,lz,rot,0,Math\.max\(2\.58,facadeZ\+0\.34\)\)/.test(homesBlock)
+  &&/board\.position\.set\(sp\.x,3\.72\*height,sp\.z\)/.test(homesBlock)
+  &&canopyPostSeatGap>0.6&&canopyOuterRadius<3.15&&minWindowCanopyGap>0, 'signs clear gable facades and canopy assemblies clear windows, seats, and cottage collision');
+ok(/roofStyles:roofCounts,shutters:RESIDENTS\.length\*4,transoms:RESIDENTS\.length,windowBoxes:boxCount/.test(homesBlock)
+  &&/style:style\.roof,details:\{canopy:!LOW_END&&!!style\.canopy,boxes:!!style\.boxes,chimney:!LOW_END&&!!style\.chimney,finial:!LOW_END\}/.test(homesBlock), 'debug state reports truthful style and rendered detail counts on every quality tier');
 ok(/SEATS\.push\(\{x:seat\.x,z:seat\.z,rot:rot\+Math\.PI,pos:new THREE\.Vector3\(seat\.x,0,seat\.z\),_residentHome:res\.id\}/.test(homesBlock)
   &&/if\(L\._atHome\)\{ if\(s\._residentHome!==L\.res\.id\) continue; \} else if\(s\._residentHome\) continue/.test(npcBlock)
   &&/function _coRestSeats\(L,W\)\{ if\(L\._atHome\|\|W\._atHome\) return null/.test(npcBlock), 'at-home residents use only their own porch seat and never leak into friend co-rest pairing');
@@ -800,7 +823,8 @@ ok(/case 'homes': return RES_QUARTER\?/.test(HTML)
   &&/LM\.push\(\[RES_QUARTER_POS\.x,RES_QUARTER_POS\.z,'🏘️'\]\)/.test(HTML)
   &&/lmDriveHomes:/.test(HTML)&&/lmArriveHomes:/.test(HTML), 'map, Station, taxi, Passport, and bilingual arrival copy expose the new quarter');
 ok(/window\.__residentQuarter=/.test(HTML)&&/window\.__goHome=/.test(HTML)&&/window\.__goWork=/.test(HTML)
-  &&/window\.__homeCollision=/.test(HTML)&&/window\.__finishCommute=/.test(HTML)&&/window\.__frameHomes=/.test(HTML), 'debug hooks inspect, collide, drive, finish, and frame residential routines');
+  &&/window\.__homeCollision=/.test(HTML)&&/window\.__finishCommute=/.test(HTML)&&/window\.__frameHomes=/.test(HTML)
+  &&/window\.__frameHome=/.test(HTML), 'debug hooks inspect, collide, drive, finish, and frame quarter-wide or individual residential routines');
 
 group('Resident Agency — autonomous shared joy excursions');
 const joyBlock=(npcBlock.match(/Resident Agency — one pair[\s\S]*?function _tryPeerNotice/)||[''])[0];

@@ -234,5 +234,10 @@ lanterns. Instanced broadleaf/cypress trees and shrubs form a perimeter with a d
 town. Tree and home colliders share `RES_QUARTER_COLLIDERS`; overflow repository slots reserve the full
 42-unit landscape clearing. LOW_END reduces counts rather than removing the garden structure.
 
+Cottage identity is also deterministic. `RES_HOME_STYLES` maps residents to hip, gable, or hex roofs and
+optional window boxes, canopies, and chimneys. Walls remain one instance batch; roofs use three batches;
+shutters, transoms, boxes, canopies, posts, chimneys, and finials each use at most one additional batch.
+LOW_END preserves roof/shutter/transom/box identity but omits the four optional exterior batches.
+
 The quarter is reachable through Gitber landmark intent and GitHub Station, appears as `🏘️` on the world
 map, and awards the local-only `homes` Explorer Passport stamp.

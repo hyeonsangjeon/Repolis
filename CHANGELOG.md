@@ -6,6 +6,22 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.83.2] — 2026-07-21
+
+### 🏡 Resident cottage variety — richer homes, bounded batches
+
+- **The homes no longer share one silhouette.** Deterministic resident styles divide the eight cottages into
+  three hip, three gable, and two hex-roof houses while keeping walls and each roof family instanced.
+- **Facade details make identity readable up close.** All homes gain coloured shutters and transom windows;
+  selected residents receive window boxes, porch canopies/posts, chimneys, and bright roof finials according
+  to a fixed persona-matched style map.
+- **Clearance remains truthful.** Name signs move ahead of gable faces, canopy posts remain inside cottage
+  collision and clear of porch seats, and existing gardens, routes, taxi arrival, trees, and map bounds stay
+  unchanged.
+- **The frame budget stays explicit.** Desktop adds ten total style/detail batches; LOW_END keeps the three
+  roofs, shutters, transoms, and window boxes in six batches while dropping canopies, posts, chimneys, and
+  finials. No per-home material, light, model, network, or persistence cost is added.
+
 ## [1.83.1] — 2026-07-20
 
 ### 🌳 Starlight Row landscaping — a neighborhood cared for, not just occupied

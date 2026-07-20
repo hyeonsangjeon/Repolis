@@ -5361,13 +5361,22 @@ function _hex(c){ return '#'+(c>>>0).toString(16).padStart(6,'0'); }
 // 🏘️ Starlight Row — one real cottage per resident around a shared outer green; geometry is draw-batched, signs keep each home personal
 const RES_QUARTER_POS=new THREE.Vector3(RES_QUARTER_SITE.x,0,RES_QUARTER_SITE.z), RES_HOME_RING=13;
 const _RES_HOME_SIGNS=[]; let _RES_QUARTER_SIGN=null;
+const RES_HOME_STYLES=Object.freeze({
+  sol:{roof:'hip'}, jun:{roof:'gable',chimney:true}, nari:{roof:'hex',canopy:true,boxes:true}, tae:{roof:'gable',chimney:true},
+  rin:{roof:'gable',canopy:true,boxes:true}, mira:{roof:'hex',chimney:true,boxes:true}, kai:{roof:'hip',canopy:true}, noa:{roof:'hip',canopy:true,boxes:true}
+});
+function _residentHomeStyle(id){ return RES_HOME_STYLES[id]||{roof:'hip'}; }
+function _gableHomeRoofGeometry(){ const w=5.8,d=4.9,h=2.1,g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute([-w/2,0,d/2,w/2,0,d/2,0,h,d/2,-w/2,0,-d/2,w/2,0,-d/2,0,h,-d/2],3));
+  g.setIndex([0,1,2,4,3,5,0,2,5,0,5,3,1,4,5,1,5,2,0,3,4,0,4,1]); const hard=g.toNonIndexed(); g.dispose();
+  hard.computeVertexNormals(); hard.computeBoundingSphere(); return hard; }
 function _residentHomeById(id){ return RESIDENT_HOMES.find(h=>h.id===id)||null; }
 function _homeLocal(lx,lz,rot,ox,oz){ const c=Math.cos(rot),s=Math.sin(rot); return {x:lx+c*ox+s*oz,z:lz-s*ox+c*oz}; }
 function _addResidentQuarterCollider(c){ RES_QUARTER_COLLIDERS.push(c); EXTRA_COLLIDERS.push(c); COLLIDERS.push(c); return c; }
 function _setHomeInstance(mesh,i,x,y,z,rot=0,sx=1,sy=1,sz=1,rx=0){ const d=_setHomeInstance.d||(_setHomeInstance.d=new THREE.Object3D());
   d.position.set(x,y,z); d.rotation.set(rx,rot,0); d.scale.set(sx,sy,sz); d.updateMatrix(); mesh.setMatrixAt(i,d.matrix); }
 function _refreshResidentHomeLights(night=isNight){ for(const m of RES_HOME_WINDOWS){ m.map=night?_roomTex:_winTex; m.color.setHex(night?0xffdf9a:DAY_GLASS); m.needsUpdate=true; }
-  for(const s of RES_HOME_SURFACES){ s.body.emissive.setHex(night?0x35261f:0x000000); s.roof.emissive.setHex(night?0x20263f:0x000000); }
+  for(const s of RES_HOME_SURFACES){ s.body.emissive.setHex(night?0x35261f:0x000000); for(const roof of s.roofs) roof.emissive.setHex(night?0x20263f:0x000000); }
   for(const h of RESIDENT_HOMES) if(h.glow) h.glow.material.opacity=night?(h.occupied?0.22:0.09):0; }
 function refreshResidentHomeSigns(){ for(const s of _RES_HOME_SIGNS){ const m=s.board.material; if(m.map) m.map.dispose();
     m.map=signTexture('🏠 '+(s.res[LANG]||s.res.ko).name,s.res.color); m.needsUpdate=true; }
@@ -5434,35 +5443,68 @@ function buildResidentQuarter(){
   const common=new THREE.Mesh(new THREE.CircleGeometry(20,48),new THREE.MeshBasicMaterial({color:0x87b875,transparent:true,opacity:0.55,depthWrite:false}));
   common.rotation.x=-Math.PI/2; common.position.y=0.012; q.add(common);
   const lane=new THREE.Mesh(new THREE.RingGeometry(6.4,10.2,48),texMat(SAND_TEX,3,3)); lane.rotation.x=-Math.PI/2; lane.position.y=0.025; lane.receiveShadow=true; q.add(lane);
+  const styles=RESIDENTS.map(r=>_residentHomeStyle(r.id)), roofCounts={hip:0,gable:0,hex:0}; styles.forEach(s=>roofCounts[s.roof]++);
   const body=new THREE.InstancedMesh(new THREE.BoxGeometry(5,3.2,4.2),toon(0xffffff),RESIDENTS.length);
-  const roof=new THREE.InstancedMesh(new THREE.ConeGeometry(3.8,2.1,4),toon(0xffffff),RESIDENTS.length);
+  const roofHip=new THREE.InstancedMesh(new THREE.ConeGeometry(3.8,2.1,4),toon(0xffffff),roofCounts.hip);
+  const roofGable=new THREE.InstancedMesh(_gableHomeRoofGeometry(),toon(0xffffff),roofCounts.gable);
+  const roofHex=new THREE.InstancedMesh(new THREE.ConeGeometry(3.55,2.3,6),toon(0xffffff),roofCounts.hex);
+  const roofs={hip:roofHip,gable:roofGable,hex:roofHex}, roofAt={hip:0,gable:0,hex:0};
   const yard=new THREE.InstancedMesh(new THREE.CircleGeometry(4.4,24),toon(0x79aa68),RESIDENTS.length);
   const door=new THREE.InstancedMesh(new THREE.BoxGeometry(0.92,1.82,0.18),toon(0x6e4930),RESIDENTS.length);
   const winMat=new THREE.MeshBasicMaterial({map:_winTex,transparent:true,color:DAY_GLASS,depthWrite:true});
   const windows=new THREE.InstancedMesh(new THREE.PlaneGeometry(0.84,0.98),winMat,RESIDENTS.length*2);
-  const chimney=new THREE.InstancedMesh(new THREE.BoxGeometry(0.5,1.25,0.5),toon(0x8f6650),RESIDENTS.length);
-  body.castShadow=roof.castShadow=true; body.receiveShadow=roof.receiveShadow=true; yard.receiveShadow=true;
-  q.add(yard,body,roof,door,windows); if(!LOW_END) q.add(chimney); RES_HOME_WINDOWS.push(winMat); RES_HOME_SURFACES.push({body:body.material,roof:roof.material});
+  const shutters=new THREE.InstancedMesh(new THREE.BoxGeometry(0.22,0.94,0.1),toon(0xffffff),RESIDENTS.length*4);
+  const transoms=new THREE.InstancedMesh(new THREE.PlaneGeometry(0.58,0.34),winMat,RESIDENTS.length);
+  const boxCount=styles.filter(s=>s.boxes).length*2, windowBoxes=new THREE.InstancedMesh(new THREE.BoxGeometry(1.0,0.22,0.34),toon(0xffffff),boxCount);
+  const canopyCount=styles.filter(s=>s.canopy).length, chimneyCount=styles.filter(s=>s.chimney).length;
+  const canopies=!LOW_END?new THREE.InstancedMesh(new THREE.BoxGeometry(2.35,0.14,0.82),toon(0xffffff),canopyCount):null;
+  const canopyPosts=!LOW_END?new THREE.InstancedMesh(new THREE.BoxGeometry(0.14,1,0.14),toon(0x725139),canopyCount*2):null;
+  const chimneys=!LOW_END?new THREE.InstancedMesh(new THREE.BoxGeometry(0.5,1.25,0.5),toon(0x8f6650),chimneyCount):null;
+  const finials=!LOW_END?new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.25,0),basic(0xffffff),RESIDENTS.length):null;
+  body.castShadow=body.receiveShadow=yard.receiveShadow=shutters.castShadow=true; for(const r of Object.values(roofs)){ r.castShadow=r.receiveShadow=true; }
+  q.add(yard,body,roofHip,roofGable,roofHex,door,windows,shutters,transoms,windowBoxes);
+  if(!LOW_END) q.add(canopies,canopyPosts,chimneys,finials);
+  RES_HOME_WINDOWS.push(winMat); RES_HOME_SURFACES.push({body:body.material,roofs:Object.values(roofs).map(r=>r.material)});
+  let boxAt=0,canopyAt=0,chimneyAt=0;
   for(let i=0;i<RESIDENTS.length;i++){ const res=RESIDENTS[i],a=i/RESIDENTS.length*Math.PI*2+Math.PI/8, lx=Math.cos(a)*RES_HOME_RING,lz=Math.sin(a)*RES_HOME_RING;
-    const wx=RES_QUARTER_POS.x+lx,wz=RES_QUARTER_POS.z+lz,rot=Math.atan2(-lx,-lz),height=0.94+(i%3)*0.035;
+    const style=styles[i],wx=RES_QUARTER_POS.x+lx,wz=RES_QUARTER_POS.z+lz,rot=Math.atan2(-lx,-lz),height=0.94+(i%3)*0.035;
+    const wallX=style.roof==='gable'?1.05:style.roof==='hex'?0.97:1,wallZ=style.roof==='hex'?1.04:1,facadeZ=2.1*wallZ+0.06;
     _setHomeInstance(yard,i,lx,0.014,lz,0,1,1,1,-Math.PI/2);
-    _setHomeInstance(body,i,lx,1.6*height,lz,rot,1,height,1); body.setColorAt(i,new THREE.Color(res.color).lerp(new THREE.Color(0xfff1d6),0.62));
-    _setHomeInstance(roof,i,lx,4.25*height,lz,rot+Math.PI/4,1,1,1); roof.setColorAt(i,new THREE.Color(res.accent||res.color));
-    const dp=_homeLocal(lx,lz,rot,0,2.14); _setHomeInstance(door,i,dp.x,1.08,dp.z,rot);
-    for(let side=0;side<2;side++){ const wp=_homeLocal(lx,lz,rot,side?-1.28:1.28,2.16); _setHomeInstance(windows,i*2+side,wp.x,2.35*height,wp.z,rot); }
-    const cp=_homeLocal(lx,lz,rot,-1.35,-0.7); _setHomeInstance(chimney,i,cp.x,4.55*height,cp.z,rot);
-    const sp=_homeLocal(lx,lz,rot,0,2.22), board=new THREE.Mesh(new THREE.PlaneGeometry(2.5,0.72),new THREE.MeshBasicMaterial({map:signTexture('🏠 '+(res[LANG]||res.ko).name,res.color),transparent:true}));
-    board.position.set(sp.x,3.48*height,sp.z); board.rotation.y=rot; q.add(board); _RES_HOME_SIGNS.push({res,board});
+    _setHomeInstance(body,i,lx,1.6*height,lz,rot,wallX,height,wallZ); body.setColorAt(i,new THREE.Color(res.color).lerp(new THREE.Color(0xfff1d6),0.62));
+    const roof=roofs[style.roof],ri=roofAt[style.roof]++; if(style.roof==='gable') _setHomeInstance(roof,ri,lx,3.2*height,lz,rot,wallX,1,wallZ);
+    else _setHomeInstance(roof,ri,lx,(style.roof==='hex'?4.35:4.25)*height,lz,rot+(style.roof==='hex'?Math.PI/6:Math.PI/4),wallX,1,wallZ);
+    roof.setColorAt(ri,new THREE.Color(res.accent||res.color));
+    const dp=_homeLocal(lx,lz,rot,0,facadeZ); _setHomeInstance(door,i,dp.x,1.08,dp.z,rot);
+    const shutterColor=new THREE.Color(res.color).lerp(new THREE.Color(0x49372e),0.48);
+    for(let side=0;side<2;side++){ const wx0=side?-1.28:1.28,wp=_homeLocal(lx,lz,rot,wx0,facadeZ); _setHomeInstance(windows,i*2+side,wp.x,2.35*height,wp.z,rot);
+      for(let sh=0;sh<2;sh++){ const shp=_homeLocal(lx,lz,rot,wx0+(sh?-0.57:0.57),facadeZ+0.02),si=i*4+side*2+sh;
+        _setHomeInstance(shutters,si,shp.x,2.35*height,shp.z,rot); shutters.setColorAt(si,shutterColor); }
+      if(style.boxes){ const bp=_homeLocal(lx,lz,rot,wx0,facadeZ+0.12); _setHomeInstance(windowBoxes,boxAt,bp.x,1.72*height,bp.z,rot);
+        windowBoxes.setColorAt(boxAt,new THREE.Color(res.accent||res.color).lerp(new THREE.Color(0x76513b),0.4)); boxAt++; } }
+    const tp=_homeLocal(lx,lz,rot,0,facadeZ); _setHomeInstance(transoms,i,tp.x,2.26*height,tp.z,rot);
+    if(!LOW_END&&style.chimney){ const cp=_homeLocal(lx,lz,rot,-1.35,-0.7); _setHomeInstance(chimneys,chimneyAt++,cp.x,4.55*height,cp.z,rot); }
+    if(!LOW_END&&style.canopy){ const canopyY=2.92*height+0.05,ap=_homeLocal(lx,lz,rot,0,facadeZ+0.24); _setHomeInstance(canopies,canopyAt,ap.x,canopyY,ap.z,rot);
+      canopies.setColorAt(canopyAt,new THREE.Color(res.accent||res.color)); const postH=canopyY-0.07;
+      for(let p=0;p<2;p++){ const pp=_homeLocal(lx,lz,rot,p?-0.95:0.95,facadeZ+0.38); _setHomeInstance(canopyPosts,canopyAt*2+p,pp.x,postH/2,pp.z,rot,1,postH,1); } canopyAt++; }
+    if(!LOW_END){ const fy=style.roof==='gable'?5.45:style.roof==='hex'?5.62:5.42; _setHomeInstance(finials,i,lx,fy*height,lz,rot); finials.setColorAt(i,new THREE.Color(res.accent||res.color)); }
+    const sp=_homeLocal(lx,lz,rot,0,Math.max(2.58,facadeZ+0.34)), board=new THREE.Mesh(new THREE.PlaneGeometry(2.5,0.72),new THREE.MeshBasicMaterial({map:signTexture('🏠 '+(res[LANG]||res.ko).name,res.color),transparent:true}));
+    board.position.set(sp.x,3.72*height,sp.z); board.rotation.y=rot; q.add(board); _RES_HOME_SIGNS.push({res,board});
     const porchL=_homeLocal(lx,lz,rot,0,3.55), seatL=_homeLocal(lx,lz,rot,-1.25,3.2);
     const porch={x:RES_QUARTER_POS.x+porchL.x,z:RES_QUARTER_POS.z+porchL.z}, seat={x:RES_QUARTER_POS.x+seatL.x,z:RES_QUARTER_POS.z+seatL.z};
     const glow=new THREE.Mesh(new THREE.CircleGeometry(3.5,20),new THREE.MeshBasicMaterial({map:GLOW_TEX,color:res.accent||res.color,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
     glow.rotation.x=-Math.PI/2; glow.position.set(lx,0.035,lz); q.add(glow);
-    const home={id:res.id,res,index:i,x:wx,z:wz,rot,porch,seat,board,glow,occupied:false}; RESIDENT_HOMES.push(home);
+    const home={id:res.id,res,index:i,style:style.roof,details:{canopy:!LOW_END&&!!style.canopy,boxes:!!style.boxes,chimney:!LOW_END&&!!style.chimney,finial:!LOW_END},x:wx,z:wz,rot,porch,seat,board,glow,occupied:false}; RESIDENT_HOMES.push(home);
     SEATS.push({x:seat.x,z:seat.z,rot:rot+Math.PI,pos:new THREE.Vector3(seat.x,0,seat.z),_residentHome:res.id});
     _addResidentQuarterCollider({x:wx,z:wz,r:3.15,_residentHome:res.id});
   }
-  body.instanceMatrix.needsUpdate=roof.instanceMatrix.needsUpdate=yard.instanceMatrix.needsUpdate=door.instanceMatrix.needsUpdate=windows.instanceMatrix.needsUpdate=true;
-  if(body.instanceColor) body.instanceColor.needsUpdate=true; if(roof.instanceColor) roof.instanceColor.needsUpdate=true; if(!LOW_END) chimney.instanceMatrix.needsUpdate=true;
+  body.instanceMatrix.needsUpdate=yard.instanceMatrix.needsUpdate=door.instanceMatrix.needsUpdate=windows.instanceMatrix.needsUpdate=shutters.instanceMatrix.needsUpdate=transoms.instanceMatrix.needsUpdate=windowBoxes.instanceMatrix.needsUpdate=true;
+  if(body.instanceColor) body.instanceColor.needsUpdate=true; for(const r of Object.values(roofs)){ r.instanceMatrix.needsUpdate=true; if(r.instanceColor) r.instanceColor.needsUpdate=true; }
+  if(shutters.instanceColor) shutters.instanceColor.needsUpdate=true; if(windowBoxes.instanceColor) windowBoxes.instanceColor.needsUpdate=true;
+  if(!LOW_END){ canopies.instanceMatrix.needsUpdate=canopyPosts.instanceMatrix.needsUpdate=chimneys.instanceMatrix.needsUpdate=finials.instanceMatrix.needsUpdate=true;
+    if(canopies.instanceColor) canopies.instanceColor.needsUpdate=true; if(finials.instanceColor) finials.instanceColor.needsUpdate=true; }
+  const homeDetails={roofStyles:roofCounts,shutters:RESIDENTS.length*4,transoms:RESIDENTS.length,windowBoxes:boxCount,
+    canopies:LOW_END?0:canopyCount,canopyPosts:LOW_END?0:canopyCount*2,chimneys:LOW_END?0:chimneyCount,finials:LOW_END?0:RESIDENTS.length,batches:LOW_END?6:10};
+  q.userData.homeDetails=homeDetails;
   const landscape=buildResidentQuarterLandscape(q);
   const ua=RES_QUARTER_POS.clone().normalize(), sx=-ua.x*8,sz=-ua.z*8, signG=new THREE.Group(); signG.position.set(sx,0,sz); signG.rotation.y=Math.atan2(-ua.x,-ua.z); q.add(signG);
   const post=rbox(0.18,2.5,0.18,0x765237,0.03); post.position.y=1.25; signG.add(post);
@@ -5470,7 +5512,7 @@ function buildResidentQuarter(){
   _addResidentQuarterCollider({x:RES_QUARTER_POS.x+sx,z:RES_QUARTER_POS.z+sz,r:0.45,_residentQuarterSign:true});
   makeBench(RES_QUARTER_POS.x-4.2,RES_QUARTER_POS.z,Math.PI/2); makeBench(RES_QUARTER_POS.x+4.2,RES_QUARTER_POS.z,-Math.PI/2);
   makeGlowFlowers(RES_QUARTER_POS.x,RES_QUARTER_POS.z-4.7,0xb9a7ff,1.05); if(!LOW_END) makeGlowFlowers(RES_QUARTER_POS.x,RES_QUARTER_POS.z+4.7,0x8fe8d0,0.95);
-  RES_QUARTER={id:'homes',label:t('lmHomes'),pos:RES_QUARTER_POS,_pos:RES_QUARTER_POS.clone(),group:q,homes:RESIDENT_HOMES,arrival:RES_QUARTER_POS.clone(),landscape};
+  RES_QUARTER={id:'homes',label:t('lmHomes'),pos:RES_QUARTER_POS,_pos:RES_QUARTER_POS.clone(),group:q,homes:RESIDENT_HOMES,arrival:RES_QUARTER_POS.clone(),landscape,homeDetails};
   _refreshResidentHomeLights(isNight); return RES_QUARTER;
 }
 if(NPC_CFG.modeEnabled&&NPC_CFG.visualEnabled) buildResidentQuarter();
@@ -8551,10 +8593,10 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     return { placed:!!RES_QUARTER, name:t('lmHomes'), pos:RES_QUARTER?[RES_QUARTER_POS.x,RES_QUARTER_POS.z]:null, meshes, windows:RES_HOME_WINDOWS.length,
       colliders:RES_QUARTER_COLLIDERS.length, maxColliderWorldR:+maxWorldR.toFixed(2),
       maxVisualWorldR:RES_QUARTER&&RES_QUARTER.landscape?RES_QUARTER.landscape.maxVisualWorldR:0, repoGap:+repoGap.toFixed(2), nearestRepo:nearRepo,
-      landscape:RES_QUARTER&&RES_QUARTER.landscape?{...RES_QUARTER.landscape}:null,
+      landscape:RES_QUARTER&&RES_QUARTER.landscape?{...RES_QUARTER.landscape}:null, homeDetails:RES_QUARTER&&RES_QUARTER.homeDetails?JSON.parse(JSON.stringify(RES_QUARTER.homeDetails)):null,
       homes:RESIDENT_HOMES.map(h=>{ const L=_residentLive(h.id); return {id:h.id,name:(h.res[LANG]||h.res.ko).name,pos:[+h.x.toFixed(1),+h.z.toFixed(1)],
         porch:[+h.porch.x.toFixed(1),+h.porch.z.toFixed(1)],worldR:+Math.hypot(h.x,h.z).toFixed(1),occupied:!!h.occupied,
-        resident:L?[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)]:null,atHome:!!(L&&L._atHome),commute:L&&L._commute||null}; }) }; };
+        style:h.style,details:{...h.details},resident:L?[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)]:null,atHome:!!(L&&L._atHome),commute:L&&L._commute||null}; }) }; };
   window.__homeCollision=(id)=>{ const h=_residentHomeById(id)||RESIDENT_HOMES[0]; if(!h) return null; const p=new THREE.Vector3(h.x+0.02,0,h.z); resolveColliders(p);
     return {id:h.id,r:3.15,resolved:[+p.x.toFixed(2),+p.z.toFixed(2)],distance:+Math.hypot(p.x-h.x,p.z-h.z).toFixed(2)}; };
   window.__goHome=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE[0]; if(!L) return {ok:false};
@@ -8568,6 +8610,8 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     return {ok:true,id:L.res.id,arrived:kind,state:window.__npcRoutes().find(x=>x.id===L.res.id)}; };
   window.__frameHomes=(dist=36,pitch=1.08)=>{ if(!RES_QUARTER) return null; player.position.set(RES_QUARTER_POS.x,0,RES_QUARTER_POS.z);
     model.visible=false; camYaw=0; camPitch=pitch; camDist=dist; return window.__residentQuarter(); };
+  window.__frameHome=(id,dist=11)=>{ const h=_residentHomeById(id)||RESIDENT_HOMES[0]; if(!h) return null; player.position.set(h.x,0,h.z);
+    model.visible=false; freeLook=true; camYaw=h.rot; camPitch=0.12; camDist=dist; return {id:h.id,style:h.style,details:{...h.details},pos:[+h.x.toFixed(1),+h.z.toFixed(1)]}; };
   window.__tpHearth=()=>{ if(!HEARTH) return null; player.position.set(HEARTH.x, 0, HEARTH.z+4.5); const yaw=Math.atan2(HEARTH.x-player.position.x, HEARTH.z-player.position.z); camYaw=yaw; camPitch=0.2; camDist=16; if(typeof model!=='undefined'&&model) model.rotation.y=Math.PI-yaw; return { at:[+HEARTH.x.toFixed(1),+HEARTH.z.toFixed(1)], night:isNight, lightNow:+HEARTH.light.intensity.toFixed(2) }; };
   window.__comfort=(id)=>{ const L=id?RESIDENTS_LIVE.find(x=>x.res.id===id):RESIDENTS_LIVE.slice().sort((a,b)=>player.position.distanceTo(a.group.position)-player.position.distanceTo(b.group.position))[0];   // force a resident to settle onto the nearest hearth seat and murmur a contented line
     if(!L) return { ok:false }; const seat=SEATS.find(s=>s._hearth&&!s._occ)||SEATS.find(s=>!s._occ); if(seat){ seat._occ=L; L._rest={ seat, phase:'sit', until:clock.elapsedTime+8 }; _resSit(L,seat); }
