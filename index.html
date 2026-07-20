@@ -2039,7 +2039,7 @@ function updateKoi(t){
 
 /* plaza fountain spray (gravity particles) + glows toggled at night */
 const FOUNTAINS=[]; const NIGHT_GLOWS=[];
-const RESIDENT_HOMES=[], RES_HOME_WINDOWS=[], RES_HOME_SURFACES=[]; let RES_QUARTER=null;   // 🏘️ Starlight Row homes + shared night material registries
+const RESIDENT_HOMES=[], RES_HOME_WINDOWS=[], RES_HOME_SURFACES=[], RES_QUARTER_COLLIDERS=[], RES_QUARTER_LANDSCAPE=[]; let RES_QUARTER=null;   // 🏘️ Starlight Row homes + bounded landscape registries
 const GLOW_FLORA=[]; let _floraLit=false;   // 🌼 luminous roadside blossoms — colourful by day, softly shimmering after dark
 function updateFountains(dt){
   for(const F of FOUNTAINS){ const a=F.pos, st=F.st;
@@ -2800,7 +2800,7 @@ function zoneReposOf(z){ return (z&&z.repos&&z.repos.length)?z.repos:REPOS.filte
 /* ---- town layout: concentric ring streets; repos grouped into district wedges (downtown→hometown by rank within each) ---- */
 const buildings=[];
 const RINGS=[{r:34,n:6},{r:60,n:9},{r:88,n:12},{r:118,n:13},{r:150,n:13}];
-const RES_QUARTER_SITE=Object.freeze({x:130,z:130,reserve:30});   // overflow-ring slots leave this north-east clearing open for Starlight Row
+const RES_QUARTER_SITE=Object.freeze({x:130,z:130,reserve:42});   // overflow-ring slots leave the cottages + perimeter garden open
 (function place(){
   // Identical slot geometry to the classic city (5 ring streets + a faint overflow ring). We keep every
   // slot position byte-for-byte so the Colmar props/landmarks/colliders threaded around them never collide —
@@ -5363,6 +5363,7 @@ const RES_QUARTER_POS=new THREE.Vector3(RES_QUARTER_SITE.x,0,RES_QUARTER_SITE.z)
 const _RES_HOME_SIGNS=[]; let _RES_QUARTER_SIGN=null;
 function _residentHomeById(id){ return RESIDENT_HOMES.find(h=>h.id===id)||null; }
 function _homeLocal(lx,lz,rot,ox,oz){ const c=Math.cos(rot),s=Math.sin(rot); return {x:lx+c*ox+s*oz,z:lz-s*ox+c*oz}; }
+function _addResidentQuarterCollider(c){ RES_QUARTER_COLLIDERS.push(c); EXTRA_COLLIDERS.push(c); COLLIDERS.push(c); return c; }
 function _setHomeInstance(mesh,i,x,y,z,rot=0,sx=1,sy=1,sz=1,rx=0){ const d=_setHomeInstance.d||(_setHomeInstance.d=new THREE.Object3D());
   d.position.set(x,y,z); d.rotation.set(rx,rot,0); d.scale.set(sx,sy,sz); d.updateMatrix(); mesh.setMatrixAt(i,d.matrix); }
 function _refreshResidentHomeLights(night=isNight){ for(const m of RES_HOME_WINDOWS){ m.map=night?_roomTex:_winTex; m.color.setHex(night?0xffdf9a:DAY_GLASS); m.needsUpdate=true; }
@@ -5372,6 +5373,62 @@ function refreshResidentHomeSigns(){ for(const s of _RES_HOME_SIGNS){ const m=s.
     m.map=signTexture('🏠 '+(s.res[LANG]||s.res.ko).name,s.res.color); m.needsUpdate=true; }
   if(_RES_QUARTER_SIGN){ const m=_RES_QUARTER_SIGN.material; if(m.map) m.map.dispose(); m.map=signTexture('🏘️ '+t('lmHomes'),0x8d78c9); m.needsUpdate=true; }
   if(RES_QUARTER) RES_QUARTER.label=t('lmHomes'); }
+function buildResidentQuarterLandscape(q){
+  const n=RESIDENTS.length, perHome=LOW_END?3:5, commonN=LOW_END?10:18, flowerN=n*perHome+commonN;
+  const hedges=new THREE.InstancedMesh(new THREE.BoxGeometry(1.1,0.55,0.45),toon(0xffffff),n*2);
+  const steps=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.34,0.39,0.09,10),toon(0xb7aa91),n*3);
+  const stems=new THREE.InstancedMesh(GEO_STEM,MAT_STEM,flowerN), blossoms=new THREE.InstancedMesh(GEO_FLOWER,basic(0xffffff),flowerN);
+  hedges.castShadow=hedges.receiveShadow=true; steps.receiveShadow=true;
+  let fi=0;
+  for(let i=0;i<n;i++){ const res=RESIDENTS[i],a=i/n*Math.PI*2+Math.PI/8,lx=Math.cos(a)*RES_HOME_RING,lz=Math.sin(a)*RES_HOME_RING,rot=Math.atan2(-lx,-lz);
+    for(let side=0;side<2;side++){ const hp=_homeLocal(lx,lz,rot,side?-2.4:2.4,3.0); _setHomeInstance(hedges,i*2+side,hp.x,0.275,hp.z,rot);
+      hedges.setColorAt(i*2+side,new THREE.Color(res.color).lerp(new THREE.Color(0x4f7f4c),0.72)); }
+    for(let j=0;j<3;j++){ const sp=_homeLocal(lx,lz,rot,0,2.72+j*0.68); _setHomeInstance(steps,i*3+j,sp.x,0.055,sp.z); }
+    for(let j=0;j<perHome;j++){ const side=j%2?-1:1, row=Math.floor(j/2),fp=_homeLocal(lx,lz,rot,side*(1.72+row*0.2),2.62+row*0.58);
+      _setHomeInstance(stems,fi,fp.x,0.23,fp.z,0,1,1.1,1); _setHomeInstance(blossoms,fi,fp.x,0.53,fp.z,0,1.2,1.2,1.2);
+      blossoms.setColorAt(fi,new THREE.Color(res.accent||res.color).lerp(new THREE.Color(FLOWER_MATS[(i+j)%FLOWER_MATS.length].color),0.28)); fi++; } }
+  const gardenCols=[0xff8fb8,0xffd66b,0xb9a7ff,0x82ddbf,0xffffff];
+  for(let j=0;j<commonN;j++){ const a=j/commonN*Math.PI*2+(j%2)*0.13,r=1.15+(j%3)*0.5,x=Math.cos(a)*r,z=Math.sin(a)*r;
+    _setHomeInstance(stems,fi,x,0.23,z,0,1,1.15,1); _setHomeInstance(blossoms,fi,x,0.55,z,0,1.25,1.25,1.25); blossoms.setColorAt(fi,new THREE.Color(gardenCols[j%gardenCols.length])); fi++; }
+  hedges.instanceMatrix.needsUpdate=steps.instanceMatrix.needsUpdate=stems.instanceMatrix.needsUpdate=blossoms.instanceMatrix.needsUpdate=true;
+  if(hedges.instanceColor) hedges.instanceColor.needsUpdate=true; if(blossoms.instanceColor) blossoms.instanceColor.needsUpdate=true;
+  const soil=new THREE.Mesh(new THREE.CylinderGeometry(2.65,2.8,0.18,28),toon(0x76513b)); soil.position.y=0.09;
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(2.72,0.11,7,32),toon(0xb5ad9c)); rim.rotation.x=Math.PI/2; rim.position.y=0.19;
+  q.add(soil,rim,hedges,steps,stems,blossoms);
+  const lampN=LOW_END?2:4, lampPosts=new THREE.InstancedMesh(new THREE.BoxGeometry(0.13,2.1,0.13),toon(0x403a35),lampN);
+  const lampBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(0.17,9,7),basic(0xffe4a3),lampN), lampGlows=[];
+  for(let i=0;i<lampN;i++){ const a=i/lampN*Math.PI*2,r=5.25,x=Math.cos(a)*r,z=Math.sin(a)*r;
+    _setHomeInstance(lampPosts,i,x,1.05,z); _setHomeInstance(lampBulbs,i,x,2.15,z);
+    const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffcf7d,transparent:true,opacity:isNight?0.65:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+    halo.position.set(x,2.15,z); halo.scale.set(2.2,2.2,1); halo._nightOp=0.65; q.add(halo); LAMP_GLOWS.push(halo); lampGlows.push(halo); }
+  lampPosts.instanceMatrix.needsUpdate=lampBulbs.instanceMatrix.needsUpdate=true; q.add(lampPosts,lampBulbs);
+  const broadA=LOW_END?[0.05,1.28,2.38,4.82,5.82]:[0.05,0.66,1.25,1.86,2.48,4.48,5.04,5.58,6.04];
+  const cypressA=LOW_END?[1.72,5.18]:[0.34,1.72,2.82,4.82,5.92];
+  const trunks=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.28,0.38,2.7,7),toon(0x76563a),broadA.length);
+  const crowns=new THREE.InstancedMesh(new THREE.SphereGeometry(1.58,10,8),toon(0xffffff),broadA.length);
+  trunks.castShadow=crowns.castShadow=true; let maxVisualWorldR=0;
+  broadA.forEach((a,i)=>{ const r=19.2,x=Math.cos(a)*r,z=Math.sin(a)*r,s=0.9+(i%3)*0.08;
+    _setHomeInstance(trunks,i,x,1.35,z,0,s,1.0+(i%2)*0.08,s); _setHomeInstance(crowns,i,x,3.2+(i%2)*0.18,z,0,s,0.82+(i%3)*0.05,s);
+    crowns.setColorAt(i,new THREE.Color([0x5d994f,0x789f62,0x6eaa58][i%3])); maxVisualWorldR=Math.max(maxVisualWorldR,Math.hypot(RES_QUARTER_POS.x+x,RES_QUARTER_POS.z+z)+1.58*s);
+    _addResidentQuarterCollider({x:RES_QUARTER_POS.x+x,z:RES_QUARTER_POS.z+z,r:1.05,_residentQuarterTree:true}); });
+  const cTrunks=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.2,0.28,1.4,7),toon(0x6b5436),cypressA.length);
+  const cCrowns=new THREE.InstancedMesh(new THREE.ConeGeometry(1.0,4.6,8),toon(0xffffff),cypressA.length);
+  cTrunks.castShadow=cCrowns.castShadow=true;
+  cypressA.forEach((a,i)=>{ const r=19.4,x=Math.cos(a)*r,z=Math.sin(a)*r,s=0.9+(i%2)*0.08;
+    _setHomeInstance(cTrunks,i,x,0.7,z,0,s,1,s); _setHomeInstance(cCrowns,i,x,3.0,z,0,s,1,s);
+    cCrowns.setColorAt(i,new THREE.Color([0x355b3c,0x416a47][i%2])); maxVisualWorldR=Math.max(maxVisualWorldR,Math.hypot(RES_QUARTER_POS.x+x,RES_QUARTER_POS.z+z)+1.0*s);
+    _addResidentQuarterCollider({x:RES_QUARTER_POS.x+x,z:RES_QUARTER_POS.z+z,r:0.72,_residentQuarterTree:true}); });
+  trunks.instanceMatrix.needsUpdate=crowns.instanceMatrix.needsUpdate=cTrunks.instanceMatrix.needsUpdate=cCrowns.instanceMatrix.needsUpdate=true;
+  if(crowns.instanceColor) crowns.instanceColor.needsUpdate=true; if(cCrowns.instanceColor) cCrowns.instanceColor.needsUpdate=true; q.add(trunks,crowns,cTrunks,cCrowns);
+  const entranceA=Math.PI*1.25, shrubAngles=[]; for(let k=0;k<32;k++){ const a=k/32*Math.PI*2,d=Math.abs(Math.atan2(Math.sin(a-entranceA),Math.cos(a-entranceA)));
+    if(d>0.48) shrubAngles.push(a); } const shrubN=LOW_END?10:18, shrubs=new THREE.InstancedMesh(new THREE.SphereGeometry(0.78,8,6),toon(0xffffff),shrubN);
+  for(let i=0;i<shrubN;i++){ const a=shrubAngles[Math.floor(i*shrubAngles.length/shrubN)],r=18.25,x=Math.cos(a)*r,z=Math.sin(a)*r;
+    _setHomeInstance(shrubs,i,x,0.52,z,0,1.0+(i%2)*0.12,0.64+(i%3)*0.05,0.82); shrubs.setColorAt(i,new THREE.Color([0x4f8a49,0x5d9854,0x467b43][i%3])); }
+  shrubs.instanceMatrix.needsUpdate=true; if(shrubs.instanceColor) shrubs.instanceColor.needsUpdate=true; q.add(shrubs);
+  const landscape={frontGardens:n,homeFlowers:n*perHome,commonFlowers:commonN,broadleaf:broadA.length,cypress:cypressA.length,shrubs:shrubN,lanterns:lampN,
+    entranceAngle:entranceA,maxVisualWorldR:+maxVisualWorldR.toFixed(2),seatHedgeGap:0.6};
+  RES_QUARTER_LANDSCAPE.push({hedges,steps,stems,blossoms,soil,rim,lampPosts,lampBulbs,lampGlows,trunks,crowns,cTrunks,cCrowns,shrubs}); q.userData.landscape=landscape; return landscape;
+}
 function buildResidentQuarter(){
   const q=new THREE.Group(); q.position.copy(RES_QUARTER_POS); q.userData.residentQuarter=true; scene.add(q);
   const common=new THREE.Mesh(new THREE.CircleGeometry(20,48),new THREE.MeshBasicMaterial({color:0x87b875,transparent:true,opacity:0.55,depthWrite:false}));
@@ -5402,17 +5459,18 @@ function buildResidentQuarter(){
     glow.rotation.x=-Math.PI/2; glow.position.set(lx,0.035,lz); q.add(glow);
     const home={id:res.id,res,index:i,x:wx,z:wz,rot,porch,seat,board,glow,occupied:false}; RESIDENT_HOMES.push(home);
     SEATS.push({x:seat.x,z:seat.z,rot:rot+Math.PI,pos:new THREE.Vector3(seat.x,0,seat.z),_residentHome:res.id});
-    const col={x:wx,z:wz,r:3.15,_residentHome:res.id}; EXTRA_COLLIDERS.push(col); COLLIDERS.push(col);
+    _addResidentQuarterCollider({x:wx,z:wz,r:3.15,_residentHome:res.id});
   }
   body.instanceMatrix.needsUpdate=roof.instanceMatrix.needsUpdate=yard.instanceMatrix.needsUpdate=door.instanceMatrix.needsUpdate=windows.instanceMatrix.needsUpdate=true;
   if(body.instanceColor) body.instanceColor.needsUpdate=true; if(roof.instanceColor) roof.instanceColor.needsUpdate=true; if(!LOW_END) chimney.instanceMatrix.needsUpdate=true;
+  const landscape=buildResidentQuarterLandscape(q);
   const ua=RES_QUARTER_POS.clone().normalize(), sx=-ua.x*8,sz=-ua.z*8, signG=new THREE.Group(); signG.position.set(sx,0,sz); signG.rotation.y=Math.atan2(-ua.x,-ua.z); q.add(signG);
   const post=rbox(0.18,2.5,0.18,0x765237,0.03); post.position.y=1.25; signG.add(post);
   const sign=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.92),new THREE.MeshBasicMaterial({map:signTexture('🏘️ '+t('lmHomes'),0x8d78c9),transparent:true})); sign.position.set(0,2.18,0.12); signG.add(sign); _RES_QUARTER_SIGN=sign;
-  const scol={x:RES_QUARTER_POS.x+sx,z:RES_QUARTER_POS.z+sz,r:0.45,_residentQuarterSign:true}; EXTRA_COLLIDERS.push(scol); COLLIDERS.push(scol);
+  _addResidentQuarterCollider({x:RES_QUARTER_POS.x+sx,z:RES_QUARTER_POS.z+sz,r:0.45,_residentQuarterSign:true});
   makeBench(RES_QUARTER_POS.x-4.2,RES_QUARTER_POS.z,Math.PI/2); makeBench(RES_QUARTER_POS.x+4.2,RES_QUARTER_POS.z,-Math.PI/2);
   makeGlowFlowers(RES_QUARTER_POS.x,RES_QUARTER_POS.z-4.7,0xb9a7ff,1.05); if(!LOW_END) makeGlowFlowers(RES_QUARTER_POS.x,RES_QUARTER_POS.z+4.7,0x8fe8d0,0.95);
-  RES_QUARTER={id:'homes',label:t('lmHomes'),pos:RES_QUARTER_POS,_pos:RES_QUARTER_POS.clone(),group:q,homes:RESIDENT_HOMES,arrival:RES_QUARTER_POS.clone()};
+  RES_QUARTER={id:'homes',label:t('lmHomes'),pos:RES_QUARTER_POS,_pos:RES_QUARTER_POS.clone(),group:q,homes:RESIDENT_HOMES,arrival:RES_QUARTER_POS.clone(),landscape};
   _refreshResidentHomeLights(isNight); return RES_QUARTER;
 }
 if(NPC_CFG.modeEnabled&&NPC_CFG.visualEnabled) buildResidentQuarter();
@@ -5854,11 +5912,11 @@ function _residentReactToRepo(repo){ if(!repo||!repo.repo||repo._isLibrary||docu
   try{ _emitMetric('npc_repo_react',{who:best.res.id,repo:repo.repo,zone:repo._zone||null}); }catch(e){} }
 
 // ---- resident locomotion: step toward a target with a simple leg-swing gait; returns true once arrived ----
-function _resolveResidentHomeColliders(p){ for(const h of RESIDENT_HOMES){ const dx=p.x-h.x,dz=p.z-h.z,d=Math.hypot(dx,dz),r=3.15;
-    if(d<r){ if(d<1e-3){ p.x=h.x+r; p.z=h.z; } else { const k=r/d; p.x=h.x+dx*k; p.z=h.z+dz*k; } } } }
+function _resolveResidentQuarterColliders(p){ for(const c of RES_QUARTER_COLLIDERS){ const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),r=c.r||0;
+    if(d<r){ if(d<1e-3){ p.x=c.x+r; p.z=c.z; } else { const k=r/d; p.x=c.x+dx*k; p.z=c.z+dz*k; } } } }
 function _resWalk(L,tx,tz,spd,dt,avoid=false){ const g=L.group, dx=tx-g.position.x, dz=tz-g.position.z, d=Math.hypot(dx,dz);
   if(d<=RES_MOVE.arrive) return true;
-  const step=Math.min(spd*dt,d), nx=dx/d, nz=dz/d; g.position.x+=nx*step; g.position.z+=nz*step; if(avoid) resolveColliders(g.position); else _resolveResidentHomeColliders(g.position); L._dist=(L._dist||0)+step;
+  const step=Math.min(spd*dt,d), nx=dx/d, nz=dz/d; g.position.x+=nx*step; g.position.z+=nz*step; if(avoid) resolveColliders(g.position); else _resolveResidentQuarterColliders(g.position); L._dist=(L._dist||0)+step;
   g.rotation.y=lerpA(g.rotation.y, Math.atan2(nx,nz), 0.2);
   L._wk+=step*RES_MOVE.gait; const sw=Math.sin(L._wk)*0.5;
   if(g._legL){ g._legL.rotation.x=sw; g._legR.rotation.x=-sw; }
@@ -8487,8 +8545,13 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, maxGroup:NPC_CFG.maxGroup, groupR:RES_MOVE.groupR, joinR:RES_MOVE.joinR, groupChat:(activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null), groupSize:(_ambConv?_ambConv.members.length:0), moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), resting:RESIDENTS_LIVE.filter(L=>L._rest).length, joy:_sharedJoy?{type:_sharedJoy.type,phase:_sharedJoy.phase,members:_sharedJoy.members.map(m=>m.res.id)}:null, seats:SEATS.length, flora:GLOW_FLORA.length, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
   window.__seats=()=>SEATS.map((s,i)=>({ i, pos:[+s.x.toFixed(1),+s.z.toFixed(1)], hearth:!!s._hearth, home:s._residentHome||null, occupied:s._occ?s._occ.res.id:null }));
   window.__hearth=()=>({ placed:!!HEARTH, at:HEARTH?[+HEARTH.x.toFixed(1),+HEARTH.z.toFixed(1)]:null, seats:SEATS.filter(s=>s._hearth).length, sitting:SEATS.filter(s=>s._hearth&&s._occ).map(s=>s._occ.res.id), lightNow:HEARTH?+HEARTH.light.intensity.toFixed(2):null, night:isNight });   // 🔥 the campfire nook: placement, its stump-seats, who's warming up, live light level
-  window.__residentQuarter=()=>{ let meshes=0; if(RES_QUARTER) RES_QUARTER.group.traverse(o=>{ if(o.isMesh||o.isSprite) meshes++; });
+  window.__residentQuarter=()=>{ let meshes=0,repoGap=Infinity,nearRepo=null,maxWorldR=0; if(RES_QUARTER) RES_QUARTER.group.traverse(o=>{ if(o.isMesh||o.isSprite) meshes++; });
+    for(const c of RES_QUARTER_COLLIDERS){ maxWorldR=Math.max(maxWorldR,Math.hypot(c.x,c.z)+(c.r||0)); for(const b of buildings){ if(b._isLibrary) continue;
+      const gap=Math.hypot(c.x-b._x,c.z-b._z)-(c.r||0)-(b._cw||3); if(gap<repoGap){ repoGap=gap; nearRepo=b.repo; } } }
     return { placed:!!RES_QUARTER, name:t('lmHomes'), pos:RES_QUARTER?[RES_QUARTER_POS.x,RES_QUARTER_POS.z]:null, meshes, windows:RES_HOME_WINDOWS.length,
+      colliders:RES_QUARTER_COLLIDERS.length, maxColliderWorldR:+maxWorldR.toFixed(2),
+      maxVisualWorldR:RES_QUARTER&&RES_QUARTER.landscape?RES_QUARTER.landscape.maxVisualWorldR:0, repoGap:+repoGap.toFixed(2), nearestRepo:nearRepo,
+      landscape:RES_QUARTER&&RES_QUARTER.landscape?{...RES_QUARTER.landscape}:null,
       homes:RESIDENT_HOMES.map(h=>{ const L=_residentLive(h.id); return {id:h.id,name:(h.res[LANG]||h.res.ko).name,pos:[+h.x.toFixed(1),+h.z.toFixed(1)],
         porch:[+h.porch.x.toFixed(1),+h.porch.z.toFixed(1)],worldR:+Math.hypot(h.x,h.z).toFixed(1),occupied:!!h.occupied,
         resident:L?[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)]:null,atHome:!!(L&&L._atHome),commute:L&&L._commute||null}; }) }; };

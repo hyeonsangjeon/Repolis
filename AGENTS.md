@@ -138,7 +138,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | Change how a repo becomes a building (height/size/ornaments) | `index.html` (city-build section) + score/rank in `scripts/build_repos.py`; model in [`docs/domain-model.md`](docs/domain-model.md). |
 | Change districts, Village Chronicle, passport, or exploration loops | `index.html` + the matching behavioral groups in `scripts/smoke.mjs`. |
 | Change Town Gazette / return-visit freshness | `/*FRESHNESS*/` + Passport render/start flow in `index.html`; keep snapshots local, bounded, per-town, and explicit-read only. |
-| Change resident homes, routines, moods, friendships, haunts, or Shared Joy | The resident social layer + Starlight Row block in `index.html`; preserve home/work truth, owned porch seats, one-pair bounds, and visitor/repo-reaction/chat/festival/hidden-tab ownership guards. |
+| Change resident homes, gardens, routines, moods, friendships, haunts, or Shared Joy | The resident social layer + Starlight Row blocks in `index.html`; preserve the 42-unit public-layout reserve, entrance gap, quarter colliders, home/work truth, owned porch seats, one-pair bounds, and social ownership guards. |
 | Fix / improve a scholar's answer or references | `cloudflare-taxi/src/grounded.js` (server) + the trace panel in `index.html`. |
 | Add a new scholar NPC | `scholars.js` + `scholarConfig`/`MCP_NPCS` in `cloudflare-taxi/src/grounded.js`; choose KB-backed or direct MCP deliberately; document in `SCHOLARS.md`. |
 | Tune the taxi's repo search/intent routing | `index.html` (Local search: inverted index + intent agent). |

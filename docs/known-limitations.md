@@ -60,7 +60,8 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 - **Starlight Row is exterior and session-local.** The eight cottages do not have walk-in interiors, saved
   occupancy, or offline simulation. Residents finish any stronger social owner before commuting, so a
   festival or conversation can intentionally delay home/work arrival. Long commutes use purposeful speed
-  plus existing circle-collider resolution rather than authored road splines.
+  plus existing circle-collider resolution rather than authored road splines. Its trees and gardens are
+  procedural scenery rather than a persistent gardening simulation; LOW_END intentionally uses fewer plants.
 
 ## Tooling
 

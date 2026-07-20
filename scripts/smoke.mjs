@@ -744,9 +744,12 @@ ok(/window\.__coRest=\(id\)=>/.test(HTML), '?dbg __coRest sits two friends down 
 
 group('Starlight Row — eight resident homes + visible home/work routines');
 const homesBlock=(npcBlock.match(/Starlight Row — one real cottage[\s\S]*?resident visuals/)||[''])[0];
+const homeLandscapeBlock=(homesBlock.match(/function buildResidentQuarterLandscape\(q\)[\s\S]*?function buildResidentQuarter\(\)/)||[''])[0];
 const homeRadii=Array.from({length:8},(_,i)=>{ const a=i/8*Math.PI*2+Math.PI/8; return Math.hypot(130+Math.cos(a)*13,130+Math.sin(a)*13); });
+const broadAngles=[0.05,0.66,1.25,1.86,2.48,4.48,5.04,5.58,6.04];
+const broadVisualMax=Math.max(...broadAngles.map((a,i)=>Math.hypot(130+Math.cos(a)*19.2,130+Math.sin(a)*19.2)+1.58*(0.9+(i%3)*0.08)));
 ok(homesBlock.length>0, 'resident-quarter geometry block is extractable');
-ok(/const RES_QUARTER_SITE=Object\.freeze\(\{x:130,z:130,reserve:30\}\)/.test(HTML)
+ok(/const RES_QUARTER_SITE=Object\.freeze\(\{x:130,z:130,reserve:42\}\)/.test(HTML)
   &&/const RES_QUARTER_POS=new THREE\.Vector3\(RES_QUARTER_SITE\.x,0,RES_QUARTER_SITE\.z\), RES_HOME_RING=13/.test(homesBlock)
   &&Math.min(...homeRadii)>165&&Math.max(...homeRadii)<205, 'all eight homes occupy the north-east outer clearing inside the 205-unit map radius');
 ok(/overflow\.some\(s=>Math\.hypot\(s\.x-RES_QUARTER_SITE\.x,s\.z-RES_QUARTER_SITE\.z\)<RES_QUARTER_SITE\.reserve\)/.test(HTML)
@@ -755,7 +758,8 @@ ok(/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(5,3\.2,4\.2\)[\s\S]*?new T
   &&/new THREE\.InstancedMesh\(new THREE\.PlaneGeometry\(0\.84,0\.98\)/.test(homesBlock), 'walls, roofs, and sixteen windows stay draw-batched');
 ok(/for\(let i=0;i<RESIDENTS\.length;i\+\+\)[\s\S]*?RESIDENT_HOMES\.push\(home\)/.test(homesBlock)
   &&/signTexture\('🏠 '\+\(res\[LANG\]\|\|res\.ko\)\.name,res\.color\)/.test(homesBlock), 'the roster truthfully creates one colored, named cottage per resident');
-ok(/const col=\{x:wx,z:wz,r:3\.15,_residentHome:res\.id\}; EXTRA_COLLIDERS\.push\(col\); COLLIDERS\.push\(col\)/.test(homesBlock), 'every cottage joins both resident-target and player collision registries');
+ok(/_addResidentQuarterCollider\(\{x:wx,z:wz,r:3\.15,_residentHome:res\.id\}\)/.test(homesBlock)
+  &&/function _addResidentQuarterCollider\(c\)\{ RES_QUARTER_COLLIDERS\.push\(c\); EXTRA_COLLIDERS\.push\(c\); COLLIDERS\.push\(c\)/.test(homesBlock), 'every cottage and landscape obstacle joins resident-target and player collision registries');
 ok(/if\(!LOW_END\) q\.add\(chimney\)/.test(homesBlock)&&/if\(!LOW_END\) makeGlowFlowers/.test(homesBlock)
   &&!/PointLight|fetch\(|_npcFetch|npcModelCall/.test(homesBlock), 'LOW_END drops optional cottage detail and the quarter adds no light, network, or model call');
 ok(/SEATS\.push\(\{x:seat\.x,z:seat\.z,rot:rot\+Math\.PI,pos:new THREE\.Vector3\(seat\.x,0,seat\.z\),_residentHome:res\.id\}/.test(homesBlock)
@@ -771,8 +775,23 @@ ok(/function _syncResidentRoutine\(tt\)[\s\S]*?p==='night'\|\|prev==='night'/.te
 ok(/if\(!force&&\(L\._joy\|\|L\._joinWalk\|\|L\._stroll\|\|L\._pNear\|\|L\._rest\)\) return false/.test(npcBlock)
   &&/if\(L\._commute&&L\._pNear\)\{ moving=false; \}/.test(npcBlock)
   &&/else if\(!_festival && !inConv && !chatBound && !hidden && NPC_CFG\.motionEnabled\)/.test(npcBlock), 'commuting starts and pauses behind every stronger resident owner');
-ok(/function _resolveResidentHomeColliders\(p\)/.test(npcBlock)
-  &&/if\(avoid\) resolveColliders\(g\.position\); else _resolveResidentHomeColliders\(g\.position\)/.test(npcBlock), 'every resident movement mode respects cottage colliders while long commutes retain full town collision');
+ok(/function _resolveResidentQuarterColliders\(p\)/.test(npcBlock)
+  &&/if\(avoid\) resolveColliders\(g\.position\); else _resolveResidentQuarterColliders\(g\.position\)/.test(npcBlock), 'every resident movement mode respects quarter colliders while long commutes retain full town collision');
+ok(homeLandscapeBlock.length>0, 'resident-quarter landscape block is extractable');
+ok(/const n=RESIDENTS\.length, perHome=LOW_END\?3:5, commonN=LOW_END\?10:18/.test(homeLandscapeBlock)
+  &&/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(1\.1,0\.55,0\.45\)/.test(homeLandscapeBlock)
+  &&/new THREE\.InstancedMesh\(new THREE\.CylinderGeometry\(0\.34,0\.39,0\.09,10\)/.test(homeLandscapeBlock), 'all eight homes receive draw-batched hedges, stepping stones, and bounded flower beds');
+ok(/side\?-2\.4:2\.4,3\.0/.test(homeLandscapeBlock)&&/seatHedgeGap:0\.6/.test(homeLandscapeBlock), 'front hedges leave a measured clear gap around every porch seat');
+ok(/const broadA=LOW_END\?\[0\.05,1\.28,2\.38,4\.82,5\.82\]/.test(homeLandscapeBlock)
+  &&/const cypressA=LOW_END\?\[1\.72,5\.18\]/.test(homeLandscapeBlock)
+  &&/broadA\.forEach\(\(a,i\)=>\{ const r=19\.2/.test(homeLandscapeBlock)
+  &&/shrubN=LOW_END\?10:18/.test(homeLandscapeBlock)&&broadVisualMax<205, 'LOW_END keeps a reduced tree perimeter and the full broadleaf canopy stays inside the map radius');
+ok(/const entranceA=Math\.PI\*1\.25/.test(homeLandscapeBlock)
+  &&/if\(d>0\.48\) shrubAngles\.push\(a\)/.test(homeLandscapeBlock), 'the town-facing entrance remains open through the perimeter hedge');
+ok(/lampN=LOW_END\?2:4/.test(homeLandscapeBlock)
+  &&/const a=i\/lampN\*Math\.PI\*2,r=5\.25/.test(homeLandscapeBlock)
+  &&/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(0\.13,2\.1,0\.13\)/.test(homeLandscapeBlock)
+  &&!/PointLight|fetch\(|_npcFetch|npcModelCall/.test(homeLandscapeBlock), 'shared-garden lanterns avoid the 225° taxi entrance and add no point light, network, or model cost');
 ok(/L\._commute=null; L\._rt=null; L\._toFav=false; L\._toBond=false/.test(npcBlock)
   &&/L\._routineAt=now\+1\+i\*\(LOW_END\?1\.4:0\.8\)/.test(npcBlock), 'festival ownership clears stale routes and staggers a fresh home/work evaluation on release');
 ok(/case 'homes': return RES_QUARTER\?/.test(HTML)

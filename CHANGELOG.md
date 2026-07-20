@@ -6,6 +6,21 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.83.1] — 2026-07-20
+
+### 🌳 Starlight Row landscaping — a neighborhood cared for, not just occupied
+
+- **Every cottage gains a real front garden.** Resident-coloured flowers, paired hedges, and stepping stones
+  now connect each door to the shared walking ring.
+- **The commons becomes a garden.** A raised circular flower bed, benches, luminous flowers, and visual-only
+  lanterns give the central green a readable daytime heart and warm night rhythm without adding point lights.
+- **Trees frame the neighborhood.** Draw-batched broadleaf and cypress trees plus a low shrub perimeter shape
+  the quarter while preserving a clear town-facing entrance. Landscape colliders protect both visitors and
+  resident movement.
+- **The polish stays bounded.** LOW_END keeps all eight gardens, the central bed, five broadleaf trees, two
+  cypress, ten shrubs, and two lanterns. The public-town reserve expands to keep overflow repos clear of the
+  full tree canopy, not only the cottages.
+
 ## [1.83.0] — 2026-07-20
 
 ### 🏘️ Starlight Row — homes and daily routes for the AI residents
