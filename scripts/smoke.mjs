@@ -688,7 +688,7 @@ ok(/const _RES_FAV=\{ sol:\{ko:'볕 잘 드는 실험 자리'/.test(npcBlock) &&
 ok(/function _resFavPhase\(res\)\{[\s\S]*?res&&res\.id/.test(npcBlock) && /function _resFavSpot\(L\)\{ if\(L\._fav\) return L\._fav;/.test(npcBlock) && /_resFavPhase\(L\.res\)/.test(npcBlock), '_resFavSpot resolves a reload-stable deterministic haunt phase');
 ok(/if\(L\.res\.id==='noa' && typeof HEARTH!=='undefined' && HEARTH\)/.test(npcBlock), 'Noa\'s cherished haunt remains the campfire');
 ok(/function _resFavLine\(L\)\{ const f=L\._fav, ?d=f\?\(LANG==='ko'\?f\.ko:f\.en\):''/.test(npcBlock), '_resFavLine speaks fondly of that spot, weaving in its descriptor');
-ok(/if\(tt>=\(L\._favCd\|\|0\) && Math\.random\(\)<0\.3\)\{ const f=_resFavSpot\(L\);/.test(npcBlock) && /L\._toFav=true; L\._favCd=tt\+42\+Math\.random\(\)\*44;/.test(npcBlock), 'now and then (cooldown-gated) a wandering resident heads for their haunt instead of a random waypoint');
+ok(/if\(!L\._atHome && tt>=\(L\._favCd\|\|0\) && Math\.random\(\)<0\.3\)\{ const f=_resFavSpot\(L\);/.test(npcBlock) && /L\._toFav=true; L\._favCd=tt\+42\+Math\.random\(\)\*44;/.test(npcBlock), 'now and then (cooldown-gated) a wandering resident heads for their haunt instead of a random waypoint');
 ok(/if\(L\._toFav\)\{ L\._toFav=false; L\._rp=tt\+RES_MOVE\.pauseMin\*1\.8\+Math\.random\(\)\*4;/.test(npcBlock) && /_resFavLine\(L\)/.test(npcBlock), 'on arrival they linger longer at the haunt and let an occasional fond word slip (hushed when the visitor is right there)');
 ok(/window\.__favs=\(\)=>/.test(HTML) && /window\.__goFav=\(id\)=>/.test(HTML), '?dbg __favs/__goFav list + drive each resident to their cherished haunt');
 
@@ -741,6 +741,47 @@ ok(/function _resSitChatLine\(L,W\)\{[\s\S]*?function _coRestInviteLine/.test(np
 ok(/function _seatRelease\(L\)\{[\s\S]*?L\._restMate=null;/.test(npcBlock), 'standing up clears the rest-mate link (no dangling pairing)');
 ok(/let _coRestGlobalCd=0;/.test(npcBlock) && /_coRestGlobalCd=tt\+NPC_STROLL_CD\*2/.test(npcBlock), 'co-rest is globally cooldown-gated so it stays an occasional beat');
 ok(/window\.__coRest=\(id\)=>/.test(HTML), '?dbg __coRest sits two friends down together on the spot');
+
+group('Starlight Row — eight resident homes + visible home/work routines');
+const homesBlock=(npcBlock.match(/Starlight Row — one real cottage[\s\S]*?resident visuals/)||[''])[0];
+const homeRadii=Array.from({length:8},(_,i)=>{ const a=i/8*Math.PI*2+Math.PI/8; return Math.hypot(130+Math.cos(a)*13,130+Math.sin(a)*13); });
+ok(homesBlock.length>0, 'resident-quarter geometry block is extractable');
+ok(/const RES_QUARTER_SITE=Object\.freeze\(\{x:130,z:130,reserve:30\}\)/.test(HTML)
+  &&/const RES_QUARTER_POS=new THREE\.Vector3\(RES_QUARTER_SITE\.x,0,RES_QUARTER_SITE\.z\), RES_HOME_RING=13/.test(homesBlock)
+  &&Math.min(...homeRadii)>165&&Math.max(...homeRadii)<205, 'all eight homes occupy the north-east outer clearing inside the 205-unit map radius');
+ok(/overflow\.some\(s=>Math\.hypot\(s\.x-RES_QUARTER_SITE\.x,s\.z-RES_QUARTER_SITE\.z\)<RES_QUARTER_SITE\.reserve\)/.test(HTML)
+  &&/overflow\.length=0; const qa=Math\.atan2\(RES_QUARTER_SITE\.z,RES_QUARTER_SITE\.x\)/.test(HTML), 'public-town overflow slots redistribute around the reserved residential clearing');
+ok(/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(5,3\.2,4\.2\)[\s\S]*?new THREE\.InstancedMesh\(new THREE\.ConeGeometry\(3\.8,2\.1,4\)/.test(homesBlock)
+  &&/new THREE\.InstancedMesh\(new THREE\.PlaneGeometry\(0\.84,0\.98\)/.test(homesBlock), 'walls, roofs, and sixteen windows stay draw-batched');
+ok(/for\(let i=0;i<RESIDENTS\.length;i\+\+\)[\s\S]*?RESIDENT_HOMES\.push\(home\)/.test(homesBlock)
+  &&/signTexture\('🏠 '\+\(res\[LANG\]\|\|res\.ko\)\.name,res\.color\)/.test(homesBlock), 'the roster truthfully creates one colored, named cottage per resident');
+ok(/const col=\{x:wx,z:wz,r:3\.15,_residentHome:res\.id\}; EXTRA_COLLIDERS\.push\(col\); COLLIDERS\.push\(col\)/.test(homesBlock), 'every cottage joins both resident-target and player collision registries');
+ok(/if\(!LOW_END\) q\.add\(chimney\)/.test(homesBlock)&&/if\(!LOW_END\) makeGlowFlowers/.test(homesBlock)
+  &&!/PointLight|fetch\(|_npcFetch|npcModelCall/.test(homesBlock), 'LOW_END drops optional cottage detail and the quarter adds no light, network, or model call');
+ok(/SEATS\.push\(\{x:seat\.x,z:seat\.z,rot:rot\+Math\.PI,pos:new THREE\.Vector3\(seat\.x,0,seat\.z\),_residentHome:res\.id\}/.test(homesBlock)
+  &&/if\(L\._atHome\)\{ if\(s\._residentHome!==L\.res\.id\) continue; \} else if\(s\._residentHome\) continue/.test(npcBlock)
+  &&/function _coRestSeats\(L,W\)\{ if\(L\._atHome\|\|W\._atHome\) return null/.test(npcBlock), 'at-home residents use only their own porch seat and never leak into friend co-rest pairing');
+ok(/home:homeRec\?\{x:homeRec\.porch\.x,z:homeRec\.porch\.z\}[\s\S]*?work:\{x:work\.x,z:work\.z\}/.test(npcBlock)
+  &&/const h=L\.work\|\|L\.home/.test(npcBlock), 'each resident keeps a real cottage home while cherished haunts remain tied to the work district');
+ok(/if\(!hub\)\{ const base=_resFavPhase\(res\),golden=Math\.PI\*\(3-Math\.sqrt\(5\)\)/.test(npcBlock)
+  &&/_RES_WORK_SPOTS\.some\(p=>Math\.hypot\(p\.x-x,p\.z-z\)<6\)/.test(npcBlock), 'missing public-town districts receive deterministic separated fallback work anchors');
+ok(/function _syncResidentRoutine\(tt\)[\s\S]*?p==='night'\|\|prev==='night'/.test(npcBlock)
+  &&/wantHome=_residentRoutinePart==='night'/.test(npcBlock)
+  &&/L\._commute\?RES_MOVE\.commuteSpd:L\._wspd,dt,!!L\._commute/.test(npcBlock), 'night/day transitions stagger purposeful collision-aware home/work commutes');
+ok(/if\(!force&&\(L\._joy\|\|L\._joinWalk\|\|L\._stroll\|\|L\._pNear\|\|L\._rest\)\) return false/.test(npcBlock)
+  &&/if\(L\._commute&&L\._pNear\)\{ moving=false; \}/.test(npcBlock)
+  &&/else if\(!_festival && !inConv && !chatBound && !hidden && NPC_CFG\.motionEnabled\)/.test(npcBlock), 'commuting starts and pauses behind every stronger resident owner');
+ok(/function _resolveResidentHomeColliders\(p\)/.test(npcBlock)
+  &&/if\(avoid\) resolveColliders\(g\.position\); else _resolveResidentHomeColliders\(g\.position\)/.test(npcBlock), 'every resident movement mode respects cottage colliders while long commutes retain full town collision');
+ok(/L\._commute=null; L\._rt=null; L\._toFav=false; L\._toBond=false/.test(npcBlock)
+  &&/L\._routineAt=now\+1\+i\*\(LOW_END\?1\.4:0\.8\)/.test(npcBlock), 'festival ownership clears stale routes and staggers a fresh home/work evaluation on release');
+ok(/case 'homes': return RES_QUARTER\?/.test(HTML)
+  &&/\{id:'homes',\s+ico:'🏘️', key:'lmHomes'\}/.test(HTML)
+  &&/\{id:'homes',ico:'🏘️'\}/.test(HTML)
+  &&/LM\.push\(\[RES_QUARTER_POS\.x,RES_QUARTER_POS\.z,'🏘️'\]\)/.test(HTML)
+  &&/lmDriveHomes:/.test(HTML)&&/lmArriveHomes:/.test(HTML), 'map, Station, taxi, Passport, and bilingual arrival copy expose the new quarter');
+ok(/window\.__residentQuarter=/.test(HTML)&&/window\.__goHome=/.test(HTML)&&/window\.__goWork=/.test(HTML)
+  &&/window\.__homeCollision=/.test(HTML)&&/window\.__finishCommute=/.test(HTML)&&/window\.__frameHomes=/.test(HTML), 'debug hooks inspect, collide, drive, finish, and frame residential routines');
 
 group('Resident Agency — autonomous shared joy excursions');
 const joyBlock=(npcBlock.match(/Resident Agency — one pair[\s\S]*?function _tryPeerNotice/)||[''])[0];

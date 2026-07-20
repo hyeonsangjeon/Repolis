@@ -6,6 +6,22 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.83.0] — 2026-07-20
+
+### 🏘️ Starlight Row — homes and daily routes for the AI residents
+
+- **Every resident has a real home.** Eight named, resident-coloured cottages now form a shared north-east
+  residential quarter with porch seats, warm night windows, a common green, benches, and luminous flowers.
+- **Home and work are different places.** Existing district anchors remain each resident's work. Night
+  schedules a staggered collision-aware walk home; morning/day sends residents back to their own district.
+  Friends and idle life continue around the shared green instead of stacking at one point.
+- **Social ownership still wins.** Chat, visitor proximity, Shared Joy, gatherings, festivals, strolls, rest,
+  hidden tabs, and disabled motion delay commuting rather than being interrupted by it. LOW_END keeps all
+  eight homes and routes while dropping optional chimney and flower detail.
+- **The expansion is part of the town loop.** Starlight Row appears on the world map, GitHub Station, Gitber's
+  bilingual landmark intent, and the Explorer Passport. Debug probes cover homes, collision, framing, and
+  forced/finished home-work routes without adding AI, network, interior, or persistence cost.
+
 ## [1.82.1] — 2026-07-20
 
 ### ✨ README hero polish — turn external curiosity into the live town

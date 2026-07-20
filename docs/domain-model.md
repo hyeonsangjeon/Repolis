@@ -13,7 +13,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **Repo** | one object in `repos.json` | The unit of the world — becomes one house. |
 | **City / Town** | derived in `index.html` at load | The whole 3D scene built from the `repos.json` array. |
 | **District** | deterministic `zoneOf(repo)` result | A topic-shaped neighborhood with a hub, board, map destination, and progress. |
-| **Resident** | resident roster in `index.html` | A district-local townsperson with mood, routine, relationships, and a cherished haunt. |
+| **Resident** | resident roster in `index.html` | A townsperson with a residential home, district work anchor, mood, relationships, and a cherished haunt. |
 | **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, Town Gazette baselines, and constellation completion. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
 | **Taxi** | the POLARIS scholar (`kind: taxi`) | Finds a repo and physically drives you there. |
@@ -207,3 +207,26 @@ shorter enjoyment, purposeful movement, and no arrival sparkle.
 Shared Joy yields immediately to visitor proximity, repo reactions, resident/group chat, ambient gatherings,
 festivals, seating, hidden tabs, or disabled motion. Travel timeout uses the same capped simulation delta as
 resident movement. The state is not persisted and makes no AI, MCP, network, asset, or storage request.
+
+---
+
+## 11. Starlight Row — resident homes and routines
+
+Starlight Row is a fixed civic landmark at `(130, 130)`, outside the repository rings but inside the
+205-unit map and 215-unit player bounds. It contains one roster-bound cottage per resident. Shared instanced
+walls, roofs, yards, doors, and windows keep the draw cost bounded; only bilingual name signs remain
+individual. Cottage and sign colliders join both player collision and resident destination clearance.
+
+Each live resident now carries two truthful anchors:
+
+- `work`: the existing district/plaza spawn used by daytime wandering and cherished haunts,
+- `home`: that resident's cottage porch in Starlight Row.
+
+At the night boundary, free residents begin staggered collision-aware commutes home. After night, they return
+to `work`. A resident already claimed by chat, Shared Joy, a gathering, festival, stroll, seat, visitor
+proximity, hidden tab, or disabled motion waits until that owner releases them. At home, residents use their
+own porch seat and deterministic sectors of the shared green, keeping the neighborhood social without
+stacking. The schedule is session-local and deterministic; it adds no model, MCP, backend, or saved state.
+
+The quarter is reachable through Gitber landmark intent and GitHub Station, appears as `🏘️` on the world
+map, and awards the local-only `homes` Explorer Passport stamp.
