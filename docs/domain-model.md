@@ -228,5 +228,11 @@ proximity, hidden tab, or disabled motion waits until that owner releases them. 
 own porch seat and deterministic sectors of the shared green, keeping the neighborhood social without
 stacking. The schedule is session-local and deterministic; it adds no model, MCP, backend, or saved state.
 
+The landscape is part of the same bounded quarter model. Each home receives resident-coloured instanced
+flowers, hedges, and stepping stones. The central green contains a raised shared flower bed and visual-only
+lanterns. Instanced broadleaf/cypress trees and shrubs form a perimeter with a deliberate entrance gap toward
+town. Tree and home colliders share `RES_QUARTER_COLLIDERS`; overflow repository slots reserve the full
+42-unit landscape clearing. LOW_END reduces counts rather than removing the garden structure.
+
 The quarter is reachable through Gitber landmark intent and GitHub Station, appears as `🏘️` on the world
 map, and awards the local-only `homes` Explorer Passport stamp.

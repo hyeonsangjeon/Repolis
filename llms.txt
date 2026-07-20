@@ -25,7 +25,7 @@
 - Metric-shaped repository houses and deterministic topic districts with hubs, boards, and a world map.
 - Explorer Passport, district progress, the daily resident→haunt→repo/district Village Chronicle, and the Repository Constellation Trail.
 - Local Town Gazette: added/removed repos, releases, pushes, and positive metric deltas since the last marked-read snapshot.
-- Eight residents with named Starlight Row homes, home/work commutes, moods, friendships, cherished haunts, bounded Shared Joy excursions, conversations, rest, festivals, and deterministic specialist handoffs.
+- Eight residents with landscaped Starlight Row homes, resident-coloured gardens, a shared flower commons, perimeter trees, home/work commutes, moods, friendships, Shared Joy, conversations, festivals, and specialist handoffs.
 - Gitber/POLARIS taxi: keyless Local search by default; optional WebLLM and grounded AI.
 - VEGA via Microsoft Learn, RIGEL via DeepWiki, roaming MIRA via Context7, and roaming LYRA via Hugging Face, all with answer traces.
 - Contribution Library, Chronopolis Council, Observatory, World Tree, canals, parks, and fairground.
