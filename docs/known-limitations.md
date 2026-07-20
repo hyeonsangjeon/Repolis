@@ -57,6 +57,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 - **Resident Shared Joy is bounded and session-local.** At most one pair takes a scripted excursion at a
   time; it is not remembered across reloads and does not use a model. Stargazing starts autonomously only
   while stars are visible, and visitor/chat/festival ownership intentionally interrupts an outing.
+- **Starlight Row is exterior and session-local.** The eight cottages do not have walk-in interiors, saved
+  occupancy, or offline simulation. Residents finish any stronger social owner before commuting, so a
+  festival or conversation can intentionally delay home/work arrival. Long commutes use purposeful speed
+  plus existing circle-collider resolution rather than authored road splines.
 
 ## Tooling
 
