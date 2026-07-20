@@ -6,6 +6,19 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.82.1] — 2026-07-20
+
+### ✨ README hero polish — turn external curiosity into the live town
+
+- **The experience leads before implementation proof.** Both README heroes now put one copyable product
+  sentence, the live CTA, and the current demo before the compact utility badges.
+- **The demo matches today's village.** New EN/KO loops show the living data-built town, a real Local-mode
+  Gitber query, the taxi ride, and arrival at the truthful repository card. Each GIF is smaller than the
+  June recording despite showing more of the current product.
+- **Shared links tell the same story.** HTML description, Open Graph, Twitter, banner copy, `llms.txt`, and
+  `repolis.yaml` now use the same traffic-shaped town positioning. The social preview uses the current
+  rendered village instead of the June-era illustration.
+
 ## [1.82.0] — 2026-07-18
 
 ### 🎈 Resident Agency — Shared Joy excursions
