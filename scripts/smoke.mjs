@@ -46,11 +46,19 @@ const heroCopy = 'Public GitHub repos become a walkable 3D town. Traffic shapes 
 const heroCopyKo = 'Repolis는 공개 GitHub 레포를 직접 걸어 다니는 3D 마을로 바꿉니다. 트래픽이 건물을 만들고, 주민이 살아가며, 깃버가 원하는 프로젝트까지 데려갑니다.';
 ok(README_EN.includes(`**${heroCopy}**`) && README_KO.includes(`**${heroCopyKo}**`), 'EN/KO heroes carry one copyable product sentence');
 const heroOrderEn = [README_EN.indexOf(`**${heroCopy}**`), README_EN.indexOf('Open-Live%20Town'),
-  README_EN.indexOf('assets/demo.gif'), README_EN.indexOf('daily%20refresh')];
+  README_EN.indexOf('assets/demo.gif'), README_EN.indexOf('🎬 <strong>15-second demo:</strong>'),
+  README_EN.indexOf('<code>WASD</code> / touch to walk'), README_EN.indexOf('>Star Repolis</a>'), README_EN.indexOf('daily%20refresh')];
 const heroOrderKo = [README_KO.indexOf(`**${heroCopyKo}**`), README_KO.indexOf('%EB%9D%BC%EC%9D%B4%EB%B8%8C-'),
-  README_KO.indexOf('assets/demo.ko.gif'), README_KO.indexOf('daily%20refresh')];
-ok(heroOrderEn.every(i => i >= 0) && heroOrderEn.every((i, n) => n === 0 || heroOrderEn[n - 1] < i), 'English hero orders story → live CTA → demo → utility proof');
-ok(heroOrderKo.every(i => i >= 0) && heroOrderKo.every((i, n) => n === 0 || heroOrderKo[n - 1] < i), 'Korean hero orders story → live CTA → demo → utility proof');
+  README_KO.indexOf('assets/demo.ko.gif'), README_KO.indexOf('🎬 <strong>15초 데모:</strong>'),
+  README_KO.indexOf('<code>WASD</code> / 터치로 걷기'), README_KO.indexOf('>Star 남기기</a>'), README_KO.indexOf('daily%20refresh')];
+ok(heroOrderEn.every(i => i >= 0) && heroOrderEn.every((i, n) => n === 0 || heroOrderEn[n - 1] < i), 'English hero orders story → live CTA → demo → caption → controls → Star → utility proof');
+ok(heroOrderKo.every(i => i >= 0) && heroOrderKo.every((i, n) => n === 0 || heroOrderKo[n - 1] < i), 'Korean hero orders story → live CTA → demo → caption → controls → Star → utility proof');
+ok(/traffic → buildings · ask Gitber → taxi ride → real repo card/.test(README_EN)
+  &&/트래픽 → 건물 · 깃버에게 질문 → 택시 이동 → 실제 레포 카드/.test(README_KO), 'visible EN/KO captions describe what the existing demo proves');
+ok(/<code>Enter<\/code> \/ tap to open · no sign-up or build/.test(README_EN)
+  &&/<code>Enter<\/code> \/ 탭으로 열기 · 가입이나 빌드 없음/.test(README_KO), 'visible controls state the exact first interaction and friction-free setup');
+ok((README_EN.match(/href="https:\/\/github\.com\/hyeonsangjeon\/Repolis">Star Repolis<\/a>/g)||[]).length===1
+  &&(README_KO.match(/href="https:\/\/github\.com\/hyeonsangjeon\/Repolis">Star 남기기<\/a>/g)||[]).length===1, 'each hero contains exactly one calm repository Star CTA');
 ok((HTML.split(heroCopy).length - 1) === 3 && !HTML.includes('6-pin grid'), 'description, Open Graph, and Twitter share the current positioning');
 ok(DEMO_EN.subarray(0, 6).toString() === 'GIF89a' && DEMO_EN.readUInt16LE(6) === 520 && DEMO_EN.readUInt16LE(8) === 293
   && DEMO_KO.subarray(0, 6).toString() === 'GIF89a' && DEMO_KO.readUInt16LE(6) === 520 && DEMO_KO.readUInt16LE(8) === 293, 'EN/KO hero demos remain 520×293 GIF89a assets');

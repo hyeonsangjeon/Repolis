@@ -6,6 +6,17 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.83.3] — 2026-07-22
+
+### 🎬 README demo continuity — from Hada curiosity to a first town visit
+
+- The existing current EN/KO GIFs now have visible 15-second captions that explain the full
+  traffic→building→Gitber→taxi→repo-card story instead of relying on image alt text.
+- Generic control copy becomes the exact first interaction path: `WASD`/touch to walk, ask Gitber, and
+  `Enter`/tap to open, with no-sign-up/no-build and local-run proof kept in the same compact line.
+- A single calm `Star Repolis` link follows the action path below the demo. The GIF, hero hierarchy, data
+  mapping section, and Council assets remain unchanged.
+
 ## [1.83.2] — 2026-07-21
 
 ### 🏡 Resident cottage variety — richer homes, bounded batches

@@ -13,7 +13,8 @@
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis 데모: 트래픽으로 지은 살아 있는 GitHub 마을, 깃버 검색과 택시 이동, 실제 레포 카드" width="92%"></a>
 
-<sub>가입 없음 · 빌드 없음 · 키보드, 터치, 모바일 조작 지원 · <strong><a href="#60초-로컬-실행">로컬 실행</a></strong></sub>
+<sub>🎬 <strong>15초 데모:</strong> 트래픽 → 건물 · 깃버에게 질문 → 택시 이동 → 실제 레포 카드</sub><br>
+<sub><code>WASD</code> / 터치로 걷기 · 깃버에게 묻기 · <code>Enter</code> / 탭으로 열기 · 가입이나 빌드 없음 · <strong><a href="#60초-로컬-실행">로컬 실행</a></strong> · ⭐ <strong><a href="https://github.com/hyeonsangjeon/Repolis">Star 남기기</a></strong></sub>
 
 [![매일 갱신](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=flat-square&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
