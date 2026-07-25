@@ -8,6 +8,9 @@ The fastest way to understand Repolis's public surface. Every file here runs as-
 | [`share-links.md`](share-links.md) | URL parameters: share any user's town, wire a realtime server, point at a custom backend. |
 | [`embed.html`](embed.html) | Drop the live city into any page with one `<iframe>`. |
 
+Personal preview: `https://hyeonsangjeon.github.io/Repolis/?launch=1`<br>
+Persistent town: [use the Repolis template](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon), enable Actions + Pages, and run the refresh workflow once.
+
 Run the city itself with **no build**:
 
 ```bash

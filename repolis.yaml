@@ -20,6 +20,7 @@ runtime:
   kind: zero-build-static-web-app
   build: none
   entrypoint: index.html
+  config: repolis.config.js
   serve: python3 -m http.server 8000
   renderer: three.js@0.160
   module_source: jsdelivr import map
@@ -44,6 +45,7 @@ entrypoints:
   scholars: scholars.js
   world_tree: assets/world-tree/createRepolisHero.js
   data_builder: scripts/build_repos.py
+  launch_config: repolis.config.js
   library_builder: scripts/build-contribution-library.mjs
   grounding_worker: cloudflare-taxi/src/grounded.js
   realtime_worker: cloudflare/src
@@ -57,6 +59,9 @@ deploy:
     dir: /
     command: git push origin main
     rule: Rebase onto origin/main first because the daily refresh Action also pushes.
+    fork_bootstrap: Enable Actions and Pages, then run Refresh Repolis data once.
+    fork_pat_required: false
+    optional_traffic_secret: GH_PAT
   grounding_worker:
     target: cloudflare-workers
     name: repolis-taxi
@@ -70,14 +75,16 @@ endpoints:
   grounding:
     url: https://repolis-taxi.wingnut0310.workers.dev/
     method: POST
-    wired_in: index.html (GROUNDED_DEFAULT)
+    wired_in: repolis.config.js -> index.html
     required: false
     fallback: keyless Local search
+    fork_default: disabled
   realtime:
     url: wss://repolis-rt.wingnut0310.workers.dev
-    wired_in: index.html (RT_DEFAULT)
+    wired_in: repolis.config.js -> index.html
     required: false
     fallback: solo town
+    fork_default: disabled
 
 features:
   - id: data-built-city
@@ -87,7 +94,7 @@ features:
   - id: living-village
     summary: Residents have named homes, home-work routines, relationships, haunts, bounded shared excursions, gatherings, festivals, and specialist handoffs.
   - id: resident-quarter
-    summary: Starlight Row gives all eight residents a named, individually styled cottage with three batched roof families, facade details, colored gardens, tree canopy, and session-local home-work commute.
+    summary: Starlight Row gives every resident a named, individually styled cottage with three batched roof families, facade details, colored gardens, tree canopy, and session-local home-work commute.
   - id: resident-shared-joy
     summary: One idle pair autonomously visits real flowers, visible night stars, or a rendered repo house without AI or network calls.
   - id: exploration
@@ -106,6 +113,8 @@ features:
     summary: Contribution Library, Chronopolis, Observatory, World Tree, canals, parks, and fairground.
   - id: shareable-towns
     summary: "?user=<login> rebuilds a lighter town from any public GitHub user's repositories."
+  - id: launch-kit
+    summary: The intro username launchpad previews any public account; template forks infer their Pages owner, build with github.token, and isolate upstream optional services.
   - id: realtime
     summary: Optional multiplayer presence and visitor counters.
   - id: bilingual-daynight

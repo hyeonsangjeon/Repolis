@@ -29,6 +29,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | Path | What it is | Touch it when… |
 |---|---|---|
 | **`index.html`** | Primary app runtime — 3D engine, UI, navigation, residents, exploration, i18n, day/night. | Any UI / gameplay / client behavior change. |
+| **`repolis.config.js`** | Fork-facing runtime identity and optional-service policy. GitHub Pages infers the fork owner; upstream Workers stay off on forks. | Changing owner inference, template behavior, or canonical endpoints. |
 | **`repos.json`** | Generated array of repo objects that build the current owner city. **Do not hand-edit.** | Never directly; regenerate (see below). |
 | **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
@@ -59,7 +60,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 # 1) Run the city (static)
 python3 -m http.server 8000
 
-# 2) Rebuild repos.json from the owner's repos + committed traffic logs (needs gh CLI, logged in)
+# 2) Rebuild repos.json from the owner's public repos + committed traffic logs (needs gh CLI, logged in)
 gh auth login
 GTM_DIR=data python3 scripts/build_repos.py     # regenerates repos.json (do not hand-edit)
 
@@ -82,10 +83,11 @@ social, social_custom, score, rank`. Full meaning: [`docs/domain-model.md`](docs
 | **Grounding worker** | `cd cloudflare-taxi && npx wrangler deploy` | Updates `repolis-taxi` (the live AI brain). |
 | **Realtime worker** | `cd cloudflare && npx wrangler deploy` | Updates `repolis-rt` (presence). |
 
-The site talks to the workers through two constants in `index.html` (already wired for the live site):
-`GROUNDED_DEFAULT` → `https://repolis-taxi.wingnut0310.workers.dev/`, and
-`RT_DEFAULT` → `wss://repolis-rt.wingnut0310.workers.dev`. A fresh fork with neither deployed still
-works: the taxi falls back to keyless **Local search** and the city stays solo. **No backend is required to run.**
+The canonical site gets its Worker defaults from `repolis.config.js`:
+`services.grounded` → `https://repolis-taxi.wingnut0310.workers.dev/`, and
+`services.realtime` → `wss://repolis-rt.wingnut0310.workers.dev`. GitHub Pages forks infer their
+own owner and receive empty service defaults, so the taxi falls back to keyless **Local search**
+and the city stays solo. **No backend is required to run.**
 
 Worker secrets live in Cloudflare (set via `npx wrangler secret put …`) and local `.dev.vars` — see
 [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md). Never put a real key in tracked files.

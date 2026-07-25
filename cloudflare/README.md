@@ -20,15 +20,15 @@ npx wrangler deploy     # prints your URL, e.g. https://repolis-rt.<you>.workers
 
 ## Turn it on for every visitor
 
-Take the deployed URL and use its `wss://` form, then set it as `RT_DEFAULT`
-in `../index.html` (near the realtime block) and push:
+Take the deployed URL and use its `wss://` form, then set `services.realtime`
+in `../repolis.config.js` and push:
 
 ```js
-const RT_DEFAULT='wss://repolis-rt.<you>.workers.dev';
+realtime: canonicalServices ? 'wss://repolis-rt.<you>.workers.dev' : '',
 ```
 
 Now the HUD badge shows **🟢 현재 · 오늘 · 누적** for everyone, and visitors see
-each other's avatars. With `RT_DEFAULT` empty the site just runs solo (🟢 1).
+each other's avatars. With the configured default empty the site just runs solo (🟢 1).
 
 ## Local test (no login)
 

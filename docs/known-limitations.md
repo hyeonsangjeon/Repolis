@@ -33,7 +33,7 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 ## Realtime / multiplayer
 
 - **Solo by default.** Presence + the live visitor counter only appear when a realtime server is wired
-  (`RT_DEFAULT`, `?rt=`, `localStorage.repolisRT`, or `window.REPOLIS_RT`). A bare fork is single-player.
+  (`repolis.config.js`, `?rt=`, `localStorage.repolisRT`, or `window.REPOLIS_RT`). A bare fork is single-player.
 - **Self-host count is in-memory.** The `node scripts/dev_realtime.mjs` server forgets counts on restart;
   only the PartyKit / Cloudflare Durable-Object backends persist the cumulative total.
 

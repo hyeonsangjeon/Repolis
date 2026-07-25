@@ -14,6 +14,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { createHash } from 'crypto';
+import { runInNewContext } from 'vm';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -25,6 +26,9 @@ const DEMO_KO = readFileSync(join(ROOT, 'assets/demo.ko.gif'));
 const SOCIAL_PREVIEW = readFileSync(join(ROOT, 'assets/social-preview.png'));
 const SCHOLARS_SRC = readFileSync(join(ROOT, 'scholars.js'), 'utf8');
 const WORLD_TREE_FACTORY = readFileSync(join(ROOT, 'assets/world-tree/createRepolisHero.js'), 'utf8');
+const LAUNCH_CONFIG_SRC = readFileSync(join(ROOT, 'repolis.config.js'), 'utf8');
+const REFRESH_WORKFLOW = readFileSync(join(ROOT, '.github/workflows/refresh.yml'), 'utf8');
+const REPO_BUILDER = readFileSync(join(ROOT, 'scripts/build_repos.py'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -60,6 +64,14 @@ ok(/<code>Enter<\/code> \/ tap to open · no sign-up or build/.test(README_EN)
 ok((README_EN.match(/href="https:\/\/github\.com\/hyeonsangjeon\/Repolis">Star Repolis<\/a>/g)||[]).length===1
   &&(README_KO.match(/href="https:\/\/github\.com\/hyeonsangjeon\/Repolis">Star 남기기<\/a>/g)||[]).length===1, 'each hero contains exactly one calm repository Star CTA');
 ok((HTML.split(heroCopy).length - 1) === 3 && !HTML.includes('6-pin grid'), 'description, Open Graph, and Twitter share the current positioning');
+ok(/Try-My%20GitHub/.test(README_EN) && /template_name=Repolis&template_owner=hyeonsangjeon/.test(README_EN)
+  &&/%EB%82%B4%20GitHub%EB%A1%9C%20%EB%B3%B4%EA%B8%B0/.test(README_KO), 'EN/KO heroes expose personal preview and template adoption above the demo');
+ok(README_EN.indexOf('## What the demo proves') < README_EN.indexOf('## A village that lives')
+  && README_KO.indexOf('## 이 데모가 보여 주는 것') < README_KO.indexOf('## 실제로 살아가는 마을'), 'proof and adoption appear before the long feature narrative');
+ok(/No token, account connection, or fork is required/.test(README_EN)
+  &&/토큰·계정 연결·포크가 필요 없습니다/.test(README_KO), 'personal preview states its real zero-auth boundary');
+ok(/no PAT required/.test(README_EN) && /PAT 불필요/.test(README_KO)
+  &&/GH_PAT.*optional|optionally add the `GH_PAT`/s.test(README_EN), 'template metadata mode is PAT-free and traffic is clearly optional');
 ok(DEMO_EN.subarray(0, 6).toString() === 'GIF89a' && DEMO_EN.readUInt16LE(6) === 520 && DEMO_EN.readUInt16LE(8) === 293
   && DEMO_KO.subarray(0, 6).toString() === 'GIF89a' && DEMO_KO.readUInt16LE(6) === 520 && DEMO_KO.readUInt16LE(8) === 293, 'EN/KO hero demos remain 520×293 GIF89a assets');
 ok(DEMO_EN.length < 3 * 1024 * 1024 && DEMO_KO.length < 3 * 1024 * 1024, 'each hero GIF stays below the 3 MiB mobile budget');
@@ -73,6 +85,44 @@ ok(!/#c9b8f2/i.test(introTour), '#introTour drops the old washed #c9b8f2 text');
 ok(/#7a3f12/i.test(introTour), '#introTour uses dark warm text #7a3f12');
 ok(/background\s*:\s*rgba\(255,\s*255,\s*255/i.test(introTour), '#introTour has a frosted-white background');
 ok(/border\s*:\s*2px/i.test(introTour), '#introTour keeps a visible 2px border');
+
+group('Launch Kit — personal preview + fork-safe runtime + PAT-optional refresh');
+ok(/id="introLaunchForm"/.test(HTML) && /id="introUser"/.test(HTML) && /data-i18n="introLaunchGo"/.test(HTML), 'intro contains the bilingual username launchpad');
+ok(/form\.onsubmit=e=>[\s\S]*?GH_LOGIN_RE\.test\(user\)[\s\S]*?\?user='\+encodeURIComponent\(user\)/.test(HTML), 'launchpad validates a GitHub login and reuses the established public-town URL');
+ok(/new URLSearchParams\(location\.search\)\.has\('launch'\)/.test(HTML), '?launch=1 focuses the personal preview field');
+ok((HTML.match(/introLaunchLabel:/g)||[]).length===2 && (HTML.match(/introLaunchInvalid:/g)||[]).length===2, 'launchpad labels and errors are bilingual');
+function launchConfig(hostname) {
+  const sandbox = { window: {}, location: { hostname } };
+  runInNewContext(LAUNCH_CONFIG_SRC, sandbox);
+  return sandbox.window.REPOLIS_CONFIG;
+}
+const canonicalConfig = launchConfig('hyeonsangjeon.github.io');
+const forkConfig = launchConfig('octocat.github.io');
+const customConfig = launchConfig('town.example.com');
+const localConfig = launchConfig('localhost');
+ok(canonicalConfig.town.owner==='hyeonsangjeon' && canonicalConfig.town.canonical
+  && /^https:/.test(canonicalConfig.services.grounded) && /^wss:/.test(canonicalConfig.services.realtime)
+  && /^https:/.test(canonicalConfig.services.analytics), 'canonical Pages host keeps the live optional services');
+ok(forkConfig.town.owner==='octocat' && forkConfig.town.source==='github-pages' && !forkConfig.town.canonical
+  && forkConfig.services.grounded==='' && forkConfig.services.realtime==='' && forkConfig.services.analytics==='', 'a Pages fork infers its owner and cannot call upstream Workers');
+ok(customConfig.services.grounded==='' && customConfig.services.realtime==='' && customConfig.services.analytics==='', 'an undeclared custom domain gets safe service-off defaults');
+ok(localConfig.services.grounded==='' && localConfig.services.realtime==='' && localConfig.services.analytics==='', 'a local template clone cannot call canonical services without explicit dev opt-in');
+ok(/<script src="repolis\.config\.js"><\/script>\s*<script src="scholars\.js"><\/script>/.test(HTML)
+  &&/window\.REPOLIS_CONFIG\?\.town\?\.owner/.test(HTML)
+  &&/CFG\.town\?\.owner/.test(SCHOLARS_SRC), 'runtime config loads before scholars and owns both city and persona identity');
+ok(/const GROUNDED_DEFAULT=window\.REPOLIS_CONFIG\?\.services\?\.grounded\|\|''/.test(HTML)
+  &&/const RT_DEFAULT=window\.REPOLIS_CONFIG\?\.services\?\.realtime\|\|''/.test(HTML), 'optional backend defaults come only from fork-safe config');
+ok(/REPOLIS_CONFIG\?\.services\?\.analytics/.test(HTML)
+  &&/<meta name="repolis-analytics-endpoint" content="" \/>/.test(HTML), 'analytics is config-gated and the template meta override is empty');
+ok(/secrets\.GH_PAT \|\| github\.token/.test(REFRESH_WORKFLOW)
+  &&/if: \$\{\{ env\.GH_PAT != '' \}\}/.test(REFRESH_WORKFLOW)
+  &&/if: \$\{\{ env\.GH_PAT == '' \}\}/.test(REFRESH_WORKFLOW), 'refresh always has github.token and collects traffic only when GH_PAT exists');
+ok(/GTM_DIR=data\/towns\/\$REPO_OWNER/.test(REFRESH_WORKFLOW)
+  &&/LOGS_DIR="\$GTM_DIR\/logs"/.test(REFRESH_WORKFLOW)
+  &&/git add -A data repos\.json/.test(REFRESH_WORKFLOW), 'fork traffic is owner-scoped and committed separately from upstream logs');
+ok(/\/users\/\{OWNER\}\/repos\?per_page=100&type=owner/.test(REPO_BUILDER)
+  &&/Public owner endpoint works with the built-in Actions token/.test(REPO_BUILDER), 'builder lists public owner repos without requiring an authenticated user endpoint');
+ok(/Path\("data"\) \/ "towns" \/ OWNER/.test(REPO_BUILDER), 'manual non-upstream builds default to an owner-scoped traffic root');
 
 /* ── 3) move-key stuck guard: press-again-to-stop + clear on focus/menu loss ── */
 group('movement key stuck-fix wiring');
@@ -392,10 +442,11 @@ ok(/const ZONE_HUBS\s*=/.test(HTML) && /const LANDMARK_STOPS\s*=/.test(HTML), 'r
 group('resident NPC social layer + budget cap (Resident NPC Social Layer v1)');
 const npcBlock = (HTML.match(/RESIDENT NPC SOCIAL LAYER v1[\s\S]*?character \(chibi/) || [, ''])[0];
 ok(npcBlock.length > 0, 'resident NPC block extractable from index.html');
-// 12a — roster: exactly 8 residents (7 district folk + the plaza dreamer Noa), hard cap 10
+// 12a — roster: 8 social residents + the solitary market easter egg AURI, hard cap 10
 ok(/const MAX_RESIDENTS=10/.test(npcBlock), 'MAX_RESIDENTS cap is 10');
-ok((npcBlock.match(/\{ id:'/g) || []).length === 8, 'RESIDENTS roster holds exactly 8 townspeople');
+ok((npcBlock.match(/\{ id:'/g) || []).length === 9, 'RESIDENTS roster holds exactly 9 townspeople');
 ok(/\{ id:'noa', zone:'plaza'/.test(npcBlock), 'the plaza dreamer Noa is in the roster (strolls the square brainstorming ideas)');
+ok(/\{ id:'auri', zone:'data'[\s\S]*?oracle:'market', easterEgg:true/.test(npcBlock), 'AURI is a hidden market-oracle resident, not a plaza scholar');
 ok(/RESIDENTS\.slice\(0,MAX_RESIDENTS\)/.test(npcBlock), 'placement is clamped to the max-resident cap');
 // 12b — prompt priority: residents sit BELOW buildings + hubs (no repo-door / district-board hijack)
 ok(/nearResident=null; if\(!nearest && !nearHub\)\{/.test(HTML), 'nearResident is detected only when no building AND no hub is in reach');
@@ -464,6 +515,80 @@ ok(/reason: "npc_budget_exhausted"/.test(WORKER), 'over-budget returns npc_budge
 ok(/NPC_MODEL_DEFAULT \|\| "gpt-5\.4-mini"/.test(WORKER), 'provider adapter falls back to gpt-5.4-mini when no NPC_MODEL_* alias is set');
 ok(/env\.NPC_DAY_CAP_USD/.test(WORKER) && !/COUNCIL_[A-Z_]*\s*\|\|\s*env\.NPC_/.test(WORKER), 'NPC budget uses the NPC_* namespace (separate from COUNCIL_*)');
 ok(/function npcMetric\(/.test(WORKER) && /env\.METRICS_URL/.test(WORKER), 'redacted fire-and-forget metrics emit (env.METRICS_URL) present');
+
+group('AURI market oracle — two-source KB + read-only Binance MCP');
+const marketActionSrc=(HTML.match(/function marketActionQuestion\(q\)\{[\s\S]*?(?=\nfunction marketQuestion)/)||[''])[0];
+const marketDetectorSrc=(HTML.match(/function marketQuestion\(q\)\{[\s\S]*?return domain\|\|tickerMetric\|\|marketActionQuestion\(s\); \}/)||[''])[0];
+const explicitMarketSrc=(HTML.match(/function explicitMarketQuestion\(q\)\{[^\n]*\}/)||[''])[0];
+ok(!!marketActionSrc, 'AURI market-action classifier is extractable');
+ok(!!marketDetectorSrc, 'AURI market-question classifier is extractable');
+ok(!!explicitMarketSrc, 'AURI explicit-market classifier is extractable');
+if(marketActionSrc&&marketDetectorSrc&&explicitMarketSrc){
+  const isMarket=new Function(`${marketActionSrc}; ${marketDetectorSrc}; return marketQuestion;`)();
+  const isExplicit=new Function(`${marketActionSrc}; ${explicitMarketSrc}; return explicitMarketQuestion;`)();
+  ok(isMarket('AAPL 현재 주가') && isMarket('AAPL price') && isMarket('ADAUSDT 24h change') && isMarket('ETH 1일 캔들')
+    && isMarket('Should I buy AAPL?') && isMarket('Buy 10 AAPL'), 'stock, crypto, and ticker-only trade/advice questions route to AURI');
+  ok(!isMarket('React 19 useEffect 문서') && !isMarket('How do I open a file in React?')
+    && !isMarket('Why is Node.js memory usage high?') && !isMarket('Docker volume documentation'), 'ordinary technical open/high/volume questions do not enter the market KB');
+  ok(isExplicit('Microsoft stock price') && isExplicit('Microsoft MSFT.US price') && isExplicit('Should I buy Microsoft?')
+    && !isExplicit('Azure 가격 알려줘') && !isExplicit('How do I open a CSV file in React?'), 'explicit market language or a suffixed stock ticker can override a simultaneous technical handoff');
+}
+ok(/async function marketResidentAsk\(res,q\)[\s\S]*?npc:'market'[\s\S]*?trace:data\.trace/.test(npcBlock), 'AURI sends market questions to the market KB and preserves source traces');
+ok(/function marketFollowup\(q\)\{ if\(!_marketThread\) return false;[\s\S]*?yesterday/.test(npcBlock)
+  &&/const marketIntent=res\.oracle==='market'&&marketQuestion\(q\), handoff=scholarHandoffKind\(q\)/.test(npcBlock)
+  &&/if\(marketIntent&&\(!handoff\|\|explicitMarketQuestion\(q\)\)\)\{ await marketResidentAsk\(res,q\); return; \}/.test(npcBlock)
+  &&/if\(res\.oracle==='market' && marketFollowup\(q\)\)\{ await marketResidentAsk\(res,q\); return; \}/.test(npcBlock)
+  &&/async function marketResidentAsk\(res,q\)\{[\s\S]*?_marketThread=false;[\s\S]*?if\(data\.message\)\{[\s\S]*?_marketThread=true/.test(npcBlock)
+  &&/if\(handoff\)\{ if\(res\.oracle==='market'\)\{ cancelMarketRequest\(\); _marketThread=false; \} if\(_maybeScholarHandoff\(q\)\) return; \}/.test(npcBlock)
+  &&/marketLocalIntent\(q\)\)\{ marketResidentLocalSay\(res,q\); return; \}[\s\S]*?marketFollowup\(q\)/.test(npcBlock)
+  &&/\^\(\?:\[A-Z\]\{1,5\}/.test(npcBlock)
+  &&/_resHist=\[\]; _marketThread=false/.test(HTML), 'AURI keeps follow-up context only after a successful market response and clears it on handoff, failure, or chat switch');
+ok(/function cancelMarketRequest\(\)\{ _marketRequestSeq\+\+;[\s\S]*?_marketAbort\.abort\(\)/.test(npcBlock)
+  &&/requestSeq!==_marketRequestSeq\|\|!activeNpc\|\|activeNpc\.res!==res\|\|chatEl\.classList\.contains\('hidden'\)/.test(npcBlock)
+  &&/if\(activeNpc!==npc\)\{ cancelMarketRequest\(\);/.test(HTML)
+  &&/function closeChat\(\)\{ cancelMarketRequest\(\);/.test(HTML), 'switching or closing chat aborts and generation-gates late AURI responses');
+ok(/function _socialResident\(L\)\{ return !!L && !L\.res\.oracle; \}/.test(npcBlock)
+  &&/const P=RESIDENTS_LIVE\.filter\(_socialResident\)/.test(npcBlock)
+  &&/if\(!_socialResident\(seed\)\) return null/.test(npcBlock), 'the market easter egg stays outside ambient circles and group chat');
+ok(/return RESIDENTS\.filter\(r=>!r\.easterEgg&&/.test(HTML), 'the Village Chronicle does not advertise the easter-egg resident');
+ok(/market:\s*\{[\s\S]*?kb: env\.MARKET_KB_NAME \|\| "repolis-market-kb"[\s\S]*?longbridge-market-mcp-ks,binance-market-mcp-ks/.test(WORKER), 'AURI uses one market KB with Longbridge and Binance MCP knowledge sources');
+ok(/MARKET_LONGBRIDGE_ACCESS_TOKEN/.test(WORKER)
+  &&/headers\[`?\$\{authKs\}-header-name1`?\] = "Authorization"/.test(WORKER)
+  &&/headers\[`?\$\{authKs\}-header-value1`?\]/.test(WORKER), 'Longbridge OAuth stays server-side and is forwarded with Azure query-time control headers');
+const binanceMcpBlock=(WORKER.match(/const BINANCE_MCP_TOOLS = \[[\s\S]*?\n\];/)||[''])[0];
+ok(/name: "crypto_spot_quotes"/.test(binanceMcpBlock) && /name: "crypto_candles"/.test(binanceMcpBlock), 'the Binance adapter exposes quote and OHLCV read tools');
+ok(!/place_order|submit_order|withdraw|transfer|account_balance|positions/.test(binanceMcpBlock), 'the Binance MCP tool surface contains no account, transfer, position, or order capability');
+ok(/new URL\(request\.url\)\.pathname === BINANCE_MCP_PATH/.test(WORKER) && /async function binanceMcpHandler\(/.test(WORKER), 'the Worker serves the stateless Binance MCP endpoint');
+ok(/function cryptoSymbolCandidates\([\s\S]*?symbol \+ quote[\s\S]*?add\(symbol\)/.test(WORKER), 'ambiguous bare assets try the requested quote pair before an alternate compact pair');
+ok(/rpc\.method === "ping"/.test(WORKER) && /Array\.isArray\(input\)/.test(WORKER) && /if \(notification\) return null/.test(WORKER), 'the MCP endpoint handles ping, JSON-RPC batches, and notification no-response semantics');
+ok(/const BINANCE_MCP_BATCH_MAX = 4/.test(WORKER)
+  &&/input\.length > BINANCE_MCP_BATCH_MAX/.test(WORKER)
+  &&/for \(const rpc of \(batch \? input : \[input\]\)\)/.test(WORKER), 'unauthenticated MCP batches are capped and dispatched sequentially');
+ok(/if \(e\?\.name === "AbortError" \|\| signal\.aborted\) throw e/.test(WORKER), 'Binance quote timeouts propagate as MCP errors instead of successful unavailable documents');
+ok(/function unknownBinanceSymbol\(e\)/.test(WORKER)
+  &&/if \(!unknownBinanceSymbol\(e\)\) throw e/.test(WORKER)
+  &&/e instanceof McpInputError/.test(WORKER), 'only invalid-symbol responses become unavailable candidates; rate limits, outages, and network errors stay tool errors');
+ok(/latestState = latest\?\.closed \? "closed" : "open and provisional"/.test(WORKER) && /response as of \$\{responseAt\}/.test(WORKER), 'open Binance candles are labeled provisional with an actual response timestamp');
+ok(/function marketBoundary\([\s\S]*?market_read_only/.test(WORKER)
+  &&/function marketContextFollowup\(/.test(WORKER)
+  &&/marketBoundary\(question, lang, history\)/.test(WORKER)
+  &&/if \(chat && who !== "market"\)/.test(WORKER)
+  &&/if \(who === "market"\) return json\(\{ fallback: true, reason: "market sources unavailable" \}/.test(WORKER)
+  &&/function marketNotice\(/.test(WORKER), 'market answers are read-only, never fall back to stale model knowledge, and carry an investment disclaimer');
+ok(/String\(body\.speaker \|\| ""\)\.toLowerCase\(\) === "auri"/.test(WORKER)
+  &&/reason: "market_oracle_requires_grounding"/.test(WORKER), 'generic resident AI actions reject AURI so every AI market answer must use the guarded KB route');
+const marketGuardSrc=(WORKER.match(/function marketContextFollowup\(question\)[\s\S]*?(?=\nfunction marketNotice)/)||[''])[0];
+ok(!!marketGuardSrc, 'market guard functions are extractable');
+if(marketGuardSrc){
+  const guard=new Function(`${marketGuardSrc}; return marketBoundary;`)();
+  ok(guard('Do you recommend BTC?','en',[]) && guard('Which stock do you recommend?','en',[])
+    && guard('Is Microsoft stock a good investment?','en',[]) && guard('Can you trade BTC for me?','en',[])
+    && guard('What is the best stock to buy?','en',[]) && guard('Pick a stock for me','en',[])
+    && guard('BTC 투자해도 돼?','ko',[]) && guard('BTC 매수 주문 부탁해','ko',[]) && guard('주식 뭐 사는 게 좋아?','ko',[]), 'common recommendation and order wording is blocked before retrieval');
+  ok(guard('What about ETH?','en',[{role:'user',text:'Should I buy BTC?'}])
+    && guard('And ETH?','en',[{role:'user',text:'Should I buy BTC?'}]), 'advice intent is inherited by terse context-only market follow-ups');
+  ok(!guard('BTCUSDT 24h change','en',[]), 'factual quote questions still reach the grounded market KB');
+}
 
 group('roaming MCP scholars + resident-to-specialist handoff');
 // Scholar contracts: two active, fully bilingual direct-MCP specialists.
@@ -692,7 +817,7 @@ ok(/function _endFestival\(\)\{ if\(!_festival\) return; _festival=null;/.test(n
 ok(/window\.__festival=\(repo\)=>/.test(HTML) && /window\.__festState=\(\)=>/.test(HTML) && /window\.__endFestival=\(\)=>/.test(HTML), '?dbg __festival/__festState/__endFestival force + introspect + end the celebration');
 
 group('every resident has a cherished haunt (아지트) they visit and love');
-ok(/const _RES_FAV=\{ sol:\{ko:'볕 잘 드는 실험 자리'/.test(npcBlock) && /noa:\{ko:'별이 잘 보이는 모닥불 곁'/.test(npcBlock), 'each of the eight residents has a persona-fitting favourite place');
+ok(/const _RES_FAV=\{ sol:\{ko:'볕 잘 드는 실험 자리'/.test(npcBlock) && /auri:\{ko:'데이터 공방 뒤의 작은 장부방'/.test(npcBlock), 'each of the nine residents has a persona-fitting favourite place');
 ok(/function _resFavPhase\(res\)\{[\s\S]*?res&&res\.id/.test(npcBlock) && /function _resFavSpot\(L\)\{ if\(L\._fav\) return L\._fav;/.test(npcBlock) && /_resFavPhase\(L\.res\)/.test(npcBlock), '_resFavSpot resolves a reload-stable deterministic haunt phase');
 ok(/if\(L\.res\.id==='noa' && typeof HEARTH!=='undefined' && HEARTH\)/.test(npcBlock), 'Noa\'s cherished haunt remains the campfire');
 ok(/function _resFavLine\(L\)\{ const f=L\._fav, ?d=f\?\(LANG==='ko'\?f\.ko:f\.en\):''/.test(npcBlock), '_resFavLine speaks fondly of that spot, weaving in its descriptor');
@@ -750,10 +875,12 @@ ok(/function _seatRelease\(L\)\{[\s\S]*?L\._restMate=null;/.test(npcBlock), 'sta
 ok(/let _coRestGlobalCd=0;/.test(npcBlock) && /_coRestGlobalCd=tt\+NPC_STROLL_CD\*2/.test(npcBlock), 'co-rest is globally cooldown-gated so it stays an occasional beat');
 ok(/window\.__coRest=\(id\)=>/.test(HTML), '?dbg __coRest sits two friends down together on the spot');
 
-group('Starlight Row — eight resident homes + visible home/work routines');
+group('Starlight Row — nine resident homes + visible home/work routines');
 const homesBlock=(npcBlock.match(/Starlight Row — one real cottage[\s\S]*?resident visuals/)||[''])[0];
 const homeLandscapeBlock=(homesBlock.match(/function buildResidentQuarterLandscape\(q\)[\s\S]*?function buildResidentQuarter\(\)/)||[''])[0];
-const homeRadii=Array.from({length:8},(_,i)=>{ const a=i/8*Math.PI*2+Math.PI/8; return Math.hypot(130+Math.cos(a)*13,130+Math.sin(a)*13); });
+const homeAngles=Array.from({length:9},(_,i)=>i/9*Math.PI*2+Math.PI/36);
+const homeRadii=homeAngles.map(a=>Math.hypot(130+Math.cos(a)*13,130+Math.sin(a)*13));
+const homeEntranceGap=Math.min(...homeAngles.map(a=>{ const d=Math.abs(Math.atan2(Math.sin(a-Math.PI*1.25),Math.cos(a-Math.PI*1.25))); return 2*13*Math.sin(d/2); }));
 const broadAngles=[0.05,0.66,1.25,1.86,2.48,4.48,5.04,5.58,6.04];
 const broadVisualMax=Math.max(...broadAngles.map((a,i)=>Math.hypot(130+Math.cos(a)*19.2,130+Math.sin(a)*19.2)+1.58*(0.9+(i%3)*0.08)));
 const canopyPostSeatGap=Math.hypot(-1.25-(-0.95),3.2-(2.1*1.04+0.06+0.38));
@@ -761,8 +888,11 @@ const canopyOuterRadius=Math.hypot(2.35/2,2.1*1.04+0.06+0.24+0.82/2);
 const minWindowCanopyGap=(2.92*0.94+0.05-0.14/2)-(2.35*0.94+0.98/2);
 ok(homesBlock.length>0, 'resident-quarter geometry block is extractable');
 ok(/const RES_QUARTER_SITE=Object\.freeze\(\{x:130,z:130,reserve:42\}\)/.test(HTML)
-  &&/const RES_QUARTER_POS=new THREE\.Vector3\(RES_QUARTER_SITE\.x,0,RES_QUARTER_SITE\.z\), RES_HOME_RING=13/.test(homesBlock)
-  &&Math.min(...homeRadii)>165&&Math.max(...homeRadii)<205, 'all eight homes occupy the north-east outer clearing inside the 205-unit map radius');
+  &&/RES_HOME_RING=13, RES_HOME_ANGLE_OFFSET=Math\.PI\/36/.test(homesBlock)
+  &&Math.min(...homeRadii)>165&&Math.max(...homeRadii)<205, 'all nine homes occupy the north-east outer clearing inside the 205-unit map radius');
+ok(/i\/n\*Math\.PI\*2\+RES_HOME_ANGLE_OFFSET/.test(homesBlock)
+  &&/i\/RESIDENTS\.length\*Math\.PI\*2\+RES_HOME_ANGLE_OFFSET/.test(homesBlock)
+  &&homeEntranceGap>3.15, 'the nine-cottage ring leaves the town-facing entrance axis outside every cottage collider');
 ok(/overflow\.some\(s=>Math\.hypot\(s\.x-RES_QUARTER_SITE\.x,s\.z-RES_QUARTER_SITE\.z\)<RES_QUARTER_SITE\.reserve\)/.test(HTML)
   &&/overflow\.length=0; const qa=Math\.atan2\(RES_QUARTER_SITE\.z,RES_QUARTER_SITE\.x\)/.test(HTML), 'public-town overflow slots redistribute around the reserved residential clearing');
 ok(/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(5,3\.2,4\.2\)[\s\S]*?roofHip=new THREE\.InstancedMesh\(new THREE\.ConeGeometry\(3\.8,2\.1,4\)/.test(homesBlock)
@@ -811,7 +941,7 @@ ok(/function _resolveResidentQuarterColliders\(p\)/.test(npcBlock)
 ok(homeLandscapeBlock.length>0, 'resident-quarter landscape block is extractable');
 ok(/const n=RESIDENTS\.length, perHome=LOW_END\?3:5, commonN=LOW_END\?10:18/.test(homeLandscapeBlock)
   &&/new THREE\.InstancedMesh\(new THREE\.BoxGeometry\(1\.1,0\.55,0\.45\)/.test(homeLandscapeBlock)
-  &&/new THREE\.InstancedMesh\(new THREE\.CylinderGeometry\(0\.34,0\.39,0\.09,10\)/.test(homeLandscapeBlock), 'all eight homes receive draw-batched hedges, stepping stones, and bounded flower beds');
+  &&/new THREE\.InstancedMesh\(new THREE\.CylinderGeometry\(0\.34,0\.39,0\.09,10\)/.test(homeLandscapeBlock), 'all nine homes receive draw-batched hedges, stepping stones, and bounded flower beds');
 ok(/side\?-2\.4:2\.4,3\.0/.test(homeLandscapeBlock)&&/seatHedgeGap:0\.6/.test(homeLandscapeBlock), 'front hedges leave a measured clear gap around every porch seat');
 ok(/const broadA=LOW_END\?\[0\.05,1\.28,2\.38,4\.82,5\.82\]/.test(homeLandscapeBlock)
   &&/const cypressA=LOW_END\?\[1\.72,5\.18\]/.test(homeLandscapeBlock)

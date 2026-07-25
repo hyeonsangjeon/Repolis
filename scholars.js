@@ -11,7 +11,10 @@
  * active:true 인 현자만 실제로 밤하늘에 그려지고 마을에 소환된다.
  */
 (function () {
-  const OWNER = 'hyeonsangjeon', OWNER_KO = '전현상', OWNER_EN = 'Hyeon Sang Jeon';
+  const CFG = window.REPOLIS_CONFIG || {};
+  const OWNER = CFG.town?.owner || 'hyeonsangjeon';
+  const OWNER_KO = CFG.town?.ownerKo || OWNER;
+  const OWNER_EN = CFG.town?.ownerEn || OWNER;
 
   const SCHOLARS = [
     {

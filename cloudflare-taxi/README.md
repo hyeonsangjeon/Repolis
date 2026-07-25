@@ -15,10 +15,14 @@ public site (https://hyeonsangjeon.github.io/Repolis/) — the Vercel functions 
 3. **Direct public MCP scholars** — RIGEL calls DeepWiki, MIRA resolves and reads current
    library docs through Context7, and LYRA searches Hugging Face models, datasets, and papers.
    Their results keep source links and can be synthesized in the visitor's language.
+4. **AURI's read-only market ledger** — the hidden resident queries one Azure AI Search KB
+   backed by Longbridge stock-market MCP tools and this Worker's bounded Binance spot-data MCP.
+   It returns cited, time-stamped facts and has no order, account, transfer, or withdrawal tools.
 
 It serves **five specialist scholars**: POLARIS, VEGA · MS Learn, RIGEL · DeepWiki,
-MIRA · Context7, and LYRA · Hugging Face. See [`../SCHOLARS.md`](../SCHOLARS.md) and
-the hybrid `scholarConfig` / `MCP_NPCS` maps in [`src/grounded.js`](src/grounded.js).
+MIRA · Context7, and LYRA · Hugging Face, plus one **easter-egg resident**, AURI · Market.
+See [`../SCHOLARS.md`](../SCHOLARS.md) and the hybrid `scholarConfig` / `MCP_NPCS` maps
+in [`src/grounded.js`](src/grounded.js).
 
 This is a **separate** Worker from the realtime presence server in [`../cloudflare`](../cloudflare).
 The grounding logic mirrors the Vercel function [`../api/taxi-grounded.js`](../api/taxi-grounded.js),
@@ -34,7 +38,7 @@ wait for the slow KB to finish. Free plan, no card, and you already run a Worker
 
 ## What it holds (and what it doesn't)
 
-The Worker needs **two secrets** for the live KB/persona path:
+The Worker needs **two secrets** for the existing live KB/persona path:
 
 - your **Azure AI Search key** (`SEARCH_API_KEY`) — for KB retrieval, and
 - an **Entra ID service-principal secret** (`AAD_CLIENT_SECRET`) — so it can call Azure
@@ -49,6 +53,11 @@ MIRA and LYRA work anonymously. For higher third-party quotas you may additional
 `CONTEXT7_API_KEY` and `HF_TOKEN` as Worker secrets. They remain server-side and are optional.
 If Context7's anonymous MCP quota is exhausted, MIRA falls back to that library's public
 Context7 `llms.txt` page rather than returning an ungrounded answer.
+
+AURI's stock source optionally adds `MARKET_LONGBRIDGE_ACCESS_TOKEN`, a dedicated Longbridge
+OAuth access token. The Worker forwards it only to `longbridge-market-mcp-ks` through Azure AI
+Search query-time control headers. Binance spot data is public and keyless. Never use a
+full-trading token when a read-only market-data token is available.
 
 Deterministic navigation ("take me to the most popular repo") is handled in the client
 and never reaches here. If the KB is unreachable / slow / unconfigured, the Worker returns
@@ -96,6 +105,18 @@ npx wrangler deploy
 
 `wrangler deploy` prints your URL, e.g. `https://repolis-taxi.<you>.workers.dev`.
 
+**(4) AURI's optional market KB** — create the two MCP Knowledge Sources and the
+`repolis-market-kb` described in [`../SCHOLARS.md`](../SCHOLARS.md), then set the Longbridge
+token server-side:
+
+```bash
+npx wrangler secret put MARKET_LONGBRIDGE_ACCESS_TOKEN
+```
+
+The Binance Knowledge Source points to the deployed Worker itself:
+`https://repolis-taxi.<you>.workers.dev/mcp/binance`. AURI remains safe when this setup is
+missing: the client says the market ledger is unavailable and never invents a live price.
+
 > First deploy needs `npx wrangler login` (opens a browser once). The **non-secret**
 > config — KB/KS names per scholar, `AOAI_DEPLOYMENT`, api-versions, timeouts — lives in
 > `wrangler.toml [vars]`; edit it there. Add more MCP knowledge sources by making
@@ -111,15 +132,15 @@ npx wrangler secret put HF_TOKEN
 
 ## Turn it on for every visitor
 
-Open `../index.html`, find `GROUNDED_DEFAULT`, and paste your Worker URL:
+Open `../repolis.config.js` and set `services.grounded` for your deployment policy:
 
 ```js
-const GROUNDED_DEFAULT = 'https://repolis-taxi.<you>.workers.dev/';
+grounded: canonicalServices ? 'https://repolis-taxi.<you>.workers.dev/' : '',
 ```
 
-Commit + push. Now every visitor who picks **🛰️ AI Foundry Live** gets live grounded
-answers — no per-user setup. Leave it `''` and the site stays Local-default (each
-visitor can still paste their own backend URL in the taxi mode prompt).
+Commit + push. Visitors on that configured deployment can use **🛰️ AI Foundry Live** with
+no per-user setup. Leave it `''` and the site stays Local-default (each visitor can still
+paste their own backend URL in the taxi mode prompt). Template forks ship service-off.
 
 Optionally set `ALLOW_ORIGIN` in `wrangler.toml` to your Pages origin so only your site
 can call the Worker. (Origin headers are spoofable, so this is soft protection; for a
@@ -135,6 +156,10 @@ SEARCH_ENDPOINT=https://<your-search>.search.windows.net
 SEARCH_API_KEY=<your-search-key>
 SEARCH_KB_NAME=repolis-github-kb
 SEARCH_KS_NAME=github-repos-mcp-ks
+MARKET_KB_NAME=repolis-market-kb
+MARKET_KS_NAME=longbridge-market-mcp-ks,binance-market-mcp-ks
+MARKET_LONGBRIDGE_KS_NAME=longbridge-market-mcp-ks
+MARKET_LONGBRIDGE_ACCESS_TOKEN=<dedicated-read-only-oauth-token>
 SEARCH_API_VERSION=2026-05-01-preview
 GROUNDED_MAX_RUNTIME_S=25
 GROUNDED_TIMEOUT_MS=25000
@@ -171,6 +196,7 @@ curl -s -X POST http://localhost:8788/ \
 // direct public MCP scholar:                { "question": "React 19 useEffect", "npc": "context7", "lang": "ko" }
 // Hugging Face model/dataset/paper search:   { "question": "VLM papers", "npc": "huggingface", "lang": "en" }
 // DeepWiki repo map:                        { "question": "how does it work?", "npc": "deepwiki", "repoName": "facebook/react" }
+// AURI market KB (two MCP sources):          { "question": "BTCUSDT 24h change", "npc": "market", "lang": "en" }
 // in-persona general / small talk:          { "question": "…", "npc": "taxi", "chat": true, "history": [], "lang": "ko" }
 ```
 
@@ -190,13 +216,31 @@ Responses:
 // Context7 / Hugging Face direct MCP (MIRA / LYRA):
 { "kind": "docs", "message": "…", "items": [ /* source links */ ],
   "trace": { "ks": "Context7 (MCP)", "tools": ["resolve-library-id", "query-docs"], "direct": true } }
+// AURI market answer: { "message": "…", "trace": {
+//   "ks": "longbridge-market-mcp-ks,binance-market-mcp-ks",
+//   "tools": ["quote", "crypto_spot_quotes"], "refs": [ /* cited source snapshots */ ] } }
 // use Local search instead:
 { "fallback": true, "reason": "timeout 25000ms" }
 ```
 
+## Read-only Binance MCP endpoint
+
+`POST /mcp/binance` implements stateless Streamable HTTP JSON-RPC for Azure AI Search. It
+supports only:
+
+| Tool | Purpose | Limits |
+|---|---|---|
+| `crypto_spot_quotes` | Binance spot last price, 24h change/range/volume, exchange time | 1–6 symbols |
+| `crypto_candles` | Recent Binance spot OHLCV candles | one symbol, 2–50 rows |
+
+Symbols, intervals, result counts, upstream host, and timeout are bounded in the Worker. The
+tool list intentionally contains no account, position, order, conversion, deposit, withdrawal,
+or transfer capability. Returned MCP documents include a Binance source URL and exchange
+timestamp so the KB can cite the data it used.
+
 ## 🧑‍🌾 Resident NPC social layer (optional, budget-capped)
 
-The city's **townspeople** (8 residents — distinct from the specialist scholars and Gitber the taxi) trade
+The city's **townspeople** (9 residents — distinct from the specialist scholars and Gitber the taxi) trade
 short turn-by-turn ambient lines and chat with the visitor. **This is off by default and costs nothing:**
 `index.html` ships them as deterministic **scripted** residents (zero network). The Worker only produces
 real model turns when you opt in *and* the daily budget allows — otherwise every action returns

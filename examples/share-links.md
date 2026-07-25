@@ -7,6 +7,7 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 | Link | Opens |
 |---|---|
 | `https://hyeonsangjeon.github.io/Repolis/` | The owner's generated city snapshot. |
+| `https://hyeonsangjeon.github.io/Repolis/?launch=1` | The username launchpad, focused and ready to build a personal preview. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob` | A town built live from `mrdoob`'s public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=torvalds` | A town built from `torvalds`' public repos. |
 
@@ -14,6 +15,15 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 stale fallback). It activates only for a valid, non-owner username; a bad name shows a friendly "lost"
 overlay, and a "go home" button always returns to the owner city. Cross-town taxi driving is disabled in
 public mode.
+
+## Publish a persistent town
+
+Use the [Repolis template](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon),
+enable Actions and Pages, then run **Refresh Repolis data** once. Public metadata uses the built-in
+`github.token`; `GH_PAT` is optional and only unlocks cumulative traffic collection.
+
+On `<owner>.github.io`, `repolis.config.js` automatically uses `<owner>` as the town owner and disables
+the canonical Repolis AI/realtime endpoints. Set `townOwner` in that one file when using a custom domain.
 
 ## Wire a realtime server (optional multiplayer)
 
@@ -25,15 +35,16 @@ localStorage.setItem('repolisRT','wss://your-realtime-server')
 window.REPOLIS_RT = 'wss://your-realtime-server'
 ```
 
-To enable presence for **every** visitor of your fork, set `const RT_DEFAULT='wss://…'` in `index.html`
-and push. Deploy a server with `cd cloudflare && npx wrangler deploy` or `npx partykit deploy`.
+To enable presence for **every** visitor of your fork, set `services.realtime` in
+`repolis.config.js` and push. Deploy a server with `cd cloudflare && npx wrangler deploy`
+or `npx partykit deploy`.
 
 ## Point the taxi at your own grounding backend (optional)
 
 The "🛰️ AI Foundry Live" mode can target any compatible Worker/function:
 
 - In the chat, choose **AI Foundry Live** and paste your URL, **or**
-- set `const GROUNDED_DEFAULT='https://your-worker.workers.dev/'` in `index.html` to enable it for everyone.
+- set `services.grounded` in `repolis.config.js` to enable it for everyone on your deployment.
 
 Leave it unset and the taxi stays on keyless **Local** search — the site still works fully. See
 [`../cloudflare-taxi/README.md`](../cloudflare-taxi/README.md) to deploy your own.

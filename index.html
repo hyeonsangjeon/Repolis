@@ -7,7 +7,7 @@
 <title>Repolis · 레포들의 도시 · hyeonsangjeon</title>
 <meta name="description" content="Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project." />
 <!-- Optional anonymous-aggregate analytics endpoint. Empty = OFF (no network). Set to your collector URL to enable. -->
-<meta name="repolis-analytics-endpoint" content="https://repolis-metrics.wingnut0310.workers.dev/event" />
+<meta name="repolis-analytics-endpoint" content="" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Repolis" />
 <meta property="og:title" content="Repolis — the City of Repos" />
@@ -501,7 +501,7 @@
   .libfoot button.close { flex: 0 0 auto; min-width: 0; background: #f1e6d6; color: #6a523d; }
   #intro { position: fixed; inset: 0; z-index: 30; background: linear-gradient(165deg,#7fcdc4 0%,#e8b87a 100%);
     display: flex; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 24px; }
-  #intro .inner { max-width: 440px; }
+  #intro .inner { width: 100%; max-width: 480px; max-height: calc(100vh - 32px); overflow-y: auto; padding: 2px 8px 12px; }
   #intro .langsel { display: inline-flex; margin-bottom: 20px; background: rgba(255,255,255,.16);
     border: 1px solid rgba(255,255,255,.4); border-radius: 999px; padding: 3px; }
   #intro .langsel button { border: none; background: transparent; color: #fff; font-weight: 800;
@@ -514,6 +514,20 @@
   #intro .ctrls { display: flex; gap: 14px; justify-content: center; margin-bottom: 26px; flex-wrap: wrap; }
   #intro .ctrls div { background: rgba(255,255,255,.18); border-radius: 12px; padding: 12px 16px; font-size: 13px; }
   #intro .ctrls b { display: block; font-size: 16px; margin-bottom: 3px; }
+  #introLaunch { margin: -5px auto 20px; padding: 12px; border: 1px solid rgba(255,255,255,.46); border-radius: 16px;
+    background: rgba(35,73,73,.16); box-shadow: 0 8px 22px rgba(41,45,35,.12); }
+  #introLaunch .launchLabel { margin-bottom: 8px; font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+  #introLaunchForm { display: flex; gap: 7px; align-items: stretch; }
+  #introLaunchForm .at { display: grid; place-items: center; flex: 0 0 35px; border-radius: 10px;
+    background: rgba(255,255,255,.22); font-size: 15px; font-weight: 900; }
+  #introUser { min-width: 0; flex: 1; border: 1px solid rgba(255,255,255,.68); border-radius: 10px; padding: 10px 11px;
+    background: rgba(255,255,255,.94); color: #4c3d30; font: inherit; font-size: 14px; outline: none; }
+  #introUser:focus { box-shadow: 0 0 0 3px rgba(255,255,255,.28); }
+  #introLaunchGo { flex: 0 0 auto; border: 0; border-radius: 10px; padding: 10px 13px; background: #234d49; color: #fff;
+    font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+  #introLaunch .launchHint { margin-top: 7px; font-size: 10.5px; color: rgba(255,255,255,.82); }
+  #introLaunchErr { min-height: 0; margin-top: 6px; color: #fff2ce; font-size: 11px; font-weight: 700; }
+  #introLaunchErr:empty { display: none; }
   #startBtn { background: #fff; color: #c2702f; border: none; border-radius: 14px; padding: 14px 40px;
     font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(60,30,10,.25); }
   #intro.hidden { opacity: 0; pointer-events: none; transition: opacity .4s; }
@@ -689,6 +703,9 @@
     .msg .alt { display: inline-flex; align-items: center; min-height: 32px; }
     #intro .langsel button { min-height: 44px; padding: 10px 22px; }
     #introTour { min-height: 48px; }
+    #introLaunchForm { flex-wrap: wrap; }
+    #introLaunchGo { flex: 1 0 150px; min-height: 44px; }
+    #introUser { min-height: 44px; }
     .chronoRecapBtn { min-height: 44px; }
     .obsTrail button, #starTrailHud .stActions button { min-height: 44px; }
     #starTrailHud { left:12px; bottom:calc(100px + env(safe-area-inset-bottom,0px)); width:min(280px,calc(100vw - 112px)); }
@@ -909,6 +926,16 @@
     </div>
     <h1>🏙️ Repolis — <span data-i18n="cityOfRepos">레포들의 도시</span></h1>
     <div class="sub" data-i18n-html="introSub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>깃버에게 물어보면 그 레포까지 데려다줘요.</div>
+    <div id="introLaunch">
+      <div class="launchLabel" data-i18n="introLaunchLabel">내 공개 레포로 바로 보기</div>
+      <form id="introLaunchForm">
+        <span class="at" aria-hidden="true">@</span>
+        <input id="introUser" data-i18n-ph="introUserPh" placeholder="GitHub username" autocomplete="username" spellcheck="false" />
+        <button id="introLaunchGo" type="submit" data-i18n="introLaunchGo">내 마을 만들기 →</button>
+      </form>
+      <div class="launchHint" data-i18n="introLaunchHint">공개 레포만 사용 · 로그인 없음 · 포크 없음</div>
+      <div id="introLaunchErr" role="alert"></div>
+    </div>
     <div class="ctrls">
       <div><b>WASD / ←↑↓→</b><span data-i18n="ctrlWalk">걷기</span></div>
       <div><b>좌클릭 / Left</b><span data-i18n="ctrlLookL">시점 회전(자유 시점)</span></div>
@@ -954,6 +981,7 @@
   </div>
 </div>
 
+<script src="repolis.config.js"></script>
 <script src="scholars.js"></script>
 <script src="council/engine.js"></script>
 <script src="council/fixtures.js"></script>
@@ -979,7 +1007,8 @@ import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree
    Public mode (?user=someone) builds a town from any GitHub user's PUBLIC
    repo metadata (derived metrics only — never claims real traffic).
    The owner city stays the premium / full-data experience. ================ */
-const OWNER = 'hyeonsangjeon';
+const OWNER = window.REPOLIS_CONFIG?.town?.owner || 'hyeonsangjeon';
+document.title = `Repolis · ${OWNER}'s City of Repos`;
 let REPOS = [];
 
 /* --- which town are we in? --- */
@@ -996,7 +1025,8 @@ if(_reqUser && GH_LOGIN_RE.test(_reqUser) && _reqUser.toLowerCase() !== OWNER.to
 /* --- lightweight, non-blocking analytics. Default sink = in-memory (+ console under ?dbg).
    No network unless ANALYTICS_ENDPOINT is set. No tokens, no raw taxi queries. --- */
 const ANALYTICS_ENDPOINT = (function(){
-  try{ const m = document.querySelector('meta[name="repolis-analytics-endpoint"]'); const u = m && m.content && m.content.trim(); return u || null; }
+  try{ const configured=window.REPOLIS_CONFIG?.services?.analytics||''; const m=document.querySelector('meta[name="repolis-analytics-endpoint"]');
+    const override=m&&m.content&&m.content.trim(); return override||configured||null; }
   catch(e){ return null; }
 })();
 if(ANALYTICS_ENDPOINT){ try{ const _pn = document.getElementById('privacyNote'); if(_pn) _pn.classList.remove('hidden'); }catch(e){} }
@@ -1207,6 +1237,8 @@ const I18N = {
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>깃버에게 물어보면 그 레포까지 데려다줘요.',
     introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
+    introLaunchLabel:'내 공개 레포로 바로 보기', introUserPh:'GitHub username', introLaunchGo:'내 마을 만들기 →',
+    introLaunchHint:'공개 레포만 사용 · 로그인 없음 · 포크 없음', introLaunchInvalid:'올바른 GitHub username을 입력해 주세요.',
     privacyNote:'익명 집계 통계만 측정해요 · 개인정보·계정·검색어는 저장하지 않아요.',
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
     enterTown:'마을 입장 →',
@@ -1370,6 +1402,8 @@ const I18N = {
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask Gitber and it'll drive you right to any repo.",
     introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
+    introLaunchLabel:'See the same engine with your public repos', introUserPh:'GitHub username', introLaunchGo:'Build my town →',
+    introLaunchHint:'Public repos only · no login · no fork', introLaunchInvalid:'Enter a valid GitHub username.',
     privacyNote:'Anonymous, aggregate stats only — no personal data, accounts, or search queries are stored.',
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
     enterTown:'Enter the town →',
@@ -5347,7 +5381,18 @@ const RESIDENTS=[
     greet:{ko:'천천히 걷다 보면 생각이 맑아져요. 잘 왔어요.',en:'A slow walk clears the mind \u2014 welcome.'},
     blurb:{ko:'저는 노아, 광장을 거닐며 이 도시가 앞으로 뭐가 될 수 있을지 상상하는 몽상가예요.',en:'I\u2019m Noa, the plaza dreamer \u2014 I wander the square and imagine what this city could become.'},
     amb:{ko:['이 광장에 밤에도 빛나는 꽃길이 있으면 어떨까 상상했어요.','걷다 보면 흩어진 생각들이 길처럼 이어져요.','새 구역 하나를 마음속으로 그려보는 중이에요.','좋은 아이디어는 대개 산책 끝에 찾아와요.','벤치에 앉아 하늘을 보면 답이 떠오르곤 해요.'],
-        en:['I imagined a flower path here that glows after dark.','When I walk, scattered thoughts line up like streets.','I\u2019m sketching a whole new district in my head.','The best ideas arrive at the end of a stroll.','Sit on a bench, watch the sky \u2014 answers surface.']} }
+        en:['I imagined a flower path here that glows after dark.','When I walk, scattered thoughts line up like streets.','I\u2019m sketching a whole new district in my head.','The best ideas arrive at the end of a stroll.','Sit on a bench, watch the sky \u2014 answers surface.']} },
+  { id:'auri', zone:'data', color:0xd2ad4f, accent:0x76d9b5, tone:'calm\u00b7exact', oracle:'market', easterEgg:true,
+    topics:['market','stock','crypto','price','volume','candle'],
+    ko:{name:'아우리',role:'밤시장 장부지기'}, en:{name:'AURI',role:'night-market ledger keeper'},
+    greet:{ko:'쉿, 이 장부는 밤에만 잘 읽혀요. 종목이나 코인과 확인할 지표를 말해 주세요.',en:'Quiet\u2014this ledger reads best at night. Name a stock or coin and the fact you want checked.'},
+    blurb:{ko:'저는 아우리, 데이터 공방 뒤편에서 Longbridge와 Binance의 읽기 전용 시세를 대조하는 숨은 AI 장부지기예요. 주문이나 투자 추천은 하지 않고, 출처와 기준 시각이 있는 사실만 적어요.',en:'I\u2019m AURI, a hidden AI ledger keeper behind the Data workshop. I cross-check read-only Longbridge and Binance market data, never place orders, and record only sourced, time-stamped facts.'},
+    oracleCopy:{
+      ko:{help:'미국\u00b7홍콩 주식과 Binance 현물 코인의 현재가, 변동률, 거래량, 캔들을 물어보세요. 예: \u201cAAPL 현재가\u201d, \u201cBTCUSDT 24시간 변동률\u201d. 주문과 개인화된 매수\u00b7매도 추천은 하지 않아요.',searching:'Longbridge와 Binance 장부를 대조하고 있어요\u2026',none:'두 시장 장부에서 근거 있는 값을 찾지 못했어요. 티커와 시장(예: AAPL.US, BTCUSDT)을 더 정확히 알려주세요.',noBackend:'시장 장부 KB가 아직 연결되지 않았어요. 시세를 추측해서 답하지는 않을게요.',err:'시장 장부를 펼치지 못했어요. 잠시 후 다시 확인해 주세요.',offTopic:'저는 시장 숫자를 읽는 숨은 장부지기예요. 종목\u00b7코인과 현재가, 변동률, 거래량, 캔들 중 무엇을 확인할지 말해 주세요.',thanks:'장부가 도움이 됐다니 다행이에요. 거래 전에는 브로커나 거래소의 현재가를 꼭 다시 확인하세요.'},
+      en:{help:'Ask for US/HK stock or Binance spot facts: price, change, volume, or candles. Try \u201cAAPL price\u201d or \u201cBTCUSDT 24h change.\u201d I never place orders or give personalized buy/sell advice.',searching:'Cross-checking the Longbridge and Binance ledgers\u2026',none:'Neither market ledger returned a grounded value. Give me a more exact ticker and market, such as AAPL.US or BTCUSDT.',noBackend:'The market-ledger KB is not connected yet. I will not guess a live price.',err:'I could not open the market ledgers. Please try again shortly.',offTopic:'I\u2019m the hidden keeper of market numbers. Name a stock or coin and whether you want price, change, volume, or candles.',thanks:'Glad the ledger helped. Recheck the live price with your broker or exchange before trading.'}
+    },
+    amb:{ko:['숫자는 기준 시각이 있어야 의미가 있어요.','주문은 안 받아요. 장부만 읽습니다.','주식 장부와 코인 장부의 시계가 서로 달라요.','가격보다 먼저 통화와 시장을 확인해요.','출처 없는 시세는 장부에 적지 않아요.'],
+        en:['A number needs an as-of time to mean anything.','No orders here\u2014I only read the ledger.','Stock and crypto ledgers keep different clocks.','Check the market and currency before the price.','An unsourced quote never enters my book.']} }
 ];
 window.RESIDENTS=RESIDENTS;
 const _ZWHY={ ai:{ko:'LLM·RAG·에이전트·모델',en:'LLMs, RAG, agents and models'}, infra:{ko:'NAS·도커·자동화·서버',en:'NAS, Docker, automation and servers'},
@@ -5359,11 +5404,12 @@ function _resReps(res,n){ const z=_resZone(res); return (z&&z.repos)?z.repos.sli
 function _hex(c){ return '#'+(c>>>0).toString(16).padStart(6,'0'); }
 
 // 🏘️ Starlight Row — one real cottage per resident around a shared outer green; geometry is draw-batched, signs keep each home personal
-const RES_QUARTER_POS=new THREE.Vector3(RES_QUARTER_SITE.x,0,RES_QUARTER_SITE.z), RES_HOME_RING=13;
+const RES_QUARTER_POS=new THREE.Vector3(RES_QUARTER_SITE.x,0,RES_QUARTER_SITE.z), RES_HOME_RING=13, RES_HOME_ANGLE_OFFSET=Math.PI/36;
 const _RES_HOME_SIGNS=[]; let _RES_QUARTER_SIGN=null;
 const RES_HOME_STYLES=Object.freeze({
   sol:{roof:'hip'}, jun:{roof:'gable',chimney:true}, nari:{roof:'hex',canopy:true,boxes:true}, tae:{roof:'gable',chimney:true},
-  rin:{roof:'gable',canopy:true,boxes:true}, mira:{roof:'hex',chimney:true,boxes:true}, kai:{roof:'hip',canopy:true}, noa:{roof:'hip',canopy:true,boxes:true}
+  rin:{roof:'gable',canopy:true,boxes:true}, mira:{roof:'hex',chimney:true,boxes:true}, kai:{roof:'hip',canopy:true}, noa:{roof:'hip',canopy:true,boxes:true},
+  auri:{roof:'hex',canopy:true,chimney:true}
 });
 function _residentHomeStyle(id){ return RES_HOME_STYLES[id]||{roof:'hip'}; }
 function _gableHomeRoofGeometry(){ const w=5.8,d=4.9,h=2.1,g=new THREE.BufferGeometry();
@@ -5389,7 +5435,7 @@ function buildResidentQuarterLandscape(q){
   const stems=new THREE.InstancedMesh(GEO_STEM,MAT_STEM,flowerN), blossoms=new THREE.InstancedMesh(GEO_FLOWER,basic(0xffffff),flowerN);
   hedges.castShadow=hedges.receiveShadow=true; steps.receiveShadow=true;
   let fi=0;
-  for(let i=0;i<n;i++){ const res=RESIDENTS[i],a=i/n*Math.PI*2+Math.PI/8,lx=Math.cos(a)*RES_HOME_RING,lz=Math.sin(a)*RES_HOME_RING,rot=Math.atan2(-lx,-lz);
+  for(let i=0;i<n;i++){ const res=RESIDENTS[i],a=i/n*Math.PI*2+RES_HOME_ANGLE_OFFSET,lx=Math.cos(a)*RES_HOME_RING,lz=Math.sin(a)*RES_HOME_RING,rot=Math.atan2(-lx,-lz);
     for(let side=0;side<2;side++){ const hp=_homeLocal(lx,lz,rot,side?-2.4:2.4,3.0); _setHomeInstance(hedges,i*2+side,hp.x,0.275,hp.z,rot);
       hedges.setColorAt(i*2+side,new THREE.Color(res.color).lerp(new THREE.Color(0x4f7f4c),0.72)); }
     for(let j=0;j<3;j++){ const sp=_homeLocal(lx,lz,rot,0,2.72+j*0.68); _setHomeInstance(steps,i*3+j,sp.x,0.055,sp.z); }
@@ -5466,7 +5512,7 @@ function buildResidentQuarter(){
   if(!LOW_END) q.add(canopies,canopyPosts,chimneys,finials);
   RES_HOME_WINDOWS.push(winMat); RES_HOME_SURFACES.push({body:body.material,roofs:Object.values(roofs).map(r=>r.material)});
   let boxAt=0,canopyAt=0,chimneyAt=0;
-  for(let i=0;i<RESIDENTS.length;i++){ const res=RESIDENTS[i],a=i/RESIDENTS.length*Math.PI*2+Math.PI/8, lx=Math.cos(a)*RES_HOME_RING,lz=Math.sin(a)*RES_HOME_RING;
+  for(let i=0;i<RESIDENTS.length;i++){ const res=RESIDENTS[i],a=i/RESIDENTS.length*Math.PI*2+RES_HOME_ANGLE_OFFSET, lx=Math.cos(a)*RES_HOME_RING,lz=Math.sin(a)*RES_HOME_RING;
     const style=styles[i],wx=RES_QUARTER_POS.x+lx,wz=RES_QUARTER_POS.z+lz,rot=Math.atan2(-lx,-lz),height=0.94+(i%3)*0.035;
     const wallX=style.roof==='gable'?1.05:style.roof==='hex'?0.97:1,wallZ=style.roof==='hex'?1.04:1,facadeZ=2.1*wallZ+0.06;
     _setHomeInstance(yard,i,lx,0.014,lz,0,1,1,1,-Math.PI/2);
@@ -5620,7 +5666,8 @@ function _resMoodLine(L){ const b=_RES_MOOD_LINES[_resMood(L)]; const a=b&&(b[LA
 function _moodTell(m){ return m==='dozy'?{droop:0.05,bob:0.018,rate:1.25} : m==='bright'?{droop:0,bob:0.05,rate:2.15} : m==='curious'?{droop:0,bob:0.045,rate:2.0} : m==='wistful'?{droop:0.03,bob:0.022,rate:1.4} : {droop:0.01,bob:0.03,rate:1.7}; }
 // 🤝 fellow-feeling: two residents who are both idle and pass close by turn, greet by name (sometimes remarking on how the other seems), and the other warmly answers back a beat later. Rare, cooldown-gated, zero-AI.
 const NPC_PEER_R=(LOW_END?6.0:6.8), NPC_PEER_CD_MIN=(LOW_END?52:38), NPC_PEER_CD_MAX=(LOW_END?96:74); let _peerGlobalCd=0;
-function _peerIdle(L){ return !!L && !L._rt && !L._rest && !L._joinWalk && !L._joy && (L._stretch||0)<=0 && !L._pNear; }
+function _socialResident(L){ return !!L && !L.res.oracle; }
+function _peerIdle(L){ return _socialResident(L) && !L._rt && !L._rest && !L._joinWalk && !L._joy && (L._stretch||0)<=0 && !L._pNear; }
 function _peerNoticeLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko', m=_resMood(P);
   if(m==='dozy' && Math.random()<0.6) return ko?`${nm}, 오늘 좀 피곤해 보여요. 쉬엄쉬엄해요.`:`${nm}, you look a bit tired — take it easy.`;
   if(m==='bright' && Math.random()<0.6) return ko?`${nm}, 표정이 밝네요! 좋은 일 있어요?`:`${nm}, you look bright! Good news?`;
@@ -5685,7 +5732,7 @@ const _JOY_LINES={
 let _sharedJoy=null, _joyLast=null, _joyNextAt=(LOW_END?90:42)+Math.random()*(LOW_END?55:36); const _joyMemory=new Map();
 function _joyKey(A,B){ return [A.res.id,B.res.id].sort().join('|'); }
 function _joySpeed(L){ return Math.max(L._wspd*1.1,LOW_END?1.0:1.25); }
-function _joyFree(L,tt){ return !!L && !L._rt && !L._rest && !L._joinWalk && !L._stroll && !L._joy && !L._pNear && (L._stretch||0)<=0
+function _joyFree(L,tt){ return _socialResident(L) && !L._rt && !L._rest && !L._joinWalk && !L._stroll && !L._joy && !L._pNear && (L._stretch||0)<=0
   && (L._gt||0)<=0 && (!activeGroupMembers||activeGroupMembers.indexOf(L)<0) && (!_ambConv||_ambConv.members.indexOf(L)<0) && (_resCd.get(L.res.id)||0)<=tt; }
 function _joyClear(x,z,gap=3.0,minR=20){ if(!Number.isFinite(x)||!Number.isFinite(z)||Math.hypot(x,z)<minR||Math.hypot(x,z)>207||_hubGap(x,z)<gap) return false;
   return !(typeof EXTRA_COLLIDERS!=='undefined'&&EXTRA_COLLIDERS.some(c=>Math.hypot(x-c.x,z-c.z)<(c.r||0)+2.2)); }
@@ -5739,7 +5786,7 @@ function _sharedJoyTick(tt,dt=0){ const J=_sharedJoy;
     if(J.phase==='enjoy'&&tt>=J.endAt) return _endSharedJoy('complete',tt); return true; }
   if(tt<_joyNextAt||_festival||_ambConv||_resChatActive()||document.hidden||!NPC_CFG.motionEnabled) return false; const pair=_joyPair(tt);
   if(!pair){ _joyNextAt=tt+12; return false; } return _startSharedJoy(pair.A,pair.B,tt); }
-function _tryPeerNotice(L,tt,force){ if((_ambConv||_festival||document.hidden) && !force) return null;
+function _tryPeerNotice(L,tt,force){ if(!_socialResident(L)) return null; if((_ambConv||_festival||document.hidden) && !force) return null;
   if(!force && (L._gt>0 || tt<(L._noticeCd||0) || tt<_peerGlobalCd)) return null;
   let P=null,pd=1e9; for(const O of RESIDENTS_LIVE){ if(O===L || !_peerIdle(O)) continue; if(!force && (O._gt>0 || tt<(O._noticeCd||0))) continue; if(_ambConv && _ambConv.members.indexOf(O)>=0) continue;
     const d=Math.hypot(O.group.position.x-L.group.position.x, O.group.position.z-L.group.position.z); if(d<=(force?9999:NPC_PEER_R) && d<pd){ pd=d; P=O; } }
@@ -5756,7 +5803,8 @@ function _resComfortLine(L){ const hearth=L._rest&&L._rest.seat&&L._rest.seat._h
 const _RES_FAV={ sol:{ko:'볕 잘 드는 실험 자리',en:'a sunny spot to tinker'}, jun:{ko:'물결 소리 들리는 항구 끝',en:'the harbour edge where the water laps'},
   nari:{ko:'꽃이 제일 많이 핀 골목',en:'the alley where the flowers bloom thickest'}, tae:{ko:'아무도 안 오는 조용한 구석',en:'a quiet corner nobody visits'},
   rin:{ko:'도서관 계단',en:'the library steps'}, mira:{ko:'노을이 제일 고운 폐허 언덕',en:'the ruin-hill with the best sunset'},
-  kai:{ko:'광장 한복판',en:'the heart of the plaza'}, noa:{ko:'별이 잘 보이는 모닥불 곁',en:'the campfire under the stars'} };
+  kai:{ko:'광장 한복판',en:'the heart of the plaza'}, noa:{ko:'별이 잘 보이는 모닥불 곁',en:'the campfire under the stars'},
+  auri:{ko:'데이터 공방 뒤의 작은 장부방',en:'the little ledger nook behind the Data workshop'} };
 function _resFavPhase(res){ let h=0; const s=String(res&&res.id||''); for(let i=0;i<s.length;i++) h=(Math.imul(h,31)+s.charCodeAt(i))>>>0; return (h%360)*Math.PI/180; }
 function _resFavSpot(L){ if(L._fav) return L._fav; const F=_RES_FAV[L.res.id]; if(!F) return null; let x, z;
   if(L.res.id==='noa' && typeof HEARTH!=='undefined' && HEARTH){ x=HEARTH.x-2.6; z=HEARTH.z; }             // noa's haunt is the campfire itself
@@ -5852,7 +5900,7 @@ function _endAmb(reason){ const C=_ambConv; _ambConv=null; if(C){ const until=cl
     _emitMetric('npc_ambient_finished',{a:C.a.res.id,b:C.b.res.id,size:C.members.length,turns:C.turns.length,reason}); } _ambNextAt=clock.elapsedTime + 10 + Math.random()*16; }
 function _startAmb(a,b){ const now=clock.elapsedTime; let members;
   if(Array.isArray(a)) members=a.slice(); else if(a&&b) members=[a,b];
-  else { let best=null,bd=Infinity; const P=RESIDENTS_LIVE;   // 1) closest eligible seed pair (unchanged), 2) grow it into a circle with nearby cooldown-free neighbours so a gathering becomes a group chat, not just 1:1
+  else { let best=null,bd=Infinity; const P=RESIDENTS_LIVE.filter(_socialResident);   // 1) closest eligible seed pair (unchanged), 2) grow it into a circle with nearby cooldown-free neighbours so a gathering becomes a group chat, not just 1:1
     for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){ const A=P[i],B=P[j];
       if(A._joy||B._joy) continue;
       if((_pairCd.get(_pairKey(A,B))||0)>now || (_resCd.get(A.res.id)||0)>now || (_resCd.get(B.res.id)||0)>now) continue;
@@ -6106,7 +6154,7 @@ async function _aiAmbientTurn(C,speaker,listener){ const data=await _npcFetch({ 
   if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{where:'ambient'}); } _emitMetric('npc_fallback_used',{where:'ambient',reason:data.reason||'no_line'}); return null; }
   _emitMetric('npc_budget_spend',{where:'ambient',spent:_npcBudget.spentUsd}); return String(data.line); }
 // ---- shared resident/group chat transcript: every speaker answers on top of the thread (and a chime-in reacts in context) ----
-let _resHist=[];                                                     // {who:'visitor'|<resId>, text} — plain text, newest last; reset when the chat NPC changes
+let _resHist=[], _marketThread=false, _marketRequestSeq=0, _marketAbort=null;   // resident thread + cancellable AURI request generation
 function _plain(s){ return String(s==null?'':s).replace(/<[^>]*>/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim(); }
 function _resHistPush(who,text){ const s=_plain(text); if(!s) return; _resHist.push({who,text:s.slice(0,180)}); if(_resHist.length>12) _resHist=_resHist.slice(-12); }   // keep last 12 turns
 function _resHistWindow(){ return _resHist.slice(-10); }             // recent window handed to the worker so the speaker follows the flow
@@ -6143,6 +6191,49 @@ function residentReply(res,q){ const ql=String(q||'').toLowerCase().trim(), ko=L
   if(why.test(ql)){ const w=_ZWHY[res.zone]?(_ZWHY[res.zone][LANG]||_ZWHY[res.zone].ko):''; return { html: esc((ko?`${zn}엔 ${w} 관련 레포가 모여 있어요.`:`${zn} gathers repos about ${w}.`)+(reps[0]?(ko?` 예: ${reps[0].repo}.`:` e.g. ${reps[0].repo}.`):'')) }; }
   const g=residentGreet(res), cnt=z.repos.length;
   return { html: (g?g+' ':'')+esc(ko?`여기는 ${zn}, ${L.role}로서 제가 돌보는 곳이에요. 레포 ${cnt}채가 있어요.`:`This is ${zn}, my patch as the ${L.role}. ${cnt} repo-houses stand here.`) }; }
+function marketActionQuestion(q){ const s=String(q||'');
+  return /매수|매도|투자|주문|사야|팔아야|추천\s*(?:종목|주식|코인)?|should\s+i\s+(?:buy|sell|invest)|would\s+you\s+(?:buy|sell|invest)|good\s+investment|do\s+you\s+recommend|which\s+(?:stock|coin|token).*\brecommend|trade\b.{0,30}\bfor\s+me\b/i.test(s)
+    ||/\b(?:buy|sell|Buy|Sell)\s+(?:\d+(?:\.\d+)?\s+)?[A-Z]{1,5}(?:\.(?:US|HK))?\b/.test(s); }
+function marketQuestion(q){ const s=String(q||'');
+  const domain=/주가|주식|종목|증시|시세|현재가|가격|코인|암호화폐|가상\s*자산|비트코인|이더리움|솔라나|거래량|변동률|등락|캔들|봉\s*차트|시가|종가|고가|저가|나스닥|뉴욕\s*증권|홍콩\s*증시|ticker|stock|share\s*price|market\s*price|current\s+price|crypto|coin|bitcoin|ethereum|solana|change\s*(?:rate|percent)|24\s*h(?:our)?|market\s*cap|candles?|ohlcv|nasdaq|nyse|hong\s*kong|\b[A-Z0-9]{2,12}(?:USDT|USDC|FDUSD|BTC|ETH|BNB|EUR|TRY)\b|\b(?:BTC|ETH|SOL|BNB|XRP|DOGE)(?:USDT|USDC|USD)?\b/i.test(s);
+  const tickerStop=new Set(['I','A','AN','THE','HOW','WHY','DO','IS','IN','ON','TO','OF','AND','OR']), ticker=(s.match(/\b[A-Z]{1,5}(?:\.(?:US|HK))?\b/g)||[]).some(x=>!tickerStop.has(x));
+  const tickerMetric=ticker&&/\b(?:price|quote|open|close|high|low|volume|change|candles?|ohlcv|market\s*cap)\b/i.test(s);
+  return domain||tickerMetric||marketActionQuestion(s); }
+function explicitMarketQuestion(q){ return marketActionQuestion(q)||/주가|주식|종목|증시|시세|코인|암호화폐|가상\s*자산|비트코인|이더리움|솔라나|거래량|변동률|등락|캔들|봉\s*차트|시가|종가|고가|저가|나스닥|뉴욕\s*증권|홍콩\s*증시|ticker|stock|share\s*price|market\s*price|crypto|coin|bitcoin|ethereum|solana|24\s*h(?:our)?|market\s*cap|candles?|ohlcv|nasdaq|nyse|hong\s*kong|\b[A-Z]{1,5}\.(?:US|HK)\b|\b[A-Z0-9]{2,12}(?:USDT|USDC|FDUSD|BTC|ETH|BNB|EUR|TRY)\b|\b(?:BTC|ETH|SOL|BNB|XRP|DOGE)(?:USDT|USDC|USD)?\b/i.test(String(q||'')); }
+function marketFollowup(q){ if(!_marketThread) return false; const s=String(q||'').trim();
+  return /^(?:그럼|그러면|그건|그거|그게|그\s*종목|그\s*코인|어제|전일|지난|같은|비교|더|다른|왜|그리고|또)/.test(s)
+    ||/^(?:what\s+about|how\s+about|then|yesterday|previous|same|compare|more|another|why|and|also)\b/i.test(s)
+    ||/^(?:BTC|ETH|SOL|BNB|XRP|DOGE)\??$/i.test(s)
+    ||/^(?:[A-Z]{1,5}(?:\.(?:US|HK))?|[A-Z0-9]{2,12}(?:USDT|USDC|FDUSD|BTC|ETH|BNB|EUR|TRY))\??$/.test(s); }
+function marketCopy(res,key){ const c=res&&res.oracleCopy&&(res.oracleCopy[LANG]||res.oracleCopy.ko); return c&&c[key]||''; }
+function cancelMarketRequest(){ _marketRequestSeq++; if(_marketAbort){ try{ _marketAbort.abort(); }catch(e){} } _marketAbort=null; }
+function marketLocalIntent(q){ const s=String(q||'');
+  if(/누구|이름|정체|who\s*are\s*you|your\s*name|introduce/i.test(s)) return 'who';
+  if(/도움|뭘?\s*물|무엇을\s*물|어떻게\s*써|help|what\s+can\s+i\s+ask|how\s+do\s+i\s+use/i.test(s)) return 'help';
+  if(/고마|감사|thanks?|helpful/i.test(s)) return 'thanks';
+  if(/^\s*(?:안녕|반가|hi\b|hello\b|hey\b)/i.test(s)) return 'greet'; return null; }
+function marketLocalReply(res,q){ const intent=marketLocalIntent(q);
+  if(intent==='who') return res.blurb&&(res.blurb[LANG]||res.blurb.ko)||marketCopy(res,'offTopic');
+  if(intent==='help') return marketCopy(res,'help'); if(intent==='thanks') return marketCopy(res,'thanks');
+  if(intent==='greet') return res.greet&&(res.greet[LANG]||res.greet.ko)||marketCopy(res,'offTopic'); return marketCopy(res,'offTopic'); }
+function marketResidentLocalSay(res,q){ cancelMarketRequest(); _marketThread=false; const line=marketLocalReply(res,q); _resHistPush('visitor',q); _resHistPush(res.id,line);
+  addMsg('bot',esc(line)); trackChatEvent('npc_player_chat',{npc:'market',id:res.id,ai:false}); }
+async function marketResidentAsk(res,q){ const requestSeq=++_marketRequestSeq; if(_marketAbort){ try{ _marketAbort.abort(); }catch(e){} } _marketAbort=null;
+  _marketThread=false; _guestCdUntil=clock.elapsedTime+NPC_CFG.guestCooldownSec; _resHistPush('visitor',q); const url=groundedUrl(), aiStarted=nowMs();
+  if(!url){ const line=marketCopy(res,'noBackend'); addMsg('bot',esc(line)); _resHistPush(res.id,line); trackAiTurn('market_grounded','market',q,aiStarted,{ok:false,fallback:'no_backend'}); return; }
+  const sb=showTyping(addMsg('bot',esc(marketCopy(res,'searching')),{noHist:true})), tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||30000;
+  const ctrl=new AbortController(), to=setTimeout(()=>ctrl.abort(),tmo); _marketAbort=ctrl;
+  try{ const body=aiRequestPayload({question:q,npc:'market',history:priorHist(),lang:LANG});
+    const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});
+    clearTimeout(to); if(!response.ok) throw new Error('http '+response.status); const data=await response.json();
+    if(requestSeq!==_marketRequestSeq||!activeNpc||activeNpc.res!==res||chatEl.classList.contains('hidden')){ sb.remove(); return; } _marketAbort=null; sb.remove();
+    if(data.fallback){ const line=marketCopy(res,'noBackend'); addMsg('bot',esc(line)); _resHistPush(res.id,line); trackAiTurn('market_grounded','market',q,aiStarted,{ok:false,fallback:data.reason||'worker_fallback'}); return; }
+    if(data.notFound){ const line=marketCopy(res,'none'); addMsg('bot',esc(line)); _resHistPush(res.id,line); trackAiTurn('market_grounded','market',q,aiStarted,{ok:false,fallback:'not_found'}); return; }
+    if(data.message){ const plain=String(data.message), msg=esc(plain).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>'); _marketThread=true;
+      addMsg('bot',msg,{trace:data.trace}); _resHistPush(res.id,plain); trackAiTurn('market_grounded','market',q,aiStarted,{ok:true,refs:traceRefCount(data.trace)}); return; }
+    const line=marketCopy(res,'none'); addMsg('bot',esc(line)); _resHistPush(res.id,line); trackAiTurn('market_grounded','market',q,aiStarted,{ok:false,fallback:'empty_result'});
+  }catch(e){ clearTimeout(to); sb.remove(); if(requestSeq!==_marketRequestSeq||!activeNpc||activeNpc.res!==res||chatEl.classList.contains('hidden')) return; _marketAbort=null;
+    const line=marketCopy(res,'err'); addMsg('bot',esc(line)); _resHistPush(res.id,line); trackAiTurn('market_grounded','market',q,aiStarted,{ok:false,fallback:'fetch_fail',err:errName(e)}); } }
 function scholarHandoffKind(q){ const s=String(q||'');
   if(/azure|microsoft|ms\s*learn|\.net|dotnet|copilot|파운드리|애저|마이크로소프트/i.test(s)) return 'msdocs';
   if(/\b[A-Za-z0-9][\w.-]*\/[A-Za-z0-9][\w.-]+\b/.test(s) || /레포|repo|repository/i.test(s) && /내부|구조|아키텍처|architecture|internals?|source\s*code|동작\s*원리/i.test(s)) return 'deepwiki';
@@ -6163,8 +6254,14 @@ function _maybeScholarHandoff(q){ const kind=scholarHandoffKind(q), sc=kind&&win
   _resHistPush('visitor',q); _resHistPush(res.id,line); addMsg('bot',html,{handoff:{kind}});
   trackChatEvent('scholar_handoff_offer',{from:res.id,to:kind}); return true; }
 async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) return; _guestCdUntil=clock.elapsedTime + NPC_CFG.guestCooldownSec;
-  if(await _maybeFarewell(q)) return;                                                            // "잘 가요" → a warm goodbye + wave, and the chat gently closes
-  if(_maybeScholarHandoff(q)) return;                                                          // specialist question → resident introduces an oracle; no resident AI/model call
+  if(await _maybeFarewell(q)){ if(res.oracle==='market'){ cancelMarketRequest(); _marketThread=false; } return; }   // farewell cancels AURI's request context
+  const marketIntent=res.oracle==='market'&&marketQuestion(q), handoff=scholarHandoffKind(q);
+  if(marketIntent&&(!handoff||explicitMarketQuestion(q))){ await marketResidentAsk(res,q); return; }
+  if(handoff){ if(res.oracle==='market'){ cancelMarketRequest(); _marketThread=false; } if(_maybeScholarHandoff(q)) return; }   // technical handoff invalidates AURI's pending response
+  if(marketIntent){ await marketResidentAsk(res,q); return; }                                    // safety-net when a classified scholar is unavailable
+  if(res.oracle==='market' && marketLocalIntent(q)){ marketResidentLocalSay(res,q); return; }     // thanks/help/greetings never become ticker-like follow-ups
+  if(res.oracle==='market' && marketFollowup(q)){ await marketResidentAsk(res,q); return; }     // context-only follow-up, but only after a genuinely grounded AURI turn
+  if(res.oracle==='market'){ marketResidentLocalSay(res,q); return; }
   if(await _maybeInvite(q)) return;                                                            // name another resident (with an invite cue) → this 1:1 grows into a 모임 they both join
   const last=_resHistWindow(); _resHistPush('visitor',q);                                     // record the question after snapshotting the prior thread (the worker appends it as the ask)
   const useAI = NPC_CFG.aiEnabled && NPC_CFG.playerChatAiEnabled && !_budgetExhausted() && NPC_CFG.worker;
@@ -6178,9 +6275,10 @@ let activeGroupMembers=null;                                   // live residents
 function _isGroupChat(n){ return !!(n&&n.chatGroup===true&&n.resident===true); }   // never confuse a scholar's Three.js `group` object with the resident-circle marker
 function _liveOf(npc){ return (npc&&npc.res&&npc.res._live)||null; }
 function _groupNear(npc){ const seed=_liveOf(npc); if(!seed) return null; let members;
+  if(!_socialResident(seed)) return null;
   if(_ambConv && _ambConv.members.indexOf(seed)>=0) members=_ambConv.members.slice();      // you stepped into an active circle → join exactly that circle
   else { const sp=seed.group.position, jr=RES_MOVE.joinR;                                   // otherwise gather only the neighbours genuinely clustered around them
-    members=[seed].concat(RESIDENTS_LIVE.filter(L=>L!==seed && L.group.position.distanceTo(sp)<=jr)
+    members=[seed].concat(RESIDENTS_LIVE.filter(L=>L!==seed && _socialResident(L) && L.group.position.distanceTo(sp)<=jr)
       .sort((a,b)=>a.group.position.distanceToSquared(sp)-b.group.position.distanceToSquared(sp))); }
   const cap=Math.max(2,Math.min(NPC_CFG.maxGroup,RESIDENTS_LIVE.length)); members=members.slice(0,cap);
   return members.length>=2?members:null; }
@@ -6198,7 +6296,7 @@ function groupGreet(wrap){ return _groupNames(wrap.live||[])+' \u2014 '+esc(LANG
 const _RES_INV_CUE=/(부르|부를|불러|초대|데려|합류|같이|함께|껴|끼(?:워|어|자)|오라|와\s*줘|와서|얘기|이야기|대화|만나|물어|call|invite|join|bring|come|talk|meet|ask)/i;
 function _escRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 function _resNamedIn(q, excludeIds){ const s=String(q||''); if(!s) return null;                 // find a live resident named in the text (KO name + a person particle, or the EN name as a word)
-  for(const res of RESIDENTS){ if(!res._live) continue; if(excludeIds&&excludeIds.indexOf(res.id)>=0) continue;
+  for(const res of RESIDENTS){ if(!res._live||res.oracle) continue; if(excludeIds&&excludeIds.indexOf(res.id)>=0) continue;
     const koRe=new RegExp('(^|[^가-힣])'+_escRe(res.ko.name)+'(이|가|랑|이랑|와|과|도|만|님|씨|을|를|은|는|한테|에게|께|$|[^가-힣])');
     const enRe=new RegExp('(^|[^A-Za-z])'+_escRe(res.en.name)+'([^A-Za-z]|$)','i');
     if(koRe.test(s)||enRe.test(s)) return res; }
@@ -6653,7 +6751,7 @@ function lmCourseDest(id){ switch(id){
 } return null; }
 function _residentLive(id){ return RESIDENTS_LIVE.find(L=>L.res.id===id)||null; }
 function _chronicleResidents(){ const active=new Set(ZONES.map(z=>z.id));
-  return RESIDENTS.filter(r=>(r.zone==='plaza'||active.has(r.zone))&&_residentLive(r.id)); }
+  return RESIDENTS.filter(r=>!r.easterEgg&&(r.zone==='plaza'||active.has(r.zone))&&_residentLive(r.id)); }
 function _chronicleZone(res,rng){ if(res&&res.zone!=='plaza'){ const own=zoneCatById(res.zone); if(own&&zoneReposOf(own).length) return own; }
   const zs=ZONES.filter(z=>zoneReposOf(z).length); return zs.length?zs[Math.floor(rng()*zs.length)]:null; }
 function _chronicleRepo(z,res){ const terms=(res&&res.topics)||[]; const reps=zoneReposOf(z).slice();
@@ -7019,6 +7117,15 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
   setTimeout(()=>{ try{ openRepoFromHash(); }catch(e){} }, 480); };
+(function(){ const form=document.getElementById('introLaunchForm'), input=document.getElementById('introUser'), err=document.getElementById('introLaunchErr');
+  if(!form||!input) return; if(cityMode==='public') input.value=currentUser;
+  if(new URLSearchParams(location.search).has('launch')) setTimeout(()=>input.focus(),80);
+  input.addEventListener('keydown',e=>e.stopPropagation());
+  form.onsubmit=e=>{ e.preventDefault(); const user=input.value.trim().replace(/^@/,'');
+    if(!GH_LOGIN_RE.test(user)){ if(err) err.textContent=t('introLaunchInvalid'); input.focus(); return; }
+    if(err) err.textContent=''; track('intro_personal_preview',{targetUser:user});
+    const url=location.origin+location.pathname+(user.toLowerCase()===OWNER.toLowerCase()?'':'?user='+encodeURIComponent(user));
+    location.href=url; }; })();
 (function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
     document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
@@ -7264,12 +7371,12 @@ function applyNpcChrome(n){ if(_isGroupChat(n)){ if(chatHeadTtl) chatHeadTtl.inn
   modeSel.style.display = scholar?'none':''; chatText.placeholder = scholar ? (scholarPersona(n.kind,'ph')||t('engPh')) : t('chatPh'); }
 function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi'); if(activeGroupMembers && !_isGroupChat(npc)) _releaseGroup(); chatEl.classList.remove('hidden');
   if(npc&&npc.resident) courseMark('resident',npc.id);
-  if(activeNpc!==npc){ activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; chatHistory=[]; _resHist=[]; }   // switching NPC resets the thread + memory (scholar + resident/group transcripts)
+  if(activeNpc!==npc){ cancelMarketRequest(); activeNpc=npc; chatLog.innerHTML=''; chatGreeted=false; chatHistory=[]; _resHist=[]; _marketThread=false; }   // switching NPC invalidates late market replies
   applyNpcChrome(npc);
   if(!chatGreeted){ chatGreeted=true; addMsg('bot', npcGreet(npc), {noHist:true}); }
   trackChatEvent('chat_open', { npc:npcKindOf(npc) });
   setTimeout(()=>chatText.focus(),60); }
-function closeChat(){ chatEl.classList.add('hidden'); _releaseGroup(); trackChatEvent('chat_close'); }
+function closeChat(){ cancelMarketRequest(); chatEl.classList.add('hidden'); _releaseGroup(); trackChatEvent('chat_close'); }
 
 /* ---- Mode A: local intent search (no key, always works) ---- */
 const SYN={ rag:['rag','retrieval','faq','vector','embedding','검색증강','지식'], llm:['llm','gpt','openai','azure','generative','genai','foundry','language model','파운드리'],
@@ -7544,11 +7651,9 @@ async function proxyAsk(q){
 }
 
 /* ---- Mode D: live grounding (Vercel → Azure AI Search KB → GitHub hosted MCP) ---- */
-// Paste your deployed grounding backend URL here to enable 🛰️ AI Foundry Live for
-// every visitor — a Cloudflare Worker (see cloudflare-taxi/README.md), e.g.
-// 'https://repolis-taxi.<you>.workers.dev/'. Empty = the site stays Local-default and
-// each visitor can still set their own backend URL in the taxi mode prompt.
-const GROUNDED_DEFAULT='https://repolis-taxi.wingnut0310.workers.dev/';
+// The deployment-wide grounding default comes from repolis.config.js. Forks receive
+// an empty value and stay Local-default; a visitor can still set a personal backend.
+const GROUNDED_DEFAULT=window.REPOLIS_CONFIG?.services?.grounded||'';
 function groundedUrl(){
   const saved=localStorage.getItem('taxiGroundedUrl');
   if(saved && /(localhost|127\.0\.0\.1)/.test(saved) && !/(localhost|127\.0\.0\.1)/.test(location.hostname)) return GROUNDED_DEFAULT;   // a saved dev URL is dead on the live site → use prod
@@ -8082,12 +8187,12 @@ _desktopFinePointer.addEventListener?.('change',_resizeViewportQuality);
    the world runs solo and simply shows "🟢 1". Everything is wrapped so a missing
    or broken backend never affects the single-player experience. */
 /* To enable the live / today / cumulative visitor counters for EVERY visitor,
-   deploy the (free) realtime room and paste its wss endpoint here once.
+   deploy the (free) realtime room and set services.realtime in repolis.config.js.
    Deployed on Cloudflare Workers (see cloudflare/ — free SQLite Durable Object):
      cd cloudflare && npx wrangler deploy  ->  wss://repolis-rt.<you>.workers.dev
    (PartyKit alt: npx partykit deploy -> wss://repolis.<you>.partykit.dev/parties/main/world)
    With RT_DEFAULT empty the world runs solo and just shows "🟢 1". */
-const RT_DEFAULT='wss://repolis-rt.wingnut0310.workers.dev';
+const RT_DEFAULT=window.REPOLIS_CONFIG?.services?.realtime||'';
 const RT_URL=(new URLSearchParams(location.search).get('rt'))||localStorage.getItem('repolisRT')||window.REPOLIS_RT||RT_DEFAULT;
 const liveCountEl=document.getElementById('liveCount'), allWrap=document.getElementById('allWrap'), allCountEl=document.getElementById('allCount'), entryWrap=document.getElementById('entryWrap'), entryCountEl=document.getElementById('entryCount'), entryTotalWrap=document.getElementById('entryTotalWrap'), entryTotalCountEl=document.getElementById('entryTotalCount');
 function guestId(){ let id=localStorage.getItem('repolisGuestId'); if(!id){ id='g'+Math.random().toString(36).slice(2,9); localStorage.setItem('repolisGuestId',id); } return id; }

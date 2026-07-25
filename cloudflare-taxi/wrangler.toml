@@ -27,6 +27,14 @@ SEARCH_KS_NAME = "github-repos-mcp-ks"
 # knowledge source (see SCHOLARS.md). Defaults are baked into src/grounded.js — override here:
 MSDOCS_KB_NAME = "repolis-mslearn-kb"
 MSDOCS_KS_NAME = "microsoft-learn-mcp-ks"
+# AURI's easter-egg market ledger combines two strictly read-only MCP sources:
+# Longbridge quote/fundamental tools + this Worker's /mcp/binance public spot-data endpoint.
+MARKET_KB_NAME = "repolis-market-kb"
+MARKET_KS_NAME = "longbridge-market-mcp-ks,binance-market-mcp-ks"
+MARKET_LONGBRIDGE_KS_NAME = "longbridge-market-mcp-ks"
+MARKET_MCP_TIMEOUT_MS = "6000"
+# Longbridge uses OAuth. Keep its access token server-side and rotate it when required:
+#   wrangler secret put MARKET_LONGBRIDGE_ACCESS_TOKEN
 # MIRA/Context7 and LYRA/Hugging Face use official direct MCP endpoints anonymously.
 # Optional higher-quota secrets (never commit values):
 #   wrangler secret put CONTEXT7_API_KEY

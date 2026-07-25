@@ -11,8 +11,10 @@ actually committed to (pure untouched mirrors are skipped). Traffic totals are
 cumulative over the whole period that has been tracked.
 
 Env vars:
-  REPO_OWNER  GitHub login that owns the repos (default: hyeonsangjeon)
-  GTM_DIR     Directory holding the collected logs/ tree (default: data)
+  REPO_OWNER  GitHub login that owns the repos (default: authenticated gh user,
+              then hyeonsangjeon as the upstream fallback)
+  GTM_DIR     Directory holding the collected logs/ tree. Defaults to data for
+              upstream and data/towns/<owner> for every other owner.
   OUT         Output path (default: repos.json)
   GH_TOKEN    Token used by `gh` (PAT that can list the repos)
 """
@@ -23,8 +25,27 @@ import os
 import subprocess
 from pathlib import Path
 
-OWNER = os.environ.get("REPO_OWNER", "hyeonsangjeon")
-GTM_DIR = Path(os.environ.get("GTM_DIR", "data"))
+def resolve_owner():
+    configured = os.environ.get("REPO_OWNER", "").strip()
+    if configured:
+        return configured
+    try:
+        data = json.loads(subprocess.check_output(
+            ["gh", "api", "/user"], text=True, stderr=subprocess.DEVNULL,
+        ))
+        if data.get("login"):
+            return data["login"]
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        pass
+    return "hyeonsangjeon"
+
+
+UPSTREAM_OWNER = "hyeonsangjeon"
+OWNER = resolve_owner()
+_configured_gtm = os.environ.get("GTM_DIR", "").strip()
+GTM_DIR = Path(_configured_gtm) if _configured_gtm else (
+    Path("data") if OWNER.lower() == UPSTREAM_OWNER else Path("data") / "towns" / OWNER
+)
 OUT = Path(os.environ.get("OUT", "repos.json"))
 
 
@@ -132,7 +153,9 @@ def first_date(path):
 
 
 def build():
-    repos = gh_api("/user/repos?per_page=100&affiliation=owner&sort=full_name")
+    # Public owner endpoint works with the built-in Actions token, so a fork can
+    # build its first city without a PAT. A PAT is only needed for traffic data.
+    repos = gh_api(f"/users/{OWNER}/repos?per_page=100&type=owner&sort=full_name")
     social = social_map(OWNER)
     out = []
     for r in repos:

@@ -6,8 +6,8 @@
 // login and the free Workers plan — SQLite-backed Durable Objects, no card.
 //
 // The wire protocol is identical to party/repolis.js and
-// scripts/dev_realtime.mjs, so the Repolis client needs ZERO changes: just
-// point RT_DEFAULT (in index.html) at the deployed
+// scripts/dev_realtime.mjs, so the Repolis client needs ZERO protocol changes:
+// point services.realtime (in repolis.config.js) at the deployed
 //   wss://repolis-rt.<your-subdomain>.workers.dev
 //
 // Protocol (JSON over WS):

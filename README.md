@@ -9,12 +9,14 @@
 **Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.**
 
 [![Open the live town](https://img.shields.io/badge/Open-Live%20Town-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
-**[Visit any public GitHub town →](https://hyeonsangjeon.github.io/Repolis/?user=mrdoob)**
+[![Try my GitHub](https://img.shields.io/badge/Try-My%20GitHub-234d49?style=for-the-badge&logo=github&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/?launch=1)
+[![Use this template](https://img.shields.io/badge/Use-This%20Template-c2702f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon)
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis demo: a living traffic-shaped GitHub town, Gitber search, taxi ride, and real repository card" width="92%"></a>
 
 <sub>🎬 <strong>15-second demo:</strong> traffic → buildings · ask Gitber → taxi ride → real repo card</sub><br>
-<sub><code>WASD</code> / touch to walk · ask Gitber · <code>Enter</code> / tap to open · no sign-up or build · <strong><a href="#run-in-60-seconds">Run locally</a></strong> · ⭐ <strong><a href="https://github.com/hyeonsangjeon/Repolis">Star Repolis</a></strong></sub>
+<sub><code>WASD</code> / touch to walk · ask Gitber · <code>Enter</code> / tap to open · no sign-up or build · <strong><a href="#run-in-60-seconds">Run locally</a></strong> · ⭐ <strong><a href="https://github.com/hyeonsangjeon/Repolis">Star Repolis</a></strong></sub><br>
+<sub>Type any GitHub username on the first screen. Repolis uses public metadata only.</sub>
 
 [![Daily refresh](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=flat-square&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
@@ -23,7 +25,29 @@
 
 </div>
 
-## A city built from repository data
+## What the demo proves
+
+| In the demo | What it means for your repositories |
+|---|---|
+| traffic, stars, forks, clones, and activity become visible architecture | portfolio signals become a place people can understand without opening a dashboard |
+| Gitber searches by natural language, then physically drives to the result | repository discovery becomes an interaction, not another list |
+| `?user=<login>` rebuilds the town from any public GitHub account | you can test the same engine with your work before cloning or configuring anything |
+
+**Fastest proof:** open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)**, type your login, and walk through your public repos. No token, account connection, or fork is required.
+
+If this gives you a useful way to present repositories, **[star Repolis](https://github.com/hyeonsangjeon/Repolis)** — it helps other developers discover the template.
+
+## From preview to your own city
+
+| Goal | What to do | Result |
+|---|---|---|
+| preview my public repos | use the live username field | a shareable metadata-built town in seconds |
+| publish my own Repolis | use the template, enable Actions + Pages, run **Refresh Repolis data** once | your fork owner's public repos become the default town; no PAT required |
+| grow buildings from real traffic | optionally add the `GH_PAT` Actions secret | daily cumulative views, visitors, and clones enrich the same city |
+
+Forks automatically infer `<owner>.github.io` as the town owner and do **not** call the upstream AI or realtime Workers. Custom domains set one value in [`repolis.config.js`](repolis.config.js).
+
+## How repository data becomes a city
 
 Repolis turns public GitHub metadata and cumulative traffic into a place instead of another dashboard.
 
@@ -40,7 +64,7 @@ Repositories are grouped into topic districts with roads, signs, hubs, and a wor
 
 ## A village that lives
 
-- **Residents have lives, not idle loops.** Eight townspeople wander their districts, keep daily rhythms, carry changing moods, visit cherished haunts, recognize friends, stroll and sit together, gather around the campfire, and sometimes celebrate a recent repository release. Their named cottages form **Starlight Row** on the north-east edge, with resident-coloured gardens, three roof silhouettes, shutters, transoms, selected window boxes, canopies, chimneys, and roof finials. A shared flower bed, lanterns, hedges, and broadleaf/cypress trees care for the commons. Night brings residents home to warm windows and porch seats, while morning sends them back to their district work. Pairs also choose their own short **Shared Joy** excursions to real flower patches, visible night stars, or a real repo house—without a player prompt or AI call. Ask a specialist question and they introduce the right scholar instead of pretending to know: follow the compass and find that scholar in the world.
+- **Residents have lives, not idle loops.** Named townspeople wander their districts, keep daily rhythms, carry changing moods, visit cherished haunts, recognize friends, stroll and sit together, gather around the campfire, and sometimes celebrate a recent repository release. Their cottages form **Starlight Row** on the north-east edge, with resident-coloured gardens, three roof silhouettes, shutters, transoms, selected window boxes, canopies, chimneys, and roof finials. A shared flower bed, lanterns, hedges, and broadleaf/cypress trees care for the commons. Night brings residents home to warm windows and porch seats, while morning sends them back to their district work. Pairs also choose their own short **Shared Joy** excursions to real flower patches, visible night stars, or a real repo house—without a player prompt or AI call. Ask a specialist question and they introduce the right scholar instead of pretending to know: follow the compass and find that scholar in the world.
 - **Exploration has continuity.** The Explorer Passport records houses and landmarks, district progress shows what remains, and the daily **Village Chronicle** connects one resident to their cherished haunt and a truthful related repo or district.
 - **Daily refresh now means something on return.** The Passport's **Town Gazette** compares the current public repo snapshot with the last one this browser marked read, then highlights new repos, release tags when available, pushes, and positive metric growth. It is entirely local and costs nothing.
 - **Repositories form relationships.** The Stargazer's Observatory finds a truthful three-repo connection from shared topics or languages and draws it as a nighttime Constellation Trail.
@@ -82,14 +106,14 @@ GTM_DIR=data python3 scripts/build_repos.py
 
 ## Build your own city
 
-The quickest preview needs no fork: open `https://hyeonsangjeon.github.io/Repolis/?user=<login>`.
+The quickest preview needs no fork: open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)** or share `https://hyeonsangjeon.github.io/Repolis/?user=<login>`.
 
-For a persistent city with cumulative traffic:
+For a persistent metadata-built city:
 
-1. Fork the repository and keep a daily collector such as [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor).
-2. Configure the `GH_PAT` Actions secret required by the refresh workflow.
-3. Enable GitHub Pages from `main` at the repository root.
-4. Run **Refresh Repolis data** once; the workflow continues daily.
+1. Click **[Use this template](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon)**.
+2. Enable Actions, then enable GitHub Pages from `main` at the repository root.
+3. Run **Refresh Repolis data** once; the workflow uses `github.token` to build from the template owner's public repos and continues daily.
+4. Optional: add an Actions secret named `GH_PAT` to collect cumulative traffic. Without it, stars, forks, recency, language, topics, and releases still build the city.
 
 Only public repositories are rendered. Untouched mirror forks are filtered out, and private repository names never enter the public data.
 
@@ -114,6 +138,7 @@ Repolis stays a **zero-build static web app**. The main runtime remains in `inde
 | Path | Purpose |
 |---|---|
 | [`index.html`](index.html) | 3D world, UI, navigation, residents, exploration, i18n |
+| [`repolis.config.js`](repolis.config.js) | fork owner inference and safe optional-service defaults |
 | [`repos.json`](repos.json) | generated repository and traffic data |
 | [`scholars.js`](scholars.js) | scholar roster |
 | [`assets/world-tree/`](assets/world-tree/) | procedural World Tree factory |

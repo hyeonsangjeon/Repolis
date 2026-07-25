@@ -9,12 +9,14 @@
 **Repolis는 공개 GitHub 레포를 직접 걸어 다니는 3D 마을로 바꿉니다. 트래픽이 건물을 만들고, 주민이 살아가며, 깃버가 원하는 프로젝트까지 데려갑니다.**
 
 [![라이브 마을 열기](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EB%B8%8C-%EB%A7%88%EC%9D%84%20%EC%97%B4%EA%B8%B0-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
-**[공개 GitHub 마을 방문 →](https://hyeonsangjeon.github.io/Repolis/?user=mrdoob)**
+[![내 GitHub로 보기](https://img.shields.io/badge/%EB%B0%94%EB%A1%9C-%EB%82%B4%20GitHub%EB%A1%9C%20%EB%B3%B4%EA%B8%B0-234d49?style=for-the-badge&logo=github&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/?launch=1)
+[![템플릿 사용](https://img.shields.io/badge/%EC%82%AC%EC%9A%A9-%EC%9D%B4%20%ED%85%9C%ED%94%8C%EB%A6%BF-c2702f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon)
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis 데모: 트래픽으로 지은 살아 있는 GitHub 마을, 깃버 검색과 택시 이동, 실제 레포 카드" width="92%"></a>
 
 <sub>🎬 <strong>15초 데모:</strong> 트래픽 → 건물 · 깃버에게 질문 → 택시 이동 → 실제 레포 카드</sub><br>
-<sub><code>WASD</code> / 터치로 걷기 · 깃버에게 묻기 · <code>Enter</code> / 탭으로 열기 · 가입이나 빌드 없음 · <strong><a href="#60초-로컬-실행">로컬 실행</a></strong> · ⭐ <strong><a href="https://github.com/hyeonsangjeon/Repolis">Star 남기기</a></strong></sub>
+<sub><code>WASD</code> / 터치로 걷기 · 깃버에게 묻기 · <code>Enter</code> / 탭으로 열기 · 가입이나 빌드 없음 · <strong><a href="#60초-로컬-실행">로컬 실행</a></strong> · ⭐ <strong><a href="https://github.com/hyeonsangjeon/Repolis">Star 남기기</a></strong></sub><br>
+<sub>첫 화면에 GitHub username을 입력하세요. 공개 메타데이터만 사용합니다.</sub>
 
 [![매일 갱신](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=flat-square&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
@@ -23,7 +25,29 @@
 
 </div>
 
-## 레포 데이터로 지은 도시
+## 이 데모가 보여 주는 것
+
+| 데모에서 보이는 장면 | 내 저장소에 적용하면 |
+|---|---|
+| 트래픽·스타·포크·클론·활동이 건축으로 바뀝니다 | 포트폴리오 신호를 대시보드 없이 한눈에 설명할 수 있습니다 |
+| 깃버가 자연어로 찾고 실제 결과까지 운전합니다 | 저장소 탐색이 또 하나의 목록이 아니라 상호작용이 됩니다 |
+| `?user=<login>`이 어떤 공개 GitHub 계정이든 마을로 다시 짓습니다 | 클론이나 설정 전에 같은 엔진을 내 작업으로 검증할 수 있습니다 |
+
+**가장 빠른 확인:** **[내 GitHub로 보기](https://hyeonsangjeon.github.io/Repolis/?launch=1)**를 열고 username을 입력한 뒤 내 공개 레포 사이를 걸어보세요. 토큰·계정 연결·포크가 필요 없습니다.
+
+저장소를 보여 주는 새로운 방식이 유용했다면 **[Repolis에 Star를 남겨주세요](https://github.com/hyeonsangjeon/Repolis)**. 더 많은 개발자가 이 템플릿을 발견하는 데 도움이 됩니다.
+
+## 미리보기에서 내 도시까지
+
+| 목표 | 할 일 | 결과 |
+|---|---|---|
+| 내 공개 레포 미리보기 | 라이브 첫 화면에 username 입력 | 몇 초 안에 공유 가능한 메타데이터 마을 생성 |
+| 내 Repolis 배포 | 템플릿 사용 → Actions·Pages 활성화 → **Refresh Repolis data** 1회 실행 | 템플릿 저장소 소유자의 공개 레포가 기본 도시가 됨 · PAT 불필요 |
+| 실제 트래픽으로 건물 성장 | 선택적으로 `GH_PAT` Actions 시크릿 추가 | 같은 도시에 일일 조회·방문자·클론 누적 |
+
+포크는 `<owner>.github.io`를 자동으로 마을 소유자로 인식하고 원본 AI·실시간 Worker를 호출하지 않습니다. 커스텀 도메인은 [`repolis.config.js`](repolis.config.js) 한 곳만 설정합니다.
+
+## 레포 데이터가 도시가 되는 방식
 
 Repolis는 공개 GitHub 메타데이터와 누적 트래픽을 또 하나의 대시보드가 아니라 실제 장소로 바꿉니다.
 
@@ -40,7 +64,7 @@ Repolis는 공개 GitHub 메타데이터와 누적 트래픽을 또 하나의 �
 
 ## 실제로 살아가는 마을
 
-- **주민은 제자리 반복 동작만 하지 않습니다.** 여덟 주민이 자기 구역을 거닐고, 시간대에 맞춰 생활하며, 기분이 바뀌고, 아끼는 아지트를 찾습니다. 북동쪽 **별빛 주거구역**에는 이름표가 달린 여덟 채의 집과 주민색 앞마당이 있습니다. 집마다 3종 지붕 실루엣, 셔터, 트랜섬 창, 선택형 창가 화분·캐노피·굴뚝·지붕 장식이 다르게 조합되고, 공동 꽃정원·랜턴·생울타리·활엽수·사이프러스가 마을을 감쌉니다. 밤이면 따뜻한 창과 현관으로 귀가하고, 아침이면 각자 구역으로 출근합니다. 친구를 알아보고 함께 산책하거나 나란히 쉬며, 모닥불에 모이고, 때로는 새 릴리스 축제를 엽니다. 두 주민은 플레이어 지시나 AI 호출 없이 실제 꽃밭·별이 보이는 밤하늘·실제 레포 집으로 짧은 **함께하는 기쁨** 나들이도 스스로 떠납니다. 전문 질문을 받으면 아는 척하지 않고 맞는 현자를 소개합니다. 나침반을 따라 마을 안에서 그 현자를 직접 찾아가세요.
+- **주민은 제자리 반복 동작만 하지 않습니다.** 이름 있는 주민들이 자기 구역을 거닐고, 시간대에 맞춰 생활하며, 기분이 바뀌고, 아끼는 아지트를 찾습니다. 북동쪽 **별빛 주거구역**에는 이름표가 달린 집과 주민색 앞마당이 있습니다. 집마다 3종 지붕 실루엣, 셔터, 트랜섬 창, 선택형 창가 화분·캐노피·굴뚝·지붕 장식이 다르게 조합되고, 공동 꽃정원·랜턴·생울타리·활엽수·사이프러스가 마을을 감쌉니다. 밤이면 따뜻한 창과 현관으로 귀가하고, 아침이면 각자 구역으로 출근합니다. 친구를 알아보고 함께 산책하거나 나란히 쉬며, 모닥불에 모이고, 때로는 새 릴리스 축제를 엽니다. 두 주민은 플레이어 지시나 AI 호출 없이 실제 꽃밭·별이 보이는 밤하늘·실제 레포 집으로 짧은 **함께하는 기쁨** 나들이도 스스로 떠납니다. 전문 질문을 받으면 아는 척하지 않고 맞는 현자를 소개합니다. 나침반을 따라 마을 안에서 그 현자를 직접 찾아가세요.
 - **탐험에는 흐름이 남습니다.** 탐험 여권이 집과 명소 방문을 기록하고, 구역 진행률이 남은 곳을 보여주며, 매일 열리는 **마을 이야기**가 한 주민과 그 아지트, 실제로 이어진 레포 또는 구역을 연결합니다.
 - **매일 갱신되는 이유가 재방문에서 보입니다.** 여권의 **마을 소식**은 이 브라우저가 마지막으로 읽은 공개 레포 스냅샷과 현재를 비교해 새 레포·제공되는 경우의 릴리스 태그·푸시·양의 지표 성장을 보여줍니다. 전부 로컬에서 계산되어 비용이 없습니다.
 - **레포끼리의 관계도 보입니다.** 별빛 전망대는 공통 주제나 언어를 바탕으로 실제 세 레포의 연결을 찾고, 밤하늘 저장소 별자리 탐사로 펼칩니다.
@@ -82,14 +106,14 @@ GTM_DIR=data python3 scripts/build_repos.py
 
 ## 내 도시로 만들기
 
-가장 빠른 미리보기에는 포크도 필요 없습니다. `https://hyeonsangjeon.github.io/Repolis/?user=<login>`을 여세요.
+가장 빠른 미리보기에는 포크도 필요 없습니다. **[내 GitHub로 보기](https://hyeonsangjeon.github.io/Repolis/?launch=1)**를 열거나 `https://hyeonsangjeon.github.io/Repolis/?user=<login>`을 공유하세요.
 
-누적 트래픽을 가진 영구 도시를 운영하려면:
+영구적인 메타데이터 도시를 운영하려면:
 
-1. 이 저장소를 포크하고 [github-traffic-monitor](https://github.com/hyeonsangjeon/github-traffic-monitor) 같은 일일 수집기를 유지합니다.
-2. 갱신 워크플로에 필요한 Actions 시크릿 `GH_PAT`을 설정합니다.
-3. 저장소 루트의 `main` 브랜치에서 GitHub Pages를 활성화합니다.
-4. **Refresh Repolis data**를 한 번 실행하면 이후 매일 자동으로 이어집니다.
+1. **[이 템플릿 사용](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon)**을 누릅니다.
+2. Actions를 활성화하고 저장소 루트 `main` 브랜치에서 GitHub Pages를 켭니다.
+3. **Refresh Repolis data**를 한 번 실행합니다. `github.token`으로 템플릿 저장소 소유자의 공개 레포를 불러오고 이후 매일 이어집니다.
+4. 선택: 누적 트래픽이 필요하면 `GH_PAT` Actions 시크릿을 추가합니다. 없어도 스타·포크·최근 활동·언어·토픽·릴리스로 도시는 완성됩니다.
 
 공개 레포만 마을에 나타납니다. 손대지 않은 미러 포크는 제외되며, 비공개 레포 이름은 공개 데이터에 들어가지 않습니다.
 
@@ -114,6 +138,7 @@ Repolis는 **빌드 없는 정적 웹 앱**을 유지합니다. 주 런타임은
 | 경로 | 역할 |
 |---|---|
 | [`index.html`](index.html) | 3D 월드, UI, 이동, 주민, 탐험, 다국어 |
+| [`repolis.config.js`](repolis.config.js) | 포크 소유자 자동 인식과 선택형 서비스 안전 기본값 |
 | [`repos.json`](repos.json) | 생성된 레포 및 트래픽 데이터 |
 | [`scholars.js`](scholars.js) | 현자 명단 |
 | [`assets/world-tree/`](assets/world-tree/) | 절차적 월드 트리 팩토리 |

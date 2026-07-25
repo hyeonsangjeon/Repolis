@@ -21,6 +21,9 @@
 //   SEARCH_API_KEY         Search admin or query key  (SECRET — wrangler secret put)
 //   SEARCH_KB_NAME         knowledge base name (e.g. repolis-github-kb)
 //   SEARCH_KS_NAME         comma-separated knowledge source name(s) — attach more MCPs here
+//   MARKET_KB_NAME         AURI's market knowledge base (default repolis-market-kb)
+//   MARKET_KS_NAME         Longbridge + Binance MCP knowledge sources, comma-separated
+//   MARKET_LONGBRIDGE_ACCESS_TOKEN  Longbridge OAuth token (SECRET; forwarded only to its KS)
 //   SEARCH_API_VERSION     optional (default 2026-05-01-preview)
 //   GROUNDED_TIMEOUT_MS    optional fetch abort ms (default 25000; CF has no 10 s wall)
 //   GROUNDED_MAX_RUNTIME_S optional KB runtime budget seconds (default 30; KB requires 11–599)
@@ -122,6 +125,12 @@ function scholarConfig(npc, env) {
     huggingface: {
       kb: "",
       ks: "huggingface-direct",
+      ride: false,
+    },
+    market: {
+      kb: env.MARKET_KB_NAME || "repolis-market-kb",
+      ks: env.MARKET_KS_NAME || "longbridge-market-mcp-ks,binance-market-mcp-ks",
+      authKs: env.MARKET_LONGBRIDGE_KS_NAME || "longbridge-market-mcp-ks",
       ride: false,
     },
   };
@@ -544,6 +553,254 @@ function json(obj, status, env) {
   });
 }
 
+// --- Read-only Binance public-market MCP ----------------------------------------------------
+// The Agent Finder result for Binance is a CLI skill, not an MCP server. This bounded endpoint
+// turns Binance's anonymous spot API into AURI's second MCP source. It has no account or order tools.
+const BINANCE_MCP_PATH = "/mcp/binance";
+const BINANCE_API = "https://api.binance.com";
+const BINANCE_QUOTES = new Set(["USDT", "USDC", "FDUSD", "BTC", "ETH", "BNB", "EUR", "TRY"]);
+const BINANCE_INTERVALS = new Set(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]);
+const BINANCE_MCP_BATCH_MAX = 4;
+const BINANCE_MCP_TOOLS = [
+  {
+    name: "crypto_spot_quotes",
+    description: "Read-only Binance spot quote snapshots for up to six symbols, including last price, 24h change, range, volume, and source time.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        symbols: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 6, description: "Pairs or base assets, for example BTCUSDT, ETH-USDT, or SOL." },
+        quoteAsset: { type: "string", enum: ["USDT", "USDC", "FDUSD", "BTC", "ETH", "BNB", "EUR", "TRY"], default: "USDT" },
+      },
+      required: ["symbols"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+  },
+  {
+    name: "crypto_candles",
+    description: "Read-only Binance spot OHLCV candles for one symbol. Returns at most 50 recent candles with exchange timestamps.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        symbol: { type: "string", description: "Pair or base asset, for example BTCUSDT or ETH." },
+        quoteAsset: { type: "string", enum: ["USDT", "USDC", "FDUSD", "BTC", "ETH", "BNB", "EUR", "TRY"], default: "USDT" },
+        interval: { type: "string", enum: ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"], default: "1d" },
+        limit: { type: "integer", minimum: 2, maximum: 50, default: 14 },
+      },
+      required: ["symbol"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+  },
+];
+
+function rpcResult(id, result) { return { jsonrpc: "2.0", id, result }; }
+function rpcFailure(id, code, message) { return { jsonrpc: "2.0", id: id ?? null, error: { code, message } }; }
+class McpInputError extends Error {}
+function rpcHttp(payload, env, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...corsHeaders(env) },
+  });
+}
+
+function cryptoSymbolCandidates(value, quoteAsset = "USDT") {
+  const quote = String(quoteAsset || "USDT").toUpperCase();
+  if (!BINANCE_QUOTES.has(quote)) return [];
+  const raw = String(value || "").trim().toUpperCase();
+  const separated = raw.match(/^([A-Z0-9]{2,16})\s*[-/_]\s*([A-Z0-9]{2,8})$/);
+  if (separated) return BINANCE_QUOTES.has(separated[2]) ? [separated[1] + separated[2]] : [];
+  const symbol = raw.replace(/\s+/g, "");
+  if (!/^[A-Z0-9]{2,18}$/.test(symbol)) return [];
+  const candidates = [], add = (s) => { if (s.length <= 20 && !candidates.includes(s)) candidates.push(s); };
+  if (symbol.endsWith(quote) && symbol.length > quote.length) add(symbol);
+  else {
+    add(symbol + quote);
+    if ([...BINANCE_QUOTES].some((q) => q !== quote && symbol.endsWith(q) && symbol.length > q.length)) add(symbol);
+  }
+  return candidates;
+}
+
+function binanceTradeUrl(symbol) {
+  const quote = [...BINANCE_QUOTES].find((q) => symbol.endsWith(q) && symbol.length > q.length) || "USDT";
+  const base = symbol.slice(0, -quote.length);
+  return `https://www.binance.com/en/trade/${base}_${quote}?type=spot`;
+}
+
+async function binanceGet(path, signal) {
+  const r = await fetch(BINANCE_API + path, { headers: { Accept: "application/json" }, signal });
+  const text = await r.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = null; }
+  if (!r.ok) {
+    const e = new Error(`Binance market data HTTP ${r.status}`);
+    e.status = r.status;
+    e.binanceCode = Number(data?.code);
+    throw e;
+  }
+  if (data === null) throw new Error("Binance market data returned invalid JSON");
+  return data;
+}
+function unknownBinanceSymbol(e) { return e?.status === 400 && e?.binanceCode === -1121; }
+
+function mcpToolResult(results) {
+  const payload = { results };
+  return {
+    content: [{ type: "text", text: JSON.stringify(payload) }],
+    structuredContent: payload,
+    isError: false,
+  };
+}
+
+async function binanceQuotes(args, signal) {
+  const raw = Array.isArray(args?.symbols) ? args.symbols.slice(0, 6) : [];
+  const inputs = [...new Set(raw.map((s) => String(s || "").trim()).filter(Boolean))];
+  if (!inputs.length) throw new McpInputError("symbols must contain at least one valid Binance spot symbol");
+  const rows = await Promise.all(inputs.map(async (input) => {
+    const candidates = cryptoSymbolCandidates(input, args?.quoteAsset);
+    if (!candidates.length) throw new McpInputError(`invalid Binance spot symbol: ${input}`);
+    let lastError;
+    for (const symbol of candidates) {
+      try {
+        const q = await binanceGet(`/api/v3/ticker/24hr?symbol=${encodeURIComponent(symbol)}`, signal);
+        const asOf = Number.isFinite(Number(q.closeTime)) ? new Date(Number(q.closeTime)).toISOString() : "";
+        return {
+          title: `${symbol} Binance spot quote`,
+          url: binanceTradeUrl(symbol),
+          content: `${symbol}: last ${q.lastPrice}; 24h change ${q.priceChangePercent}%; high ${q.highPrice}; low ${q.lowPrice}; base volume ${q.volume}; quote volume ${q.quoteVolume}; as of ${asOf || "exchange response time"}.`,
+          symbol,
+          lastPrice: q.lastPrice,
+          priceChangePercent24h: q.priceChangePercent,
+          highPrice24h: q.highPrice,
+          lowPrice24h: q.lowPrice,
+          baseVolume24h: q.volume,
+          quoteVolume24h: q.quoteVolume,
+          asOf,
+          source: "Binance public spot market API",
+        };
+      } catch (e) {
+        if (e?.name === "AbortError" || signal.aborted) throw e;
+        if (!unknownBinanceSymbol(e)) throw e;
+        lastError = e;
+      }
+    }
+    const label = String(input).toUpperCase();
+    return {
+      title: `${label} Binance quote unavailable`,
+      url: "https://www.binance.com/en/markets/overview",
+      content: `${label}: quote unavailable from Binance (${String(lastError?.message || lastError || "symbol not found").slice(0, 100)}).`,
+      symbol: label,
+      unavailable: true,
+      source: "Binance public spot market API",
+    };
+  }));
+  return mcpToolResult(rows);
+}
+
+async function binanceCandles(args, signal) {
+  const candidates = cryptoSymbolCandidates(args?.symbol, args?.quoteAsset);
+  const interval = BINANCE_INTERVALS.has(String(args?.interval || "")) ? String(args.interval) : "1d";
+  const limit = Math.min(50, Math.max(2, Math.floor(Number(args?.limit) || 14)));
+  if (!candidates.length) throw new McpInputError("symbol must be a valid Binance spot symbol");
+  let symbol = "", rows, lastError;
+  for (const candidate of candidates) {
+    try {
+      rows = await binanceGet(`/api/v3/klines?symbol=${encodeURIComponent(candidate)}&interval=${encodeURIComponent(interval)}&limit=${limit}`, signal);
+      symbol = candidate;
+      break;
+    } catch (e) {
+      if (e?.name === "AbortError" || signal.aborted) throw e;
+      if (!unknownBinanceSymbol(e)) throw e;
+      lastError = e;
+    }
+  }
+  if (!symbol) throw new McpInputError(lastError ? "Binance spot symbol not found" : "symbol must be a valid Binance spot symbol");
+  const responseAtMs = Date.now(), responseAt = new Date(responseAtMs).toISOString();
+  const candles = (Array.isArray(rows) ? rows : []).map((k) => ({
+    openTime: new Date(Number(k[0])).toISOString(),
+    open: k[1], high: k[2], low: k[3], close: k[4], volume: k[5],
+    closeTime: new Date(Number(k[6])).toISOString(),
+    quoteVolume: k[7], trades: k[8],
+    closed: Number(k[6]) <= responseAtMs,
+  }));
+  const latest = candles[candles.length - 1];
+  const latestState = latest?.closed ? "closed" : "open and provisional";
+  return mcpToolResult([{
+    title: `${symbol} ${interval} Binance candles`,
+    url: binanceTradeUrl(symbol),
+    content: `${symbol} ${interval} OHLCV candles (${candles.length} rows), latest candle is ${latestState} with close ${latest?.close || "unavailable"} and scheduled close time ${latest?.closeTime || "unavailable"}; response as of ${responseAt}: ${JSON.stringify(candles)}.`,
+    symbol,
+    interval,
+    candles,
+    responseAt,
+    source: "Binance public spot market API",
+  }]);
+}
+
+async function binanceMcpToolCall(name, args, env) {
+  if (!BINANCE_MCP_TOOLS.some((t) => t.name === name)) return { error: { code: -32602, message: "Unknown read-only market tool" } };
+  const timeoutMs = Math.min(15000, Math.max(1000, Number(env.MARKET_MCP_TIMEOUT_MS) || 6000));
+  const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const result = name === "crypto_spot_quotes"
+      ? await binanceQuotes(args, ctrl.signal)
+      : await binanceCandles(args, ctrl.signal);
+    clearTimeout(timer);
+    return result;
+  } catch (e) {
+    clearTimeout(timer);
+    const message = e?.name === "AbortError" ? `Binance market data timeout after ${timeoutMs}ms` : String(e?.message || e).slice(0, 160);
+    if (e instanceof McpInputError) return { error: { code: -32602, message } };
+    return { content: [{ type: "text", text: message }], isError: true };
+  }
+}
+
+async function binanceRpcDispatch(rpc, env) {
+  if (!rpc || rpc.jsonrpc !== "2.0" || typeof rpc.method !== "string") return rpcFailure(null, -32600, "Invalid Request");
+  const notification = !Object.prototype.hasOwnProperty.call(rpc, "id");
+  if (notification) return null;
+  const id = rpc.id ?? null;
+  if (rpc.method === "initialize") {
+    const supported = new Set(["2025-06-18", "2025-03-26", "2024-11-05"]);
+    const requested = String(rpc.params?.protocolVersion || "");
+    return rpcResult(id, {
+      protocolVersion: supported.has(requested) ? requested : "2025-03-26",
+      capabilities: { tools: { listChanged: false } },
+      serverInfo: { name: "repolis-binance-market", version: "1.0.0" },
+    });
+  }
+  if (rpc.method === "ping") return rpcResult(id, {});
+  if (rpc.method === "tools/list") return rpcResult(id, { tools: BINANCE_MCP_TOOLS });
+  if (rpc.method !== "tools/call") return rpcFailure(id, -32601, "Method not found");
+  const result = await binanceMcpToolCall(rpc.params?.name, rpc.params?.arguments || {}, env);
+  if (result?.error) return rpcFailure(id, result.error.code, result.error.message);
+  return rpcResult(id, result);
+}
+
+async function binanceMcpHandler(request, env) {
+  if (request.method === "GET") return rpcHttp(rpcFailure(null, -32600, "Stateless MCP endpoint: use POST"), env, 405);
+  if (request.method !== "POST") return rpcHttp(rpcFailure(null, -32600, "POST only"), env, 405);
+  let input;
+  try { input = await request.json(); }
+  catch { return rpcHttp(rpcFailure(null, -32700, "Parse error"), env, 400); }
+  if (Array.isArray(input) && !input.length) return rpcHttp(rpcFailure(null, -32600, "Invalid Request"), env, 400);
+  if (Array.isArray(input) && input.length > BINANCE_MCP_BATCH_MAX) {
+    return rpcHttp(rpcFailure(null, -32600, `Batch limit is ${BINANCE_MCP_BATCH_MAX}`), env, 400);
+  }
+  try {
+    const batch = Array.isArray(input);
+    const replies = [];
+    for (const rpc of (batch ? input : [input])) {
+      const reply = await binanceRpcDispatch(rpc, env);
+      if (reply) replies.push(reply);
+    }
+    if (!replies.length) return new Response(null, { status: 202, headers: { "Cache-Control": "no-store", ...corsHeaders(env) } });
+    return rpcHttp(batch ? replies : replies[0], env);
+  } catch (e) {
+    return rpcHttp(rpcFailure(null, -32603, String(e?.message || e).slice(0, 160)), env);
+  }
+}
+
 // --- General-knowledge fallback for scholars (Entra ID → Azure OpenAI) ---------------------
 // When a scholar's Knowledge Base has nothing relevant, the scholar still answers from the
 // model's own knowledge — in character, in the user's language. This is a *direct* Azure
@@ -559,6 +816,7 @@ const PERSONA = {
   deepwiki: { star: "RIGEL",   ko: "지도제작자(아리아드네의 혼), 오리온자리의 리겔 — 레포의 미궁을 지도로 그리는 현자", en: "the Cartographer (spirit of Ariadne), Rigel of Orion who maps a repo's labyrinth" },
   context7: { star: "MIRA",    ko: "시간지기(카이로스의 혼), Context7에서 최신 라이브러리 문서를 읽는 고래자리의 변광성", en: "the Timekeeper (spirit of Kairos), a variable star of Cetus who reads current library docs through Context7" },
   huggingface: { star: "LYRA", ko: "창조의 대장장이(오르페우스의 혼), Hugging Face에서 모델·데이터셋·논문을 고르는 리라의 불꽃", en: "the Forgemaster (spirit of Orpheus), the lyre-fire who selects models, datasets and papers from Hugging Face" },
+  market: { star: "AURI", ko: "밤시장 장부지기 — Longbridge와 Binance의 읽기 전용 시세를 대조하는 숨은 주민", en: "the hidden night-market ledger keeper who cross-checks read-only Longbridge and Binance market data" },
 };
 
 function personaPrompt(who, lang) {
@@ -693,10 +951,17 @@ async function groundedRetrieve(cfg, messages, env) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   const started = Date.now();
+  const headers = { "Content-Type": "application/json", "api-key": key };
+  const accessToken = String(env.MARKET_LONGBRIDGE_ACCESS_TOKEN || "").trim();
+  const authKs = String(cfg.authKs || "").trim();
+  if (accessToken && authKs && /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(authKs) && !/[\r\n]/.test(accessToken)) {
+    headers[`${authKs}-header-name1`] = "Authorization";
+    headers[`${authKs}-header-value1`] = /^Bearer\s/i.test(accessToken) ? accessToken : `Bearer ${accessToken}`;
+  }
   try {
     const r = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "api-key": key },
+      headers,
       body: JSON.stringify(payload),
       signal: ctrl.signal,
     });
@@ -932,7 +1197,7 @@ async function councilStreamHandler(body, request, env) {
    reason:"npc_budget_exhausted" }. The budget ledger below is a module-scope best-effort tally (resets when the
    Worker isolate recycles) — a durable D1/Durable-Object store is the documented deferred upgrade for real enforcement. */
 
-// Short server-side persona summaries for the 8 residents (canonical source is the RESIDENTS registry in index.html).
+// Short server-side persona summaries for the 9 residents (canonical source is the RESIDENTS registry in index.html).
 const NPC_PERSONAS = {
   sol:  { ko:{name:"솔",role:"파운드리 견습생"},   en:{name:"Sol",role:"Foundry apprentice"}, zone:{ko:"AI 연구구역",en:"the AI research district"},   vibe:{ko:"호기심 많고 예산을 아끼는",en:"curious and budget-minded"} },
   jun:  { ko:{name:"준",role:"항구 정비공"},       en:{name:"Jun",role:"build mechanic"},     zone:{ko:"홈랩·인프라 항구",en:"the Homelab Harbor"},     vibe:{ko:"실용적이고 말수 적은",en:"practical and terse"} },
@@ -942,6 +1207,7 @@ const NPC_PERSONAS = {
   mira: { ko:{name:"미라",role:"분위기지기"},       en:{name:"Mira",role:"atmosphere keeper"}, zone:{ko:"실험·폐허 지구",en:"the old ruins"},          vibe:{ko:"시각적이고 고요한",en:"visual and calm"} },
   kai:  { ko:{name:"카이",role:"광장 길잡이"},     en:{name:"Kai",role:"crossing guide"},     zone:{ko:"중앙 광장",en:"the central plaza"},          vibe:{ko:"간결하고 다정한",en:"concise and welcoming"} },
   noa:  { ko:{name:"노아",role:"광장 몽상가"},     en:{name:"Noa",role:"plaza dreamer"},      zone:{ko:"중앙 광장",en:"the central plaza"},          vibe:{ko:"몽상적이고 호기심 많은",en:"dreamy and curious"} },
+  auri: { ko:{name:"아우리",role:"밤시장 장부지기"}, en:{name:"Auri",role:"night-market ledger keeper"}, zone:{ko:"데이터 공방 뒤편",en:"behind the Data workshop"}, vibe:{ko:"차분하고 숫자에 엄격한",en:"calm and exacting with numbers"} },
 };
 function _npcName(id, lang) { const p = NPC_PERSONAS[id]; if (!p) return id; return (lang === "en" ? p.en : p.ko); }
 function _npcGuard(lang) {
@@ -1073,7 +1339,41 @@ function groundedRoute(who) {
   if (who === "deepwiki") return "grounded_mcp_deepwiki";
   if (who === "context7") return "grounded_mcp_context7";
   if (who === "huggingface") return "grounded_mcp_huggingface";
+  if (who === "market") return "grounded_kb_market";
   return "grounded_kb_taxi";
+}
+function marketContextFollowup(question) {
+  const q = String(question || "").trim();
+  return /^(?:그럼|그러면|그건|그거|그게|그\s*종목|그\s*코인|어제|전일|지난|같은|비교|더|다른|왜|그리고|또)/.test(q)
+    || /^(?:what\s+about|how\s+about|then|yesterday|previous|same|compare|more|another|why|and|also)\b/i.test(q)
+    || /^(?:BTC|ETH|SOL|BNB|XRP|DOGE)\??$/i.test(q)
+    || /^(?:[A-Z]{1,5}(?:\.(?:US|HK))?|[A-Z0-9]{2,12}(?:USDT|USDC|FDUSD|BTC|ETH|BNB|EUR|TRY))\??$/.test(q);
+}
+function marketBoundary(question, lang, history) {
+  const current = String(question || "");
+  let q = current;
+  if (marketContextFollowup(current)) {
+    const currentKey = current.trim().toLowerCase();
+    const prior = (Array.isArray(history) ? history : []).slice().reverse().find((h) =>
+      h && h.role !== "assistant" && String(h.text || "").trim()
+      && String(h.text || "").trim().toLowerCase() !== currentKey
+    );
+    if (prior) q = `${String(prior.text).slice(0, 500)}\n${current}`;
+  }
+  const order = /매수해|매도해|(?:매수|매도)\s*주문|주문\s*(?:넣|걸|해|부탁)|사\s*줘|팔아\s*줘|체결해|송금해|출금해|(?:\d+(?:\.\d+)?\s*)?(?:주|개)\s*(?:사|팔아)|\b(?:buy|sell|purchase)\s+(?:\d+(?:\.\d+)?\s+)?(?:shares?|stocks?|coins?|tokens?|[A-Z]{2,10})\b|(?:can|could|would)\s+you\s+trade\b|trade\b.{0,30}\bfor\s+me\b|place\s+(?:an?\s+)?(?:(?:limit|market|stop)\s+)?order|(?:limit|market|stop)\s+order|execute\s+(?:a\s+)?trade|open\s+(?:a\s+)?position|close\s+(?:my\s+|the\s+)?position|withdraw|transfer/i.test(q);
+  const advice = /뭘?\s*사야|뭐\s*사는\s*게\s*좋|(?:주식|종목|코인).{0,20}(?:뭐|무엇).{0,12}(?:사|매수).{0,12}(?:좋|괜찮)|어떤\s*(?:주식|종목|코인).*(?:사|투자)|매수해도|사도\s*돼|살까|팔아야|투자해도|괜찮은\s*투자|투자\s*추천|추천해|수익\s*보장|should\s+i\s+(?:buy|sell|invest)|what\s+should\s+i\s+buy|would\s+you\s+(?:buy|sell|invest)|best\s+(?:stock|coin|token|investment).{0,20}\bto\s+buy|(?:pick|choose)\s+(?:a\s+|the\s+)?(?:stock|coin|token|investment).{0,20}\bfor\s+me|is\s+.+\s+a\s+good\s+(?:buy|investment)|worth\s+buying|buying\s+opportunity|(?:which|what)\s+(?:stock|coin|token|investment).{0,30}\brecommend|(?:stock|coin|token|investment).{0,30}\brecommend|(?:do\s+you\s+)?recommend\b.*(?:[A-Z]{2,10}|stock|coin|trade|token)|guaranteed\s+return/i.test(q);
+  if (!order && !advice) return "";
+  return String(lang || "").toLowerCase().startsWith("ko")
+    ? "저는 시세와 공개 지표를 읽는 장부지기라 주문을 실행하거나 개인화된 매수·매도 추천은 하지 않아요. 종목·코인과 확인할 지표(현재가, 24시간 변동률, 거래량, 캔들)를 지정해 주시면 출처와 기준 시각을 붙여 사실만 정리할게요."
+    : "I read public market data, but I don't execute orders or provide personalized buy/sell recommendations. Name the stock or coin and the facts you want—price, 24-hour change, volume, or candles—and I'll return sourced, time-stamped data.";
+}
+function marketNotice(answer, lang) {
+  const text = String(answer || "").trim();
+  if (!text) return text;
+  const notice = String(lang || "").toLowerCase().startsWith("ko")
+    ? "※ 공개 시세 정보이며 투자 조언이 아닙니다. 거래 전 거래소·브로커의 현재가를 다시 확인하세요."
+    : "Public market information only, not investment advice. Recheck the live price with your exchange or broker before trading.";
+  return text.includes(notice) ? text : `${text}\n\n${notice}`;
 }
 function personaRoute(role) {
   return role === "ambient" ? "persona_ambient" : "persona_visitor";
@@ -1192,6 +1492,10 @@ async function npcHandler(body, request, env, ctx) {
     const budget = npcBudgetState(env);
     // Env-off ceiling → never a model call; client falls back to its free scripted bank.
     const requestMeta = metricContext(body, request);
+    if (String(body.speaker || "").toLowerCase() === "auri") {
+      npcMetric(env, "npc_fallback_used", { where: role, route: "grounded_kb_market", reason: "market_oracle_requires_grounding", ...requestMeta }, ctx);
+      return json({ ok: true, fallback: true, reason: "market_oracle_requires_grounding", budget }, 200, env);
+    }
     if (!featureOn) { npcMetric(env, "npc_fallback_used", { where: role, route: personaRoute(role), reason: "disabled", ...requestMeta }, ctx); return json({ ok: true, fallback: true, reason: "npc_ai_disabled", budget }, 200, env); }
     if (budget.blocked) { npcMetric(env, "npc_budget_blocked", { where: role, route: personaRoute(role), reason: "npc_budget_exhausted", ...requestMeta }, ctx); return json({ ok: false, fallback: true, reason: "npc_budget_exhausted", budget }, 200, env); }
     const sys = role === "ambient" ? npcAmbientPrompt(body.speaker, body.listener, body.topic, lang) : npcPlayerPrompt(body.speaker, lang, { chime: !!body.chime, prev: body.prev });
@@ -1229,6 +1533,7 @@ export default {
   async fetch(request, env, ctx) {
     const headers = corsHeaders(env);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+    if (new URL(request.url).pathname === BINANCE_MCP_PATH) return binanceMcpHandler(request, env);
     if (request.method === "GET") {
       return new Response('Repolis taxi grounding — POST {"question":"…"}.', { status: 200, headers });
     }
@@ -1257,10 +1562,20 @@ export default {
     const cfg = scholarConfig(who, env);
     const messages = buildMessages(history, question);
     const requestMeta = metricContext(body, request);
+    const boundary = who === "market" ? marketBoundary(question, lang, history) : "";
+    if (boundary) {
+      npcMetric(env, "ai_guardrail", { route: groundedRoute(who), npc: who, reason: "market_read_only", ...requestMeta }, ctx);
+      return json({
+        repo: null,
+        message: boundary,
+        general: true,
+        trace: { general: true, guard: "market_read_only", sources: false },
+      }, 200, env);
+    }
 
     // Explicit small-talk / general intent (the client decided this isn't a repo or doc
     // lookup) → answer straight from the model in the scholar's voice, no KB retrieval.
-    if (chat) {
+    if (chat && who !== "market") {
       const g = await chatLLM(who, history, question, lang, env);
       if (g) {
         emitProviderUsage(env, ctx, "persona_visitor", "none", who, { phase: "persona", model: g.model, usage: g.usage, ms: g.ms }, requestMeta);
@@ -1312,6 +1627,7 @@ export default {
     // exist we always surface them as references — even when the synthesized answer hedges —
     // so the user sees the sources they asked for instead of an unsourced "general" reply.
     if (!docs.length) {
+      if (who === "market") return json({ fallback: true, reason: "market sources unavailable" }, 200, env);
       const g = await chatLLM(who, history, question, lang, env);
       if (g) {
         emitProviderUsage(env, ctx, "persona_visitor", "none", who, { phase: "persona", model: g.model, usage: g.usage, ms: g.ms }, requestMeta);
@@ -1322,7 +1638,7 @@ export default {
     }
     return json({
       repo: null,
-      message: out.answer,
+      message: who === "market" ? marketNotice(out.answer, lang) : out.answer,
       usage,
       trace: { ks: cfg.ks, tools: out.tools, refs: docs.slice(0, 6), docs: true, mcpMs: out.mcpMs, totalMs: out.totalMs, partial: out.status === 206 },
     }, 200, env);
