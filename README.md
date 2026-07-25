@@ -35,6 +35,14 @@
 
 **Fastest proof:** open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)**, type your login, and walk through your public repos. No token, account connection, or fork is required.
 
+<div align="center">
+
+<a href="https://hyeonsangjeon.github.io/Repolis/?launch=1"><img src="assets/launch.gif" alt="Typing a GitHub username on the Repolis launchpad and walking into a town built from that account's public repositories" width="86%"></a>
+
+<sub>⌨️ <strong>Username → your own town:</strong> type <code>mrdoob</code> → his 58 public repos stand up as a walkable city</sub>
+
+</div>
+
 If this gives you a useful way to present repositories, **[star Repolis](https://github.com/hyeonsangjeon/Repolis)** — it helps other developers discover the template.
 
 ## From preview to your own city

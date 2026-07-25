@@ -35,6 +35,14 @@
 
 **가장 빠른 확인:** **[내 GitHub로 보기](https://hyeonsangjeon.github.io/Repolis/?launch=1)**를 열고 username을 입력한 뒤 내 공개 레포 사이를 걸어보세요. 토큰·계정 연결·포크가 필요 없습니다.
 
+<div align="center">
+
+<a href="https://hyeonsangjeon.github.io/Repolis/?launch=1"><img src="assets/launch.ko.gif" alt="Repolis 첫 화면에 GitHub username을 입력하면 그 계정의 공개 레포로 지은 마을을 걸어 다니는 흐름" width="86%"></a>
+
+<sub>⌨️ <strong>username → 내 마을:</strong> <code>mrdoob</code> 입력 → 그의 공개 레포 58채가 걸어 다닐 수 있는 도시로</sub>
+
+</div>
+
 저장소를 보여 주는 새로운 방식이 유용했다면 **[Repolis에 Star를 남겨주세요](https://github.com/hyeonsangjeon/Repolis)**. 더 많은 개발자가 이 템플릿을 발견하는 데 도움이 됩니다.
 
 ## 미리보기에서 내 도시까지

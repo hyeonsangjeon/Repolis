@@ -23,6 +23,8 @@ const README_EN = readFileSync(join(ROOT, 'README.md'), 'utf8');
 const README_KO = readFileSync(join(ROOT, 'README.ko.md'), 'utf8');
 const DEMO_EN = readFileSync(join(ROOT, 'assets/demo.gif'));
 const DEMO_KO = readFileSync(join(ROOT, 'assets/demo.ko.gif'));
+const LAUNCH_GIF_EN = readFileSync(join(ROOT, 'assets/launch.gif'));
+const LAUNCH_GIF_KO = readFileSync(join(ROOT, 'assets/launch.ko.gif'));
 const SOCIAL_PREVIEW = readFileSync(join(ROOT, 'assets/social-preview.png'));
 const SCHOLARS_SRC = readFileSync(join(ROOT, 'scholars.js'), 'utf8');
 const WORLD_TREE_FACTORY = readFileSync(join(ROOT, 'assets/world-tree/createRepolisHero.js'), 'utf8');
@@ -70,6 +72,12 @@ ok(README_EN.indexOf('## What the demo proves') < README_EN.indexOf('## A villag
   && README_KO.indexOf('## 이 데모가 보여 주는 것') < README_KO.indexOf('## 실제로 살아가는 마을'), 'proof and adoption appear before the long feature narrative');
 ok(/No token, account connection, or fork is required/.test(README_EN)
   &&/토큰·계정 연결·포크가 필요 없습니다/.test(README_KO), 'personal preview states its real zero-auth boundary');
+ok(/assets\/launch\.gif/.test(README_EN) && /assets\/launch\.ko\.gif/.test(README_KO)
+  && README_EN.indexOf('assets/launch.gif') > README_EN.indexOf('**Fastest proof:**')
+  && README_KO.indexOf('assets/launch.ko.gif') > README_KO.indexOf('**가장 빠른 확인:**'), 'each proof section shows the username→own-town capture right after its claim');
+ok(LAUNCH_GIF_EN.subarray(0, 6).toString() === 'GIF89a' && LAUNCH_GIF_EN.readUInt16LE(6) === 520 && LAUNCH_GIF_EN.readUInt16LE(8) === 360
+  && LAUNCH_GIF_KO.subarray(0, 6).toString() === 'GIF89a' && LAUNCH_GIF_KO.readUInt16LE(6) === 520 && LAUNCH_GIF_KO.readUInt16LE(8) === 360, 'EN/KO launch captures stay 520×360 GIF89a assets');
+ok(LAUNCH_GIF_EN.length < 1.6 * 1024 * 1024 && LAUNCH_GIF_KO.length < 1.6 * 1024 * 1024, 'each launch capture stays inside its mobile weight budget');
 ok(/no PAT required/.test(README_EN) && /PAT 불필요/.test(README_KO)
   &&/GH_PAT.*optional|optionally add the `GH_PAT`/s.test(README_EN), 'template metadata mode is PAT-free and traffic is clearly optional');
 ok(DEMO_EN.subarray(0, 6).toString() === 'GIF89a' && DEMO_EN.readUInt16LE(6) === 520 && DEMO_EN.readUInt16LE(8) === 293
