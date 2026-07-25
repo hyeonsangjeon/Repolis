@@ -282,6 +282,20 @@
     border-radius:12px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer;
     box-shadow:0 4px 14px rgba(60,30,10,.18); transition:background .15s,color .15s,border-color .15s; }
   #introTour:hover{ background:#fff; color:#c2702f; border-color:#fff; }
+  /* ⭐ one quiet, earned invitation to star the open-source project (never on first sight) */
+  #starNudge{ position:fixed; z-index:29; left:50%; transform:translateX(-50%) translateY(14px);
+    bottom:calc(74px + env(safe-area-inset-bottom,0px)); display:none; align-items:center; gap:10px;
+    max-width:min(560px,calc(100vw - 24px)); padding:10px 12px; border-radius:14px;
+    background:rgba(28,24,20,.93); color:#fff6e8; border:1px solid rgba(255,255,255,.24);
+    box-shadow:0 10px 30px rgba(30,18,8,.34); font-size:13px; line-height:1.45;
+    opacity:0; transition:opacity .28s ease, transform .28s ease; }
+  #starNudge.show{ display:flex; opacity:1; transform:translateX(-50%) translateY(0); }
+  #starNudge .snTx{ flex:1 1 auto; min-width:0; }
+  #starNudge .snGo{ flex:0 0 auto; text-decoration:none; background:#f1c45a; color:#3a2a08;
+    border-radius:10px; padding:9px 13px; font-weight:800; font-size:12.5px; white-space:nowrap; }
+  #starNudge .snX{ flex:0 0 auto; background:transparent; border:0; color:#d9c7b3; cursor:pointer;
+    font-size:15px; line-height:1; padding:6px 4px; }
+  @media (max-width:520px){ #starNudge{ font-size:12.5px; } #starNudge .snGo{ min-height:40px; display:grid; place-items:center; } }
   .card .hero { width: 100%; aspect-ratio: 2 / 1; height: auto; max-height: 230px; object-fit: cover; display: block;
     background: linear-gradient(135deg,#efe6d3,#e2d4bb); }
   .card .sociallabel { position: absolute; top: 12px; left: 12px; z-index: 3; display: none;
@@ -949,6 +963,11 @@
 </div>
 
 <div id="tourCap" class="hidden"><span class="tcDot" id="tourDot">✨</span><span class="tcTxt" id="tourTxt"></span><button class="tcSkip" id="tourSkip" data-i18n="tourSkip">건너뛰기 ⏭</button></div>
+<div id="starNudge" role="status">
+  <span class="snTx" id="starNudgeTx" data-i18n="starNudge">이 마을이 마음에 드셨나요? Repolis는 오픈소스예요.</span>
+  <a class="snGo" id="starNudgeGo" href="https://github.com/hyeonsangjeon/Repolis" target="_blank" rel="noopener" data-i18n="starNudgeGo">⭐ GitHub에서 Star</a>
+  <button class="snX" id="starNudgeX" aria-label="close">✕</button>
+</div>
 <div id="joy"><div class="nub"></div></div>
 <button id="actBtn" title="Open" aria-label="Open">🚪</button>
 <div class="hint" data-i18n-html="hint">집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 깃버에게 물어보기</div>
@@ -1239,6 +1258,7 @@ const I18N = {
     introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
     introLaunchLabel:'내 공개 레포로 바로 보기', introUserPh:'GitHub username', introLaunchGo:'내 마을 만들기 →',
     introLaunchHint:'공개 레포만 사용 · 로그인 없음 · 포크 없음', introLaunchInvalid:'올바른 GitHub username을 입력해 주세요.',
+    starNudge:'이 마을이 마음에 드셨나요? Repolis는 오픈소스예요.', starNudgeGo:'⭐ GitHub에서 Star',
     privacyNote:'익명 집계 통계만 측정해요 · 개인정보·계정·검색어는 저장하지 않아요.',
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
     enterTown:'마을 입장 →',
@@ -1404,6 +1424,7 @@ const I18N = {
     introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
     introLaunchLabel:'See the same engine with your public repos', introUserPh:'GitHub username', introLaunchGo:'Build my town →',
     introLaunchHint:'Public repos only · no login · no fork', introLaunchInvalid:'Enter a valid GitHub username.',
+    starNudge:'Enjoying the town? Repolis is open source.', starNudgeGo:'⭐ Star on GitHub',
     privacyNote:'Anonymous, aggregate stats only — no personal data, accounts, or search queries are stored.',
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
     enterTown:'Enter the town →',
@@ -6623,6 +6644,7 @@ function addStamp(id){ if(passHasStamp(id)) return false; passport.stamps.push(i
   onCourseProgress(); return true; }
 function addRepoVisit(name){ if(!name || passport.repos.indexOf(name)>=0) return; passport.repos.push(name); savePassport(); if(!passportEl.classList.contains('hidden')) renderPassport();
   if([5,15,30,REPOS.length].indexOf(passport.repos.length)>=0){ fireworksShow(8); showWave(t('festRepos').replace('{n}',passport.repos.length),3000); }
+  if(passport.repos.length>=3) maybeStarNudge('repos_visited');
   onCourseProgress(); }
 function restorePassport(){ if(!passport.repos.length) return;
   for(const r of REPOS){ if(passport.repos.indexOf(r.repo)>=0 && !r._visited){ r._visited=true; visited++;
@@ -6978,7 +7000,7 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   track('repo_card_open',{repo:repo.repo});
   renderCardAsk(repo);
   markVisited(repo); }
-function closeCard(){ modalOpen=false; modal.classList.remove('show'); modal._repoKey=null; clearRepoHash(); }
+function closeCard(){ modalOpen=false; modal.classList.remove('show'); modal._repoKey=null; clearRepoHash(); flushStarNudge(); }
 /* ───────── 🚕 Repo-card actions — reuse the existing taxi/chat flow (no new backend) ───────── */
 function _taxiNpc(){ return (typeof NPCS!=='undefined'&&NPCS)?(NPCS.find(n=>n.kind==='taxi')||activeNpc||NPCS[0]):activeNpc; }
 function askInChat(q){ if(!q) return; closeCard(); openChat(_taxiNpc());   // routes through taxi → localIntent/grounded, same as typing it
@@ -7111,7 +7133,30 @@ function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
 function sitDown(seat){ if(ride||modalOpen||sitting) return; sitting=seat; player.position.set(seat.x,0,seat.z); model.rotation.y=seat.rot; camYaw=seat.rot+Math.PI; walk=0; }
 function standUp(){ sitting=null; }
+/* ⭐ One earned, dismissible invitation to star the open-source project. Never on arrival:
+   it appears only after the visitor has actually explored (3 repo houses) or spent time in
+   a town they built themselves. Shown once per browser, and it always points at the upstream
+   project so a fork credits the engine it runs on. */
+const STAR_NUDGE_KEY='repolis:starNudge:v1';
+let _starNudgeShown=false, _starNudgePending=null;
+function _starNudgeSeen(){ try{ return !!localStorage.getItem(STAR_NUDGE_KEY); }catch(e){ return true; } }
+function _starNudgeClose(how){ const el=document.getElementById('starNudge'); if(el) el.classList.remove('show');
+  try{ localStorage.setItem(STAR_NUDGE_KEY,how); }catch(e){} }
+function maybeStarNudge(reason){ if(_starNudgeShown||_starNudgeSeen()) return false;
+  const el=document.getElementById('starNudge'); if(!el) return false;
+  // exploring a repo happens inside its card, so wait for the visitor to step back out
+  if(modalOpen||(tour&&tour.active)){ _starNudgePending=reason; return false; }
+  const go=document.getElementById('starNudgeGo');
+  if(go) go.href=(window.REPOLIS_CONFIG&&REPOLIS_CONFIG.project&&REPOLIS_CONFIG.project.url)||go.href;
+  _starNudgeShown=true; _starNudgePending=null; el.classList.add('show'); track('star_nudge_shown',{reason}); return true; }
+function flushStarNudge(){ if(!_starNudgePending) return; const reason=_starNudgePending;
+  setTimeout(()=>{ if(_starNudgePending===reason) maybeStarNudge(reason); }, 900); }
+(function(){ const x=document.getElementById('starNudgeX'), go=document.getElementById('starNudgeGo');
+  if(x) x.onclick=()=>{ track('star_nudge_dismiss'); _starNudgeClose('dismissed'); };
+  if(go) go.onclick=()=>{ track('project_star_click'); _starNudgeClose('clicked'); }; })();
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
+  track('town_enter', { returning: !!VISITOR.returning });
+  if(cityMode==='public') setTimeout(()=>{ try{ maybeStarNudge('personal_town'); }catch(e){} }, 14000);   // only after they have actually walked their own town
   const rb=VISITOR.returning, news=hasFreshness(); if(rb){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} }, 850); }   // welcome a familiar face back before Gazette / Chronicle
   try{ if(REPOS.length){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
@@ -7122,7 +7167,7 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
   if(new URLSearchParams(location.search).has('launch')) setTimeout(()=>input.focus(),80);
   input.addEventListener('keydown',e=>e.stopPropagation());
   form.onsubmit=e=>{ e.preventDefault(); const user=input.value.trim().replace(/^@/,'');
-    if(!GH_LOGIN_RE.test(user)){ if(err) err.textContent=t('introLaunchInvalid'); input.focus(); return; }
+    if(!GH_LOGIN_RE.test(user)){ if(err) err.textContent=t('introLaunchInvalid'); track('intro_launch_invalid'); input.focus(); return; }
     if(err) err.textContent=''; track('intro_personal_preview',{targetUser:user});
     const url=location.origin+location.pathname+(user.toLowerCase()===OWNER.toLowerCase()?'':'?user='+encodeURIComponent(user));
     location.href=url; }; })();

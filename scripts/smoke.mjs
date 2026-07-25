@@ -132,6 +132,20 @@ ok(/\/users\/\{OWNER\}\/repos\?per_page=100&type=owner/.test(REPO_BUILDER)
   &&/Public owner endpoint works with the built-in Actions token/.test(REPO_BUILDER), 'builder lists public owner repos without requiring an authenticated user endpoint');
 ok(/Path\("data"\) \/ "towns" \/ OWNER/.test(REPO_BUILDER), 'manual non-upstream builds default to an owner-scoped traffic root');
 
+group('star funnel — earned invitation + the events that show where visitors drop');
+ok(/id="starNudge"/.test(HTML) && /id="starNudgeGo"/.test(HTML) && /id="starNudgeX"/.test(HTML), 'the town carries a dismissible star invitation with its own close control');
+ok((HTML.match(/starNudge:'/g)||[]).length===2 && (HTML.match(/starNudgeGo:'/g)||[]).length===2, 'the invitation copy is bilingual');
+ok(/if\(passport\.repos\.length>=3\) maybeStarNudge\('repos_visited'\)/.test(HTML)
+  &&/if\(cityMode==='public'\) setTimeout\(\(\)=>\{ try\{ maybeStarNudge\('personal_town'\); \}/.test(HTML), 'the invitation is earned: three explored repo houses, or time spent in a self-built town');
+ok(/if\(_starNudgeShown\|\|_starNudgeSeen\(\)\) return false/.test(HTML)
+  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
+  &&/function flushStarNudge\(\)/.test(HTML)
+  &&/clearRepoHash\(\); flushStarNudge\(\);/.test(HTML)
+  &&/localStorage\.setItem\(STAR_NUDGE_KEY,how\)/.test(HTML), 'it shows at most once per browser, waits out a modal or the tour, and returns when the visitor steps back out');
+ok(/REPOLIS_CONFIG&&REPOLIS_CONFIG\.project&&REPOLIS_CONFIG\.project\.url/.test(HTML), 'a fork still credits the upstream project it runs on');
+['town_enter','intro_launch_invalid','intro_personal_preview','star_nudge_shown','star_nudge_dismiss','project_star_click']
+  .forEach(ev => ok(HTML.includes(`track('${ev}'`), `funnel event ${ev} is instrumented`));
+
 /* ── 3) move-key stuck guard: press-again-to-stop + clear on focus/menu loss ── */
 group('movement key stuck-fix wiring');
 ok(/const\s+MOVE\s*=\s*new Set\(/.test(HTML), 'MOVE set of movement codes exists');
