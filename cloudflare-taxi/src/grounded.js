@@ -22,7 +22,7 @@
 //   SEARCH_KB_NAME         knowledge base name (e.g. repolis-github-kb)
 //   SEARCH_KS_NAME         comma-separated knowledge source name(s) — attach more MCPs here
 //   MARKET_KB_NAME         AURI's market knowledge base (default repolis-market-kb)
-//   MARKET_KS_NAME         Longbridge + Binance MCP knowledge sources, comma-separated
+//   MARKET_KS_NAME         Longbridge + crypto MCP knowledge sources, comma-separated
 //   MARKET_LONGBRIDGE_ACCESS_TOKEN  Longbridge OAuth token (SECRET; forwarded only to its KS)
 //   SEARCH_API_VERSION     optional (default 2026-05-01-preview)
 //   GROUNDED_TIMEOUT_MS    optional fetch abort ms (default 25000; CF has no 10 s wall)
@@ -129,7 +129,7 @@ function scholarConfig(npc, env) {
     },
     market: {
       kb: env.MARKET_KB_NAME || "repolis-market-kb",
-      ks: env.MARKET_KS_NAME || "longbridge-market-mcp-ks,binance-market-mcp-ks",
+      ks: env.MARKET_KS_NAME || "crypto-market-mcp-ks",
       authKs: env.MARKET_LONGBRIDGE_KS_NAME || "longbridge-market-mcp-ks",
       ride: false,
     },
@@ -553,23 +553,25 @@ function json(obj, status, env) {
   });
 }
 
-// --- Read-only Binance public-market MCP ----------------------------------------------------
-// The Agent Finder result for Binance is a CLI skill, not an MCP server. This bounded endpoint
-// turns Binance's anonymous spot API into AURI's second MCP source. It has no account or order tools.
-const BINANCE_MCP_PATH = "/mcp/binance";
-const BINANCE_API = "https://api.binance.com";
-const BINANCE_QUOTES = new Set(["USDT", "USDC", "FDUSD", "BTC", "ETH", "BNB", "EUR", "TRY"]);
-const BINANCE_INTERVALS = new Set(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]);
-const BINANCE_MCP_BATCH_MAX = 4;
-const BINANCE_MCP_TOOLS = [
+// --- Read-only public crypto market MCP -----------------------------------------------------
+// Binance refuses Cloudflare egress IPs (403 on both api.binance.com and data-api.binance.vision),
+// so AURI's crypto source is Coinbase Exchange public market data. Quotes and candles only:
+// this endpoint exposes no account, order, transfer, or withdrawal capability.
+const CRYPTO_MCP_PATH = "/mcp/crypto";
+const CRYPTO_API = "https://api.exchange.coinbase.com";
+const CRYPTO_QUOTES = new Set(["USD", "USDT", "USDC", "EUR", "GBP", "BTC", "ETH"]);
+const CRYPTO_GRANULARITY = { "1m": 60, "5m": 300, "15m": 900, "1h": 3600, "6h": 21600, "1d": 86400 };
+const CRYPTO_MCP_BATCH_MAX = 3;
+const CRYPTO_MAX_SYMBOLS = 4;
+const CRYPTO_MCP_TOOLS = [
   {
     name: "crypto_spot_quotes",
-    description: "Read-only Binance spot quote snapshots for up to six symbols, including last price, 24h change, range, volume, and source time.",
+    description: "Read-only Coinbase spot quote snapshots for up to four symbols: last price, 24h open/high/low, 24h change, base volume, and retrieval time.",
     inputSchema: {
       type: "object",
       properties: {
-        symbols: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 6, description: "Pairs or base assets, for example BTCUSDT, ETH-USDT, or SOL." },
-        quoteAsset: { type: "string", enum: ["USDT", "USDC", "FDUSD", "BTC", "ETH", "BNB", "EUR", "TRY"], default: "USDT" },
+        symbols: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 4, description: "Pairs or base assets, for example BTC-USD, BTCUSDT, or SOL." },
+        quoteAsset: { type: "string", enum: ["USD", "USDT", "USDC", "EUR", "GBP", "BTC", "ETH"], default: "USD" },
       },
       required: ["symbols"],
       additionalProperties: false,
@@ -578,13 +580,13 @@ const BINANCE_MCP_TOOLS = [
   },
   {
     name: "crypto_candles",
-    description: "Read-only Binance spot OHLCV candles for one symbol. Returns at most 50 recent candles with exchange timestamps.",
+    description: "Read-only Coinbase spot OHLCV candles for one symbol. Returns at most 50 recent candles, oldest first, each marked closed or still open.",
     inputSchema: {
       type: "object",
       properties: {
-        symbol: { type: "string", description: "Pair or base asset, for example BTCUSDT or ETH." },
-        quoteAsset: { type: "string", enum: ["USDT", "USDC", "FDUSD", "BTC", "ETH", "BNB", "EUR", "TRY"], default: "USDT" },
-        interval: { type: "string", enum: ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"], default: "1d" },
+        symbol: { type: "string", description: "Pair or base asset, for example BTC-USD or ETH." },
+        quoteAsset: { type: "string", enum: ["USD", "USDT", "USDC", "EUR", "GBP", "BTC", "ETH"], default: "USD" },
+        interval: { type: "string", enum: ["1m", "5m", "15m", "1h", "6h", "1d"], default: "1d" },
         limit: { type: "integer", minimum: 2, maximum: 50, default: 14 },
       },
       required: ["symbol"],
@@ -604,44 +606,47 @@ function rpcHttp(payload, env, status = 200) {
   });
 }
 
-function cryptoSymbolCandidates(value, quoteAsset = "USDT") {
-  const quote = String(quoteAsset || "USDT").toUpperCase();
-  if (!BINANCE_QUOTES.has(quote)) return [];
+function cryptoProductCandidates(value, quoteAsset = "USD") {
+  const quote = String(quoteAsset || "USD").toUpperCase();
+  if (!CRYPTO_QUOTES.has(quote)) return [];
   const raw = String(value || "").trim().toUpperCase();
-  const separated = raw.match(/^([A-Z0-9]{2,16})\s*[-/_]\s*([A-Z0-9]{2,8})$/);
-  if (separated) return BINANCE_QUOTES.has(separated[2]) ? [separated[1] + separated[2]] : [];
-  const symbol = raw.replace(/\s+/g, "");
-  if (!/^[A-Z0-9]{2,18}$/.test(symbol)) return [];
-  const candidates = [], add = (s) => { if (s.length <= 20 && !candidates.includes(s)) candidates.push(s); };
-  if (symbol.endsWith(quote) && symbol.length > quote.length) add(symbol);
-  else {
-    add(symbol + quote);
-    if ([...BINANCE_QUOTES].some((q) => q !== quote && symbol.endsWith(q) && symbol.length > q.length)) add(symbol);
+  const add = (p, out) => { if (!out.includes(p)) out.push(p); };
+  const out = [];
+  const separated = raw.match(/^([A-Z0-9]{2,10})\s*[-/_]\s*([A-Z0-9]{2,6})$/);
+  if (separated) return CRYPTO_QUOTES.has(separated[2]) ? [`${separated[1]}-${separated[2]}`] : [];
+  const symbol = raw.replace(/[^A-Z0-9]/g, "");
+  if (!/^[A-Z0-9]{2,14}$/.test(symbol)) return [];
+  // "BTCUSDT" already carries its quote asset; a bare "BTC" gets the requested one
+  const suffix = [...CRYPTO_QUOTES].find((q) => symbol.endsWith(q) && symbol.length > q.length);
+  if (suffix) {
+    add(`${symbol.slice(0, -suffix.length)}-${suffix}`, out);
+    if (suffix !== "USD") add(`${symbol.slice(0, -suffix.length)}-USD`, out);
+  } else {
+    add(`${symbol}-${quote}`, out);
+    if (quote !== "USD") add(`${symbol}-USD`, out);
   }
-  return candidates;
+  return out.slice(0, 3);
 }
 
-function binanceTradeUrl(symbol) {
-  const quote = [...BINANCE_QUOTES].find((q) => symbol.endsWith(q) && symbol.length > q.length) || "USDT";
-  const base = symbol.slice(0, -quote.length);
-  return `https://www.binance.com/en/trade/${base}_${quote}?type=spot`;
-}
+function cryptoTradeUrl(product) { return `https://www.coinbase.com/advanced-trade/spot/${product}`; }
 
-async function binanceGet(path, signal) {
-  const r = await fetch(BINANCE_API + path, { headers: { Accept: "application/json" }, signal });
+async function cryptoGet(path, signal) {
+  const r = await fetch(CRYPTO_API + path, {
+    headers: { Accept: "application/json", "User-Agent": "repolis-market-mcp/1.0" },
+    signal,
+  });
   const text = await r.text();
   let data;
   try { data = JSON.parse(text); } catch { data = null; }
-  if (!r.ok) {
-    const e = new Error(`Binance market data HTTP ${r.status}`);
-    e.status = r.status;
-    e.binanceCode = Number(data?.code);
-    throw e;
+  if (r.ok) {
+    if (data === null) throw new Error("Coinbase market data returned invalid JSON");
+    return data;
   }
-  if (data === null) throw new Error("Binance market data returned invalid JSON");
-  return data;
+  const e = new Error(`Coinbase market data HTTP ${r.status}`);
+  e.status = r.status;
+  throw e;
 }
-function unknownBinanceSymbol(e) { return e?.status === 400 && e?.binanceCode === -1121; }
+function unknownCryptoProduct(e) { return e?.status === 404; }
 
 function mcpToolResult(results) {
   const payload = { results };
@@ -652,110 +657,115 @@ function mcpToolResult(results) {
   };
 }
 
-async function binanceQuotes(args, signal) {
-  const raw = Array.isArray(args?.symbols) ? args.symbols.slice(0, 6) : [];
+async function cryptoQuotes(args, signal) {
+  const raw = Array.isArray(args?.symbols) ? args.symbols.slice(0, CRYPTO_MAX_SYMBOLS) : [];
   const inputs = [...new Set(raw.map((s) => String(s || "").trim()).filter(Boolean))];
-  if (!inputs.length) throw new McpInputError("symbols must contain at least one valid Binance spot symbol");
+  if (!inputs.length) throw new McpInputError("symbols must contain at least one crypto pair or base asset");
+  const retrievedAt = new Date().toISOString();
   const rows = await Promise.all(inputs.map(async (input) => {
-    const candidates = cryptoSymbolCandidates(input, args?.quoteAsset);
-    if (!candidates.length) throw new McpInputError(`invalid Binance spot symbol: ${input}`);
+    const candidates = cryptoProductCandidates(input, args?.quoteAsset);
+    if (!candidates.length) throw new McpInputError(`invalid crypto symbol: ${input}`);
     let lastError;
-    for (const symbol of candidates) {
+    for (const product of candidates) {
       try {
-        const q = await binanceGet(`/api/v3/ticker/24hr?symbol=${encodeURIComponent(symbol)}`, signal);
-        const asOf = Number.isFinite(Number(q.closeTime)) ? new Date(Number(q.closeTime)).toISOString() : "";
+        const s = await cryptoGet(`/products/${encodeURIComponent(product)}/stats`, signal);
+        const open = Number(s.open), last = Number(s.last);
+        const change = (Number.isFinite(open) && open > 0 && Number.isFinite(last))
+          ? (((last - open) / open) * 100).toFixed(3) : "";
         return {
-          title: `${symbol} Binance spot quote`,
-          url: binanceTradeUrl(symbol),
-          content: `${symbol}: last ${q.lastPrice}; 24h change ${q.priceChangePercent}%; high ${q.highPrice}; low ${q.lowPrice}; base volume ${q.volume}; quote volume ${q.quoteVolume}; as of ${asOf || "exchange response time"}.`,
-          symbol,
-          lastPrice: q.lastPrice,
-          priceChangePercent24h: q.priceChangePercent,
-          highPrice24h: q.highPrice,
-          lowPrice24h: q.lowPrice,
-          baseVolume24h: q.volume,
-          quoteVolume24h: q.quoteVolume,
-          asOf,
-          source: "Binance public spot market API",
+          title: `${product} spot quote (Coinbase)`,
+          url: cryptoTradeUrl(product),
+          content: `${product}: last ${s.last}; 24h open ${s.open}; 24h change ${change || "unavailable"}%; 24h high ${s.high}; 24h low ${s.low}; base volume ${s.volume}; retrieved ${retrievedAt}.`,
+          symbol: product,
+          lastPrice: s.last,
+          open24h: s.open,
+          priceChangePercent24h: change,
+          highPrice24h: s.high,
+          lowPrice24h: s.low,
+          baseVolume24h: s.volume,
+          retrievedAt,
+          source: "Coinbase Exchange public market data",
         };
       } catch (e) {
         if (e?.name === "AbortError" || signal.aborted) throw e;
-        if (!unknownBinanceSymbol(e)) throw e;
+        if (!unknownCryptoProduct(e)) throw e;
         lastError = e;
       }
     }
     const label = String(input).toUpperCase();
     return {
-      title: `${label} Binance quote unavailable`,
-      url: "https://www.binance.com/en/markets/overview",
-      content: `${label}: quote unavailable from Binance (${String(lastError?.message || lastError || "symbol not found").slice(0, 100)}).`,
+      title: `${label} quote unavailable`,
+      url: "https://www.coinbase.com/explore",
+      content: `${label}: no matching Coinbase spot product (tried ${candidates.join(", ")}).`,
       symbol: label,
       unavailable: true,
-      source: "Binance public spot market API",
+      retrievedAt,
+      source: "Coinbase Exchange public market data",
     };
   }));
   return mcpToolResult(rows);
 }
 
-async function binanceCandles(args, signal) {
-  const candidates = cryptoSymbolCandidates(args?.symbol, args?.quoteAsset);
-  const interval = BINANCE_INTERVALS.has(String(args?.interval || "")) ? String(args.interval) : "1d";
+async function cryptoCandles(args, signal) {
+  const candidates = cryptoProductCandidates(args?.symbol, args?.quoteAsset);
+  const interval = CRYPTO_GRANULARITY[String(args?.interval || "")] ? String(args.interval) : "1d";
   const limit = Math.min(50, Math.max(2, Math.floor(Number(args?.limit) || 14)));
-  if (!candidates.length) throw new McpInputError("symbol must be a valid Binance spot symbol");
-  let symbol = "", rows, lastError;
+  if (!candidates.length) throw new McpInputError("symbol must be a crypto pair or base asset");
+  const granularity = CRYPTO_GRANULARITY[interval];
+  let product = "", rows, lastError;
   for (const candidate of candidates) {
     try {
-      rows = await binanceGet(`/api/v3/klines?symbol=${encodeURIComponent(candidate)}&interval=${encodeURIComponent(interval)}&limit=${limit}`, signal);
-      symbol = candidate;
+      rows = await cryptoGet(`/products/${encodeURIComponent(candidate)}/candles?granularity=${granularity}`, signal);
+      product = candidate;
       break;
     } catch (e) {
       if (e?.name === "AbortError" || signal.aborted) throw e;
-      if (!unknownBinanceSymbol(e)) throw e;
+      if (!unknownCryptoProduct(e)) throw e;
       lastError = e;
     }
   }
-  if (!symbol) throw new McpInputError(lastError ? "Binance spot symbol not found" : "symbol must be a valid Binance spot symbol");
-  const responseAtMs = Date.now(), responseAt = new Date(responseAtMs).toISOString();
-  const candles = (Array.isArray(rows) ? rows : []).map((k) => ({
-    openTime: new Date(Number(k[0])).toISOString(),
-    open: k[1], high: k[2], low: k[3], close: k[4], volume: k[5],
-    closeTime: new Date(Number(k[6])).toISOString(),
-    quoteVolume: k[7], trades: k[8],
-    closed: Number(k[6]) <= responseAtMs,
-  }));
+  if (!product) throw new McpInputError(`no matching Coinbase spot product (tried ${candidates.join(", ")})`);
+  const retrievedAtMs = Date.now(), retrievedAt = new Date(retrievedAtMs).toISOString();
+  // Coinbase returns [time, low, high, open, close, volume], newest first
+  const candles = (Array.isArray(rows) ? rows : []).slice(0, limit).map((k) => ({
+    openTime: new Date(Number(k[0]) * 1000).toISOString(),
+    low: String(k[1]), high: String(k[2]), open: String(k[3]), close: String(k[4]), volume: String(k[5]),
+    closeTime: new Date((Number(k[0]) + granularity) * 1000).toISOString(),
+    closed: (Number(k[0]) + granularity) * 1000 <= retrievedAtMs,
+  })).reverse();
   const latest = candles[candles.length - 1];
   const latestState = latest?.closed ? "closed" : "open and provisional";
   return mcpToolResult([{
-    title: `${symbol} ${interval} Binance candles`,
-    url: binanceTradeUrl(symbol),
-    content: `${symbol} ${interval} OHLCV candles (${candles.length} rows), latest candle is ${latestState} with close ${latest?.close || "unavailable"} and scheduled close time ${latest?.closeTime || "unavailable"}; response as of ${responseAt}: ${JSON.stringify(candles)}.`,
-    symbol,
+    title: `${product} ${interval} candles (Coinbase)`,
+    url: cryptoTradeUrl(product),
+    content: `${product} ${interval} OHLCV candles (${candles.length} rows, oldest first), latest candle is ${latestState} with close ${latest?.close || "unavailable"} and period end ${latest?.closeTime || "unavailable"}; retrieved ${retrievedAt}: ${JSON.stringify(candles)}.`,
+    symbol: product,
     interval,
     candles,
-    responseAt,
-    source: "Binance public spot market API",
+    retrievedAt,
+    source: "Coinbase Exchange public market data",
   }]);
 }
 
-async function binanceMcpToolCall(name, args, env) {
-  if (!BINANCE_MCP_TOOLS.some((t) => t.name === name)) return { error: { code: -32602, message: "Unknown read-only market tool" } };
+async function cryptoMcpToolCall(name, args, env) {
+  if (!CRYPTO_MCP_TOOLS.some((t) => t.name === name)) return { error: { code: -32602, message: "Unknown read-only market tool" } };
   const timeoutMs = Math.min(15000, Math.max(1000, Number(env.MARKET_MCP_TIMEOUT_MS) || 6000));
   const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const result = name === "crypto_spot_quotes"
-      ? await binanceQuotes(args, ctrl.signal)
-      : await binanceCandles(args, ctrl.signal);
+      ? await cryptoQuotes(args, ctrl.signal)
+      : await cryptoCandles(args, ctrl.signal);
     clearTimeout(timer);
     return result;
   } catch (e) {
     clearTimeout(timer);
-    const message = e?.name === "AbortError" ? `Binance market data timeout after ${timeoutMs}ms` : String(e?.message || e).slice(0, 160);
+    const message = e?.name === "AbortError" ? `Coinbase market data timeout after ${timeoutMs}ms` : String(e?.message || e).slice(0, 160);
     if (e instanceof McpInputError) return { error: { code: -32602, message } };
     return { content: [{ type: "text", text: message }], isError: true };
   }
 }
 
-async function binanceRpcDispatch(rpc, env) {
+async function cryptoRpcDispatch(rpc, env) {
   if (!rpc || rpc.jsonrpc !== "2.0" || typeof rpc.method !== "string") return rpcFailure(null, -32600, "Invalid Request");
   const notification = !Object.prototype.hasOwnProperty.call(rpc, "id");
   if (notification) return null;
@@ -766,32 +776,32 @@ async function binanceRpcDispatch(rpc, env) {
     return rpcResult(id, {
       protocolVersion: supported.has(requested) ? requested : "2025-03-26",
       capabilities: { tools: { listChanged: false } },
-      serverInfo: { name: "repolis-binance-market", version: "1.0.0" },
+      serverInfo: { name: "repolis-crypto-market", version: "1.0.0" },
     });
   }
   if (rpc.method === "ping") return rpcResult(id, {});
-  if (rpc.method === "tools/list") return rpcResult(id, { tools: BINANCE_MCP_TOOLS });
+  if (rpc.method === "tools/list") return rpcResult(id, { tools: CRYPTO_MCP_TOOLS });
   if (rpc.method !== "tools/call") return rpcFailure(id, -32601, "Method not found");
-  const result = await binanceMcpToolCall(rpc.params?.name, rpc.params?.arguments || {}, env);
+  const result = await cryptoMcpToolCall(rpc.params?.name, rpc.params?.arguments || {}, env);
   if (result?.error) return rpcFailure(id, result.error.code, result.error.message);
   return rpcResult(id, result);
 }
 
-async function binanceMcpHandler(request, env) {
+async function cryptoMcpHandler(request, env) {
   if (request.method === "GET") return rpcHttp(rpcFailure(null, -32600, "Stateless MCP endpoint: use POST"), env, 405);
   if (request.method !== "POST") return rpcHttp(rpcFailure(null, -32600, "POST only"), env, 405);
   let input;
   try { input = await request.json(); }
   catch { return rpcHttp(rpcFailure(null, -32700, "Parse error"), env, 400); }
   if (Array.isArray(input) && !input.length) return rpcHttp(rpcFailure(null, -32600, "Invalid Request"), env, 400);
-  if (Array.isArray(input) && input.length > BINANCE_MCP_BATCH_MAX) {
-    return rpcHttp(rpcFailure(null, -32600, `Batch limit is ${BINANCE_MCP_BATCH_MAX}`), env, 400);
+  if (Array.isArray(input) && input.length > CRYPTO_MCP_BATCH_MAX) {
+    return rpcHttp(rpcFailure(null, -32600, `Batch limit is ${CRYPTO_MCP_BATCH_MAX}`), env, 400);
   }
   try {
     const batch = Array.isArray(input);
     const replies = [];
     for (const rpc of (batch ? input : [input])) {
-      const reply = await binanceRpcDispatch(rpc, env);
+      const reply = await cryptoRpcDispatch(rpc, env);
       if (reply) replies.push(reply);
     }
     if (!replies.length) return new Response(null, { status: 202, headers: { "Cache-Control": "no-store", ...corsHeaders(env) } });
@@ -816,7 +826,7 @@ const PERSONA = {
   deepwiki: { star: "RIGEL",   ko: "지도제작자(아리아드네의 혼), 오리온자리의 리겔 — 레포의 미궁을 지도로 그리는 현자", en: "the Cartographer (spirit of Ariadne), Rigel of Orion who maps a repo's labyrinth" },
   context7: { star: "MIRA",    ko: "시간지기(카이로스의 혼), Context7에서 최신 라이브러리 문서를 읽는 고래자리의 변광성", en: "the Timekeeper (spirit of Kairos), a variable star of Cetus who reads current library docs through Context7" },
   huggingface: { star: "LYRA", ko: "창조의 대장장이(오르페우스의 혼), Hugging Face에서 모델·데이터셋·논문을 고르는 리라의 불꽃", en: "the Forgemaster (spirit of Orpheus), the lyre-fire who selects models, datasets and papers from Hugging Face" },
-  market: { star: "AURI", ko: "밤시장 장부지기 — Longbridge와 Binance의 읽기 전용 시세를 대조하는 숨은 주민", en: "the hidden night-market ledger keeper who cross-checks read-only Longbridge and Binance market data" },
+  market: { star: "AURI", ko: "밤시장 장부지기 — 읽기 전용 주식·코인 시세를 대조하는 숨은 주민", en: "the hidden night-market ledger keeper who cross-checks read-only stock and crypto market data" },
 };
 
 function personaPrompt(who, lang) {
@@ -1533,7 +1543,7 @@ export default {
   async fetch(request, env, ctx) {
     const headers = corsHeaders(env);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
-    if (new URL(request.url).pathname === BINANCE_MCP_PATH) return binanceMcpHandler(request, env);
+    if (new URL(request.url).pathname === CRYPTO_MCP_PATH) return cryptoMcpHandler(request, env);
     if (request.method === "GET") {
       return new Response('Repolis taxi grounding — POST {"question":"…"}.', { status: 200, headers });
     }

@@ -16,7 +16,7 @@ public site (https://hyeonsangjeon.github.io/Repolis/) — the Vercel functions 
    library docs through Context7, and LYRA searches Hugging Face models, datasets, and papers.
    Their results keep source links and can be synthesized in the visitor's language.
 4. **AURI's read-only market ledger** — the hidden resident queries one Azure AI Search KB
-   backed by Longbridge stock-market MCP tools and this Worker's bounded Binance spot-data MCP.
+   backed by this Worker's bounded Coinbase spot-data MCP (Longbridge stock tools optional).
    It returns cited, time-stamped facts and has no order, account, transfer, or withdrawal tools.
 
 It serves **five specialist scholars**: POLARIS, VEGA · MS Learn, RIGEL · DeepWiki,
@@ -56,7 +56,7 @@ Context7 `llms.txt` page rather than returning an ungrounded answer.
 
 AURI's stock source optionally adds `MARKET_LONGBRIDGE_ACCESS_TOKEN`, a dedicated Longbridge
 OAuth access token. The Worker forwards it only to `longbridge-market-mcp-ks` through Azure AI
-Search query-time control headers. Binance spot data is public and keyless. Never use a
+Search query-time control headers. Coinbase spot data is public and keyless. Never use a
 full-trading token when a read-only market-data token is available.
 
 Deterministic navigation ("take me to the most popular repo") is handled in the client
@@ -113,8 +113,8 @@ token server-side:
 npx wrangler secret put MARKET_LONGBRIDGE_ACCESS_TOKEN
 ```
 
-The Binance Knowledge Source points to the deployed Worker itself:
-`https://repolis-taxi.<you>.workers.dev/mcp/binance`. AURI remains safe when this setup is
+The crypto Knowledge Source points to the deployed Worker itself:
+`https://repolis-taxi.<you>.workers.dev/mcp/crypto`. AURI remains safe when this setup is
 missing: the client says the market ledger is unavailable and never invents a live price.
 
 > First deploy needs `npx wrangler login` (opens a browser once). The **non-secret**
@@ -157,7 +157,7 @@ SEARCH_API_KEY=<your-search-key>
 SEARCH_KB_NAME=repolis-github-kb
 SEARCH_KS_NAME=github-repos-mcp-ks
 MARKET_KB_NAME=repolis-market-kb
-MARKET_KS_NAME=longbridge-market-mcp-ks,binance-market-mcp-ks
+MARKET_KS_NAME=crypto-market-mcp-ks
 MARKET_LONGBRIDGE_KS_NAME=longbridge-market-mcp-ks
 MARKET_LONGBRIDGE_ACCESS_TOKEN=<dedicated-read-only-oauth-token>
 SEARCH_API_VERSION=2026-05-01-preview
@@ -217,25 +217,25 @@ Responses:
 { "kind": "docs", "message": "…", "items": [ /* source links */ ],
   "trace": { "ks": "Context7 (MCP)", "tools": ["resolve-library-id", "query-docs"], "direct": true } }
 // AURI market answer: { "message": "…", "trace": {
-//   "ks": "longbridge-market-mcp-ks,binance-market-mcp-ks",
+//   "ks": "crypto-market-mcp-ks",
 //   "tools": ["quote", "crypto_spot_quotes"], "refs": [ /* cited source snapshots */ ] } }
 // use Local search instead:
 { "fallback": true, "reason": "timeout 25000ms" }
 ```
 
-## Read-only Binance MCP endpoint
+## Read-only crypto MCP endpoint
 
-`POST /mcp/binance` implements stateless Streamable HTTP JSON-RPC for Azure AI Search. It
+`POST /mcp/crypto` implements stateless Streamable HTTP JSON-RPC for Azure AI Search. It
 supports only:
 
 | Tool | Purpose | Limits |
 |---|---|---|
-| `crypto_spot_quotes` | Binance spot last price, 24h change/range/volume, exchange time | 1–6 symbols |
-| `crypto_candles` | Recent Binance spot OHLCV candles | one symbol, 2–50 rows |
+| `crypto_spot_quotes` | Coinbase spot last price, 24h open/high/low/change/volume, retrieval time | 1–4 symbols |
+| `crypto_candles` | Recent Coinbase spot OHLCV candles, oldest first | one symbol, 2–50 rows |
 
 Symbols, intervals, result counts, upstream host, and timeout are bounded in the Worker. The
 tool list intentionally contains no account, position, order, conversion, deposit, withdrawal,
-or transfer capability. Returned MCP documents include a Binance source URL and exchange
+or transfer capability. Returned MCP documents include a Coinbase source URL and a retrieval
 timestamp so the KB can cite the data it used.
 
 ## 🧑‍🌾 Resident NPC social layer (optional, budget-capped)

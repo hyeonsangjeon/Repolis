@@ -538,7 +538,7 @@ ok(/NPC_MODEL_DEFAULT \|\| "gpt-5\.4-mini"/.test(WORKER), 'provider adapter fall
 ok(/env\.NPC_DAY_CAP_USD/.test(WORKER) && !/COUNCIL_[A-Z_]*\s*\|\|\s*env\.NPC_/.test(WORKER), 'NPC budget uses the NPC_* namespace (separate from COUNCIL_*)');
 ok(/function npcMetric\(/.test(WORKER) && /env\.METRICS_URL/.test(WORKER), 'redacted fire-and-forget metrics emit (env.METRICS_URL) present');
 
-group('AURI market oracle — two-source KB + read-only Binance MCP');
+group('AURI market oracle — grounded market KB + read-only crypto MCP');
 const marketActionSrc=(HTML.match(/function marketActionQuestion\(q\)\{[\s\S]*?(?=\nfunction marketQuestion)/)||[''])[0];
 const marketDetectorSrc=(HTML.match(/function marketQuestion\(q\)\{[\s\S]*?return domain\|\|tickerMetric\|\|marketActionQuestion\(s\); \}/)||[''])[0];
 const explicitMarketSrc=(HTML.match(/function explicitMarketQuestion\(q\)\{[^\n]*\}/)||[''])[0];
@@ -573,24 +573,24 @@ ok(/function _socialResident\(L\)\{ return !!L && !L\.res\.oracle; \}/.test(npcB
   &&/const P=RESIDENTS_LIVE\.filter\(_socialResident\)/.test(npcBlock)
   &&/if\(!_socialResident\(seed\)\) return null/.test(npcBlock), 'the market easter egg stays outside ambient circles and group chat');
 ok(/return RESIDENTS\.filter\(r=>!r\.easterEgg&&/.test(HTML), 'the Village Chronicle does not advertise the easter-egg resident');
-ok(/market:\s*\{[\s\S]*?kb: env\.MARKET_KB_NAME \|\| "repolis-market-kb"[\s\S]*?longbridge-market-mcp-ks,binance-market-mcp-ks/.test(WORKER), 'AURI uses one market KB with Longbridge and Binance MCP knowledge sources');
+ok(/market:\s*\{[\s\S]*?kb: env\.MARKET_KB_NAME \|\| "repolis-market-kb"[\s\S]*?ks: env\.MARKET_KS_NAME/.test(WORKER), 'AURI reads one dedicated market knowledge base');
 ok(/MARKET_LONGBRIDGE_ACCESS_TOKEN/.test(WORKER)
   &&/headers\[`?\$\{authKs\}-header-name1`?\] = "Authorization"/.test(WORKER)
   &&/headers\[`?\$\{authKs\}-header-value1`?\]/.test(WORKER), 'Longbridge OAuth stays server-side and is forwarded with Azure query-time control headers');
-const binanceMcpBlock=(WORKER.match(/const BINANCE_MCP_TOOLS = \[[\s\S]*?\n\];/)||[''])[0];
-ok(/name: "crypto_spot_quotes"/.test(binanceMcpBlock) && /name: "crypto_candles"/.test(binanceMcpBlock), 'the Binance adapter exposes quote and OHLCV read tools');
-ok(!/place_order|submit_order|withdraw|transfer|account_balance|positions/.test(binanceMcpBlock), 'the Binance MCP tool surface contains no account, transfer, position, or order capability');
-ok(/new URL\(request\.url\)\.pathname === BINANCE_MCP_PATH/.test(WORKER) && /async function binanceMcpHandler\(/.test(WORKER), 'the Worker serves the stateless Binance MCP endpoint');
-ok(/function cryptoSymbolCandidates\([\s\S]*?symbol \+ quote[\s\S]*?add\(symbol\)/.test(WORKER), 'ambiguous bare assets try the requested quote pair before an alternate compact pair');
+const cryptoMcpBlock=(WORKER.match(/const CRYPTO_MCP_TOOLS = \[[\s\S]*?\n\];/)||[''])[0];
+ok(/name: "crypto_spot_quotes"/.test(cryptoMcpBlock) && /name: "crypto_candles"/.test(cryptoMcpBlock), 'the crypto adapter exposes quote and OHLCV read tools');
+ok(!/place_order|submit_order|withdraw|transfer|account_balance|positions/.test(cryptoMcpBlock), 'the crypto MCP tool surface contains no account, transfer, position, or order capability');
+ok(/new URL\(request\.url\)\.pathname === CRYPTO_MCP_PATH/.test(WORKER) && /async function cryptoMcpHandler\(/.test(WORKER), 'the Worker serves the stateless crypto MCP endpoint');
+ok(/function cryptoProductCandidates\([\s\S]*?const suffix = \[\.\.\.CRYPTO_QUOTES\]/.test(WORKER), 'a symbol that already carries its quote asset keeps it, and a bare asset gets the requested one');
 ok(/rpc\.method === "ping"/.test(WORKER) && /Array\.isArray\(input\)/.test(WORKER) && /if \(notification\) return null/.test(WORKER), 'the MCP endpoint handles ping, JSON-RPC batches, and notification no-response semantics');
-ok(/const BINANCE_MCP_BATCH_MAX = 4/.test(WORKER)
-  &&/input\.length > BINANCE_MCP_BATCH_MAX/.test(WORKER)
+ok(/const CRYPTO_MCP_BATCH_MAX = 3/.test(WORKER)
+  &&/input\.length > CRYPTO_MCP_BATCH_MAX/.test(WORKER)
   &&/for \(const rpc of \(batch \? input : \[input\]\)\)/.test(WORKER), 'unauthenticated MCP batches are capped and dispatched sequentially');
-ok(/if \(e\?\.name === "AbortError" \|\| signal\.aborted\) throw e/.test(WORKER), 'Binance quote timeouts propagate as MCP errors instead of successful unavailable documents');
-ok(/function unknownBinanceSymbol\(e\)/.test(WORKER)
-  &&/if \(!unknownBinanceSymbol\(e\)\) throw e/.test(WORKER)
-  &&/e instanceof McpInputError/.test(WORKER), 'only invalid-symbol responses become unavailable candidates; rate limits, outages, and network errors stay tool errors');
-ok(/latestState = latest\?\.closed \? "closed" : "open and provisional"/.test(WORKER) && /response as of \$\{responseAt\}/.test(WORKER), 'open Binance candles are labeled provisional with an actual response timestamp');
+ok(/if \(e\?\.name === "AbortError" \|\| signal\.aborted\) throw e/.test(WORKER), 'quote timeouts propagate as MCP errors instead of successful unavailable documents');
+ok(/function unknownCryptoProduct\(e\)/.test(WORKER)
+  &&/if \(!unknownCryptoProduct\(e\)\) throw e/.test(WORKER)
+  &&/e instanceof McpInputError/.test(WORKER), 'only unknown-product responses become unavailable candidates; rate limits, outages, and network errors stay tool errors');
+ok(/latestState = latest\?\.closed \? "closed" : "open and provisional"/.test(WORKER) && /retrieved \$\{retrievedAt\}/.test(WORKER), 'open candles are labeled provisional with an actual retrieval timestamp');
 ok(/function marketBoundary\([\s\S]*?market_read_only/.test(WORKER)
   &&/function marketContextFollowup\(/.test(WORKER)
   &&/marketBoundary\(question, lang, history\)/.test(WORKER)
