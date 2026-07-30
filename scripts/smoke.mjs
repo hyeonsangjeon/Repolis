@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { createHash } from 'crypto';
 import { runInNewContext } from 'vm';
+import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -514,29 +515,75 @@ ok(/degrade\?NPC_CFG\.degradeMaxTurns/.test(npcBlock), 'a low budget degrades th
 // 12e — public-safe: the client ships NO api key, model deployment name, or Azure endpoint
 ok(!/AOAI_ENDPOINT|AAD_CLIENT|SEARCH_API_KEY|cognitiveservices|["']api-key["']/.test(npcBlock), 'resident client code contains no Azure endpoint / secret');
 ok(!/gpt-[0-9]/.test(npcBlock), 'resident client code names no model deployment');
-ok(!/NPC_MODEL_|NPC_DAY_CAP_USD|AOAI_DEPLOYMENT/.test(npcBlock), 'server-only NPC env names never appear in the client');
+ok(!/NPC_MODEL_|NPC_DAY_CAP_USD|NPC_DAILY_ATTEMPT_MAX|AOAI_DEPLOYMENT/.test(npcBlock), 'server-only NPC env names never appear in the client');
 // 12f — debug probes
 ok(/window\.__villagers=/.test(HTML) && /window\.__npcRoutes=/.test(HTML) && /window\.__npcEncounter=/.test(HTML), 'debug helpers __villagers/__npcRoutes/__npcEncounter present');
 ok(/window\.__npcBudget=/.test(HTML) && /window\.__npcTranscript=/.test(HTML), 'debug helpers __npcBudget/__npcTranscript present');
-// 12g — worker: additive npc_action scaffolding with the env-off ceiling + budget guard + fallback model
-let WORKER = '';
+// 12g — worker: additive npc_action scaffolding with hard kill switches + durable budget governor
+let WORKER = '', NPC_GOVERNOR = '', TAXI_WRANGLER = '';
 try { WORKER = readFileSync(join(ROOT, 'cloudflare-taxi/src/grounded.js'), 'utf8'); } catch (e) { console.log('  ✗ grounded.js load: ' + e.message); }
+try { NPC_GOVERNOR = readFileSync(join(ROOT, 'cloudflare-taxi/src/npc-budget-governor.js'), 'utf8'); } catch (e) { console.log('  ✗ npc-budget-governor.js load: ' + e.message); }
+try { TAXI_WRANGLER = readFileSync(join(ROOT, 'cloudflare-taxi/wrangler.toml'), 'utf8'); } catch (e) { console.log('  ✗ cloudflare-taxi/wrangler.toml load: ' + e.message); }
 ok(WORKER.length > 0, 'grounded.js worker source loaded');
+ok(NPC_GOVERNOR.length > 0, 'Durable NPC budget governor source loaded');
 ok(/if \(body && body\.npc_action\) return npcHandler\(body, request, env, ctx\)/.test(WORKER), 'fetch router dispatches body.npc_action to npcHandler with execution context');
 ok(/async function npcHandler\(/.test(WORKER), 'npcHandler() exists');
 ok(/grounded_mcp_mslearn/.test(WORKER) && /grounded_mcp_deepwiki/.test(WORKER) && /grounded_kb_taxi/.test(WORKER), 'grounded AI routes use the report taxonomy');
 ok(/tokensIn: u\.prompt_tokens/.test(WORKER) && /cachedTokens: u\.cached_tokens/.test(WORKER) && /tokensOut: u\.completion_tokens/.test(WORKER), 'provider usage emits input, cached-input, and output tokens');
 ok(/action === "npcConfig"/.test(WORKER) && /action === "npcBudget"/.test(WORKER) && /"npcAmbientTurn"/.test(WORKER) && /"npcPlayerChat"/.test(WORKER), 'all four npc actions (config/budget/ambientTurn/playerChat) handled');
-ok(/if \(!aiEnabled\) return null/.test(WORKER), 'hard ceiling: npcModelCall returns null unless the resolved aiEnabled is true');
+ok(/if \(!aiEnabled\) return \{ ok: false, reason: "npc_ai_disabled" \}/.test(WORKER), 'hard ceiling: npcModelCall refuses unless the resolved aiEnabled is true');
 ok(/async function npcResolveFlags\(/.test(WORKER), 'npcResolveFlags() resolves the effective NPC flags (env vs live KV)');
 ok(/env\.NPC_LIVE_TOGGLE === "true"/.test(WORKER), 'NPC_LIVE_TOGGLE is the master kill-switch for the live toggle');
 ok(/source: "env", liveToggle: false/.test(WORKER), 'live toggle OFF → resolver ignores KV and stays env-gated (safe deploy-only default)');
 ok(/env\.NPC_FLAGS\.get\(/.test(WORKER), 'live mode reads on/off from the shared NPC_FLAGS KV');
-ok(/npcModelCall\(env, role, sys, userMsg, aiEnabled\)/.test(WORKER), 'model call is gated by the resolved effective aiEnabled');
-ok(/reason: "npc_budget_exhausted"/.test(WORKER), 'over-budget returns npc_budget_exhausted (client falls back to scripted)');
-ok(/NPC_MODEL_DEFAULT \|\| "gpt-5\.4-mini"/.test(WORKER), 'provider adapter falls back to gpt-5.4-mini when no NPC_MODEL_* alias is set');
-ok(/env\.NPC_DAY_CAP_USD/.test(WORKER) && !/COUNCIL_[A-Z_]*\s*\|\|\s*env\.NPC_/.test(WORKER), 'NPC budget uses the NPC_* namespace (separate from COUNCIL_*)');
+ok(/const ai = envAi && allows\(kAi\)/.test(WORKER)
+  && /ambientEnabled: ai && envAmb && allows\(kAmb\)/.test(WORKER)
+  && /playerChatEnabled: ai && envPc && allows\(kPc\)/.test(WORKER)
+  && /source: "kv-unavailable"/.test(WORKER),
+  'KV live flags can kill resident AI, never bypass env ceilings, and fail closed on read errors');
+ok(/runBudgetedNpcCall\(\{[\s\S]*?providerCall: \(plan\) => npcModelCall\(env, role, plan, aiEnabled\)/.test(WORKER),
+  'model call is reachable only through the durable reserve/settle lifecycle');
+ok(/"npc_budget_exhausted"/.test(WORKER), 'over-budget returns npc_budget_exhausted (client falls back to scripted)');
+ok(/NPC_MODEL_DEFAULT[\s\S]*?"gpt-5\.4-mini"/.test(NPC_GOVERNOR), 'provider adapter falls back to gpt-5.4-mini when no NPC_MODEL_* alias is set');
+ok(/env\?\.NPC_DAY_CAP_USD/.test(NPC_GOVERNOR) && !/COUNCIL_/.test(NPC_GOVERNOR), 'NPC budget uses the NPC_* namespace (separate from COUNCIL_*)');
 ok(/function npcMetric\(/.test(WORKER) && /env\.METRICS_URL/.test(WORKER), 'redacted fire-and-forget metrics emit (env.METRICS_URL) present');
+ok(/export class NpcBudgetGovernor/.test(NPC_GOVERNOR)
+  && /NPC_BUDGET_OBJECT_NAME = "npc-budget-canonical-v1"/.test(NPC_GOVERNOR)
+  && /blockConcurrencyWhile\(run\)/.test(NPC_GOVERNOR),
+  'one canonical Durable Object serializes persistent budget mutations');
+ok(!/_npcLedger|source: "module"|module-scope ledger/.test(WORKER + NPC_GOVERNOR),
+  'isolate-local NPC budget ledger is fully removed');
+ok(/NPC_DAILY_ATTEMPT_MAX/.test(NPC_GOVERNOR)
+  && /reason: "daily_attempt_max"/.test(NPC_GOVERNOR)
+  && /cleanupFinalized/.test(NPC_GOVERNOR)
+  && /deleteKeys\.slice\(index, index \+ 128\)/.test(NPC_GOVERNOR),
+  'provider failures are attempt-capped and finalized Durable Object records stay bounded');
+ok(/NPC_RESERVATION_LEASE_MS/.test(NPC_GOVERNOR)
+  && /async reconcileExpiredReservations\(/.test(NPC_GOVERNOR)
+  && /async alarm\(\)/.test(NPC_GOVERNOR)
+  && /chargedNanos: record\.amountNanos/.test(NPC_GOVERNOR),
+  'orphaned reservations have a durable lease and conservatively full-settle by alarm');
+ok(/modelDispatched = true/.test(WORKER)
+  && /billable: modelDispatched/.test(WORKER)
+  && /billable: true, reason: "provider_http_error"/.test(WORKER),
+  'ambiguous failures after Azure model dispatch settle instead of reopening budget');
+ok(/NPC_INPUT_OVERHEAD_TOKENS = 512/.test(NPC_GOVERNOR)
+  && /maxInputTokens = encodedBytes \+ NPC_INPUT_OVERHEAD_TOKENS/.test(NPC_GOVERNOR)
+  && /max_completion_tokens: plan\.maxOutputTokens/.test(WORKER)
+  && /maxInputTokens: 272_000/.test(NPC_GOVERNOR)
+  && /maxOutputTokens: 128_000/.test(NPC_GOVERNOR)
+  && /npc_pricing_unavailable/.test(NPC_GOVERNOR),
+  'reservation validates model limits and covers byte-bounded input, provider output cap, and prices');
+ok(/name = "NPC_BUDGET_GOVERNOR"/.test(TAXI_WRANGLER)
+  && /class_name = "NpcBudgetGovernor"/.test(TAXI_WRANGLER)
+  && /new_sqlite_classes = \["NpcBudgetGovernor"\]/.test(TAXI_WRANGLER),
+  'Wrangler binds and migrates the SQLite-backed NPC budget Durable Object');
+ok(/source: "durable-object"/.test(WORKER)
+  && /NPC_BUDGET_SOURCE = "durable-object"/.test(NPC_GOVERNOR),
+  'npcConfig and npcBudget identify the Durable Object as their budget authority');
+
+group('Durable NPC budget governor — hermetic atomicity and fail-closed behavior');
+await runNpcBudgetGovernorTests(ok);
 
 group('AURI market oracle — grounded market KB + read-only crypto MCP');
 const marketActionSrc=(HTML.match(/function marketActionQuestion\(q\)\{[\s\S]*?(?=\nfunction marketQuestion)/)||[''])[0];
