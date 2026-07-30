@@ -238,17 +238,58 @@ tool list intentionally contains no account, position, order, conversion, deposi
 or transfer capability. Returned MCP documents include a Coinbase source URL and a retrieval
 timestamp so the KB can cite the data it used.
 
-## 🧑‍🌾 Resident NPC social layer (optional, budget-capped)
+## 🧑‍🌾 Resident NPC social layer (optional, hard-capped)
 
 The city's **townspeople** (9 residents — distinct from the specialist scholars and Gitber the taxi) trade
-short turn-by-turn ambient lines and chat with the visitor. **This is off by default and costs nothing:**
-`index.html` ships them as deterministic **scripted** residents (zero network). The Worker only produces
-real model turns when you opt in *and* the daily budget allows — otherwise every action returns
-`{ fallback: true }` and the client uses its own free scripted bank.
+short ambient lines and chat with the visitor. They remain deterministic **scripted** residents by default:
+zero network, zero backend, and zero model cost. The Worker produces a real model turn only when every env/KV
+kill switch is on **and** the Durable NPC Budget Governor accepts a worst-case reservation.
 
-The client learns the runtime toggles + budget from a best-effort `npcConfig` call on boot; it can never
-exceed the Worker's env ceiling. All model turns are **budget-capped** (UTC-day tally) and **redacted** in
-metrics. The `NPC_*` namespace is fully separate from `COUNCIL_*`.
+### Durable hard-cap design
+
+`NPC_BUDGET_GOVERNOR` is a SQLite-backed Durable Object binding. Every Worker isolate addresses the same
+`npc-budget-canonical-v1` instance, which serializes and persists the UTC-day budget:
+
+- aggregate only: `spent`, `reserved`, completed/in-flight turns, and bounded daily attempts;
+- idempotency records: reservation day, amount, and pending/settled/released status;
+- **never** prompts, conversation text, visitor identifiers, or personal data.
+
+Before Azure OpenAI is called, the Worker validates the selected deployment's price table and official model
+input/output limits, then calculates a conservative maximum cost from the exact bounded message bytes plus 512
+chat-framing tokens and the request's `max_completion_tokens`. One UTF-8 byte per input token is the conservative
+tokenizer bound; the reservation uses the more expensive of normal/cached input prices and the full output
+allowance. The committed `gpt-5.4-mini` entry uses Azure's documented 272,000-token maximum input and
+128,000-token maximum output limits; the request itself is capped at 120 output tokens. The Governor atomically
+accepts only when:
+
+```text
+spent + reserved + maximumTurnCost <= NPC_DAY_CAP_USD
+completedTurns + reservedTurns < NPC_DAILY_TURN_MAX  (when non-zero)
+acceptedAttempts < NPC_DAILY_ATTEMPT_MAX
+```
+
+Concurrent requests therefore cannot pass the same remaining dollars or turn slot. Success settles normalized
+provider usage and returns the unused reservation. A failure proven to occur before Azure model dispatch releases
+the reservation at zero cost. Once dispatch begins, HTTP/network error, timeout, abort, unusable/empty content, or
+missing/partial/malformed/out-of-bounds usage conservatively settles the full reservation before scripted fallback;
+that removes the reservation without pretending an ambiguous provider attempt was free. Unknown deployment pricing,
+malformed caps, a missing/unresponsive binding, or failed settlement all **fail closed before another model
+call**; the client uses its free scripted bank. A failed settlement leaves the conservative reservation held,
+so loss of availability cannot become cap overshoot.
+
+UTC rollover starts a clean active-day aggregate on the first Governor operation of the new day. Prior-day
+in-flight reservations and their aggregate remain only as needed to settle/release cross-midnight calls safely.
+Lowering the cap or imposing a tighter turn limit during a day is sticky until the next UTC day, so an older
+Worker isolate cannot reopen it with stale higher settings. In-day increases deliberately wait until rollover.
+If current spend/reservations already exceed a new lower cap, no new reservation is accepted.
+`NPC_DAY_CAP_USD=0` disables model turns immediately at the Governor.
+Accepted reservations also increment a durable attempt counter. `NPC_DAILY_ATTEMPT_MAX` provides a bounded
+abuse/storage ceiling even when providers repeatedly fail and release their dollar/turn reservations; released
+idempotency tombstones are deleted, the immediately prior UTC day's settled records remain available for response
+retries, and later rollovers remove older finalized records once no pending call needs them.
+Every pending reservation has a durable lease longer than the provider timeout plus Governor retries. A Durable
+Object alarm full-settles an orphaned lease, so a terminated Worker cannot leave permanent pending state or reopen
+possibly billable dollars.
 
 ### Actions
 
@@ -256,74 +297,95 @@ metrics. The `NPC_*` namespace is fully separate from `COUNCIL_*`.
 
 ```jsonc
 { "npc_action": "npcConfig", "lang": "ko" }
-// → { ok, config:{ aiEnabled, ambientEnabled, playerChatEnabled, maxTurns, hardMaxTurns, source, liveToggle }, budget:{…} }
+// → { ok, config:{ aiEnabled, ambientEnabled, playerChatEnabled, maxTurns, hardMaxTurns,
+//                  source:"durable-object", flagSource, liveToggle },
+//      budget:{ source:"durable-object", available, ... } }
 { "npc_action": "npcBudget" }
-// → { ok, budget:{ enabled, dayCapUsd, spentUsd, remainingUsd, turnsToday, dailyTurnMax, blocked } }
+// → { ok, budget:{ enabled, available, source:"durable-object", day, dayCapUsd,
+//                  spentUsd, reservedUsd, remainingUsd, turnsToday, reservedTurns,
+//                  dailyTurnMax, attemptsToday, dailyAttemptMax, blocked } }
 { "npc_action": "npcAmbientTurn", "speaker":"sol", "listener":"jun", "topic":"model", "lang":"ko",
   "last":[{ "who":"jun", "text":"…" }] }
-// → { ok, line:"one ≤180-char line", budget:{…} }   |   { ok, fallback:true, reason, budget }
+// → { ok, line:"one short line", budget:{…} } | { ok, fallback:true, reason, budget }
 { "npc_action": "npcPlayerChat", "speaker":"nari", "zone":"web", "question":"…", "lang":"ko" }
-// → { ok, line:"…", budget }   |   { ok:false, fallback:true, reason:"npc_budget_exhausted", budget }
+// → { ok, line:"…", budget } | { ok:false, fallback:true, reason:"npc_budget_exhausted", budget }
 ```
 
-### Env (all optional — defaults keep AI **off** so a fresh clone costs nothing)
+`npcConfig` and `npcBudget` only read flags/Governor state; they never invoke a model. When the binding is
+unavailable, they return `available:false`, `blocked:true`, and `source:"durable-object"` rather than an
+isolate-local estimate.
+
+### Env (all optional — defaults keep AI **off**)
 
 | Var | Default | Meaning |
 |---|---|---|
-| `NPC_AI_ENABLED` | `false` | Master switch. `!== "true"` → **never** a model call (hard ceiling). |
-| `NPC_AMBIENT_ENABLED` | `false` | Allow model-powered ambient turns (requires `NPC_AI_ENABLED`). |
-| `NPC_PLAYER_CHAT_ENABLED` | `false` | Allow model-powered player chat (requires `NPC_AI_ENABLED`). |
-| `NPC_LIVE_TOGGLE` | `false` | Master kill-switch for the live KV path. `!== "true"` → the `NPC_FLAGS` KV is **ignored** and residents stay strictly env-gated (deploy-only, the safe default). `"true"` → the dashboard can flip on/off in real time (see below). |
-| `NPC_MODEL_DEFAULT` | `gpt-5.4-mini` | Deployment name for NPC turns. |
-| `NPC_MODEL_AMBIENT` / `NPC_MODEL_PLAYER` | — | Optional per-role deployment overrides. |
-| `NPC_DAY_CAP_USD` | `10` | Hard daily spend cap; over it → `npc_budget_exhausted`. |
-| `NPC_DAILY_TURN_MAX` | `0` (off) | Optional hard daily turn cap. |
-| `NPC_PRICE_IN_PER_1K` / `NPC_PRICE_OUT_PER_1K` | `0.00015` / `0.0006` | Price per 1K tokens for the day tally. |
-| `NPC_TURN_COST_USD` | `0.0003` | Flat per-turn estimate when the model returns no usage. |
-| `NPC_MAX_TURNS` / `NPC_HARD_MAX_TURNS` | `6` / `10` | Advertised default / absolute ambient turn caps. |
-| `NPC_TIMEOUT_MS` | `12000` | Per-turn model timeout. |
-| `METRICS_URL` | — | Optional private collector; redacted fire-and-forget events (lengths only, no text). |
+| `NPC_AI_ENABLED` | `false` | Top-level env ceiling. Anything except `"true"` means **never** a resident model call. KV cannot override it on. |
+| `NPC_AMBIENT_ENABLED` | `false` | Env ceiling for model-powered ambient turns (also requires `NPC_AI_ENABLED`). |
+| `NPC_PLAYER_CHAT_ENABLED` | `false` | Env ceiling for model-powered player chat (also requires `NPC_AI_ENABLED`). |
+| `NPC_LIVE_TOGGLE` | `false` | Enables per-request `NPC_FLAGS` kill switches. When off, KV is ignored. |
+| `NPC_MODEL_DEFAULT` | `gpt-5.4-mini` | Azure OpenAI deployment name for resident turns. |
+| `NPC_MODEL_AMBIENT` / `NPC_MODEL_PLAYER` | — | Optional per-role deployment overrides; each deployed name needs a pricing entry. |
+| `NPC_MODEL_PRICING_JSON` | built-in `gpt-5.4-mini` table | JSON map of deployment alias to `inputPer1MUsd`, `cachedInputPer1MUsd`, `outputPer1MUsd`, `maxInputTokens`, and `maxOutputTokens`. Invalid/unknown/incomplete means no call. |
+| `NPC_MAX_COMPLETION_TOKENS` | `120` | Provider output cap and reservation output bound (1–4096). |
+| `NPC_DAY_CAP_USD` | `10` | Durable UTC-day hard cap. `0` disables calls. Invalid values fail closed. |
+| `NPC_DAILY_TURN_MAX` | `0` (off) | Optional durable daily turn cap; in-flight reservations consume slots. |
+| `NPC_DAILY_ATTEMPT_MAX` | `5000` | Hard abuse/storage ceiling for accepted reservations, including provider failures. Must be positive. |
+| `NPC_BUDGET_TIMEOUT_MS` | `1500` | Internal Governor response deadline (100–10000 ms); timeout fails closed. |
+| `NPC_RESERVATION_LEASE_MS` | `60000` | Orphan lease; must exceed `NPC_TIMEOUT_MS + 2×NPC_BUDGET_TIMEOUT_MS + 10000` and be ≤300000. Expiry full-settles. |
+| `NPC_TIMEOUT_MS` | `12000` | Entra token + model request deadline; timeout aborts the request and releases its reservation. |
+| `NPC_MAX_TURNS` / `NPC_HARD_MAX_TURNS` | `6` / `10` | Advertised default / absolute ambient conversation caps. |
+| `METRICS_URL` | — | Optional private collector. Resident budget telemetry is anonymous aggregate operations only. |
 
-Model turns reuse the **same** Entra ID service principal as the scholar chat (`AAD_*` + `AOAI_ENDPOINT`);
-no new secret is needed.
+Model turns reuse the **same** Entra ID service principal as scholar chat (`AAD_*` + `AOAI_ENDPOINT`); no
+new secret is needed. Keep the committed `NPC_MODEL_PRICING_JSON` synchronized with the actual deployment
+meter before enabling the pilot. A custom deployment alias without a matching entry is deliberately rejected.
 
-### Live on/off from the owner dashboard (no redeploy)
+Allowed resident-budget telemetry is limited to `npc_budget_reserve` (accepted/rejected),
+`npc_budget_settle` (settled/released), `npc_provider_error`, and `npc_budget_utc_reset`. Events may include
+role, reason, aggregate dollars/turns, and whether provider usage was authoritative. They never include prompt
+text, conversation text, speaker/visitor identity, instance ID, or reservation ID. Scholar/KB/MCP telemetry
+remains on its existing independent path.
 
-By default the flags above are **deploy-time** — flipping them means `wrangler secret put` + a Worker
-deploy (seconds, but still a deploy). For a real-time button, bind a shared KV namespace and turn on the
-master kill-switch:
+### Live kill switches
 
+By default the three feature flags are deploy-time env ceilings. For an owner dashboard, bind the shared KV
+namespace and enable live reads:
+
+```bash
+# create once; bind the SAME id in the private dashboard Worker
+npx wrangler kv namespace create NPC_FLAGS
+# [[kv_namespaces]] binding="NPC_FLAGS" id="…" is already wired here
+npx wrangler secret put NPC_LIVE_TOGGLE   # enter: true
 ```
-# create once, bind the SAME id in repolis-metrics/wrangler.toml
-wrangler kv namespace create NPC_FLAGS
-# [[kv_namespaces]] binding="NPC_FLAGS" id="…" in wrangler.toml (already wired here)
-wrangler secret put NPC_LIVE_TOGGLE   # set to: true
-```
 
-With `NPC_LIVE_TOGGLE="true"`, this Worker reads `NPC_FLAGS` keys `ai_enabled` / `ambient_enabled` /
-`player_chat_enabled` (`"true"`/`"false"`) **per request**, each falling back to its env var when the key is
-absent. The private **repolis-metrics** dashboard writes those keys from an owner-only button. Propagation
-across Cloudflare's edge takes **up to ~60s**. This can never bypass the ceiling: `aiEnabled` is still ANDed
-into every model call, so `NPC_AI_ENABLED=false` + no KV key = strictly scripted. Leave `NPC_LIVE_TOGGLE`
-unset and the KV is ignored entirely — forks stay safe with zero config.
+With `NPC_LIVE_TOGGLE="true"`, the Worker reads `ai_enabled`, `ambient_enabled`, and
+`player_chat_enabled` (`"true"`/`"false"`) on every resident request. KV may turn an env-enabled feature off,
+but can never turn an env-disabled feature on. A missing binding or KV read failure disables all resident AI
+for that request.
+Cloudflare KV propagation can take up to about 60 seconds; use `NPC_AI_ENABLED=false` plus a Worker deploy for
+the account-level hard stop.
 
-### Deferred (documented, not shipped in v1)
+### Disable and rollback safely
 
-- **Durable budget store.** The day tally lives in Worker **module scope**, so it resets when the isolate
-  recycles — fine as a soft cost brake, but for strict multi-isolate enforcement bind a **D1 table** or a
-  **Durable Object** and swap `npcBudgetState` / `npcChargeTurn` to read/write it.
-- **Private `repolis-metrics` dashboard.** The Worker *emits* redacted metrics to `METRICS_URL` and, when
-  `NPC_LIVE_TOGGLE` is on, *reads* the on/off flags the dashboard writes to `NPC_FLAGS`. The dashboard itself
-  is a separate **private** repo (never part of this public town).
-- **Real Azure Foundry deployment names.** `NPC_MODEL_*` are config-only; with none set the adapter falls
-  back to `gpt-5.4-mini`.
+1. Set all three dashboard KV flags to `"false"` (if live toggles are enabled).
+2. Set `NPC_AI_ENABLED=false` in the Worker environment and deploy. Confirm `npcConfig.config.aiEnabled=false`
+   and read `npcBudget`; neither action calls a model.
+3. Roll back application code only while the env ceiling remains false. Do **not** remove the binding or add a
+   destructive Durable Object deletion migration during an incident; the persisted ledger can remain unused.
+4. Re-enable only after the pricing table, cap, migration, and read-only `npcBudget` response are verified.
 
-Local `.dev.vars` to try a real turn:
+The binding and `new_sqlite_classes = ["NpcBudgetGovernor"]` migration in `wrangler.toml` create the namespace
+on first deploy. Validate packaging without publishing by running `npx wrangler deploy --dry-run --outdir
+/tmp/repolis-taxi-dry-run`. Template forks and the public site still require no backend: without a configured
+grounded service, the browser never contacts this Worker and residents remain scripted.
 
-```
+Local `.dev.vars` for a bounded real-turn test:
+
+```text
 NPC_AI_ENABLED=true
 NPC_AMBIENT_ENABLED=true
 NPC_PLAYER_CHAT_ENABLED=true
 NPC_DAY_CAP_USD=1
-# reuses AOAI_ENDPOINT + AAD_* from the scholar-chat block above
+# Reuses AOAI_ENDPOINT + AAD_* from the scholar-chat block above.
+# Keep NPC_MODEL_PRICING_JSON aligned if NPC_MODEL_DEFAULT is a custom deployment alias.
 ```

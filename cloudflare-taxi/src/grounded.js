@@ -45,6 +45,13 @@ import CouncilGuards from "../../council/guards.js";
 import CouncilLive from "../../council/live.js";
 import CouncilFixtures from "../../council/fixtures.js";
 import COUNCIL_CFG from "../../council/council.config.json";
+import {
+  NpcBudgetGovernor,
+  npcBudgetStatus,
+  runBudgetedNpcCall,
+} from "./npc-budget-governor.js";
+
+export { NpcBudgetGovernor };
 
 // --- Direct-MCP fallback for scholar NPCs. Used ONLY when the scholar's Azure Knowledge
 // Base is unreachable/unconfigured (clone-friendly, keyless). Normally scholars go through
@@ -871,7 +878,7 @@ function isNotFound(a) {
 
 // Entra ID service-principal token (client-credentials), cached until ~1 min before expiry.
 let _aad = { token: "", exp: 0 };
-async function aadToken(env) {
+async function aadToken(env, signal) {
   const now = Date.now();
   if (_aad.token && now < _aad.exp - 60000) return _aad.token;
   const body = new URLSearchParams({
@@ -882,6 +889,7 @@ async function aadToken(env) {
   });
   const r = await fetch(`https://login.microsoftonline.com/${env.AAD_TENANT}/oauth2/v2.0/token`, {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body,
+    signal,
   });
   if (!r.ok) throw new Error("aad token " + r.status);
   const j = await r.json();
@@ -1203,9 +1211,9 @@ async function councilStreamHandler(body, request, env) {
 /* ============================ 🧑‍🌾 Resident NPC social layer (additive; existing behavior untouched) ============================
    Townspeople actions dispatched via body.npc_action: npcConfig | npcBudget | npcAmbientTurn | npcPlayerChat.
    Namespace is NPC_* (fully separate from COUNCIL_*). Hard ceiling: NPC_AI_ENABLED !== "true" → never a model call,
-   always { fallback:true } so the client uses its own free scripted bank. Over the daily cap → { ok:false,
-   reason:"npc_budget_exhausted" }. The budget ledger below is a module-scope best-effort tally (resets when the
-   Worker isolate recycles) — a durable D1/Durable-Object store is the documented deferred upgrade for real enforcement. */
+   always { fallback:true } so the client uses its own free scripted bank. A single canonical Durable Object atomically
+   reserves the maximum possible turn cost before a provider call and settles actual usage afterward. Any governor,
+   pricing, provider, timeout, or settlement failure stays fail-closed on the scripted path. */
 
 // Short server-side persona summaries for the 9 residents (canonical source is the RESIDENTS registry in index.html).
 const NPC_PERSONAS = {
@@ -1270,31 +1278,6 @@ function npcPlayerUser(body, lang) {
 }
 function capLine(s, max = 180) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, max); }
 
-// --- NPC budget: UTC-day module-scope ledger (best-effort; deferred: D1/DO for durable multi-isolate enforcement) ---
-let _npcLedger = { day: "", spentUsd: 0, turns: 0 };
-function _utcDay() { return new Date().toISOString().slice(0, 10); }
-function npcBudgetState(env) {
-  const day = _utcDay();
-  if (_npcLedger.day !== day) _npcLedger = { day, spentUsd: 0, turns: 0 };
-  const dayCapUsd = Number(env.NPC_DAY_CAP_USD || 10);
-  const dailyTurnMax = Number(env.NPC_DAILY_TURN_MAX || 0);
-  const remainingUsd = Math.max(0, dayCapUsd - _npcLedger.spentUsd);
-  const blocked = remainingUsd <= 0 || (dailyTurnMax > 0 && _npcLedger.turns >= dailyTurnMax);
-  return {
-    enabled: env.NPC_AI_ENABLED === "true", source: "module", day, dayCapUsd,
-    spentUsd: +_npcLedger.spentUsd.toFixed(4), remainingUsd: +remainingUsd.toFixed(4),
-    turnsToday: _npcLedger.turns, dailyTurnMax, blocked,
-  };
-}
-function npcChargeTurn(env, usd) {
-  const day = _utcDay();
-  if (_npcLedger.day !== day) _npcLedger = { day, spentUsd: 0, turns: 0 };
-  _npcLedger.spentUsd += (Number(usd) || 0); _npcLedger.turns += 1;
-}
-function npcDeployment(env, role) {
-  return (role === "ambient" && env.NPC_MODEL_AMBIENT) || (role === "player" && env.NPC_MODEL_PLAYER)
-    || env.NPC_MODEL_DEFAULT || "gpt-5.4-mini";
-}
 function normalizeModelUsage(usage) {
   const u = usage && typeof usage === "object" ? usage : {};
   const details = u.prompt_tokens_details || u.input_tokens_details || {};
@@ -1305,16 +1288,13 @@ function normalizeModelUsage(usage) {
   };
 }
 function modelCostUsd(env, usage) {
-  if (!usage) return Number(env.NPC_TURN_COST_USD || 0.0003);
+  if (!usage) return 0;
   const u = normalizeModelUsage(usage);
   const input = Math.max(0, u.prompt_tokens - u.cached_tokens);
   const priceIn = Number(env.MODEL_PRICE_IN_PER_1M_USD || 0.75);
   const priceCached = Number(env.MODEL_PRICE_CACHED_IN_PER_1M_USD || 0.075);
   const priceOut = Number(env.MODEL_PRICE_OUT_PER_1M_USD || 4.5);
   return input / 1000000 * priceIn + u.cached_tokens / 1000000 * priceCached + u.completion_tokens / 1000000 * priceOut;
-}
-function npcCostUsd(env, usage) {
-  return modelCostUsd(env, usage);
 }
 // Fire-and-forget metrics to a private collector; text is redacted to lengths only (public-safe).
 function npcRedact(m) {
@@ -1385,9 +1365,6 @@ function marketNotice(answer, lang) {
     : "Public market information only, not investment advice. Recheck the live price with your exchange or broker before trading.";
   return text.includes(notice) ? text : `${text}\n\n${notice}`;
 }
-function personaRoute(role) {
-  return role === "ambient" ? "persona_ambient" : "persona_visitor";
-}
 function emitProviderUsage(env, ctx, route, ks, npc, activity, base) {
   if (!activity || !activity.usage) return;
   const u = normalizeModelUsage(activity.usage);
@@ -1424,30 +1401,44 @@ function emitKbQuery(env, ctx, route, cfg, npc, out, base) {
     ...base,
   }, ctx);
 }
-// Provider adapter. Hard ceiling: with the effective aiEnabled false this returns null WITHOUT calling any model.
-async function npcModelCall(env, role, sys, userMsg, aiEnabled) {
-  if (!aiEnabled) return null;
-  if (!env.AAD_CLIENT_ID || !env.AAD_CLIENT_SECRET || !env.AAD_TENANT || !env.AOAI_ENDPOINT) return null;
+// Provider adapter. A caller must hold a Durable Object reservation; aiEnabled is a second hard ceiling.
+async function npcModelCall(env, role, plan, aiEnabled) {
+  if (!aiEnabled) return { ok: false, reason: "npc_ai_disabled" };
+  if (!env.AAD_CLIENT_ID || !env.AAD_CLIENT_SECRET || !env.AAD_TENANT || !env.AOAI_ENDPOINT) {
+    return { ok: false, reason: "provider_unconfigured" };
+  }
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), Number(env.NPC_TIMEOUT_MS || 12000));
   const started = Date.now();
+  let modelDispatched = false;
   try {
-    const token = await aadToken(env);
-    const dep = npcDeployment(env, role);
+    const token = await aadToken(env, ctrl.signal);
     const ver = env.AOAI_API_VERSION || "2025-04-01-preview";
-    const url = `${env.AOAI_ENDPOINT.replace(/\/$/, "")}/openai/deployments/${dep}/chat/completions?api-version=${ver}`;
-    const r = await fetch(url, {
+    const url = `${env.AOAI_ENDPOINT.replace(/\/$/, "")}/openai/deployments/${plan.deployment}/chat/completions?api-version=${ver}`;
+    const modelRequest = fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-      body: JSON.stringify({ messages: [{ role: "system", content: sys }, { role: "user", content: String(userMsg).slice(0, role === "player" ? 1500 : 600) }], max_completion_tokens: 120 }),
+      body: JSON.stringify({ messages: plan.messages, max_completion_tokens: plan.maxOutputTokens }),
       signal: ctrl.signal,
     });
-    clearTimeout(timer);
-    if (!r.ok) return null;
+    modelDispatched = true;
+    const r = await modelRequest;
+    if (!r.ok) return { ok: false, billable: true, reason: "provider_http_error", ms: Date.now() - started };
     const j = await r.json();
     const txt = j.choices?.[0]?.message?.content;
-    return txt && txt.trim() ? { text: txt.trim(), usage: j.usage || null, ms: Date.now() - started } : null;
-  } catch { clearTimeout(timer); return null; }
+    return txt && txt.trim()
+      ? { ok: true, text: txt.trim(), usage: j.usage || null, ms: Date.now() - started }
+      : { ok: false, billable: true, reason: "provider_empty_response", usage: j.usage || null, ms: Date.now() - started };
+  } catch (error) {
+    return {
+      ok: false,
+      billable: modelDispatched,
+      reason: error?.name === "AbortError" ? "provider_timeout" : "provider_error",
+      ms: Date.now() - started,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 // --- Live flag resolver. NPC_LIVE_TOGGLE is the master kill-switch. When it is NOT "true",
 //     behaviour is exactly the env-gated default (KV ignored) — the safe, deploy-only posture.
@@ -1458,9 +1449,12 @@ async function npcResolveFlags(env) {
   const envAi = env.NPC_AI_ENABLED === "true";
   const envAmb = env.NPC_AMBIENT_ENABLED === "true";
   const envPc = env.NPC_PLAYER_CHAT_ENABLED === "true";
-  const liveReady = env.NPC_LIVE_TOGGLE === "true" && env.NPC_FLAGS && typeof env.NPC_FLAGS.get === "function";
-  if (!liveReady) {
+  const liveToggle = env.NPC_LIVE_TOGGLE === "true";
+  if (!liveToggle) {
     return { aiEnabled: envAi, ambientEnabled: envAi && envAmb, playerChatEnabled: envAi && envPc, source: "env", liveToggle: false };
+  }
+  if (!env.NPC_FLAGS || typeof env.NPC_FLAGS.get !== "function") {
+    return { aiEnabled: false, ambientEnabled: false, playerChatEnabled: false, source: "kv-unavailable", liveToggle: true };
   }
   let kAi = null, kAmb = null, kPc = null;
   try {
@@ -1469,13 +1463,15 @@ async function npcResolveFlags(env) {
       env.NPC_FLAGS.get("ambient_enabled"),
       env.NPC_FLAGS.get("player_chat_enabled"),
     ]);
-  } catch { /* KV read failure → fall back to env per key below */ }
-  const pick = (kv, envVal) => (kv === "true" ? true : kv === "false" ? false : envVal);
-  const ai = pick(kAi, envAi);
+  } catch {
+    return { aiEnabled: false, ambientEnabled: false, playerChatEnabled: false, source: "kv-unavailable", liveToggle: true };
+  }
+  const allows = (kv) => kv !== "false";
+  const ai = envAi && allows(kAi);
   return {
     aiEnabled: ai,
-    ambientEnabled: ai && pick(kAmb, envAmb),
-    playerChatEnabled: ai && pick(kPc, envPc),
+    ambientEnabled: ai && envAmb && allows(kAmb),
+    playerChatEnabled: ai && envPc && allows(kPc),
     source: "kv", liveToggle: true,
   };
 }
@@ -1486,55 +1482,64 @@ async function npcHandler(body, request, env, ctx) {
   const aiEnabled = flags.aiEnabled;
   const ambientOn = flags.ambientEnabled;
   const playerOn = flags.playerChatEnabled;
+  const emitBudgetMetric = (name, meta) => npcMetric(env, name, meta, ctx);
 
   if (action === "npcConfig") {
+    const budget = await npcBudgetStatus(env, aiEnabled, emitBudgetMetric);
+    const budgetReady = budget.available === true;
     return json({ ok: true, config: {
-      aiEnabled, ambientEnabled: ambientOn, playerChatEnabled: playerOn,
+      aiEnabled: aiEnabled && budgetReady,
+      ambientEnabled: ambientOn && budgetReady,
+      playerChatEnabled: playerOn && budgetReady,
       maxTurns: Number(env.NPC_MAX_TURNS || 6), hardMaxTurns: Number(env.NPC_HARD_MAX_TURNS || 10),
-      source: flags.source, liveToggle: flags.liveToggle,
-    }, budget: npcBudgetState(env) }, 200, env);
+      source: "durable-object", flagSource: flags.source, liveToggle: flags.liveToggle,
+    }, budget }, 200, env);
   }
-  if (action === "npcBudget") return json({ ok: true, budget: npcBudgetState(env) }, 200, env);
+  if (action === "npcBudget") {
+    return json({ ok: true, budget: await npcBudgetStatus(env, aiEnabled, emitBudgetMetric) }, 200, env);
+  }
 
   if (action === "npcAmbientTurn" || action === "npcPlayerChat") {
     const role = action === "npcAmbientTurn" ? "ambient" : "player";
     const featureOn = role === "ambient" ? ambientOn : playerOn;
-    const budget = npcBudgetState(env);
-    // Env-off ceiling → never a model call; client falls back to its free scripted bank.
-    const requestMeta = metricContext(body, request);
     if (String(body.speaker || "").toLowerCase() === "auri") {
-      npcMetric(env, "npc_fallback_used", { where: role, route: "grounded_kb_market", reason: "market_oracle_requires_grounding", ...requestMeta }, ctx);
+      const budget = await npcBudgetStatus(env, aiEnabled, emitBudgetMetric);
       return json({ ok: true, fallback: true, reason: "market_oracle_requires_grounding", budget }, 200, env);
     }
-    if (!featureOn) { npcMetric(env, "npc_fallback_used", { where: role, route: personaRoute(role), reason: "disabled", ...requestMeta }, ctx); return json({ ok: true, fallback: true, reason: "npc_ai_disabled", budget }, 200, env); }
-    if (budget.blocked) { npcMetric(env, "npc_budget_blocked", { where: role, route: personaRoute(role), reason: "npc_budget_exhausted", ...requestMeta }, ctx); return json({ ok: false, fallback: true, reason: "npc_budget_exhausted", budget }, 200, env); }
+    if (!featureOn) {
+      const budget = await npcBudgetStatus(env, false, emitBudgetMetric);
+      return json({ ok: true, fallback: true, reason: "npc_ai_disabled", budget }, 200, env);
+    }
     const sys = role === "ambient" ? npcAmbientPrompt(body.speaker, body.listener, body.topic, lang) : npcPlayerPrompt(body.speaker, lang, { chime: !!body.chime, prev: body.prev });
     const userMsg = role === "ambient" ? npcAmbientUser(body, lang) : npcPlayerUser(body, lang);
-    const out = await npcModelCall(env, role, sys, userMsg, aiEnabled);
-    if (!out) { npcMetric(env, "npc_fallback_used", { where: role, route: personaRoute(role), reason: "model_unavailable", ...requestMeta }, ctx); return json({ ok: true, fallback: true, reason: "model_unavailable", budget }, 200, env); }
-    const cost = npcCostUsd(env, out.usage);
-    npcChargeTurn(env, cost);
-    const budget2 = npcBudgetState(env);
-    const usage = normalizeModelUsage(out.usage);
-    npcMetric(env, role === "ambient" ? "npc_ambient_turn" : "npc_player_chat", {
-      where: role,
-      route: personaRoute(role),
-      phase: "persona",
-      npc: String(body.speaker || "resident"),
-      model: npcDeployment(env, role),
-      providerCall: true,
-      answer: true,
+    const messages = [
+      { role: "system", content: sys },
+      { role: "user", content: String(userMsg).slice(0, role === "player" ? 1500 : 600) },
+    ];
+    const turn = await runBudgetedNpcCall({
+      env,
+      role,
+      messages,
+      enabled: aiEnabled,
+      emit: emitBudgetMetric,
+      providerCall: (plan) => npcModelCall(env, role, plan, aiEnabled),
+    });
+    if (!turn.ok) {
+      const exhausted = ["day_cap_zero", "day_cap_exhausted", "daily_turn_max", "daily_attempt_max"].includes(turn.reason);
+      return json({
+        ok: !exhausted,
+        fallback: true,
+        reason: exhausted ? "npc_budget_exhausted" : turn.reason,
+        budget: turn.budget,
+      }, 200, env);
+    }
+    return json({
       ok: true,
-      ai: true,
-      line: out.text,
-      ms: out.ms,
-      tokensIn: usage.prompt_tokens,
-      cachedTokens: usage.cached_tokens,
-      tokensOut: usage.completion_tokens,
-      costUsd: cost,
-      ...requestMeta,
-    }, ctx);
-    return json({ ok: true, line: capLine(out.text, role === "ambient" ? 90 : 180), usage, model: npcDeployment(env, role), budget: budget2 }, 200, env);
+      line: capLine(turn.value.text, role === "ambient" ? 90 : 180),
+      usage: turn.usage,
+      model: turn.model,
+      budget: turn.budget,
+    }, 200, env);
   }
   return json({ error: "unknown npc_action" }, 400, env);
 }

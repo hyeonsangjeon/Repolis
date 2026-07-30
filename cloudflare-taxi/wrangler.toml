@@ -8,6 +8,16 @@ main = "src/grounded.js"
 compatibility_date = "2025-04-01"
 workers_dev = true
 
+# One globally named instance serializes every resident-NPC reservation. The SQLite-backed
+# namespace persists UTC-day aggregates and idempotency records across isolates/restarts.
+[[durable_objects.bindings]]
+name = "NPC_BUDGET_GOVERNOR"
+class_name = "NpcBudgetGovernor"
+
+[[migrations]]
+tag = "v1-npc-budget-governor"
+new_sqlite_classes = ["NpcBudgetGovernor"]
+
 # ── Resident NPC live on/off (owner dashboard toggle) ─────────────────────────
 # Shared KV with the private repolis-metrics dashboard. The dashboard writes the
 # on/off flags here; this Worker reads them per request ONLY when NPC_LIVE_TOGGLE
@@ -60,6 +70,14 @@ METRICS_URL = "https://repolis-metrics.wingnut0310.workers.dev/event"
 MODEL_PRICE_IN_PER_1M_USD = "0.75"
 MODEL_PRICE_CACHED_IN_PER_1M_USD = "0.075"
 MODEL_PRICE_OUT_PER_1M_USD = "4.5"
+
+# Resident NPC reservations use deployment-specific prices and official input/output limits.
+# Unknown deployments or malformed tables fail closed. max_completion_tokens uses the same bound.
+NPC_MODEL_PRICING_JSON = '{"gpt-5.4-mini":{"inputPer1MUsd":0.75,"cachedInputPer1MUsd":0.075,"outputPer1MUsd":4.5,"maxInputTokens":272000,"maxOutputTokens":128000}}'
+NPC_MAX_COMPLETION_TOKENS = "120"
+NPC_BUDGET_TIMEOUT_MS = "1500"
+NPC_DAILY_ATTEMPT_MAX = "5000"
+NPC_RESERVATION_LEASE_MS = "60000"
 
 # Set your Azure AI Search endpoint (not secret, but account-specific). Either
 # uncomment + edit here, or keep it out of git with `wrangler secret put SEARCH_ENDPOINT`:
