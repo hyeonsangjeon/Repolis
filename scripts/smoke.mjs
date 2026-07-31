@@ -1114,6 +1114,9 @@ const memorialTreeBlock = (HTML.match(/\/\*MEMORIAL_TREE:START\*\/([\s\S]*?)\/\*
 const visualLodBlock = (HTML.match(/\/\*VISUAL_LOD:START\*\/([\s\S]*?)\/\*VISUAL_LOD:END\*\//) || [, ''])[1];
 const staticInstanceBlock = (HTML.match(/\/\*STATIC_INSTANCES:START\*\/([\s\S]*?)\/\*STATIC_INSTANCES:END\*\//) || [, ''])[1];
 const buildingLodPrototypeBlock = (HTML.match(/\/\*BUILDING_LOD_PROTOTYPE:START\*\/([\s\S]*?)\/\*BUILDING_LOD_PROTOTYPE:END\*\//) || [, ''])[1];
+const buildingLodReadabilityMatch = HTML.match(/(function _buildingLodReadabilityGeometry\(repo\)\{([\s\S]*?)\n\})\nfunction _buildingLodSilhouetteGeometry/) || [];
+const buildingLodReadabilitySource = buildingLodReadabilityMatch[1] || '';
+const buildingLodReadabilityBlock = buildingLodReadabilityMatch[2] || '';
 const buildingLodUpdateBlock = (HTML.match(/function _updateBuildingLodPrototype\(frame,force=false\)\{([\s\S]*?)\n\}\nfunction _syncBuildingLodFacade/) || [, ''])[1];
 const worldTreeBloomPrepBlock = (HTML.match(/function _prepareWorldTreeBloom\(\)\{([\s\S]*?)\n\}\nfunction _renderWorldTreeFrame/) || [, ''])[1];
 const worldTreeBloomProjectionBlock = (HTML.match(/function _updateWorldTreeBloomProjection\(\)\{([\s\S]*?)\n\}\nfunction _captureWorldTreeBloomProjection/) || [, ''])[1];
@@ -1339,10 +1342,39 @@ ok(/canaries:new Set\(\['threejs-sculpt-dna','FSI-Gameday-General-Immersion-Day'
   && /supportedKinds:new Set\(\['cabin','cottage','house','shop','tower','villa','manor','mansion'\]\)/.test(buildingLodPrototypeBlock)
   && /supportedRoofs:new Set\(\['flat','gable','hip','mansard','barrel','shed','aframe','gambrel'\]\)/.test(buildingLodPrototypeBlock)
   && /reason:'unsupported-typology'/.test(buildingLodPrototypeBlock), '2C-B retains permanent canaries and explicit full-visual fallback diagnostics for unknown typologies');
+ok(buildingLodReadabilityBlock.length > 0
+  && ['cabin','cottage','house','shop','tower','villa','manor','mansion'].every(kind=>buildingLodReadabilityBlock.includes(`'${kind}'`))
+  && ['flat','gable','hip','mansard','barrel','shed','aframe','gambrel'].every(roof=>buildingLodReadabilityBlock.includes(`'${roof}'`)),
+  'mid readability geometry covers every supported building kind and roof while unknown typologies retain the full fallback');
+ok(/'plinth'/.test(buildingLodReadabilityBlock) && /'door'/.test(buildingLodReadabilityBlock) && /'yard-step'/.test(buildingLodReadabilityBlock)
+  && /'window-frame'/.test(buildingLodReadabilityBlock) && /'window-shutter'/.test(buildingLodReadabilityBlock)
+  && /entrance-\$\{spec\.kind\}-portico/.test(buildingLodReadabilityBlock)
+  && /roof-\$\{spec\.roof\}-chimney/.test(buildingLodReadabilityBlock) && /'roof-flat-tech'/.test(buildingLodReadabilityBlock) && /'roof-aframe-ridge'/.test(buildingLodReadabilityBlock),
+  'mid readability geometry restores a door, grounded entrance silhouette, facade rhythm, and roof cue at projected home sizes');
+ok(/geometry\.setIndex\(indices\)/.test(buildingLodReadabilityBlock)
+  && /geometry\.userData=\{sources:\[\.\.\.sources\],kind:spec\.kind,roof:spec\.roof\}/.test(buildingLodReadabilityBlock)
+  && !/Math\.random/.test(buildingLodReadabilityBlock), 'mid readability is compact indexed vertex-color geometry with deterministic feature diagnostics');
+if(buildingLodReadabilitySource){
+  class LodMockGeometry { constructor(){ this.attributes={}; this.userData={}; } setIndex(a){ this.index={array:Uint16Array.from(a),count:a.length}; } setAttribute(n,a){ this.attributes[n]=a; } computeBoundingBox(){} computeBoundingSphere(){} }
+  class LodMockAttribute { constructor(a,itemSize){ this.array=Float32Array.from(a); this.itemSize=itemSize; this.count=a.length/itemSize; } }
+  class LodMockColor { constructor(v){ const n=Number(v)>>>0; this.r=((n>>>16)&255)/255; this.g=((n>>>8)&255)/255; this.b=(n&255)/255; } }
+  const buildReadability=new Function('THREE',`${buildingLodReadabilitySource}; return _buildingLodReadabilityGeometry;`)({BufferGeometry:LodMockGeometry,Float32BufferAttribute:LodMockAttribute,Color:LodMockColor});
+  const kinds=['cabin','cottage','house','shop','tower','villa','manor','mansion'],roofs=['flat','gable','hip','mansard','barrel','shed','aframe','gambrel'],tier={cabin:0,cottage:1,house:2,shop:2,tower:3,villa:3,manor:4,mansion:5};
+  let covered=0,maxBytes=0,deterministic=true,features=true;
+  for(const kind of kinds) for(const roof of roofs){ const shop=kind==='shop',spec={kind,roof,tier:tier[kind],w:8,h:8,d:8,topH:shop?10:8,topW:shop?5:8,wall:0xd9b77e,roofColor:0xa8563b,accent:0x7290b8,entranceColor:0xc89043};
+    const a=buildReadability({_lodSpec:spec}),b=buildReadability({_lodSpec:spec}),src=a.userData.sources,entrance=kind==='cabin'||kind==='cottage'?'entrance-cottage-awning':`entrance-${kind}-${kind==='house'?'porch':kind==='shop'?'awning':kind==='tower'?'hood':kind==='villa'?'balcony':'portico'}`;
+    const roofCue=roof==='flat'?'roof-flat-tech':roof==='aframe'?'roof-aframe-ridge':`roof-${roof}-chimney`,bytes=a.index.array.byteLength+a.attributes.position.array.byteLength+a.attributes.color.array.byteLength;
+    features&&=['plinth','door','yard-step','window-frame',entrance,roofCue].every(name=>src.includes(name))&&a.attributes.position.count===a.attributes.color.count&&!a.attributes.normal;
+    deterministic&&=JSON.stringify(src)===JSON.stringify(b.userData.sources)&&Buffer.from(a.index.array.buffer).equals(Buffer.from(b.index.array.buffer))&&Buffer.from(a.attributes.position.array.buffer).equals(Buffer.from(b.attributes.position.array.buffer))&&Buffer.from(a.attributes.color.array.buffer).equals(Buffer.from(b.attributes.color.array.buffer));
+    maxBytes=Math.max(maxBytes,bytes); covered++;
+  }
+  ok(covered===64&&features&&maxBytes<=12000, 'all 64 supported kind/roof combinations build compact indexed readability geometry with required visible cues');
+  ok(deterministic, 'all supported mid readability combinations are byte-deterministic');
+}
 ok(/function _withBuildingLodPrivateRandom\(fn\)/.test(buildingLodPrototypeBlock)
   && /finally \{ Math\.random=globalRandom; \}/.test(buildingLodPrototypeBlock)
   && /memoryBudget:1024\*1024/.test(buildingLodPrototypeBlock)
-  && /proxy-memory-budget-exceeded/.test(buildingLodPrototypeBlock), '2C-A constructors consume private RNG and enforce a two-megabyte proxy budget');
+  && /proxy-memory-budget-exceeded/.test(buildingLodPrototypeBlock), '2C-A constructors consume private RNG and enforce a one-megabyte proxy budget');
 ok(/fullEnter:280,fullLeave:240,midEnter:60,midLeave:48,settle:3,cadence:8,minDwellFrames:24/.test(buildingLodPrototypeBlock)
   && /entry\.pendingCount>=BUILDING_LOD_PROTO\.thresholds\.settle/.test(buildingLodUpdateBlock)
   && !/(?:traverse|Box3|new THREE|sort\()/.test(buildingLodUpdateBlock), 'projected-size hysteresis updates without traversal, geometry, sorting, or allocation');
@@ -1355,6 +1387,16 @@ ok(/attribute float aLit; attribute float aJitter; attribute float aActivity/.te
   && /THREE\.UniformsUtils\.clone\(THREE\.UniformsLib\.fog\)/.test(buildingLodPrototypeBlock)
   && (buildingLodPrototypeBlock.match(/fog:true/g)||[]).length===2
   && /originalSign:repo\._sign/.test(buildingLodPrototypeBlock), 'one shared facade shader preserves day/night window state and exact sign/emblem textures');
+ok(/const midReadability=new THREE\.Mesh\(readabilityGeometry,silhouetteMaterial\)/.test(buildingLodPrototypeBlock)
+  && (buildingLodPrototypeBlock.match(/mid\.add\(midReadability\)/g)||[]).length===1
+  && !/far\.add\(midReadability\)|full\.add\(midReadability\)/.test(buildingLodPrototypeBlock)
+  && /window\.__buildingLodPrototypeReadabilityDelta=/.test(HTML),
+  'mid readability reuses the shared fog/night material and adds at most one draw without changing full or far groups');
+ok(/resources\.geometries\.add\(readabilityGeometry\)/.test(buildingLodPrototypeBlock)
+  && /facadeGeometry,readabilityGeometry,silhouetteGeometry/.test(buildingLodPrototypeBlock)
+  && /readability:\{bytes:_buildingLodGeometryBytes\(e\.readabilityGeometry\),sources:e\.readabilityGeometry\.userData\.sources\.slice\(\)\}/.test(HTML)
+  && /resources\?\.geometries\.forEach\(geometry=>geometry\.dispose\(\)\)/.test(buildingLodPrototypeBlock),
+  'mid readability bytes are owned by the proxy memory budget and disposed with every other LOD geometry');
 ok(/BuildingLOD_ShadowProxy/.test(buildingLodPrototypeBlock)
   && /shadowProxy\.scale\.set\(\.985,1,\.985\)/.test(buildingLodPrototypeBlock)
   && /depthPacking:THREE\.RGBADepthPacking/.test(buildingLodPrototypeBlock)
