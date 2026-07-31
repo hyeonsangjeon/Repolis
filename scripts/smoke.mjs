@@ -372,6 +372,108 @@ ok(/function cardWhyZone\(repo\)/.test(HTML) && /function cardSimilar\(repo\)/.t
 ok(/function repoSuggestedQs\(repo\)/.test(HTML), 'repoSuggestedQs() builds contextual questions');
 ok(/function similarRepos\(repo,n\)/.test(HTML), 'similarRepos() finds same-district matches');
 ok((HTML.match(/cardAskRepo:\s*['"]/g) || []).length >= 2 && (HTML.match(/cardAskWhy:\s*['"]/g) || []).length >= 2 && (HTML.match(/cardSimilar:\s*['"]/g) || []).length >= 2, 'card-ask i18n keys present in ko + en');
+
+group('Repository Atelier — one reusable walkable room for every repo');
+const atelierSrc=(HTML.match(/\/\*REPOSITORY_ATELIER:START\*\/([\s\S]*?)\/\*REPOSITORY_ATELIER:END\*\//)||[,''])[1];
+const atelierCreateSrc=(atelierSrc.match(/function _createRepositoryAtelier\(\)\{[\s\S]*?(?=\nfunction _drawRepositoryAtelierHistory)/)||[''])[0];
+const atelierBindSrc=(atelierSrc.match(/function _bindRepositoryAtelier\(repo\)\{[\s\S]*?(?=\nfunction _refreshRepositoryAtelierLanguage)/)||[''])[0];
+ok(atelierSrc.length>0, 'atelier runtime is a bounded, extractable integration block');
+ok(/id="atelierBtn"/.test(HTML) && /class="btn atelier"/.test(HTML)
+  && /class="btn gh"[\s\S]*?target="_blank" rel="noopener"/.test(HTML), 'repo card adds a clear room entry command without removing quick GitHub access');
+ok((HTML.match(/atelierEnter:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierExit:\s*['"]/g)||[]).length===2
+  && (HTML.match(/atelierAsk:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierWhy:\s*['"]/g)||[]).length===2, 'atelier card, exit, and terminal copy is bilingual');
+ok(/const REPOSITORY_ATELIER_LAYER=6/.test(atelierSrc) && /new THREE\.Scene\(\)/.test(atelierCreateSrc)
+  && /renderer\.render\(A\.scene,camera\)/.test(atelierSrc), 'interior uses a dedicated scene plus camera layer instead of drawing the town behind it');
+ok(/if\(REPOSITORY_ATELIER&&REPOSITORY_ATELIER\.created\) return REPOSITORY_ATELIER/.test(atelierCreateSrc)
+  && /A\.created=true; A\.createCount\+\+/.test(atelierCreateSrc), 'the single room is lazy-created once');
+ok((atelierCreateSrc.match(/_atelierCanvas\(/g)||[]).length===2
+  && /history=_atelierCanvas\([^,]+,[^,]+,'history'\)/.test(atelierCreateSrc)
+  && /actions=_atelierCanvas\([^,]+,[^,]+,'actions'\)/.test(atelierCreateSrc), 'the reusable room owns exactly two bounded canvas textures');
+ok(/A\.resources=\S*\|\|\{geometries:new Set\(\),materials:new Set\(\),textures:new Set\(\)\}/.test(atelierCreateSrc)
+  && /resources:\{rooms:A\.created\?1:0,geometries:/.test(atelierSrc), 'room geometry, material, and texture resources are explicitly counted');
+ok(!/new THREE\.(?:CanvasTexture|Texture|Material|Geometry)/.test(atelierBindSrc)
+  && /_drawRepositoryAtelierHistory\(canonical\); _drawRepositoryAtelierActions\(canonical\)/.test(atelierBindSrc)
+  && /A\.bindings=\{github:canonical\.repo,ask:canonical\.repo,why:canonical\.repo\}/.test(atelierBindSrc), 'repo switches redraw existing atlases and rebind all actions without allocating a second room');
+ok(/RepositoryCore/.test(atelierCreateSrc) && /AtelierHistoryWall/.test(atelierCreateSrc)
+  && /AtelierTerminals/.test(atelierCreateSrc), 'Repository Core, History/Data Wall, and action terminals are real 3D exhibits');
+ok(/canonical\.stars/.test(atelierBindSrc) && /canonical\._activity/.test(atelierBindSrc) && /canonical\.score/.test(atelierBindSrc)
+  && /langColor[\s\S]*?zoneColor[\s\S]*?hash=_atelierHash\(canonical\.repo\)/.test(atelierBindSrc), 'core size, light, structure, language, district, and deterministic repo identity all bind from shipped data');
+ok(/repo\.desc\|\|t\('noDesc'\)/.test(atelierSrc) && /repo\.topics\|\|\[\]/.test(atelierSrc)
+  && /repo\.stars/.test(atelierSrc) && /repo\.forks/.test(atelierSrc) && /repo\.open_issues/.test(atelierSrc)
+  && /repo\.license/.test(atelierSrc) && /repo\.created/.test(atelierSrc) && /repo\.pushed/.test(atelierSrc)
+  && /repo\.release_tag/.test(atelierSrc) && /repo\.visitors/.test(atelierSrc) && /repo\.views/.test(atelierSrc)
+  && /repo\.clones/.test(atelierSrc), 'data wall covers identity, description, topics, repo metrics, dates, releases, and available traffic');
+ok(/const hasTraffic=repo\.tracked===true/.test(atelierSrc), 'the TRAFFIC section appears only for genuinely tracked owner data, never public-mode synthetic metrics');
+ok(/A\.terminalKinds=\['github','ask','why'\]/.test(atelierCreateSrc)
+  && /window\.open\(repo\.url,'_blank','noopener'\)/.test(atelierSrc)
+  && /askInChat\(q\)/.test(atelierSrc) && /cardWhyZone\(repo\)/.test(atelierSrc), 'three terminals reuse exact GitHub, Gitber, and deterministic district paths only on activation');
+ok(!/fetch\(|new WebSocket|groundedAsk|webllmAsk|proxyAsk|import\(/.test(atelierCreateSrc+atelierBindSrc), 'entering and rebinding the room has no network, model, CDN, or dynamic-import work');
+ok(!/track\('atelier_(?:enter|exit)'/.test(atelierSrc) && /track\('atelier_terminal'/.test(atelierSrc),
+  'enter and exit emit no remote analytics; only an explicit terminal action may record an event');
+ok(/if\(kind==='exit'\) return exitRepositoryAtelier\(\);[\s\S]*?if\(kind!=='github'&&kind!=='ask'&&kind!=='why'\) return false;[\s\S]*?track\('atelier_terminal'/.test(atelierSrc),
+  'terminal analytics run only after validating GitHub, Ask, or Why—not exit or passive core');
+ok(/state:'outside'/.test(atelierSrc) && /A\.state='entering'/.test(atelierSrc)
+  && /A\.state='inside'/.test(atelierSrc) && /A\.state='exiting'/.test(atelierSrc)
+  && /A\.state='outside'/.test(atelierSrc), 'state machine explicitly follows outside → entering → inside → exiting → outside');
+ok(/playerPosition:player\.position\.clone\(\)/.test(atelierSrc)
+  && /cameraPosition:camera\.position\.clone\(\)/.test(atelierSrc)
+  && /cameraLayerMask:camera\.layers\.mask,camYaw,camPitch,camDist/.test(atelierSrc)
+  && /navTarget,navVisible:navHolder\.visible/.test(atelierSrc)
+  && /sitting,ride,ferris,carousel,modalOpen/.test(atelierSrc), 'entry snapshot owns exact player, camera, navigation, seat, ride, and UI safety state');
+ok(/player\.position\.copy\(s\.playerPosition\)/.test(atelierSrc)
+  && /camera\.position\.copy\(s\.cameraPosition\)/.test(atelierSrc)
+  && /camYaw=s\.camYaw; camPitch=s\.camPitch; camDist=s\.camDist/.test(atelierSrc)
+  && /navTarget=s\.navTarget; navHolder\.visible=s\.navVisible/.test(atelierSrc)
+  && /if\(!s\|\|s\.restored\) return/.test(atelierSrc), 'exit restore is exact and idempotent');
+ok(/_resetRepositoryAtelierInput\(\)/.test(atelierSrc) && /clearKeys\(\); stickVec=\{x:0,y:0\}/.test(atelierSrc)
+  && /moveTid=null; lookTid=null/.test(atelierSrc), 'entry and exit clear keyboard and touch ownership so movement cannot stick');
+ok(/if\(e\.code==='Enter'&&e\.repeat\)\{ e\.preventDefault\(\); return; \}/.test(HTML), 'held Enter cannot repeatedly fire a room terminal');
+ok(/const isUiKeyTarget=e=>/.test(HTML) && /if\(isTyping\(\)\|\|isUiKeyTarget\(e\)\) return/.test(HTML)
+  && /\^\(BUTTON\|A\|INPUT\|SELECT\|TEXTAREA\)\$/.test(HTML), 'focused native controls own Enter/Space without also firing a world action');
+ok(/if\(!repositoryAtelierActive\(\)&&!chatEl\.classList\.contains\('hidden'\)\) chatText\.focus\(\)/.test(HTML)
+  && /if\(!_drainQueuedChat\(\)&&!_resumePendingChatNpc\(\)&&!repositoryAtelierActive\(\)&&!chatEl\.classList\.contains\('hidden'\)\) chatText\.focus\(\)/.test(HTML)
+  && /if\(document\.activeElement===chatText\) chatText\.blur\(\)/.test(atelierSrc), 'hidden or in-flight chat cannot steal keyboard focus from the room');
+ok(/if\(repositoryAtelierActive\(\)\)\{ REPOSITORY_ATELIER\.pendingHash=true; exitRepositoryAtelier\(\); return; \}/.test(HTML)
+  && /pendingHash=A\.pendingHash/.test(atelierSrc) && /if\(pendingHash\)\{ A\.afterExit=null; const key=repoHashKey\(\),repo=repoByKey\(key\); if\(repo\) openCard\(repo\)/.test(atelierSrc),
+  'repo hash changes exit the room and rebuild the requested card only after the exterior reveal');
+ok(/if\(pendingHash\)\{ A\.afterExit=null;/.test(atelierSrc), 'explicit hash navigation supersedes a terminal after-exit action');
+ok(/const CHAT_QUEUE_MAX=4,queuedChatQuestions=\[\]; let pendingChatNpc=null/.test(HTML)
+  && /if\(busy\)\{ chatText\.value=''; _queueChatQuestion\(q,npc\); return; \}/.test(HTML)
+  && /function _queueChatAction\(action\)/.test(HTML) && /_queueChatAction\(\{kind:'ask',q,npc\}\)/.test(HTML)
+  && /function _drainQueuedChat\(\)\{ if\(busy\|\|repositoryAtelierActive\(\)\|\|!queuedChatQuestions\.length\)/.test(HTML)
+  && /if\(!_drainQueuedChat\(\)&&!_resumePendingChatNpc\(\)&&!repositoryAtelierActive\(\)/.test(HTML), 'busy chat preserves a bounded question plus target NPC and switches only after the current turn finishes');
+ok(/if\(busy&&activeNpc&&npc!==activeNpc\)\{ pendingChatNpc=npc;/.test(HTML)
+  && /function _resumePendingChatNpc\(\)/.test(HTML), 'an in-flight scholar answer cannot leak into a newly selected Gitber thread');
+ok(/_queueChatAction\(\{kind:'why',repoKey:repo\.repo,npc:_taxiNpc\(\)\}\)/.test(HTML)
+  && /_queueChatAction\(\{kind:'similar',repoKey:repo\.repo,npc:_taxiNpc\(\)\}\)/.test(HTML)
+  && /if\(next\.kind==='why'&&repo\)\{ _showCardWhyZone\(repo\)/.test(HTML)
+  && /if\(next\.kind==='similar'&&repo\)\{ _showCardSimilar\(repo\)/.test(HTML)
+  && /while\(queuedChatQuestions\.length\)/.test(HTML) && /_resumePendingChatNpc\(\); return true;/.test(HTML),
+  'deterministic Why and Similar actions drain synchronously before the next async turn or deferred NPC switch');
+ok(/function _pauseTourForAtelier\(\)/.test(HTML) && /tourPause:_pauseTourForAtelier\(\)/.test(atelierSrc)
+  && /A\.resumeTour=s\.tourPause/.test(atelierSrc) && /_resumeTourAfterAtelier\(pausedTour\)/.test(atelierSrc)
+  && /body\.atelier-active #tourCap/.test(HTML), 'guided-tour deadlines and chrome pause through the room and resume only after the exterior reveal');
+ok(/if\(pendingHash&&tour&&tour\.active\) endTour\(false\); else _resumeTourAfterAtelier\(pausedTour\)/.test(atelierSrc),
+  'explicit hash navigation cancels a paused tour before the requested card opens');
+ok(/if\(_repositoryAtelierFrame\(dt\)\) return;/.test(HTML)
+  && /one explicit gate: room or frozen transition/.test(HTML)
+  && /if\(mode==='interior'\)\{ _updateRepositoryAtelier\(dt\); _renderRepositoryAtelier\(\); \}/.test(atelierSrc), 'one main-loop gate pauses all exterior updates while the room owns update/render');
+ok(/renderer\.render\(A\.scene,camera\)/.test(atelierSrc) && !/renderer\.render\(scene,camera\)/.test(atelierSrc)
+  && /exteriorCalls:A\.renderInterior\?0:null/.test(atelierSrc), 'inside frames issue zero exterior scene renders');
+ok(/rtSock\?rtSock\.readyState:-1/.test(atelierSrc) && !/rtSock\.close|rtConnect\(|clearPeers\(/.test(atelierSrc), 'atelier leaves realtime connection and counters intact while exterior avatar work is paused');
+ok(/function _realtimeExteriorPose\(\)/.test(HTML)
+  && /snapshot\?\{x:snapshot\.playerPosition\.x,z:snapshot\.playerPosition\.z,yaw:snapshot\.modelYaw\}/.test(HTML)
+  && /rtSock\.onopen=\(\)=>\{ const pose=_realtimeExteriorPose\(\)/.test(HTML), 'a realtime reconnect publishes the saved exterior pose, never room-local coordinates');
+ok(/\(LOW_END\|\|IS_MOBILE\)\?1024:1536/.test(atelierCreateSrc) && /LOW_END\?2:3/.test(atelierBindSrc)
+  && /A\.rods\.count=LOW_END\?4/.test(atelierBindSrc), 'LOW_END reduces atlas and core detail without removing any exhibit');
+ok(/webglcontextrestored'[\s\S]*?_repositoryAtelierContextRestored/.test(HTML)
+  && /A\.resources\.textures\.forEach\(texture=>\{ texture\.needsUpdate=true; \}\)/.test(atelierSrc), 'context restore marks both reusable atlases for re-upload');
+ok(/window\.__repositoryAtelier=/.test(atelierSrc) && /window\.__atelierEnter=/.test(atelierSrc)
+  && /window\.__atelierSelect=/.test(atelierSrc), 'short diagnostics expose active repo, state, layers, resources, render cost, bindings, and poses');
+const atelierHashSrc=(atelierSrc.match(/function _atelierHash\(value\)\{[^\n]+\}/)||[''])[0];
+if(atelierHashSrc){ const hash=new Function(`${atelierHashSrc}; return _atelierHash;`)();
+  ok(hash('Repolis')===hash('Repolis') && hash('Repolis')!==hash('jenkins-dind'), 'repo style seed is stable across re-entry and differs across repos');
+} else ok(false, 'repo style seed helper is extractable');
 // 10d — district explanation is deterministic (no LLM / network)
 const zoneWhySrc = (HTML.match(/function zoneWhy\(repo\)\{[\s\S]*?\nfunction cardWhyZone/) || [, ''])[0];
 ok(zoneWhySrc.length > 0, 'zoneWhy() explanation helper exists');
