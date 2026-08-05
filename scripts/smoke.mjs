@@ -352,6 +352,7 @@ ok(/nearCanalFerry = \(CANAL_FERRY && !canalFerryRide/.test(HTML)
 ok(/!carousel && !canalFerryRide && FW\.length/.test(HTML)
   && /ride\|\|canalFerryRide\|\|dragging/.test(HTML), 'an active tour stays at full interaction cadence while idle town throttling is unchanged');
 ok((HTML.match(/ferryName:/g)||[]).length===2 && (HTML.match(/ferryReached:/g)||[]).length===2
+  && (HTML.match(/ferryRiding:/g)||[]).length===2 && /if\(canalFerryRide\)\{ promptEl\.innerHTML = t\('ferryRiding'\)/.test(HTML)
   && /window\.__canalFerry=/.test(HTML) && /window\.__boardFerry=/.test(HTML) && /window\.__finishFerry=/.test(HTML),
   'Korean/English ride copy and bounded debug board/finish probes are present');
 ok(/boardable low-profile ferry/.test(README_EN) && /낮은 유람선에 올라/.test(README_KO),

@@ -8901,7 +8901,8 @@ function animate(){
     if(RES_QUARTER && !passHasStamp('homes') && Math.hypot(px-RES_QUARTER_POS.x,pz-RES_QUARTER_POS.z)<22){ if(addStamp('homes')) popSparkle(RES_QUARTER_POS.x,4,RES_QUARTER_POS.z,0xc8b8ff); }
     if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ if(addStamp('canal')) popSparkle(c.x,2.6,c.z,0x7fe3da); break; } } } }
   courseProximityTick();
-  if(ferris){ promptEl.innerHTML = t('ferrisRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
+  if(canalFerryRide){ promptEl.innerHTML = t('ferryRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
+  else if(ferris){ promptEl.innerHTML = t('ferrisRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
   else if(carousel){ promptEl.innerHTML = t('carouselRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
   else if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
