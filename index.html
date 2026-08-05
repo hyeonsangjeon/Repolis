@@ -3028,10 +3028,12 @@ let CANAL_FERRY=null, nearCanalFerry=null, canalFerryRide=null;
 function makeCanalFerry(curve,dock){
   if(CANAL_FERRY||!curve||!dock) return CANAL_FERRY;
   const root=new THREE.Group(); root.name='petite-venise-canal-ferry'; scene.add(root);
-  const hull=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,8,0,Math.PI*2,0,Math.PI/2),toon(0x347f8d));
-  hull.scale.set(1.16,0.5,2.35); hull.rotation.x=Math.PI; hull.position.y=0.16; root.add(hull);
-  [-0.62,0.62].forEach(x=>{ const trim=rbox(0.08,0.1,3.45,0xf2d28a,0.025); trim.position.set(x,0.3,0); root.add(trim); });
-  [-0.72,0,0.72].forEach(z=>{ const seat=rbox(0.98,0.07,0.13,0x6f4930,0.025); seat.position.set(0,0.28,z); root.add(seat); });
+  const hull=capsule(0.8,2.7,0xb85f3d,10); hull.name='canal-ferry-hull'; hull.rotation.x=Math.PI/2;
+  hull.scale.set(1.1,1,0.22); hull.position.y=0.08; outline(hull,0.025); root.add(hull);
+  const deck=capsule(0.62,2.45,0x3f2d27,8); deck.name='canal-ferry-cockpit'; deck.rotation.x=Math.PI/2;
+  deck.scale.set(1.06,0.92,0.08); deck.position.y=0.34; root.add(deck);
+  [-0.68,0.68].forEach(x=>{ const trim=rbox(0.08,0.1,3.45,0xffe0a3,0.025); trim.position.set(x,0.3,0); root.add(trim); });
+  [-0.72,0,0.72].forEach(z=>{ const seat=rbox(1.02,0.07,0.13,0xc78347,0.025); seat.position.set(0,0.38,z); root.add(seat); });
   const lampMat=new THREE.MeshBasicMaterial({color:0xffe6a8});
   const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.09,8,6),lampMat); lamp.position.set(0,0.34,1.72); root.add(lamp);
   const wake=new THREE.Mesh(new THREE.PlaneGeometry(2.4,4.8),new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0xbfefff,transparent:true,opacity:0.1,depthWrite:false,fog:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
@@ -3040,7 +3042,7 @@ function makeCanalFerry(curve,dock){
   const sample={},point=new THREE.Vector3(),tangent=new THREE.Vector3(),dockPos=new THREE.Vector3(dock.x,0,dock.z);
   sampleCanalFerryRoute(0,CANAL_FERRY_DEFAULTS,sample); curve.getPointAt(sample.t,point); curve.getTangentAt(sample.t,tangent);
   root.position.set(point.x,0.12,point.z); root.rotation.y=Math.atan2(tangent.x,tangent.z);
-  CANAL_FERRY={group:root,curve,dock:dockPos,_pos:dockPos,point,tangent,sample,wake,lastDirection:sample.direction,
+  CANAL_FERRY={group:root,hull,deck,curve,dock:dockPos,_pos:dockPos,point,tangent,sample,wake,lastDirection:sample.direction,
     duration:CANAL_FERRY_DEFAULTS.duration,baseY:0.12,bridgeUnderY:0.62,maxWorldY:0.55,bridgeClearance:0.07};
   return CANAL_FERRY;
 }
@@ -9454,6 +9456,8 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     near:!!nearCanalFerry,riding:!!canalFerryRide,progress:canalFerryRide?+CANAL_FERRY.sample.progress.toFixed(3):0,
     routeT:CANAL_FERRY?+CANAL_FERRY.sample.t.toFixed(4):null,duration:CANAL_FERRY?CANAL_FERRY.duration:0,
     bridge:CANAL_FERRY?{underY:CANAL_FERRY.bridgeUnderY,maxWorldY:CANAL_FERRY.maxWorldY,clearance:CANAL_FERRY.bridgeClearance}:null,
+    silhouette:CANAL_FERRY?{profile:'open-skiff',hull:CANAL_FERRY.hull.visible,deck:CANAL_FERRY.deck.visible,opaque:CANAL_FERRY.hull.material.transparent!==true,
+      hullColor:'#'+CANAL_FERRY.hull.material.color.getHexString(),deckColor:'#'+CANAL_FERRY.deck.material.color.getHexString()}:null,
     meshes:CANAL_FERRY?CANAL_FERRY.group.children.length:0,owner:_cameraOwnerAtFrameStart() });
   window.__boardFerry=()=>{ if(!CANAL_FERRY) return {has:false}; player.position.copy(CANAL_FERRY.dock); nearCanalFerry=CANAL_FERRY; boardCanalFerry(); return window.__canalFerry(); };
   window.__finishFerry=()=>{ if(canalFerryRide) canalFerryRide.elapsed=CANAL_FERRY.duration-0.05; return window.__canalFerry(); };
