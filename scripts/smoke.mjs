@@ -16,6 +16,13 @@ import { createRequire } from 'module';
 import { createHash } from 'crypto';
 import { runInNewContext } from 'vm';
 import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
+import {
+  CAMERA_OBSTRUCTION_DEFAULTS,
+  CAMERA_ARRIVAL_OFFSETS,
+  resolveCameraObstruction,
+  stepCameraResolvedDistance,
+  chooseCameraArrivalYaw
+} from '../assets/camera-obstruction.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -32,6 +39,7 @@ const WORLD_TREE_FACTORY = readFileSync(join(ROOT, 'assets/world-tree/createRepo
 const LAUNCH_CONFIG_SRC = readFileSync(join(ROOT, 'repolis.config.js'), 'utf8');
 const REFRESH_WORKFLOW = readFileSync(join(ROOT, '.github/workflows/refresh.yml'), 'utf8');
 const REPO_BUILDER = readFileSync(join(ROOT, 'scripts/build_repos.py'), 'utf8');
+const CAMERA_MATH_SRC = readFileSync(join(ROOT, 'assets/camera-obstruction.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -177,6 +185,120 @@ ok(/if\s*\(\s*!dest\s*\)\s*return/.test(HTML), 'absent stops are skipped (public
 ok(/taxiTo\s*\(\s*dest\s*\)/.test(HTML), 'landmark stop button rides via taxiTo(dest)');
 ok(/track\(\s*['"]landmark_stop_ride['"]/.test(HTML), 'landmark stop ride is tracked');
 ok(/stationDistrictsH\s*:/.test(HTML), 'stationDistrictsH i18n key present');
+
+group('ClearSight camera — pure obstruction math, arrival framing, and ownership');
+const nearNumber = (actual, expected, epsilon = 1e-6) => Math.abs(actual - expected) <= epsilon;
+const cameraQuery = (focus, desired, requested, extra = {}) => ({
+  focusX: focus[0], focusY: focus[1], focusZ: focus[2],
+  desiredX: desired[0], desiredY: desired[1], desiredZ: desired[2],
+  requestedDistance: requested, padding: 0, surfaceEpsilon: 0, minDistance: 1, ...extra
+});
+let cameraResult = {};
+resolveCameraObstruction(cameraQuery([0, 1, 0], [10, 1, 0], 10),
+  [{ x: 5, z: 0, r: 1, minY: 0, maxY: 2, cameraId: 'middle' }], cameraResult);
+ok(cameraResult.valid && cameraResult.blocked && nearNumber(cameraResult.distance, 4)
+  && cameraResult.hit.cameraId === 'middle', 'segment crossing a height-bounded collider resolves immediately before its near face');
+
+cameraResult = {};
+resolveCameraObstruction(cameraQuery([0, 4, 0], [10, 4, 0], 10),
+  [{ x: 5, z: 0, r: 2, minY: 0, maxY: 3 }], cameraResult);
+ok(cameraResult.valid && !cameraResult.blocked && cameraResult.distance === 10,
+  'a horizontal overlap outside the collider height range is not a false positive');
+
+cameraResult = {};
+resolveCameraObstruction(cameraQuery([0, 1, 0], [12, 1, 0], 12),
+  [{ x: 9, z: 0, r: 1, minY: 0, maxY: 3, cameraId: 'far' },
+    { x: 4, z: 0, r: 1, minY: 0, maxY: 3, cameraId: 'near' }], cameraResult);
+ok(cameraResult.blocked && cameraResult.hit.cameraId === 'near' && nearNumber(cameraResult.distance, 3),
+  'multiple colliders resolve to the nearest hit regardless of registry order');
+
+const internal = {}, tangent = {}, short = {}, invalid = {};
+resolveCameraObstruction(cameraQuery([0, 1, 0], [8, 1, 0], 8),
+  [{ x: 0, z: 0, r: 2, minY: 0, maxY: 2 }], internal);
+resolveCameraObstruction(cameraQuery([0, 1, 1], [10, 1, 1], 10),
+  [{ x: 5, z: 0, r: 1, minY: 0, maxY: 2 }], tangent);
+resolveCameraObstruction(cameraQuery([0, 1, 0], [.5, 1, 0], .5),
+  [{ x: 0, z: 0, r: 1, minY: 0, maxY: 2 }], short);
+resolveCameraObstruction(cameraQuery([0, 1, 0], [NaN, 1, 0], NaN), [], invalid);
+ok(internal.blocked && internal.distance === 1 && tangent.blocked && nearNumber(tangent.distance, 5)
+  && short.blocked && short.distance === .5 && !invalid.valid && !invalid.blocked && Number.isFinite(invalid.distance),
+  'inside-start, tangent, sub-minimum request, and NaN inputs are deterministic and fail soft');
+
+const padded = {}, minimum = {};
+resolveCameraObstruction(cameraQuery([0, 1, 0], [10, 1, 0], 10, { padding: .5 }),
+  [{ x: 5, z: 0, r: 1, minY: 0, maxY: 2 }], padded);
+resolveCameraObstruction(cameraQuery([0, 1, 0], [3, 1, 0], 3, { minDistance: 1 }),
+  [{ x: 1, z: 0, r: .8, minY: 0, maxY: 2 }], minimum);
+const fastIn = stepCameraResolvedDistance(10, 4, 10, true, 1 / 60, CAMERA_OBSTRUCTION_DEFAULTS);
+const slowOut = stepCameraResolvedDistance(4, 10, 10, false, 1 / 60, CAMERA_OBSTRUCTION_DEFAULTS);
+const hysteresisHold = stepCameraResolvedDistance(4, 4.2, 10, true, 1 / 60, CAMERA_OBSTRUCTION_DEFAULTS);
+ok(nearNumber(padded.distance, 3.5) && minimum.distance === 1
+  && 10 - fastIn > slowOut - 4 && hysteresisHold === 4,
+  'padding, minimum distance, fast-in/slow-out, and outward hysteresis stay deterministic');
+
+const clear = {};
+resolveCameraObstruction(cameraQuery([2, 1.7, -3], [11, 7, 4], 13), [], clear);
+ok(clear.valid && !clear.blocked && clear.distance === 13 && clear.fraction === 1,
+  'clear space preserves the requested camDist and the existing desired pose exactly');
+
+const starlightBlockers = [], starlightX = 130, starlightZ = 130;
+for (let i = 0; i < 9; i++) {
+  const angle = i / 9 * Math.PI * 2 + Math.PI / 36;
+  starlightBlockers.push({
+    x: starlightX + Math.cos(angle) * 13, z: starlightZ + Math.sin(angle) * 13,
+    r: 3.15, cameraR: 3.9, minY: 0, maxY: 6.15, cameraId: 'home-' + i
+  });
+}
+const spawnX = 2.6, spawnZ = -3.2, routeX = starlightX - spawnX, routeZ = starlightZ - spawnZ;
+const routeLength = Math.hypot(routeX, routeZ);
+const arrivalX = starlightX - routeX / routeLength * 6, arrivalZ = starlightZ - routeZ / routeLength * 6;
+const arrivalBaseYaw = Math.atan2(arrivalX - starlightX, arrivalZ - starlightZ);
+const arrivalQuery = {
+  focusX: arrivalX, focusY: 1.7, focusZ: arrivalZ, destinationX: starlightX, destinationZ: starlightZ,
+  currentYaw: arrivalBaseYaw, pitch: .42, requestedDistance: 13, verticalBaseOffset: -.2,
+  padding: CAMERA_OBSTRUCTION_DEFAULTS.padding, surfaceEpsilon: CAMERA_OBSTRUCTION_DEFAULTS.surfaceEpsilon,
+  minDistance: CAMERA_OBSTRUCTION_DEFAULTS.minDistance, softPadding: .12
+};
+const arrivalResult = {
+  yaws: new Float64Array(CAMERA_ARRIVAL_OFFSETS.length), distances: new Float64Array(CAMERA_ARRIVAL_OFFSETS.length),
+  scores: new Float64Array(CAMERA_ARRIVAL_OFFSETS.length), softHits: new Uint8Array(CAMERA_ARRIVAL_OFFSETS.length)
+};
+const arrivalScratch = { query: {}, hard: {}, soft: {} };
+chooseCameraArrivalYaw(arrivalQuery, starlightBlockers, [{
+  x: starlightX - 8 / Math.sqrt(2), z: starlightZ - 8 / Math.sqrt(2),
+  r: .45, cameraR: 1.4, minY: 0, maxY: 2.9, cameraId: 'starlight-row-sign'
+}], CAMERA_ARRIVAL_OFFSETS, arrivalResult, arrivalScratch);
+ok(arrivalResult.valid && arrivalResult.index === 10
+  && nearNumber(arrivalResult.yaw - arrivalBaseYaw, Math.PI * 5 / 12)
+  && arrivalResult.softHits[0] === 1 && !arrivalResult.softBlocked
+  && arrivalResult.clearDistance > 7.5,
+  'deterministic Starlight arrival turns off the sign/roof axis and settles before the cottage ring');
+
+const resizeA = {}, resizeB = {};
+resolveCameraObstruction(cameraQuery([0, 1, 0], [10, 4, 0], 10, { padding: .4 }),
+  [{ x: 6, z: 0, r: 1.2, minY: 0, maxY: 5 }], resizeA);
+resolveCameraObstruction({ ...cameraQuery([0, 1, 0], [10, 4, 0], 10, { padding: .4 }), viewportWidth: 390, viewportHeight: 844 },
+  [{ x: 6, z: 0, r: 1.2, minY: 0, maxY: 5 }], resizeB);
+ok(resizeA.distance === resizeB.distance && !/innerWidth|innerHeight|devicePixelRatio/.test(CAMERA_MATH_SRC),
+  'camera safety math is viewport-independent across desktop/mobile resize');
+
+const clearSightBlock = (HTML.match(/\/\*CLEAR_SIGHT_CAMERA:START\*\/([\s\S]*?)\/\*CLEAR_SIGHT_CAMERA:END\*\//) || [, ''])[1];
+const clearSightUpdate = (clearSightBlock.match(/function _updateClearSightCamera\(dt,owner\)\{([\s\S]*?)\n\}/) || [, ''])[1];
+ok(/if\(tour&&tour\.active\) return 'guided-tour'/.test(clearSightBlock)
+  && /if\(ride\) return 'taxi-ride'/.test(clearSightBlock)
+  && /if\(ferris\) return 'ferris'/.test(clearSightBlock)
+  && /if\(carousel\) return 'carousel'/.test(clearSightBlock)
+  && /if\(sitting\) return 'seated'/.test(clearSightBlock)
+  && /if\(owner!=='open-world'\)/.test(clearSightUpdate)
+  && /_repositoryAtelierFrame\(dt\)\) return/.test(HTML),
+  'Atelier, guided tour, taxi ride, Ferris, carousel, and seated camera owners bypass ClearSight');
+ok(clearSightUpdate.length > 0 && !/new\s+|scene\.traverse|Raycaster|raycast|material\.clone|\.map\(/.test(clearSightUpdate)
+  && /resolveCameraObstruction\(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT\)/.test(clearSightUpdate)
+  && /resolveCameraObstruction\(CAMERA_POST_QUERY,CAMERA_BLOCKERS,CAMERA_POST_RESULT\)/.test(clearSightUpdate),
+  'steady-state ClearSight reuses fixed storage and bounded collider math without allocation or scene raycasts');
+ok(/window\.__clearSightCamera=/.test(HTML) && /window\.__clearSightStarlightProbe=/.test(HTML)
+  && /requestedDist:[\s\S]*?resolvedDist:[\s\S]*?blocked:[\s\S]*?hit:[\s\S]*?pose:[\s\S]*?arrival:[\s\S]*?timingMs:/.test(HTML),
+  'one debug surface exposes requested/resolved pose, hit identity, arrival scoring, skip reason, and timing');
 
 /* ── 6) inline <script type=module> still parses ── */
 group('inline module parses (node --check)');
@@ -1077,7 +1199,7 @@ ok(/function _gableHomeRoofGeometry\(\)[\s\S]*?g\.setIndex\(\[0,1,2,4,3,5/.test(
 ok(/for\(let i=0;i<RESIDENTS\.length;i\+\+\)[\s\S]*?RESIDENT_HOMES\.push\(home\)/.test(homesBlock)
   &&/signTexture\('🏠 '\+\(res\[LANG\]\|\|res\.ko\)\.name,res\.color\)/.test(homesBlock), 'the roster truthfully creates one colored, named cottage per resident');
 ok(/_addResidentQuarterCollider\(\{x:wx,z:wz,r:3\.15,_residentHome:res\.id\}\)/.test(homesBlock)
-  &&/function _addResidentQuarterCollider\(c\)\{ RES_QUARTER_COLLIDERS\.push\(c\); EXTRA_COLLIDERS\.push\(c\); COLLIDERS\.push\(c\)/.test(homesBlock), 'every cottage and landscape obstacle joins resident-target and player collision registries');
+  &&/function _addResidentQuarterCollider\(c\)\{\s*RES_QUARTER_COLLIDERS\.push\(c\); EXTRA_COLLIDERS\.push\(c\); COLLIDERS\.push\(c\)/.test(homesBlock), 'every cottage and landscape obstacle joins resident-target and player collision registries');
 ok(/q\.add\(yard,body,roofHip,roofGable,roofHex,door,windows,shutters,transoms,windowBoxes\)/.test(homesBlock)
   &&/if\(!LOW_END\) q\.add\(canopies,canopyPosts,chimneys,finials\)/.test(homesBlock)
   &&/batches:LOW_END\?6:10/.test(homesBlock)&&/if\(!LOW_END\) makeGlowFlowers/.test(homesBlock)
@@ -1657,8 +1779,10 @@ ok(/const WORLD_TREE_SAVED_CLEAR=new THREE\.Color\(\)/.test(HTML)
   && /renderer\.getClearColor\(WORLD_TREE_SAVED_CLEAR\)/.test(HTML)
   && /lastFrame=_now; renderedFrame\+\+/.test(HTML), 'production reuses the clear-color temp and keeps a standalone rendered-frame LOD cadence counter');
 ok(/const CAMERA_FOLLOW_TARGET=new THREE\.Vector3\(\)/.test(HTML)
-  && /CAMERA_FOLLOW_TARGET\.set\([^)]+\); camera\.position\.lerp\(CAMERA_FOLLOW_TARGET,0\.12\)/.test(HTML)
-  && !/camera\.position\.lerp\(new THREE\.Vector3/.test(HTML), 'camera follow reuses one non-escaping target vector per frame');
+  && /const CAMERA_FOCUS=new THREE\.Vector3\(\), CAMERA_RESOLVED_TARGET=new THREE\.Vector3\(\)/.test(HTML)
+  && /CAMERA_FOLLOW_TARGET\.set\(/.test(clearSightBlock)
+  && /camera\.position\.lerp\(CAMERA_RESOLVED_TARGET,0\.12\)/.test(clearSightUpdate)
+  && !/camera\.position\.lerp\(new THREE\.Vector3/.test(HTML), 'camera follow reuses fixed focus, desired, and resolved vectors per frame');
 ok(/WORLD_TREE_BLOOM_POSITION=new THREE\.Vector3\(\)[\s\S]*?WORLD_TREE_BLOOM_WORLD=new THREE\.Vector3\(\)/.test(HTML)
   && /bloomMaterialList:Object\.values\(bloomMaterials\)/.test(HTML)
   && !/(?:new THREE|Object\.values|\[min\.|\[max\.)/.test(worldTreeBloomPrepBlock)
