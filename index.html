@@ -1067,6 +1067,7 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree/createRepolisHero.js?v=azimuth-energy-v6-dual-face-b-pendant-bloom-r1';
 import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstruction, stepCameraResolvedDistance, chooseCameraArrivalYaw } from './assets/camera-obstruction.js?v=clearsight-v1';
+import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1298,6 +1299,7 @@ const I18N = {
     ferrisRiding:'🎡 마을이 한눈에! 한 바퀴 천천히 돌아 내려와요…', ferrisBoard:'🎡 대관람차에 탑승! 위로 올라가며 마을을 둘러보세요', ferrisDone:'🎡 즐거운 탑승이었어요! 또 타러 오세요',
     lmDriveFerris:'🎡 대관람차로 갑니다… 꼭대기에서 마을을 내려다봐요!', lmArriveFerris:'🚕 <b>대관람차</b>에 도착! 탑승해서 위로 올라가 볼까요? 🎡',
     carouselName:'회전목마', carouselReached:' — 알록달록 놀이공원의 회전목마. <span class="key">Enter</span> 또는 클릭으로 탑승', carouselRiding:'🎠 빙글빙글~ 한 바퀴 돌면 내려요', carouselBoard:'🎠 회전목마에 탑승! 천천히 돌며 놀이공원을 둘러보세요', carouselDone:'🎠 즐거웠나요? 또 타러 오세요', lmDriveCarousel:'🎠 회전목마로 갑니다… 빙글빙글 놀이공원으로!', lmArriveCarousel:'🚕 <b>회전목마</b>에 도착! 목마에 올라타 볼까요? 🎠',
+    ferryName:'쁘띠베니스 운하 유람선', ferryReached:' — 운하를 한 바퀴 도는 작은 유람선. <span class="key">Enter</span> 또는 클릭으로 탑승', ferryRiding:'🛶 물길을 따라 천천히 마을을 둘러보는 중…', ferryBoard:'🛶 유람선에 탑승! 꽃다리 아래로 이어지는 물길을 둘러보세요', ferryDone:'🛶 선착장에 돌아왔어요! 즐거운 운하 여행이었길 바라요',
     festAllStamps:'🎆 마을을 모두 둘러봤어요! 모든 명소 스탬프 완성 — 축제를 즐겨요!', festRepos:'🎆 레포 {n}곳 방문 달성! 불꽃이 터져요.',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
@@ -1470,6 +1472,7 @@ const I18N = {
     ferrisRiding:'🎡 The whole village at a glance! Riding one slow turn back down…', ferrisBoard:'🎡 Aboard the Ferris wheel! Rise up and take in the village', ferrisDone:'🎡 Hope you enjoyed the ride! Come again',
     lmDriveFerris:'🎡 Off to the Grand Ferris Wheel… a view from the very top!', lmArriveFerris:"🚕 We've reached the <b>Grand Ferris Wheel</b>! Hop aboard and rise up 🎡",
     carouselName:'Carousel', carouselReached:' — a colourful carousel at the funfair. Press <span class="key">Enter</span> or click to board', carouselRiding:'🎠 Round and round~ step off after one turn', carouselBoard:'🎠 Aboard the carousel! Spin gently and take in the funfair', carouselDone:'🎠 Did you enjoy it? Come ride again', lmDriveCarousel:'🎠 Off to the carousel… round and round at the funfair!', lmArriveCarousel:"🚕 We've reached the <b>Carousel</b>! Hop on a horse? 🎠",
+    ferryName:'Petite-Venise Canal Ferry', ferryReached:' — a small ferry touring the canal. Press <span class="key">Enter</span> or click to board', ferryRiding:'🛶 Cruising the waterway for one gentle town tour…', ferryBoard:'🛶 Aboard the canal ferry! Follow the waterway beneath the flower bridges', ferryDone:'🛶 Back at the dock! Hope you enjoyed the canal tour',
     festAllStamps:'🎆 You\'ve explored the whole village! Every landmark stamped — enjoy the festival!', festRepos:'🎆 {n} repos visited! Fireworks light up the sky.',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
@@ -3016,6 +3019,64 @@ function makePavilion(px,pz){
 const EXTRA_COLLIDERS=[];   // big props get a soft collider (merged into COLLIDERS after the building pass)
 const CANAL_PTS=[];         // ⛵ Petite-Venise canal centres (auto-collected) → Explorer Passport "canal" stamp proximity
 let RIVER_LANDMARK=null;    // 🌊 grand stream's taxi/landmark arrival point (a dry spot on the town-side bank)
+/*CANAL_FERRY:START*/
+let CANAL_FERRY=null, nearCanalFerry=null, canalFerryRide=null;
+function makeCanalFerry(curve,dock){
+  if(CANAL_FERRY||!curve||!dock) return CANAL_FERRY;
+  const root=new THREE.Group(); root.name='petite-venise-canal-ferry'; scene.add(root);
+  const hull=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,8,0,Math.PI*2,0,Math.PI/2),toon(0x347f8d));
+  hull.scale.set(1.16,0.5,2.35); hull.rotation.x=Math.PI; hull.position.y=0.16; root.add(hull);
+  [-0.62,0.62].forEach(x=>{ const trim=rbox(0.08,0.1,3.45,0xf2d28a,0.025); trim.position.set(x,0.3,0); root.add(trim); });
+  [-0.72,0,0.72].forEach(z=>{ const seat=rbox(0.98,0.07,0.13,0x6f4930,0.025); seat.position.set(0,0.28,z); root.add(seat); });
+  const lampMat=new THREE.MeshBasicMaterial({color:0xffe6a8});
+  const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.09,8,6),lampMat); lamp.position.set(0,0.34,1.72); root.add(lamp);
+  const wake=new THREE.Mesh(new THREE.PlaneGeometry(2.4,4.8),new THREE.MeshBasicMaterial({map:GLOW_TEX,color:0xbfefff,transparent:true,opacity:0.1,depthWrite:false,fog:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
+  wake.rotation.x=-Math.PI/2; wake.position.set(0,0.01,-1.45); root.add(wake);
+  disableDynamicShadowCasters(root);
+  const sample={},point=new THREE.Vector3(),tangent=new THREE.Vector3(),dockPos=new THREE.Vector3(dock.x,0,dock.z);
+  sampleCanalFerryRoute(0,CANAL_FERRY_DEFAULTS,sample); curve.getPointAt(sample.t,point); curve.getTangentAt(sample.t,tangent);
+  root.position.set(point.x,0.12,point.z); root.rotation.y=Math.atan2(tangent.x,tangent.z);
+  CANAL_FERRY={group:root,curve,dock:dockPos,_pos:dockPos,point,tangent,sample,wake,lastDirection:sample.direction,
+    duration:CANAL_FERRY_DEFAULTS.duration,baseY:0.12,bridgeUnderY:0.62,maxWorldY:0.55,bridgeClearance:0.07};
+  return CANAL_FERRY;
+}
+function _placeCanalFerry(elapsed,dt){
+  const F=CANAL_FERRY; if(!F) return null;
+  sampleCanalFerryRoute(elapsed,CANAL_FERRY_DEFAULTS,F.sample);
+  F.curve.getPointAt(F.sample.t,F.point); F.curve.getTangentAt(F.sample.t,F.tangent);
+  F.lastDirection=F.sample.direction||F.lastDirection; F.tangent.multiplyScalar(F.lastDirection);
+  const yaw=Math.atan2(F.tangent.x,F.tangent.z);
+  F.group.rotation.y=lerpA(F.group.rotation.y,yaw,Math.min(1,Math.max(0.08,dt*4.2)));
+  const bob=REDUCED?0:Math.sin(clock.elapsedTime*2.1)*0.025;
+  F.group.position.set(F.point.x,F.baseY+bob,F.point.z);
+  F.wake.material.opacity=canalFerryRide?(REDUCED?0.12:0.18+Math.sin(clock.elapsedTime*3.4)*0.04):0.08;
+  return F.sample;
+}
+function boardCanalFerry(){
+  if(!CANAL_FERRY||canalFerryRide||ride||ferris||carousel||modalOpen||repositoryAtelierActive()) return false;
+  standUp(); clearKeys(); canalFerryRide={elapsed:0}; CANAL_FERRY.lastDirection=1; _placeCanalFerry(0,1);
+  player.position.set(CANAL_FERRY.group.position.x,CANAL_FERRY.group.position.y,CANAL_FERRY.group.position.z);
+  model.visible=false; blob.visible=false; freeLook=true; camYaw=CANAL_FERRY.group.rotation.y+Math.PI; camPitch=0.3; camDist=16;
+  if(addStamp('canal')) popSparkle(CANAL_FERRY.dock.x,2.6,CANAL_FERRY.dock.z,0x7fe3da);
+  promptEl.classList.remove('show'); actBtn.classList.remove('avail'); track('canal_ferry_board',{}); showWave(t('ferryBoard'),3000); return true;
+}
+function disembarkCanalFerry(){
+  if(!CANAL_FERRY||!canalFerryRide) return false;
+  canalFerryRide=null; _placeCanalFerry(0,1); player.position.copy(CANAL_FERRY.dock);
+  model.visible=true; blob.visible=true; freeLook=false;
+  model.rotation.y=Math.atan2(CANAL_FERRY.group.position.x-CANAL_FERRY.dock.x,CANAL_FERRY.group.position.z-CANAL_FERRY.dock.z);
+  camYaw=model.rotation.y+Math.PI; camPitch=0.42; camDist=13;
+  track('canal_ferry_complete',{}); showWave(t('ferryDone'),3000); return true;
+}
+function updateCanalFerry(dt){
+  if(!CANAL_FERRY) return;
+  if(canalFerryRide) canalFerryRide.elapsed=Math.min(CANAL_FERRY.duration,canalFerryRide.elapsed+dt);
+  const state=_placeCanalFerry(canalFerryRide?canalFerryRide.elapsed:0,dt);
+  if(!canalFerryRide) return;
+  player.position.set(CANAL_FERRY.group.position.x,CANAL_FERRY.group.position.y,CANAL_FERRY.group.position.z);
+  if(state.complete) disembarkCanalFerry();
+}
+/*CANAL_FERRY:END*/
 const BLOOM_MATS=[0xff5d8f,0xffd23f,0xff8a3d,0xb06fe0,0xfff0f5,0xff3b6e,0xff7eb0,0xffe08a,0xe6486e].map(basic);
 function bloom(parent,x,y,z,spread=0.5,n=10,s=1){   // a colorful mound of blossoms (shared geo+mats)
   for(let i=0;i<n;i++){ const a=Math.random()*6.2832, rr=Math.random()*spread;
@@ -3266,6 +3327,7 @@ function makeRiver(ctrl, opt={}){
     const post=rbox(0.16,2.0,0.16,0x7a5230,0.03); post.position.y=1.0; outline(post,0.03); signG.add(post);
     const board=new THREE.Mesh(new THREE.PlaneGeometry(1.95,0.64), new THREE.MeshBasicMaterial({map:signTexture('Petite-Venise · 쁘띠베니스',0x67c4d8),transparent:true})); board.position.set(0,1.72,0.08); signG.add(board);
     EXTRA_COLLIDERS.push({x:sgx,z:sgz,r:0.4}); }
+  makeCanalFerry(curve,RIVER_LANDMARK);
 }
 /*MEMORIAL_TREE:START*/
 // 🌳 Solar Archive — one dominant front vein, one rear support, rooted leaves, and bright branch-end ornaments.
@@ -6684,6 +6746,7 @@ function _cameraOwnerAtFrameStart(){
   if(ride) return 'taxi-ride';
   if(ferris) return 'ferris';
   if(carousel) return 'carousel';
+  if(canalFerryRide) return 'canal-ferry';
   if(sitting) return 'seated';
   return 'open-world';
 }
@@ -6747,8 +6810,8 @@ function _updateClearSightCamera(dt,owner){
 function _settleClearSightArrival(destination){
   const state=CLEAR_SIGHT_CAMERA,pos=destination&&destination._pos;
   if(!pos) return false;
-  if((tour&&tour.active)||repositoryAtelierActive()||ferris||carousel||sitting){
-    state.arrivalSkipped=(tour&&tour.active)?'guided-tour':repositoryAtelierActive()?'repository-atelier':ferris?'ferris':carousel?'carousel':'seated';
+  if((tour&&tour.active)||repositoryAtelierActive()||ferris||carousel||canalFerryRide||sitting){
+    state.arrivalSkipped=(tour&&tour.active)?'guided-tour':repositoryAtelierActive()?'repository-atelier':ferris?'ferris':carousel?'carousel':canalFerryRide?'canal-ferry':'seated';
     return false;
   }
   const started=performance.now();
@@ -7418,7 +7481,7 @@ const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null
 let nearInviteCircle=null;   // an active gathering that has waved you over (join it with Enter from a little further out than the walk-up reach)
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -8724,12 +8787,13 @@ function animate(){
   frame++;
   const _now=performance.now();
   const _idle=_effectiveIdle(_now);   // perf matrix can toggle cadence without synthetic input
-  if(_idle && !repositoryAtelierActive() && !(tour&&tour.active) && !ferris && !carousel && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour keep full fps)
+  if(_idle && !repositoryAtelierActive() && !(tour&&tour.active) && !ferris && !carousel && !canalFerryRide && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour/ferry keep full fps)
   lastFrame=_now; renderedFrame++;
   const dt=Math.min(clock.getDelta(),0.05);
   if(_repositoryAtelierFrame(dt)) return;   // one explicit gate: room or frozen transition, never the exterior simulation too
   updateFerris(dt);
   updateCarousel(dt);
+  updateCanalFerry(dt);
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
   mv.set(0,0,0);
@@ -8767,6 +8831,8 @@ function animate(){
     const w=new THREE.Vector3(); carousel.horse.grp.getWorldPosition(w);
     player.position.set(w.x, w.y-1.6, w.z);                  // ride the horse — the camera circles with the carousel
     if(carousel.turned>=Math.PI*2) disembarkCarousel();      // one full turn → step off at the platform
+  } else if(canalFerryRide){
+    player.position.set(CANAL_FERRY.group.position.x,CANAL_FERRY.group.position.y,CANAL_FERRY.group.position.z);
   } else {
     if(sitting&&userInput) standUp();
     if(keys['KeyW']||keys['ArrowUp']) mv.add(tF);
@@ -8815,6 +8881,7 @@ function animate(){
   nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
   nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
   nearCarousel = (CAROUSEL && !carousel && player.position.distanceTo(CAROUSEL.board) < 6.0) ? CAROUSEL : null;
+  nearCanalFerry = (CANAL_FERRY && !canalFerryRide && player.position.distanceTo(CANAL_FERRY.dock) < 7.5) ? CANAL_FERRY : null;
   nearHub=null; if(!nearest){ let hd=HUB_NEAR; for(const h of ZONE_HUBS){ const d=player.position.distanceTo(h.pos); if(d<hd){ hd=d; nearHub=h; } } }   // hubs never override a building's own door (checked only when no house is in reach)
   nearResident=null; if(!nearest && !nearHub){ let rd=RES_REACH; for(const L of RESIDENTS_LIVE){ const d=player.position.distanceTo(L._npc.pos); if(d<rd){ rd=d; nearResident=L._npc; } } }   // residents sit below buildings + hubs — they never hijack a repo door or a district board
   nearInviteCircle=null;   // 👋 a nearby gathering waves the lingering visitor over: linger within invite reach (but past the walk-up reach) of a talking circle and one member calls you
@@ -8843,6 +8910,7 @@ function animate(){
   else if(nearStation&&!modalOpen){ promptEl.innerHTML=`<b>${t('stationLm')}</b>${t('stationReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚉'; }
   else if(nearFerris&&!modalOpen){ promptEl.innerHTML=`<b>${t('ferrisName')}</b>${t('ferrisReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎡'; }
   else if(nearCarousel&&!modalOpen){ promptEl.innerHTML=`<b>${t('carouselName')}</b>${t('carouselReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎠'; }
+  else if(nearCanalFerry&&!modalOpen){ promptEl.innerHTML=`<b>${t('ferryName')}</b>${t('ferryReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🛶'; }
   else if(nearest&&!modalOpen){ promptEl.innerHTML = nearest._isLibrary
       ? `<b>${t('libName')}</b>${t('libReached')}`
       : (LANG==='ko'?`<b>${nearest.label}</b> 도착! <span class="key">Enter</span> 또는 클릭으로 열기`:`<b>${nearest.label}</b> reached! <span class="key">Enter</span> or click to open`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚪'; }
@@ -8893,7 +8961,7 @@ function animate(){
   updateGlowFlora(clock.elapsedTime);
   updateHearth(clock.elapsedTime);
   rtTick(dt);
-  if(userInput||moving||ride||dragging||navTarget) lastAct=_now;   // dynamic state keeps interaction responsive; shadow invalidation is independent
+  if(userInput||moving||ride||canalFerryRide||dragging||navTarget) lastAct=_now;   // dynamic state keeps interaction responsive; shadow invalidation is independent
   _updateVisualLod(renderedFrame);
   _updateBuildingLodPrototype(renderedFrame);
   _beginRenderMetrics(_idle); _renderWorldTreeFrame(); _endRenderMetrics();
@@ -9376,6 +9444,14 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__board=()=>{ if(!FERRIS) return 'no ferris'; const b=FERRIS.board; player.position.set(b.x,0,b.z); return window.__ferris(); };
   window.__carousel=()=>({ has:!!CAROUSEL, pos:CAROUSEL?{x:+CAROUSEL._pos.x.toFixed(1),z:+CAROUSEL._pos.z.toFixed(1)}:null, board:CAROUSEL?{x:+CAROUSEL.board.x.toFixed(1),z:+CAROUSEL.board.z.toFixed(1)}:null, near:!!nearCarousel, riding:!!carousel, turned:carousel?+carousel.turned.toFixed(2):0, dist:CAROUSEL?+player.position.distanceTo(CAROUSEL.board).toFixed(1):null });
   window.__boardC=()=>{ if(!CAROUSEL) return 'no carousel'; const b=CAROUSEL.board; player.position.set(b.x,0,b.z); return window.__carousel(); };
+  window.__canalFerry=()=>({ has:!!CANAL_FERRY, dock:CANAL_FERRY?[+CANAL_FERRY.dock.x.toFixed(1),+CANAL_FERRY.dock.z.toFixed(1)]:null,
+    boat:CANAL_FERRY?[+CANAL_FERRY.group.position.x.toFixed(1),+CANAL_FERRY.group.position.y.toFixed(2),+CANAL_FERRY.group.position.z.toFixed(1)]:null,
+    near:!!nearCanalFerry,riding:!!canalFerryRide,progress:canalFerryRide?+CANAL_FERRY.sample.progress.toFixed(3):0,
+    routeT:CANAL_FERRY?+CANAL_FERRY.sample.t.toFixed(4):null,duration:CANAL_FERRY?CANAL_FERRY.duration:0,
+    bridge:CANAL_FERRY?{underY:CANAL_FERRY.bridgeUnderY,maxWorldY:CANAL_FERRY.maxWorldY,clearance:CANAL_FERRY.bridgeClearance}:null,
+    meshes:CANAL_FERRY?CANAL_FERRY.group.children.length:0,owner:_cameraOwnerAtFrameStart() });
+  window.__boardFerry=()=>{ if(!CANAL_FERRY) return {has:false}; player.position.copy(CANAL_FERRY.dock); nearCanalFerry=CANAL_FERRY; boardCanalFerry(); return window.__canalFerry(); };
+  window.__finishFerry=()=>{ if(canalFerryRide) canalFerryRide.elapsed=CANAL_FERRY.duration-0.05; return window.__canalFerry(); };
   window.__station=(tx,tz)=>{ if(!STATION) return {has:false}; const S=(tx==null?STATION._pos:new THREE.Vector3(+tx,0,+tz)); let mind=Infinity,who=null,wpos=null,wcw=null;
     for(const b of buildings){ if(b._isLibrary) continue; const bx=(b._x!=null?b._x:b.position.x), bz=(b._z!=null?b._z:b.position.z); const cw=(b._cw||3); const edge=Math.hypot(bx-S.x,bz-S.z)-cw; if(edge<mind){ mind=edge; who=b.repo; wpos={x:+bx.toFixed(1),z:+bz.toFixed(1)}; wcw=+cw.toFixed(1); } }
     return { has:true, pos:{x:+S.x.toFixed(1),z:+S.z.toFixed(1)}, r:+Math.hypot(S.x,S.z).toFixed(1), near:!!nearStation, dist:+player.position.distanceTo(S).toFixed(1), reach:6.0, baseR:2.5, nearestBld:who, nearestBldPos:wpos, nearestBldCw:wcw, gapToEdge:+mind.toFixed(1) }; };
