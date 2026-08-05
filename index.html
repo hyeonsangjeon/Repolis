@@ -1072,6 +1072,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree/createRepolisHero.js?v=azimuth-energy-v6-dual-face-b-pendant-bloom-r1';
 import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstruction, stepCameraResolvedDistance, chooseCameraArrivalYaw } from './assets/camera-obstruction.js?v=clearsight-v1';
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
+import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1270,7 +1271,7 @@ const I18N = {
     chronicleZoneFound:'🧭 {name}이 알려준 {zone}에 도착했어요.',
     handoffGo:'🧭 {name} 찾으러 가기', handoffNav:'🧭 나침반이 {name}의 현재 위치를 가리켜요. 직접 찾아가 보세요!',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자', lmMira:'MIRA · 시간지기', lmLyra:'LYRA · 창조의 대장장이',
-    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리', lmHomes:'별빛 주거구역',
+    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmRain:'비정원 · 날씨 종', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리', lmHomes:'별빛 주거구역',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
     chronoSub:'주제를 입력하면 세 현자(옹호·회의·분석)가 실시간으로 토론하고, 시간의 의장 크로노스가 결론을 내립니다.',
     chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'예시 주제를 골라 채워 보세요', chronoStage:'⚡ 라이브 AI 토론',
@@ -1304,6 +1305,7 @@ const I18N = {
     lmDriveFerris:'🎡 대관람차로 갑니다… 꼭대기에서 마을을 내려다봐요!', lmArriveFerris:'🚕 <b>대관람차</b>에 도착! 탑승해서 위로 올라가 볼까요? 🎡',
     carouselName:'회전목마', carouselReached:' — 알록달록 놀이공원의 회전목마. <span class="key">Enter</span> 또는 클릭으로 탑승', carouselRiding:'🎠 빙글빙글~ 한 바퀴 돌면 내려요', carouselBoard:'🎠 회전목마에 탑승! 천천히 돌며 놀이공원을 둘러보세요', carouselDone:'🎠 즐거웠나요? 또 타러 오세요', lmDriveCarousel:'🎠 회전목마로 갑니다… 빙글빙글 놀이공원으로!', lmArriveCarousel:'🚕 <b>회전목마</b>에 도착! 목마에 올라타 볼까요? 🎠',
     ferryName:'쁘띠베니스 운하 유람선', ferryReached:' — 운하를 한 바퀴 도는 작은 유람선. <span class="key">Enter</span> 또는 클릭으로 탑승', ferryRiding:'🛶 물길을 따라 천천히 마을을 둘러보는 중…', ferryBoard:'🛶 유람선에 탑승! 꽃다리 아래로 이어지는 물길을 둘러보세요', ferryDone:'🛶 선착장에 돌아왔어요! 즐거운 운하 여행이었길 바라요',
+    rainName:'비정원 날씨 종', rainReached:' — 종을 울려 36초 동안 햇빛 소나기를 불러요. <span class="key">Enter</span> 또는 클릭으로 울리기', rainReachedWet:' — 소나기가 내려요. <span class="key">Enter</span> 또는 클릭으로 맑게 하기', rainStarted:'🌦️ 날씨 종이 울렸어요! 구름이 모이고 주민들이 우산을 펼쳐요', rainStopped:'☀️ 종소리를 따라 소나기가 걷혔어요', rainEnded:'🌤️ 짧은 소나기가 지나가고 마을이 다시 맑아졌어요', lmDriveRain:'🌦️ 비정원의 날씨 종으로 갑니다…', lmArriveRain:'🚕 <b>비정원</b>에 도착했어요! 종을 울려 햇빛 소나기를 불러보세요 🌦️',
     festAllStamps:'🎆 마을을 모두 둘러봤어요! 모든 명소 스탬프 완성 — 축제를 즐겨요!', festRepos:'🎆 레포 {n}곳 방문 달성! 불꽃이 터져요.',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
     cityOfRepos:'레포들의 도시',
@@ -1443,7 +1445,7 @@ const I18N = {
     chronicleZoneFound:'🧭 You reached {zone}, recommended by {name}.',
     handoffGo:'🧭 Find {name}', handoffNav:'🧭 The compass now follows {name}\'s live position. Walk out and find them!',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer', lmMira:'MIRA · Timekeeper', lmLyra:'LYRA · Forgemaster',
-    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation', lmHomes:'Starlight Row',
+    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmRain:'Rain Garden · Weather Bell', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation', lmHomes:'Starlight Row',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
     chronoSub:'Type a topic and three sages (advocate · skeptic · analyst) debate it live; the Chair of Time, KRONOS, delivers the verdict.',
     chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick an example to fill the box', chronoStage:'⚡ Live AI debate',
@@ -1477,6 +1479,7 @@ const I18N = {
     lmDriveFerris:'🎡 Off to the Grand Ferris Wheel… a view from the very top!', lmArriveFerris:"🚕 We've reached the <b>Grand Ferris Wheel</b>! Hop aboard and rise up 🎡",
     carouselName:'Carousel', carouselReached:' — a colourful carousel at the funfair. Press <span class="key">Enter</span> or click to board', carouselRiding:'🎠 Round and round~ step off after one turn', carouselBoard:'🎠 Aboard the carousel! Spin gently and take in the funfair', carouselDone:'🎠 Did you enjoy it? Come ride again', lmDriveCarousel:'🎠 Off to the carousel… round and round at the funfair!', lmArriveCarousel:"🚕 We've reached the <b>Carousel</b>! Hop on a horse? 🎠",
     ferryName:'Petite-Venise Canal Ferry', ferryReached:' — a small ferry touring the canal. Press <span class="key">Enter</span> or click to board', ferryRiding:'🛶 Cruising the waterway for one gentle town tour…', ferryBoard:'🛶 Aboard the canal ferry! Follow the waterway beneath the flower bridges', ferryDone:'🛶 Back at the dock! Hope you enjoyed the canal tour',
+    rainName:'Rain Garden Weather Bell', rainReached:' — ring for one 36-second sunshower. Press <span class="key">Enter</span> or click to ring', rainReachedWet:' — the sunshower is falling. Press <span class="key">Enter</span> or click to clear it', rainStarted:'🌦️ The Weather Bell rang! Clouds gather and the residents open their umbrellas', rainStopped:'☀️ The sunshower clears with the bell', rainEnded:'🌤️ The brief shower passes and the town brightens again', lmDriveRain:'🌦️ Off to the Rain Garden Weather Bell…', lmArriveRain:"🚕 We've reached the <b>Rain Garden</b>! Ring the bell to call a sunshower 🌦️",
     festAllStamps:'🎆 You\'ve explored the whole village! Every landmark stamped — enjoy the festival!', festRepos:'🎆 {n} repos visited! Fireworks light up the sky.',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
     cityOfRepos:'the city of repos',
@@ -1949,7 +1952,7 @@ function _visualLodRoot(object){ let root=object; while(root.parent&&root.parent
 function _finalizeVisualLod(){
   if(VISUAL_LOD.finalized) return; const protectedRoots=new Set(),protect=o=>{ if(o) protectedRoots.add(_visualLodRoot(o)); };
   protect(MEMORIAL_TREE&&MEMORIAL_TREE.group); protect(player); protect(taxi); protect(driver); protect(engineer); protect(rigel); protect(navHolder);
-  protect(CHRONO&&CHRONO._group); protect(OBS&&OBS._group); protect(STATION&&STATION._group); protect(LIB&&LIB._group); protect(HEARTH&&HEARTH.g);
+  protect(CHRONO&&CHRONO._group); protect(OBS&&OBS._group); protect(STATION&&STATION._group); protect(LIB&&LIB._group); protect(HEARTH&&HEARTH.g); protect(RAIN_GARDEN&&RAIN_GARDEN.group);
   if(FERRIS) protect(FERRIS.wheel); if(CAROUSEL) protect(CAROUSEL.spin); ZONE_HUBS.forEach(h=>protect(h.group)); NPCS.forEach(n=>protect(n.group));
   RESIDENTS_LIVE.forEach(L=>protect(L.group)); peers.forEach(p=>protect(p.group));
   for(const entry of [...VISUAL_LOD.outlines,...VISUAL_LOD.effects]) entry.eligible=!protectedRoots.has(_visualLodRoot(entry.object));
@@ -3456,6 +3459,109 @@ function makePark(cx, cz, memorial=false){   // 🌳 a calm rest park set off th
   const board=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.62), new THREE.MeshBasicMaterial({map:signTexture('Park · 공원',0x6fbf73),transparent:true})); board.position.set(0,1.78,0.1); signG.add(board);
   EXTRA_COLLIDERS.push({x:signG.position.x,z:signG.position.z,r:0.4});
 }
+/*RAIN_GARDEN:START*/
+const RAIN_GARDEN_POS=new THREE.Vector3(20,0,-6);
+const RAIN_CLOUD_CLEAR=new THREE.Color(0xfffdf6), RAIN_CLOUD_WET=new THREE.Color(0x9fb1c1);
+const RAIN_SAMPLE={}, RAIN_SEED={}, RAIN_UMBRELLA_DUMMY=new THREE.Object3D();
+let RAIN_GARDEN=null, nearRainGarden=null, rainGardenActive=false, rainGardenElapsed=RAIN_GARDEN_DEFAULTS.duration, rainGardenBellSwing=0, rainGardenUmbrellaStep=0;
+function makeRainGarden(x,z){
+  const g=new THREE.Group(), inward=new THREE.Vector3(-x,0,-z).normalize(); g.position.set(x,0,z); g.rotation.y=Math.atan2(inward.x,inward.z); scene.add(g);
+  const bed=new THREE.Mesh(new THREE.CylinderGeometry(3.35,3.55,0.22,28),toon(0xb9aa8d)); bed.position.y=0.11; bed.receiveShadow=true; g.add(bed);
+  const rim=new THREE.Mesh(new THREE.RingGeometry(2.45,3.08,36),toon(0xd8c9aa)); rim.rotation.x=-Math.PI/2; rim.position.y=0.24; g.add(rim);
+  const pool=makeWater(2.38,36); pool.position.y=0.25; g.add(pool);
+  [[-2.55,-1.25],[2.45,-1.1],[-2.25,1.15],[2.3,1.25]].forEach(([sx,sz],i)=>{
+    const stone=new THREE.Mesh(new THREE.CylinderGeometry(0.48,0.58,0.16,10),toon(i%2?0xb8b0a0:0xc8bfad)); stone.position.set(sx,0.25,sz); stone.rotation.y=i*0.7; g.add(stone); });
+  bloom(g,-2.25,0.26,-0.6,0.55,LOW_END?5:8,0.86); bloom(g,2.15,0.26,0.55,0.55,LOW_END?5:8,0.86);
+  const arch=new THREE.Group(); arch.position.z=2.15; g.add(arch);
+  [-1.05,1.05].forEach(sx=>{ const post=rbox(0.24,4.0,0.24,0x54706b,0.05); post.position.set(sx,2.0,0); outline(post,0.035); arch.add(post); });
+  const beam=rbox(2.55,0.26,0.3,0x54706b,0.05); beam.position.y=4.0; outline(beam,0.035); arch.add(beam);
+  const bellPivot=new THREE.Group(); bellPivot.position.y=3.72; arch.add(bellPivot);
+  const bell=new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.62,0.72,14,1,true),toon(0xc87835)); bell.position.y=-0.35; outline(bell,0.035); bellPivot.add(bell);
+  const crown=new THREE.Mesh(new THREE.SphereGeometry(0.36,12,8,0,Math.PI*2,0,Math.PI/2),toon(0xd89042)); crown.position.y=-0.02; bellPivot.add(crown);
+  const clapper=new THREE.Mesh(new THREE.SphereGeometry(0.12,9,7),toon(0x6e4c35)); clapper.position.y=-0.76; bellPivot.add(clapper);
+  const rope=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,1.55,6),toon(0xcdb178)); rope.position.set(0,2.15,0.04); arch.add(rope);
+  const drop=new THREE.Mesh(new THREE.OctahedronGeometry(0.18,0),new THREE.MeshBasicMaterial({color:0x9edcff,transparent:true,opacity:0.9})); drop.scale.y=1.45; drop.position.set(0,4.55,0); arch.add(drop);
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(2.2,0.72),new THREE.MeshBasicMaterial({map:signTexture('RAIN GARDEN · 비정원',0x5f9eaa),transparent:true}));
+  sign.position.set(-2.15,1.25,2.8); sign.rotation.y=0.1; g.add(sign);
+
+  const dropCount=LOW_END?RAIN_GARDEN_DEFAULTS.mobileDrops:RAIN_GARDEN_DEFAULTS.desktopDrops;
+  const rainPositions=new Float32Array(dropCount*6), rainSpeeds=new Float32Array(dropCount);
+  for(let i=0;i<dropCount;i++){ seedRainDrop(i,dropCount,RAIN_GARDEN_DEFAULTS,RAIN_SEED); const o=i*6;
+    rainPositions[o]=rainPositions[o+3]=RAIN_SEED.x; rainPositions[o+1]=RAIN_SEED.y; rainPositions[o+4]=Math.max(0.04,RAIN_SEED.y-RAIN_GARDEN_DEFAULTS.streak); rainPositions[o+2]=rainPositions[o+5]=RAIN_SEED.z; rainSpeeds[i]=RAIN_SEED.speed; }
+  const rainGeometry=new THREE.BufferGeometry(), rainAttribute=new THREE.BufferAttribute(rainPositions,3); rainAttribute.setUsage(THREE.DynamicDrawUsage); rainGeometry.setAttribute('position',rainAttribute);
+  const rainMaterial=new THREE.LineBasicMaterial({color:0xbde7ff,transparent:true,opacity:0,depthWrite:false,fog:true});
+  const rain=new THREE.LineSegments(rainGeometry,rainMaterial); rain.name='RainGardenSunshower'; rain.frustumCulled=false; rain.visible=false; rain.position.set(x,0,z); scene.add(rain);
+  const rippleMaterial=new THREE.MeshBasicMaterial({color:0xc7eeff,transparent:true,opacity:0,depthWrite:false,fog:true,side:THREE.DoubleSide});
+  const ripples=new THREE.InstancedMesh(new THREE.RingGeometry(0.34,0.42,14),rippleMaterial,RAIN_GARDEN_DEFAULTS.rippleCount);
+  ripples.name='RainGardenRipples'; ripples.instanceMatrix.setUsage(THREE.DynamicDrawUsage); ripples.frustumCulled=false; ripples.visible=false; scene.add(ripples);
+  const center=new THREE.Vector3(x,0,z), arrival=center.clone().addScaledVector(inward,4.8), bellPos=center.clone().addScaledVector(inward,2.15);
+  disableDynamicShadowCasters(g); EXTRA_COLLIDERS.push({x,z,r:1.55,_rainGarden:true});
+  RAIN_GARDEN={group:g,center,_pos:arrival,bellPos,bellPivot,rain,rainPositions,rainSpeeds,ripples,dropCount,intensity:0,umbrellas:null};
+  return RAIN_GARDEN;
+}
+function buildRainGardenResidentUmbrellas(){
+  if(!RAIN_GARDEN||RAIN_GARDEN.umbrellas||!RESIDENTS_LIVE.length) return;
+  const n=RESIDENTS_LIVE.length, canopyMat=toon(0xffffff), poleMat=toon(0x6b5945);
+  canopyMat.transparent=true; canopyMat.opacity=0; poleMat.transparent=true; poleMat.opacity=0;
+  const canopies=new THREE.InstancedMesh(new THREE.ConeGeometry(0.78,0.34,12,1,true),canopyMat,n);
+  const poles=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.035,0.035,1.12,6),poleMat,n);
+  const colors=[new THREE.Color(0x5f9eaa),new THREE.Color(0xc8785c),new THREE.Color(0xd0a844),new THREE.Color(0x8a72b8)];
+  for(let i=0;i<n;i++) canopies.setColorAt(i,colors[i%colors.length]);
+  canopies.instanceColor.needsUpdate=true; canopies.instanceMatrix.setUsage(THREE.DynamicDrawUsage); poles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  canopies.name='RainGardenResidentUmbrellas'; poles.name='RainGardenUmbrellaPoles'; canopies.frustumCulled=poles.frustumCulled=false;
+  canopies.visible=poles.visible=false; scene.add(canopies,poles); RAIN_GARDEN.umbrellas={canopies,poles,count:n};
+}
+function _setRainGardenClouds(intensity){
+  CLOUD_MAT.color.setRGB(RAIN_CLOUD_CLEAR.r+(RAIN_CLOUD_WET.r-RAIN_CLOUD_CLEAR.r)*intensity,
+    RAIN_CLOUD_CLEAR.g+(RAIN_CLOUD_WET.g-RAIN_CLOUD_CLEAR.g)*intensity,
+    RAIN_CLOUD_CLEAR.b+(RAIN_CLOUD_WET.b-RAIN_CLOUD_CLEAR.b)*intensity);
+  CLOUD_MAT.opacity=0.88+intensity*0.07;
+}
+function _setRainGardenUmbrellas(visible){
+  const U=RAIN_GARDEN&&RAIN_GARDEN.umbrellas; if(!U) return; U.canopies.visible=U.poles.visible=!!visible;
+  if(!visible){ U.canopies.material.opacity=U.poles.material.opacity=0; }
+}
+function _updateRainGardenUmbrellas(dt,intensity){
+  const U=RAIN_GARDEN&&RAIN_GARDEN.umbrellas; if(!U||!U.canopies.visible) return;
+  rainGardenUmbrellaStep+=dt; if(rainGardenUmbrellaStep<0.08) return; rainGardenUmbrellaStep=0;
+  U.canopies.material.opacity=Math.min(1,intensity*1.25); U.poles.material.opacity=Math.min(1,intensity*1.25);
+  for(let i=0;i<U.count;i++){ const L=RESIDENTS_LIVE[i], show=!!(L&&L.group.visible), s=show?1:0.001, y=show?L.group.position.y:0;
+    RAIN_UMBRELLA_DUMMY.position.set(show?L.group.position.x:0,y+3.0,show?L.group.position.z:0); RAIN_UMBRELLA_DUMMY.rotation.set(0,show?L.group.rotation.y:0,0); RAIN_UMBRELLA_DUMMY.scale.setScalar(s); RAIN_UMBRELLA_DUMMY.updateMatrix(); U.canopies.setMatrixAt(i,RAIN_UMBRELLA_DUMMY.matrix);
+    RAIN_UMBRELLA_DUMMY.position.y=y+2.38; RAIN_UMBRELLA_DUMMY.scale.setScalar(s); RAIN_UMBRELLA_DUMMY.updateMatrix(); U.poles.setMatrixAt(i,RAIN_UMBRELLA_DUMMY.matrix); }
+  U.canopies.instanceMatrix.needsUpdate=U.poles.instanceMatrix.needsUpdate=true;
+}
+function _stopRainGarden(reason){
+  if(!RAIN_GARDEN) return false; const wasActive=rainGardenActive; rainGardenActive=false; rainGardenElapsed=RAIN_GARDEN_DEFAULTS.duration; RAIN_GARDEN.intensity=0;
+  RAIN_GARDEN.rain.visible=RAIN_GARDEN.ripples.visible=false; RAIN_GARDEN.rain.material.opacity=RAIN_GARDEN.ripples.material.opacity=0; _setRainGardenUmbrellas(false); _setRainGardenClouds(0);
+  if(wasActive) track('rain_garden_complete',{reason}); return wasActive;
+}
+function ringRainGarden(){
+  if(!RAIN_GARDEN||ride||ferris||carousel||canalFerryRide||modalOpen||repositoryAtelierActive()) return false;
+  rainGardenBellSwing=2.2;
+  if(rainGardenActive){ _stopRainGarden('visitor'); showWave(t('rainStopped'),2400); return true; }
+  rainGardenActive=true; rainGardenElapsed=0; RAIN_GARDEN.rain.visible=RAIN_GARDEN.ripples.visible=true; _setRainGardenUmbrellas(true);
+  if(addStamp('rain')) popSparkle(RAIN_GARDEN.center.x,4.6,RAIN_GARDEN.center.z,0x9edcff);
+  track('rain_garden_ring',{drops:RAIN_GARDEN.dropCount}); showWave(t('rainStarted'),3200); return true;
+}
+function updateRainGarden(dt){
+  if(!RAIN_GARDEN) return;
+  if(rainGardenBellSwing>0){ rainGardenBellSwing=Math.max(0,rainGardenBellSwing-dt); RAIN_GARDEN.bellPivot.rotation.z=Math.sin((2.2-rainGardenBellSwing)*12)*0.25*(rainGardenBellSwing/2.2); }
+  else RAIN_GARDEN.bellPivot.rotation.z=0;
+  if(!rainGardenActive) return;
+  rainGardenElapsed=Math.min(RAIN_GARDEN_DEFAULTS.duration,rainGardenElapsed+dt); sampleRainGarden(rainGardenElapsed,RAIN_GARDEN_DEFAULTS,RAIN_SAMPLE); RAIN_GARDEN.intensity=RAIN_SAMPLE.intensity;
+  const arr=RAIN_GARDEN.rainPositions, speed=RAIN_GARDEN_DEFAULTS.fallSpeed, streak=RAIN_GARDEN_DEFAULTS.streak;
+  for(let i=0;i<RAIN_GARDEN.dropCount;i++){ const o=i*6, y=wrapRainDropY(arr[o+1],speed*RAIN_GARDEN.rainSpeeds[i]*dt,RAIN_GARDEN_DEFAULTS.height);
+    arr[o+1]=y; arr[o+4]=Math.max(0.04,y-streak*RAIN_GARDEN.rainSpeeds[i]); }
+  RAIN_GARDEN.rain.geometry.attributes.position.needsUpdate=true;
+  const follow=Math.min(1,dt*7); RAIN_GARDEN.rain.position.x+=(player.position.x-RAIN_GARDEN.rain.position.x)*follow; RAIN_GARDEN.rain.position.z+=(player.position.z-RAIN_GARDEN.rain.position.z)*follow;
+  RAIN_GARDEN.ripples.position.x=RAIN_GARDEN.rain.position.x; RAIN_GARDEN.ripples.position.z=RAIN_GARDEN.rain.position.z;
+  for(let i=0;i<RAIN_GARDEN_DEFAULTS.rippleCount;i++){ const phase=(rainGardenElapsed*0.78+i/RAIN_GARDEN_DEFAULTS.rippleCount)%1, a=i*2.399963229728653, rr=2.0+(i%4)*2.7;
+    RAIN_UMBRELLA_DUMMY.position.set(Math.cos(a)*rr,0.04,Math.sin(a)*rr); RAIN_UMBRELLA_DUMMY.rotation.set(-Math.PI/2,0,0); RAIN_UMBRELLA_DUMMY.scale.setScalar(0.38+phase*1.25); RAIN_UMBRELLA_DUMMY.updateMatrix(); RAIN_GARDEN.ripples.setMatrixAt(i,RAIN_UMBRELLA_DUMMY.matrix); }
+  RAIN_GARDEN.ripples.instanceMatrix.needsUpdate=true; RAIN_GARDEN.rain.material.opacity=RAIN_SAMPLE.intensity*0.72; RAIN_GARDEN.ripples.material.opacity=RAIN_SAMPLE.intensity*0.34;
+  _setRainGardenClouds(RAIN_SAMPLE.intensity); _updateRainGardenUmbrellas(dt,RAIN_SAMPLE.intensity);
+  if(RAIN_SAMPLE.complete){ _stopRainGarden('duration'); if(player.position.distanceTo(RAIN_GARDEN._pos)<40) showWave(t('rainEnded'),2400); }
+}
+/*RAIN_GARDEN:END*/
 function placeColmar(){   // invoked after the shared garden geo (GEO_FLOWER) is defined, below
   const D=Math.PI/180;
   makeCanalNook(Math.cos(45*D)*23, Math.sin(45*D)*23, 45*D+Math.PI/2);
@@ -3477,6 +3583,7 @@ function placeColmar(){   // invoked after the shared garden geo (GEO_FLOWER) is
   makeFlowerCart(Math.cos(255*D)*22, Math.sin(255*D)*22, 255*D+1);
   makeGuildLantern(Math.cos(135*D)*19, Math.sin(135*D)*19);
   makeGuildLantern(Math.cos(225*D)*19, Math.sin(225*D)*19);
+  makeRainGarden(RAIN_GARDEN_POS.x,RAIN_GARDEN_POS.z);
   // 🌳 calm rest parks set off the plaza, spread across lawn pockets (SW · N · E) between the ring streets to distribute the focal points
   makePark(-43,-15);
   makePark(MEMORIAL_TREE_POS.x,MEMORIAL_TREE_POS.z,true);
@@ -6099,6 +6206,7 @@ function placeResident(res){ const g=buildResident(res), work=_residentSpot(res)
   if(homeRec) homeRec.occupied=atHome;
   RESIDENTS_LIVE.push(live); return live; }
 if(NPC_CFG.modeEnabled && NPC_CFG.visualEnabled){ for(const res of RESIDENTS.slice(0,MAX_RESIDENTS)) placeResident(res); }
+buildRainGardenResidentUmbrellas();
 const _RES_COMMUTE_LINES={
   home:{ko:['이제 우리 집으로 돌아갈 시간이네요.','오늘도 잘 보냈어요 — 집에 다녀올게요.','별빛 주거구역으로 천천히 돌아갈래요.'],en:["Time to head back to my little house.","A good day — I'm walking home now.","Off to Starlight Row for a quiet evening."]},
   work:{ko:['잘 쉬었어요. 이제 제 구역으로 가볼게요.','좋은 아침이에요 — 일하러 다녀올게요.','오늘도 제 구역을 돌볼 시간이에요.'],en:["Rested well. Time to return to my district.","Good morning — off to work I go.","Time to look after my district again."]}
@@ -6932,6 +7040,7 @@ const PASS_LANDMARKS=[
   {id:'scholar:huggingface', ico:'🤗', key:'lmLyra'},
   {id:'library',          ico:'📚', key:'lmLibrary'},
   {id:'plaza',            ico:'⛲', key:'lmPlaza'},
+  {id:'rain',             ico:'🌦️', key:'lmRain'},
   {id:'canal',            ico:'🛶', key:'lmCanal'},
   {id:'chrono',           ico:'⏳', key:'lmChrono'},
   {id:'observatory',      ico:'🔭', key:'lmObservatory'},
@@ -7120,6 +7229,7 @@ function lmCourseDest(id){ switch(id){
   case 'observatory': return (typeof OBS!=='undefined'&&OBS)?{label:t('obsName'),_pos:OBS._pos,_landmark:'obs'}:null;
   case 'ferris': return (typeof FERRIS!=='undefined'&&FERRIS)?{label:t('ferrisName'),_pos:FERRIS._pos,_landmark:'ferris'}:null;
   case 'carousel': return (typeof CAROUSEL!=='undefined'&&CAROUSEL)?{label:t('carouselName'),_pos:CAROUSEL._pos,_landmark:'carousel'}:null;
+  case 'rain': return RAIN_GARDEN?{label:t('lmRain'),_pos:RAIN_GARDEN._pos,_landmark:'rain'}:null;
   case 'canal': { const c=RIVER_LANDMARK||CANAL_PTS[0]; return c?{label:t('lmCanal'),_pos:new THREE.Vector3(c.x,0,c.z),_landmark:'canal'}:null; }
   case 'plaza': return {label:t('lmPlaza'),_pos:new THREE.Vector3(0,0,0),_landmark:'plaza'};
   case 'homes': return RES_QUARTER?{label:t('lmHomes'),_pos:RES_QUARTER.arrival,_landmark:'homes'}:null;
@@ -7492,7 +7602,7 @@ const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null
 let nearInviteCircle=null;   // an active gathering that has waved you over (join it with Enter from a little further out than the walk-up reach)
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearRainGarden) ringRainGarden(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -7557,7 +7667,7 @@ document.getElementById('loading').style.display='none';
   const curName=document.getElementById('stationCurName');
   const stationClose=document.getElementById('stationClose');
   const EXAMPLES=['mrdoob','torvalds','karpathy','vercel','sindresorhus'];
-  const LANDMARK_STOPS=[{id:'plaza',ico:'⛲'},{id:'homes',ico:'🏘️'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
+  const LANDMARK_STOPS=[{id:'plaza',ico:'⛲'},{id:'rain',ico:'🌦️'},{id:'homes',ico:'🏘️'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
   const baseUrl=()=>location.origin+location.pathname;
   const townName=()=> cityMode==='public' ? tf('townOf',{user:currentUser}) : t('myCity');
 
@@ -7929,6 +8039,8 @@ function landmarkNav(q){
   // the Observatory is a proper noun too — its name carries the intent
   if(/별빛 ?전망대|전망대|천문대|observatory|stargazer|planetarium/i.test(q) || (/(별자리|constellation|night ?sky|밤하늘)/i.test(q) && go.test(q)))
     return OBS ? mk('lmDriveObs', t('obsName'), OBS._pos, 'obs') : null;
+  if(/비 ?정원|날씨 ?종|rain ?garden|weather ?bell|sunshower/i.test(q))
+    return RAIN_GARDEN ? mk('lmDriveRain',t('lmRain'),RAIN_GARDEN._pos,'rain') : null;
   // generic landmarks need a "go" verb so plain chatter about a canal/plaza doesn't hail a taxi
   if(go.test(q)){
     if(/쁘띠 ?베니스|petite[- ]?venise|운하|canal/i.test(q) && (RIVER_LANDMARK||CANAL_PTS.length)){ const c=RIVER_LANDMARK||CANAL_PTS[0]; return mk('lmDriveCanal', t('lmCanal'), new THREE.Vector3(c.x,0,c.z), 'canal'); }
@@ -8297,6 +8409,7 @@ function drawMinimap(){
   if(typeof OBS!=='undefined'&&OBS) LM.push([OBS._pos.x,OBS._pos.z,'🔭']);
   if(typeof FERRIS!=='undefined'&&FERRIS) LM.push([FERRIS._pos.x,FERRIS._pos.z,'🎡']);
   if(typeof CAROUSEL!=='undefined'&&CAROUSEL) LM.push([CAROUSEL._pos.x,CAROUSEL._pos.z,'🎠']);
+  if(RAIN_GARDEN) LM.push([RAIN_GARDEN.center.x,RAIN_GARDEN.center.z,'🌦️']);
   if(RES_QUARTER) LM.push([RES_QUARTER_POS.x,RES_QUARTER_POS.z,'🏘️']);
   ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.font='11px system-ui,sans-serif'; for(const l of LM){ const p=_mapP(l[0],l[1]); ctx.fillText(l[2],p[0],p[1]); }
@@ -8894,6 +9007,7 @@ function animate(){
   nearChrono = (CHRONO && player.position.distanceTo(CHRONO._pos) < 8.5) ? CHRONO : null;
   nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
   nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
+  nearRainGarden = (RAIN_GARDEN && player.position.distanceTo(RAIN_GARDEN._pos) < 5.8) ? RAIN_GARDEN : null;
   nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
   nearCarousel = (CAROUSEL && !carousel && player.position.distanceTo(CAROUSEL.board) < 6.0) ? CAROUSEL : null;
   nearCanalFerry = (CANAL_FERRY && !canalFerryRide && player.position.distanceTo(CANAL_FERRY.dock) < 7.5) ? CANAL_FERRY : null;
@@ -8924,6 +9038,7 @@ function animate(){
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
   else if(nearObs&&!modalOpen){ promptEl.innerHTML=`<b>${t('obsName')}</b>${t('obsReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🔭'; }
   else if(nearStation&&!modalOpen){ promptEl.innerHTML=`<b>${t('stationLm')}</b>${t('stationReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚉'; }
+  else if(nearRainGarden&&!modalOpen){ promptEl.innerHTML=`<b>${t('rainName')}</b>${t(rainGardenActive?'rainReachedWet':'rainReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent=rainGardenActive?'☀️':'🌦️'; }
   else if(nearFerris&&!modalOpen){ promptEl.innerHTML=`<b>${t('ferrisName')}</b>${t('ferrisReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎡'; }
   else if(nearCarousel&&!modalOpen){ promptEl.innerHTML=`<b>${t('carouselName')}</b>${t('carouselReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎠'; }
   else if(nearCanalFerry&&!modalOpen){ promptEl.innerHTML=`<b>${t('ferryName')}</b>${t('ferryReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🛶'; }
@@ -8974,6 +9089,7 @@ function animate(){
   updateStarTrail(clock.elapsedTime);
   updateNpcs(dt);
   updateResidents(dt);
+  updateRainGarden(dt);
   updateGlowFlora(clock.elapsedTime);
   updateHearth(clock.elapsedTime);
   rtTick(dt);
@@ -9472,6 +9588,25 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     meshes:CANAL_FERRY?CANAL_FERRY.group.children.length:0,owner:_cameraOwnerAtFrameStart() });
   window.__boardFerry=()=>{ if(!CANAL_FERRY) return {has:false}; player.position.copy(CANAL_FERRY.dock); nearCanalFerry=CANAL_FERRY; boardCanalFerry(); return window.__canalFerry(); };
   window.__finishFerry=()=>{ if(canalFerryRide) canalFerryRide.elapsed=CANAL_FERRY.duration-0.05; return window.__canalFerry(); };
+  const _rainGardenDebug=()=>{ let meshes=0,buildingGap=Infinity,nearestBuilding=null,decorGap=Infinity;
+    if(RAIN_GARDEN) RAIN_GARDEN.group.traverse(o=>{ if(o.isMesh||o.isSprite) meshes++; });
+    if(RAIN_GARDEN) for(const b of buildings){ if(b._isLibrary) continue; const bx=b._x!=null?b._x:b.position.x,bz=b._z!=null?b._z:b.position.z;
+      const gap=Math.hypot(bx-RAIN_GARDEN.center.x,bz-RAIN_GARDEN.center.z)-(b._cw||3)-3.55; if(gap<buildingGap){ buildingGap=gap; nearestBuilding=b.repo; } }
+    if(RAIN_GARDEN) for(const c of EXTRA_COLLIDERS){ if(c._rainGarden) continue; const gap=Math.hypot(c.x-RAIN_GARDEN.center.x,c.z-RAIN_GARDEN.center.z)-(c.r||0)-3.55; if(gap<decorGap) decorGap=gap; }
+    const U=RAIN_GARDEN&&RAIN_GARDEN.umbrellas, rainDraws=RAIN_GARDEN&&RAIN_GARDEN.rain.visible?1:0, rippleDraws=RAIN_GARDEN&&RAIN_GARDEN.ripples.visible?1:0, umbrellaDraws=U&&U.canopies.visible?2:0;
+    return {has:!!RAIN_GARDEN,active:rainGardenActive,elapsed:+rainGardenElapsed.toFixed(2),
+      remaining:+Math.max(0,RAIN_GARDEN_DEFAULTS.duration-rainGardenElapsed).toFixed(2),intensity:RAIN_GARDEN?+RAIN_GARDEN.intensity.toFixed(3):0,
+      pos:RAIN_GARDEN?[+RAIN_GARDEN.center.x.toFixed(1),+RAIN_GARDEN.center.z.toFixed(1)]:null,arrival:RAIN_GARDEN?[+RAIN_GARDEN._pos.x.toFixed(1),+RAIN_GARDEN._pos.z.toFixed(1)]:null,
+      near:!!nearRainGarden,stamp:passHasStamp('rain'),drops:RAIN_GARDEN?RAIN_GARDEN.dropCount:0,dropCap:LOW_END?RAIN_GARDEN_DEFAULTS.mobileDrops:RAIN_GARDEN_DEFAULTS.desktopDrops,
+      ripples:RAIN_GARDEN_DEFAULTS.rippleCount,umbrellas:U?U.count:0,umbrellasVisible:!!(U&&U.canopies.visible),meshes,
+      visible:{rain:!!(RAIN_GARDEN&&RAIN_GARDEN.rain.visible),ripples:!!(RAIN_GARDEN&&RAIN_GARDEN.ripples.visible)},
+      clouds:{color:'#'+CLOUD_MAT.color.getHexString(),opacity:+CLOUD_MAT.opacity.toFixed(3)},
+      clearance:{building:+buildingGap.toFixed(2),nearestBuilding,decor:+decorGap.toFixed(2)},resources:{activeDraws:rainDraws+rippleDraws+umbrellaDraws,rainDraws,rippleDraws,umbrellaDraws,timers:0,network:0,steadyAllocations:0},
+      owner:_cameraOwnerAtFrameStart()}; };
+  window.__rainGarden=()=>_rainGardenDebug();
+  window.__ringRain=()=>{ if(!RAIN_GARDEN) return {has:false}; if(rainGardenActive) _stopRainGarden('debug-reset'); player.position.copy(RAIN_GARDEN._pos); nearRainGarden=RAIN_GARDEN; ringRainGarden(); return _rainGardenDebug(); };
+  window.__finishRain=()=>{ if(rainGardenActive) rainGardenElapsed=RAIN_GARDEN_DEFAULTS.duration-0.04; return _rainGardenDebug(); };
+  window.__stopRain=()=>{ _stopRainGarden('debug-stop'); return _rainGardenDebug(); };
   window.__station=(tx,tz)=>{ if(!STATION) return {has:false}; const S=(tx==null?STATION._pos:new THREE.Vector3(+tx,0,+tz)); let mind=Infinity,who=null,wpos=null,wcw=null;
     for(const b of buildings){ if(b._isLibrary) continue; const bx=(b._x!=null?b._x:b.position.x), bz=(b._z!=null?b._z:b.position.z); const cw=(b._cw||3); const edge=Math.hypot(bx-S.x,bz-S.z)-cw; if(edge<mind){ mind=edge; who=b.repo; wpos={x:+bx.toFixed(1),z:+bz.toFixed(1)}; wcw=+cw.toFixed(1); } }
     return { has:true, pos:{x:+S.x.toFixed(1),z:+S.z.toFixed(1)}, r:+Math.hypot(S.x,S.z).toFixed(1), near:!!nearStation, dist:+player.position.distanceTo(S).toFixed(1), reach:6.0, baseR:2.5, nearestBld:who, nearestBldPos:wpos, nearestBldCw:wcw, gapToEdge:+mind.toFixed(1) }; };
