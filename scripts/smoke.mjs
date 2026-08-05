@@ -346,12 +346,14 @@ ok(/root\.name='petite-venise-canal-ferry'/.test(ferryBlock)
   && /bridgeUnderY:0\.62,maxWorldY:0\.55,bridgeClearance:0\.07/.test(ferryBlock)
   && !/canopy|roof/i.test(ferryBlock), 'the low-profile craft keeps measured clearance beneath every flower bridge');
 ok(/const hull=capsule\(0\.8,2\.7,0xb85f3d,10\); hull\.name='canal-ferry-hull'/.test(ferryBlock)
-  && /hull\.rotation\.x=Math\.PI\/2;[\s\S]*?hull\.scale\.set\(1\.1,0\.34,1\)/.test(ferryBlock)
-  && /const deck=capsule\(0\.62,2\.45,0xe6b96f,8\); deck\.name='canal-ferry-deck'/.test(ferryBlock)
+  && /hull\.rotation\.x=Math\.PI\/2;[\s\S]*?hull\.scale\.set\(1\.1,1,0\.22\)/.test(ferryBlock)
+  && /const deck=capsule\(0\.62,2\.45,0x3f2d27,8\); deck\.name='canal-ferry-cockpit'/.test(ferryBlock)
+  && /deck\.scale\.set\(1\.06,0\.92,0\.08\)/.test(ferryBlock)
+  && /seat=rbox\(1\.02,0\.07,0\.13,0xc78347/.test(ferryBlock)
   && !/SphereGeometry\(0\.5,12,8,0,Math\.PI\*2,0,Math\.PI\/2\)/.test(ferryBlock),
-  'a full opaque terracotta hull and contrasting deck replace the culled water-coloured hemisphere');
+  'a flattened terracotta hull, dark open cockpit, and bright cross-seats replace the closed barrel silhouette');
 ok(/CANAL_FERRY=\{group:root,hull,deck,curve/.test(ferryBlock)
-  && /silhouette:CANAL_FERRY\?\{hull:CANAL_FERRY\.hull\.visible,deck:CANAL_FERRY\.deck\.visible,opaque:/.test(HTML),
+  && /silhouette:CANAL_FERRY\?\{profile:'open-skiff',hull:CANAL_FERRY\.hull\.visible,deck:CANAL_FERRY\.deck\.visible,opaque:/.test(HTML),
   'the runtime retains and exposes both silhouette layers for bounded visual verification');
 ok(!/LOW_END/.test(ferryBlock) && /disableDynamicShadowCasters\(root\)/.test(ferryBlock),
   'desktop and mobile keep the same single lightweight craft without dynamic shadow churn');
