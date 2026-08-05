@@ -604,6 +604,10 @@
   canvas { touch-action: none; }
   @media (hover: none) and (pointer: coarse) {
     #actBtn.avail { display: flex; }
+    #prompt { left: 12px; right: 112px; bottom: calc(30px + env(safe-area-inset-bottom, 0px)); max-width: none;
+      white-space: normal; line-height: 1.35; text-align: center; justify-content: center;
+      transform: translateY(20px); padding: 10px 12px; font-size: 12.5px; }
+    #prompt.show { transform: translateY(0); }
     .hint { display: none; }
   }
 
