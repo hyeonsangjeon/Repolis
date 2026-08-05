@@ -443,7 +443,8 @@ ok((HTML.match(/rainName:/g)||[]).length===2 && (HTML.match(/rainStarted:/g)||[]
   'the walk-up, weather-state, and arrival copy are complete in Korean and English');
 ok(/window\.__rainGarden=/.test(HTML) && /window\.__ringRain=/.test(HTML)
   && /window\.__finishRain=/.test(HTML) && /window\.__stopRain=/.test(HTML)
-  && /resources:\{rainDraws:1,rippleDraws:1,umbrellaDraws:U\?2:0,timers:0,network:0,steadyAllocations:0\}/.test(HTML),
+  && /resources:\{activeDraws:rainDraws\+rippleDraws\+umbrellaDraws,rainDraws,rippleDraws,umbrellaDraws,timers:0,network:0,steadyAllocations:0\}/.test(HTML)
+  && /clouds:\{color:'#'\+CLOUD_MAT\.color\.getHexString\(\),opacity:/.test(HTML),
   'bounded diagnostics expose placement, lifecycle, counts, ownership, and zero recurring resources');
 
 /* ── 6) inline <script type=module> still parses ── */

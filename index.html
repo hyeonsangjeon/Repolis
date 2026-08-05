@@ -3490,7 +3490,7 @@ function makeRainGarden(x,z){
     rainPositions[o]=rainPositions[o+3]=RAIN_SEED.x; rainPositions[o+1]=RAIN_SEED.y; rainPositions[o+4]=Math.max(0.04,RAIN_SEED.y-RAIN_GARDEN_DEFAULTS.streak); rainPositions[o+2]=rainPositions[o+5]=RAIN_SEED.z; rainSpeeds[i]=RAIN_SEED.speed; }
   const rainGeometry=new THREE.BufferGeometry(), rainAttribute=new THREE.BufferAttribute(rainPositions,3); rainAttribute.setUsage(THREE.DynamicDrawUsage); rainGeometry.setAttribute('position',rainAttribute);
   const rainMaterial=new THREE.LineBasicMaterial({color:0xbde7ff,transparent:true,opacity:0,depthWrite:false,fog:true});
-  const rain=new THREE.LineSegments(rainGeometry,rainMaterial); rain.name='RainGardenSunshower'; rain.frustumCulled=false; rain.visible=false; rain.position.copy(player.position); scene.add(rain);
+  const rain=new THREE.LineSegments(rainGeometry,rainMaterial); rain.name='RainGardenSunshower'; rain.frustumCulled=false; rain.visible=false; rain.position.set(x,0,z); scene.add(rain);
   const rippleMaterial=new THREE.MeshBasicMaterial({color:0xc7eeff,transparent:true,opacity:0,depthWrite:false,fog:true,side:THREE.DoubleSide});
   const ripples=new THREE.InstancedMesh(new THREE.RingGeometry(0.34,0.42,14),rippleMaterial,RAIN_GARDEN_DEFAULTS.rippleCount);
   ripples.name='RainGardenRipples'; ripples.instanceMatrix.setUsage(THREE.DynamicDrawUsage); ripples.frustumCulled=false; ripples.visible=false; scene.add(ripples);
@@ -9593,12 +9593,15 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     if(RAIN_GARDEN) for(const b of buildings){ if(b._isLibrary) continue; const bx=b._x!=null?b._x:b.position.x,bz=b._z!=null?b._z:b.position.z;
       const gap=Math.hypot(bx-RAIN_GARDEN.center.x,bz-RAIN_GARDEN.center.z)-(b._cw||3)-3.55; if(gap<buildingGap){ buildingGap=gap; nearestBuilding=b.repo; } }
     if(RAIN_GARDEN) for(const c of EXTRA_COLLIDERS){ if(c._rainGarden) continue; const gap=Math.hypot(c.x-RAIN_GARDEN.center.x,c.z-RAIN_GARDEN.center.z)-(c.r||0)-3.55; if(gap<decorGap) decorGap=gap; }
-    const U=RAIN_GARDEN&&RAIN_GARDEN.umbrellas; return {has:!!RAIN_GARDEN,active:rainGardenActive,elapsed:+rainGardenElapsed.toFixed(2),
+    const U=RAIN_GARDEN&&RAIN_GARDEN.umbrellas, rainDraws=RAIN_GARDEN&&RAIN_GARDEN.rain.visible?1:0, rippleDraws=RAIN_GARDEN&&RAIN_GARDEN.ripples.visible?1:0, umbrellaDraws=U&&U.canopies.visible?2:0;
+    return {has:!!RAIN_GARDEN,active:rainGardenActive,elapsed:+rainGardenElapsed.toFixed(2),
       remaining:+Math.max(0,RAIN_GARDEN_DEFAULTS.duration-rainGardenElapsed).toFixed(2),intensity:RAIN_GARDEN?+RAIN_GARDEN.intensity.toFixed(3):0,
       pos:RAIN_GARDEN?[+RAIN_GARDEN.center.x.toFixed(1),+RAIN_GARDEN.center.z.toFixed(1)]:null,arrival:RAIN_GARDEN?[+RAIN_GARDEN._pos.x.toFixed(1),+RAIN_GARDEN._pos.z.toFixed(1)]:null,
       near:!!nearRainGarden,stamp:passHasStamp('rain'),drops:RAIN_GARDEN?RAIN_GARDEN.dropCount:0,dropCap:LOW_END?RAIN_GARDEN_DEFAULTS.mobileDrops:RAIN_GARDEN_DEFAULTS.desktopDrops,
       ripples:RAIN_GARDEN_DEFAULTS.rippleCount,umbrellas:U?U.count:0,umbrellasVisible:!!(U&&U.canopies.visible),meshes,
-      clearance:{building:+buildingGap.toFixed(2),nearestBuilding,decor:+decorGap.toFixed(2)},resources:{rainDraws:1,rippleDraws:1,umbrellaDraws:U?2:0,timers:0,network:0,steadyAllocations:0},
+      visible:{rain:!!(RAIN_GARDEN&&RAIN_GARDEN.rain.visible),ripples:!!(RAIN_GARDEN&&RAIN_GARDEN.ripples.visible)},
+      clouds:{color:'#'+CLOUD_MAT.color.getHexString(),opacity:+CLOUD_MAT.opacity.toFixed(3)},
+      clearance:{building:+buildingGap.toFixed(2),nearestBuilding,decor:+decorGap.toFixed(2)},resources:{activeDraws:rainDraws+rippleDraws+umbrellaDraws,rainDraws,rippleDraws,umbrellaDraws,timers:0,network:0,steadyAllocations:0},
       owner:_cameraOwnerAtFrameStart()}; };
   window.__rainGarden=()=>_rainGardenDebug();
   window.__ringRain=()=>{ if(!RAIN_GARDEN) return {has:false}; if(rainGardenActive) _stopRainGarden('debug-reset'); player.position.copy(RAIN_GARDEN._pos); nearRainGarden=RAIN_GARDEN; ringRainGarden(); return _rainGardenDebug(); };
