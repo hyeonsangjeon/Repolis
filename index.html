@@ -4257,7 +4257,12 @@ if(LIB){
   COLLIDERS.push(_registerCameraBlocker(north,'library','library-wing','contribution-library-north',13,0,18));
   COLLIDERS.push(_registerCameraBlocker(south,'library','library-wing','contribution-library-south',14,0,18));
 }
-if(typeof EXTRA_COLLIDERS!=='undefined') COLLIDERS.push(...EXTRA_COLLIDERS);   // Colmar charms (carts/stalls/well/canal) get soft colliders
+if(typeof EXTRA_COLLIDERS!=='undefined'){
+  for(const c of EXTRA_COLLIDERS) if(c.cameraBlocking==null){
+    c.cameraBlocking=false; c.cameraOwner='town-decor'; c.cameraType=c._memorialTree?'tree':'decor';
+  }
+  COLLIDERS.push(...EXTRA_COLLIDERS);   // Colmar charms (carts/stalls/well/canal) remain player-only soft colliders
+}
 /* circle-collider resolver — pushes the player (a point) out of every overlapping collider,
    iterating a few passes so two adjacent props/columns can't wedge them: a single pass would
    shove them out of one collider straight back into its neighbour and they'd stick. Iterating

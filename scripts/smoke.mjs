@@ -304,6 +304,10 @@ ok(clearSightUpdate.length > 0 && !/new\s+|scene\.traverse|Raycaster|raycast|mat
 ok(/_registerCameraBlocker\(c,'resident-quarter','cottage'[\s\S]*?3\.15,0,3\.3\)/.test(HTML)
   && /_registerCameraBlocker\(\{x:c\.x,z:c\.z,r:3\.9\},'resident-quarter','cottage-roof'[\s\S]*?3\.9,3\.05,6\.15\)/.test(HTML)
   && /'repo','roof'/.test(HTML), 'repo and Starlight blockers separate wall and roof height ranges');
+ok(/for\(const c of EXTRA_COLLIDERS\) if\(c\.cameraBlocking==null\)[\s\S]*?c\.cameraBlocking=false; c\.cameraOwner='town-decor'/.test(HTML)
+  && /c\.cameraBlocking='arrival-only'; c\.cameraOwner='resident-quarter'; c\.cameraType='sign'/.test(HTML)
+  && /c\.cameraBlocking=false; c\.cameraOwner='resident-quarter'; c\.cameraType=c\._residentQuarterTree\?'tree':'decor'/.test(HTML),
+  'thin signs, trees, lamps, and town decor are explicitly arrival-only or non-blocking');
 ok(/window\.__clearSightCamera=/.test(HTML) && /window\.__clearSightStarlightProbe=/.test(HTML)
   && /requestedDist:[\s\S]*?resolvedDist:[\s\S]*?blocked:[\s\S]*?hit:[\s\S]*?pose:[\s\S]*?arrival:[\s\S]*?timingMs:/.test(HTML),
   'one debug surface exposes requested/resolved pose, hit identity, arrival scoring, skip reason, and timing');
