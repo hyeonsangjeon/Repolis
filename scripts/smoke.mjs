@@ -23,6 +23,7 @@ import {
   stepCameraResolvedDistance,
   chooseCameraArrivalYaw
 } from '../assets/camera-obstruction.js';
+import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from '../assets/canal-ferry.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -55,6 +56,11 @@ ok(viewport.length > 0, 'meta viewport tag exists');
 ok(!/user-scalable\s*=\s*no/i.test(viewport), 'viewport has no user-scalable=no');
 ok(!/maximum-scale/i.test(viewport), 'viewport has no maximum-scale');
 ok(/width=device-width/i.test(viewport), 'viewport still width=device-width');
+ok(/@media \(max-width: 520px\) \{[^\n]*#mapBtn \{ order: 10; \}/.test(HTML),
+  'the mobile map action wraps below the hamburger instead of overlapping it');
+ok(/@media \(hover: none\) and \(pointer: coarse\) \{[\s\S]*?#prompt \{ left: 12px; right: 112px;[\s\S]*?white-space: normal/.test(HTML)
+  && /#prompt\.show \{ transform: translateY\(0\); \}/.test(HTML),
+  'mobile interaction prompts wrap inside a left lane reserved away from the round action button');
 
 group('README hero leads with one current story, CTA, and bounded media');
 const heroCopy = 'Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.';
@@ -293,10 +299,11 @@ ok(/if\(tour&&tour\.active\) return 'guided-tour'/.test(clearSightBlock)
   && /if\(ride\) return 'taxi-ride'/.test(clearSightBlock)
   && /if\(ferris\) return 'ferris'/.test(clearSightBlock)
   && /if\(carousel\) return 'carousel'/.test(clearSightBlock)
+  && /if\(canalFerryRide\) return 'canal-ferry'/.test(clearSightBlock)
   && /if\(sitting\) return 'seated'/.test(clearSightBlock)
   && /if\(owner!=='open-world'\)/.test(clearSightUpdate)
   && /_repositoryAtelierFrame\(dt\)\) return/.test(HTML),
-  'Atelier, guided tour, taxi ride, Ferris, carousel, and seated camera owners bypass ClearSight');
+  'Atelier, guided tour, taxi ride, Ferris, carousel, canal ferry, and seated camera owners bypass ClearSight');
 ok(clearSightUpdate.length > 0 && !/new\s+|scene\.traverse|Raycaster|raycast|material\.clone|\.map\(/.test(clearSightUpdate)
   && /resolveCameraObstruction\(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT\)/.test(clearSightUpdate)
   && /resolveCameraObstruction\(CAMERA_POST_QUERY,CAMERA_BLOCKERS,CAMERA_POST_RESULT\)/.test(clearSightUpdate),
@@ -315,6 +322,44 @@ ok(/window\.__clearSightResourceProbe=/.test(HTML)
   && /for\(let i=0;i<iterations;i\+\+\) resolveCameraObstruction\(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT\)/.test(HTML)
   && /delta:\{objects:[\s\S]*?materials:[\s\S]*?renderCalls:/.test(HTML),
   'debug resource probe measures resolver-only object, material, memory, and draw-call deltas');
+
+group('Petite-Venise canal ferry — one deterministic scenic loop');
+const ferryAt = ratio => sampleCanalFerryRoute(CANAL_FERRY_DEFAULTS.duration * ratio, CANAL_FERRY_DEFAULTS, {});
+const ferryStart=ferryAt(0), ferryQuarter=ferryAt(0.25), ferryHalf=ferryAt(0.5), ferryThreeQuarter=ferryAt(0.75), ferryEnd=ferryAt(1);
+ok(CANAL_FERRY_DEFAULTS.duration===38 && CANAL_FERRY_DEFAULTS.amplitude===0.34,
+  'the user-started ferry tour has one bounded 38-second route and no autonomous cadence');
+ok(ferryStart.t>0.43 && ferryStart.t<0.45 && ferryQuarter.t>0.83 && ferryThreeQuarter.t<0.17,
+  'the route starts clear of the central bridge and reaches both scenic halves of the canal');
+ok(ferryStart.direction===1 && ferryHalf.direction===-1 && ferryEnd.direction===1,
+  'the launch changes heading at each end instead of drifting off the river curve');
+ok(!ferryStart.complete && ferryEnd.complete && Math.abs(ferryStart.t-ferryEnd.t)<1e-12,
+  'one complete tour returns to the exact dock-side curve point');
+const ferryReuse={sentinel:true};
+ok(sampleCanalFerryRoute(Infinity,CANAL_FERRY_DEFAULTS,ferryReuse)===ferryReuse
+  && ferryReuse.progress===0 && ferryReuse.complete===false, 'invalid elapsed time fails soft and reuses caller-owned output');
+const ferryBlock=(HTML.match(/\/\*CANAL_FERRY:START\*\/([\s\S]*?)\/\*CANAL_FERRY:END\*\//)||[,''])[1];
+const ferryMove=(ferryBlock.match(/function _placeCanalFerry\(elapsed,dt\)\{([\s\S]*?)\n\}/)||[,''])[1];
+const ferryUpdate=(ferryBlock.match(/function updateCanalFerry\(dt\)\{([\s\S]*?)\n\}/)||[,''])[1];
+ok(ferryBlock.length>0 && /makeCanalFerry\(curve,RIVER_LANDMARK\)/.test(HTML),
+  'the grand river creates exactly one dedicated boardable ferry from its existing curve');
+ok(/root\.name='petite-venise-canal-ferry'/.test(ferryBlock)
+  && /bridgeUnderY:0\.62,maxWorldY:0\.55,bridgeClearance:0\.07/.test(ferryBlock)
+  && !/canopy|roof/i.test(ferryBlock), 'the low-profile craft keeps measured clearance beneath every flower bridge');
+ok(!/LOW_END/.test(ferryBlock) && /disableDynamicShadowCasters\(root\)/.test(ferryBlock),
+  'desktop and mobile keep the same single lightweight craft without dynamic shadow churn');
+ok(ferryMove.length>0 && ferryUpdate.length>0 && !/new THREE|\.clone\(|scene\.traverse|\.map\(/.test(ferryMove+ferryUpdate),
+  'steady ferry motion reuses its route sample and fixed curve vectors without per-frame allocation or traversal');
+ok(/nearCanalFerry = \(CANAL_FERRY && !canalFerryRide/.test(HTML)
+  && /else if\(nearCanalFerry\) boardCanalFerry\(\)/.test(HTML)
+  && /actBtn\.textContent='🛶'/.test(HTML), 'the canal dock owns a walk-up prompt and the shared Enter/mobile action path');
+ok(/!carousel && !canalFerryRide && FW\.length/.test(HTML)
+  && /ride\|\|canalFerryRide\|\|dragging/.test(HTML), 'an active tour stays at full interaction cadence while idle town throttling is unchanged');
+ok((HTML.match(/ferryName:/g)||[]).length===2 && (HTML.match(/ferryReached:/g)||[]).length===2
+  && (HTML.match(/ferryRiding:/g)||[]).length===2 && /if\(canalFerryRide\)\{ promptEl\.innerHTML = t\('ferryRiding'\)/.test(HTML)
+  && /window\.__canalFerry=/.test(HTML) && /window\.__boardFerry=/.test(HTML) && /window\.__finishFerry=/.test(HTML),
+  'Korean/English ride copy and bounded debug board/finish probes are present');
+ok(/boardable low-profile ferry/.test(README_EN) && /낮은 유람선에 올라/.test(README_KO),
+  'both READMEs describe the real boardable canal interaction');
 
 /* ── 6) inline <script type=module> still parses ── */
 group('inline module parses (node --check)');
