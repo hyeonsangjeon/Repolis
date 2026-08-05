@@ -1066,6 +1066,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree/createRepolisHero.js?v=azimuth-energy-v6-dual-face-b-pendant-bloom-r1';
+import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstruction, stepCameraResolvedDistance, chooseCameraArrivalYaw } from './assets/camera-obstruction.js?v=clearsight-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -3750,6 +3751,19 @@ function makeBuilding(repo){
     addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, wx); addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, -wx); }
   // central roof
   repo._lodSpec={kind,roof:typ.roof,tier:typ.tier,w,h,d,topH,topW,wall:repo.wall,roofColor:repo.roof,accent:repo.accent,entranceColor:(CATS[repo._cat]||CATS.Software).color};
+  const cameraRoofRadius=topW*({flat:.73,hip:.9,gambrel:.96,mansard:1,aframe:.82,shed:.76,barrel:.74}[typ.roof]||.95);
+  const cameraRoofRise=typ.roof==='flat'?1.1:typ.roof==='hip'?1.75:typ.roof==='gambrel'?2.35:typ.roof==='mansard'?2.32:
+    typ.roof==='aframe'?2.22:typ.roof==='shed'?1.55:typ.roof==='barrel'?topW*.52+0.12:2.65;
+  repo._cameraRoofR=cameraRoofRadius; repo._cameraRoofMin=Math.max(0,topH-.16);
+  repo._cameraHeight=Math.max(topH+cameraRoofRise,kind==='mansion'?topH+3.2:0);
+  repo._cameraParts=[];
+  if(kind==='villa'||kind==='manor'||kind==='mansion'){
+    const wh=kind==='villa'?h*.66:h*(kind==='mansion'?.8:.72),ww=w*.52,wd=d*.82,wx=w*(kind==='villa'?.66:.72);
+    const partR=Math.hypot(ww,wd)*.5+.18,rot=g.rotation.y,sides=kind==='villa'?[1]:[-1,1];
+    for(const side of sides) repo._cameraParts.push({
+      x:repo._x+Math.cos(rot)*wx*side,z:repo._z-Math.sin(rot)*wx*side,r:partR,minY:0,maxY:wh+2.2,id:`${repo.repo}-wing-${side}`
+    });
+  }
   const roof=makeRoof(typ.roof, topW, topH, repo.roof); g.add(roof); repo._roof=roof;
   const flatTop = (typ.roof==='flat');
   if(typ.roof!=='flat' && typ.roof!=='aframe'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim);
@@ -4221,9 +4235,34 @@ function makeLibrary(){
 makeLibrary();
 
 /* ---- building colliders (player can't walk through houses) ---- */
-const COLLIDERS = buildings.map(b=>({x:b._x, z:b._z, r:b._cw||3}));
-if(LIB){ COLLIDERS.push({x:0,z:LIB._z-14,r:13}); COLLIDERS.push({x:0,z:LIB._z+14,r:14}); }
-if(typeof EXTRA_COLLIDERS!=='undefined') COLLIDERS.push(...EXTRA_COLLIDERS);   // Colmar charms (carts/stalls/well/canal) get soft colliders
+const CAMERA_BLOCKERS=[], CAMERA_ARRIVAL_OCCLUDERS=[];
+function _registerCameraBlocker(c,owner,type,id,r,minY,maxY){
+  c.cameraBlocking=true; c.cameraOwner=owner; c.cameraType=type; c.cameraId=id;
+  c.cameraR=r; c.cameraMinY=minY; c.cameraMaxY=maxY; CAMERA_BLOCKERS.push(c); return c;
+}
+const COLLIDERS = buildings.map(b=>{
+  const c={x:b._x,z:b._z,r:b._cw||3};
+  _registerCameraBlocker(c,b._isLibrary?'library':'repo',b._isLibrary?'library':'building',
+    b._isLibrary?'contribution-library':b.repo,b._isLibrary?18:(b._cw||3),0,b._isLibrary?18:(b._lodSpec?.topH||b._cameraHeight||12));
+  if(!b._isLibrary){
+    _registerCameraBlocker({x:b._x,z:b._z,r:b._cameraRoofR||b._cw||3},'repo','roof',`${b.repo}-roof`,
+      b._cameraRoofR||b._cw||3,b._cameraRoofMin||0,b._cameraHeight||12);
+    for(const part of b._cameraParts||[]) _registerCameraBlocker({x:part.x,z:part.z,r:part.r},'repo','building-wing',
+      part.id,part.r,part.minY,part.maxY);
+  }
+  return c;
+});
+if(LIB){
+  const north={x:0,z:LIB._z-14,r:13},south={x:0,z:LIB._z+14,r:14};
+  COLLIDERS.push(_registerCameraBlocker(north,'library','library-wing','contribution-library-north',13,0,18));
+  COLLIDERS.push(_registerCameraBlocker(south,'library','library-wing','contribution-library-south',14,0,18));
+}
+if(typeof EXTRA_COLLIDERS!=='undefined'){
+  for(const c of EXTRA_COLLIDERS) if(c.cameraBlocking==null){
+    c.cameraBlocking=false; c.cameraOwner='town-decor'; c.cameraType=c._memorialTree?'tree':'decor';
+  }
+  COLLIDERS.push(...EXTRA_COLLIDERS);   // Colmar charms (carts/stalls/well/canal) remain player-only soft colliders
+}
 /* circle-collider resolver — pushes the player (a point) out of every overlapping collider,
    iterating a few passes so two adjacent props/columns can't wedge them: a single pass would
    shove them out of one collider straight back into its neighbour and they'd stick. Iterating
@@ -5546,7 +5585,20 @@ function _gableHomeRoofGeometry(){ const w=5.8,d=4.9,h=2.1,g=new THREE.BufferGeo
   hard.computeVertexNormals(); hard.computeBoundingSphere(); return hard; }
 function _residentHomeById(id){ return RESIDENT_HOMES.find(h=>h.id===id)||null; }
 function _homeLocal(lx,lz,rot,ox,oz){ const c=Math.cos(rot),s=Math.sin(rot); return {x:lx+c*ox+s*oz,z:lz-s*ox+c*oz}; }
-function _addResidentQuarterCollider(c){ RES_QUARTER_COLLIDERS.push(c); EXTRA_COLLIDERS.push(c); COLLIDERS.push(c); return c; }
+function _addResidentQuarterCollider(c){
+  RES_QUARTER_COLLIDERS.push(c); EXTRA_COLLIDERS.push(c); COLLIDERS.push(c);
+  if(c._residentHome){
+    _registerCameraBlocker(c,'resident-quarter','cottage',c._residentHome,3.15,0,3.3);
+    _registerCameraBlocker({x:c.x,z:c.z,r:3.9},'resident-quarter','cottage-roof',`${c._residentHome}-roof`,3.9,3.05,6.15);
+  }
+  else if(c._residentQuarterSign){
+    c.cameraBlocking='arrival-only'; c.cameraOwner='resident-quarter'; c.cameraType='sign'; c.cameraId='starlight-row-sign';
+    c.cameraR=1.4; c.cameraMinY=0; c.cameraMaxY=2.9; CAMERA_ARRIVAL_OCCLUDERS.push(c);
+  } else {
+    c.cameraBlocking=false; c.cameraOwner='resident-quarter'; c.cameraType=c._residentQuarterTree?'tree':'decor';
+  }
+  return c;
+}
 function _setHomeInstance(mesh,i,x,y,z,rot=0,sx=1,sy=1,sz=1,rx=0){ const d=_setHomeInstance.d||(_setHomeInstance.d=new THREE.Object3D());
   d.position.set(x,y,z); d.rotation.set(rx,rot,0); d.scale.set(sx,sy,sz); d.updateMatrix(); mesh.setMatrixAt(i,d.matrix); }
 function _refreshResidentHomeLights(night=isNight){ for(const m of RES_HOME_WINDOWS){ m.map=night?_roomTex:_winTex; m.color.setHex(night?0xffdf9a:DAY_GLASS); m.needsUpdate=true; }
@@ -6607,6 +6659,123 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden){ clearKey
 
 let camYaw=Math.PI, camPitch=0.42, camDist=13, dragging=false, dragBtn=0, px=0, py=0, dragMoved=false, freeLook=false;
 const CAMERA_FOLLOW_TARGET=new THREE.Vector3();
+/*CLEAR_SIGHT_CAMERA:START*/
+const CAMERA_FOCUS=new THREE.Vector3(), CAMERA_RESOLVED_TARGET=new THREE.Vector3();
+const CAMERA_QUERY={}, CAMERA_POST_QUERY={}, CAMERA_RESULT={}, CAMERA_POST_RESULT={};
+const CAMERA_ARRIVAL_QUERY={}, CAMERA_ARRIVAL_SCRATCH={query:{},hard:{},soft:{}};
+const CAMERA_ARRIVAL_RESULT={
+  yaws:new Float64Array(CAMERA_ARRIVAL_OFFSETS.length),
+  distances:new Float64Array(CAMERA_ARRIVAL_OFFSETS.length),
+  scores:new Float64Array(CAMERA_ARRIVAL_OFFSETS.length),
+  softHits:new Uint8Array(CAMERA_ARRIVAL_OFFSETS.length)
+};
+const CLEAR_SIGHT_CAMERA={
+  requestedDist:camDist,resolvedDist:camDist,springDist:camDist,targetDist:camDist,blocked:false,hit:null,clearance:0,
+  calls:0,skips:0,frames:0,totalMs:0,maxMs:0,lastMs:0,lastReason:'boot',arrivalFrame:-1,arrivalCalls:0,arrivalMs:0,
+  arrivalId:null,arrivalScore:0,arrivalYaw:camYaw,arrivalIdealYaw:camYaw,arrivalIndex:0,arrivalCount:0,arrivalSkipped:null
+};
+for(const npc of NPCS) if(npc.kind==='deepwiki') CAMERA_ARRIVAL_OCCLUDERS.push({
+  x:npc.pos.x,z:npc.pos.z,r:.9,cameraR:.9,cameraMinY:0,cameraMaxY:3.15,cameraBlocking:'arrival-only',
+  cameraOwner:'scholar',cameraType:'npc',cameraId:'rigel'
+});
+function _cameraOwnerAtFrameStart(){
+  if(repositoryAtelierActive()) return 'repository-atelier';
+  if(tour&&tour.active) return 'guided-tour';
+  if(ride) return 'taxi-ride';
+  if(ferris) return 'ferris';
+  if(carousel) return 'carousel';
+  if(sitting) return 'seated';
+  return 'open-world';
+}
+function _setCameraQuery(query,desired,requested){
+  query.focusX=CAMERA_FOCUS.x; query.focusY=CAMERA_FOCUS.y; query.focusZ=CAMERA_FOCUS.z;
+  query.desiredX=desired.x; query.desiredY=desired.y; query.desiredZ=desired.z;
+  query.requestedDistance=requested; query.padding=CAMERA_OBSTRUCTION_DEFAULTS.padding;
+  query.surfaceEpsilon=CAMERA_OBSTRUCTION_DEFAULTS.surfaceEpsilon; query.minDistance=CAMERA_OBSTRUCTION_DEFAULTS.minDistance;
+}
+function _setRequestedCameraPose(yaw=camYaw,distance=camDist){
+  const horizontal=Math.cos(camPitch)*distance;
+  CAMERA_FOCUS.set(player.position.x,player.position.y+1.7,player.position.z);
+  CAMERA_FOLLOW_TARGET.set(player.position.x+Math.sin(yaw)*horizontal,
+    player.position.y+Math.sin(camPitch)*distance+1.5,
+    player.position.z+Math.cos(yaw)*horizontal);
+}
+function _updateClearSightCamera(dt,owner){
+  _setRequestedCameraPose();
+  const state=CLEAR_SIGHT_CAMERA;
+  state.requestedDist=camDist;
+  if(state.arrivalFrame===renderedFrame){
+    state.skips++; state.lastReason='arrival-settle'; CAMERA_RESOLVED_TARGET.copy(camera.position);
+    camera.lookAt(CAMERA_FOCUS); return;
+  }
+  if(owner!=='open-world'){
+    state.skips++; state.lastReason=owner; state.blocked=false; state.hit=null; state.clearance=0;
+    state.targetDist=camDist; state.springDist=camDist;
+    camera.position.lerp(CAMERA_FOLLOW_TARGET,0.12); CAMERA_RESOLVED_TARGET.copy(camera.position);
+    const requestedLength=CAMERA_FOCUS.distanceTo(CAMERA_FOLLOW_TARGET),actualLength=CAMERA_FOCUS.distanceTo(camera.position);
+    state.resolvedDist=requestedLength>1e-6?Math.min(camDist,camDist*actualLength/requestedLength):camDist;
+    camera.lookAt(CAMERA_FOCUS); return;
+  }
+
+  const started=performance.now();
+  _setCameraQuery(CAMERA_QUERY,CAMERA_FOLLOW_TARGET,camDist);
+  resolveCameraObstruction(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT);
+  state.targetDist=CAMERA_RESULT.distance;
+  state.springDist=stepCameraResolvedDistance(state.springDist,state.targetDist,camDist,CAMERA_RESULT.blocked,dt,CAMERA_OBSTRUCTION_DEFAULTS);
+  const targetFraction=camDist>1e-6?state.springDist/camDist:1;
+  CAMERA_RESOLVED_TARGET.copy(CAMERA_FOCUS).lerp(CAMERA_FOLLOW_TARGET,targetFraction);
+  camera.position.lerp(CAMERA_RESOLVED_TARGET,0.12);
+
+  const actualRequested=CAMERA_FOCUS.distanceTo(camera.position);
+  _setCameraQuery(CAMERA_POST_QUERY,camera.position,actualRequested);
+  resolveCameraObstruction(CAMERA_POST_QUERY,CAMERA_BLOCKERS,CAMERA_POST_RESULT);
+  if(CAMERA_POST_RESULT.blocked){
+    const cx=camera.position.x,cy=camera.position.y,cz=camera.position.z,f=CAMERA_POST_RESULT.fraction;
+    camera.position.set(CAMERA_FOCUS.x+(cx-CAMERA_FOCUS.x)*f,CAMERA_FOCUS.y+(cy-CAMERA_FOCUS.y)*f,CAMERA_FOCUS.z+(cz-CAMERA_FOCUS.z)*f);
+  }
+  if(CAMERA_RESULT.blocked&&state.springDist>CAMERA_RESULT.distance) state.springDist=CAMERA_RESULT.distance;
+  const requestedLength=CAMERA_FOCUS.distanceTo(CAMERA_FOLLOW_TARGET),actualLength=CAMERA_FOCUS.distanceTo(camera.position);
+  state.resolvedDist=requestedLength>1e-6?Math.min(camDist,camDist*actualLength/requestedLength):camDist;
+  state.blocked=CAMERA_RESULT.blocked||CAMERA_POST_RESULT.blocked;
+  state.hit=CAMERA_RESULT.hit||CAMERA_POST_RESULT.hit;
+  state.clearance=Math.max(CAMERA_RESULT.clearance||0,CAMERA_POST_RESULT.clearance||0);
+  state.calls+=2; state.frames++; state.lastReason='open-world';
+  state.lastMs=performance.now()-started; state.totalMs+=state.lastMs; state.maxMs=Math.max(state.maxMs,state.lastMs);
+  CAMERA_RESOLVED_TARGET.copy(camera.position);
+  camera.lookAt(CAMERA_FOCUS);
+}
+function _settleClearSightArrival(destination){
+  const state=CLEAR_SIGHT_CAMERA,pos=destination&&destination._pos;
+  if(!pos) return false;
+  if((tour&&tour.active)||repositoryAtelierActive()||ferris||carousel||sitting){
+    state.arrivalSkipped=(tour&&tour.active)?'guided-tour':repositoryAtelierActive()?'repository-atelier':ferris?'ferris':carousel?'carousel':'seated';
+    return false;
+  }
+  const started=performance.now();
+  CAMERA_FOCUS.set(player.position.x,player.position.y+1.7,player.position.z);
+  CAMERA_ARRIVAL_QUERY.focusX=CAMERA_FOCUS.x; CAMERA_ARRIVAL_QUERY.focusY=CAMERA_FOCUS.y; CAMERA_ARRIVAL_QUERY.focusZ=CAMERA_FOCUS.z;
+  CAMERA_ARRIVAL_QUERY.destinationX=pos.x; CAMERA_ARRIVAL_QUERY.destinationZ=pos.z;
+  CAMERA_ARRIVAL_QUERY.currentYaw=camYaw; CAMERA_ARRIVAL_QUERY.pitch=camPitch; CAMERA_ARRIVAL_QUERY.requestedDistance=camDist;
+  CAMERA_ARRIVAL_QUERY.verticalBaseOffset=-.2; CAMERA_ARRIVAL_QUERY.padding=CAMERA_OBSTRUCTION_DEFAULTS.padding;
+  CAMERA_ARRIVAL_QUERY.surfaceEpsilon=CAMERA_OBSTRUCTION_DEFAULTS.surfaceEpsilon;
+  CAMERA_ARRIVAL_QUERY.minDistance=CAMERA_OBSTRUCTION_DEFAULTS.minDistance; CAMERA_ARRIVAL_QUERY.softPadding=.12;
+  chooseCameraArrivalYaw(CAMERA_ARRIVAL_QUERY,CAMERA_BLOCKERS,CAMERA_ARRIVAL_OCCLUDERS,
+    CAMERA_ARRIVAL_OFFSETS,CAMERA_ARRIVAL_RESULT,CAMERA_ARRIVAL_SCRATCH);
+  camYaw=CAMERA_ARRIVAL_RESULT.yaw;
+  _setRequestedCameraPose();
+  _setCameraQuery(CAMERA_QUERY,CAMERA_FOLLOW_TARGET,camDist);
+  resolveCameraObstruction(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT);
+  state.requestedDist=camDist; state.targetDist=CAMERA_RESULT.distance; state.springDist=CAMERA_RESULT.distance;
+  state.resolvedDist=CAMERA_RESULT.distance; state.blocked=CAMERA_RESULT.blocked; state.hit=CAMERA_RESULT.hit; state.clearance=CAMERA_RESULT.clearance;
+  CAMERA_RESOLVED_TARGET.copy(CAMERA_FOCUS).lerp(CAMERA_FOLLOW_TARGET,CAMERA_RESULT.fraction);
+  camera.position.copy(CAMERA_RESOLVED_TARGET); camera.lookAt(CAMERA_FOCUS);
+  state.arrivalFrame=renderedFrame; state.arrivalSkipped=null; state.arrivalCalls+=CAMERA_ARRIVAL_RESULT.count*2+1;
+  state.arrivalMs=performance.now()-started; state.arrivalId=destination._landmark||destination.repo||destination.label||'destination';
+  state.arrivalScore=CAMERA_ARRIVAL_RESULT.score; state.arrivalYaw=CAMERA_ARRIVAL_RESULT.yaw;
+  state.arrivalIdealYaw=CAMERA_ARRIVAL_RESULT.idealYaw; state.arrivalIndex=CAMERA_ARRIVAL_RESULT.index; state.arrivalCount=CAMERA_ARRIVAL_RESULT.count;
+  state.lastReason='arrival-settle'; return true;
+}
+/*CLEAR_SIGHT_CAMERA:END*/
 const dom=renderer.domElement;
 addEventListener('contextmenu',e=>{ e.preventDefault(); clearKeys(); },true);   // WoW: suppress browser right-click menu globally (capture phase, any target). Also drop held keys so a misfired right-click never leaves you walking.
 dom.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch') return; if(e.button!==0&&e.button!==2) return;
@@ -7996,7 +8165,7 @@ function taxiTo(repo){ standUp(); ride={repo, phase:'coming', t:0}; setNav(repo)
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
-function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true;
+function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; _settleClearSightArrival(repo);
   if(repo._courseResident){ const L=_residentLive(repo._courseResident), res=L&&L.res; if(L&&res){ const met=courseMark('resident',res.id); openChat(L._npc);
       if(met) showWave(tf('chronicleMet',{name:(res[LANG]||res.ko).name}),2800); } else openChat(); return; }
   openChat();
@@ -8566,6 +8735,7 @@ function animate(){
   mv.set(0,0,0);
   const userInput = keys['Space']||keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
   if(tour&&tour.active&&!tour.waiting&&!ride&&userInput){ endTour(false); }
+  const cameraOwner=_cameraOwnerAtFrameStart();
   let moving=false;
   if(ride){
     { // ride no longer auto-cancels on key input — exit only via the hold-to-get-off button
@@ -8625,9 +8795,7 @@ function animate(){
   if(emoteT>0){ emoteT-=dt; const E=EMOTES[emoteKind]||EMOTES.wave; E.anim(E.dur-emoteT, armL, armR, model); }
 
   if(!dragging&&moving&&!freeLook) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,0.04);
-  const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist, oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist, oy=Math.sin(camPitch)*camDist;
-  CAMERA_FOLLOW_TARGET.set(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz); camera.position.lerp(CAMERA_FOLLOW_TARGET,0.12);
-  camera.lookAt(player.position.x,player.position.y+1.7,player.position.z);
+  _updateClearSightCamera(dt,cameraOwner);
 
   nearest=null; let nd=Infinity;
   for(const b of buildings){
@@ -8898,6 +9066,56 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__cam=()=>({camYaw:+camYaw.toFixed(6),camPitch:+camPitch.toFixed(6),camDist:+camDist.toFixed(4),charYaw:+model.rotation.y.toFixed(6),freeLook,dragging,dragBtn,
     camera:{position:_debugVec(camera.position),quaternion:[+camera.quaternion.x.toFixed(6),+camera.quaternion.y.toFixed(6),+camera.quaternion.z.toFixed(6),+camera.quaternion.w.toFixed(6)]},
     player:{position:_debugVec(player.position)},renderMode:WORLD_TREE_RENDER_MODE,night:isNight});
+  const _clearSightCandidates=(count=CLEAR_SIGHT_CAMERA.arrivalCount)=>{ const rows=[]; for(let i=0;i<count;i++) rows.push({
+      index:i,yaw:+CAMERA_ARRIVAL_RESULT.yaws[i].toFixed(6),distance:+CAMERA_ARRIVAL_RESULT.distances[i].toFixed(4),
+      score:+CAMERA_ARRIVAL_RESULT.scores[i].toFixed(5),softBlocked:!!CAMERA_ARRIVAL_RESULT.softHits[i]}); return rows; };
+  window.__clearSightCamera=()=>{ const S=CLEAR_SIGHT_CAMERA,H=S.hit; return {
+    requestedDist:+S.requestedDist.toFixed(4),resolvedDist:+S.resolvedDist.toFixed(4),springDist:+S.springDist.toFixed(4),
+    blocked:S.blocked,hit:H?{owner:H.cameraOwner||null,type:H.cameraType||null,id:H.cameraId||null,
+      clearance:+S.clearance.toFixed(4),hitDistance:+((CAMERA_RESULT.hitDistance??0).toFixed(4))}:null,
+    pose:{focus:_debugVec(CAMERA_FOCUS),desired:_debugVec(CAMERA_FOLLOW_TARGET),resolved:_debugVec(camera.position)},
+    arrival:{id:S.arrivalId,selectedYaw:+S.arrivalYaw.toFixed(6),idealYaw:+S.arrivalIdealYaw.toFixed(6),score:+S.arrivalScore.toFixed(5),
+      selectedIndex:S.arrivalIndex,skipped:S.arrivalSkipped,candidates:_clearSightCandidates()},
+    resolver:{owner:_cameraOwnerAtFrameStart(),lastReason:S.lastReason,calls:S.calls,skips:S.skips,frames:S.frames,
+      blockerCount:CAMERA_BLOCKERS.length,arrivalOccluders:CAMERA_ARRIVAL_OCCLUDERS.length,arrivalCalls:S.arrivalCalls,
+      timingMs:{last:+S.lastMs.toFixed(4),average:+(S.frames?S.totalMs/S.frames:0).toFixed(4),max:+S.maxMs.toFixed(4),arrival:+S.arrivalMs.toFixed(4)},
+      steadyStateAllocations:0,fullSceneRaycast:false}}; };
+  window.__clearSightStarlightProbe=(apply=false)=>{ if(!RES_QUARTER) return null;
+    const sx=2.6,sz=-3.2,tx=RES_QUARTER_POS.x,tz=RES_QUARTER_POS.z,vx=tx-sx,vz=tz-sz,len=Math.hypot(vx,vz);
+    const fx=tx-vx/len*6,fz=tz-vz/len*6,baseYaw=Math.atan2(fx-tx,fz-tz);
+    CAMERA_ARRIVAL_QUERY.focusX=fx; CAMERA_ARRIVAL_QUERY.focusY=1.7; CAMERA_ARRIVAL_QUERY.focusZ=fz;
+    CAMERA_ARRIVAL_QUERY.destinationX=tx; CAMERA_ARRIVAL_QUERY.destinationZ=tz; CAMERA_ARRIVAL_QUERY.currentYaw=baseYaw;
+    CAMERA_ARRIVAL_QUERY.pitch=.42; CAMERA_ARRIVAL_QUERY.requestedDistance=13; CAMERA_ARRIVAL_QUERY.verticalBaseOffset=-.2;
+    CAMERA_ARRIVAL_QUERY.padding=CAMERA_OBSTRUCTION_DEFAULTS.padding; CAMERA_ARRIVAL_QUERY.surfaceEpsilon=CAMERA_OBSTRUCTION_DEFAULTS.surfaceEpsilon;
+    CAMERA_ARRIVAL_QUERY.minDistance=CAMERA_OBSTRUCTION_DEFAULTS.minDistance; CAMERA_ARRIVAL_QUERY.softPadding=.12;
+    chooseCameraArrivalYaw(CAMERA_ARRIVAL_QUERY,CAMERA_BLOCKERS,CAMERA_ARRIVAL_OCCLUDERS,
+      CAMERA_ARRIVAL_OFFSETS,CAMERA_ARRIVAL_RESULT,CAMERA_ARRIVAL_SCRATCH);
+    const q=CAMERA_ARRIVAL_SCRATCH.query,yaw=CAMERA_ARRIVAL_RESULT.yaw,horizontal=Math.cos(.42)*13;
+    q.focusX=fx; q.focusY=1.7; q.focusZ=fz; q.desiredX=fx+Math.sin(yaw)*horizontal;
+    q.desiredY=1.5+Math.sin(.42)*13; q.desiredZ=fz+Math.cos(yaw)*horizontal; q.requestedDistance=13;
+    q.padding=CAMERA_OBSTRUCTION_DEFAULTS.padding; q.surfaceEpsilon=CAMERA_OBSTRUCTION_DEFAULTS.surfaceEpsilon; q.minDistance=CAMERA_OBSTRUCTION_DEFAULTS.minDistance;
+    resolveCameraObstruction(q,CAMERA_BLOCKERS,CAMERA_ARRIVAL_SCRATCH.hard);
+    if(apply){ player.position.set(fx,0,fz); model.visible=true; freeLook=false; camYaw=baseYaw; _settleClearSightArrival(RES_QUARTER); }
+    return {arrival:[+fx.toFixed(5),0,+fz.toFixed(5)],destination:[tx,0,tz],baseYaw:+baseYaw.toFixed(6),
+      selectedYaw:+CAMERA_ARRIVAL_RESULT.yaw.toFixed(6),selectedIndex:CAMERA_ARRIVAL_RESULT.index,
+      clearDistance:+CAMERA_ARRIVAL_SCRATCH.hard.distance.toFixed(4),blocked:CAMERA_ARRIVAL_SCRATCH.hard.blocked,
+      hit:CAMERA_ARRIVAL_SCRATCH.hard.hit?.cameraId||null,candidates:_clearSightCandidates(CAMERA_ARRIVAL_RESULT.count),applied:apply,
+      camera:apply?window.__clearSightCamera():null}; };
+  window.__clearSightResourceProbe=(iterations=1000)=>{
+    const census=()=>{ let objects=0,drawables=0; const materials=new Set(); scene.traverse(object=>{ objects++;
+        if(object.isMesh||object.isLine||object.isPoints||object.isSprite) drawables++;
+        if(Array.isArray(object.material)) object.material.forEach(material=>material&&materials.add(material));
+        else if(object.material) materials.add(object.material); });
+      return {objects,drawables,materials:materials.size,geometries:renderer.info.memory.geometries,
+        textures:renderer.info.memory.textures,programs:(renderer.info.programs||[]).length}; };
+    iterations=Math.max(1,Math.min(10000,iterations|0)); _setRequestedCameraPose(); _setCameraQuery(CAMERA_QUERY,CAMERA_FOLLOW_TARGET,camDist);
+    const before=census(),renderCalls=renderer.info.render.calls,started=performance.now();
+    for(let i=0;i<iterations;i++) resolveCameraObstruction(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT);
+    const elapsed=performance.now()-started,after=census();
+    return {iterations,blockers:CAMERA_BLOCKERS.length,averageMs:+(elapsed/iterations).toFixed(6),
+      delta:{objects:after.objects-before.objects,drawables:after.drawables-before.drawables,materials:after.materials-before.materials,
+        geometries:after.geometries-before.geometries,textures:after.textures-before.textures,programs:after.programs-before.programs,
+        renderCalls:renderer.info.render.calls-renderCalls}}; };
   window.__setPerfPose=(o={})=>{ player.position.set(o.x??15,o.y??0,o.z??-7); camYaw=o.yaw??Math.PI; camPitch=o.pitch??0.42; camDist=o.dist??18;
     model.visible=o.modelVisible===true; freeLook=true; return window.__cam(); };
   window.__perfActivity=(active=null)=>{ DEBUG_FORCE_ACTIVITY=active===null?null:active!==false; if(DEBUG_FORCE_ACTIVITY) lastAct=performance.now(); RENDER_METRICS.lastStartedAt=0; return {forced:DEBUG_FORCE_ACTIVITY}; };
