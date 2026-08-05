@@ -345,6 +345,14 @@ ok(ferryBlock.length>0 && /makeCanalFerry\(curve,RIVER_LANDMARK\)/.test(HTML),
 ok(/root\.name='petite-venise-canal-ferry'/.test(ferryBlock)
   && /bridgeUnderY:0\.62,maxWorldY:0\.55,bridgeClearance:0\.07/.test(ferryBlock)
   && !/canopy|roof/i.test(ferryBlock), 'the low-profile craft keeps measured clearance beneath every flower bridge');
+ok(/const hull=capsule\(0\.8,2\.7,0xb85f3d,10\); hull\.name='canal-ferry-hull'/.test(ferryBlock)
+  && /hull\.rotation\.x=Math\.PI\/2;[\s\S]*?hull\.scale\.set\(1\.1,0\.34,1\)/.test(ferryBlock)
+  && /const deck=capsule\(0\.62,2\.45,0xe6b96f,8\); deck\.name='canal-ferry-deck'/.test(ferryBlock)
+  && !/SphereGeometry\(0\.5,12,8,0,Math\.PI\*2,0,Math\.PI\/2\)/.test(ferryBlock),
+  'a full opaque terracotta hull and contrasting deck replace the culled water-coloured hemisphere');
+ok(/CANAL_FERRY=\{group:root,hull,deck,curve/.test(ferryBlock)
+  && /silhouette:CANAL_FERRY\?\{hull:CANAL_FERRY\.hull\.visible,deck:CANAL_FERRY\.deck\.visible,opaque:/.test(HTML),
+  'the runtime retains and exposes both silhouette layers for bounded visual verification');
 ok(!/LOW_END/.test(ferryBlock) && /disableDynamicShadowCasters\(root\)/.test(ferryBlock),
   'desktop and mobile keep the same single lightweight craft without dynamic shadow churn');
 ok(ferryMove.length>0 && ferryUpdate.length>0 && !/new THREE|\.clone\(|scene\.traverse|\.map\(/.test(ferryMove+ferryUpdate),
