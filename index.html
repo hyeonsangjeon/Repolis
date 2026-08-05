@@ -3754,9 +3754,16 @@ function makeBuilding(repo){
   const cameraRoofRadius=topW*({flat:.73,hip:.9,gambrel:.96,mansard:1,aframe:.82,shed:.76,barrel:.74}[typ.roof]||.95);
   const cameraRoofRise=typ.roof==='flat'?1.1:typ.roof==='hip'?1.75:typ.roof==='gambrel'?2.35:typ.roof==='mansard'?2.32:
     typ.roof==='aframe'?2.22:typ.roof==='shed'?1.55:typ.roof==='barrel'?topW*.52+0.12:2.65;
-  const cameraWingRadius=kind==='mansion'||kind==='manor'?w*.99:kind==='villa'?w*.93:0;
-  repo._cameraR=Math.max(repo._cw,cameraRoofRadius,cameraWingRadius);
+  repo._cameraRoofR=cameraRoofRadius; repo._cameraRoofMin=Math.max(0,topH-.16);
   repo._cameraHeight=Math.max(topH+cameraRoofRise,kind==='mansion'?topH+3.2:0);
+  repo._cameraParts=[];
+  if(kind==='villa'||kind==='manor'||kind==='mansion'){
+    const wh=kind==='villa'?h*.66:h*(kind==='mansion'?.8:.72),ww=w*.52,wd=d*.82,wx=w*(kind==='villa'?.66:.72);
+    const partR=Math.hypot(ww,wd)*.5+.18,rot=g.rotation.y,sides=kind==='villa'?[1]:[-1,1];
+    for(const side of sides) repo._cameraParts.push({
+      x:repo._x+Math.cos(rot)*wx*side,z:repo._z-Math.sin(rot)*wx*side,r:partR,minY:0,maxY:wh+2.2,id:`${repo.repo}-wing-${side}`
+    });
+  }
   const roof=makeRoof(typ.roof, topW, topH, repo.roof); g.add(roof); repo._roof=roof;
   const flatTop = (typ.roof==='flat');
   if(typ.roof!=='flat' && typ.roof!=='aframe'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim);
@@ -4235,8 +4242,15 @@ function _registerCameraBlocker(c,owner,type,id,r,minY,maxY){
 }
 const COLLIDERS = buildings.map(b=>{
   const c={x:b._x,z:b._z,r:b._cw||3};
-  return _registerCameraBlocker(c,b._isLibrary?'library':'repo',b._isLibrary?'library':'building',
-    b._isLibrary?'contribution-library':b.repo,b._isLibrary?18:(b._cameraR||b._cw||3),0,b._isLibrary?18:(b._cameraHeight||12));
+  _registerCameraBlocker(c,b._isLibrary?'library':'repo',b._isLibrary?'library':'building',
+    b._isLibrary?'contribution-library':b.repo,b._isLibrary?18:(b._cw||3),0,b._isLibrary?18:(b._lodSpec?.topH||b._cameraHeight||12));
+  if(!b._isLibrary){
+    _registerCameraBlocker({x:b._x,z:b._z,r:b._cameraRoofR||b._cw||3},'repo','roof',`${b.repo}-roof`,
+      b._cameraRoofR||b._cw||3,b._cameraRoofMin||0,b._cameraHeight||12);
+    for(const part of b._cameraParts||[]) _registerCameraBlocker({x:part.x,z:part.z,r:part.r},'repo','building-wing',
+      part.id,part.r,part.minY,part.maxY);
+  }
+  return c;
 });
 if(LIB){
   const north={x:0,z:LIB._z-14,r:13},south={x:0,z:LIB._z+14,r:14};
@@ -5568,7 +5582,10 @@ function _residentHomeById(id){ return RESIDENT_HOMES.find(h=>h.id===id)||null; 
 function _homeLocal(lx,lz,rot,ox,oz){ const c=Math.cos(rot),s=Math.sin(rot); return {x:lx+c*ox+s*oz,z:lz-s*ox+c*oz}; }
 function _addResidentQuarterCollider(c){
   RES_QUARTER_COLLIDERS.push(c); EXTRA_COLLIDERS.push(c); COLLIDERS.push(c);
-  if(c._residentHome) _registerCameraBlocker(c,'resident-quarter','cottage',c._residentHome,3.9,0,6.15);
+  if(c._residentHome){
+    _registerCameraBlocker(c,'resident-quarter','cottage',c._residentHome,3.15,0,3.3);
+    _registerCameraBlocker({x:c.x,z:c.z,r:3.9},'resident-quarter','cottage-roof',`${c._residentHome}-roof`,3.9,3.05,6.15);
+  }
   else if(c._residentQuarterSign){
     c.cameraBlocking='arrival-only'; c.cameraOwner='resident-quarter'; c.cameraType='sign'; c.cameraId='starlight-row-sign';
     c.cameraR=1.4; c.cameraMinY=0; c.cameraMaxY=2.9; CAMERA_ARRIVAL_OCCLUDERS.push(c);
@@ -9079,6 +9096,21 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
       clearDistance:+CAMERA_ARRIVAL_SCRATCH.hard.distance.toFixed(4),blocked:CAMERA_ARRIVAL_SCRATCH.hard.blocked,
       hit:CAMERA_ARRIVAL_SCRATCH.hard.hit?.cameraId||null,candidates:_clearSightCandidates(CAMERA_ARRIVAL_RESULT.count),applied:apply,
       camera:apply?window.__clearSightCamera():null}; };
+  window.__clearSightResourceProbe=(iterations=1000)=>{
+    const census=()=>{ let objects=0,drawables=0; const materials=new Set(); scene.traverse(object=>{ objects++;
+        if(object.isMesh||object.isLine||object.isPoints||object.isSprite) drawables++;
+        if(Array.isArray(object.material)) object.material.forEach(material=>material&&materials.add(material));
+        else if(object.material) materials.add(object.material); });
+      return {objects,drawables,materials:materials.size,geometries:renderer.info.memory.geometries,
+        textures:renderer.info.memory.textures,programs:(renderer.info.programs||[]).length}; };
+    iterations=Math.max(1,Math.min(10000,iterations|0)); _setRequestedCameraPose(); _setCameraQuery(CAMERA_QUERY,CAMERA_FOLLOW_TARGET,camDist);
+    const before=census(),renderCalls=renderer.info.render.calls,started=performance.now();
+    for(let i=0;i<iterations;i++) resolveCameraObstruction(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT);
+    const elapsed=performance.now()-started,after=census();
+    return {iterations,blockers:CAMERA_BLOCKERS.length,averageMs:+(elapsed/iterations).toFixed(6),
+      delta:{objects:after.objects-before.objects,drawables:after.drawables-before.drawables,materials:after.materials-before.materials,
+        geometries:after.geometries-before.geometries,textures:after.textures-before.textures,programs:after.programs-before.programs,
+        renderCalls:renderer.info.render.calls-renderCalls}}; };
   window.__setPerfPose=(o={})=>{ player.position.set(o.x??15,o.y??0,o.z??-7); camYaw=o.yaw??Math.PI; camPitch=o.pitch??0.42; camDist=o.dist??18;
     model.visible=o.modelVisible===true; freeLook=true; return window.__cam(); };
   window.__perfActivity=(active=null)=>{ DEBUG_FORCE_ACTIVITY=active===null?null:active!==false; if(DEBUG_FORCE_ACTIVITY) lastAct=performance.now(); RENDER_METRICS.lastStartedAt=0; return {forced:DEBUG_FORCE_ACTIVITY}; };

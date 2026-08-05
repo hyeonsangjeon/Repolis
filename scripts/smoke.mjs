@@ -220,9 +220,13 @@ resolveCameraObstruction(cameraQuery([0, 1, 1], [10, 1, 1], 10),
 resolveCameraObstruction(cameraQuery([0, 1, 0], [.5, 1, 0], .5),
   [{ x: 0, z: 0, r: 1, minY: 0, maxY: 2 }], short);
 resolveCameraObstruction(cameraQuery([0, 1, 0], [NaN, 1, 0], NaN), [], invalid);
-ok(internal.blocked && internal.distance === 1 && tangent.blocked && nearNumber(tangent.distance, 5)
-  && short.blocked && short.distance === .5 && !invalid.valid && !invalid.blocked && Number.isFinite(invalid.distance),
+ok(internal.blocked && internal.distance === 0 && tangent.blocked && nearNumber(tangent.distance, 5)
+  && short.blocked && short.distance === 0 && !invalid.valid && !invalid.blocked && Number.isFinite(invalid.distance),
   'inside-start, tangent, sub-minimum request, and NaN inputs are deterministic and fail soft');
+const outward = {};
+resolveCameraObstruction(cameraQuery([2, 1, 0], [8, 1, 0], 6),
+  [{ x: 0, z: 0, r: 2, minY: 0, maxY: 2 }], outward);
+ok(!outward.blocked && outward.distance === 6, 'a camera moving outward from a collider boundary is not trapped at the focus point');
 
 const padded = {}, minimum = {};
 resolveCameraObstruction(cameraQuery([0, 1, 0], [10, 1, 0], 10, { padding: .5 }),
@@ -232,7 +236,7 @@ resolveCameraObstruction(cameraQuery([0, 1, 0], [3, 1, 0], 3, { minDistance: 1 }
 const fastIn = stepCameraResolvedDistance(10, 4, 10, true, 1 / 60, CAMERA_OBSTRUCTION_DEFAULTS);
 const slowOut = stepCameraResolvedDistance(4, 10, 10, false, 1 / 60, CAMERA_OBSTRUCTION_DEFAULTS);
 const hysteresisHold = stepCameraResolvedDistance(4, 4.2, 10, true, 1 / 60, CAMERA_OBSTRUCTION_DEFAULTS);
-ok(nearNumber(padded.distance, 3.5) && minimum.distance === 1
+ok(nearNumber(padded.distance, 3.5) && nearNumber(minimum.distance, .2)
   && 10 - fastIn > slowOut - 4 && hysteresisHold === 4,
   'padding, minimum distance, fast-in/slow-out, and outward hysteresis stay deterministic');
 
@@ -244,10 +248,11 @@ ok(clear.valid && !clear.blocked && clear.distance === 13 && clear.fraction === 
 const starlightBlockers = [], starlightX = 130, starlightZ = 130;
 for (let i = 0; i < 9; i++) {
   const angle = i / 9 * Math.PI * 2 + Math.PI / 36;
-  starlightBlockers.push({
-    x: starlightX + Math.cos(angle) * 13, z: starlightZ + Math.sin(angle) * 13,
-    r: 3.15, cameraR: 3.9, minY: 0, maxY: 6.15, cameraId: 'home-' + i
-  });
+  const x = starlightX + Math.cos(angle) * 13, z = starlightZ + Math.sin(angle) * 13;
+  starlightBlockers.push(
+    { x, z, r: 3.15, minY: 0, maxY: 3.3, cameraId: 'home-' + i },
+    { x, z, r: 3.9, minY: 3.05, maxY: 6.15, cameraId: 'home-' + i + '-roof' }
+  );
 }
 const spawnX = 2.6, spawnZ = -3.2, routeX = starlightX - spawnX, routeZ = starlightZ - spawnZ;
 const routeLength = Math.hypot(routeX, routeZ);
@@ -296,9 +301,16 @@ ok(clearSightUpdate.length > 0 && !/new\s+|scene\.traverse|Raycaster|raycast|mat
   && /resolveCameraObstruction\(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT\)/.test(clearSightUpdate)
   && /resolveCameraObstruction\(CAMERA_POST_QUERY,CAMERA_BLOCKERS,CAMERA_POST_RESULT\)/.test(clearSightUpdate),
   'steady-state ClearSight reuses fixed storage and bounded collider math without allocation or scene raycasts');
+ok(/_registerCameraBlocker\(c,'resident-quarter','cottage'[\s\S]*?3\.15,0,3\.3\)/.test(HTML)
+  && /_registerCameraBlocker\(\{x:c\.x,z:c\.z,r:3\.9\},'resident-quarter','cottage-roof'[\s\S]*?3\.9,3\.05,6\.15\)/.test(HTML)
+  && /'repo','roof'/.test(HTML), 'repo and Starlight blockers separate wall and roof height ranges');
 ok(/window\.__clearSightCamera=/.test(HTML) && /window\.__clearSightStarlightProbe=/.test(HTML)
   && /requestedDist:[\s\S]*?resolvedDist:[\s\S]*?blocked:[\s\S]*?hit:[\s\S]*?pose:[\s\S]*?arrival:[\s\S]*?timingMs:/.test(HTML),
   'one debug surface exposes requested/resolved pose, hit identity, arrival scoring, skip reason, and timing');
+ok(/window\.__clearSightResourceProbe=/.test(HTML)
+  && /for\(let i=0;i<iterations;i\+\+\) resolveCameraObstruction\(CAMERA_QUERY,CAMERA_BLOCKERS,CAMERA_RESULT\)/.test(HTML)
+  && /delta:\{objects:[\s\S]*?materials:[\s\S]*?renderCalls:/.test(HTML),
+  'debug resource probe measures resolver-only object, material, memory, and draw-call deltas');
 
 /* ── 6) inline <script type=module> still parses ── */
 group('inline module parses (node --check)');

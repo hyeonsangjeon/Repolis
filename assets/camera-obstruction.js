@@ -110,12 +110,15 @@ export function resolveCameraObstruction(query, blockers, out) {
     if (enter <= EPSILON) {
       const insidePhysical = sx * sx + sz * sz <= physicalRadius * physicalRadius + EPSILON
         && fy >= minY - EPSILON && fy <= maxY + EPSILON;
-      if (!insidePhysical && sx * vx + sz * vz >= 0) continue;
+      const radialMotion = sx * vx + sz * vz;
+      if (radialMotion > EPSILON || (!insidePhysical && radialMotion >= 0)) continue;
       enter = 0;
     }
 
     const hitDistance = requested * clamp(enter, 0, 1);
-    const safeDistance = Math.max(minDistance, hitDistance - surfaceEpsilon);
+    const safeDistance = hitDistance > minDistance
+      ? Math.max(minDistance, hitDistance - surfaceEpsilon)
+      : Math.max(0, hitDistance - surfaceEpsilon);
     if (safeDistance < nearestSafe - EPSILON
         || (Math.abs(safeDistance - nearestSafe) <= EPSILON && hitDistance < nearestHit)) {
       nearestSafe = safeDistance;
