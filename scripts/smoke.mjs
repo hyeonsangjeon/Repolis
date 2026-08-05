@@ -340,6 +340,7 @@ ok(sampleCanalFerryRoute(Infinity,CANAL_FERRY_DEFAULTS,ferryReuse)===ferryReuse
 const ferryBlock=(HTML.match(/\/\*CANAL_FERRY:START\*\/([\s\S]*?)\/\*CANAL_FERRY:END\*\//)||[,''])[1];
 const ferryMove=(ferryBlock.match(/function _placeCanalFerry\(elapsed,dt\)\{([\s\S]*?)\n\}/)||[,''])[1];
 const ferryUpdate=(ferryBlock.match(/function updateCanalFerry\(dt\)\{([\s\S]*?)\n\}/)||[,''])[1];
+const ferryRider=(ferryBlock.match(/function _placeCanalFerryRider\(\)\{([\s\S]*?)\n\}/)||[,''])[1];
 ok(ferryBlock.length>0 && /makeCanalFerry\(curve,RIVER_LANDMARK\)/.test(HTML),
   'the grand river creates exactly one dedicated boardable ferry from its existing curve');
 ok(/root\.name='petite-venise-canal-ferry'/.test(ferryBlock)
@@ -359,6 +360,16 @@ ok(!/LOW_END/.test(ferryBlock) && /disableDynamicShadowCasters\(root\)/.test(fer
   'desktop and mobile keep the same single lightweight craft without dynamic shadow churn');
 ok(ferryMove.length>0 && ferryUpdate.length>0 && !/new THREE|\.clone\(|scene\.traverse|\.map\(/.test(ferryMove+ferryUpdate),
   'steady ferry motion reuses its route sample and fixed curve vectors without per-frame allocation or traversal');
+ok(ferryRider.length>0
+  && /player\.position\.set\(F\.group\.position\.x,F\.group\.position\.y-F\.baseY,F\.group\.position\.z\)/.test(ferryRider)
+  && /model\.rotation\.y=F\.group\.rotation\.y/.test(ferryRider),
+  'the existing player root follows the center bench, ferry yaw, and bob without parenting or another avatar');
+ok(/_placeCanalFerryRider\(\); model\.visible=true; blob\.visible=false; emoteT=0/.test(ferryBlock)
+  && /if\(canalFerryRide\)\{[\s\S]*?legL\.rotation\.x=legR\.rotation\.x=-1\.5[\s\S]*?model\.position\.y=-0\.34; model\.rotation\.y=CANAL_FERRY\.group\.rotation\.y/.test(HTML),
+  'boarding keeps the character visible in the seated pose and hides only its ground contact shadow');
+ok(/rider:CANAL_FERRY\?\{aboard:!!canalFerryRide,visible:model\.visible,seat:canalFerryRide\?'center':null/.test(HTML)
+  && !/CANAL_FERRY\.group\.add\(model\)/.test(HTML),
+  'debug state exposes the reused center-seat rider while the ferry remains a nine-child craft');
 ok(/nearCanalFerry = \(CANAL_FERRY && !canalFerryRide/.test(HTML)
   && /else if\(nearCanalFerry\) boardCanalFerry\(\)/.test(HTML)
   && /actBtn\.textContent='🛶'/.test(HTML), 'the canal dock owns a walk-up prompt and the shared Enter/mobile action path');
