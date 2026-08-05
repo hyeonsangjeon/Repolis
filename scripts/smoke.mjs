@@ -24,6 +24,7 @@ import {
   chooseCameraArrivalYaw
 } from '../assets/camera-obstruction.js';
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from '../assets/canal-ferry.js';
+import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from '../assets/rain-garden.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -381,6 +382,69 @@ ok((HTML.match(/ferryName:/g)||[]).length===2 && (HTML.match(/ferryReached:/g)||
   'Korean/English ride copy and bounded debug board/finish probes are present');
 ok(/boardable low-profile ferry/.test(README_EN) && /낮은 유람선에 올라/.test(README_KO),
   'both READMEs describe the real boardable canal interaction');
+
+group('Rain Garden Weather Bell — one bounded town sunshower');
+const rainStart=sampleRainGarden(0,RAIN_GARDEN_DEFAULTS,{}), rainFull=sampleRainGarden(8,RAIN_GARDEN_DEFAULTS,{});
+const rainFade=sampleRainGarden(35,RAIN_GARDEN_DEFAULTS,{}), rainEnd=sampleRainGarden(36,RAIN_GARDEN_DEFAULTS,{});
+ok(RAIN_GARDEN_DEFAULTS.duration===36 && RAIN_GARDEN_DEFAULTS.desktopDrops===96
+  && RAIN_GARDEN_DEFAULTS.mobileDrops===48 && RAIN_GARDEN_DEFAULTS.rippleCount===8,
+  'the visitor-started shower is capped at 36 seconds, 96/48 drops, and eight ripples');
+ok(rainStart.active && rainStart.intensity===0 && rainFull.active && rainFull.intensity===1
+  && rainFade.intensity>0 && rainFade.intensity<1 && rainEnd.complete && !rainEnd.active && rainEnd.intensity===0,
+  'the pure lifecycle fades in, holds, fades out, and completes exactly once');
+const rainReuse={sentinel:true};
+ok(sampleRainGarden(Infinity,RAIN_GARDEN_DEFAULTS,rainReuse)===rainReuse
+  && rainReuse.progress===0 && rainReuse.active && !rainReuse.complete,
+  'invalid elapsed time fails soft and reuses caller-owned lifecycle output');
+const rainSeedA=seedRainDrop(17,96,RAIN_GARDEN_DEFAULTS,{}), rainSeedB=seedRainDrop(17,96,RAIN_GARDEN_DEFAULTS,{});
+ok(rainSeedA.x===rainSeedB.x && rainSeedA.y===rainSeedB.y && rainSeedA.z===rainSeedB.z
+  && Math.hypot(rainSeedA.x,rainSeedA.z)<=RAIN_GARDEN_DEFAULTS.radius
+  && rainSeedA.y>0 && rainSeedA.y<=RAIN_GARDEN_DEFAULTS.height && rainSeedA.speed>=0.78 && rainSeedA.speed<=1.22,
+  'drop seeding is deterministic and remains inside the fixed player-following field');
+ok(Math.abs(wrapRainDropY(5,1,18)-4)<1e-12 && Math.abs(wrapRainDropY(0.2,1,18)-17.2)<1e-12,
+  'falling drops wrap within one fixed-height buffer instead of allocating replacements');
+const rainBlock=(HTML.match(/\/\*RAIN_GARDEN:START\*\/([\s\S]*?)\/\*RAIN_GARDEN:END\*\//)||[,''])[1];
+const rainUpdate=(rainBlock.match(/function updateRainGarden\(dt\)\{([\s\S]*?)\n\}/)||[,''])[1];
+const rainUmbrellaUpdate=(rainBlock.match(/function _updateRainGardenUmbrellas\(dt,intensity\)\{([\s\S]*?)\n\}/)||[,''])[1];
+ok(rainBlock.length>0 && /const RAIN_GARDEN_POS=new THREE\.Vector3\(20,0,-6\)/.test(rainBlock)
+  && /makeRainGarden\(RAIN_GARDEN_POS\.x,RAIN_GARDEN_POS\.z\)/.test(HTML)
+  && /EXTRA_COLLIDERS\.push\(\{x,z,r:1\.55,_rainGarden:true\}\)/.test(rainBlock),
+  'one plaza-edge garden is built at a fixed clear site with a minimal walk collider');
+ok(/new THREE\.LineSegments\(rainGeometry,rainMaterial\)/.test(rainBlock)
+  && /new THREE\.InstancedMesh\(new THREE\.RingGeometry\(0\.34,0\.42,14\),rippleMaterial,RAIN_GARDEN_DEFAULTS\.rippleCount\)/.test(rainBlock)
+  && /LOW_END\?RAIN_GARDEN_DEFAULTS\.mobileDrops:RAIN_GARDEN_DEFAULTS\.desktopDrops/.test(rainBlock),
+  'rain and ripples stay in two batches with the explicit low-end drop cap');
+ok(/new THREE\.InstancedMesh\(new THREE\.ConeGeometry\(0\.78,0\.34,12,1,true\),canopyMat,n\)/.test(rainBlock)
+  && /new THREE\.InstancedMesh\(new THREE\.CylinderGeometry\(0\.035,0\.035,1\.12,6\),poleMat,n\)/.test(rainBlock)
+  && /buildRainGardenResidentUmbrellas\(\);/.test(HTML),
+  'resident reactions reuse two instanced umbrella batches created only after residents exist');
+ok(rainUpdate.length>0 && rainUmbrellaUpdate.length>0
+  && !/new\s+|\.clone\(|scene\.traverse|setTimeout|setInterval|fetch\(/.test(rainUpdate+rainUmbrellaUpdate)
+  && /wrapRainDropY\(/.test(rainUpdate) && /instanceMatrix\.needsUpdate/.test(rainUpdate+rainUmbrellaUpdate),
+  'steady rain and umbrella motion reuse fixed buffers and matrices with no timer, network, traversal, or allocation');
+ok(/function _stopRainGarden\(reason\)[\s\S]*?_setRainGardenUmbrellas\(false\); _setRainGardenClouds\(0\)/.test(rainBlock)
+  && /if\(RAIN_SAMPLE\.complete\)\{ _stopRainGarden\('duration'\)/.test(rainBlock)
+  && /updateResidents\(dt\);\s*updateRainGarden\(dt\);/.test(HTML),
+  'completion restores clouds and hides every dynamic batch while the exterior loop owns the only lifecycle');
+ok(/else if\(nearRainGarden\) ringRainGarden\(\)/.test(HTML)
+  && /nearRainGarden = \(RAIN_GARDEN && player\.position\.distanceTo\(RAIN_GARDEN\._pos\) < 5\.8\)/.test(HTML)
+  && /actBtn\.textContent=rainGardenActive\?'☀️':'🌦️'/.test(HTML),
+  'the Weather Bell owns the shared Enter/mobile action path and toggles without taking camera control');
+ok(/\{id:'rain',\s+ico:'🌦️', key:'lmRain'\}/.test(HTML)
+  && /\{id:'rain',ico:'🌦️'\}/.test(HTML)
+  && /case 'rain': return RAIN_GARDEN\?\{label:t\('lmRain'\),_pos:RAIN_GARDEN\._pos,_landmark:'rain'\}:null/.test(HTML)
+  && /LM\.push\(\[RAIN_GARDEN\.center\.x,RAIN_GARDEN\.center\.z,'🌦️'\]\)/.test(HTML),
+  'Passport, Station, taxi destination, and world map all expose the same garden');
+ok(/rain \?garden\|weather \?bell\|sunshower/.test(HTML)
+  && /mk\('lmDriveRain',t\('lmRain'\),RAIN_GARDEN\._pos,'rain'\)/.test(HTML),
+  'distinctive Korean/English Weather Bell phrases route locally with no AI or backend');
+ok((HTML.match(/rainName:/g)||[]).length===2 && (HTML.match(/rainStarted:/g)||[]).length===2
+  && (HTML.match(/lmArriveRain:/g)||[]).length===2,
+  'the walk-up, weather-state, and arrival copy are complete in Korean and English');
+ok(/window\.__rainGarden=/.test(HTML) && /window\.__ringRain=/.test(HTML)
+  && /window\.__finishRain=/.test(HTML) && /window\.__stopRain=/.test(HTML)
+  && /resources:\{rainDraws:1,rippleDraws:1,umbrellaDraws:U\?2:0,timers:0,network:0,steadyAllocations:0\}/.test(HTML),
+  'bounded diagnostics expose placement, lifecycle, counts, ownership, and zero recurring resources');
 
 /* ── 6) inline <script type=module> still parses ── */
 group('inline module parses (node --check)');
