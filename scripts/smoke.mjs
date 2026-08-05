@@ -56,6 +56,8 @@ ok(viewport.length > 0, 'meta viewport tag exists');
 ok(!/user-scalable\s*=\s*no/i.test(viewport), 'viewport has no user-scalable=no');
 ok(!/maximum-scale/i.test(viewport), 'viewport has no maximum-scale');
 ok(/width=device-width/i.test(viewport), 'viewport still width=device-width');
+ok(/@media \(max-width: 520px\) \{[^\n]*#mapBtn \{ order: 10; \}/.test(HTML),
+  'the mobile map action wraps below the hamburger instead of overlapping it');
 
 group('README hero leads with one current story, CTA, and bounded media');
 const heroCopy = 'Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.';
