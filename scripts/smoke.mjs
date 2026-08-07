@@ -25,6 +25,15 @@ import {
 } from '../assets/camera-obstruction.js';
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from '../assets/canal-ferry.js';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from '../assets/rain-garden.js';
+import {
+  POSTCARD_FORMATS,
+  createTownPostcardIdentity,
+  summarizeTownRepos,
+  postcardFormatForViewport,
+  postcardCaptureSize,
+  analyzeTownFrame,
+  flipPixelRows
+} from '../assets/town-postcard.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -42,6 +51,7 @@ const LAUNCH_CONFIG_SRC = readFileSync(join(ROOT, 'repolis.config.js'), 'utf8');
 const REFRESH_WORKFLOW = readFileSync(join(ROOT, '.github/workflows/refresh.yml'), 'utf8');
 const REPO_BUILDER = readFileSync(join(ROOT, 'scripts/build_repos.py'), 'utf8');
 const CAMERA_MATH_SRC = readFileSync(join(ROOT, 'assets/camera-obstruction.js'), 'utf8');
+const POSTCARD_SRC = readFileSync(join(ROOT, 'assets/town-postcard.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -192,6 +202,99 @@ ok(/if\s*\(\s*!dest\s*\)\s*return/.test(HTML), 'absent stops are skipped (public
 ok(/taxiTo\s*\(\s*dest\s*\)/.test(HTML), 'landmark stop button rides via taxiTo(dest)');
 ok(/track\(\s*['"]landmark_stop_ride['"]/.test(HTML), 'landmark stop ride is tracked');
 ok(/stationDistrictsH\s*:/.test(HTML), 'stationDistrictsH i18n key present');
+
+group('Town Postcard Studio — current-view local artifact loop');
+const postcardRepos = [
+  { repo: 'atlas', lang: 'JavaScript', stars: 9, forks: 2 },
+  { repo: 'beacon', lang: 'Rust', stars: 4, forks: 1 },
+  { repo: 'canopy', lang: 'JavaScript', stars: 2, forks: 0 }
+];
+const postcardIdentity = createTownPostcardIdentity('Octo-Cat', postcardRepos);
+const postcardIdentityReordered = createTownPostcardIdentity('octo-cat', postcardRepos.slice().reverse());
+const postcardIdentityChanged = createTownPostcardIdentity('octo-cat', [{ ...postcardRepos[0], stars: 10 }, ...postcardRepos.slice(1)]);
+ok(JSON.stringify(postcardIdentity) === JSON.stringify(postcardIdentityReordered),
+  'username normalization and sorted public metadata produce one deterministic civic identity');
+ok(postcardIdentity.palette.name === postcardIdentityChanged.palette.name
+  && postcardIdentity.hash !== postcardIdentityChanged.hash && postcardIdentity.letters === 'OC',
+  'username fixes the recognizable palette while public repository metadata personalizes the seal');
+const postcardLanguageSummary = summarizeTownRepos(postcardRepos);
+const postcardRepoSummary = summarizeTownRepos(postcardRepos.map(repo => ({ ...repo, lang: 'Other' })));
+ok(postcardLanguageSummary.type === 'languages' && postcardLanguageSummary.items[0].name === 'JavaScript'
+  && postcardLanguageSummary.items[0].count === 2 && postcardRepoSummary.type === 'repos'
+  && postcardRepoSummary.items.map(item => item.name).join(',') === 'atlas,beacon,canopy',
+  'truthful signatures prefer counted top languages and deterministically fall back to top public repositories');
+ok(postcardFormatForViewport(390, 844) === POSTCARD_FORMATS.portrait
+  && postcardFormatForViewport(1440, 900) === POSTCARD_FORMATS.landscape
+  && POSTCARD_FORMATS.portrait.width === 1200 && POSTCARD_FORMATS.portrait.height === 1500
+  && POSTCARD_FORMATS.landscape.width === 1600 && POSTCARD_FORMATS.landscape.height === 1000,
+  'mobile and desktop choose legible fixed social-card output dimensions');
+const postcardCapture = postcardCaptureSize(4000, 3000);
+ok(postcardCapture.pixels <= 1800000 && Math.max(postcardCapture.width, postcardCapture.height) <= 1600
+  && Math.abs(postcardCapture.width / postcardCapture.height - 4 / 3) < 0.002,
+  'one-shot capture keeps its aspect ratio inside the 1.8MP and 1600px GPU budget');
+const blankPixels = new Uint8Array(4 * 4 * 4);
+const flatPixels = new Uint8Array(4 * 4 * 4);
+const variedPixels = new Uint8Array(4 * 4 * 4);
+for (let i = 0; i < 16; i++) {
+  flatPixels.set([48, 48, 48, 255], i * 4);
+  variedPixels.set(i % 2 ? [244, 225, 180, 255] : [18, 42, 60, 255], i * 4);
+}
+ok(analyzeTownFrame(blankPixels, 4, 4).blank && analyzeTownFrame(flatPixels, 4, 4).blank
+  && !analyzeTownFrame(variedPixels, 4, 4).blank,
+  'transparent and flat WebGL frames fail explicitly while an opaque varied town frame passes');
+const flippedPixels = new Uint8Array([1, 2, 3, 255, 4, 5, 6, 255, 7, 8, 9, 255, 10, 11, 12, 255]);
+flipPixelRows(flippedPixels, 2, 2);
+ok(flippedPixels[0] === 7 && flippedPixels[4] === 10 && flippedPixels[8] === 1 && flippedPixels[12] === 4,
+  'readback rows are deterministically flipped from WebGL to canvas coordinates');
+
+const postcardBlock = (HTML.match(/\/\* ====================== 📸 TOWN POSTCARD STUDIO ====================== \*\/([\s\S]*?)\/\* ====================== LLM TAXI DRIVER/) || [, ''])[1];
+const postcardCaptureBlock = (postcardBlock.match(/function _capturePostcardComposite\(\)\{([\s\S]*?)\n\}/) || [, ''])[1];
+ok(/id="postcardMenuBtn"/.test(HTML) && /id="postcardModal" role="dialog" aria-modal="true"/.test(HTML)
+  && /aria-labelledby="postcardTitle" aria-describedby="postcardSub"/.test(HTML)
+  && /id="postcardStatus" role="status" aria-live="polite"/.test(HTML),
+  'Wayfinding exposes one native dialog with named controls and a polite live status');
+ok(/buildPostcardKiosk/.test(HTML) && /new THREE\.Vector3\(-9\.5,0,14\.5\)/.test(HTML)
+  && /nearPostcardKiosk\) openPostcardStudio\('kiosk'\)/.test(HTML)
+  && /actBtn\.textContent='📸'/.test(HTML) && /LM\.push\(\[POSTCARD_KIOSK\._pos\.x,POSTCARD_KIOSK\._pos\.z,'📸'\]\)/.test(HTML),
+  'a non-HUD civic kiosk supports Enter/mobile action and the existing minimap vocabulary');
+ok(/renderer\.getRenderTarget\(\)/.test(postcardCaptureBlock)
+  && /captureComposer\.addPass\(finalMix\)/.test(postcardCaptureBlock)
+  && /captureComposer\.addPass\(finalComposer\.passes\[1\]\)/.test(postcardCaptureBlock)
+  && /readRenderTargetPixels/.test(postcardCaptureBlock),
+  'capture replays the latest real base/bloom composite through the existing final color pass');
+ok(/renderer\.setRenderTarget\(savedTarget\)/.test(postcardCaptureBlock)
+  && /renderer\.autoClear=savedAutoClear/.test(postcardCaptureBlock)
+  && /renderTarget1\.dispose\(\)/.test(postcardCaptureBlock) && /renderTarget2\.dispose\(\)/.test(postcardCaptureBlock)
+  && /activeTargets=Math\.max\(0,POSTCARD\.activeTargets-2\)/.test(postcardCaptureBlock),
+  'temporary targets are disposed and renderer target/autoclear state is restored on every outcome');
+ok(!/preserveDrawingBuffer|renderer\.setSize|camera\.position|player\.position|requestAnimationFrame/.test(postcardCaptureBlock)
+  && !/renderTownPostcard|_capturePostcardComposite/.test((HTML.match(/function animate\([\s\S]*?requestAnimationFrame\(animate\)/) || [''])[0]),
+  'export neither resizes/moves the live world nor enters the steady frame loop');
+ok(!/fetch\(|XMLHttpRequest|FormData|WebSocket|GROUNDED/.test(postcardBlock + POSTCARD_SRC)
+  && /Everything stays in this browser\. The image is never uploaded\./.test(HTML)
+  && /이 브라우저 안에서만 이뤄지며 이미지는 업로드되지 않아요/.test(HTML),
+  'image composition is local-only and the bilingual privacy boundary is explicit');
+ok(/navigator\.canShare\(\{files:\[file\]\}\)/.test(postcardBlock)
+  && /navigator\.share\(\{files:\[file\],[\s\S]*?url:_postcardShareUrl\(\)\}\)/.test(postcardBlock)
+  && /URL\.createObjectURL\(POSTCARD\.blob\)/.test(postcardBlock)
+  && /navigator\.clipboard&&navigator\.clipboard\.writeText/.test(postcardBlock),
+  'native PNG file sharing includes the exact URL with download and copy-link fallbacks');
+ok(/postcardCaptureBlank/.test(postcardBlock) && /postcardCaptureContext/.test(postcardBlock)
+  && /postcardCaptureSecurity/.test(postcardBlock) && /forceBlank/.test(postcardBlock)
+  && /forceFallback/.test(postcardBlock),
+  'blank, lost-context, CORS/security, generic capture, and forced fallback paths stay visible and testable');
+['postcard_open', 'postcard_render', 'postcard_share', 'postcard_download'].forEach(event =>
+  ok(postcardBlock.includes(`track('${event}'`), `postcard event ${event} is instrumented`));
+ok(!/track\('postcard_[^']+',\{[^}]*?(?:url|blob|image|user)/.test(postcardBlock),
+  'postcard analytics payloads stay bounded and omit username, URL, blob, and image data');
+ok((HTML.match(/postcardTitle:/g) || []).length === 2 && (HTML.match(/postcardPrivacy:/g) || []).length === 2
+  && (HTML.match(/postcardCaptureBlank:/g) || []).length === 2 && /@media \(max-width: 520px\)[\s\S]*?\.postcardActions \{ grid-template-columns: 1fr 1fr/.test(HTML)
+  && /\.postcardActions button \{ min-height: 46px/.test(HTML) && /\.postcardClose \{[^}]*width: 44px; height: 44px/.test(HTML),
+  'KO/EN states and 44px-plus responsive controls remain legible at 390×844');
+ok(/window\.__postcardOpen=/.test(HTML) && /window\.__postcardRetake=/.test(HTML)
+  && /window\.__postcardFallback=/.test(HTML) && /window\.__postcardPixels=/.test(HTML)
+  && /window\.__postcardKiosk=/.test(HTML) && /activeTargets:POSTCARD\.activeTargets/.test(HTML),
+  'bounded diagnostics cover open/render/blank/fallback/pixels/kiosk and resource lifetime');
 
 group('ClearSight camera — pure obstruction math, arrival framing, and ownership');
 const nearNumber = (actual, expected, epsilon = 1e-6) => Math.abs(actual - expected) <= epsilon;
