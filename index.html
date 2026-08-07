@@ -51,6 +51,16 @@
   #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
+  #postcardMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
+    border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
+  #postcardMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
+  #postcardMenuBtn:active { transform: translateY(1px); }
+  #postcardMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+    color: #fff8e7; background: linear-gradient(145deg,#365464,#173d55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); font-size: 17px; }
+  #postcardMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #postcardMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
+  #postcardMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .repoRow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 12px;
     cursor: pointer; transition: background .12s; }
   .repoRow:hover { background: #f6ecdb; }
@@ -268,6 +278,60 @@
   .btn.atelier:disabled { cursor: default; opacity: .72; }
   .btn.close { flex: 0 0 auto; min-width: 0; background: #f1e6d6; color: #6a523d; }
   .btn.chrono { background: linear-gradient(135deg,#4b3b8f,#6b4fb0); color: #fff; }
+  /* Town Postcard Studio — one local canvas artifact, never uploaded */
+  #postcardModal { position: fixed; inset: 0; z-index: 35; display: none; align-items: center; justify-content: center;
+    padding: max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px))
+      max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));
+    background: rgba(18,19,24,.68); backdrop-filter: blur(7px); }
+  #postcardModal.show { display: flex; }
+  .postcardStudio { --postcard-primary:#173d55; --postcard-accent:#f2b84b; position: relative; width: min(760px,100%);
+    max-height: calc(100dvh - 28px); overflow-y: auto; border-radius: 24px; background: #fffaf0; color: #33281f;
+    box-shadow: 0 28px 90px rgba(0,0,0,.48); animation: pop .22s cubic-bezier(.2,.9,.3,1.12); }
+  .postcardStudio:focus { outline: none; }
+  .postcardClose { position: absolute; z-index: 2; top: 12px; right: 12px; width: 44px; height: 44px; border: 0;
+    border-radius: 999px; display: grid; place-items: center; cursor: pointer; background: rgba(255,255,255,.88);
+    color: #4a3425; font-size: 17px; box-shadow: 0 4px 15px rgba(20,18,14,.18); }
+  .postcardHead { padding: 20px 66px 14px 22px; border-bottom: 1px solid #eadbc5; }
+  .postcardHead .pk { color: var(--postcard-primary); font-size: 10.5px; font-weight: 900; letter-spacing: .12em; }
+  .postcardHead h2 { margin: 3px 0 3px; font-size: 21px; color: #3f2b1f; }
+  .postcardHead p { margin: 0; color: #8a6f52; font-size: 12px; line-height: 1.45; }
+  #postcardPreview { position: relative; min-height: 260px; margin: 16px 18px 10px; border-radius: 16px; overflow: hidden;
+    display: grid; place-items: center; background: linear-gradient(145deg,var(--postcard-primary),#172431);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14),0 8px 24px rgba(30,25,18,.18); }
+  #postcardCanvas { display: none; width: 100%; max-height: min(48vh,520px); object-fit: contain; background: #172431; }
+  #postcardPreview.ready #postcardCanvas { display: block; }
+  .postcardBusy { display: none; align-items: center; gap: 10px; padding: 22px; color: #fff8e9; font-size: 13px; font-weight: 700; text-align: center; }
+  #postcardPreview.busy .postcardBusy, #postcardPreview.error .postcardBusy { display: flex; }
+  #postcardPreview.error .postcardBusy { color: #ffe4d9; }
+  .postcardSpinner { width: 20px; height: 20px; flex: 0 0 auto; border: 3px solid rgba(255,255,255,.28);
+    border-top-color: var(--postcard-accent); border-radius: 50%; animation: postcardSpin .8s linear infinite; }
+  #postcardPreview.error .postcardSpinner { display: none; }
+  @keyframes postcardSpin { to { transform: rotate(360deg); } }
+  #postcardStatus { min-height: 20px; margin: 0 22px; color: #6c5847; font-size: 11.5px; line-height: 1.45; }
+  #postcardStatus.error { color: #b44530; font-weight: 700; }
+  #postcardStatus.success { color: #2f7d5b; font-weight: 700; }
+  .postcardPrivacy { margin: 8px 22px 0; color: #a08464; font-size: 10.5px; line-height: 1.45; }
+  .postcardActions { padding: 14px 18px 20px; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
+  .postcardActions button { min-height: 46px; border: 0; border-radius: 12px; padding: 9px 10px; cursor: pointer;
+    font: 800 12px/1.25 inherit; color: #4c3827; background: #efe3d2; }
+  .postcardActions button:hover:not(:disabled) { filter: brightness(.97); transform: translateY(-1px); }
+  .postcardActions button:active:not(:disabled) { transform: translateY(1px); }
+  .postcardActions button:disabled { cursor: wait; opacity: .48; }
+  .postcardActions .primary { color: #fff; background: linear-gradient(145deg,var(--postcard-primary),#203744); }
+  .postcardActions .download { color: #3d2b13; background: linear-gradient(145deg,var(--postcard-accent),#e2a63e); }
+  .postcardActions [hidden] { display: none; }
+  @media (max-width: 520px) {
+    .postcardStudio { max-height: calc(100dvh - 20px); border-radius: 20px; }
+    .postcardHead { padding: 16px 58px 11px 16px; }
+    .postcardHead h2 { font-size: 18px; }
+    .postcardHead p { font-size: 11px; }
+    #postcardPreview { min-height: 230px; margin: 11px 12px 8px; }
+    #postcardCanvas { max-height: 49vh; }
+    #postcardStatus, .postcardPrivacy { margin-inline: 16px; }
+    .postcardActions { grid-template-columns: 1fr 1fr; padding: 12px 12px 16px; }
+    .postcardActions button { min-height: 46px; font-size: 12px; }
+    #postcardShare { grid-column: 1 / -1; }
+  }
   /* Repository Atelier — one isolated, reusable 3D room */
   #atelierFade { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0;
     background: #11171a; will-change: opacity; }
@@ -768,7 +832,7 @@
   }
   /* ---- respect prefers-reduced-motion: keep every bit of info, drop the looping motion ---- */
   @media (prefers-reduced-motion: reduce) {
-    #trainOverlay .rail, #trainOverlay .train, .msg .tdots i, a.libitem { animation: none !important; }
+    #trainOverlay .rail, #trainOverlay .train, .msg .tdots i, a.libitem, .postcardSpinner { animation: none !important; }
     .msg .tdots i { opacity: .6; }
     a.libitem { opacity: 1; }
   }
@@ -811,10 +875,14 @@
   <div class="badge" id="liveBadge" title="online now · entries today · total entries · all-time unique guests · UTC">🟢 <b id="liveCount">1</b><span id="entryWrap" style="display:none;"> · <span class="hudFull" data-i18n="entriesTodayWord">오늘 입장</span><span class="hudShort" data-i18n="entriesTodayShort">입장</span> <b id="entryCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="entryTotalWrap" style="display:none;"> · <span class="hudFull" data-i18n="entriesTotalWord">누적 입장</span><span class="hudShort" data-i18n="entriesTotalShort">누적</span> <b id="entryTotalCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="allWrap" style="display:none;"> · <span data-i18n="uniqueWord">고유</span> <b id="allCount">0</b><span data-i18n="peopleUnit">명</span></span></div>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
 </div>
-<button id="menuBtn">☰<span class="dot"></span></button>
+<button id="menuBtn" type="button" aria-controls="panel" aria-expanded="false" data-i18n-aria="wayfinding">☰<span class="dot"></span></button>
 
 <div id="panel" class="hidden">
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <button id="postcardMenuBtn" type="button">
+    <span class="pmIcon" aria-hidden="true">📸</span>
+    <span class="pmCopy"><span class="pmTitle" data-i18n="postcardMenu">타운 엽서 만들기</span><span class="pmSub" data-i18n="postcardMenuSub">지금 보이는 마을을 PNG로</span></span>
+  </button>
   <input id="repoSearch" type="text" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" autocomplete="off" />
   <div id="repoList"></div>
 </div>
@@ -860,6 +928,29 @@
     <div class="shome" id="stationHome" style="display:none;"></div>
   </div>
   <div class="sshare"><button id="shareBtn" data-i18n="copyLink">🔗 링크 복사</button></div>
+</div>
+
+<div id="postcardModal" role="dialog" aria-modal="true" aria-labelledby="postcardTitle" aria-describedby="postcardSub" aria-hidden="true">
+  <section class="postcardStudio" tabindex="-1">
+    <button id="postcardClose" class="postcardClose" type="button" data-i18n-aria="close" aria-label="닫기">✕</button>
+    <header class="postcardHead">
+      <div class="pk" data-i18n="postcardKicker">TOWN POSTCARD STUDIO</div>
+      <h2 id="postcardTitle" data-i18n="postcardTitle">타운 엽서 스튜디오</h2>
+      <p id="postcardSub" data-i18n="postcardSub">현재 카메라에 보이는 실제 마을을 엽서로 만들어요.</p>
+    </header>
+    <div id="postcardPreview" class="busy">
+      <canvas id="postcardCanvas" role="img" data-i18n-aria="postcardCanvasAria" aria-label="생성된 타운 엽서"></canvas>
+      <div class="postcardBusy" aria-hidden="true"><span class="postcardSpinner"></span><span id="postcardBusyText" data-i18n="postcardRendering">현재 마을 풍경을 현상하는 중…</span></div>
+    </div>
+    <div id="postcardStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="postcardPrivacy" data-i18n="postcardPrivacy">모든 작업은 이 브라우저 안에서만 이뤄지며 이미지는 업로드되지 않아요.</div>
+    <div class="postcardActions">
+      <button id="postcardRetake" type="button" data-i18n="postcardRetake">↻ 다시 찍기</button>
+      <button id="postcardShare" class="primary" type="button" data-i18n="postcardShare" hidden>공유</button>
+      <button id="postcardDownload" class="download" type="button" data-i18n="postcardDownload">PNG 저장</button>
+      <button id="postcardCopy" type="button" data-i18n="postcardCopy">링크 복사</button>
+    </div>
+  </section>
 </div>
 
 <div id="trainOverlay">
@@ -1073,6 +1164,7 @@ import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree
 import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstruction, stepCameraResolvedDistance, chooseCameraArrivalYaw } from './assets/camera-obstruction.js?v=clearsight-v1';
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
+import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1336,6 +1428,24 @@ const I18N = {
     publicNetMsg:'마을을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
     stationRetry:'🚉 다른 마을 가기', goOwnerCity:'🏙️ {user} 님의 도시 가기',
     shareTown:'이 마을 공유', copyLink:'🔗 링크 복사', copied:'복사됨!',
+    postcardMenu:'타운 엽서 만들기', postcardMenuSub:'지금 보이는 마을을 PNG로',
+    postcardKiosk:'타운 포토 키오스크', postcardReached:' — 지금 보이는 마을을 엽서로 남기는 포토 키오스크. <span class="key">Enter</span> 또는 클릭으로 열기',
+    postcardKicker:'TOWN POSTCARD STUDIO', postcardTitle:'타운 엽서 스튜디오', postcardSub:'현재 카메라에 보이는 실제 마을을 엽서로 만들어요.',
+    postcardCanvasAria:'생성된 타운 엽서', postcardRendering:'현재 마을 풍경을 현상하는 중…', postcardReady:'엽서가 준비됐어요. 기기에서 공유하거나 PNG로 저장하세요.',
+    postcardRetake:'↻ 다시 찍기', postcardShare:'공유', postcardDownload:'PNG 저장', postcardCopy:'링크 복사',
+    postcardPrivacy:'모든 작업은 이 브라우저 안에서만 이뤄지며 이미지는 업로드되지 않아요.',
+    postcardFallback:'이 기기는 이미지 공유를 지원하지 않아 PNG 저장과 링크 복사를 사용할 수 있어요.',
+    postcardCaptureBlank:'WebGL 장면이 비어 있어 엽서를 만들지 못했어요. 카메라를 조금 움직인 뒤 다시 찍어 주세요.',
+    postcardCaptureContext:'WebGL 연결이 끊겨 엽서를 만들 수 없어요. 페이지를 새로고침한 뒤 다시 시도해 주세요.',
+    postcardCaptureSecurity:'브라우저 보안 정책(CORS)이 장면 캡처를 막았어요. 링크 복사는 계속 사용할 수 있어요.',
+    postcardCaptureError:'엽서를 만들지 못했어요. 링크 복사는 계속 사용할 수 있어요.',
+    postcardShareDone:'이미지와 링크를 공유했어요.', postcardShareCanceled:'공유를 취소했어요. PNG 저장과 링크 복사는 그대로 사용할 수 있어요.',
+    postcardShareFailed:'이 기기에서는 이미지 공유를 완료하지 못했어요. PNG 저장이나 링크 복사를 사용해 주세요.',
+    postcardDownloadDone:'PNG를 저장했어요.', postcardDownloadFailed:'PNG를 저장하지 못했어요. 다시 찍어 주세요.',
+    postcardCopied:'마을 링크를 복사했어요.', postcardCopyFailed:'링크를 복사하지 못했어요. 아래 엽서의 URL을 직접 사용해 주세요.',
+    postcardRepoCount:'공개 저장소 {count}개', postcardTopLanguages:'주요 언어', postcardTopRepos:'대표 저장소',
+    postcardNoSignal:'공개 저장소로 지은 나만의 마을', postcardMadeWith:'Made with RePolis',
+    postcardShareTitle:'@{user}의 RePolis 마을', postcardShareText:'공개 GitHub 저장소로 만든 RePolis 마을 엽서',
     hint:'집(레포)으로 걸어가 보세요 · ☰ 길찾기 · 🚕 깃버에게 물어보기',
     drivePre:'🚕 ', drivePost:' (으)로 가는 중…', stop:'🛑 꾹 눌러 내리기',
     taxiTitle:'🚕 깃버',
@@ -1510,6 +1620,24 @@ const I18N = {
     publicNetMsg:"Couldn't load the town. Check your connection and try again.",
     stationRetry:'🚉 Visit another town', goOwnerCity:"🏙️ Visit {user}'s city",
     shareTown:'Share this town', copyLink:'🔗 Copy link', copied:'Copied!',
+    postcardMenu:'Make a town postcard', postcardMenuSub:'Turn this live view into a PNG',
+    postcardKiosk:'Town Photo Kiosk', postcardReached:' — turn the town in your current camera into a postcard. Press <span class="key">Enter</span> or click to open',
+    postcardKicker:'TOWN POSTCARD STUDIO', postcardTitle:'Town Postcard Studio', postcardSub:'Make a postcard from the real town currently in your camera.',
+    postcardCanvasAria:'Generated town postcard', postcardRendering:'Developing the current town view…', postcardReady:'Your postcard is ready. Share it from this device or save the PNG.',
+    postcardRetake:'↻ Retake', postcardShare:'Share', postcardDownload:'Download PNG', postcardCopy:'Copy link',
+    postcardPrivacy:'Everything stays in this browser. The image is never uploaded.',
+    postcardFallback:'This device cannot share an image file, so Download PNG and Copy link remain available.',
+    postcardCaptureBlank:'The WebGL frame was blank. Move the camera a little, then retake the postcard.',
+    postcardCaptureContext:'The WebGL context was lost. Reload the page, then try again.',
+    postcardCaptureSecurity:'The browser security policy (CORS) blocked capture. You can still copy the town link.',
+    postcardCaptureError:'The postcard could not be rendered. You can still copy the town link.',
+    postcardShareDone:'Shared the image and town link.', postcardShareCanceled:'Share canceled. Download PNG and Copy link are still available.',
+    postcardShareFailed:'This device could not finish sharing the image. Use Download PNG or Copy link instead.',
+    postcardDownloadDone:'PNG downloaded.', postcardDownloadFailed:'The PNG could not be downloaded. Retake the postcard and try again.',
+    postcardCopied:'Town link copied.', postcardCopyFailed:'The link could not be copied. Use the exact URL printed on the postcard.',
+    postcardRepoCount:'{count} public repositories', postcardTopLanguages:'Top languages', postcardTopRepos:'Top repositories',
+    postcardNoSignal:'A personal town built from public repositories', postcardMadeWith:'Made with RePolis',
+    postcardShareTitle:"@{user}'s RePolis town", postcardShareText:'A RePolis town postcard built from public GitHub repositories',
     hint:'Walk up to a house (repo) · ☰ Wayfinding · 🚕 Ask Gitber',
     drivePre:'🚕 Driving to ', drivePost:'…', stop:'🛑 Hold to get off',
     taxiTitle:'🚕 Gitber',
@@ -1615,6 +1743,8 @@ function applyLang(){
   if(typeof refreshHubSigns==='function') refreshHubSigns();
   if(typeof refreshResidentTags==='function') refreshResidentTags();
   if(typeof refreshResidentHomeSigns==='function') refreshResidentHomeSigns();
+  if(typeof refreshPostcardKioskSign==='function') refreshPostcardKioskSign();
+  if(typeof window.__postcardLangRefresh==='function') window.__postcardLangRefresh();
   { const _zb=document.getElementById('zoneBoard'); if(typeof renderZoneBoard==='function' && _zb && _zb.classList.contains('show') && _zb._zid) renderZoneBoard(_zb._zid); }
   if(_mapReady && typeof syncMapChrome==='function') syncMapChrome();
   if(typeof window.__updateLiveTitle==='function') window.__updateLiveTitle();
@@ -4652,8 +4782,15 @@ const OBS_POS = new THREE.Vector3(203, 0, 22);   // east clearing (r≈204 < pla
 let OBS=null, nearObs=null, obsScope=null;
 let FERRIS=null, nearFerris=null, ferris=null;   // 🎡 grand Ferris wheel — board it to ride up high for a whole-village panorama
 let CAROUSEL=null, nearCarousel=null, carousel=null;   // 🎠 carousel — board a horse for a gentle spin-and-bob at the ESE funfair
-/* ───────── 🚉 GitHub Station — civic landmark beside the taxi stand; board a train to any public user's town (visual-only prop, non-colliding) ───────── */
+/* ───────── civic arrival landmarks — visual-only props keep the busy plaza walkable ───────── */
 let STATION=null, nearStation=null, openStationModal=()=>{};
+let POSTCARD_KIOSK=null, nearPostcardKiosk=null;
+function refreshPostcardKioskSign(){
+  if(!POSTCARD_KIOSK) return;
+  const map=POSTCARD_KIOSK._signMaps[LANG]||POSTCARD_KIOSK._signMaps.en;
+  POSTCARD_KIOSK._boards.forEach(board=>{ board.material.map=map; board.material.needsUpdate=true; });
+  POSTCARD_KIOSK.label=t('postcardKiosk');
+}
 (function buildObservatory(){
   const og=new THREE.Group(); og.position.copy(OBS_POS);
   og.rotation.y=Math.atan2(-OBS_POS.x,-OBS_POS.z);   // local +Z faces the town centre (the arrival side)
@@ -5465,6 +5602,32 @@ NPCS.push({ group:driver, pos:driver.position.clone(), kind:'taxi', reach:4.6 })
   // gold destination ring on the ground (matches the other landmarks)
   const ring=new THREE.Mesh(new THREE.RingGeometry(2.5,2.8,32), new THREE.MeshBasicMaterial({color:0xe8c061,transparent:true,opacity:0.5,side:THREE.DoubleSide})); ring.rotation.x=-Math.PI/2; ring.position.y=0.06; g.add(ring);
   STATION={ _isStation:true, _pos:SP.clone(), label:t('stationLm'), _group:g };
+})();
+
+/* ---- 📸 Town Photo Kiosk — the current live camera becomes a local PNG postcard. ---- */
+(function buildPostcardKiosk(){
+  const KP=new THREE.Vector3(-9.5,0,14.5), NAVY=0x294b5c, DEEP=0x173342, BRASS=0xe2b45f, CREAM=0xf5ead7;
+  const g=new THREE.Group(); g.position.copy(KP); g.rotation.y=Math.atan2(-KP.x,-KP.z); scene.add(g);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(1.65,1.85,0.28,24),toon(0xcdbfa6)); base.position.y=0.14; base.receiveShadow=true; g.add(base);
+  const body=rbox(2.5,2.35,0.86,NAVY,0.16); body.position.y=1.48; outline(body,0.035); g.add(body);
+  const inset=rbox(1.92,1.25,0.08,CREAM,0.12); inset.position.set(0,1.63,0.47); g.add(inset);
+  const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,0.3,24),toon(DEEP)); lens.rotation.x=Math.PI/2; lens.position.set(0,1.87,0.69); g.add(lens);
+  const lensRing=new THREE.Mesh(new THREE.TorusGeometry(0.46,0.08,10,28),toon(BRASS)); lensRing.position.set(0,1.87,0.87); g.add(lensRing);
+  const glass=new THREE.Mesh(new THREE.CircleGeometry(0.31,24),new THREE.MeshBasicMaterial({color:0x8fc9d9,transparent:true,opacity:0.86}));
+  glass.position.set(0,1.87,0.93); g.add(glass);
+  const shutter=rbox(0.54,0.18,0.12,BRASS,0.06); shutter.position.set(0,1.08,0.54); g.add(shutter);
+  const slot=rbox(1.32,0.13,0.1,DEEP,0.03); slot.position.set(0,0.65,0.52); g.add(slot);
+  const print=rbox(1.12,0.62,0.06,0xfffaf0,0.04); print.position.set(0,0.34,0.58); print.rotation.x=-0.12; g.add(print);
+  const roof=rbox(3.05,0.24,1.35,BRASS,0.08); roof.position.y=2.85; outline(roof,0.03); g.add(roof);
+  const signMaps={ko:signTexture(I18N.ko.postcardKiosk,NAVY),en:signTexture(I18N.en.postcardKiosk,NAVY)};
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(2.55,0.87),new THREE.MeshBasicMaterial({map:signMaps[LANG],transparent:true}));
+  board.position.set(0,3.42,0.7); g.add(board);
+  const board2=board.clone(); board2.position.z=-0.7; board2.rotation.y=Math.PI; g.add(board2);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffdf9a,transparent:true,opacity:0,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));
+  halo.scale.set(3.1,3.1,1); halo.position.set(0,2.3,0); halo._nightOp=0.68; g.add(halo); LAMP_GLOWS.push(halo);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(1.85,2.12,32),new THREE.MeshBasicMaterial({color:BRASS,transparent:true,opacity:0.5,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2; ring.position.y=0.05; g.add(ring);
+  POSTCARD_KIOSK={_isPostcardKiosk:true,_pos:KP.clone(),label:t('postcardKiosk'),_group:g,_boards:[board,board2],_signMaps:signMaps};
 })();
 
 // 📘 Microsoft Docs engineer — answers from the live Microsoft Learn MCP server (official docs)
@@ -6833,7 +6996,7 @@ addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)) return;
   keys[e.code]=true;
   if(e.code==='Space') e.preventDefault();
   if(e.code==='Enter'&&!modalOpen){ doAct(); }
-  if(e.code==='Escape'){ closeCard(); closeChat(); } });
+  if(e.code==='Escape'){ closePostcardStudio(); closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ keys[e.code]=false; });   /* always clear — never let a key stick when focus jumps to an input mid-press */
 addEventListener('blur',clearKeys); window.addEventListener('pagehide',clearKeys);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden){ clearKeys(); if(_sharedJoy) _endSharedJoy('hidden'); } });   /* tab/alt-tab away mid-press → don't keep walking or resume an excursion that lost its frames */
@@ -7028,7 +7191,8 @@ actBtn.addEventListener('click',()=>{ if(modalOpen) return; doAct(); });
 /* ====================== UI ====================== */
 document.getElementById('totalCount').textContent=REPOS.length;
 const panel=document.getElementById('panel');
-document.getElementById('menuBtn').onclick=()=> panel.classList.toggle('hidden');
+const menuBtn=document.getElementById('menuBtn');
+menuBtn.onclick=()=>{ const hidden=panel.classList.toggle('hidden'); menuBtn.setAttribute('aria-expanded',String(!hidden)); };
 
 /* ───────── 🛂 Explorer Passport — local-only visit stamps (no server, no PII) ───────── */
 const PASSPORT_KEY='repolisPassport';
@@ -7298,7 +7462,7 @@ function tourCap(dot,html){ const e=document.getElementById('tourCap'); if(!e) r
   document.getElementById('tourDot').textContent=dot; document.getElementById('tourTxt').innerHTML=html; e.classList.remove('hidden'); }
 function hideTourCap(){ const e=document.getElementById('tourCap'); if(e) e.classList.add('hidden'); }
 function tourCloseModals(){ try{ if(modal.classList.contains('show')) closeCard(); }catch(e){}
-  try{ if(chronoModal.classList.contains('show')) closeChrono(); }catch(e){} try{ passportEl.classList.add('hidden'); }catch(e){} }
+  try{ if(chronoModal.classList.contains('show')) closeChrono(); }catch(e){} try{ closePostcardStudio(); }catch(e){} try{ passportEl.classList.add('hidden'); }catch(e){} }
 function buildTourSteps(){ const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.stars||0));
   const repo=pop[0]||REPOS[0]; const steps=[{kind:'welcome',dot:'👋',cap:'tourCap1',dwell:3.2}];
   if(repo) steps.push({kind:'repo',repo,dot:'🏠',cap:'tourCap2',dwell:3.6});
@@ -7316,7 +7480,7 @@ function runTourStep(){ if(!tour||!tour.active) return; const s=tour.steps[tour.
     tourSchedule(s.dwell);
   } else if(s.kind==='repo'){ tour.waiting=true; try{ taxiTo(s.repo); }catch(e){ tour.waiting=false; tourSchedule(s.dwell); } }
   else if(s.kind==='chrono'){ const d=lmCourseDest('chrono'); if(d){ tour.waiting=true; try{ taxiTo(d); }catch(e){ tour.waiting=false; tourSchedule(s.dwell); } } else tourSchedule(s.dwell); }
-  else if(s.kind==='passport'){ try{ panel.classList.add('hidden'); passportEl.classList.remove('hidden'); renderPassport(); }catch(e){} tourSchedule(s.dwell); } }
+  else if(s.kind==='passport'){ try{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.remove('hidden'); renderPassport(); }catch(e){} tourSchedule(s.dwell); } }
 function _armTourTimer(delay){ if(!tour||!tour.active) return; if(tour._timer) clearTimeout(tour._timer);
   delay=Math.max(0,delay); tour._deadline=performance.now()+delay;
   tour._timer=setTimeout(()=>{ if(!tour) return; tour._timer=null; tour._deadline=0; tourCloseModals(); tourNext(); },delay); }
@@ -7347,7 +7511,7 @@ function renderCourse(){ const box=document.getElementById('courseBox'); if(!box
 function onCourseProgress(){ if(!REPOS.length) return; if(!passportEl.classList.contains('hidden')) renderCourse();
   const pr=courseProgress(); if(pr.total>0&&pr.done>=pr.total&&course&&!course.rewarded){ course.rewarded=true;
     try{ localStorage.setItem(COURSE_KEY,JSON.stringify(course)); }catch(e){} fireworksShow(12); showWave(t('courseReward'),3400); } }
-document.getElementById('passBtn').onclick=()=>{ const hidden=passportEl.classList.toggle('hidden'); if(!hidden){ panel.classList.add('hidden'); renderPassport(); } };
+document.getElementById('passBtn').onclick=()=>{ const hidden=passportEl.classList.toggle('hidden'); if(!hidden){ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); renderPassport(); } };
 document.getElementById('menuBtn').addEventListener('click',()=> passportEl.classList.add('hidden'));
 const repoList=document.getElementById('repoList');
 function buildRow(repo){
@@ -7356,7 +7520,7 @@ function buildRow(repo){
   row.innerHTML=`<div class="pin" style="background:${repo.color}">${repo.label[0]}</div>
     <div class="meta"><div class="nm">${repo.label}</div><div class="sub">${repo.lang} · 👁${repo.visitors} · ⑂${repo.forks} · ★${repo.stars}</div></div>
     <div class="go">${t('go')}</div>`;
-  row.querySelector('.go').onclick=ev=>{ ev.stopPropagation(); setNav(repo); panel.classList.add('hidden'); };
+  row.querySelector('.go').onclick=ev=>{ ev.stopPropagation(); setNav(repo); panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); };
   row.onclick=()=> openCard(repo);
   return row;
 }
@@ -7602,7 +7766,7 @@ const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null
 let nearInviteCircle=null;   // an active gathering that has waved you over (join it with Enter from a little further out than the walk-up reach)
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearRainGarden) ringRainGarden(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearPostcardKiosk) openPostcardStudio('kiosk'); else if(nearRainGarden) ringRainGarden(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -7712,7 +7876,7 @@ document.getElementById('loading').style.display='none';
     shareBtn.textContent=t('copyLink'); shareBtn.classList.remove('ok');
     if(stationClose) stationClose.setAttribute('aria-label', t('close'));
   }
-  function openStation(){ panel.classList.add('hidden'); passportEl.classList.add('hidden'); stationEl.classList.remove('hidden'); renderStation(); track('station_open'); setTimeout(()=>{ try{ inp.focus(); }catch(e){} },80); }
+  function openStation(){ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.add('hidden'); stationEl.classList.remove('hidden'); renderStation(); track('station_open'); setTimeout(()=>{ try{ inp.focus(); }catch(e){} },80); }
   function closeStation(){ stationEl.classList.add('hidden'); }
   if(stationClose) stationClose.onclick=closeStation;
   openStationModal=openStation;   // let the spatial station prop (walk-up) open the same ticket office
@@ -7766,6 +7930,229 @@ document.getElementById('loading').style.display='none';
   setTimeout(()=>track('session_10s'),10000);
   setTimeout(()=>track('session_60s'),60000);
 })();
+
+/* ====================== 📸 TOWN POSTCARD STUDIO ====================== */
+const postcardModal=document.getElementById('postcardModal'),postcardStudio=postcardModal.querySelector('.postcardStudio'),
+  postcardPreview=document.getElementById('postcardPreview'),postcardCanvas=document.getElementById('postcardCanvas'),
+  postcardBusyText=document.getElementById('postcardBusyText'),postcardStatus=document.getElementById('postcardStatus'),
+  postcardClose=document.getElementById('postcardClose'),postcardRetake=document.getElementById('postcardRetake'),
+  postcardShare=document.getElementById('postcardShare'),postcardDownload=document.getElementById('postcardDownload'),
+  postcardCopy=document.getElementById('postcardCopy'),postcardMenuBtn=document.getElementById('postcardMenuBtn');
+const POSTCARD={open:false,busy:false,blob:null,entry:'menu',previousFocus:null,pausedTour:null,renderId:0,renderPromise:null,
+  forceBlank:false,forceFallback:false,activeTargets:0,renders:0,failures:0,last:null,lastStatus:null,resourceBefore:null,resourceAfter:null};
+
+function _postcardShareUrl(){
+  const base=location.origin+location.pathname;
+  return cityMode==='public' ? base+'?user='+encodeURIComponent(currentUser) : base;
+}
+function _postcardIdentity(){ return createTownPostcardIdentity(currentUser,REPOS); }
+function _postcardRendererMemory(){ const memory=renderer.info.memory||{};
+  return {geometries:memory.geometries||0,textures:memory.textures||0,programs:(renderer.info.programs||[]).length}; }
+function _postcardStatusSet(key,tone='',vars){
+  POSTCARD.lastStatus={key,tone,vars:vars||null}; postcardStatus.className=tone||'';
+  postcardStatus.textContent=key?(vars?tf(key,vars):t(key)):'';
+}
+function _postcardPreviewSet(state,key){
+  postcardPreview.className=state; postcardCanvas.setAttribute('aria-busy',String(state==='busy'));
+  if(key) postcardBusyText.textContent=t(key);
+}
+function _postcardSummary(){
+  const summary=summarizeTownRepos(REPOS);
+  if(summary.type==='languages') return t('postcardTopLanguages')+' · '+summary.items.map(item=>item.name+' '+item.count).join(' · ');
+  if(summary.type==='repos') return t('postcardTopRepos')+' · '+summary.items.map(item=>item.name).join(' · ');
+  return t('postcardNoSignal');
+}
+function _postcardFile(){
+  if(!POSTCARD.blob||typeof File!=='function') return null;
+  const slug=String(currentUser||'town').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'')||'town';
+  return new File([POSTCARD.blob],`repolis-${slug}-town-postcard.png`,{type:'image/png',lastModified:Date.now()});
+}
+function _postcardCanShare(){
+  if(POSTCARD.forceFallback||!navigator.share||!navigator.canShare) return false;
+  const file=_postcardFile(); if(!file) return false;
+  try{ return navigator.canShare({files:[file]}); }catch(e){ return false; }
+}
+function _syncPostcardActions(){
+  const ready=!!POSTCARD.blob&&!POSTCARD.busy,canShare=ready&&_postcardCanShare();
+  postcardRetake.disabled=POSTCARD.busy;
+  postcardDownload.disabled=!ready;
+  postcardShare.disabled=!ready;
+  postcardShare.hidden=!canShare;
+  postcardCopy.disabled=false;
+  return canShare;
+}
+function syncPostcardStudioLang(){
+  const identity=_postcardIdentity();
+  postcardStudio.style.setProperty('--postcard-primary',identity.palette.primary);
+  postcardStudio.style.setProperty('--postcard-accent',identity.palette.accent);
+  postcardCanvas.setAttribute('aria-label',t('postcardCanvasAria'));
+  if(POSTCARD.busy) postcardBusyText.textContent=t('postcardRendering');
+  if(POSTCARD.lastStatus) _postcardStatusSet(POSTCARD.lastStatus.key,POSTCARD.lastStatus.tone,POSTCARD.lastStatus.vars);
+  _syncPostcardActions();
+}
+window.__postcardLangRefresh=syncPostcardStudioLang;
+
+function _postcardCaptureError(code,cause){ const error=new Error(code); error.code=code; if(cause) error.cause=cause; return error; }
+function _postcardFailure(error){
+  if(error&&error.code==='blank') return {reason:'blank',key:'postcardCaptureBlank'};
+  if(error&&error.code==='context') return {reason:'context',key:'postcardCaptureContext'};
+  if(error&&error.name==='SecurityError') return {reason:'security',key:'postcardCaptureSecurity'};
+  return {reason:'capture',key:'postcardCaptureError'};
+}
+function _capturePostcardComposite(){
+  const gl=renderer.getContext(); if(!gl||gl.isContextLost()) throw _postcardCaptureError('context');
+  const viewWidth=renderer.domElement.clientWidth||innerWidth,viewHeight=renderer.domElement.clientHeight||innerHeight;
+  const size=postcardCaptureSize(viewWidth,viewHeight),pixels=new Uint8Array(size.width*size.height*4);
+  const savedTarget=renderer.getRenderTarget(),savedAutoClear=renderer.autoClear;
+  let target=null,captureComposer=null;
+  POSTCARD.resourceBefore=_postcardRendererMemory();
+  try{
+    target=new THREE.WebGLRenderTarget(size.width,size.height,{type:THREE.UnsignedByteType,format:THREE.RGBAFormat,depthBuffer:false,stencilBuffer:false});
+    target.texture.name='TownPostcardCapture';
+    captureComposer=new EffectComposer(renderer,target); captureComposer.renderToScreen=false; captureComposer.setPixelRatio(1);
+    captureComposer.addPass(finalMix); captureComposer.addPass(finalComposer.passes[1]);
+    POSTCARD.activeTargets+=2; captureComposer.render(0);
+    renderer.readRenderTargetPixels(captureComposer.readBuffer,0,0,size.width,size.height,pixels);
+    if(POSTCARD.forceBlank) pixels.fill(0);
+    const stats=analyzeTownFrame(pixels,size.width,size.height);
+    if(stats.blank) throw _postcardCaptureError('blank');
+    flipPixelRows(pixels,size.width,size.height);
+    const source=document.createElement('canvas'); source.width=size.width; source.height=size.height;
+    const context=source.getContext('2d',{alpha:false}); if(!context) throw _postcardCaptureError('canvas');
+    const image=context.createImageData(size.width,size.height); image.data.set(pixels); context.putImageData(image,0,0);
+    return {canvas:source,width:size.width,height:size.height,stats};
+  }finally{
+    renderer.autoClear=savedAutoClear; renderer.setRenderTarget(savedTarget);
+    if(captureComposer){ captureComposer.renderTarget1.dispose(); captureComposer.renderTarget2.dispose(); captureComposer.copyPass.material.dispose(); }
+    if(POSTCARD.activeTargets) POSTCARD.activeTargets=Math.max(0,POSTCARD.activeTargets-2);
+    POSTCARD.resourceAfter=_postcardRendererMemory();
+  }
+}
+async function renderTownPostcard(trigger='retake'){
+  if(POSTCARD.busy) return POSTCARD.renderPromise;
+  const renderId=++POSTCARD.renderId,started=performance.now();
+  POSTCARD.busy=true; POSTCARD.blob=null; POSTCARD.last=null;
+  _postcardPreviewSet('busy','postcardRendering'); _postcardStatusSet(''); _syncPostcardActions();
+  POSTCARD.renderPromise=(async()=>{
+    let frame=null;
+    try{
+      await new Promise(resolve=>requestAnimationFrame(resolve));
+      if(renderId!==POSTCARD.renderId||!POSTCARD.open) return false;
+      frame=_capturePostcardComposite();
+      const format=postcardFormatForViewport(innerWidth,innerHeight),identity=_postcardIdentity(),shareUrl=_postcardShareUrl();
+      const composed=composeTownPostcard({canvas:postcardCanvas,sourceCanvas:frame.canvas,format,identity,
+        kicker:t('postcardKicker'),title:'@'+currentUser+' · '+(cityMode==='public'?tf('townOf',{user:currentUser}):t('myCity')),
+        repoLine:tf('postcardRepoCount',{count:REPOS.length}),signature:_postcardSummary(),shareUrl,madeWith:t('postcardMadeWith')});
+      const blob=await postcardCanvasToBlob(postcardCanvas);
+      if(renderId!==POSTCARD.renderId) return false;
+      POSTCARD.blob=blob; POSTCARD.last={ok:true,trigger,orientation:composed.orientation,width:composed.width,height:composed.height,
+        captureWidth:frame.width,captureHeight:frame.height,nonblank:!frame.stats.blank,spread:frame.stats.spread,opaqueRatio:+frame.stats.opaqueRatio.toFixed(3),
+        bytes:blob.size,identityHash:composed.identityHash,palette:composed.palette,day:isNight?'night':'day',
+        renderMs:+(performance.now()-started).toFixed(1)};
+      POSTCARD.renders++;
+      _postcardPreviewSet('ready'); const native=_syncPostcardActions();
+      _postcardStatusSet(native?'postcardReady':'postcardFallback',native?'success':'');
+      track('postcard_render',{ok:true,trigger,orientation:composed.orientation,width:composed.width,height:composed.height});
+      return true;
+    }catch(error){
+      if(renderId!==POSTCARD.renderId) return false;
+      POSTCARD.failures++;
+      const failure=_postcardFailure(error); POSTCARD.last={ok:false,trigger,reason:failure.reason,renderMs:+(performance.now()-started).toFixed(1)};
+      _postcardPreviewSet('error',failure.key); _postcardStatusSet(failure.key,'error'); _syncPostcardActions();
+      track('postcard_render',{ok:false,trigger,reason:failure.reason}); return false;
+    }finally{
+      if(frame&&frame.canvas){ frame.canvas.width=1; frame.canvas.height=1; }
+      if(renderId===POSTCARD.renderId){ POSTCARD.busy=false; _syncPostcardActions(); }
+    }
+  })();
+  return POSTCARD.renderPromise;
+}
+
+function openPostcardStudio(entry='menu'){
+  if(repositoryAtelierActive()||(modalOpen&&!POSTCARD.open)) return false;
+  if(POSTCARD.open) return true;
+  POSTCARD.open=true; POSTCARD.entry=['menu','kiosk','debug'].includes(entry)?entry:'menu';
+  POSTCARD.previousFocus=POSTCARD.entry==='menu'?menuBtn:document.activeElement;
+  POSTCARD.pausedTour=typeof _pauseTourForAtelier==='function'?_pauseTourForAtelier():null;
+  panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.add('hidden');
+  document.getElementById('station').classList.add('hidden'); if(typeof closeMap==='function') closeMap();
+  modalOpen=true; postcardModal.classList.add('show'); postcardModal.setAttribute('aria-hidden','false');
+  syncPostcardStudioLang(); track('postcard_open',{entry:POSTCARD.entry,orientation:postcardFormatForViewport(innerWidth,innerHeight).id});
+  setTimeout(()=>{ try{ postcardClose.focus(); }catch(e){} },0);
+  renderTownPostcard('open'); return true;
+}
+function closePostcardStudio(){
+  if(!POSTCARD.open) return false;
+  POSTCARD.open=false; postcardModal.classList.remove('show'); postcardModal.setAttribute('aria-hidden','true'); modalOpen=false;
+  const paused=POSTCARD.pausedTour,previous=POSTCARD.previousFocus; POSTCARD.pausedTour=null; POSTCARD.previousFocus=null;
+  if(typeof _resumeTourAfterAtelier==='function') _resumeTourAfterAtelier(paused);
+  if(previous&&previous.isConnected) setTimeout(()=>{ try{ previous.focus(); }catch(e){} },0);
+  flushStarNudge(); return true;
+}
+function _postcardDebugState(){
+  const before=POSTCARD.resourceBefore||{},after=POSTCARD.resourceAfter||{},identity=_postcardIdentity();
+  return {open:POSTCARD.open,busy:POSTCARD.busy,entry:POSTCARD.entry,renders:POSTCARD.renders,failures:POSTCARD.failures,
+    ready:!!POSTCARD.blob,shareMode:_postcardCanShare()?'native':'fallback',activeTargets:POSTCARD.activeTargets,
+    resources:{before,after,delta:{geometries:(after.geometries||0)-(before.geometries||0),
+      textures:(after.textures||0)-(before.textures||0),programs:(after.programs||0)-(before.programs||0)}},
+    canvas:{width:postcardCanvas.width,height:postcardCanvas.height},identity:{hash:identity.hash,palette:identity.palette.name,
+      letters:identity.letters,spokes:identity.spokes,rings:identity.rings,notch:identity.notch},
+    url:_postcardShareUrl(),last:POSTCARD.last?{...POSTCARD.last}:null};
+}
+function _postcardPixelStats(){
+  const context=postcardCanvas.getContext('2d',{willReadFrequently:true});
+  if(!context||!postcardCanvas.width||!postcardCanvas.height) return null;
+  const image=context.getImageData(0,0,postcardCanvas.width,postcardCanvas.height);
+  const stats=analyzeTownFrame(image.data,postcardCanvas.width,postcardCanvas.height);
+  return {width:postcardCanvas.width,height:postcardCanvas.height,blank:stats.blank,spread:stats.spread,opaqueRatio:+stats.opaqueRatio.toFixed(3)};
+}
+async function shareTownPostcard(){
+  const file=_postcardFile(); if(!file||!_postcardCanShare()){ _postcardStatusSet('postcardFallback'); _syncPostcardActions(); return false; }
+  try{
+    await navigator.share({files:[file],title:tf('postcardShareTitle',{user:currentUser}),text:t('postcardShareText'),url:_postcardShareUrl()});
+    _postcardStatusSet('postcardShareDone','success'); track('postcard_share',{ok:true,orientation:POSTCARD.last?.orientation||'unknown'}); return true;
+  }catch(error){
+    const canceled=error&&error.name==='AbortError'; _postcardStatusSet(canceled?'postcardShareCanceled':'postcardShareFailed',canceled?'':'error');
+    track('postcard_share',{ok:false,reason:canceled?'cancel':'share_error'}); return false;
+  }
+}
+function downloadTownPostcard(){
+  if(!POSTCARD.blob) return false;
+  let url=null;
+  try{
+    url=URL.createObjectURL(POSTCARD.blob); const a=document.createElement('a'); a.href=url; a.download=_postcardFile()?.name||'repolis-town-postcard.png';
+    a.style.display='none'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),0);
+    _postcardStatusSet('postcardDownloadDone','success'); track('postcard_download',{ok:true,orientation:POSTCARD.last?.orientation||'unknown'}); return true;
+  }catch(error){
+    if(url) URL.revokeObjectURL(url); _postcardStatusSet('postcardDownloadFailed','error'); track('postcard_download',{ok:false,reason:'download_error'}); return false;
+  }
+}
+async function copyPostcardLink(){
+  const text=_postcardShareUrl(); let ok=false,area=null;
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){ await navigator.clipboard.writeText(text); ok=true; }
+    else { area=document.createElement('textarea'); area.value=text; area.setAttribute('readonly',''); area.style.position='fixed'; area.style.top='-9999px';
+      document.body.appendChild(area); area.select(); ok=document.execCommand('copy'); }
+  }catch(error){ ok=false; }
+  finally{ if(area) area.remove(); }
+  _postcardStatusSet(ok?'postcardCopied':'postcardCopyFailed',ok?'success':'error'); track('postcard_copy',{ok}); return ok;
+}
+function _postcardFocusables(){ return [...postcardStudio.querySelectorAll('button:not([disabled])')].filter(button=>!button.hidden); }
+postcardModal.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closePostcardStudio(); return; }
+  if(event.key!=='Tab') return; const items=_postcardFocusables(); if(!items.length) return;
+  const first=items[0],last=items[items.length-1];
+  if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+});
+postcardModal.addEventListener('click',event=>{ if(event.target===postcardModal) closePostcardStudio(); });
+postcardClose.onclick=closePostcardStudio;
+postcardRetake.onclick=()=>renderTownPostcard('retake');
+postcardShare.onclick=shareTownPostcard;
+postcardDownload.onclick=downloadTownPostcard;
+postcardCopy.onclick=copyPostcardLink;
+postcardMenuBtn.onclick=()=>openPostcardStudio('menu');
+syncPostcardStudioLang();
 
 /* ====================== LLM TAXI DRIVER ====================== */
 const chatEl=document.getElementById('chat'), chatLog=document.getElementById('chatLog'), chatText=document.getElementById('chatText');
@@ -8409,6 +8796,7 @@ function drawMinimap(){
   if(typeof OBS!=='undefined'&&OBS) LM.push([OBS._pos.x,OBS._pos.z,'🔭']);
   if(typeof FERRIS!=='undefined'&&FERRIS) LM.push([FERRIS._pos.x,FERRIS._pos.z,'🎡']);
   if(typeof CAROUSEL!=='undefined'&&CAROUSEL) LM.push([CAROUSEL._pos.x,CAROUSEL._pos.z,'🎠']);
+  if(POSTCARD_KIOSK) LM.push([POSTCARD_KIOSK._pos.x,POSTCARD_KIOSK._pos.z,'📸']);
   if(RAIN_GARDEN) LM.push([RAIN_GARDEN.center.x,RAIN_GARDEN.center.z,'🌦️']);
   if(RES_QUARTER) LM.push([RES_QUARTER_POS.x,RES_QUARTER_POS.z,'🏘️']);
   ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -9007,6 +9395,7 @@ function animate(){
   nearChrono = (CHRONO && player.position.distanceTo(CHRONO._pos) < 8.5) ? CHRONO : null;
   nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
   nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
+  nearPostcardKiosk = (POSTCARD_KIOSK && player.position.distanceTo(POSTCARD_KIOSK._pos) < 5.5) ? POSTCARD_KIOSK : null;
   nearRainGarden = (RAIN_GARDEN && player.position.distanceTo(RAIN_GARDEN._pos) < 5.8) ? RAIN_GARDEN : null;
   nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
   nearCarousel = (CAROUSEL && !carousel && player.position.distanceTo(CAROUSEL.board) < 6.0) ? CAROUSEL : null;
@@ -9038,6 +9427,7 @@ function animate(){
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
   else if(nearObs&&!modalOpen){ promptEl.innerHTML=`<b>${t('obsName')}</b>${t('obsReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🔭'; }
   else if(nearStation&&!modalOpen){ promptEl.innerHTML=`<b>${t('stationLm')}</b>${t('stationReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚉'; }
+  else if(nearPostcardKiosk&&!modalOpen){ promptEl.innerHTML=`<b>${t('postcardKiosk')}</b>${t('postcardReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='📸'; }
   else if(nearRainGarden&&!modalOpen){ promptEl.innerHTML=`<b>${t('rainName')}</b>${t(rainGardenActive?'rainReachedWet':'rainReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent=rainGardenActive?'☀️':'🌦️'; }
   else if(nearFerris&&!modalOpen){ promptEl.innerHTML=`<b>${t('ferrisName')}</b>${t('ferrisReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎡'; }
   else if(nearCarousel&&!modalOpen){ promptEl.innerHTML=`<b>${t('carouselName')}</b>${t('carouselReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎠'; }
@@ -9266,6 +9656,20 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__cam=()=>({camYaw:+camYaw.toFixed(6),camPitch:+camPitch.toFixed(6),camDist:+camDist.toFixed(4),charYaw:+model.rotation.y.toFixed(6),freeLook,dragging,dragBtn,
     camera:{position:_debugVec(camera.position),quaternion:[+camera.quaternion.x.toFixed(6),+camera.quaternion.y.toFixed(6),+camera.quaternion.z.toFixed(6),+camera.quaternion.w.toFixed(6)]},
     player:{position:_debugVec(player.position)},renderMode:WORLD_TREE_RENDER_MODE,night:isNight});
+  window.__postcard=()=>_postcardDebugState();
+  window.__postcardOpen=async()=>{ const opened=openPostcardStudio('debug'); if(!opened) return _postcardDebugState();
+    await POSTCARD.renderPromise; return _postcardDebugState(); };
+  window.__postcardRetake=async(mode='normal')=>{ if(!POSTCARD.open) openPostcardStudio('debug'); if(POSTCARD.busy) await POSTCARD.renderPromise;
+    const previous=POSTCARD.forceBlank; POSTCARD.forceBlank=mode==='blank';
+    try{ await renderTownPostcard('debug'); }finally{ POSTCARD.forceBlank=previous; } return _postcardDebugState(); };
+  window.__postcardFallback=(enabled=true)=>{ POSTCARD.forceFallback=enabled!==false; _syncPostcardActions(); return _postcardDebugState(); };
+  window.__postcardPixels=()=>_postcardPixelStats();
+  window.__postcardClose=()=>{ closePostcardStudio(); return _postcardDebugState(); };
+  window.__postcardKiosk=()=>POSTCARD_KIOSK?({position:_debugVec(POSTCARD_KIOSK._pos),near:!!nearPostcardKiosk,
+    distance:+player.position.distanceTo(POSTCARD_KIOSK._pos).toFixed(2),colliders:0}):null;
+  window.__tpPostcard=(back=4.6)=>{ if(!POSTCARD_KIOSK) return null; const p=POSTCARD_KIOSK._pos; player.position.set(p.x,0,p.z+back);
+    const yaw=Math.atan2(p.x-player.position.x,p.z-player.position.z); camYaw=yaw; camPitch=.2; camDist=14; model.rotation.y=Math.PI-yaw;
+    return {position:_debugVec(p),camera:window.__cam()}; };
   const _clearSightCandidates=(count=CLEAR_SIGHT_CAMERA.arrivalCount)=>{ const rows=[]; for(let i=0;i<count;i++) rows.push({
       index:i,yaw:+CAMERA_ARRIVAL_RESULT.yaws[i].toFixed(6),distance:+CAMERA_ARRIVAL_RESULT.distances[i].toFixed(4),
       score:+CAMERA_ARRIVAL_RESULT.scores[i].toFixed(5),softBlocked:!!CAMERA_ARRIVAL_RESULT.softHits[i]}); return rows; };
