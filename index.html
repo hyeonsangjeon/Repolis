@@ -330,7 +330,7 @@
     #postcardStatus, .postcardPrivacy { margin-inline: 16px; }
     .postcardActions { grid-template-columns: 1fr 1fr; padding: 12px 12px 16px; }
     .postcardActions button { min-height: 46px; font-size: 12px; }
-    #postcardShare { grid-column: 1 / -1; }
+    #postcardShare, #postcardRetake { grid-column: 1 / -1; }
   }
   /* Repository Atelier — one isolated, reusable 3D room */
   #atelierFade { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0;
@@ -945,10 +945,10 @@
     <div id="postcardStatus" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="postcardPrivacy" data-i18n="postcardPrivacy">모든 작업은 이 브라우저 안에서만 이뤄지며 이미지는 업로드되지 않아요.</div>
     <div class="postcardActions">
-      <button id="postcardRetake" type="button" data-i18n="postcardRetake">↻ 다시 찍기</button>
       <button id="postcardShare" class="primary" type="button" data-i18n="postcardShare" hidden>공유</button>
       <button id="postcardDownload" class="download" type="button" data-i18n="postcardDownload">PNG 저장</button>
       <button id="postcardCopy" type="button" data-i18n="postcardCopy">링크 복사</button>
+      <button id="postcardRetake" type="button" data-i18n="postcardRetake">↻ 다시 찍기</button>
     </div>
   </section>
 </div>
@@ -1439,6 +1439,7 @@ const I18N = {
     postcardCaptureContext:'WebGL 연결이 끊겨 엽서를 만들 수 없어요. 페이지를 새로고침한 뒤 다시 시도해 주세요.',
     postcardCaptureSecurity:'브라우저 보안 정책(CORS)이 장면 캡처를 막았어요. 링크 복사는 계속 사용할 수 있어요.',
     postcardCaptureError:'엽서를 만들지 못했어요. 링크 복사는 계속 사용할 수 있어요.',
+    postcardMotionBusy:'이동 중에는 카메라가 계속 움직여요. 탑승이 끝난 뒤 엽서를 찍어 주세요.',
     postcardShareDone:'이미지와 링크를 공유했어요.', postcardShareCanceled:'공유를 취소했어요. PNG 저장과 링크 복사는 그대로 사용할 수 있어요.',
     postcardShareFailed:'이 기기에서는 이미지 공유를 완료하지 못했어요. PNG 저장이나 링크 복사를 사용해 주세요.',
     postcardDownloadDone:'PNG를 저장했어요.', postcardDownloadFailed:'PNG를 저장하지 못했어요. 다시 찍어 주세요.',
@@ -1631,6 +1632,7 @@ const I18N = {
     postcardCaptureContext:'The WebGL context was lost. Reload the page, then try again.',
     postcardCaptureSecurity:'The browser security policy (CORS) blocked capture. You can still copy the town link.',
     postcardCaptureError:'The postcard could not be rendered. You can still copy the town link.',
+    postcardMotionBusy:'The camera is moving with your ride. Take the postcard after you get off.',
     postcardShareDone:'Shared the image and town link.', postcardShareCanceled:'Share canceled. Download PNG and Copy link are still available.',
     postcardShareFailed:'This device could not finish sharing the image. Use Download PNG or Copy link instead.',
     postcardDownloadDone:'PNG downloaded.', postcardDownloadFailed:'The PNG could not be downloaded. Retake the postcard and try again.',
@@ -7939,7 +7941,7 @@ const postcardModal=document.getElementById('postcardModal'),postcardStudio=post
   postcardShare=document.getElementById('postcardShare'),postcardDownload=document.getElementById('postcardDownload'),
   postcardCopy=document.getElementById('postcardCopy'),postcardMenuBtn=document.getElementById('postcardMenuBtn');
 const POSTCARD={open:false,busy:false,blob:null,entry:'menu',previousFocus:null,pausedTour:null,renderId:0,renderPromise:null,
-  forceBlank:false,forceFallback:false,activeTargets:0,renders:0,failures:0,last:null,lastStatus:null,resourceBefore:null,resourceAfter:null};
+  forceBlank:false,forceFallback:false,activeTargets:0,renders:0,failures:0,last:null,lastStatus:null,resourceBefore:null,resourceAfter:null,stateRestored:null};
 
 function _postcardShareUrl(){
   const base=location.origin+location.pathname;
@@ -8004,13 +8006,15 @@ function _capturePostcardComposite(){
   const viewWidth=renderer.domElement.clientWidth||innerWidth,viewHeight=renderer.domElement.clientHeight||innerHeight;
   const size=postcardCaptureSize(viewWidth,viewHeight),pixels=new Uint8Array(size.width*size.height*4);
   const savedTarget=renderer.getRenderTarget(),savedAutoClear=renderer.autoClear;
+  const outputPass=finalComposer.passes[1],savedMixToScreen=finalMix.renderToScreen,
+    savedOutputToScreen=outputPass.renderToScreen,savedOutputTexture=outputPass.uniforms.tDiffuse.value;
   let target=null,captureComposer=null;
   POSTCARD.resourceBefore=_postcardRendererMemory();
   try{
     target=new THREE.WebGLRenderTarget(size.width,size.height,{type:THREE.UnsignedByteType,format:THREE.RGBAFormat,depthBuffer:false,stencilBuffer:false});
     target.texture.name='TownPostcardCapture';
     captureComposer=new EffectComposer(renderer,target); captureComposer.renderToScreen=false; captureComposer.setPixelRatio(1);
-    captureComposer.addPass(finalMix); captureComposer.addPass(finalComposer.passes[1]);
+    captureComposer.addPass(finalMix); captureComposer.addPass(outputPass);
     POSTCARD.activeTargets+=2; captureComposer.render(0);
     renderer.readRenderTargetPixels(captureComposer.readBuffer,0,0,size.width,size.height,pixels);
     if(POSTCARD.forceBlank) pixels.fill(0);
@@ -8023,6 +8027,10 @@ function _capturePostcardComposite(){
     return {canvas:source,width:size.width,height:size.height,stats};
   }finally{
     renderer.autoClear=savedAutoClear; renderer.setRenderTarget(savedTarget);
+    finalMix.renderToScreen=savedMixToScreen; outputPass.renderToScreen=savedOutputToScreen; outputPass.uniforms.tDiffuse.value=savedOutputTexture;
+    POSTCARD.stateRestored={rendererTarget:renderer.getRenderTarget()===savedTarget,autoClear:renderer.autoClear===savedAutoClear,
+      mixToScreen:finalMix.renderToScreen===savedMixToScreen,outputToScreen:outputPass.renderToScreen===savedOutputToScreen,
+      outputTexture:outputPass.uniforms.tDiffuse.value===savedOutputTexture};
     if(captureComposer){ captureComposer.renderTarget1.dispose(); captureComposer.renderTarget2.dispose(); captureComposer.copyPass.material.dispose(); }
     if(POSTCARD.activeTargets) POSTCARD.activeTargets=Math.max(0,POSTCARD.activeTargets-2);
     POSTCARD.resourceAfter=_postcardRendererMemory();
@@ -8070,6 +8078,7 @@ async function renderTownPostcard(trigger='retake'){
 
 function openPostcardStudio(entry='menu'){
   if(repositoryAtelierActive()||(modalOpen&&!POSTCARD.open)) return false;
+  if(ride||ferris||carousel||canalFerryRide||performance.now()<ridePostActionUntil){ showWave(t('postcardMotionBusy'),2800); return false; }
   if(POSTCARD.open) return true;
   POSTCARD.open=true; POSTCARD.entry=['menu','kiosk','debug'].includes(entry)?entry:'menu';
   POSTCARD.previousFocus=POSTCARD.entry==='menu'?menuBtn:document.activeElement;
@@ -8095,6 +8104,7 @@ function _postcardDebugState(){
     ready:!!POSTCARD.blob,shareMode:_postcardCanShare()?'native':'fallback',activeTargets:POSTCARD.activeTargets,
     resources:{before,after,delta:{geometries:(after.geometries||0)-(before.geometries||0),
       textures:(after.textures||0)-(before.textures||0),programs:(after.programs||0)-(before.programs||0)}},
+    stateRestored:POSTCARD.stateRestored?{...POSTCARD.stateRestored}:null,
     canvas:{width:postcardCanvas.width,height:postcardCanvas.height},identity:{hash:identity.hash,palette:identity.palette.name,
       letters:identity.letters,spokes:identity.spokes,rings:identity.rings,notch:identity.notch},
     url:_postcardShareUrl(),last:POSTCARD.last?{...POSTCARD.last}:null};
@@ -8727,18 +8737,18 @@ async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; b
     if(!_drainQueuedChat()&&!_resumePendingChatNpc()&&!repositoryAtelierActive()&&!chatEl.classList.contains('hidden')) chatText.focus(); } }
 
 /* ---- taxi ride: the cab drives to you, picks you up, carries you there ---- */
-let ride=null; // {repo, phase:'coming'|'boarding'|'riding'|'arriving', t}
+let ride=null, ridePostActionUntil=0; // ride phases plus a brief guard for delayed arrival UI
 function driveTaxiToward(px,pz,speed,dt,stop=0){
   const dx=px-taxi.position.x, dz=pz-taxi.position.z, dd=Math.hypot(dx,dz);
   if(dd>stop+0.01){ const step=Math.min(dd-stop, speed*dt); taxi.position.x+=dx/dd*step; taxi.position.z+=dz/dd*step;
     taxi.rotation.y=lerpA(taxi.rotation.y, Math.atan2(-dz,dx), 0.2); }
   return dd;
 }
-function taxiTo(repo){ standUp(); ride={repo, phase:'coming', t:0}; setNav(repo); closeChat(); freeLook=false; model.visible=true;
+function taxiTo(repo){ standUp(); ridePostActionUntil=0; ride={repo, phase:'coming', t:0}; setNav(repo); closeChat(); freeLook=false; model.visible=true;
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
-function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; driveBar.style.display='none'; model.visible=true; }
-function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visible=true; _settleClearSightArrival(repo);
+function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; ridePostActionUntil=0; driveBar.style.display='none'; model.visible=true; }
+function arriveTaxi(repo){ ride=null; ridePostActionUntil=0; driveBar.style.display='none'; model.visible=true; _settleClearSightArrival(repo);
   if(repo._courseResident){ const L=_residentLive(repo._courseResident), res=L&&L.res; if(L&&res){ const met=courseMark('resident',res.id); openChat(L._npc);
       if(met) showWave(tf('chronicleMet',{name:(res[LANG]||res.ko).name}),2800); } else openChat(); return; }
   openChat();
@@ -8758,14 +8768,14 @@ function arriveTaxi(repo){ ride=null; driveBar.style.display='none'; model.visib
   if(repo._landmark){
     const k=repo._landmark, key='lmArrive'+k.charAt(0).toUpperCase()+k.slice(1);
     addMsg('bot', t(key)||(LANG==='ko'?`🚕 <b>${repo.label}</b>에 도착했어요!`:`🚕 We've arrived at <b>${repo.label}</b>!`), {noHist:true});
-    if(k==='chrono') setTimeout(()=>{ try{ openChrono(repo._chronoPreset||undefined); }catch(e){} }, 700);
-    if(k==='obs') setTimeout(()=>{ try{ openObservatory(); }catch(e){} }, 700);
-    if(k==='ferris') setTimeout(()=>{ try{ boardFerris(); }catch(e){} }, 800);
-    if(k==='carousel') setTimeout(()=>{ try{ boardCarousel(); }catch(e){} }, 800);
+    if(k==='chrono'){ ridePostActionUntil=performance.now()+900; setTimeout(()=>{ try{ openChrono(repo._chronoPreset||undefined); }catch(e){} }, 700); }
+    if(k==='obs'){ ridePostActionUntil=performance.now()+900; setTimeout(()=>{ try{ openObservatory(); }catch(e){} }, 700); }
+    if(k==='ferris'){ ridePostActionUntil=performance.now()+1000; setTimeout(()=>{ try{ boardFerris(); }catch(e){} }, 800); }
+    if(k==='carousel'){ ridePostActionUntil=performance.now()+1000; setTimeout(()=>{ try{ boardCarousel(); }catch(e){} }, 800); }
     return;
   }
   addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
-  setTimeout(()=>openCard(repo),500); }
+  ridePostActionUntil=performance.now()+700; setTimeout(()=>openCard(repo),500); }
 
 /* ---- 🗺️ World map / minimap v1 — district overview + click/tap to ride to a district centre ---- */
 var _mapReady=false;                                                 // hoisted flag: applyLang() runs before this module, so gate its syncMapChrome() call

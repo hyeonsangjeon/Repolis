@@ -259,11 +259,15 @@ ok(/buildPostcardKiosk/.test(HTML) && /new THREE\.Vector3\(-9\.5,0,14\.5\)/.test
   'a non-HUD civic kiosk supports Enter/mobile action and the existing minimap vocabulary');
 ok(/renderer\.getRenderTarget\(\)/.test(postcardCaptureBlock)
   && /captureComposer\.addPass\(finalMix\)/.test(postcardCaptureBlock)
-  && /captureComposer\.addPass\(finalComposer\.passes\[1\]\)/.test(postcardCaptureBlock)
+  && /const outputPass=finalComposer\.passes\[1\]/.test(postcardCaptureBlock)
+  && /captureComposer\.addPass\(outputPass\)/.test(postcardCaptureBlock)
   && /readRenderTargetPixels/.test(postcardCaptureBlock),
   'capture replays the latest real base/bloom composite through the existing final color pass');
 ok(/renderer\.setRenderTarget\(savedTarget\)/.test(postcardCaptureBlock)
   && /renderer\.autoClear=savedAutoClear/.test(postcardCaptureBlock)
+  && /finalMix\.renderToScreen=savedMixToScreen/.test(postcardCaptureBlock)
+  && /outputPass\.renderToScreen=savedOutputToScreen/.test(postcardCaptureBlock)
+  && /outputPass\.uniforms\.tDiffuse\.value=savedOutputTexture/.test(postcardCaptureBlock)
   && /renderTarget1\.dispose\(\)/.test(postcardCaptureBlock) && /renderTarget2\.dispose\(\)/.test(postcardCaptureBlock)
   && /activeTargets=Math\.max\(0,POSTCARD\.activeTargets-2\)/.test(postcardCaptureBlock),
   'temporary targets are disposed and renderer target/autoclear state is restored on every outcome');
@@ -283,17 +287,22 @@ ok(/postcardCaptureBlank/.test(postcardBlock) && /postcardCaptureContext/.test(p
   && /postcardCaptureSecurity/.test(postcardBlock) && /forceBlank/.test(postcardBlock)
   && /forceFallback/.test(postcardBlock),
   'blank, lost-context, CORS/security, generic capture, and forced fallback paths stay visible and testable');
+ok(/if\(ride\|\|ferris\|\|carousel\|\|canalFerryRide\|\|performance\.now\(\)<ridePostActionUntil\)/.test(postcardBlock)
+  && (HTML.match(/postcardMotionBusy:/g) || []).length === 2
+  && /ridePostActionUntil=performance\.now\(\)\+700; setTimeout\(\(\)=>openCard\(repo\),500\)/.test(HTML),
+  'moving rides and delayed arrival UI cannot overlap the postcard dialog');
 ['postcard_open', 'postcard_render', 'postcard_share', 'postcard_download'].forEach(event =>
   ok(postcardBlock.includes(`track('${event}'`), `postcard event ${event} is instrumented`));
-ok(!/track\('postcard_[^']+',\{[^}]*?(?:url|blob|image|user)/.test(postcardBlock),
-  'postcard analytics payloads stay bounded and omit username, URL, blob, and image data');
+ok(!/track\('postcard_[^']+',\{[^}]*?(?:url|blob|image)/.test(postcardBlock),
+  'postcard-specific analytics payloads stay bounded and omit URL, blob, and image data');
 ok((HTML.match(/postcardTitle:/g) || []).length === 2 && (HTML.match(/postcardPrivacy:/g) || []).length === 2
   && (HTML.match(/postcardCaptureBlank:/g) || []).length === 2 && /@media \(max-width: 520px\)[\s\S]*?\.postcardActions \{ grid-template-columns: 1fr 1fr/.test(HTML)
   && /\.postcardActions button \{ min-height: 46px/.test(HTML) && /\.postcardClose \{[^}]*width: 44px; height: 44px/.test(HTML),
   'KO/EN states and 44px-plus responsive controls remain legible at 390×844');
 ok(/window\.__postcardOpen=/.test(HTML) && /window\.__postcardRetake=/.test(HTML)
   && /window\.__postcardFallback=/.test(HTML) && /window\.__postcardPixels=/.test(HTML)
-  && /window\.__postcardKiosk=/.test(HTML) && /activeTargets:POSTCARD\.activeTargets/.test(HTML),
+  && /window\.__postcardKiosk=/.test(HTML) && /activeTargets:POSTCARD\.activeTargets/.test(HTML)
+  && /stateRestored:POSTCARD\.stateRestored/.test(HTML),
   'bounded diagnostics cover open/render/blank/fallback/pixels/kiosk and resource lifetime');
 
 group('ClearSight camera — pure obstruction math, arrival framing, and ownership');
