@@ -24,7 +24,7 @@
 ## Main product systems
 
 - Metric-shaped repository houses and deterministic topic districts with hubs, boards, and a world map.
-- Explorer Passport, district progress, the daily resident→haunt→repo/district Village Chronicle, and the Repository Constellation Trail.
+- Explorer Passport, district progress, the daily resident→haunt→repo/district Village Chronicle, Repository Constellation Trail, and Maintainers' Night Watch for recently tended low-star repos.
 - Local Town Gazette: added/removed repos, releases, pushes, and positive metric deltas since the last marked-read snapshot.
 - Named residents with individually styled Starlight Row cottages, resident-coloured gardens, a shared flower commons, perimeter trees, home/work commutes, moods, friendships, Shared Joy, conversations, festivals, and specialist handoffs.
 - Gitber/POLARIS taxi: keyless Local search by default; optional WebLLM and grounded AI.
