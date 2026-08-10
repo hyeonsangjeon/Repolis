@@ -1592,6 +1592,79 @@ ok(/window\.__starTrailPlan=/.test(HTML) && /window\.__starTrailStart=/.test(HTM
   && /window\.__starTrailNext=/.test(HTML) && /window\.__starTrailEnd=/.test(HTML), '?dbg trail plan/start/advance/end hooks are present');
 ok(/updateStarTrail\(clock\.elapsedTime\)/.test(HTML), 'the main world loop updates the active constellation visuals');
 
+group("maintainers' night watch — quiet upkeep becomes a truthful three-house lantern route");
+const watchSelectorSrc = (HTML.match(/\/\*NIGHT_WATCH_SELECTOR:START\*\/([\s\S]*?)\/\*NIGHT_WATCH_SELECTOR:END\*\//) || [, ''])[1];
+ok(watchSelectorSrc.length > 0, 'night-watch selector block is extractable from index.html');
+let quietRepoWatchPick = null;
+if (watchSelectorSrc) {
+  try { quietRepoWatchPick = new Function(`${watchSelectorSrc}\nreturn quietRepoWatchPick;`)(); }
+  catch (e) { console.log('  ✗ night-watch selector harness: ' + e.message); }
+}
+ok(typeof quietRepoWatchPick === 'function', 'night-watch selector loads without browser globals');
+if (quietRepoWatchPick) {
+  const fixture = [
+    {repo:'quiet-one',stars:0,forks:0,pushed:'2026-08-10T00:00:00Z',archived:false,fork:false},
+    {repo:'quiet-two',stars:1,forks:0,pushed:'2026-08-01T00:00:00Z',archived:false,fork:false},
+    {repo:'quiet-three',stars:0,forks:1,pushed:'2026-07-01T00:00:00Z',archived:false,fork:false},
+    {repo:'crowded',stars:999,forks:80,pushed:'2026-08-11T00:00:00Z',archived:false,fork:false},
+    {repo:'stale',stars:0,forks:0,pushed:'2020-01-01T00:00:00Z',archived:false,fork:false},
+    {repo:'archived',stars:0,forks:0,pushed:'2026-08-11T00:00:00Z',archived:true,fork:false},
+    {repo:'fork-copy',stars:0,forks:0,pushed:'2026-08-11T00:00:00Z',archived:false,fork:true}
+  ];
+  const a = quietRepoWatchPick(fixture, 'keeper', '2026-08-11');
+  const b = quietRepoWatchPick(fixture, 'keeper', '2026-08-11');
+  const names = a && a.stops ? a.stops.map(r => r.repo) : [];
+  ok(!!a && names.length === 3 && new Set(names).size === 3, 'watch yields exactly three distinct repo houses');
+  ok(JSON.stringify(names) === JSON.stringify(b.stops.map(r => r.repo)) && a.id === b.id, 'same town + date yields the same watch deterministically');
+  ok(['quiet-one','quiet-two','quiet-three'].every(name => names.includes(name)), 'recent low-star upkeep outranks a popular fresh repo and a quiet stale repo');
+  ok(a.facts.length === 3 && a.facts.every((f, i) => f.repo === a.stops[i].repo && f.ageDays >= 0 && f.stars <= 1),
+    'every stop carries aligned, factual age/star evidence for the UI');
+  ok(!names.includes('archived') && !names.includes('fork-copy'), 'normal selection excludes archived repos and forks');
+  ok(quietRepoWatchPick([{repo:'a'},{repo:'b'}], 'tiny', '2026-08-11') === null, 'a town with fewer than three houses reports the watch unavailable');
+  ok(quietRepoWatchPick([
+    {repo:'a',stars:0,pushed:'2026-08-10',archived:false,fork:false},
+    {repo:'b',stars:0,pushed:'2026-08-09',archived:false,fork:false},
+    {repo:'fork',stars:0,pushed:'2026-08-08',archived:false,fork:true}
+  ], 'ineligible', '2026-08-11') === null, 'forks never backfill a watch with fewer than three eligible originals');
+  ok(quietRepoWatchPick([
+    {repo:'a',stars:0,pushed:'2020-01-01',archived:false,fork:false},
+    {repo:'b',stars:0,pushed:'2020-01-02',archived:false,fork:false},
+    {repo:'c',stars:0,pushed:'2020-01-03',archived:false,fork:false}
+  ], 'stale', '2026-08-11') === null, 'repos untouched for more than two years do not qualify as maintained');
+  const ownerWatch = quietRepoWatchPick(trailRepos, 'hyeonsangjeon', '2026-08-11');
+  ok(!!ownerWatch && ownerWatch.stops.length === 3 && ownerWatch.facts.every(f => Number.isFinite(f.ageDays)),
+    'the shipped owner town produces a complete watch with finite maintenance facts');
+}
+const watchBlock = (HTML.match(/Maintainers' Night Watch:[\s\S]*?\/\* ---- 🔭 Observatory modal/) || [''])[0];
+ok(/id=["']lanternWatchHud["']/.test(HTML) && /id=["']obsNightWatchStart["']/.test(HTML), 'responsive watch HUD + Observatory launch action are present');
+ok(/#lanternWatchHud\.hidden\s*\{[^}]*visibility:hidden/.test(HTML), 'inactive watch HUD is removed from focus/accessibility visibility');
+ok(/#lanternWatchHud\s*\{\s*left:12px;\s*bottom:calc\(100px \+ env\(safe-area-inset-bottom,0px\)\)/.test(HTML),
+  'touch watch HUD sits above the bottom interaction prompt and safe area');
+ok(/#starTrailHud \.stClose,\s*#lanternWatchHud \.stClose\s*\{\s*width:44px;\s*height:44px/.test(HTML),
+  'both route close controls meet the 44px coarse-pointer target');
+ok(/function startLanternWatch\(\)[\s\S]*?if\(STAR_TRAIL\) endStarTrail\(\)[\s\S]*?setTimeOfDay\(true\)[\s\S]*?setNav\(LANTERN_WATCH\.stops\[0\]\)/.test(watchBlock),
+  'watch launch owns the route, turns on night, and guides to the first quiet repo');
+ok(/function startStarTrail\(\)[\s\S]{0,140}if\(LANTERN_WATCH\) endLanternWatch\(\)/.test(HTML),
+  'starting the constellation reciprocally releases any active night watch');
+ok(/function buildLanternWatchVisuals\(\)/.test(watchBlock) && /new THREE\.SpriteMaterial/.test(watchBlock)
+  && /new THREE\.RingGeometry/.test(watchBlock) && /moteCount=LOW_END\?4:8/.test(watchBlock),
+  'watch uses bounded LOW_END-aware lantern sprites, motes, and ground rings');
+ok(!/new THREE\.(PointLight|SpotLight|DirectionalLight)/.test(watchBlock), 'lanterns add no scene lights (performance ceiling)');
+ok(/function updateLanternWatch\(t\)[\s\S]*?V\.group\.visible=isNight[\s\S]*?document\.hidden[\s\S]*?if\(REDUCED\) return/.test(watchBlock),
+  'lantern motion is night-only, hidden-tab safe, and respects reduced motion');
+ok(/function _removeLanternWatchVisuals\(\)[\s\S]*?o\.geometry\.dispose\(\)[\s\S]*?m\.dispose\(\)/.test(watchBlock),
+  'ending or replaying the watch disposes its geometry and materials');
+ok(/function openCard\(repo\)[\s\S]{0,130}lanternWatchVisit\(repo\)/.test(HTML), 'opening the current repo house advances the watch');
+ok(/addStamp\(['"]nightwatch['"],celebrate\)/.test(watchBlock) && /if\(celebrate\) _auroraBoost=Math\.max\(_auroraBoost,12\)/.test(watchBlock)
+  && /if\(!REDUCED&&isNight\) popSparkle/.test(watchBlock),
+  'completion always awards the stamp while transient particles/aurora stay night- and motion-safe');
+ok(/\{id:['"]nightwatch['"],\s+ico:['"]🏮['"],\s+key:['"]lmNightWatch['"]\}/.test(HTML), 'passport catalog includes the Keeper of Quiet Repos stamp');
+ok((HTML.match(/watchKicker:\s*['"]/g) || []).length >= 2 && (HTML.match(/watchComplete:\s*['"]/g) || []).length >= 2
+  && (HTML.match(/lmNightWatch:\s*['"]/g) || []).length >= 2, 'watch launch/progress/reward copy has Korean + English parity');
+ok(/window\.__lanternWatchPlan=/.test(HTML) && /window\.__lanternWatchStart=/.test(HTML)
+  && /window\.__lanternWatchNext=/.test(HTML) && /window\.__lanternWatchEnd=/.test(HTML), '?dbg watch plan/start/advance/end hooks are present');
+ok(/updateLanternWatch\(clock\.elapsedTime\)/.test(HTML), 'the main world loop updates active night-watch lanterns');
+
 group('one colossal deterministic World Tree Pillar supports the village');
 const memorialTreeBlock = (HTML.match(/\/\*MEMORIAL_TREE:START\*\/([\s\S]*?)\/\*MEMORIAL_TREE:END\*\//) || [, ''])[1];
 const visualLodBlock = (HTML.match(/\/\*VISUAL_LOD:START\*\/([\s\S]*?)\/\*VISUAL_LOD:END\*\//) || [, ''])[1];

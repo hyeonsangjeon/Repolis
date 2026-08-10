@@ -352,7 +352,7 @@
   body.atelier-active #topbar, body.atelier-active #menuBtn, body.atelier-active #panel,
   body.atelier-active #passport, body.atelier-active #mapWrap, body.atelier-active #station,
   body.atelier-active #taxiBtn, body.atelier-active #emoteBtn, body.atelier-active #emoteBar,
-  body.atelier-active #drivebar, body.atelier-active #starTrailHud, body.atelier-active #starNudge,
+  body.atelier-active #drivebar, body.atelier-active #starTrailHud, body.atelier-active #lanternWatchHud, body.atelier-active #starNudge,
   body.atelier-active #tourCap, body.atelier-active .hint { display: none !important; }
   body.atelier-active #prompt { bottom: calc(26px + env(safe-area-inset-bottom,0px)); max-width: min(660px,calc(100vw - 120px));
     white-space: normal; text-align: center; justify-content: center; line-height: 1.38; }
@@ -505,6 +505,32 @@
   #starTrailHud .stActions button { flex:1; min-height:36px; border:0; border-radius:10px; cursor:pointer;
     color:#16213c; background:#bce8ff; font-family:inherit; font-size:11.5px; font-weight:800; }
   #starTrailHud.complete { background:linear-gradient(145deg,rgba(48,34,72,.95),rgba(91,57,69,.95)); border-color:rgba(255,218,125,.58); }
+  .obsTrail.nightWatch { background:linear-gradient(135deg,#31210e 0%,#553416 58%,#493042 100%);
+    border-color:rgba(255,214,128,.42); }
+  .obsTrail.nightWatch::after { content:"🏮"; top:9px; font-size:20px; }
+  .obsTrail.nightWatch .otK { color:#ffd98b; }
+  .obsTrail.nightWatch .otStops span { background:rgba(255,213,126,.1); border-color:rgba(255,213,126,.22); color:#fff1d1; }
+  .obsTrail.nightWatch .otStops span.done { color:#fff3b7; border-color:rgba(255,226,139,.54); background:rgba(255,209,102,.18); }
+  .obsTrail.nightWatch button { color:#3b260d; background:linear-gradient(135deg,#ffd27a,#ffe9ad); }
+  #lanternWatchHud { position:fixed; z-index:12; left:14px; bottom:54px; width:min(330px,calc(100vw - 112px));
+    padding:12px 13px 11px; border-radius:16px; color:#fff3d6; background:linear-gradient(145deg,rgba(47,30,10,.95),rgba(86,50,21,.95));
+    border:1px solid rgba(255,211,119,.48); box-shadow:0 12px 34px rgba(27,15,4,.42); backdrop-filter:blur(9px);
+    visibility:visible; transition:opacity .18s ease,transform .18s ease; }
+  #lanternWatchHud.hidden { opacity:0; transform:translateY(10px); visibility:hidden; pointer-events:none; }
+  #lanternWatchHud .stClose { position:absolute; top:7px; right:7px; width:29px; height:29px; border:0; border-radius:50%;
+    cursor:pointer; color:#f1d6aa; background:rgba(255,255,255,.09); font-size:13px; }
+  #lanternWatchHud .stK { color:#ffd27a; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  #lanternWatchHud .stTheme { padding-right:28px; margin-top:2px; font-size:14px; font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #lanternWatchHud .stSteps { display:flex; gap:6px; margin:8px 0 7px; }
+  #lanternWatchHud .stSteps i { flex:1; height:5px; border-radius:4px; background:rgba(255,222,157,.2); box-shadow:inset 0 0 0 1px rgba(255,255,255,.05); }
+  #lanternWatchHud .stSteps i.done { background:#ffd36e; box-shadow:0 0 10px rgba(255,204,91,.7); }
+  #lanternWatchHud .stSteps i.now { background:#fff0a8; box-shadow:0 0 12px rgba(255,231,143,.82); }
+  #lanternWatchHud .stTarget { color:#f4dfbd; font-size:11.5px; line-height:1.45; }
+  #lanternWatchHud .stTarget b { color:#fff; }
+  #lanternWatchHud .stActions { display:flex; gap:7px; margin-top:9px; }
+  #lanternWatchHud .stActions button { flex:1; min-height:36px; border:0; border-radius:10px; cursor:pointer;
+    color:#3b260d; background:#ffd27a; font-family:inherit; font-size:11.5px; font-weight:800; }
+  #lanternWatchHud.complete { background:linear-gradient(145deg,rgba(69,43,14,.96),rgba(91,58,51,.96)); border-color:rgba(255,224,143,.68); }
   .chronoPhilo { font-size:12.5px; font-style:italic; color:#7a6a3a; padding:9px 12px 4px; }
   .chronoCases { padding:4px 8px 8px; display:flex; flex-wrap:wrap; gap:2px; }
   .chronoCase { display:inline-flex; align-items:center; gap:6px; margin:3px 4px 3px 0; padding:7px 12px; border-radius:999px;
@@ -827,8 +853,10 @@
     #introLaunchGo { flex: 1 0 150px; min-height: 44px; }
     #introUser { min-height: 44px; }
     .chronoRecapBtn { min-height: 44px; }
-    .obsTrail button, #starTrailHud .stActions button { min-height: 44px; }
+    .obsTrail button, #starTrailHud .stActions button, #lanternWatchHud .stActions button { min-height: 44px; }
+    #starTrailHud .stClose, #lanternWatchHud .stClose { width:44px; height:44px; top:1px; right:1px; }
     #starTrailHud { left:12px; bottom:calc(100px + env(safe-area-inset-bottom,0px)); width:min(280px,calc(100vw - 112px)); }
+    #lanternWatchHud { left:12px; bottom:calc(100px + env(safe-area-inset-bottom,0px)); width:min(280px,calc(100vw - 112px)); }
   }
   /* ---- respect prefers-reduced-motion: keep every bit of info, drop the looping motion ---- */
   @media (prefers-reduced-motion: reduce) {
@@ -986,6 +1014,14 @@
   <div class="stSteps" id="starTrailSteps"></div>
   <div class="stTarget" id="starTrailTarget"></div>
   <div class="stActions" id="starTrailActions"><button id="starTrailRide" type="button"></button></div>
+</div>
+<div id="lanternWatchHud" class="hidden" aria-live="polite">
+  <button id="lanternWatchClose" class="stClose" type="button" aria-label="End watch">✕</button>
+  <div class="stK" id="lanternWatchKicker"></div>
+  <div class="stTheme" id="lanternWatchTheme"></div>
+  <div class="stSteps" id="lanternWatchSteps"></div>
+  <div class="stTarget" id="lanternWatchTarget"></div>
+  <div class="stActions" id="lanternWatchActions"><button id="lanternWatchRide" type="button"></button></div>
 </div>
 
 <div id="modal">
@@ -1363,7 +1399,7 @@ const I18N = {
     chronicleZoneFound:'🧭 {name}이 알려준 {zone}에 도착했어요.',
     handoffGo:'🧭 {name} 찾으러 가기', handoffNav:'🧭 나침반이 {name}의 현재 위치를 가리켜요. 직접 찾아가 보세요!',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자', lmMira:'MIRA · 시간지기', lmLyra:'LYRA · 창조의 대장장이',
-    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmRain:'비정원 · 날씨 종', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리', lmHomes:'별빛 주거구역',
+    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmRain:'비정원 · 날씨 종', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리', lmNightWatch:'고요한 저장소의 수호자', lmHomes:'별빛 주거구역',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
     chronoSub:'주제를 입력하면 세 현자(옹호·회의·분석)가 실시간으로 토론하고, 시간의 의장 크로노스가 결론을 내립니다.',
     chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'예시 주제를 골라 채워 보세요', chronoStage:'⚡ 라이브 AI 토론',
@@ -1391,6 +1427,15 @@ const I18N = {
     trailProgress:'별 {done}/{total}', trailTarget:'다음 별 · {repo}', trailOpenHint:'집을 열어 별을 수집하세요.', trailRide:'🚕 이 별로 이동', trailStop:'탐사 종료',
     trailStarted:'🌌 {theme} 별자리가 도시 위에 깨어났어요. 첫 번째 빛을 따라가세요!', trailFound:'✦ {repo}의 별을 찾았어요! ({done}/{total})',
     trailComplete:'🌌 저장소 별자리 완성! 도시의 연결이 오로라로 빛나요.', trailCompleteTitle:'별자리 완성', trailCompleteSub:'세 저장소의 연결을 모두 발견했어요.',
+    watchKicker:'오픈소스 야간 순찰', watchTitle:'별보다 희미한 유지보수의 불빛',
+    watchDesc:'스타 수가 적어도 최근까지 돌봄을 받은 저장소 세 곳입니다. 숫자에 묻힌 유지보수를 직접 찾아 등불을 밝혀 주세요.',
+    watchFact:'★ {stars} · {days}일 전 마지막 작업', watchStart:'🏮 야간 순찰 시작', watchResume:'🏮 순찰 계속하기', watchReplay:'↻ 오늘의 등불 다시 켜기',
+    watchUnavailable:'순찰할 저장소 집이 세 곳보다 적어요.', watchProgress:'등불 {done}/{total}', watchTarget:'다음 등불 · {repo}',
+    watchOpenHint:'저장소 집을 열어 등불을 밝혀 주세요.', watchRide:'🚕 이 등불로 이동', watchStop:'순찰 종료',
+    watchStarted:'🏮 오늘의 조용한 저장소 세 곳에 등불이 켜졌어요. 첫 번째 유지보수 불빛을 따라가세요!',
+    watchFound:'🏮 {repo}의 유지보수 불빛을 지켰어요. ({done}/{total})',
+    watchComplete:'🏮 야간 순찰 완료! 숫자보다 오래 남는 돌봄이 마을을 밝힙니다.', watchCompleteTitle:'순찰 완료',
+    watchCompleteSub:'조용히 유지되는 세 저장소의 등불을 모두 밝혔어요.',
     lmObs:'별빛 전망대로 모실게요 🔭 별과 현자들을 만나러 가요.', lmDriveObs:'별빛 전망대로 갑니다… 🔭✨', lmArriveObs:'별빛 전망대에 도착했어요. 하늘을 올려다보세요 🔭',
     ferrisName:'대관람차', ferrisReached:' — 마을이 한눈에 보이는 대관람차. <span class="key">Enter</span> 또는 클릭으로 탑승',
     ferrisRiding:'🎡 마을이 한눈에! 한 바퀴 천천히 돌아 내려와요…', ferrisBoard:'🎡 대관람차에 탑승! 위로 올라가며 마을을 둘러보세요', ferrisDone:'🎡 즐거운 탑승이었어요! 또 타러 오세요',
@@ -1556,7 +1601,7 @@ const I18N = {
     chronicleZoneFound:'🧭 You reached {zone}, recommended by {name}.',
     handoffGo:'🧭 Find {name}', handoffNav:'🧭 The compass now follows {name}\'s live position. Walk out and find them!',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer', lmMira:'MIRA · Timekeeper', lmLyra:'LYRA · Forgemaster',
-    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmRain:'Rain Garden · Weather Bell', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation', lmHomes:'Starlight Row',
+    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmRain:'Rain Garden · Weather Bell', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation', lmNightWatch:'Keeper of Quiet Repos', lmHomes:'Starlight Row',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
     chronoSub:'Type a topic and three sages (advocate · skeptic · analyst) debate it live; the Chair of Time, KRONOS, delivers the verdict.',
     chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick an example to fill the box', chronoStage:'⚡ Live AI debate',
@@ -1584,6 +1629,15 @@ const I18N = {
     trailProgress:'Stars {done}/{total}', trailTarget:'Next star · {repo}', trailOpenHint:'Open the house to collect its star.', trailRide:'🚕 Ride to this star', trailStop:'End trail',
     trailStarted:'🌌 The {theme} constellation has awakened above the town. Follow its first light!', trailFound:'✦ Found {repo}\'s star! ({done}/{total})',
     trailComplete:'🌌 Repository constellation complete! Its connections are shining through the aurora.', trailCompleteTitle:'Constellation complete', trailCompleteSub:'You discovered the connection across all three repos.',
+    watchKicker:'Open-source night watch', watchTitle:'Maintenance lights dimmer than stars',
+    watchDesc:'Three repos still being cared for even without a crowd of stars. Find the maintenance hidden by the numbers and light each lantern.',
+    watchFact:'★ {stars} · last tended {days}d ago', watchStart:'🏮 Begin the night watch', watchResume:'🏮 Resume the watch', watchReplay:'↻ Relight tonight\'s lanterns',
+    watchUnavailable:'This town has fewer than three repo houses to watch.', watchProgress:'Lanterns {done}/{total}', watchTarget:'Next lantern · {repo}',
+    watchOpenHint:'Open the repo house to tend its lantern.', watchRide:'🚕 Ride to this lantern', watchStop:'End watch',
+    watchStarted:'🏮 Lanterns are lit over three quietly maintained repos. Follow the first maintenance light!',
+    watchFound:'🏮 Kept watch over {repo}. ({done}/{total})',
+    watchComplete:'🏮 Night watch complete! Care that outlasts the numbers now lights the town.', watchCompleteTitle:'Watch complete',
+    watchCompleteSub:'You lit every lantern over three quietly maintained repos.',
     lmObs:'Off to the Stargazer\'s Observatory 🔭 to meet the stars and the scholars.', lmDriveObs:'Driving to the Observatory… 🔭✨', lmArriveObs:'We\'ve reached the Observatory. Look up at the sky 🔭',
     ferrisName:'Grand Ferris Wheel', ferrisReached:' — the grand Ferris wheel over the village. Press <span class="key">Enter</span> or click to board',
     ferrisRiding:'🎡 The whole village at a glance! Riding one slow turn back down…', ferrisBoard:'🎡 Aboard the Ferris wheel! Rise up and take in the village', ferrisDone:'🎡 Hope you enjoyed the ride! Come again',
@@ -1740,6 +1794,7 @@ function applyLang(){
   if(typeof renderChronoCase==='function' && chronoModal && chronoModal.classList.contains('show') && chronoCaseId){ renderChronoCase(chronoCaseId); chronoModalLang=LANG; }
   if(typeof renderObservatory==='function' && typeof obsModal!=='undefined' && obsModal && obsModal.classList.contains('show')) renderObservatory();
   if(typeof renderStarTrailHud==='function') renderStarTrailHud();
+  if(typeof renderLanternWatchHud==='function') renderLanternWatchHud();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
   if(typeof refreshDistrictSigns==='function') refreshDistrictSigns();
   if(typeof refreshHubSigns==='function') refreshHubSigns();
@@ -5381,6 +5436,7 @@ function _clearStarTrailNav(){ if(!STAR_TRAIL||!navTarget||STAR_TRAIL.stops.inde
 function endStarTrail(){ _clearStarTrailNav(); _removeStarTrailVisuals(); STAR_TRAIL=null; renderStarTrailHud(); track('constellation_end'); }
 function startStarTrail(){
   const plan=dailyConstellation(); if(!plan) return false;
+  if(LANTERN_WATCH) endLanternWatch();
   if(STAR_TRAIL&&STAR_TRAIL.active&&STAR_TRAIL.plan.id===plan.id){ closeObservatory(); setTimeOfDay(true); setNav(STAR_TRAIL.stops[STAR_TRAIL.index]); renderStarTrailHud(); return true; }
   _removeStarTrailVisuals(); STAR_TRAIL={plan,stops:plan.stops,index:0,active:true,complete:false,visual:null};
   buildStarTrailVisuals(); setTimeOfDay(true); _auroraBoost=Math.max(_auroraBoost,7); closeObservatory(); setNav(STAR_TRAIL.stops[0]); renderStarTrailHud();
@@ -5398,7 +5454,111 @@ function starTrailVisit(repo){ if(!STAR_TRAIL||!STAR_TRAIL.active||STAR_TRAIL.st
 document.getElementById('starTrailClose').onclick=endStarTrail;
 document.getElementById('starTrailRide').onclick=()=>{ if(STAR_TRAIL&&STAR_TRAIL.active) taxiTo(STAR_TRAIL.stops[STAR_TRAIL.index]); };
 
-/* ---- 🔭 Observatory modal: launch the repo trail, or meet the active night-sky scholars (deterministic, 0 KS) ---- */
+/* ---- 🏮 Maintainers' Night Watch: recent low-star repos become a deterministic three-house
+   lantern route, so the town celebrates sustained care rather than popularity alone (0 AI). ---- */
+/*NIGHT_WATCH_SELECTOR:START*/
+function _watchHash(s){ let h=2166136261; for(const c of String(s||'')){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
+function _watchNum(v){ v=Number(v); return Number.isFinite(v)?Math.max(0,v):0; }
+function quietRepoWatchPick(repos,user,dayKey){
+  const all=(Array.isArray(repos)?repos:[]).filter(r=>r&&r.repo);
+  if(all.length<3) return null;
+  const clean=all.filter(r=>!r.archived&&!r.fork);
+  if(clean.length<3) return null;
+  const day=String(dayKey||'1970-01-01').slice(0,10), parsed=Date.parse(day+'T00:00:00Z'), at=Number.isFinite(parsed)?parsed:0;
+  const ranked=clean.map(repo=>{ const pushed=Date.parse(String(repo.pushed||''));
+    const ageDays=Number.isFinite(pushed)?Math.max(0,Math.floor((at-pushed)/86400000)):3650;
+    const stars=_watchNum(repo.stars), forks=_watchNum(repo.forks);
+    const score=Math.min(ageDays,3650)*4+Math.log2(stars+1)*95+Math.log2(forks+1)*35;
+    return {repo,ageDays,stars,forks,score}; }).sort((a,b)=>a.score-b.score||a.repo.repo.localeCompare(b.repo.repo));
+  const recent=ranked.filter(x=>x.ageDays<=730);
+  if(recent.length<3) return null;
+  const starRanks=recent.map(x=>x.stars).sort((a,b)=>a-b);
+  const quietCeiling=starRanks[Math.max(2,Math.floor((starRanks.length-1)*.45))];
+  const source=recent.filter(x=>x.stars<=quietCeiling);
+  const poolSize=Math.min(source.length,Math.max(3,Math.min(9,Math.ceil(source.length*.22))));
+  const seed=String(user||'town')+'|'+day, pool=source.slice(0,poolSize);
+  pool.sort((a,b)=>_watchHash(seed+'|'+a.repo.repo)-_watchHash(seed+'|'+b.repo.repo)||a.repo.repo.localeCompare(b.repo.repo));
+  const picked=pool.slice(0,3), stops=picked.map(x=>x.repo);
+  const facts=picked.map(x=>({repo:x.repo.repo,ageDays:x.ageDays,stars:x.stars,forks:x.forks,pushed:String(x.repo.pushed||''),
+    reason:x.ageDays<=45?'fresh':x.stars<=1?'quiet':'steady'}));
+  return {id:'night-watch:'+day+':'+_watchHash(seed+'|'+stops.map(r=>r.repo).join('|')),day,stops,facts,candidateCount:source.length};
+}
+/*NIGHT_WATCH_SELECTOR:END*/
+let LANTERN_WATCH=null;
+const lanternWatchHud=document.getElementById('lanternWatchHud');
+function dailyLanternWatch(){ return quietRepoWatchPick(REPOS,currentUser,_trailDay()); }
+function lanternWatchFact(plan,index){ const f=plan&&plan.facts&&plan.facts[index]; return f?tf('watchFact',{stars:f.stars,days:f.ageDays}):''; }
+function _removeLanternWatchVisuals(){ if(!LANTERN_WATCH||!LANTERN_WATCH.visual) return; const g=LANTERN_WATCH.visual.group;
+  g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material){ const mm=Array.isArray(o.material)?o.material:[o.material]; mm.forEach(m=>m.dispose()); } }); scene.remove(g); LANTERN_WATCH.visual=null; }
+function buildLanternWatchVisuals(){
+  const g=new THREE.Group(); g.name='maintainers-night-watch'; scene.add(g);
+  const nodes=[], moteCount=LOW_END?4:8;
+  LANTERN_WATCH.stops.forEach((repo,index)=>{
+    const p=_trailRoofPoint(repo); p.y=Math.min(25,(repo._h||6)+5.5);
+    const sm=new THREE.SpriteMaterial({map:GLINT_TEX,color:0x9a6a31,transparent:true,opacity:.42,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending});
+    const sprite=new THREE.Sprite(sm); sprite.position.copy(p); sprite.scale.set(4.4,4.4,1); sprite.renderOrder=9; g.add(sprite);
+    const rm=new THREE.MeshBasicMaterial({color:0x8c612b,transparent:true,opacity:.16,depthWrite:false,depthTest:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});
+    const ring=new THREE.Mesh(new THREE.RingGeometry(2.5,3.2,32),rm); ring.rotation.x=-Math.PI/2; ring.position.set(p.x,.1,p.z); ring.renderOrder=8; g.add(ring);
+    const bm=new THREE.LineBasicMaterial({color:0x9a6a31,transparent:true,opacity:.12,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending});
+    const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(p.x,.18,p.z),p.clone()]),bm); beam.frustumCulled=false; g.add(beam);
+    const motes=[];
+    for(let i=0;i<moteCount;i++){ const mm=new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffcf68,transparent:true,opacity:.2,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending});
+      const mote=new THREE.Sprite(mm), a=(i/moteCount)*Math.PI*2; mote.scale.setScalar(.38+(i%3)*.1);
+      mote.userData={angle:a,radius:1.4+(i%3)*.55,phase:index*1.7+i*.83,speed:.36+(i%4)*.07,baseY:p.y-1.1+(i%2)*1.05};
+      mote.position.set(p.x+Math.cos(a)*mote.userData.radius,mote.userData.baseY,p.z+Math.sin(a)*mote.userData.radius); g.add(mote); motes.push(mote); }
+    nodes.push({sprite,ring,beam,motes,x:p.x,y:p.y,z:p.z});
+  });
+  LANTERN_WATCH.visual={group:g,nodes}; _paintLanternWatch();
+}
+function _paintLanternWatch(){ if(!LANTERN_WATCH||!LANTERN_WATCH.visual) return; const done=LANTERN_WATCH.index;
+  LANTERN_WATCH.visual.nodes.forEach((n,i)=>{ const past=i<done, now=LANTERN_WATCH.active&&i===done, col=past?0xffd36e:now?0xffeea3:0x8f6632;
+    n.sprite.material.color.setHex(col); n.sprite.material.opacity=past?.92:now?1:.34;
+    n.ring.material.color.setHex(col); n.ring.material.opacity=past?.4:now?.68:.14;
+    n.beam.material.color.setHex(col); n.beam.material.opacity=past?.24:now?.42:.08;
+    n.motes.forEach(m=>{ m.material.color.setHex(col); m.material.opacity=past?.46:now?.82:.16; }); }); }
+function updateLanternWatch(t){ if(!LANTERN_WATCH||!LANTERN_WATCH.visual) return; const V=LANTERN_WATCH.visual;
+  V.group.visible=isNight; if(!LANTERN_WATCH.active||!isNight||document.hidden) return; const now=LANTERN_WATCH.index;
+  V.nodes.forEach((n,i)=>{ const pulse=(!REDUCED&&i===now)?1+Math.sin(t*2.7)*.14:1, s=(i===now?5.2:4.4)*pulse; n.sprite.scale.set(s,s,1);
+    if(REDUCED) return; n.ring.rotation.z=t*(i===now?.38:.12)+i*1.9;
+    n.motes.forEach(m=>{ const u=m.userData,a=u.angle+t*u.speed; m.position.x=n.x+Math.cos(a)*u.radius; m.position.z=n.z+Math.sin(a)*u.radius;
+      m.position.y=u.baseY+Math.sin(t*.9+u.phase)*.58; m.material.opacity=(i===now?.52:.24)+Math.abs(Math.sin(t*1.35+u.phase))*(i===now?.42:.2); }); }); }
+function renderLanternWatchHud(){ if(!lanternWatchHud) return; if(!LANTERN_WATCH){ lanternWatchHud.classList.add('hidden'); return; }
+  const total=LANTERN_WATCH.stops.length, done=LANTERN_WATCH.index, complete=LANTERN_WATCH.complete;
+  lanternWatchHud.classList.remove('hidden'); lanternWatchHud.classList.toggle('complete',!!complete);
+  document.getElementById('lanternWatchKicker').textContent=t('watchKicker');
+  document.getElementById('lanternWatchTheme').textContent=complete?t('watchCompleteTitle'):t('watchTitle');
+  document.getElementById('lanternWatchSteps').innerHTML=LANTERN_WATCH.stops.map((_,i)=>`<i class="${i<done?'done':i===done&&LANTERN_WATCH.active?'now':''}"></i>`).join('');
+  const target=LANTERN_WATCH.stops[done];
+  document.getElementById('lanternWatchTarget').innerHTML=complete
+    ? `<b>${_esc(t('watchCompleteSub'))}</b>`
+    : `<b>${_esc(tf('watchTarget',{repo:target.label}))}</b><br>${_esc(lanternWatchFact(LANTERN_WATCH.plan,done))} · ${_esc(tf('watchProgress',{done,total}))}<br>${_esc(t('watchOpenHint'))}`;
+  document.getElementById('lanternWatchActions').style.display=complete?'none':'flex';
+  document.getElementById('lanternWatchRide').textContent=t('watchRide');
+  document.getElementById('lanternWatchClose').setAttribute('aria-label',t('watchStop')); }
+function _clearLanternWatchNav(){ if(!LANTERN_WATCH||!navTarget||LANTERN_WATCH.stops.indexOf(navTarget)<0) return;
+  navTarget=null; navHolder.visible=false; document.getElementById('navBadge').style.display='none'; }
+function endLanternWatch(){ const had=!!LANTERN_WATCH; _clearLanternWatchNav(); _removeLanternWatchVisuals(); LANTERN_WATCH=null; renderLanternWatchHud(); if(had) track('night_watch_end'); }
+function startLanternWatch(){
+  const plan=dailyLanternWatch(); if(!plan) return false;
+  if(STAR_TRAIL) endStarTrail();
+  if(LANTERN_WATCH&&LANTERN_WATCH.active&&LANTERN_WATCH.plan.id===plan.id){ closeObservatory(); setTimeOfDay(true); setNav(LANTERN_WATCH.stops[LANTERN_WATCH.index]); renderLanternWatchHud(); return true; }
+  _removeLanternWatchVisuals(); LANTERN_WATCH={plan,stops:plan.stops,index:0,active:true,complete:false,visual:null};
+  buildLanternWatchVisuals(); setTimeOfDay(true); if(!REDUCED) _auroraBoost=Math.max(_auroraBoost,6); closeObservatory(); setNav(LANTERN_WATCH.stops[0]); renderLanternWatchHud();
+  showWave(t('watchStarted'),4400); track('night_watch_start',{repos:plan.stops.map(r=>r.repo).join(',')}); lastAct=performance.now(); return true;
+}
+function lanternWatchVisit(repo){ if(!LANTERN_WATCH||!LANTERN_WATCH.active||LANTERN_WATCH.stops[LANTERN_WATCH.index]!==repo) return false;
+  LANTERN_WATCH.index++; const done=LANTERN_WATCH.index,total=LANTERN_WATCH.stops.length;
+  if(!REDUCED&&isNight) popSparkle(repo._pos.x,(repo._h||6)+5,repo._pos.z,0xffd36e); track('night_watch_lantern',{repo:repo.repo,done,total});
+  if(done>=total){ LANTERN_WATCH.active=false; LANTERN_WATCH.complete=true; _clearLanternWatchNav(); _paintLanternWatch(); renderLanternWatchHud();
+    const celebrate=!REDUCED&&isNight, fresh=addStamp('nightwatch',celebrate); if(!fresh&&celebrate) fireworksShow(6); if(celebrate) _auroraBoost=Math.max(_auroraBoost,12);
+    showWave(t('watchComplete'),4800); track('night_watch_complete',{repos:LANTERN_WATCH.stops.map(r=>r.repo).join(',')}); }
+  else { _paintLanternWatch(); setNav(LANTERN_WATCH.stops[done]); renderLanternWatchHud(); showWave(tf('watchFound',{repo:repo.label,done,total}),3200); }
+  return true;
+}
+document.getElementById('lanternWatchClose').onclick=endLanternWatch;
+document.getElementById('lanternWatchRide').onclick=()=>{ if(LANTERN_WATCH&&LANTERN_WATCH.active) taxiTo(LANTERN_WATCH.stops[LANTERN_WATCH.index]); };
+
+/* ---- 🔭 Observatory modal: launch either truthful repo route, or meet the active night-sky scholars (deterministic, 0 KS) ---- */
 const obsModal=document.getElementById('obsModal');
 function renderObservatory(){ const body=document.getElementById('obsBody'); if(!body) return; const ko=LANG==='ko';
   const plan=dailyConstellation(), same=plan&&STAR_TRAIL&&STAR_TRAIL.plan.id===plan.id, done=same?STAR_TRAIL.index:0;
@@ -5407,8 +5567,14 @@ function renderObservatory(){ const body=document.getElementById('obsBody'); if(
       +`<div class="otD">${_esc(starTrailDesc(plan))}</div><div class="otStops">${plan.stops.map((r,i)=>`<span class="${i<done?'done':''}">${i<done?'✦':'·'} ${_esc(r.label)}</span>`).join('')}</div>`
       +`<button type="button" id="obsTrailStart">${_esc(same&&STAR_TRAIL.active?t('trailResume'):same&&STAR_TRAIL.complete?t('trailReplay'):t('trailStart'))}</button></div>`
     : `<div class="obsTrail empty"><div class="otK">${_esc(t('trailKicker'))}</div><div class="otT">${_esc(t('trailTitle'))}</div><div class="otD">${_esc(t('trailUnavailable'))}</div></div>`;
+  const watchPlan=dailyLanternWatch(), watchSame=watchPlan&&LANTERN_WATCH&&LANTERN_WATCH.plan.id===watchPlan.id, watchDone=watchSame?LANTERN_WATCH.index:0;
+  const watch=watchPlan
+    ? `<div class="obsTrail nightWatch"><div class="otK">${_esc(t('watchKicker'))}</div><div class="otT">🏮 ${_esc(t('watchTitle'))}</div>`
+      +`<div class="otD">${_esc(t('watchDesc'))}</div><div class="otStops">${watchPlan.stops.map((r,i)=>`<span class="${i<watchDone?'done':''}" title="${_esc(lanternWatchFact(watchPlan,i))}">${i<watchDone?'◆':'·'} ${_esc(r.label)}</span>`).join('')}</div>`
+      +`<button type="button" id="obsNightWatchStart">${_esc(watchSame&&LANTERN_WATCH.active?t('watchResume'):watchSame&&LANTERN_WATCH.complete?t('watchReplay'):t('watchStart'))}</button></div>`
+    : `<div class="obsTrail nightWatch empty"><div class="otK">${_esc(t('watchKicker'))}</div><div class="otT">${_esc(t('watchTitle'))}</div><div class="otD">${_esc(t('watchUnavailable'))}</div></div>`;
   const list=(window.SCHOLARS||[]).filter(s=>s.active);
-  body.innerHTML = trail+list.map(s=>{
+  body.innerHTML = watch+trail+list.map(s=>{
     const epi=ko?(s.epithetKo||''):(s.epithetEn||''), myth=ko?(s.mythKo||''):(s.mythEn||'');
     const con=s.constellation?(ko?(s.constellation.nameKo||''):(s.constellation.nameEn||'')):'';
     const bs=s.backstory?(s.backstory[ko?'ko':'en']||''):'';
@@ -5419,6 +5585,7 @@ function renderObservatory(){ const body=document.getElementById('obsBody'); if(
       +`<div class="bs">${_esc(bs)}</div></div></div>`;
   }).join('');
   const start=document.getElementById('obsTrailStart'); if(start) start.onclick=startStarTrail;
+  const watchStart=document.getElementById('obsNightWatchStart'); if(watchStart) watchStart.onclick=startLanternWatch;
 }
 function openObservatory(){ modalOpen=true; obsModal.classList.add('show'); renderObservatory(); document.getElementById('obsBody').scrollTop=0; }
 function closeObservatory(){ modalOpen=false; obsModal.classList.remove('show'); }
@@ -7211,6 +7378,7 @@ const PASS_LANDMARKS=[
   {id:'chrono',           ico:'⏳', key:'lmChrono'},
   {id:'observatory',      ico:'🔭', key:'lmObservatory'},
   {id:'constellation',    ico:'🌌', key:'lmConstellation'},
+  {id:'nightwatch',       ico:'🏮', key:'lmNightWatch'},
   {id:'homes',            ico:'🏘️', key:'lmHomes'},
   {id:'ferris',           ico:'🎡', key:'ferrisName'},
   {id:'carousel',         ico:'🎠', key:'carouselName'},
@@ -7268,8 +7436,8 @@ function markFreshnessRead(){ if(!freshnessTrackable) return false; freshnessCur
   repoFreshness=diffRepoFreshness(freshnessBaseline,freshnessCurrent); syncFreshnessNotice(); renderFreshness(); track('town_gazette_read'); return true; }
 const passportEl=document.getElementById('passport');
 function flashPassport(){ const b=document.getElementById('passBtn'); if(!b) return; b.classList.add('glow'); clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('glow'),2200); }
-function addStamp(id){ if(passHasStamp(id)) return false; passport.stamps.push(id); savePassport(); flashPassport(); if(!passportEl.classList.contains('hidden')) renderPassport();
-  if(passport.stamps.length>=PASS_LANDMARKS.length){ fireworksShow(20); showWave(t('festAllStamps'),3400); } else fireworksShow(3);
+function addStamp(id,celebrate=true){ if(passHasStamp(id)) return false; passport.stamps.push(id); savePassport(); flashPassport(); if(!passportEl.classList.contains('hidden')) renderPassport();
+  if(passport.stamps.length>=PASS_LANDMARKS.length){ if(celebrate) fireworksShow(20); showWave(t('festAllStamps'),3400); } else if(celebrate) fireworksShow(3);
   onCourseProgress(); return true; }
 function addRepoVisit(name){ if(!name || passport.repos.indexOf(name)>=0) return; passport.repos.push(name); savePassport(); if(!passportEl.classList.contains('hidden')) renderPassport();
   if([5,15,30,REPOS.length].indexOf(passport.repos.length)>=0){ fireworksShow(8); showWave(t('festRepos').replace('{n}',passport.repos.length),3000); }
@@ -7590,7 +7758,7 @@ window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=re
   if(k!==(modal._repoKey||'')){ const r=repoByKey(k); if(r) openCard(r); } });
 
 function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
-  starTrailVisit(repo); courseMark('repo',repo.repo);
+  starTrailVisit(repo); lanternWatchVisit(repo); courseMark('repo',repo.repo);
   modalOpen=true; modal.classList.add('show'); modal._repoKey=repo.repo||null; setRepoHash(repo);
   document.getElementById('cardTop').style.background=repo.color;
   document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
@@ -9487,6 +9655,7 @@ function animate(){
   updateFireworks(dt);
   updateVisitFx(dt);
   updateStarTrail(clock.elapsedTime);
+  updateLanternWatch(clock.elapsedTime);
   updateNpcs(dt);
   updateResidents(dt);
   updateRainGarden(dt);
@@ -9986,6 +10155,17 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__starTrailStart=()=>{ startStarTrail(); return _starTrailDebug(); };
   window.__starTrailNext=()=>{ if(STAR_TRAIL&&STAR_TRAIL.active) starTrailVisit(STAR_TRAIL.stops[STAR_TRAIL.index]); return _starTrailDebug(); };
   window.__starTrailEnd=()=>{ endStarTrail(); return _starTrailDebug(); };
+  const _lanternWatchDebug=()=>{ const p=LANTERN_WATCH?LANTERN_WATCH.plan:dailyLanternWatch(); return { available:!!p, active:!!(LANTERN_WATCH&&LANTERN_WATCH.active), complete:!!(LANTERN_WATCH&&LANTERN_WATCH.complete),
+    index:LANTERN_WATCH?LANTERN_WATCH.index:0,stops:p?p.stops.map(r=>r.repo):[],facts:p?p.facts.map(f=>({...f})):[],
+    current:LANTERN_WATCH&&LANTERN_WATCH.active?LANTERN_WATCH.stops[LANTERN_WATCH.index].repo:null,
+    visual:!!(LANTERN_WATCH&&LANTERN_WATCH.visual),visualVisible:!!(LANTERN_WATCH&&LANTERN_WATCH.visual&&LANTERN_WATCH.visual.group.visible),
+    meshes:LANTERN_WATCH&&LANTERN_WATCH.visual?LANTERN_WATCH.visual.group.children.length:0,
+    hud:!lanternWatchHud.classList.contains('hidden'),stamp:passHasStamp('nightwatch'),night:isNight,
+    constellationActive:!!(STAR_TRAIL&&STAR_TRAIL.active) }; };
+  window.__lanternWatchPlan=()=>_lanternWatchDebug();
+  window.__lanternWatchStart=()=>{ startLanternWatch(); return _lanternWatchDebug(); };
+  window.__lanternWatchNext=()=>{ if(LANTERN_WATCH&&LANTERN_WATCH.active) lanternWatchVisit(LANTERN_WATCH.stops[LANTERN_WATCH.index]); return _lanternWatchDebug(); };
+  window.__lanternWatchEnd=()=>{ endLanternWatch(); return _lanternWatchDebug(); };
   window.__ferris=()=>({ has:!!FERRIS, pos:FERRIS?{x:+FERRIS._pos.x.toFixed(1),z:+FERRIS._pos.z.toFixed(1)}:null, board:FERRIS?{x:+FERRIS.board.x.toFixed(1),z:+FERRIS.board.z.toFixed(1)}:null, near:!!nearFerris, riding:!!ferris, turned:ferris?+ferris.turned.toFixed(2):0, dist:FERRIS?+player.position.distanceTo(FERRIS.board).toFixed(1):null });
   window.__board=()=>{ if(!FERRIS) return 'no ferris'; const b=FERRIS.board; player.position.set(b.x,0,b.z); return window.__ferris(); };
   window.__carousel=()=>({ has:!!CAROUSEL, pos:CAROUSEL?{x:+CAROUSEL._pos.x.toFixed(1),z:+CAROUSEL._pos.z.toFixed(1)}:null, board:CAROUSEL?{x:+CAROUSEL.board.x.toFixed(1),z:+CAROUSEL.board.z.toFixed(1)}:null, near:!!nearCarousel, riding:!!carousel, turned:carousel?+carousel.turned.toFixed(2):0, dist:CAROUSEL?+player.position.distanceTo(CAROUSEL.board).toFixed(1):null });
