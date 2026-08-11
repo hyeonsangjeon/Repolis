@@ -72,6 +72,12 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 `zoneOf(repo)` classifier chooses a topic district from repository name, description, topics, and language.
 Every active district receives a map region, walkable hub, board, and representative repositories.
 
+The World Tree performance path does not replace these houses with bare boxes. Full models remain available
+nearby; the one-draw architectural mid LOD combines textured walls and the authored roof with a deterministic
+parcel/detail mesh (plot, hedge, path, framed live windows, shutters, sills, window boxes, drainage, and the
+kind-specific entrance). The far visual keeps a low-poly parcel, while its separate shadow proxy remains only
+the body/roof silhouette so decorative ground geometry cannot pollute the frozen town shadow map.
+
 Counts are **cumulative since move-in day** (`first_seen`/`tracked`), because GitHub's traffic API only
 keeps a rolling 14-day window — a daily collector accumulates the lifetime totals offline.
 

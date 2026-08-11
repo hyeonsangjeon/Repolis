@@ -69,6 +69,7 @@ Repolis turns public GitHub metadata and cumulative traffic into a place instead
 | recent activity | window glow at night |
 
 Repositories are grouped into topic districts with roads, signs, hubs, and a world map. The owner town refreshes daily from committed traffic history plus the GitHub API; `?user=<login>` can build a lighter town from any user's public repositories.
+At ordinary walking distances, a one-draw architectural LOD keeps each repo house's textured walls and roof while preserving its plot, hedge, path, real window panes, shutters, sills, flower boxes, gutters, and tier-specific porch, balcony, or portico.
 
 ## A village that lives
 
