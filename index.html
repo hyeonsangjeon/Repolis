@@ -4117,7 +4117,8 @@ function makeBuilding(repo){
   else if(kind==='manor'||kind==='mansion'){ const wh=h*(kind==='mansion'?0.8:0.72), wx=w*0.72;
     addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, wx); addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, -wx); }
   // central roof
-  repo._lodSpec={kind,roof:typ.roof,tier:typ.tier,w,h,d,topH,topW,wall:repo.wall,roofColor:repo.roof,accent:repo.accent,entranceColor:(CATS[repo._cat]||CATS.Software).color};
+  repo._lodSpec={kind,roof:typ.roof,tier:typ.tier,w,h,d,topH,topW,wall:repo.wall,roofColor:repo.roof,accent:repo.accent,entranceColor:(CATS[repo._cat]||CATS.Software).color,
+    yardRadius:yr,yardColor:repo._downtown?0xcbb888:0x86c069,hedgeColor:repo._downtown?0xb7a274:0x5d9e46,rich,fancy,flags,stars:repo.stars||0};
   const cameraRoofRadius=topW*({flat:.73,hip:.9,gambrel:.96,mansard:1,aframe:.82,shed:.76,barrel:.74}[typ.roof]||.95);
   const cameraRoofRise=typ.roof==='flat'?1.1:typ.roof==='hip'?1.75:typ.roof==='gambrel'?2.35:typ.roof==='mansard'?2.32:
     typ.roof==='aframe'?2.22:typ.roof==='shed'?1.55:typ.roof==='barrel'?topW*.52+0.12:2.65;
@@ -4214,8 +4215,8 @@ const BUILDING_LOD_PROTO={
   supportedKinds:new Set(['cabin','cottage','house','shop','tower','villa','manor','mansion']),
   supportedRoofs:new Set(['flat','gable','hip','mansard','barrel','shed','aframe','gambrel']),
   entries:[],enabled:true,lastFrame:-999,lastCameraPos:new THREE.Vector3(),lastCameraQuat:new THREE.Quaternion(),
-  updates:0,switches:0,flaps:0,contextRestores:0,errors:[],memoryBytes:0,memoryBudget:1024*1024,
-  thresholds:{fullEnter:280,fullLeave:240,midEnter:60,midLeave:48,settle:3,cadence:8,minDwellFrames:24}
+  updates:0,switches:0,flaps:0,contextRestores:0,errors:[],memoryBytes:0,memoryBudget:5*1024*1024,
+  thresholds:{fullEnter:280,fullLeave:240,midEnter:(LOW_END||IS_MOBILE)?60:48,midLeave:(LOW_END||IS_MOBILE)?48:36,settle:3,cadence:8,minDwellFrames:24}
 };
 function _withBuildingLodPrivateRandom(fn){
   const globalRandom=Math.random; let state=0x2c0a2026;
@@ -4228,64 +4229,120 @@ function _buildingLodGeometryBytes(geometry){
   return bytes;
 }
 function _buildingLodFacadeGeometry(repo){
-  const positions=[],lit=[],jitter=[],activity=[];
-  for(const windowMesh of repo._windows){ windowMesh.updateMatrix(); const source=windowMesh.geometry.index?windowMesh.geometry.toNonIndexed():windowMesh.geometry.clone(),attr=source.attributes.position;
+  const positions=[],uvs=[],lit=[],jitter=[],activity=[];
+  for(const windowMesh of repo._windows){ windowMesh.updateMatrix(); const source=windowMesh.geometry.index?windowMesh.geometry.toNonIndexed():windowMesh.geometry.clone(),attr=source.attributes.position,uv=source.attributes.uv;
     for(let i=0;i<attr.count;i++){ const p=new THREE.Vector3().fromBufferAttribute(attr,i).applyMatrix4(windowMesh.matrix);
-      positions.push(p.x,p.y,p.z+0.012); lit.push(windowMesh.userData.lit?1:0); jitter.push(windowMesh.userData.j||1); activity.push(repo._activity||0); }
+      positions.push(p.x,p.y,p.z+0.012); uvs.push(uv.getX(i),uv.getY(i)); lit.push(windowMesh.userData.lit?1:0); jitter.push(windowMesh.userData.j||1); activity.push(repo._activity||0); }
     source.dispose(); }
   const geometry=new THREE.BufferGeometry(); geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
   geometry.setAttribute('aLit',new THREE.Float32BufferAttribute(lit,1)); geometry.setAttribute('aJitter',new THREE.Float32BufferAttribute(jitter,1));
   geometry.setAttribute('aActivity',new THREE.Float32BufferAttribute(activity,1)); geometry.computeVertexNormals(); geometry.computeBoundingSphere(); return geometry;
 }
 function _buildingLodReadabilityGeometry(repo){
   const spec=repo._lodSpec,positions=[],colors=[],indices=[],sources=new Set(),front=spec.d*.5;
-  const addBox=(w,h,d,x,y,z,color,name)=>{ const base=positions.length/3,hx=w*.5,hy=h*.5,hz=d*.5,c=new THREE.Color(color);
-    positions.push(x-hx,y-hy,z+hz,x+hx,y-hy,z+hz,x+hx,y+hy,z+hz,x-hx,y+hy,z+hz,x-hx,y-hy,z-hz,x+hx,y-hy,z-hz,x+hx,y+hy,z-hz,x-hx,y+hy,z-hz);
+  const addBox=(w,h,d,x,y,z,color,name,rotY=0)=>{ const base=positions.length/3,hx=w*.5,hy=h*.5,hz=d*.5,c=new THREE.Color(color),co=Math.cos(rotY),si=Math.sin(rotY);
+    const verts=[[-hx,-hy,hz],[hx,-hy,hz],[hx,hy,hz],[-hx,hy,hz],[-hx,-hy,-hz],[hx,-hy,-hz],[hx,hy,-hz],[-hx,hy,-hz]];
+    for(const v of verts) positions.push(x+v[0]*co+v[2]*si,y+v[1],z-v[0]*si+v[2]*co);
     for(let i=0;i<8;i++) colors.push(c.r,c.g,c.b);
     indices.push(base,base+1,base+2,base,base+2,base+3,base+5,base+4,base+7,base+5,base+7,base+6,
       base+1,base+5,base+6,base+1,base+6,base+2,base+4,base,base+3,base+4,base+3,base+7,
       base+3,base+2,base+6,base+3,base+6,base+7,base+4,base+5,base+1,base+4,base+1,base);
     sources.add(name);
   };
-  const stone=0x948a78,trim=0xeadfca,dark=0x6e4a32,accent=spec.accent??spec.roofColor,entrance=spec.entranceColor??accent;
+  const addDisc=(radius,y,color,name,segments=12)=>{ const base=positions.length/3,c=new THREE.Color(color);
+    positions.push(0,y,0); colors.push(c.r,c.g,c.b);
+    for(let i=0;i<segments;i++){ const a=i/segments*Math.PI*2; positions.push(Math.cos(a)*radius,y,Math.sin(a)*radius); colors.push(c.r,c.g,c.b); }
+    for(let i=0;i<segments;i++) indices.push(base,base+1+(i+1)%segments,base+1+i); sources.add(name);
+  };
+  const addRing=(radius,width,height,y,color,name,segments=10)=>{ const span=2*radius*Math.tan(Math.PI/segments)*1.02;
+    for(let i=0;i<segments;i++){ const a=(i+.5)/segments*Math.PI*2; addBox(span,height,width,Math.cos(a)*radius,y,Math.sin(a)*radius,color,name,Math.PI*.5-a); } };
+  const addGable=(w,h,d,x,y,z,color,name)=>{ const base=positions.length/3,hw=w*.5,hd=d*.5,c=new THREE.Color(color);
+    positions.push(x-hw,y,z+hd,x+hw,y,z+hd,x,y+h,z+hd,x-hw,y,z-hd,x+hw,y,z-hd,x,y+h,z-hd);
+    for(let i=0;i<6;i++) colors.push(c.r,c.g,c.b);
+    indices.push(base,base+1,base+2,base+5,base+4,base+3,base+3,base+4,base+1,base+3,base+1,base,
+      base+2,base+1,base+4,base+2,base+4,base+5,base+3,base,base+2,base+3,base+2,base+5); sources.add(name);
+  };
+  const stone=0x948a78,trim=0xeadfca,dark=0x6e4a32,gold=0xd9aa43,warm=0xffcc72,accent=spec.accent??spec.roofColor,entrance=spec.entranceColor??accent;
+  const plotR=Math.max(1,spec.yardRadius??spec.w),yardColor=spec.yardColor??0x86c069,hedgeColor=spec.hedgeColor??0x5d9e46;
+  addDisc(plotR,.025,yardColor,'yard-plot'); addRing(plotR*.94,.26,.46,.28,hedgeColor,'yard-hedge',spec.tier>=3?12:10);
+  const pathN=spec.tier>=3?4:3; for(let i=0;i<pathN;i++) addBox(1.7-i*.12,.1,.48,0,.06,front+.72+i*.64,stone,'path-stone');
   addBox(spec.w+.28,.5,spec.d+.28,0,.25,0,stone,'plinth');
   addBox(1.46,2.18,.28,0,1.09,front+.15,dark,'door');
+  addBox(.78,.86,.06,0,1.08,front+.32,entrance,'door-panel');
+  addBox(.16,.28,.14,-.95,1.66,front+.25,warm,'door-lantern'); addBox(.16,.28,.14,.95,1.66,front+.25,warm,'door-lantern');
   addBox(1.9,.14,1.7,0,.07,front+.86,stone,'yard-step');
+  addBox(spec.w+.18,.18,spec.d+.18,0,spec.h-.09,0,trim,'facade-cornice');
   const rows=spec.h>10.5?[spec.h*.32,spec.h*.55,spec.h*.78]:spec.h>6.5?[spec.h*.42,spec.h*.72]:[Math.min(2.6,spec.h*.5)];
   const xs=spec.w>7?[-spec.w*.32,0,spec.w*.32]:[-spec.w*.27,spec.w*.27];
-  for(const wy of rows) for(const wx of xs){ addBox(1.18,1.3,.08,wx,wy,front+.07,trim,'window-frame');
+  if(rows.length>1) for(let i=0;i<rows.length-1;i++) addBox(spec.w+.08,.11,.14,0,(rows[i]+rows[i+1])*.5,front+.075,stone,'facade-belt-course');
+  if(spec.tier>=2){ const levels=Math.min(3,Math.max(2,Math.floor(spec.h/3)));
+    for(const side of [-1,1]) for(let i=0;i<levels;i++) addBox(.34,.42,.24,side*(spec.w*.5+.04),.75+i*1.45,front+.07,stone,'facade-quoin'); }
+  for(const wy of rows) for(const wx of xs){
+    addBox(.13,1.32,.09,wx-.525,wy,front+.075,trim,'window-frame'); addBox(.13,1.32,.09,wx+.525,wy,front+.075,trim,'window-frame');
+    addBox(1.18,.13,.09,wx,wy-.585,front+.075,trim,'window-frame'); addBox(1.18,.13,.09,wx,wy+.585,front+.075,trim,'window-frame');
+    addBox(1.34,.14,.3,wx,wy-.72,front+.13,stone,'window-sill');
     if(spec.tier>=2&&spec.roof!=='flat'&&spec.roof!=='shed'&&spec.kind!=='tower'){
       if(Math.abs(wx-.7)+.14<=spec.w*.5) addBox(.28,1.24,.08,wx-.7,wy,front+.08,accent,'window-shutter');
       if(Math.abs(wx+.7)+.14<=spec.w*.5) addBox(.28,1.24,.08,wx+.7,wy,front+.08,accent,'window-shutter');
     }
+    if(spec.tier>=3&&wy===rows[0]){ addBox(.72,.17,.24,wx,wy-.59,front+.22,0x9c6f4a,'window-box');
+      for(let i=-1;i<=1;i++) addBox(.12,.16,.12,wx+i*.2,wy-.43,front+.27,i===0?warm:accent,'window-box-bloom'); }
   }
-  if(spec.kind==='cabin'||spec.kind==='cottage') addBox(1.95,.24,.9,0,2.32,front+.38,spec.roofColor,'entrance-cottage-awning');
-  else if(spec.kind==='house'){ addBox(3.45,.22,1.35,0,2.58,front+.6,spec.roofColor,'entrance-house-porch');
-    addBox(.24,2.2,.24,-1.38,1.1,front+.88,stone,'entrance-house-post'); addBox(.24,2.2,.24,1.38,1.1,front+.88,stone,'entrance-house-post'); }
+  if(spec.kind==='cabin'||spec.kind==='cottage'){ addBox(1.95,.24,.9,0,2.32,front+.38,spec.roofColor,'entrance-cottage-awning');
+    addBox(spec.w*.82,.14,.12,0,spec.h*.63,front+.1,dark,'facade-timber'); addBox(.14,spec.h*.5,.12,0,spec.h*.61,front+.1,dark,'facade-timber'); }
+  else if(spec.kind==='house'){ addBox(3.45,.22,1.35,0,2.8,front+.6,spec.roofColor,'entrance-house-porch');
+    addBox(.24,2.55,.24,-1.38,1.28,front+.88,stone,'entrance-house-post'); addBox(.24,2.55,.24,1.38,1.28,front+.88,stone,'entrance-house-post');
+    addBox(2.9,.12,.12,0,1.03,front+1.12,accent,'entrance-house-rail'); }
   else if(spec.kind==='shop'){ if(spec.topH>spec.h+.1) addBox(spec.topW,spec.topH-spec.h,spec.topW,0,(spec.h+spec.topH)*.5,0,spec.wall,'shop-upper');
-    addBox(spec.w*.96,.26,1.3,0,2.5,front+.55,entrance,'entrance-shop-awning'); }
+    addBox(spec.w*.96,.26,1.3,0,2.5,front+.55,entrance,'entrance-shop-awning');
+    for(const x of [-spec.w*.28,spec.w*.28]){ addBox(1.25,1.45,.08,x,1.18,front+.08,trim,'shop-window-frame'); addBox(1.02,1.18,.06,x,1.18,front+.14,0x8eb8c9,'shop-window'); } }
   else if(spec.kind==='tower'){ addBox(2.35,.22,.9,0,2.42,front+.38,entrance,'entrance-tower-hood');
-    addBox(spec.w*.34,.86,spec.w*.34,spec.w*.2,spec.h+1,-spec.d*.18,0x8a98a6,'tower-roof-tank'); }
+    addBox(spec.w*.34,.86,spec.w*.34,spec.w*.2,spec.h+1,-spec.d*.18,0x8a98a6,'tower-roof-tank');
+    addBox(.18,spec.h*.84,.16,-spec.w*.42,spec.h*.5,front+.08,stone,'tower-pier'); addBox(.18,spec.h*.84,.16,spec.w*.42,spec.h*.5,front+.08,stone,'tower-pier'); }
   else if(spec.kind==='villa'){ const ww=spec.w*.52,wh=spec.h*.66,wd=spec.d*.8,wx=spec.w*.66,by=spec.h*.58;
-    addBox(ww,wh,wd,wx,wh*.5,0,spec.wall,'villa-wing'); addBox(ww*1.05,.22,wd*1.05,wx,wh+.11,0,spec.roofColor,'villa-wing-roof');
-    addBox(spec.w*.56,.18,.95,0,by,front+.42,stone,'entrance-villa-balcony'); addBox(spec.w*.52,.42,.12,0,by+.28,front+.88,accent,'entrance-villa-rail'); }
+    addBox(ww,wh,wd,wx,wh*.5,0,spec.wall,'villa-wing'); addBox(ww*1.08,.28,wd*1.08,wx,wh+.14,0,spec.roofColor,'villa-wing-roof');
+    addBox(1.06,1.24,.09,wx,wh*.53,wd*.5+.07,trim,'villa-wing-window-frame'); addBox(.82,1,.06,wx,wh*.53,wd*.5+.14,0x8eb8c9,'villa-wing-window-pane');
+    addBox(.08,1,.07,wx,wh*.53,wd*.5+.18,dark,'villa-wing-window-mullion'); addBox(.82,.08,.07,wx,wh*.53,wd*.5+.18,dark,'villa-wing-window-mullion');
+    addBox(spec.w*.56,.18,.95,0,by,front+.42,stone,'entrance-villa-balcony'); addBox(spec.w*.52,.1,.12,0,by+.66,front+.88,accent,'entrance-villa-rail');
+    for(let i=0;i<6;i++) addBox(.07,.56,.07,(i/5-.5)*spec.w*.48,by+.36,front+.88,accent,'entrance-villa-baluster'); }
   else if(spec.kind==='manor'||spec.kind==='mansion'){ const grand=spec.kind==='mansion',wh=spec.h*(grand?.8:.72),ww=spec.w*.5,wd=spec.d*.82,wx=spec.w*.72,span=grand?4.5:3.7;
-    for(const side of [-1,1]){ addBox(ww,wh,wd,side*wx,wh*.5,0,spec.wall,`${spec.kind}-wing`); addBox(ww*1.05,.24,wd*1.05,side*wx,wh+.12,0,spec.roofColor,`${spec.kind}-wing-roof`); }
+    for(const side of [-1,1]){ addBox(ww,wh,wd,side*wx,wh*.5,0,spec.wall,`${spec.kind}-wing`); addBox(ww*1.08,.3,wd*1.08,side*wx,wh+.15,0,spec.roofColor,`${spec.kind}-wing-roof`);
+      addBox(1.06,1.24,.09,side*wx,wh*.52,wd*.5+.07,trim,`${spec.kind}-wing-window-frame`); addBox(.82,1,.06,side*wx,wh*.52,wd*.5+.14,0x8eb8c9,`${spec.kind}-wing-window-pane`);
+      addBox(.08,1,.07,side*wx,wh*.52,wd*.5+.18,dark,`${spec.kind}-wing-window-mullion`); addBox(.82,.08,.07,side*wx,wh*.52,wd*.5+.18,dark,`${spec.kind}-wing-window-mullion`); }
     addBox(span,.26,1.65,0,2.82,front+.78,spec.roofColor,`entrance-${spec.kind}-portico`);
     const columns=grand?[-1.65,-.55,.55,1.65]:[-1.25,1.25]; for(const x of columns) addBox(.25,2.55,.25,x,1.28,front+1.33,trim,`entrance-${spec.kind}-column`);
+    addGable(span,1.02,.56,0,2.92,front+1.04,spec.roofColor,`entrance-${spec.kind}-pediment`);
     if(grand){ addBox(spec.w*.18,.72,spec.w*.18,0,spec.topH+1.88,0,trim,'mansion-cupola'); addBox(spec.w*.28,.18,spec.w*.28,0,spec.topH+2.31,0,spec.roofColor,'mansion-cupola-cap'); }
   }
-  if(['gable','hip','mansard','barrel','shed','gambrel'].includes(spec.roof)) addBox(.58,1.25,.58,spec.w*.3,spec.topH+1.4,spec.d*.2,dark,`roof-${spec.roof}-chimney`);
+  const pitched=spec.roof!=='flat',roofRise={gable:2.6,hip:1.7,gambrel:2.35,mansard:2.3,aframe:2.2,shed:1.5,barrel:spec.topW*.52}[spec.roof]??1.7;
+  if(pitched){ addBox(spec.w*.94,.13,.18,0,spec.topH+.08,front+.08,dark,'roof-gutter');
+    const pipeBottom=.1,pipeTop=spec.topH+.08,pipeH=pipeTop-pipeBottom,pipeY=(pipeTop+pipeBottom)*.5;
+    addBox(.12,pipeH,.12,-spec.w*.44,pipeY,front+.12,dark,'roof-downpipe'); addBox(.12,pipeH,.12,spec.w*.44,pipeY,front+.12,dark,'roof-downpipe'); }
+  if(['gable','hip','mansard','barrel','shed','gambrel'].includes(spec.roof)){ addBox(.58,1.25,.58,spec.w*.3,spec.topH+1.4,spec.d*.2,dark,`roof-${spec.roof}-chimney`);
+    addBox(.72,.12,.72,spec.w*.3,spec.topH+2.02,spec.d*.2,stone,'roof-chimney-cap'); }
   else if(spec.roof==='flat'){ addBox(spec.topW*.24,.58,spec.topW*.24,-spec.topW*.24,spec.topH+.79,-spec.d*.2,0x8a98a6,'roof-flat-tech');
     addBox(spec.topW*.34,.12,spec.topW*.26,spec.topW*.2,spec.topH+.86,spec.d*.16,0x24466f,'roof-flat-solar'); }
   else if(spec.roof==='aframe') addBox(.18,.18,spec.d*1.12,0,spec.topH+1.05,0,dark,'roof-aframe-ridge');
+  if(['gable','gambrel','mansard','barrel'].includes(spec.roof)) addBox(.14,.14,spec.d*1.04,0,spec.topH+roofRise,0,dark,'roof-ridge');
+  if(spec.kind==='house'&&!['shed','aframe','flat'].includes(spec.roof)){ addBox(1.08,.88,.72,0,spec.topH+.78,spec.d*.18,spec.wall,'roof-dormer');
+    addGable(1.2,.58,.78,0,spec.topH+1.16,spec.d*.18,spec.roofColor,'roof-dormer-gable'); }
+  const metricStars=Math.min(2,Math.max(0,Number(spec.stars)||0)),metricY=Math.max(spec.h+3,spec.topH+roofRise+.4);
+  for(let i=0;i<metricStars;i++){ const x=(i-(metricStars-1)*.5)*.72; addBox(.12,.68,.12,x,metricY,0,gold,'metric-star'); addBox(.52,.12,.12,x,metricY,0,gold,'metric-star'); }
+  const banners=Math.min(3,Math.max(0,Number(spec.flags)||0)); for(let i=0;i<banners;i++) addBox(.18,.48,.08,(i-(banners-1)*.5)*.5,spec.h-.42,front+.14,i%2?accent:entrance,'metric-banner');
+  const gardenN=(spec.rich??0)>.66?3:(spec.rich??0)>.22?2:1; for(let i=0;i<gardenN;i++){ const side=i%2?-1:1,x=side*(1.45+Math.floor(i/2)*.48);
+    addBox(.72,.18,.54,x,.12,front+1.4,hedgeColor,'garden-bed'); addBox(.16,.28,.16,x,.31,front+1.4,i%2?accent:warm,'garden-bloom'); }
   const geometry=new THREE.BufferGeometry(); geometry.setIndex(indices);
   geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3)); geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
   geometry.computeBoundingBox(); geometry.computeBoundingSphere(); geometry.userData={sources:[...sources],kind:spec.kind,roof:spec.roof}; return geometry;
 }
-function _buildingLodSilhouetteGeometry(repo){
-  const spec=repo._lodSpec,positions=[],normals=[],colors=[],sources=[],parts=[];
-  const add=(geometry,matrix,color,name)=>parts.push({geometry,matrix,color:new THREE.Color(color),name});
+function _buildingLodSilhouetteGeometry(repo,withParcel=false,withColor=true){
+  const spec=repo._lodSpec,positions=[],colors=[],sources=[],parts=[];
+  const add=(geometry,matrix,color,name)=>parts.push({geometry,matrix,color:withColor?new THREE.Color(color):null,name});
+  if(withParcel){ const plotR=Math.max(1,spec.yardRadius??spec.w);
+    add(new THREE.CylinderGeometry(plotR,plotR,.03,12),new THREE.Matrix4().makeTranslation(0,.015,0),spec.yardColor??0x86c069,'yard-plot');
+    const hedgeMatrix=new THREE.Matrix4().compose(new THREE.Vector3(0,.28,0),new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI*.5,0,0)),new THREE.Vector3(1,1,1));
+    add(new THREE.TorusGeometry(plotR*.94,.22,4,12),hedgeMatrix,spec.hedgeColor??0x5d9e46,'yard-hedge'); }
   add(new THREE.BoxGeometry(spec.w,spec.h,spec.d),new THREE.Matrix4().makeTranslation(0,spec.h*.5,0),spec.wall,'body');
   const roofH=spec.roof==='aframe'?Math.max(2.2,spec.topW*.52):spec.roof==='flat' ? .42 : Math.max(1.15,spec.topW*.28);
   if(spec.roof==='flat'){ add(new THREE.BoxGeometry(spec.topW*1.06,roofH,spec.d*1.06),new THREE.Matrix4().makeTranslation(0,spec.topH+roofH*.5,0),spec.roofColor,'flat-roof'); }
@@ -4295,11 +4352,11 @@ function _buildingLodSilhouetteGeometry(repo){
   else if(spec.kind==='manor'||spec.kind==='mansion'){ const wh=spec.h*(spec.kind==='mansion'?.8:.72),ww=spec.w*.5,wd=spec.d*.82,wx=spec.w*.72;
     add(new THREE.BoxGeometry(ww,wh,wd),new THREE.Matrix4().makeTranslation(wx,wh*.5,0),spec.wall,'right-wing');
     add(new THREE.BoxGeometry(ww,wh,wd),new THREE.Matrix4().makeTranslation(-wx,wh*.5,0),spec.wall,'left-wing'); }
-  for(const part of parts){ const source=part.geometry.index?part.geometry.toNonIndexed():part.geometry.clone(),pos=source.attributes.position,normal=source.attributes.normal,normalMatrix=new THREE.Matrix3().getNormalMatrix(part.matrix),p=new THREE.Vector3(),n=new THREE.Vector3();
-    for(let i=0;i<pos.count;i++){ p.fromBufferAttribute(pos,i).applyMatrix4(part.matrix); positions.push(p.x,p.y,p.z); n.fromBufferAttribute(normal,i).applyNormalMatrix(normalMatrix); normals.push(n.x,n.y,n.z); colors.push(part.color.r,part.color.g,part.color.b); }
+  for(const part of parts){ const source=part.geometry.index?part.geometry.toNonIndexed():part.geometry.clone(),pos=source.attributes.position,p=new THREE.Vector3();
+    for(let i=0;i<pos.count;i++){ p.fromBufferAttribute(pos,i).applyMatrix4(part.matrix); positions.push(p.x,p.y,p.z); if(withColor) colors.push(part.color.r,part.color.g,part.color.b); }
     sources.push(part.name); source.dispose(); part.geometry.dispose(); }
   const geometry=new THREE.BufferGeometry(); geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3)); geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  if(withColor) geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
   geometry.computeBoundingBox(); geometry.computeBoundingSphere(); geometry.userData.sources=sources; return geometry;
 }
 function _buildingLodCloneWithoutOutlines(source){
@@ -4314,9 +4371,10 @@ function _buildingLodAttach(entry,tier,forced=false){
 }
 function _buildingLodDesired(entry,projectedPx,outside){
   if(entry.forcedTier) return entry.forcedTier; if(outside) return 'culled'; const th=BUILDING_LOD_PROTO.thresholds;
-  if(entry.tier==='full') return projectedPx<th.fullLeave?(projectedPx<th.midLeave?'far':'mid'):'full';
-  if(entry.tier==='mid') return projectedPx>th.fullEnter?'full':projectedPx<th.midLeave?'far':'mid';
-  return projectedPx>th.fullEnter?'full':projectedPx>th.midEnter?'mid':'far';
+  const fullEnter=th.fullEnter*entry.detailScale,fullLeave=th.fullLeave*entry.detailScale;
+  if(entry.tier==='full') return projectedPx<fullLeave?(projectedPx<th.midLeave?'far':'mid'):'full';
+  if(entry.tier==='mid') return projectedPx>fullEnter?'full':projectedPx<th.midLeave?'far':'mid';
+  return projectedPx>fullEnter?'full':projectedPx>th.midEnter?'mid':'far';
 }
 function _updateBuildingLodPrototype(frame,force=false){
   if(!BUILDING_LOD_PROTO.enabled) return; const moved=camera.position.distanceToSquared(BUILDING_LOD_PROTO.lastCameraPos)>2.25,rotated=1-Math.abs(camera.quaternion.dot(BUILDING_LOD_PROTO.lastCameraQuat))>0.0002;
@@ -4356,29 +4414,32 @@ function _initBuildingLodPrototype(){
     const facadeMaterial=new THREE.ShaderMaterial({uniforms:facadeUniforms,vertexShader:`
       #include <common>
       #include <fog_pars_vertex>
-      attribute float aLit; attribute float aJitter; attribute float aActivity; varying float vLit; varying float vJitter; varying float vActivity;
-      void main(){ vLit=aLit; vJitter=aJitter; vActivity=aActivity; vec4 mvPosition=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mvPosition;
+      attribute float aLit; attribute float aJitter; attribute float aActivity; varying float vLit; varying float vJitter; varying float vActivity; varying vec2 vWindowUv;
+      void main(){ vLit=aLit; vJitter=aJitter; vActivity=aActivity; vWindowUv=uv; vec4 mvPosition=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mvPosition;
       #include <fog_vertex>
       }`,
       fragmentShader:`#include <common>
       #include <fog_pars_fragment>
-      uniform float uNight; varying float vLit; varying float vJitter; varying float vActivity;
-      void main(){ vec3 day=vec3(.70,.84,.91); vec3 dim=vec3(.09,.13,.18); vec3 warm=vec3(1.0,.67,.27)*(vJitter*(.72+.28*vActivity)); vec3 night=mix(dim,warm,step(.5,vLit)); gl_FragColor=vec4(mix(day,night,uNight),1.0);
+      uniform float uNight; varying float vLit; varying float vJitter; varying float vActivity; varying vec2 vWindowUv;
+      void main(){ vec3 day=mix(vec3(.58,.77,.87),vec3(.86,.92,.94),vWindowUv.y); vec3 dim=vec3(.09,.13,.18); vec3 warm=vec3(1.0,.67,.27)*(vJitter*(.72+.28*vActivity));
+      vec3 night=mix(dim,warm,step(.5,vLit)); float vx=1.0-smoothstep(.025,.065,abs(vWindowUv.x-.5)); float vy=1.0-smoothstep(.025,.065,abs(vWindowUv.y-.5));
+      float mullion=max(vx,vy); vec3 pane=mix(day,night,uNight); vec3 bar=mix(vec3(.33,.24,.16),vec3(.17,.12,.09),uNight); gl_FragColor=vec4(mix(pane,bar,mullion),1.0);
       #include <fog_fragment>
       }`,
       depthTest:true,depthWrite:true,toneMapped:true,fog:true});
     const silhouetteMaterial=new THREE.ShaderMaterial({uniforms:silhouetteUniforms,vertexShader:`
       #include <common>
       #include <fog_pars_vertex>
-      varying vec3 vColor; void main(){ vColor=color; vec4 mvPosition=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mvPosition;
+      varying vec3 vColor; varying vec3 vViewPos; void main(){ vColor=color; vec4 mvPosition=modelViewMatrix*vec4(position,1.0); vViewPos=mvPosition.xyz; gl_Position=projectionMatrix*mvPosition;
       #include <fog_vertex>
       }`,
       fragmentShader:`#include <common>
       #include <fog_pars_fragment>
-      uniform float uNight; varying vec3 vColor; void main(){ vec3 day=vColor; vec3 night=vColor*.72+vec3(.12,.075,.025); gl_FragColor=vec4(mix(day,night,uNight),1.0);
+      uniform float uNight; varying vec3 vColor; varying vec3 vViewPos; void main(){ vec3 n=cross(dFdx(vViewPos),dFdy(vViewPos)); n/=max(length(n),.0001);
+      float face=dot(abs(n),vec3(.14,.56,.30)); float shade=.68+.38*face; vec3 day=vColor*shade; vec3 night=vColor*(.38+.28*face)+vec3(.12,.075,.025); gl_FragColor=vec4(mix(day,night,uNight),1.0);
       #include <fog_fragment>
       }`,
-      vertexColors:true,depthTest:true,depthWrite:true,toneMapped:true,fog:true});
+      vertexColors:true,depthTest:true,depthWrite:true,toneMapped:true,fog:true,extensions:{derivatives:true}});
     const shadowMaterial=new THREE.MeshBasicMaterial({color:0x000000,colorWrite:false,depthWrite:false,depthTest:false,toneMapped:false});
     const shadowDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking}); shadowDepthMaterial.polygonOffset=true; shadowDepthMaterial.polygonOffsetFactor=2; shadowDepthMaterial.polygonOffsetUnits=2;
     BUILDING_LOD_PROTO.resources={facadeMaterial,silhouetteMaterial,shadowMaterial,shadowDepthMaterial,materials:4,textures:0,geometries:new Set()};
@@ -4386,8 +4447,8 @@ function _initBuildingLodPrototype(){
     for(const repo of REPOS){ if(!BUILDING_LOD_PROTO.supportedKinds.has(repo._lodSpec.kind)||!BUILDING_LOD_PROTO.supportedRoofs.has(repo._lodSpec.roof)){ BUILDING_LOD_PROTO.errors.push({repo:repo.repo,reason:'unsupported-typology',kind:repo._lodSpec.kind,roof:repo._lodSpec.roof}); continue; } try{
       const root=repo._group,box=new THREE.Box3().setFromObject(repo._body); if(repo._roof) box.expandByObject(repo._roof); if(repo._sign) box.expandByObject(repo._sign);
       const worldCenter=box.getCenter(new THREE.Vector3()),localCenter=root.worldToLocal(worldCenter.clone()),radius=box.getSize(new THREE.Vector3()).length()*.5;
-      const facadeGeometry=_buildingLodFacadeGeometry(repo),readabilityGeometry=_buildingLodReadabilityGeometry(repo),silhouetteGeometry=_buildingLodSilhouetteGeometry(repo);
-      BUILDING_LOD_PROTO.resources.geometries.add(facadeGeometry); BUILDING_LOD_PROTO.resources.geometries.add(readabilityGeometry); BUILDING_LOD_PROTO.resources.geometries.add(silhouetteGeometry);
+      const facadeGeometry=_buildingLodFacadeGeometry(repo),readabilityGeometry=_buildingLodReadabilityGeometry(repo),silhouetteGeometry=_buildingLodSilhouetteGeometry(repo,false,false),farVisualGeometry=_buildingLodSilhouetteGeometry(repo,true,true);
+      BUILDING_LOD_PROTO.resources.geometries.add(facadeGeometry); BUILDING_LOD_PROTO.resources.geometries.add(readabilityGeometry); BUILDING_LOD_PROTO.resources.geometries.add(silhouetteGeometry); BUILDING_LOD_PROTO.resources.geometries.add(farVisualGeometry);
       const functional=new THREE.Group(),full=new THREE.Group(),mid=new THREE.Group(),far=new THREE.Group(),active=new THREE.Group();
       functional.name=`BuildingLOD_Functional_${repo.repo}`; full.name=`BuildingLOD_Full_${repo.repo}`; mid.name=`BuildingLOD_Mid_${repo.repo}`; far.name=`BuildingLOD_Far_${repo.repo}`; active.name=`BuildingLOD_Active_${repo.repo}`;
       const originalChildren=root.children.slice(); for(const child of originalChildren) (child.userData.buildingLodActive?active:full).add(child);
@@ -4398,7 +4459,7 @@ function _initBuildingLodPrototype(){
       let midSign=null,midEmblem=null,farSign=null,farEmblem=null;
       if(repo._sign){ midSign=repo._sign.clone(false); midSign.name='BuildingLOD_MidSign'; mid.add(midSign); }
       if(repo._emblem){ midEmblem=repo._emblem.clone(false); midEmblem.name='BuildingLOD_MidEmblem'; mid.add(midEmblem); }
-      const farSilhouette=new THREE.Mesh(silhouetteGeometry,silhouetteMaterial); farSilhouette.name='BuildingLOD_FarSilhouette'; far.add(farSilhouette);
+      const farSilhouette=new THREE.Mesh(farVisualGeometry,silhouetteMaterial); farSilhouette.name='BuildingLOD_FarSilhouette'; far.add(farSilhouette);
       const farFacade=new THREE.Mesh(facadeGeometry,facadeMaterial); farFacade.name='BuildingLOD_FarFacade'; far.add(farFacade);
       if(repo._sign){ farSign=repo._sign.clone(false); farSign.name='BuildingLOD_FarSign'; far.add(farSign); }
       if(repo._emblem){ farEmblem=repo._emblem.clone(false); farEmblem.name='BuildingLOD_FarEmblem'; far.add(farEmblem); }
@@ -4406,7 +4467,8 @@ function _initBuildingLodPrototype(){
       const originalShadowCasters=[]; for(const group of [full,active]) group.traverse(o=>{ if(o.isMesh&&o.castShadow){ originalShadowCasters.push(o); o.castShadow=false; } });
       root.add(functional); const visualIndex=root.children.length; root.add(full); root.add(shadowProxy); root.add(active);
       const entry={repo,root,groups:{full,mid,far},functional,active,shadowProxy,originalChildren,originalShadowCasters,visualIndex,tier:'full',forcedTier:null,pending:null,pendingCount:0,lastSwitchFrame:-999,originalsMode:false,
-        localCenter,radius,worldCenter:new THREE.Vector3(),worldScale:new THREE.Vector3(),projected:new THREE.Vector3(),projectedPx:Infinity,facadeGeometry,readabilityGeometry,silhouetteGeometry,
+        detailScale:(LOW_END||IS_MOBILE)?1:(repo._lodSpec.tier>=4?.82:repo._lodSpec.tier===3?.92:1),localCenter,radius,worldCenter:new THREE.Vector3(),worldScale:new THREE.Vector3(),projected:new THREE.Vector3(),projectedPx:Infinity,
+        facadeGeometry,readabilityGeometry,silhouetteGeometry,farVisualGeometry,
         identity:{originalSign:repo._sign,midSign,farSign,originalEmblem:repo._emblem,midEmblem,farEmblem}};
       repo._lodPrototype=entry; BUILDING_LOD_PROTO.entries.push(entry);
     }catch(error){ BUILDING_LOD_PROTO.errors.push({repo:repo.repo,reason:String(error&&error.message||error)}); } }
@@ -9964,14 +10026,17 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
       batchesVisible:STATIC_INSTANCES.batches.filter(b=>b.visible).length}; };
   window.__staticInstances=(mode)=>{ if(mode==='originals'||mode==='instances') _setStaticInstanceMode(mode,true); return _staticInstanceDebug(); };
   const _buildingLodGroupStats=group=>{ let nodes=0,draws=0,triangles=0; group.traverse(o=>{ nodes++; if(o.isMesh||o.isSprite||o.isPoints||o.isLine){ draws++; const pos=o.geometry?.attributes?.position; if(o.isMesh&&pos) triangles+=o.geometry.index?o.geometry.index.count/3:pos.count/3; } }); return {nodes,draws,triangles:Math.round(triangles)}; };
-  const _buildingLodDebug=()=>({enabled:BUILDING_LOD_PROTO.enabled,updates:BUILDING_LOD_PROTO.updates,switches:BUILDING_LOD_PROTO.switches,flaps:BUILDING_LOD_PROTO.flaps,
-    thresholds:{...BUILDING_LOD_PROTO.thresholds},memory:{bytes:BUILDING_LOD_PROTO.memoryBytes,budget:BUILDING_LOD_PROTO.memoryBudget,geometries:BUILDING_LOD_PROTO.resources?.geometries.size||0,materials:BUILDING_LOD_PROTO.resources?.materials||0,textures:BUILDING_LOD_PROTO.resources?.textures||0},
-    rngBeforeInit:BUILDING_LOD_PROTO.rngBeforeInit??null,rngAfterInit:BUILDING_LOD_PROTO.rngAfterInit??null,contextRestores:BUILDING_LOD_PROTO.contextRestores,errors:BUILDING_LOD_PROTO.errors.slice(),entries:BUILDING_LOD_PROTO.entries.map(e=>({repo:e.repo.repo,kind:e.repo._lodSpec.kind,roof:e.repo._lodSpec.roof,canary:BUILDING_LOD_PROTO.canaries.has(e.repo.repo),sample:BUILDING_LOD_PROTO.samples.has(e.repo.repo),tier:e.tier,forced:e.forcedTier,projectedPx:+e.projectedPx.toFixed(2),rootScale:_debugVec(e.root.scale),
+  const _buildingLodDebug=()=>{ const entryCount=Math.max(1,BUILDING_LOD_PROTO.entries.length),perEntryBytes=Math.ceil(BUILDING_LOD_PROTO.memoryBytes/entryCount); return {enabled:BUILDING_LOD_PROTO.enabled,updates:BUILDING_LOD_PROTO.updates,switches:BUILDING_LOD_PROTO.switches,flaps:BUILDING_LOD_PROTO.flaps,
+    thresholds:{...BUILDING_LOD_PROTO.thresholds},memory:{bytes:BUILDING_LOD_PROTO.memoryBytes,budget:BUILDING_LOD_PROTO.memoryBudget,perEntryBytes,capacityAtBudget:Math.floor(BUILDING_LOD_PROTO.memoryBudget/perEntryBytes),
+      geometries:BUILDING_LOD_PROTO.resources?.geometries.size||0,materials:BUILDING_LOD_PROTO.resources?.materials||0,textures:BUILDING_LOD_PROTO.resources?.textures||0},
+    rngBeforeInit:BUILDING_LOD_PROTO.rngBeforeInit??null,rngAfterInit:BUILDING_LOD_PROTO.rngAfterInit??null,contextRestores:BUILDING_LOD_PROTO.contextRestores,errors:BUILDING_LOD_PROTO.errors.slice(),entries:BUILDING_LOD_PROTO.entries.map(e=>({repo:e.repo.repo,kind:e.repo._lodSpec.kind,roof:e.repo._lodSpec.roof,canary:BUILDING_LOD_PROTO.canaries.has(e.repo.repo),sample:BUILDING_LOD_PROTO.samples.has(e.repo.repo),tier:e.tier,forced:e.forcedTier,detailScale:e.detailScale,projectedPx:+e.projectedPx.toFixed(2),rootScale:_debugVec(e.root.scale),
       windows:{count:e.repo._windows.length,lit:e.repo._windows.filter(w=>w.userData.lit).length,facadeLit:Array.from(e.facadeGeometry.attributes.aLit.array).reduce((sum,value)=>sum+value,0)/6,night:BUILDING_LOD_NIGHT.value},
+      parcel:{radius:e.repo._lodSpec.yardRadius,ringOuter:e.repo._ring.geometry.parameters.outerRadius,glowRadius:e.repo._glowPool.geometry.parameters.radius},
       readability:{bytes:_buildingLodGeometryBytes(e.readabilityGeometry),sources:e.readabilityGeometry.userData.sources.slice()},
+      farVisual:{bytes:_buildingLodGeometryBytes(e.farVisualGeometry),sources:e.farVisualGeometry.userData.sources.slice()},shadowSources:e.silhouetteGeometry.userData.sources.slice(),
       identity:{midSign:e.identity.midSign?.material.map===e.identity.originalSign?.material.map,farSign:e.identity.farSign?.material.map===e.identity.originalSign?.material.map,
         midEmblem:e.identity.midEmblem?.material.map===e.identity.originalEmblem?.material.map,farEmblem:e.identity.farEmblem?.material.map===e.identity.originalEmblem?.material.map},
-      full:_buildingLodGroupStats(e.groups.full),mid:_buildingLodGroupStats(e.groups.mid),far:_buildingLodGroupStats(e.groups.far),active:_buildingLodGroupStats(e.active),shadow:_buildingLodGroupStats(e.shadowProxy)}))});
+      full:_buildingLodGroupStats(e.groups.full),mid:_buildingLodGroupStats(e.groups.mid),far:_buildingLodGroupStats(e.groups.far),active:_buildingLodGroupStats(e.active),shadow:_buildingLodGroupStats(e.shadowProxy)}))}; };
   window.__buildingLodPrototype=()=>_buildingLodDebug();
   window.__buildingLodPrototypeForce=(name,tier='auto')=>{ const entry=BUILDING_LOD_PROTO.entries.find(e=>e.repo.repo===name); if(!entry) return null;
     entry.forcedTier=tier==='auto'?null:tier; if(entry.forcedTier) _buildingLodAttach(entry,entry.forcedTier,true); else _updateBuildingLodPrototype(renderedFrame,true); return _buildingLodDebug(); };
