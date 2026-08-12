@@ -660,6 +660,7 @@
   #introLaunch { margin: -5px auto 20px; padding: 12px; border: 1px solid rgba(255,255,255,.46); border-radius: 16px;
     background: rgba(35,73,73,.16); box-shadow: 0 8px 22px rgba(41,45,35,.12); }
   #introLaunch .launchLabel { margin-bottom: 8px; font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+  #introLaunch.ready { background: rgba(25,63,60,.25); }
   #introLaunchForm { display: flex; gap: 7px; align-items: stretch; }
   #introLaunchForm .at { display: grid; place-items: center; flex: 0 0 35px; border-radius: 10px;
     background: rgba(255,255,255,.22); font-size: 15px; font-weight: 900; }
@@ -669,6 +670,13 @@
   #introLaunchGo { flex: 0 0 auto; border: 0; border-radius: 10px; padding: 10px 13px; background: #234d49; color: #fff;
     font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
   #introLaunch .launchHint { margin-top: 7px; font-size: 10.5px; color: rgba(255,255,255,.82); }
+  #introPublicProof { display: grid; gap: 7px; text-align: center; }
+  #introPublicProof[hidden], #introLaunchForm[hidden], #introLaunchHint[hidden] { display: none; }
+  .introProofStats { color: #fff; font-size: 14px; font-weight: 800; line-height: 1.4; }
+  .introProofTop { min-width: 0; overflow: hidden; color: rgba(255,255,255,.84); font-size: 11px;
+    line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+  #introTryAnother { justify-self: center; min-height: 36px; border: 1px solid rgba(255,255,255,.48); border-radius: 10px;
+    padding: 7px 12px; background: rgba(255,255,255,.14); color: #fff; font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
   #introLaunchErr { min-height: 0; margin-top: 6px; color: #fff2ce; font-size: 11px; font-weight: 700; }
   #introLaunchErr:empty { display: none; }
   #startBtn { background: #fff; color: #c2702f; border: none; border-radius: 14px; padding: 14px 40px;
@@ -1126,7 +1134,12 @@
         <input id="introUser" data-i18n-ph="introUserPh" placeholder="GitHub username" autocomplete="username" spellcheck="false" />
         <button id="introLaunchGo" type="submit" data-i18n="introLaunchGo">내 마을 만들기 →</button>
       </form>
-      <div class="launchHint" data-i18n="introLaunchHint">공개 레포만 사용 · 로그인 없음 · 포크 없음</div>
+      <div id="introPublicProof" hidden role="status" aria-live="polite">
+        <div class="introProofStats" id="introProofStats"></div>
+        <div class="introProofTop" id="introProofTop"></div>
+        <button id="introTryAnother" type="button" data-i18n="introTryAnother">↻ 다른 GitHub 계정 보기</button>
+      </div>
+      <div class="launchHint" id="introLaunchHint" data-i18n="introLaunchHint">공개 레포만 사용 · 로그인 없음 · 포크 없음</div>
       <div id="introLaunchErr" role="alert"></div>
     </div>
     <div class="ctrls">
@@ -1203,6 +1216,7 @@ import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstr
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
+import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1452,6 +1466,8 @@ const I18N = {
     introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
     introLaunchLabel:'내 공개 레포로 바로 보기', introUserPh:'GitHub username', introLaunchGo:'내 마을 만들기 →',
     introLaunchHint:'공개 레포만 사용 · 로그인 없음 · 포크 없음', introLaunchInvalid:'올바른 GitHub username을 입력해 주세요.',
+    introReady:'@{user}의 마을이 준비됐어요', introProofStats:'공개 레포 {count}개 · ★ {stars} · 사용 언어 {languages}개',
+    introProofTop:'대표 집 · {repos}', introTryAnother:'↻ 다른 GitHub 계정 보기', enterTownPublic:'이 마을 입장 →',
     starNudge:'이 마을이 마음에 드셨나요? Repolis는 오픈소스예요.', starNudgeGo:'⭐ GitHub에서 Star',
     privacyNote:'익명 집계 통계만 측정해요 · 개인정보·계정·검색어는 저장하지 않아요.',
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
@@ -1656,6 +1672,8 @@ const I18N = {
     introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
     introLaunchLabel:'See the same engine with your public repos', introUserPh:'GitHub username', introLaunchGo:'Build my town →',
     introLaunchHint:'Public repos only · no login · no fork', introLaunchInvalid:'Enter a valid GitHub username.',
+    introReady:"@{user}'s town is ready", introProofStats:'{count} public repos · ★ {stars} · {languages} languages',
+    introProofTop:'Featured houses · {repos}', introTryAnother:'↻ Try another GitHub account', enterTownPublic:'Enter this town →',
     starNudge:'Enjoying the town? Repolis is open source.', starNudgeGo:'⭐ Star on GitHub',
     privacyNote:'Anonymous, aggregate stats only — no personal data, accounts, or search queries are stored.',
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
@@ -1802,6 +1820,7 @@ function applyLang(){
   if(typeof renderStarTrailHud==='function') renderStarTrailHud();
   if(typeof renderLanternWatchHud==='function') renderLanternWatchHud();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
+  if(typeof window.__publicIntroRefresh==='function') window.__publicIntroRefresh();
   if(typeof refreshDistrictSigns==='function') refreshDistrictSigns();
   if(typeof refreshHubSigns==='function') refreshHubSigns();
   if(typeof refreshResidentTags==='function') refreshResidentTags();
@@ -8039,7 +8058,30 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
   setTimeout(()=>{ try{ openRepoFromHash(); }catch(e){} }, 480); };
-(function(){ const form=document.getElementById('introLaunchForm'), input=document.getElementById('introUser'), err=document.getElementById('introLaunchErr');
+const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introLaunch.querySelector('.launchLabel'),
+  introLaunchForm=document.getElementById('introLaunchForm'),introLaunchHint=document.getElementById('introLaunchHint'),
+  introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
+  introProofTop=document.getElementById('introProofTop'),introTryAnother=document.getElementById('introTryAnother'),
+  introStartBtn=document.getElementById('startBtn');
+let introChoosingAnother=false;
+function publicIntroSummary(){ return summarizePublicTown(currentUser,REPOS); }
+function introProofNumber(value){ try{ return new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US').format(value); }catch(e){ return String(value); } }
+function renderPublicIntro(){
+  const summary=publicIntroSummary(),ready=cityMode==='public'&&!cityError&&summary.count>0&&!introChoosingAnother;
+  introLaunch.classList.toggle('ready',ready); introPublicProof.hidden=!ready; introLaunchForm.hidden=ready; introLaunchHint.hidden=ready;
+  if(ready){
+    introLaunchLabel.textContent=tf('introReady',{user:summary.user});
+    introProofStats.textContent=tf('introProofStats',{count:introProofNumber(summary.count),stars:introProofNumber(summary.stars),languages:introProofNumber(summary.languages)});
+    const featured=summary.topRepos.join(' · '); introProofTop.textContent=tf('introProofTop',{repos:featured}); introProofTop.title=featured;
+    introStartBtn.textContent=t('enterTownPublic');
+  }else{
+    introLaunchLabel.textContent=t('introLaunchLabel'); introStartBtn.textContent=t('enterTown');
+  }
+  return {ready,choosingAnother:introChoosingAnother,summary};
+}
+window.__publicIntroRefresh=renderPublicIntro;
+introTryAnother.onclick=()=>{ introChoosingAnother=true; renderPublicIntro(); const input=document.getElementById('introUser'); input.value=''; setTimeout(()=>input.focus(),0); };
+(function(){ const form=introLaunchForm, input=document.getElementById('introUser'), err=document.getElementById('introLaunchErr');
   if(!form||!input) return; if(cityMode==='public') input.value=currentUser;
   if(new URLSearchParams(location.search).has('launch')) setTimeout(()=>input.focus(),80);
   input.addEventListener('keydown',e=>e.stopPropagation());
@@ -8047,7 +8089,7 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
     if(!GH_LOGIN_RE.test(user)){ if(err) err.textContent=t('introLaunchInvalid'); track('intro_launch_invalid'); input.focus(); return; }
     if(err) err.textContent=''; track('intro_personal_preview',{targetUser:user});
     const url=location.origin+location.pathname+(user.toLowerCase()===OWNER.toLowerCase()?'':'?user='+encodeURIComponent(user));
-    location.href=url; }; })();
+    location.href=url; }; renderPublicIntro(); })();
 (function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
     document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
@@ -9932,6 +9974,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__postcardPixels=()=>_postcardPixelStats();
   window.__postcardPortal=()=>_postcardReadmePortal();
   window.__postcardCopyReadme=()=>copyPostcardReadme();
+  window.__introProof=()=>renderPublicIntro();
   window.__postcardClose=()=>{ closePostcardStudio(); return _postcardDebugState(); };
   window.__postcardKiosk=()=>POSTCARD_KIOSK?({position:_debugVec(POSTCARD_KIOSK._pos),near:!!nearPostcardKiosk,
     distance:+player.position.distanceTo(POSTCARD_KIOSK._pos).toFixed(2),colliders:0}):null;

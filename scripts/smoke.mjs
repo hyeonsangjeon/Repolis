@@ -25,6 +25,7 @@ import {
 } from '../assets/camera-obstruction.js';
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from '../assets/canal-ferry.js';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from '../assets/rain-garden.js';
+import { summarizePublicTown } from '../assets/public-town-proof.js';
 import {
   POSTCARD_FORMATS,
   createTownPostcardIdentity,
@@ -53,6 +54,7 @@ const REFRESH_WORKFLOW = readFileSync(join(ROOT, '.github/workflows/refresh.yml'
 const REPO_BUILDER = readFileSync(join(ROOT, 'scripts/build_repos.py'), 'utf8');
 const CAMERA_MATH_SRC = readFileSync(join(ROOT, 'assets/camera-obstruction.js'), 'utf8');
 const POSTCARD_SRC = readFileSync(join(ROOT, 'assets/town-postcard.js'), 'utf8');
+const PUBLIC_TOWN_PROOF_SRC = readFileSync(join(ROOT, 'assets/public-town-proof.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -126,6 +128,28 @@ ok(/id="introLaunchForm"/.test(HTML) && /id="introUser"/.test(HTML) && /data-i18
 ok(/form\.onsubmit=e=>[\s\S]*?GH_LOGIN_RE\.test\(user\)[\s\S]*?\?user='\+encodeURIComponent\(user\)/.test(HTML), 'launchpad validates a GitHub login and reuses the established public-town URL');
 ok(/new URLSearchParams\(location\.search\)\.has\('launch'\)/.test(HTML), '?launch=1 focuses the personal preview field');
 ok((HTML.match(/introLaunchLabel:/g)||[]).length===2 && (HTML.match(/introLaunchInvalid:/g)||[]).length===2, 'launchpad labels and errors are bilingual');
+const townProof = summarizePublicTown('Octo-Cat', [
+  { repo:'beacon', lang:'Rust', stars:3, forks:4 },
+  { repo:'atlas', lang:'JavaScript', stars:9, forks:1 },
+  { repo:'canopy', lang:'JavaScript', stars:9, forks:2 }
+]);
+ok(townProof.user==='Octo-Cat' && townProof.count===3 && townProof.stars===21 && townProof.languages===2
+  && townProof.topRepos.join(',')==='canopy,atlas,beacon', 'personal-town proof truthfully summarizes loaded public metadata and ranks featured houses deterministically');
+ok(/id="introPublicProof" hidden role="status" aria-live="polite"/.test(HTML)
+  && /id="introTryAnother" type="button" data-i18n="introTryAnother"/.test(HTML)
+  && /function renderPublicIntro\(\)/.test(HTML) && /introLaunchForm\.hidden=ready/.test(HTML)
+  && /introPublicProof\.hidden=!ready/.test(HTML), 'a completed public town replaces the duplicate username form with an accessible proof state');
+ok(/introProofStats\.textContent=tf\('introProofStats'/.test(HTML)
+  && /new Intl\.NumberFormat\(LANG==='ko'\?'ko-KR':'en-US'\)/.test(HTML)
+  && /introProofTop\.textContent=tf\('introProofTop'/.test(HTML)
+  && !/introProofTop\.innerHTML/.test(HTML), 'untrusted GitHub names enter the first-screen proof through textContent only');
+ok((HTML.match(/introReady:/g)||[]).length===2 && (HTML.match(/introProofStats:/g)||[]).length===2
+  && (HTML.match(/enterTownPublic:/g)||[]).length===2
+  && /window\.__publicIntroRefresh=renderPublicIntro/.test(HTML)
+  && /window\.__introProof=\(\)=>renderPublicIntro\(\)/.test(HTML), 'the personalized ready state is bilingual, language-refreshable, and diagnosable');
+ok(/#introPublicProof\[hidden\], #introLaunchForm\[hidden\], #introLaunchHint\[hidden\] \{ display: none; \}/.test(HTML)
+  && /\.introProofTop \{[^}]*overflow: hidden[^}]*text-overflow: ellipsis[^}]*white-space: nowrap/.test(HTML), 'the replacement state stays compact and clips long repository names on mobile');
+ok(!/innerHTML/.test(PUBLIC_TOWN_PROOF_SRC) && /Object\.freeze\(topRepos\)/.test(PUBLIC_TOWN_PROOF_SRC), 'the pure proof helper is immutable and has no DOM injection surface');
 function launchConfig(hostname) {
   const sandbox = { window: {}, location: { hostname } };
   runInNewContext(LAUNCH_CONFIG_SRC, sandbox);
