@@ -28,6 +28,7 @@ import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } f
 import {
   POSTCARD_FORMATS,
   createTownPostcardIdentity,
+  createTownReadmePortal,
   summarizeTownRepos,
   postcardFormatForViewport,
   postcardCaptureSize,
@@ -217,6 +218,14 @@ ok(JSON.stringify(postcardIdentity) === JSON.stringify(postcardIdentityReordered
 ok(postcardIdentity.palette.name === postcardIdentityChanged.palette.name
   && postcardIdentity.hash !== postcardIdentityChanged.hash && postcardIdentity.letters === 'OC',
   'username fixes the recognizable palette while public repository metadata personalizes the seal');
+const readmePortal = createTownReadmePortal('Octo-Cat', 'https://example.github.io/town/index.html?preview=1');
+ok(readmePortal.townUrl === 'https://example.github.io/town/?user=octo-cat&ref=profile-readme'
+  && readmePortal.bannerUrl === 'https://example.github.io/town/assets/banner.svg'
+  && readmePortal.html.includes('width="600"') && readmePortal.html.includes("Walk @octo-cat's GitHub town in Repolis"),
+  'the profile README portal is a stable personalized link with a bounded self-hostable banner');
+let invalidPortalRejected = false;
+try { createTownReadmePortal('not/a/login'); } catch (error) { invalidPortalRejected = error instanceof TypeError; }
+ok(invalidPortalRejected, 'the README portal rejects values outside the GitHub login grammar');
 const postcardLanguageSummary = summarizeTownRepos(postcardRepos);
 const postcardRepoSummary = summarizeTownRepos(postcardRepos.map(repo => ({ ...repo, lang: 'Other' })));
 ok(postcardLanguageSummary.type === 'languages' && postcardLanguageSummary.items[0].name === 'JavaScript'
@@ -283,6 +292,10 @@ ok(/navigator\.canShare\(\{files:\[file\]\}\)/.test(postcardBlock)
   && /URL\.createObjectURL\(POSTCARD\.blob\)/.test(postcardBlock)
   && /navigator\.clipboard&&navigator\.clipboard\.writeText/.test(postcardBlock),
   'native PNG file sharing includes the exact URL with download and copy-link fallbacks');
+ok(/id="postcardReadme"/.test(HTML) && /createTownReadmePortal\(currentUser,_postcardPublishedBase\(\)\)/.test(postcardBlock)
+  && /track\('share_click',\{channel:'profile_readme',ok\}\)/.test(postcardBlock)
+  && /maybeStarNudge\('profile_readme'\)/.test(postcardBlock),
+  'the postcard studio copies a persistent profile portal and schedules its earned star invitation');
 ok(/postcardCaptureBlank/.test(postcardBlock) && /postcardCaptureContext/.test(postcardBlock)
   && /postcardCaptureSecurity/.test(postcardBlock) && /forceBlank/.test(postcardBlock)
   && /forceFallback/.test(postcardBlock),
@@ -296,11 +309,14 @@ ok(/if\(ride\|\|ferris\|\|carousel\|\|canalFerryRide\|\|performance\.now\(\)<rid
 ok(!/track\('postcard_[^']+',\{[^}]*?(?:url|blob|image)/.test(postcardBlock),
   'postcard-specific analytics payloads stay bounded and omit URL, blob, and image data');
 ok((HTML.match(/postcardTitle:/g) || []).length === 2 && (HTML.match(/postcardPrivacy:/g) || []).length === 2
+  && (HTML.match(/postcardReadmeCopied:/g) || []).length === 2
   && (HTML.match(/postcardCaptureBlank:/g) || []).length === 2 && /@media \(max-width: 520px\)[\s\S]*?\.postcardActions \{ grid-template-columns: 1fr 1fr/.test(HTML)
-  && /\.postcardActions button \{ min-height: 46px/.test(HTML) && /\.postcardClose \{[^}]*width: 44px; height: 44px/.test(HTML),
+  && /\.postcardActions button \{ min-height: 46px/.test(HTML) && /\.postcardActions \.readme \{ grid-column: 1 \/ -1/.test(HTML)
+  && /\.postcardClose \{[^}]*width: 44px; height: 44px/.test(HTML),
   'KO/EN states and 44px-plus responsive controls remain legible at 390×844');
 ok(/window\.__postcardOpen=/.test(HTML) && /window\.__postcardRetake=/.test(HTML)
   && /window\.__postcardFallback=/.test(HTML) && /window\.__postcardPixels=/.test(HTML)
+  && /window\.__postcardPortal=/.test(HTML) && /window\.__postcardCopyReadme=/.test(HTML)
   && /window\.__postcardKiosk=/.test(HTML) && /activeTargets:POSTCARD\.activeTargets/.test(HTML)
   && /stateRestored:POSTCARD\.stateRestored/.test(HTML),
   'bounded diagnostics cover open/render/blank/fallback/pixels/kiosk and resource lifetime');

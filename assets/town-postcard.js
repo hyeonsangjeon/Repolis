@@ -12,6 +12,31 @@ export const POSTCARD_FORMATS = Object.freeze({
   portrait: Object.freeze({ id: 'portrait', width: 1200, height: 1500, bandTop: 930 })
 });
 
+const GITHUB_LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
+const DEFAULT_PORTAL_BASE = 'https://hyeonsangjeon.github.io/Repolis/';
+
+export function createTownReadmePortal(user, baseUrl = DEFAULT_PORTAL_BASE) {
+  const login = String(user || '').trim().toLowerCase();
+  if (!GITHUB_LOGIN.test(login)) throw new TypeError('invalid-github-login');
+
+  let root;
+  try { root = new URL(String(baseUrl || DEFAULT_PORTAL_BASE)); }
+  catch (error) { root = new URL(DEFAULT_PORTAL_BASE); }
+  if (!/^https?:$/.test(root.protocol)) root = new URL(DEFAULT_PORTAL_BASE);
+  root.search = '';
+  root.hash = '';
+  if (root.pathname.endsWith('/index.html')) root.pathname = root.pathname.slice(0, -10);
+  else if (!root.pathname.endsWith('/')) root.pathname += '/';
+
+  const town = new URL(root.href);
+  town.searchParams.set('user', login);
+  town.searchParams.set('ref', 'profile-readme');
+  const banner = new URL('assets/banner.svg', root);
+  const alt = `Walk @${login}'s GitHub town in Repolis`;
+  const html = `<a href="${town.href}"><img src="${banner.href}" alt="${alt}" width="600"></a>`;
+  return Object.freeze({ login, townUrl: town.href, bannerUrl: banner.href, alt, html });
+}
+
 export function hashPostcardSeed(value) {
   const text = String(value || '');
   let hash = 2166136261;
