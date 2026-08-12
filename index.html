@@ -675,8 +675,16 @@
   .introProofStats { color: #fff; font-size: 14px; font-weight: 800; line-height: 1.4; }
   .introProofTop { min-width: 0; overflow: hidden; color: rgba(255,255,255,.84); font-size: 11px;
     line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
-  #introTryAnother { justify-self: center; min-height: 36px; border: 1px solid rgba(255,255,255,.48); border-radius: 10px;
-    padding: 7px 12px; background: rgba(255,255,255,.14); color: #fff; font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
+  .introProofActions { display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; }
+  .introProofActions button { flex: 1 1 150px; min-height: 38px; border-radius: 10px; padding: 7px 10px;
+    color: #fff; font: inherit; font-size: 11.5px; line-height: 1.25; font-weight: 800; cursor: pointer; }
+  #introPinProfile { border: 1px solid rgba(255,255,255,.7); background: #24292f; }
+  #introPinProfile:disabled { cursor: wait; opacity: .58; }
+  #introTryAnother { border: 1px solid rgba(255,255,255,.48); background: rgba(255,255,255,.14); }
+  #introProfileStatus { min-height: 0; color: rgba(255,255,255,.86); font-size: 10.5px; line-height: 1.35; }
+  #introProfileStatus:empty { display: none; }
+  #introProfileStatus[data-tone="success"] { color: #e5ffe9; }
+  #introProfileStatus[data-tone="error"] { color: #fff2ce; }
   #introLaunchErr { min-height: 0; margin-top: 6px; color: #fff2ce; font-size: 11px; font-weight: 700; }
   #introLaunchErr:empty { display: none; }
   #startBtn { background: #fff; color: #c2702f; border: none; border-radius: 14px; padding: 14px 40px;
@@ -1137,7 +1145,11 @@
       <div id="introPublicProof" hidden role="status" aria-live="polite">
         <div class="introProofStats" id="introProofStats"></div>
         <div class="introProofTop" id="introProofTop"></div>
-        <button id="introTryAnother" type="button" data-i18n="introTryAnother">↻ 다른 GitHub 계정 보기</button>
+        <div class="introProofActions">
+          <button id="introPinProfile" type="button" data-i18n="introPinProfile">GitHub 프로필에 마을 붙이기</button>
+          <button id="introTryAnother" type="button" data-i18n="introTryAnother">↻ 다른 GitHub 계정 보기</button>
+        </div>
+        <div id="introProfileStatus"></div>
       </div>
       <div class="launchHint" id="introLaunchHint" data-i18n="introLaunchHint">공개 레포만 사용 · 로그인 없음 · 포크 없음</div>
       <div id="introLaunchErr" role="alert"></div>
@@ -1467,7 +1479,9 @@ const I18N = {
     introLaunchLabel:'내 공개 레포로 바로 보기', introUserPh:'GitHub username', introLaunchGo:'내 마을 만들기 →',
     introLaunchHint:'공개 레포만 사용 · 로그인 없음 · 포크 없음', introLaunchInvalid:'올바른 GitHub username을 입력해 주세요.',
     introReady:'@{user}의 마을이 준비됐어요', introProofStats:'공개 레포 {count}개 · ★ {stars} · 사용 언어 {languages}개',
-    introProofTop:'대표 집 · {repos}', introTryAnother:'↻ 다른 GitHub 계정 보기', enterTownPublic:'이 마을 입장 →',
+    introProofTop:'대표 집 · {repos}', introPinProfile:'GitHub 프로필에 마을 붙이기', introTryAnother:'↻ 다른 GitHub 계정 보기', enterTownPublic:'이 마을 입장 →',
+    introProfileCopied:'프로필 README 코드를 복사했어요. 붙여 넣으면 이 마을로 바로 연결돼요.',
+    introProfileCopyFailed:'복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
     starNudge:'이 마을이 마음에 드셨나요? Repolis는 오픈소스예요.', starNudgeGo:'⭐ GitHub에서 Star',
     privacyNote:'익명 집계 통계만 측정해요 · 개인정보·계정·검색어는 저장하지 않아요.',
     ctrlWalk:'걷기', ctrlLookL:'시점 회전(자유 시점)', ctrlAimR:'캐릭터 조준 · WoW식 · 휠 줌', ctrlOpen:'레포 열기',
@@ -1673,7 +1687,9 @@ const I18N = {
     introLaunchLabel:'See the same engine with your public repos', introUserPh:'GitHub username', introLaunchGo:'Build my town →',
     introLaunchHint:'Public repos only · no login · no fork', introLaunchInvalid:'Enter a valid GitHub username.',
     introReady:"@{user}'s town is ready", introProofStats:'{count} public repos · ★ {stars} · {languages} languages',
-    introProofTop:'Featured houses · {repos}', introTryAnother:'↻ Try another GitHub account', enterTownPublic:'Enter this town →',
+    introProofTop:'Featured houses · {repos}', introPinProfile:'Put this town on my GitHub profile', introTryAnother:'↻ Try another GitHub account', enterTownPublic:'Enter this town →',
+    introProfileCopied:'Profile README code copied. Paste it to link straight to this town.',
+    introProfileCopyFailed:'Could not copy the code. Check this browser\'s clipboard permission.',
     starNudge:'Enjoying the town? Repolis is open source.', starNudgeGo:'⭐ Star on GitHub',
     privacyNote:'Anonymous, aggregate stats only — no personal data, accounts, or search queries are stored.',
     ctrlWalk:'Walk', ctrlLookL:'Orbit camera (free look)', ctrlAimR:'Steer character · WoW-style · wheel = zoom', ctrlOpen:'Open repo',
@@ -8052,8 +8068,11 @@ function flushStarNudge(){ if(!_starNudgePending) return; const reason=_starNudg
   if(go) go.onclick=()=>{ track('project_star_click'); _starNudgeClose('clicked'); }; })();
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
   track('town_enter', { returning: !!VISITOR.returning });
-  if(cityMode==='public') setTimeout(()=>{ try{ maybeStarNudge('personal_town'); }catch(e){} }, 14000);   // only after they have actually walked their own town
-  const rb=VISITOR.returning, news=hasFreshness(); if(rb){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} }, 850); }   // welcome a familiar face back before Gazette / Chronicle
+  const rb=VISITOR.returning, news=hasFreshness();
+  if(cityMode==='public'){
+    if(!rb) setTimeout(()=>{ try{ showWave(tf('arrived',{user:currentUser}),3600); }catch(e){} },850);
+    setTimeout(()=>{ try{ maybeStarNudge('personal_town'); }catch(e){} },14000); }   // only after they have actually walked their own town
+  if(rb){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} },850); }   // welcome a familiar face back before Gazette / Chronicle
   try{ if(REPOS.length){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
@@ -8061,11 +8080,16 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
 const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introLaunch.querySelector('.launchLabel'),
   introLaunchForm=document.getElementById('introLaunchForm'),introLaunchHint=document.getElementById('introLaunchHint'),
   introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
-  introProofTop=document.getElementById('introProofTop'),introTryAnother=document.getElementById('introTryAnother'),
+  introProofTop=document.getElementById('introProofTop'),introPinProfile=document.getElementById('introPinProfile'),
+  introTryAnother=document.getElementById('introTryAnother'),introProfileStatus=document.getElementById('introProfileStatus'),
   introStartBtn=document.getElementById('startBtn');
-let introChoosingAnother=false;
+let introChoosingAnother=false,introProfileResult=null;
 function publicIntroSummary(){ return summarizePublicTown(currentUser,REPOS); }
 function introProofNumber(value){ try{ return new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US').format(value); }catch(e){ return String(value); } }
+function renderIntroProfileStatus(){
+  introProfileStatus.textContent=introProfileResult?t(introProfileResult.key):'';
+  introProfileStatus.dataset.tone=introProfileResult?.tone||'';
+}
 function renderPublicIntro(){
   const summary=publicIntroSummary(),ready=cityMode==='public'&&!cityError&&summary.count>0&&!introChoosingAnother;
   introLaunch.classList.toggle('ready',ready); introPublicProof.hidden=!ready; introLaunchForm.hidden=ready; introLaunchHint.hidden=ready;
@@ -8075,12 +8099,20 @@ function renderPublicIntro(){
     const featured=summary.topRepos.join(' · '); introProofTop.textContent=tf('introProofTop',{repos:featured}); introProofTop.title=featured;
     introStartBtn.textContent=t('enterTownPublic');
   }else{
-    introLaunchLabel.textContent=t('introLaunchLabel'); introStartBtn.textContent=t('enterTown');
+    introProfileResult=null; introLaunchLabel.textContent=t('introLaunchLabel'); introStartBtn.textContent=t('enterTown');
   }
+  renderIntroProfileStatus();
   return {ready,choosingAnother:introChoosingAnother,summary};
 }
+async function copyIntroProfileReadme(){
+  introPinProfile.disabled=true; let ok=false;
+  try{ ok=await _copyPostcardText(_postcardReadmePortal().html); }catch(e){ ok=false; }
+  introPinProfile.disabled=false; introProfileResult={key:ok?'introProfileCopied':'introProfileCopyFailed',tone:ok?'success':'error'};
+  renderIntroProfileStatus(); track('share_click',{channel:'intro_profile_readme',ok}); return ok;
+}
 window.__publicIntroRefresh=renderPublicIntro;
-introTryAnother.onclick=()=>{ introChoosingAnother=true; renderPublicIntro(); const input=document.getElementById('introUser'); input.value=''; setTimeout(()=>input.focus(),0); };
+introPinProfile.onclick=copyIntroProfileReadme;
+introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null; renderPublicIntro(); const input=document.getElementById('introUser'); input.value=''; setTimeout(()=>input.focus(),0); };
 (function(){ const form=introLaunchForm, input=document.getElementById('introUser'), err=document.getElementById('introLaunchErr');
   if(!form||!input) return; if(cityMode==='public') input.value=currentUser;
   if(new URLSearchParams(location.search).has('launch')) setTimeout(()=>input.focus(),80);
@@ -8206,7 +8238,6 @@ document.getElementById('loading').style.display='none';
     const ms=document.getElementById('modeSel'); if(ms){ ms.value='local'; ms.style.display='none'; } }
   else townLabel.style.display='none';
   if(effErr){ showCityError(); }
-  else if(cityMode==='public' && REPOS.length){ setTimeout(()=>{ try{ showWave(tf('arrived',{user:currentUser}),3600); }catch(e){} }, 1200); }
   setTimeout(()=>track('session_10s'),10000);
   setTimeout(()=>track('session_60s'),60000);
 })();
@@ -9975,6 +10006,8 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__postcardPortal=()=>_postcardReadmePortal();
   window.__postcardCopyReadme=()=>copyPostcardReadme();
   window.__introProof=()=>renderPublicIntro();
+  window.__introProfilePortal=()=>({portal:_postcardReadmePortal(),result:introProfileResult?{...introProfileResult}:null});
+  window.__introCopyProfile=()=>copyIntroProfileReadme();
   window.__postcardClose=()=>{ closePostcardStudio(); return _postcardDebugState(); };
   window.__postcardKiosk=()=>POSTCARD_KIOSK?({position:_debugVec(POSTCARD_KIOSK._pos),near:!!nearPostcardKiosk,
     distance:+player.position.distanceTo(POSTCARD_KIOSK._pos).toFixed(2),colliders:0}):null;

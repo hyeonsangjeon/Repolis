@@ -150,6 +150,22 @@ ok((HTML.match(/introReady:/g)||[]).length===2 && (HTML.match(/introProofStats:/
 ok(/#introPublicProof\[hidden\], #introLaunchForm\[hidden\], #introLaunchHint\[hidden\] \{ display: none; \}/.test(HTML)
   && /\.introProofTop \{[^}]*overflow: hidden[^}]*text-overflow: ellipsis[^}]*white-space: nowrap/.test(HTML), 'the replacement state stays compact and clips long repository names on mobile');
 ok(!/innerHTML/.test(PUBLIC_TOWN_PROOF_SRC) && /Object\.freeze\(topRepos\)/.test(PUBLIC_TOWN_PROOF_SRC), 'the pure proof helper is immutable and has no DOM injection surface');
+const introProfileBlock = (HTML.match(/async function copyIntroProfileReadme\(\)\{[\s\S]*?\n\}/) || [''])[0];
+ok(/class="introProofActions"/.test(HTML) && /id="introPinProfile" type="button" data-i18n="introPinProfile"/.test(HTML)
+  && /id="introProfileStatus"/.test(HTML), 'the ready state exposes one profile-portal command with inline result feedback');
+ok(/_copyPostcardText\(_postcardReadmePortal\(\)\.html\)/.test(introProfileBlock)
+  && /track\('share_click',\{channel:'intro_profile_readme',ok\}\)/.test(introProfileBlock)
+  && !/fetch\(|targetUser|currentUser/.test(introProfileBlock), 'the first-screen portal reuses the local bounded helper and tracks no GitHub identity');
+ok(/introProfileStatus\.textContent=introProfileResult\?t\(introProfileResult\.key\):''/.test(HTML)
+  && (HTML.match(/introPinProfile:'/g)||[]).length===2 && (HTML.match(/introProfileCopied:/g)||[]).length===2
+  && /window\.__introCopyProfile=\(\)=>copyIntroProfileReadme\(\)/.test(HTML), 'copy feedback is text-only, bilingual, language-refreshable, and browser-diagnosable');
+ok(/\.introProofActions \{[^}]*display: flex[^}]*flex-wrap: wrap/.test(HTML)
+  && /\.introProofActions button \{[^}]*flex: 1 1 150px[^}]*min-height: 38px/.test(HTML), 'the two ready-state actions stay stable and wrap instead of overflowing on mobile');
+ok(/document\.getElementById\('startBtn'\)\.onclick=[\s\S]*?showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/.test(HTML)
+  && /if\(!rb\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
+  && (HTML.match(/showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/g)||[]).length===1,
+  'a public-town arrival toast waits for actual entry and cannot cover the first-screen proof');
+ok(/Put this town on my GitHub profile/.test(README_EN) && /GitHub 프로필에 마을 붙이기/.test(README_KO), 'EN/KO adoption tables surface the same profile portal at the moment the preview is ready');
 function launchConfig(hostname) {
   const sandbox = { window: {}, location: { hostname } };
   runInNewContext(LAUNCH_CONFIG_SRC, sandbox);
@@ -187,7 +203,7 @@ group('star funnel — earned invitation + the events that show where visitors d
 ok(/id="starNudge"/.test(HTML) && /id="starNudgeGo"/.test(HTML) && /id="starNudgeX"/.test(HTML), 'the town carries a dismissible star invitation with its own close control');
 ok((HTML.match(/starNudge:'/g)||[]).length===2 && (HTML.match(/starNudgeGo:'/g)||[]).length===2, 'the invitation copy is bilingual');
 ok(/if\(passport\.repos\.length>=3\) maybeStarNudge\('repos_visited'\)/.test(HTML)
-  &&/if\(cityMode==='public'\) setTimeout\(\(\)=>\{ try\{ maybeStarNudge\('personal_town'\); \}/.test(HTML), 'the invitation is earned: three explored repo houses, or time spent in a self-built town');
+  &&/if\(cityMode==='public'\)\{[\s\S]*?maybeStarNudge\('personal_town'\)/.test(HTML), 'the invitation is earned: three explored repo houses, or time spent in a self-built town');
 ok(/if\(_starNudgeShown\|\|_starNudgeSeen\(\)\) return false/.test(HTML)
   &&/if\(modalOpen\|\|\(tour&&tour\.active\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
   &&/function flushStarNudge\(\)/.test(HTML)
@@ -1385,7 +1401,8 @@ ok(/const now=Date\.now\(\), ?prevLast=v\.last, ?fresh=!prevLast \|\| \(now-prev
 ok(/returning:v\.n>1/.test(HTML) && /longAway:\(v\.n>1 && awayDays>=7\)/.test(HTML), 'the memory derives returning (2nd+ visit) and longAway (returning after a 7-day gap)');
 ok(/if\(VISITOR\.returning && Math\.random\(\)<0\.6\)\{/.test(npcBlock) && /VISITOR\.longAway \?/.test(npcBlock), 'a returning visitor gets a warmer resident hello ~60% of the time — with an extra-warm variant after a long absence');
 ok(/function _welcomeBackLine\(\)\{/.test(npcBlock) && /n>=5\?/.test(npcBlock) && /visit #\$\{n\}/.test(npcBlock), 'a one-time welcome-back toast greets a returning visitor (with a little milestone note from the 5th visit)');
-ok(/const rb=VISITOR\.returning, news=hasFreshness\(\); if\(rb\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML)
+ok(/const rb=VISITOR\.returning, news=hasFreshness\(\)/.test(HTML)
+  && /if\(rb\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML)
   && /const c=getCourse\(\), delay=rb\?4700:/.test(HTML), 'entering town shows welcome-back first, then a single deferred Gazette/Chronicle toast');
 ok(/window\.__visitor=\(\)=>/.test(HTML) && /window\.__setVisitor=\(o\)=>/.test(HTML) && /window\.__welcomeBack=\(\)=>/.test(HTML), '?dbg __visitor/__setVisitor/__welcomeBack read + preview the returning-visitor warmth without a reload');
 
