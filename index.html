@@ -317,6 +317,7 @@
   .postcardActions button:hover:not(:disabled) { filter: brightness(.97); transform: translateY(-1px); }
   .postcardActions button:active:not(:disabled) { transform: translateY(1px); }
   .postcardActions button:disabled { cursor: wait; opacity: .48; }
+  .postcardActions .readme { grid-column: 1 / -1; color: #fff; background: #24292f; }
   .postcardActions .primary { color: #fff; background: linear-gradient(145deg,var(--postcard-primary),#203744); }
   .postcardActions .download { color: #3d2b13; background: linear-gradient(145deg,var(--postcard-accent),#e2a63e); }
   .postcardActions [hidden] { display: none; }
@@ -973,6 +974,7 @@
     <div id="postcardStatus" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="postcardPrivacy" data-i18n="postcardPrivacy">모든 작업은 이 브라우저 안에서만 이뤄지며 이미지는 업로드되지 않아요.</div>
     <div class="postcardActions">
+      <button id="postcardReadme" class="readme" type="button" data-i18n="postcardReadme">GitHub 프로필 README 포털 복사</button>
       <button id="postcardShare" class="primary" type="button" data-i18n="postcardShare" hidden>공유</button>
       <button id="postcardDownload" class="download" type="button" data-i18n="postcardDownload">PNG 저장</button>
       <button id="postcardCopy" type="button" data-i18n="postcardCopy">링크 복사</button>
@@ -1200,7 +1202,7 @@ import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree
 import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstruction, stepCameraResolvedDistance, chooseCameraArrivalYaw } from './assets/camera-obstruction.js?v=clearsight-v1';
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
-import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v1';
+import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1477,7 +1479,7 @@ const I18N = {
     postcardKiosk:'타운 포토 키오스크', postcardReached:' — 지금 보이는 마을을 엽서로 남기는 포토 키오스크. <span class="key">Enter</span> 또는 클릭으로 열기',
     postcardKicker:'TOWN POSTCARD STUDIO', postcardTitle:'타운 엽서 스튜디오', postcardSub:'현재 카메라에 보이는 실제 마을을 엽서로 만들어요.',
     postcardCanvasAria:'생성된 타운 엽서', postcardRendering:'현재 마을 풍경을 현상하는 중…', postcardReady:'엽서가 준비됐어요. 기기에서 공유하거나 PNG로 저장하세요.',
-    postcardRetake:'↻ 다시 찍기', postcardShare:'공유', postcardDownload:'PNG 저장', postcardCopy:'링크 복사',
+    postcardRetake:'↻ 다시 찍기', postcardShare:'공유', postcardDownload:'PNG 저장', postcardCopy:'링크 복사', postcardReadme:'GitHub 프로필 README 포털 복사',
     postcardPrivacy:'모든 작업은 이 브라우저 안에서만 이뤄지며 이미지는 업로드되지 않아요.',
     postcardFallback:'이 기기는 이미지 공유를 지원하지 않아 PNG 저장과 링크 복사를 사용할 수 있어요.',
     postcardCaptureBlank:'WebGL 장면이 비어 있어 엽서를 만들지 못했어요. 카메라를 조금 움직인 뒤 다시 찍어 주세요.',
@@ -1489,6 +1491,8 @@ const I18N = {
     postcardShareFailed:'이 기기에서는 이미지 공유를 완료하지 못했어요. PNG 저장이나 링크 복사를 사용해 주세요.',
     postcardDownloadDone:'PNG를 저장했어요.', postcardDownloadFailed:'PNG를 저장하지 못했어요. 다시 찍어 주세요.',
     postcardCopied:'마을 링크를 복사했어요.', postcardCopyFailed:'링크를 복사하지 못했어요. 아래 엽서의 URL을 직접 사용해 주세요.',
+    postcardReadmeCopied:'README 포털 코드를 복사했어요. GitHub 프로필 README에 붙여 넣으면 내 마을로 연결됩니다.',
+    postcardReadmeCopyFailed:'README 포털 코드를 복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
     postcardRepoCount:'공개 저장소 {count}개', postcardTopLanguages:'주요 언어', postcardTopRepos:'대표 저장소',
     postcardNoSignal:'공개 저장소로 지은 나만의 마을', postcardMadeWith:'Made with RePolis',
     postcardShareTitle:'@{user}의 RePolis 마을', postcardShareText:'공개 GitHub 저장소로 만든 RePolis 마을 엽서',
@@ -1679,7 +1683,7 @@ const I18N = {
     postcardKiosk:'Town Photo Kiosk', postcardReached:' — turn the town in your current camera into a postcard. Press <span class="key">Enter</span> or click to open',
     postcardKicker:'TOWN POSTCARD STUDIO', postcardTitle:'Town Postcard Studio', postcardSub:'Make a postcard from the real town currently in your camera.',
     postcardCanvasAria:'Generated town postcard', postcardRendering:'Developing the current town view…', postcardReady:'Your postcard is ready. Share it from this device or save the PNG.',
-    postcardRetake:'↻ Retake', postcardShare:'Share', postcardDownload:'Download PNG', postcardCopy:'Copy link',
+    postcardRetake:'↻ Retake', postcardShare:'Share', postcardDownload:'Download PNG', postcardCopy:'Copy link', postcardReadme:'Copy GitHub profile README portal',
     postcardPrivacy:'Everything stays in this browser. The image is never uploaded.',
     postcardFallback:'This device cannot share an image file, so Download PNG and Copy link remain available.',
     postcardCaptureBlank:'The WebGL frame was blank. Move the camera a little, then retake the postcard.',
@@ -1691,6 +1695,8 @@ const I18N = {
     postcardShareFailed:'This device could not finish sharing the image. Use Download PNG or Copy link instead.',
     postcardDownloadDone:'PNG downloaded.', postcardDownloadFailed:'The PNG could not be downloaded. Retake the postcard and try again.',
     postcardCopied:'Town link copied.', postcardCopyFailed:'The link could not be copied. Use the exact URL printed on the postcard.',
+    postcardReadmeCopied:'README portal code copied. Paste it into your GitHub profile README to link your town.',
+    postcardReadmeCopyFailed:'The README portal code could not be copied. Check this browser\'s clipboard permission.',
     postcardRepoCount:'{count} public repositories', postcardTopLanguages:'Top languages', postcardTopRepos:'Top repositories',
     postcardNoSignal:'A personal town built from public repositories', postcardMadeWith:'Made with RePolis',
     postcardShareTitle:"@{user}'s RePolis town", postcardShareText:'A RePolis town postcard built from public GitHub repositories',
@@ -8169,7 +8175,7 @@ const postcardModal=document.getElementById('postcardModal'),postcardStudio=post
   postcardBusyText=document.getElementById('postcardBusyText'),postcardStatus=document.getElementById('postcardStatus'),
   postcardClose=document.getElementById('postcardClose'),postcardRetake=document.getElementById('postcardRetake'),
   postcardShare=document.getElementById('postcardShare'),postcardDownload=document.getElementById('postcardDownload'),
-  postcardCopy=document.getElementById('postcardCopy'),postcardMenuBtn=document.getElementById('postcardMenuBtn');
+  postcardCopy=document.getElementById('postcardCopy'),postcardReadme=document.getElementById('postcardReadme'),postcardMenuBtn=document.getElementById('postcardMenuBtn');
 const POSTCARD={open:false,busy:false,blob:null,entry:'menu',previousFocus:null,pausedTour:null,renderId:0,renderPromise:null,
   forceBlank:false,forceFallback:false,activeTargets:0,renders:0,failures:0,last:null,lastStatus:null,resourceBefore:null,resourceAfter:null,stateRestored:null};
 
@@ -8177,6 +8183,13 @@ function _postcardShareUrl(){
   const base=location.origin+location.pathname;
   return cityMode==='public' ? base+'?user='+encodeURIComponent(currentUser) : base;
 }
+function _postcardPublishedBase(){
+  const local=/^(?:localhost|127\.0\.0\.1|::1)$/.test(location.hostname);
+  if(!local) return location.origin+location.pathname;
+  const project=window.REPOLIS_CONFIG?.project||{};
+  return 'https://'+(project.owner||'hyeonsangjeon')+'.github.io/'+(project.repository||'Repolis')+'/';
+}
+function _postcardReadmePortal(){ return createTownReadmePortal(currentUser,_postcardPublishedBase()); }
 function _postcardIdentity(){ return createTownPostcardIdentity(currentUser,REPOS); }
 function _postcardRendererMemory(){ const memory=renderer.info.memory||{};
   return {geometries:memory.geometries||0,textures:memory.textures||0,programs:(renderer.info.programs||[]).length}; }
@@ -8337,7 +8350,7 @@ function _postcardDebugState(){
     stateRestored:POSTCARD.stateRestored?{...POSTCARD.stateRestored}:null,
     canvas:{width:postcardCanvas.width,height:postcardCanvas.height},identity:{hash:identity.hash,palette:identity.palette.name,
       letters:identity.letters,spokes:identity.spokes,rings:identity.rings,notch:identity.notch},
-    url:_postcardShareUrl(),last:POSTCARD.last?{...POSTCARD.last}:null};
+    url:_postcardShareUrl(),portal:_postcardReadmePortal(),last:POSTCARD.last?{...POSTCARD.last}:null};
 }
 function _postcardPixelStats(){
   const context=postcardCanvas.getContext('2d',{willReadFrequently:true});
@@ -8367,15 +8380,26 @@ function downloadTownPostcard(){
     if(url) URL.revokeObjectURL(url); _postcardStatusSet('postcardDownloadFailed','error'); track('postcard_download',{ok:false,reason:'download_error'}); return false;
   }
 }
-async function copyPostcardLink(){
-  const text=_postcardShareUrl(); let ok=false,area=null;
+async function _copyPostcardText(text){
+  let ok=false,area=null;
   try{
     if(navigator.clipboard&&navigator.clipboard.writeText){ await navigator.clipboard.writeText(text); ok=true; }
     else { area=document.createElement('textarea'); area.value=text; area.setAttribute('readonly',''); area.style.position='fixed'; area.style.top='-9999px';
       document.body.appendChild(area); area.select(); ok=document.execCommand('copy'); }
   }catch(error){ ok=false; }
   finally{ if(area) area.remove(); }
+  return ok;
+}
+async function copyPostcardLink(){
+  const ok=await _copyPostcardText(_postcardShareUrl());
   _postcardStatusSet(ok?'postcardCopied':'postcardCopyFailed',ok?'success':'error'); track('postcard_copy',{ok}); return ok;
+}
+async function copyPostcardReadme(){
+  const ok=await _copyPostcardText(_postcardReadmePortal().html);
+  _postcardStatusSet(ok?'postcardReadmeCopied':'postcardReadmeCopyFailed',ok?'success':'error');
+  track('share_click',{channel:'profile_readme',ok});
+  if(ok) maybeStarNudge('profile_readme');
+  return ok;
 }
 function _postcardFocusables(){ return [...postcardStudio.querySelectorAll('button:not([disabled])')].filter(button=>!button.hidden); }
 postcardModal.addEventListener('keydown',event=>{
@@ -8391,6 +8415,7 @@ postcardRetake.onclick=()=>renderTownPostcard('retake');
 postcardShare.onclick=shareTownPostcard;
 postcardDownload.onclick=downloadTownPostcard;
 postcardCopy.onclick=copyPostcardLink;
+postcardReadme.onclick=copyPostcardReadme;
 postcardMenuBtn.onclick=()=>openPostcardStudio('menu');
 syncPostcardStudioLang();
 
@@ -9905,6 +9930,8 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     try{ await renderTownPostcard('debug'); }finally{ POSTCARD.forceBlank=previous; } return _postcardDebugState(); };
   window.__postcardFallback=(enabled=true)=>{ POSTCARD.forceFallback=enabled!==false; _syncPostcardActions(); return _postcardDebugState(); };
   window.__postcardPixels=()=>_postcardPixelStats();
+  window.__postcardPortal=()=>_postcardReadmePortal();
+  window.__postcardCopyReadme=()=>copyPostcardReadme();
   window.__postcardClose=()=>{ closePostcardStudio(); return _postcardDebugState(); };
   window.__postcardKiosk=()=>POSTCARD_KIOSK?({position:_debugVec(POSTCARD_KIOSK._pos),near:!!nearPostcardKiosk,
     distance:+player.position.distanceTo(POSTCARD_KIOSK._pos).toFixed(2),colliders:0}):null;

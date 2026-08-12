@@ -50,6 +50,7 @@ If this gives you a useful way to present repositories, **[star Repolis](https:/
 | Goal | What to do | Result |
 |---|---|---|
 | preview my public repos | use the live username field | a shareable metadata-built town in seconds |
+| keep my town on my GitHub profile | open **Town Postcard Studio** → **Copy GitHub profile README portal** | a 600px portal that always opens my personalized town |
 | publish my own Repolis | use the template, enable Actions + Pages, run **Refresh Repolis data** once | your fork owner's public repos become the default town; no PAT required |
 | grow buildings from real traffic | optionally add the `GH_PAT` Actions secret | daily cumulative views, visitors, and clones enrich the same city |
 
