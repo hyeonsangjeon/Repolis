@@ -6,6 +6,21 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.84.0] — 2026-08-15
+
+### ↔ Twin Towns — turn a personal preview into a two-person invitation
+
+The existing preview, profile portal, and postcard make one developer's town easy to experience and
+share, but they give a specific recipient no personal reason to open the link. Twin Towns adds that
+missing referral loop: one developer connects a second public GitHub account, sees truthful shared
+languages or topics, and sends a reversible deep link that opens both towns for the recipient.
+
+- The public-town ready state and in-city menu both open an accessible KO/EN comparison flow.
+- Matching and URL construction live in a small deterministic module with no login, upload, backend,
+  dependency, or new static media.
+- Shared `?user=<first>&twin=<second>&ref=twin-town` links open the comparison immediately; the visit
+  action swaps direction so either person can explore and reshare the bridge.
+
 ## [1.83.3] — 2026-07-22
 
 ### 🎬 README demo continuity — from Hada curiosity to a first town visit
