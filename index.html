@@ -51,16 +51,17 @@
   #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
-  #postcardMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
+  #postcardMenuBtn, #twinMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
-  #postcardMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
-  #postcardMenuBtn:active { transform: translateY(1px); }
-  #postcardMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  #postcardMenuBtn:hover, #twinMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
+  #postcardMenuBtn:active, #twinMenuBtn:active { transform: translateY(1px); }
+  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
     color: #fff8e7; background: linear-gradient(145deg,#365464,#173d55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); font-size: 17px; }
-  #postcardMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  #postcardMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
-  #postcardMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #twinMenuBtn .pmIcon { background: linear-gradient(145deg,#6a4f86,#2e5667); }
+  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
+  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .repoRow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 12px;
     cursor: pointer; transition: background .12s; }
   .repoRow:hover { background: #f6ecdb; }
@@ -332,6 +333,74 @@
     .postcardActions { grid-template-columns: 1fr 1fr; padding: 12px 12px 16px; }
     .postcardActions button { min-height: 46px; font-size: 12px; }
     #postcardShare, #postcardRetake { grid-column: 1 / -1; }
+  }
+  /* Twin Towns — a two-person GitHub referral bridge, built entirely from public metadata */
+  #twinModal { position: fixed; inset: 0; z-index: 74; display: none; align-items: center; justify-content: center;
+    padding: 18px; background: rgba(15,23,31,.72); backdrop-filter: blur(7px); }
+  #twinModal.show { display: flex; }
+  .twinStudio { position: relative; width: min(720px,100%); max-height: calc(100dvh - 36px); overflow-y: auto;
+    border: 1px solid rgba(255,255,255,.24); border-radius: 24px; background: #fffaf1; color: #3e342b;
+    box-shadow: 0 24px 76px rgba(7,14,22,.46); -webkit-user-select: text; user-select: text; }
+  .twinClose { position: absolute; z-index: 2; top: 12px; right: 12px; width: 44px; height: 44px; border: 0;
+    border-radius: 50%; background: #eee1ce; color: #6d5844; font: 800 18px/1 inherit; cursor: pointer; }
+  .twinHead { padding: 24px 70px 14px 24px; background: linear-gradient(135deg,#243f4b,#6a4f86); color: #fff;
+    border-radius: 23px 23px 0 0; }
+  .twinHead .tk { color: #d9c9ed; font-size: 10px; font-weight: 900; letter-spacing: .16em; }
+  .twinHead h2 { margin-top: 4px; font-size: 24px; line-height: 1.2; }
+  .twinHead p { margin-top: 6px; color: rgba(255,255,255,.82); font-size: 12px; line-height: 1.45; }
+  .twinBody { padding: 18px 22px 22px; }
+  #twinPrompt { display: block; flex: 0 0 100%; color: #735d47; font-size: 12px; font-weight: 800; }
+  #twinForm { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+  #twinForm .twinAt { flex: 0 0 42px; display: grid; place-items: center; border-radius: 11px; background: #eee5d6;
+    color: #6a4f86; font-weight: 900; }
+  #twinUser { min-width: 0; flex: 1; border: 1.5px solid #d8c8b3; border-radius: 11px; padding: 10px 12px;
+    background: #fff; color: #3e342b; font: inherit; font-size: 14px; outline: none; }
+  #twinUser:focus { border-color: #6a4f86; box-shadow: 0 0 0 3px rgba(106,79,134,.14); }
+  #twinGo { flex: 0 0 auto; min-height: 44px; border: 0; border-radius: 11px; padding: 10px 15px;
+    background: #345e6b; color: #fff; font: 800 12.5px/1.25 inherit; cursor: pointer; }
+  #twinGo:disabled { cursor: wait; opacity: .58; }
+  #twinStatus { min-height: 18px; margin-top: 8px; color: #806c58; font-size: 11px; line-height: 1.45; }
+  #twinStatus:empty { min-height: 0; margin-top: 0; }
+  #twinStatus[data-tone="error"] { color: #b44530; font-weight: 700; }
+  #twinStatus[data-tone="success"] { color: #2f7d5b; font-weight: 700; }
+  #twinResult[hidden] { display: none; }
+  #twinResult { margin-top: 14px; }
+  .twinPair { display: grid; grid-template-columns: minmax(0,1fr) 46px minmax(0,1fr); gap: 10px; align-items: stretch; }
+  .twinTown { min-width: 0; padding: 15px; border: 1px solid #e4d7c4; border-radius: 17px; background: #fff; text-align: center; }
+  .twinMonogram { width: 46px; height: 46px; margin: 0 auto 7px; display: grid; place-items: center; border-radius: 15px;
+    background: linear-gradient(145deg,#315868,#6b4f87); color: #fff; font-size: 16px; font-weight: 900; letter-spacing: .03em; }
+  .twinTown:last-child .twinMonogram { background: linear-gradient(145deg,#9a6334,#cf8c45); }
+  .twinTown h3 { overflow: hidden; color: #3f342a; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+  .twinStats { margin-top: 5px; color: #6f5c4a; font-size: 11.5px; font-weight: 800; line-height: 1.4; }
+  .twinTop { min-height: 32px; margin-top: 5px; overflow: hidden; color: #9a8167; font-size: 10.5px; line-height: 1.45;
+    text-overflow: ellipsis; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .twinBridgeMark { align-self: center; color: #6a4f86; font-size: 28px; font-weight: 900; text-align: center; }
+  .twinSignal { margin-top: 10px; padding: 12px 14px; border-radius: 14px; background: #eee9f4; text-align: center; }
+  .twinSignal strong { display: block; color: #55406c; font-size: 12.5px; }
+  .twinSignal span { display: block; margin-top: 3px; color: #756489; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+  .twinCombined { margin-top: 9px; color: #806b57; font-size: 11px; font-weight: 700; text-align: center; }
+  .twinActions { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 14px; }
+  .twinActions button { min-height: 44px; border: 1px solid #dacbb8; border-radius: 11px; padding: 9px 10px;
+    background: #fff; color: #5e4d3d; font: 800 11.5px/1.3 inherit; cursor: pointer; }
+  .twinActions .primary { border-color: #345e6b; background: #345e6b; color: #fff; }
+  .twinActions .visit { border-color: #a7703d; background: #fff3df; color: #8a5424; }
+  .twinPrivacy { margin-top: 12px; color: #a18a72; font-size: 10px; line-height: 1.45; text-align: center; }
+  @media (max-width: 520px) {
+    #twinModal { padding: 10px; align-items: flex-end; }
+    .twinStudio { max-height: calc(100dvh - 20px); border-radius: 20px; }
+    .twinHead { padding: 18px 62px 12px 17px; border-radius: 19px 19px 0 0; }
+    .twinHead h2 { font-size: 20px; }
+    .twinBody { padding: 14px 13px 16px; }
+    #twinForm { display: grid; grid-template-columns: 38px minmax(0,1fr); }
+    #twinPrompt { grid-column: 1 / -1; }
+    #twinGo { grid-column: 1 / -1; }
+    #twinUser { font-size: 16px; }
+    .twinPair { grid-template-columns: minmax(0,1fr); gap: 7px; }
+    .twinBridgeMark { transform: rotate(90deg); font-size: 21px; line-height: 1; }
+    .twinTown { padding: 11px 13px; }
+    .twinMonogram { width: 40px; height: 40px; margin-bottom: 5px; }
+    .twinTop { min-height: 0; }
+    .twinActions { grid-template-columns: 1fr; }
   }
   /* Repository Atelier — one isolated, reusable 3D room */
   #atelierFade { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0;
@@ -676,10 +745,11 @@
   .introProofTop { min-width: 0; overflow: hidden; color: rgba(255,255,255,.84); font-size: 11px;
     line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
   .introProofActions { display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; }
-  .introProofActions button { flex: 1 1 150px; min-height: 38px; border-radius: 10px; padding: 7px 10px;
+  .introProofActions button { flex: 1 1 150px; min-height: 44px; border-radius: 10px; padding: 7px 10px;
     color: #fff; font: inherit; font-size: 11.5px; line-height: 1.25; font-weight: 800; cursor: pointer; }
   #introPinProfile { border: 1px solid rgba(255,255,255,.7); background: #24292f; }
   #introPinProfile:disabled { cursor: wait; opacity: .58; }
+  #introCompare { border: 1px solid rgba(255,255,255,.72); background: #345e6b; }
   #introTryAnother { border: 1px solid rgba(255,255,255,.48); background: rgba(255,255,255,.14); }
   #introProfileStatus { min-height: 0; color: rgba(255,255,255,.86); font-size: 10.5px; line-height: 1.35; }
   #introProfileStatus:empty { display: none; }
@@ -924,6 +994,10 @@
 
 <div id="panel" class="hidden">
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <button id="twinMenuBtn" type="button">
+    <span class="pmIcon" aria-hidden="true">↔</span>
+    <span class="pmCopy"><span class="pmTitle" data-i18n="twinMenu">Twin Towns</span><span class="pmSub" data-i18n="twinMenuSub">친구의 GitHub 마을과 연결하기</span></span>
+  </button>
   <button id="postcardMenuBtn" type="button">
     <span class="pmIcon" aria-hidden="true">📸</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="postcardMenu">타운 엽서 만들기</span><span class="pmSub" data-i18n="postcardMenuSub">지금 보이는 마을을 PNG로</span></span>
@@ -995,6 +1069,51 @@
       <button id="postcardDownload" class="download" type="button" data-i18n="postcardDownload">PNG 저장</button>
       <button id="postcardCopy" type="button" data-i18n="postcardCopy">링크 복사</button>
       <button id="postcardRetake" type="button" data-i18n="postcardRetake">↻ 다시 찍기</button>
+    </div>
+  </section>
+</div>
+
+<div id="twinModal" role="dialog" aria-modal="true" aria-labelledby="twinTitle" aria-describedby="twinSub" aria-hidden="true">
+  <section class="twinStudio" tabindex="-1">
+    <button id="twinClose" class="twinClose" type="button" data-i18n-aria="close" aria-label="닫기">✕</button>
+    <header class="twinHead">
+      <div class="tk">TWIN TOWNS</div>
+      <h2 id="twinTitle" data-i18n="twinTitle">두 GitHub 마을 잇기</h2>
+      <p id="twinSub" data-i18n="twinSub">공통 언어와 주제로 두 사람의 공개 레포 마을 사이에 다리를 만들어요.</p>
+    </header>
+    <div class="twinBody">
+      <form id="twinForm">
+        <label id="twinPrompt" for="twinUser"></label>
+        <div class="twinAt" aria-hidden="true">@</div>
+        <input id="twinUser" type="text" maxlength="39" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" data-i18n-ph="twinUserPh" placeholder="GitHub username" />
+        <button id="twinGo" type="submit" data-i18n="twinGo">마을 다리 만들기</button>
+      </form>
+      <div id="twinStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div id="twinResult" hidden aria-live="polite" aria-atomic="true">
+        <div class="twinPair">
+          <article class="twinTown">
+            <div class="twinMonogram" id="twinLeftMark"></div>
+            <h3 id="twinLeftUser"></h3>
+            <div class="twinStats" id="twinLeftStats"></div>
+            <div class="twinTop" id="twinLeftTop"></div>
+          </article>
+          <div class="twinBridgeMark" aria-hidden="true">↔</div>
+          <article class="twinTown">
+            <div class="twinMonogram" id="twinRightMark"></div>
+            <h3 id="twinRightUser"></h3>
+            <div class="twinStats" id="twinRightStats"></div>
+            <div class="twinTop" id="twinRightTop"></div>
+          </article>
+        </div>
+        <div class="twinSignal"><strong id="twinSignalTitle"></strong><span id="twinSignalItems"></span></div>
+        <div class="twinCombined" id="twinCombined"></div>
+        <div class="twinActions">
+          <button id="twinVisit" class="visit" type="button"></button>
+          <button id="twinShare" class="primary" type="button" data-i18n="twinShare">초대 공유</button>
+          <button id="twinCopy" type="button" data-i18n="twinCopy">비교 링크 복사</button>
+        </div>
+      </div>
+      <p class="twinPrivacy" data-i18n="twinPrivacy">공개 레포 메타데이터만 사용하며 로그인이나 새 백엔드가 필요하지 않아요.</p>
     </div>
   </section>
 </div>
@@ -1147,6 +1266,7 @@
         <div class="introProofTop" id="introProofTop"></div>
         <div class="introProofActions">
           <button id="introPinProfile" type="button" data-i18n="introPinProfile">GitHub 프로필에 마을 붙이기</button>
+          <button id="introCompare" type="button" data-i18n="introCompare">↔ 친구 마을과 연결하기</button>
           <button id="introTryAnother" type="button" data-i18n="introTryAnother">↻ 다른 GitHub 계정 보기</button>
         </div>
         <div id="introProfileStatus"></div>
@@ -1229,6 +1349,7 @@ import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferr
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
+import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1242,6 +1363,7 @@ let REPOS = [];
 /* --- which town are we in? --- */
 const GH_LOGIN_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
 const _reqUser = (new URLSearchParams(location.search).get('user') || '').trim();
+const _reqTwin = (new URLSearchParams(location.search).get('twin') || '').trim();
 let currentUser = OWNER;
 let cityMode = 'owner';            // 'owner' | 'public'
 let dataSource = 'owner-ci';       // 'owner-ci' | 'github-public' | 'cache' | 'stale-cache'
@@ -1479,7 +1601,7 @@ const I18N = {
     introLaunchLabel:'내 공개 레포로 바로 보기', introUserPh:'GitHub username', introLaunchGo:'내 마을 만들기 →',
     introLaunchHint:'공개 레포만 사용 · 로그인 없음 · 포크 없음', introLaunchInvalid:'올바른 GitHub username을 입력해 주세요.',
     introReady:'@{user}의 마을이 준비됐어요', introProofStats:'공개 레포 {count}개 · ★ {stars} · 사용 언어 {languages}개',
-    introProofTop:'대표 집 · {repos}', introPinProfile:'GitHub 프로필에 마을 붙이기', introTryAnother:'↻ 다른 GitHub 계정 보기', enterTownPublic:'이 마을 입장 →',
+    introProofTop:'대표 집 · {repos}', introPinProfile:'GitHub 프로필에 마을 붙이기', introCompare:'↔ 친구 마을과 연결하기', introTryAnother:'↻ 다른 GitHub 계정 보기', enterTownPublic:'이 마을 입장 →',
     introProfileCopied:'프로필 README 코드를 복사했어요. 붙여 넣으면 이 마을로 바로 연결돼요.',
     introProfileCopyFailed:'복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
     starNudge:'이 마을이 마음에 드셨나요? Repolis는 오픈소스예요.', starNudgeGo:'⭐ GitHub에서 Star',
@@ -1505,6 +1627,20 @@ const I18N = {
     publicNetMsg:'마을을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
     stationRetry:'🚉 다른 마을 가기', goOwnerCity:'🏙️ {user} 님의 도시 가기',
     shareTown:'이 마을 공유', copyLink:'🔗 링크 복사', copied:'복사됨!',
+    twinMenu:'Twin Towns', twinMenuSub:'친구의 GitHub 마을과 연결하기',
+    twinTitle:'두 GitHub 마을 잇기', twinSub:'공통 언어와 주제로 두 사람의 공개 레포 마을 사이에 다리를 만들어요.',
+    twinLead:'누구와 @{user}의 마을을 연결할까요?', twinUserPh:'GitHub username', twinGo:'마을 다리 만들기',
+    twinInvalid:'올바른 GitHub username을 입력해 주세요.', twinSame:'서로 다른 두 GitHub 계정을 입력해 주세요.',
+    twinLoading:'공개 레포를 불러와 두 마을의 연결점을 찾는 중…', twinReady:'@{user} 님과 잇는 마을 다리가 준비됐어요.',
+    twinLoadFailed:'이 GitHub 마을을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+    twinEmpty:'비교할 공개 레포가 없는 계정이에요.', twinStats:'공개 레포 {repos}개 · ★ {stars}', twinTop:'대표 집 · {repo}',
+    twinBridgeTopics:'공통 토픽 다리', twinBridgeLanguages:'공통 언어 다리', twinBridgeContrast:'서로 다른 스택, 하나의 경로',
+    twinBridgeNone:'공통 신호가 없어도 서로의 마을을 오갈 수 있어요.', twinCombined:'두 마을 합계 · 공개 레포 {repos}개 · ★ {stars}',
+    twinVisit:'@{user} 마을로 방향 바꾸기', twinShare:'초대 공유', twinCopy:'비교 링크 복사',
+    twinCopied:'두 마을 초대 링크를 복사했어요.', twinCopyFailed:'초대 링크를 복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
+    twinShared:'두 마을 초대를 공유했어요.', twinShareFailed:'공유를 완료하지 못했어요. 링크 복사를 사용해 주세요.',
+    twinShareTitle:'@{left} ↔ @{right} · Repolis Twin Towns', twinShareText:'우리 GitHub 마을의 공통 언어와 토픽을 Repolis에서 확인해 보세요.',
+    twinPrivacy:'공개 레포 메타데이터만 사용하며 로그인이나 새 백엔드가 필요하지 않아요.',
     postcardMenu:'타운 엽서 만들기', postcardMenuSub:'지금 보이는 마을을 PNG로',
     postcardKiosk:'타운 포토 키오스크', postcardReached:' — 지금 보이는 마을을 엽서로 남기는 포토 키오스크. <span class="key">Enter</span> 또는 클릭으로 열기',
     postcardKicker:'TOWN POSTCARD STUDIO', postcardTitle:'타운 엽서 스튜디오', postcardSub:'현재 카메라에 보이는 실제 마을을 엽서로 만들어요.',
@@ -1687,7 +1823,7 @@ const I18N = {
     introLaunchLabel:'See the same engine with your public repos', introUserPh:'GitHub username', introLaunchGo:'Build my town →',
     introLaunchHint:'Public repos only · no login · no fork', introLaunchInvalid:'Enter a valid GitHub username.',
     introReady:"@{user}'s town is ready", introProofStats:'{count} public repos · ★ {stars} · {languages} languages',
-    introProofTop:'Featured houses · {repos}', introPinProfile:'Put this town on my GitHub profile', introTryAnother:'↻ Try another GitHub account', enterTownPublic:'Enter this town →',
+    introProofTop:'Featured houses · {repos}', introPinProfile:'Put this town on my GitHub profile', introCompare:'↔ Connect with a friend', introTryAnother:'↻ Try another GitHub account', enterTownPublic:'Enter this town →',
     introProfileCopied:'Profile README code copied. Paste it to link straight to this town.',
     introProfileCopyFailed:'Could not copy the code. Check this browser\'s clipboard permission.',
     starNudge:'Enjoying the town? Repolis is open source.', starNudgeGo:'⭐ Star on GitHub',
@@ -1713,6 +1849,20 @@ const I18N = {
     publicNetMsg:"Couldn't load the town. Check your connection and try again.",
     stationRetry:'🚉 Visit another town', goOwnerCity:"🏙️ Visit {user}'s city",
     shareTown:'Share this town', copyLink:'🔗 Copy link', copied:'Copied!',
+    twinMenu:'Twin Towns', twinMenuSub:"Connect this town with a GitHub friend's",
+    twinTitle:'Connect two GitHub towns', twinSub:'Build a bridge between two public-repo towns from their shared languages and topics.',
+    twinLead:"Who should @{user}'s town connect with?", twinUserPh:'GitHub username', twinGo:'Build the town bridge',
+    twinInvalid:'Enter a valid GitHub username.', twinSame:'Enter two different GitHub accounts.',
+    twinLoading:'Loading public repos and finding the bridge between these towns…', twinReady:'The town bridge to @{user} is ready.',
+    twinLoadFailed:'Could not load this GitHub town. Try again in a moment.',
+    twinEmpty:'This account has no public repos to compare.', twinStats:'{repos} public repos · ★ {stars}', twinTop:'Featured house · {repo}',
+    twinBridgeTopics:'Shared topic bridge', twinBridgeLanguages:'Shared language bridge', twinBridgeContrast:'Different stacks, one shared route',
+    twinBridgeNone:'Even without a shared signal, each town is one turn away.', twinCombined:'Together · {repos} public repos · ★ {stars}',
+    twinVisit:"Turn toward @{user}'s town", twinShare:'Share invitation', twinCopy:'Copy match link',
+    twinCopied:'Twin Towns invitation link copied.', twinCopyFailed:"Couldn't copy the invitation link. Check this browser's clipboard permission.",
+    twinShared:'Twin Towns invitation shared.', twinShareFailed:'Sharing could not finish. Use Copy match link instead.',
+    twinShareTitle:'@{left} ↔ @{right} · Repolis Twin Towns', twinShareText:'See the languages and topics our GitHub towns share in Repolis.',
+    twinPrivacy:'Uses public repository metadata only — no login or new backend required.',
     postcardMenu:'Make a town postcard', postcardMenuSub:'Turn this live view into a PNG',
     postcardKiosk:'Town Photo Kiosk', postcardReached:' — turn the town in your current camera into a postcard. Press <span class="key">Enter</span> or click to open',
     postcardKicker:'TOWN POSTCARD STUDIO', postcardTitle:'Town Postcard Studio', postcardSub:'Make a postcard from the real town currently in your camera.',
@@ -1837,6 +1987,7 @@ function applyLang(){
   if(typeof renderLanternWatchHud==='function') renderLanternWatchHud();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
   if(typeof window.__publicIntroRefresh==='function') window.__publicIntroRefresh();
+  if(typeof window.__twinLangRefresh==='function') window.__twinLangRefresh();
   if(typeof refreshDistrictSigns==='function') refreshDistrictSigns();
   if(typeof refreshHubSigns==='function') refreshHubSigns();
   if(typeof refreshResidentTags==='function') refreshResidentTags();
@@ -7268,7 +7419,7 @@ addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)) return;
   keys[e.code]=true;
   if(e.code==='Space') e.preventDefault();
   if(e.code==='Enter'&&!modalOpen){ doAct(); }
-  if(e.code==='Escape'){ closePostcardStudio(); closeCard(); closeChat(); } });
+  if(e.code==='Escape'){ closeTwinTowns(); closePostcardStudio(); closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ keys[e.code]=false; });   /* always clear — never let a key stick when focus jumps to an input mid-press */
 addEventListener('blur',clearKeys); window.addEventListener('pagehide',clearKeys);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden){ clearKeys(); if(_sharedJoy) _endSharedJoy('hidden'); } });   /* tab/alt-tab away mid-press → don't keep walking or resume an excursion that lost its frames */
@@ -8081,7 +8232,7 @@ const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introL
   introLaunchForm=document.getElementById('introLaunchForm'),introLaunchHint=document.getElementById('introLaunchHint'),
   introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
   introProofTop=document.getElementById('introProofTop'),introPinProfile=document.getElementById('introPinProfile'),
-  introTryAnother=document.getElementById('introTryAnother'),introProfileStatus=document.getElementById('introProfileStatus'),
+  introCompare=document.getElementById('introCompare'),introTryAnother=document.getElementById('introTryAnother'),introProfileStatus=document.getElementById('introProfileStatus'),
   introStartBtn=document.getElementById('startBtn');
 let introChoosingAnother=false,introProfileResult=null;
 function publicIntroSummary(){ return summarizePublicTown(currentUser,REPOS); }
@@ -8112,6 +8263,7 @@ async function copyIntroProfileReadme(){
 }
 window.__publicIntroRefresh=renderPublicIntro;
 introPinProfile.onclick=copyIntroProfileReadme;
+introCompare.onclick=()=>openTwinTowns('intro');
 introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null; renderPublicIntro(); const input=document.getElementById('introUser'); input.value=''; setTimeout(()=>input.focus(),0); };
 (function(){ const form=introLaunchForm, input=document.getElementById('introUser'), err=document.getElementById('introLaunchErr');
   if(!form||!input) return; if(cityMode==='public') input.value=currentUser;
@@ -8126,6 +8278,117 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
     document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
 document.getElementById('loading').style.display='none';
+
+/* ====================== ↔ TWIN TOWNS (two-person referral bridge) ====================== */
+const twinModal=document.getElementById('twinModal'),twinStudio=twinModal.querySelector('.twinStudio'),
+  twinForm=document.getElementById('twinForm'),twinInput=document.getElementById('twinUser'),
+  twinGo=document.getElementById('twinGo'),twinClose=document.getElementById('twinClose'),
+  twinStatus=document.getElementById('twinStatus'),twinResult=document.getElementById('twinResult'),
+  twinVisit=document.getElementById('twinVisit'),twinShare=document.getElementById('twinShare'),
+  twinCopy=document.getElementById('twinCopy'),twinMenuBtn=document.getElementById('twinMenuBtn');
+const TWIN={open:false,entry:'menu',match:null,status:null,previousFocus:null,requestId:0,loading:false};
+
+function _twinNumber(value){ try{ return new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US').format(value); }catch(e){ return String(value); } }
+function _twinMark(user){ const clean=String(user||'').replace(/[^a-z0-9]/gi,''); return (clean.slice(0,2)||'GH').toUpperCase(); }
+function _setTwinStatus(key='',tone='',vars=null){
+  TWIN.status=key?{key,tone,vars}:null; twinStatus.textContent=key?tf(key,vars||{}):''; twinStatus.dataset.tone=tone||'';
+}
+function _renderTwinSide(side,prefix){
+  document.getElementById('twin'+prefix+'Mark').textContent=_twinMark(side.user);
+  document.getElementById('twin'+prefix+'User').textContent='@'+side.user;
+  document.getElementById('twin'+prefix+'Stats').textContent=tf('twinStats',{repos:_twinNumber(side.repos),stars:_twinNumber(side.stars)});
+  const top=document.getElementById('twin'+prefix+'Top'); top.textContent=side.topRepo?tf('twinTop',{repo:side.topRepo.name}):''; top.title=side.topRepo?.name||'';
+}
+function renderTwinTowns(){
+  document.getElementById('twinPrompt').textContent=tf('twinLead',{user:currentUser});
+  if(!TWIN.match){ twinResult.hidden=true; return; }
+  const match=TWIN.match; _renderTwinSide(match.left,'Left'); _renderTwinSide(match.right,'Right');
+  const titleKey=match.bridgeKind==='topics'?'twinBridgeTopics':(match.bridgeKind==='languages'?'twinBridgeLanguages':'twinBridgeContrast');
+  document.getElementById('twinSignalTitle').textContent=t(titleKey);
+  document.getElementById('twinSignalItems').textContent=match.bridgeItems.length?match.bridgeItems.map(item=>item.name).join(' · '):t('twinBridgeNone');
+  document.getElementById('twinCombined').textContent=tf('twinCombined',{repos:_twinNumber(match.combinedRepos),stars:_twinNumber(match.combinedStars)});
+  twinVisit.textContent=tf('twinVisit',{user:match.right.user}); twinResult.hidden=false;
+}
+function syncTwinTownsLang(){
+  renderTwinTowns();
+  if(TWIN.status) twinStatus.textContent=tf(TWIN.status.key,TWIN.status.vars||{});
+}
+function _twinBaseUrl(){ return location.origin+location.pathname; }
+function _twinShareUrl(){ return TWIN.match?createTwinTownLink(TWIN.match.left.user,TWIN.match.right.user,_twinBaseUrl()):''; }
+async function compareTwinTowns(rawUser,entry=TWIN.entry){
+  const user=String(rawUser||'').trim().replace(/^@+/,'');
+  if(!GH_LOGIN_RE.test(user)){ _setTwinStatus('twinInvalid','error'); twinInput.focus(); track('twin_compare_fail',{reason:'invalid'}); return false; }
+  if(user.toLowerCase()===currentUser.toLowerCase()){ _setTwinStatus('twinSame','error'); twinInput.focus(); track('twin_compare_fail',{reason:'same'}); return false; }
+  if(cityError||!REPOS.length){ _setTwinStatus(cityError?'twinLoadFailed':'twinEmpty','error'); track('twin_compare_fail',{reason:'current_empty'}); return false; }
+  const requestId=++TWIN.requestId; TWIN.loading=true; TWIN.match=null; twinResult.hidden=true; twinGo.disabled=true;
+  twinForm.setAttribute('aria-busy','true'); _setTwinStatus('twinLoading'); track('twin_compare_start',{entry});
+  try{
+    const currentLoad=cityMode==='owner'?_loadPublicCity(currentUser):Promise.resolve({repos:REPOS,source:dataSource});
+    const [leftLoaded,loaded]=await Promise.all([currentLoad,_loadPublicCity(user)]);
+    if(requestId!==TWIN.requestId) return false;
+    if(loaded.error){ _setTwinStatus('twinLoadFailed','error'); track('twin_compare_fail',{reason:loaded.error.reason||'load'}); return false; }
+    if(!loaded.repos||!loaded.repos.length){ _setTwinStatus('twinEmpty','error'); track('twin_compare_fail',{reason:'empty'}); return false; }
+    const leftRepos=(!leftLoaded.error&&leftLoaded.repos&&leftLoaded.repos.length)?leftLoaded.repos:REPOS;
+    TWIN.match=createTwinTownMatch(currentUser,leftRepos,user,loaded.repos); _setTwinStatus('twinReady','success',{user}); renderTwinTowns();
+    track('twin_compare_success',{entry,bridge:TWIN.match.bridgeKind,combinedRepos:TWIN.match.combinedRepos}); return TWIN.match;
+  }catch(error){
+    if(requestId===TWIN.requestId){ _setTwinStatus('twinLoadFailed','error'); track('twin_compare_fail',{reason:'exception'}); }
+    return false;
+  }finally{
+    if(requestId===TWIN.requestId){ TWIN.loading=false; twinGo.disabled=false; twinForm.setAttribute('aria-busy','false'); }
+  }
+}
+function openTwinTowns(entry='menu',suggestedUser=''){
+  if(repositoryAtelierActive()||(modalOpen&&!TWIN.open)) return false;
+  if(tour&&tour.active) endTour(false);
+  TWIN.open=true; TWIN.entry=['intro','menu','link','debug'].includes(entry)?entry:'menu'; TWIN.previousFocus=document.activeElement;
+  panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.add('hidden');
+  document.getElementById('station').classList.add('hidden'); modalOpen=true; twinModal.classList.add('show'); twinModal.setAttribute('aria-hidden','false');
+  if(suggestedUser) twinInput.value=suggestedUser; else if(TWIN.match) twinInput.value=TWIN.match.right.user;
+  syncTwinTownsLang(); track('twin_open',{entry:TWIN.entry,shared:!!suggestedUser});
+  setTimeout(()=>{ try{ (suggestedUser?twinClose:twinInput).focus(); }catch(e){} },0);
+  if(suggestedUser) compareTwinTowns(suggestedUser,TWIN.entry);
+  return true;
+}
+function closeTwinTowns(){
+  if(!TWIN.open) return false;
+  const wasLoading=TWIN.loading; TWIN.open=false; TWIN.requestId++; TWIN.loading=false; twinGo.disabled=false; twinForm.setAttribute('aria-busy','false');
+  if(wasLoading) _setTwinStatus(); twinModal.classList.remove('show');
+  twinModal.setAttribute('aria-hidden','true'); modalOpen=false; const previous=TWIN.previousFocus; TWIN.previousFocus=null;
+  if(previous&&previous.isConnected) setTimeout(()=>{ try{ previous.focus(); }catch(e){} },0);
+  return true;
+}
+async function copyTwinTownLink(){
+  if(!TWIN.match) return false;
+  const ok=await _copyPostcardText(_twinShareUrl()); _setTwinStatus(ok?'twinCopied':'twinCopyFailed',ok?'success':'error');
+  track('share_click',{channel:'twin_towns_copy',ok}); return ok;
+}
+async function shareTwinTowns(){
+  if(!TWIN.match) return false;
+  if(typeof navigator.share!=='function') return copyTwinTownLink();
+  try{
+    await navigator.share({title:tf('twinShareTitle',{left:TWIN.match.left.user,right:TWIN.match.right.user}),text:t('twinShareText'),url:_twinShareUrl()});
+    _setTwinStatus('twinShared','success'); track('share_click',{channel:'twin_towns_native',ok:true}); return true;
+  }catch(error){
+    if(error&&error.name==='AbortError'){ track('share_click',{channel:'twin_towns_native',ok:false,reason:'cancel'}); return false; }
+    _setTwinStatus('twinShareFailed','error'); track('share_click',{channel:'twin_towns_native',ok:false,reason:'error'}); return false;
+  }
+}
+function _twinFocusables(){ return [...twinStudio.querySelectorAll('button:not([disabled]),input:not([disabled])')].filter(el=>!el.hidden); }
+twinForm.onsubmit=event=>{ event.preventDefault(); compareTwinTowns(twinInput.value); };
+twinInput.addEventListener('keydown',event=>event.stopPropagation());
+twinClose.onclick=closeTwinTowns; twinModal.addEventListener('click',event=>{ if(event.target===twinModal) closeTwinTowns(); });
+twinModal.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeTwinTowns(); return; }
+  if(event.key!=='Tab') return; const items=_twinFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
+  if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+});
+twinCopy.onclick=copyTwinTownLink; twinShare.onclick=shareTwinTowns;
+twinVisit.onclick=()=>{ if(TWIN.match) location.href=createTwinTownLink(TWIN.match.right.user,TWIN.match.left.user,_twinBaseUrl()); };
+twinMenuBtn.onclick=()=>openTwinTowns('menu'); window.__twinLangRefresh=syncTwinTownsLang; syncTwinTownsLang();
+if(!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_reqTwin.toLowerCase()!==currentUser.toLowerCase())
+  setTimeout(()=>openTwinTowns('link',_reqTwin),120);
 
 /* ====================== 🚉 GITHUB STATION (city mode: travel to public towns) ====================== */
 (function(){
@@ -10008,6 +10271,13 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__introProof=()=>renderPublicIntro();
   window.__introProfilePortal=()=>({portal:_postcardReadmePortal(),result:introProfileResult?{...introProfileResult}:null});
   window.__introCopyProfile=()=>copyIntroProfileReadme();
+  window.__twinTowns=()=>({open:TWIN.open,loading:TWIN.loading,entry:TWIN.entry,
+    match:TWIN.match?{left:TWIN.match.left.user,right:TWIN.match.right.user,bridge:TWIN.match.bridgeKind,
+      items:TWIN.match.bridgeItems.map(item=>item.name),combinedRepos:TWIN.match.combinedRepos,combinedStars:TWIN.match.combinedStars}:null,
+    status:TWIN.status?{...TWIN.status}:null,url:_twinShareUrl()||null});
+  window.__twinOpen=(user='')=>openTwinTowns('debug',user);
+  window.__twinCompare=user=>compareTwinTowns(user,'debug');
+  window.__twinClose=()=>closeTwinTowns();
   window.__postcardClose=()=>{ closePostcardStudio(); return _postcardDebugState(); };
   window.__postcardKiosk=()=>POSTCARD_KIOSK?({position:_debugVec(POSTCARD_KIOSK._pos),near:!!nearPostcardKiosk,
     distance:+player.position.distanceTo(POSTCARD_KIOSK._pos).toFixed(2),colliders:0}):null;

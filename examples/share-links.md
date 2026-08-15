@@ -10,11 +10,26 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 | `https://hyeonsangjeon.github.io/Repolis/?launch=1` | The username launchpad, focused and ready to build a personal preview. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob` | A town built live from `mrdoob`'s public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=torvalds` | A town built from `torvalds`' public repos. |
+| `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob&twin=torvalds&ref=twin-town` | Twin Towns for two users, including shared languages/topics and a reversible visit link. |
 
 `?user=<login>` rebuilds the whole city from any **public** GitHub user (cached in `localStorage`, with a
 stale fallback). It activates only for a valid, non-owner username; a bad name shows a friendly "lost"
 overlay, and a "go home" button always returns to the owner city. Cross-town taxi driving is disabled in
 public mode.
+
+## Connect two towns
+
+After a personal preview is ready, choose **Connect with a friend**. The same flow is available from
+**Twin Towns** in the in-city menu. Repolis loads the second account through the existing public GitHub
+REST path and local cache, then creates a link with:
+
+```
+?user=<first-login>&twin=<second-login>&ref=twin-town
+```
+
+Opening that link compares the two public towns immediately. **Turn toward** swaps the two usernames,
+so either recipient can visit the other town and send the bridge back. No login, image upload, or new
+backend is involved.
 
 ## Publish a persistent town
 

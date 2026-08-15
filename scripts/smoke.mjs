@@ -36,6 +36,7 @@ import {
   analyzeTownFrame,
   flipPixelRows
 } from '../assets/town-postcard.js';
+import { createTwinTownLink, createTwinTownMatch, summarizeTwinTown } from '../assets/twin-towns.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -55,6 +56,7 @@ const REPO_BUILDER = readFileSync(join(ROOT, 'scripts/build_repos.py'), 'utf8');
 const CAMERA_MATH_SRC = readFileSync(join(ROOT, 'assets/camera-obstruction.js'), 'utf8');
 const POSTCARD_SRC = readFileSync(join(ROOT, 'assets/town-postcard.js'), 'utf8');
 const PUBLIC_TOWN_PROOF_SRC = readFileSync(join(ROOT, 'assets/public-town-proof.js'), 'utf8');
+const TWIN_TOWNS_SRC = readFileSync(join(ROOT, 'assets/twin-towns.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -160,7 +162,7 @@ ok(/introProfileStatus\.textContent=introProfileResult\?t\(introProfileResult\.k
   && (HTML.match(/introPinProfile:'/g)||[]).length===2 && (HTML.match(/introProfileCopied:/g)||[]).length===2
   && /window\.__introCopyProfile=\(\)=>copyIntroProfileReadme\(\)/.test(HTML), 'copy feedback is text-only, bilingual, language-refreshable, and browser-diagnosable');
 ok(/\.introProofActions \{[^}]*display: flex[^}]*flex-wrap: wrap/.test(HTML)
-  && /\.introProofActions button \{[^}]*flex: 1 1 150px[^}]*min-height: 38px/.test(HTML), 'the two ready-state actions stay stable and wrap instead of overflowing on mobile');
+  && /\.introProofActions button \{[^}]*flex: 1 1 150px[^}]*min-height: 44px/.test(HTML), 'the ready-state actions stay stable, touch-sized, and wrap instead of overflowing on mobile');
 ok(/document\.getElementById\('startBtn'\)\.onclick=[\s\S]*?showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/.test(HTML)
   && /if\(!rb\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
   && (HTML.match(/showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/g)||[]).length===1,
@@ -198,6 +200,77 @@ ok(/GTM_DIR=data\/towns\/\$REPO_OWNER/.test(REFRESH_WORKFLOW)
 ok(/\/users\/\{OWNER\}\/repos\?per_page=100&type=owner/.test(REPO_BUILDER)
   &&/Public owner endpoint works with the built-in Actions token/.test(REPO_BUILDER), 'builder lists public owner repos without requiring an authenticated user endpoint');
 ok(/Path\("data"\) \/ "towns" \/ OWNER/.test(REPO_BUILDER), 'manual non-upstream builds default to an owner-scoped traffic root');
+
+group('Twin Towns — recipient-specific, reversible public-town referrals');
+const twinLeft = [
+  { repo:'agent-harbor', lang:'JavaScript', topics:['agents','threejs'], stars:12, forks:2 },
+  { repo:'rust-light', lang:'Rust', topics:['wasm'], stars:4, forks:1 }
+];
+const twinRight = [
+  { repo:'agent-map', lang:'TypeScript', topics:['agents','maps'], stars:8, forks:3 },
+  { repo:'web-stage', lang:'JavaScript', topics:['threejs'], stars:5, forks:1 }
+];
+const twinSummary = summarizeTwinTown('Ada-L', twinLeft);
+const twinMatch = createTwinTownMatch('Ada-L', twinLeft, 'Grace-H', twinRight);
+const twinReverse = createTwinTownMatch('Grace-H', twinRight, 'Ada-L', twinLeft);
+ok(twinSummary.repos===2 && twinSummary.stars===16 && twinSummary.languages.map(item=>item.name).join(',')==='JavaScript,Rust'
+  && twinSummary.topRepo.name==='agent-harbor', 'town matching summarizes only bounded public repo facts and picks a deterministic featured house');
+ok(twinMatch.bridgeKind==='topics' && twinMatch.bridgeItems.map(item=>item.name).join(',')==='agents,threejs'
+  && twinMatch.sharedLanguages.map(item=>item.name).join(',')==='JavaScript'
+  && twinMatch.combinedRepos===4 && twinMatch.combinedStars===29, 'shared topics win the bridge while shared languages and combined proof remain truthful');
+ok(twinReverse.bridgeKind===twinMatch.bridgeKind && twinReverse.bridgeItems.map(item=>item.name).join(',')===twinMatch.bridgeItems.map(item=>item.name).join(',')
+  && twinReverse.combinedRepos===twinMatch.combinedRepos && twinReverse.combinedStars===twinMatch.combinedStars, 'reversing the same public inputs preserves the bridge and combined proof');
+const twinLanguageMatch = createTwinTownMatch('one', [{repo:'a',lang:'Go',stars:1}], 'two', [{repo:'b',lang:'Go',stars:2}]);
+const twinContrastMatch = createTwinTownMatch('one', [{repo:'a',lang:'Go'}], 'two', [{repo:'b',lang:'Ruby'}]);
+ok(twinLanguageMatch.bridgeKind==='languages' && twinLanguageMatch.bridgeItems[0].name==='Go'
+  && twinContrastMatch.bridgeKind==='contrast' && twinContrastMatch.bridgeItems.length===0, 'language-only and contrasting towns degrade deterministically without invented overlap');
+ok(Object.isFrozen(twinMatch) && Object.isFrozen(twinMatch.left) && Object.isFrozen(twinMatch.bridgeItems),
+  'match results are immutable before entering the UI');
+ok(createTwinTownLink('Ada-L','Grace-H','https://example.test/Repolis/index.html?old=1#repo=x')
+  ==='https://example.test/Repolis/?user=ada-l&twin=grace-h&ref=twin-town', 'share links discard stale state and preserve a reversible two-login URL contract');
+let sameTwinRejected=false, badTwinRejected=false;
+try{ createTwinTownMatch('Ada-L',twinLeft,'ada-l',twinRight); }catch(error){ sameTwinRejected=error instanceof TypeError; }
+try{ createTwinTownLink('bad--','Grace-H'); }catch(error){ badTwinRejected=error instanceof TypeError; }
+ok(sameTwinRejected && badTwinRejected, 'same-user and invalid-login comparisons fail closed');
+
+const twinBlock = (HTML.match(/\/\* ====================== ↔ TWIN TOWNS[\s\S]*?\/\* ====================== 🚉 GITHUB STATION/) || [''])[0];
+ok(/import \{ createTwinTownLink, createTwinTownMatch \} from '\.\/assets\/twin-towns\.js\?v=twin-towns-v1'/.test(HTML),
+  'the zero-build runtime imports the deterministic Twin Towns module');
+ok(/id="twinModal" role="dialog" aria-modal="true" aria-labelledby="twinTitle" aria-describedby="twinSub" aria-hidden="true"/.test(HTML)
+  && /id="twinStatus" role="status" aria-live="polite" aria-atomic="true"/.test(HTML)
+  && /id="twinResult" hidden aria-live="polite" aria-atomic="true"/.test(HTML), 'comparison state is exposed as a labelled modal with polite live results');
+ok(/id="introCompare" type="button" data-i18n="introCompare"/.test(HTML)
+  && /id="twinMenuBtn" type="button"/.test(HTML), 'Twin Towns is discoverable after personal proof and from the in-city menu');
+ok(/const _reqTwin = \(new URLSearchParams\(location\.search\)\.get\('twin'\)/.test(HTML)
+  && /setTimeout\(\(\)=>openTwinTowns\('link',_reqTwin\),120\)/.test(twinBlock), 'a shared twin parameter opens the recipient-specific comparison automatically');
+ok(/const currentLoad=cityMode==='owner'\?_loadPublicCity\(currentUser\)/.test(twinBlock)
+  && /Promise\.all\(\[currentLoad,_loadPublicCity\(user\)\]\)/.test(twinBlock)
+  && /createTwinTownMatch\(currentUser,leftRepos,user,loaded\.repos\)/.test(twinBlock)
+  && !/fetch\(/.test(twinBlock), 'the second town reuses the existing public GitHub cache path with no new backend');
+ok(/createTwinTownLink\(TWIN\.match\.right\.user,TWIN\.match\.left\.user,_twinBaseUrl\(\)\)/.test(twinBlock),
+  'turning toward the other town swaps the pair so either recipient can continue the loop');
+ok(/textContent='@'\+side\.user/.test(twinBlock) && /top\.textContent=side\.topRepo/.test(twinBlock)
+  && !/innerHTML/.test(twinBlock) && !/innerHTML/.test(TWIN_TOWNS_SRC), 'untrusted GitHub names and repo facts enter Twin Towns through text-only sinks');
+ok(/function _twinFocusables\(\)/.test(twinBlock) && /event\.key!=='Tab'/.test(twinBlock)
+  && /twinForm\.setAttribute\('aria-busy','true'\)/.test(twinBlock)
+  && /\.twinClose \{[^}]*width: 44px; height: 44px/.test(HTML)
+  && /\.twinActions button \{[^}]*min-height: 44px/.test(HTML), 'keyboard focus is trapped and close/result actions meet the 44px touch target');
+['introCompare','twinMenu','twinTitle','twinSub','twinUserPh','twinGo','twinReady','twinShare','twinCopy','twinPrivacy']
+  .forEach(key => ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2, `Twin Towns key ${key} is bilingual`));
+ok(/if\(typeof window\.__twinLangRefresh==='function'\) window\.__twinLangRefresh\(\)/.test(HTML),
+  'dynamic match facts refresh when KO/EN changes');
+ok(/track\('twin_compare_success',\{entry,bridge:TWIN\.match\.bridgeKind,combinedRepos:TWIN\.match\.combinedRepos\}\)/.test(twinBlock)
+  && !/targetUser|cityUser|leftUser|rightUser/.test(twinBlock), 'Twin Towns funnel events omit both GitHub identities');
+ok(/connect with another developer/.test(README_EN) && /다른 개발자와 마을 연결/.test(README_KO)
+  && /twin=torvalds&ref=twin-town/.test(readFileSync(join(ROOT, 'examples/share-links.md'), 'utf8')), 'EN/KO adoption docs and the URL reference explain the new loop');
+const runtimeLocalFiles = [
+  'index.html','repolis.config.js','scholars.js','repos.json','assets/contribution-library.json',
+  'assets/world-tree/createRepolisHero.js','assets/camera-obstruction.js','assets/canal-ferry.js',
+  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js',
+  'council/council.config.json','council/engine.js','council/fixtures.js','council/guards.js','council/live.js'
+];
+const runtimeLocalBytes = runtimeLocalFiles.reduce((sum,file)=>sum+readFileSync(join(ROOT,file)).length,0);
+ok(runtimeLocalBytes < 5*1024*1024, 'the complete uncompressed local runtime remains below the 5 MiB transfer ceiling');
 
 group('star funnel — earned invitation + the events that show where visitors drop');
 ok(/id="starNudge"/.test(HTML) && /id="starNudgeGo"/.test(HTML) && /id="starNudgeX"/.test(HTML), 'the town carries a dismissible star invitation with its own close control');
