@@ -1199,8 +1199,9 @@ ok(!!metricTransportSource, 'trusted telemetry transport is extractable for beha
 if (metricTransportSource) {
   const originalFetch = globalThis.fetch;
   const metricRequests = [];
-  globalThis.fetch = async (url, init) => {
-    metricRequests.push({ url, init });
+  const serviceRequests = [];
+  globalThis.fetch = async (request) => {
+    metricRequests.push(request);
     return new Response(null, { status: 204 });
   };
   try {
@@ -1208,15 +1209,36 @@ if (metricTransportSource) {
     await metric({ METRICS_URL: 'https://metrics.example/event', METRICS_INGEST_TOKEN: 'shared-secret' },
       'ai_chat_turn', { answer: true, providerCall: false, question: 'private' });
     const sent = metricRequests[0];
-    const sentBody = JSON.parse(sent.init.body);
-    ok(new Headers(sent.init.headers).get('X-Repolis-Metrics-Key') === 'shared-secret'
+    const sentBody = await sent.clone().json();
+    ok(sent instanceof Request
+      && sent.headers.get('X-Repolis-Metrics-Key') === 'shared-secret'
       && sentBody.answer === true && sentBody.providerCall === false
       && sentBody.question === undefined && sentBody.question_len === 7,
-      'trusted telemetry sends the secret header while redacting prompt text');
+      'trusted global-fetch fallback sends the secret header while redacting prompt text');
+    await metric({
+      METRICS_URL: 'https://metrics.example/event',
+      METRICS_INGEST_TOKEN: 'shared-secret',
+      REPOLIS_METRICS: {
+        async fetch(request) {
+          serviceRequests.push(request);
+          return new Response(null, { status: 204 });
+        },
+      },
+    }, 'ai_grounding_outcome', { groundingPath: 'grounded_via_kb', ok: true });
+    const serviceSent = serviceRequests[0];
+    const serviceBody = await serviceSent.clone().json();
+    ok(serviceSent instanceof Request && serviceSent.url === 'https://metrics.example/event'
+      && serviceSent.headers.get('X-Repolis-Metrics-Key') === 'shared-secret'
+      && serviceBody.ev === 'ai_grounding_outcome'
+      && serviceBody.groundingPath === 'grounded_via_kb'
+      && metricRequests.length === 1,
+      'same-account telemetry prefers the signed REPOLIS_METRICS Service Binding and never hairpins through global fetch');
   } finally {
     globalThis.fetch = originalFetch;
   }
 }
+ok(/\[\[services\]\][\s\S]*?binding = "REPOLIS_METRICS"[\s\S]*?service = "repolis-metrics"/.test(TAXI_WRANGLER),
+  'Taxi deployment binds repolis-metrics for same-account Worker telemetry');
 ok(/route:'persona_ambient',npc:'resident',phase:'client_observation',answer:false,providerCall:false/.test(HTML),
   'browser ambient observations are explicitly non-authoritative and never leak into the none route');
 ok(/function trackAiTurn\([\s\S]{0,260}phase:'client_observation', answer:false, providerCall:false/.test(HTML),

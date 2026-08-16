@@ -29,6 +29,7 @@
 //   GROUNDED_MAX_RUNTIME_S optional KB runtime budget seconds (default 30; KB requires 11–599)
 //   ALLOW_ORIGIN           optional, e.g. https://<you>.github.io (default *)
 //   METRICS_INGEST_TOKEN   shared Observatory secret (X-Repolis-Metrics-Key; never commit)
+//   REPOLIS_METRICS        optional Service Binding to repolis-metrics (preferred over global fetch)
 //
 // Chronopolis Kronos Council (POST {action:"council"}) — see councilHandler near the bottom.
 //   COUNCIL_LIVE_ENABLED   "true" turns on the money-spending Live debate. DEFAULT OFF: every
@@ -1349,7 +1350,15 @@ function npcMetric(env, name, meta, ctx) {
     const headers = { "Content-Type": "application/json" };
     const ingestToken = String(env.METRICS_INGEST_TOKEN || "").trim();
     if (ingestToken && !/[\r\n]/.test(ingestToken)) headers["X-Repolis-Metrics-Key"] = ingestToken;
-    const task = fetch(url, { method: "POST", headers, body: JSON.stringify({ ev: name, ts: Date.now(), ...npcRedact(meta) }) }).catch(() => {});
+    const request = new Request(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ ev: name, ts: Date.now(), ...npcRedact(meta) }),
+    });
+    const transport = env.REPOLIS_METRICS && typeof env.REPOLIS_METRICS.fetch === "function"
+      ? env.REPOLIS_METRICS
+      : { fetch: (input) => fetch(input) };
+    const task = transport.fetch(request).catch(() => {});
     if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(task);
     return task;
   } catch { /* metrics never break a turn */ }

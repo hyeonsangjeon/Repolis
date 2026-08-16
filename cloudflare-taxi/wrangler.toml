@@ -28,6 +28,12 @@ new_sqlite_classes = ["NpcBudgetGovernor"]
 binding = "NPC_FLAGS"
 id = "0cad99a719a84c919839aa9e0616db53"
 
+# Same-account Worker-to-Worker telemetry must use a Service Binding. A global
+# fetch to the repolis-metrics workers.dev route can fail with Cloudflare 1042.
+[[services]]
+binding = "REPOLIS_METRICS"
+service = "repolis-metrics"
+
 # Non-secret config. The Search key is a SECRET — never put it here:
 #   wrangler secret put SEARCH_API_KEY
 [vars]

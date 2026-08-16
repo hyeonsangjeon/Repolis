@@ -65,6 +65,12 @@ same random value configured on `repolis-metrics`. The Worker sends it only as
 KB attempts, and final grounding paths out of the untrusted browser lane; prompt and answer text
 are never included.
 
+The committed `REPOLIS_METRICS` Service Binding is the primary transport. Cloudflare does not
+support an ordinary same-zone Worker-to-Worker `fetch()` to a `workers.dev` route without special
+routing, which can surface as error 1042. The binding forwards the same signed HTTP `Request`
+directly to `repolis-metrics`; global `fetch()` remains only an optional fallback for deployments
+that do not expose the binding. Deploy `repolis-metrics` before deploying this caller.
+
 Deterministic navigation ("take me to the most popular repo") is handled in the client
 and never reaches here. If the KB is unreachable / slow / unconfigured, the Worker returns
 `{ fallback:true }` and the client silently uses Local search. If the KB has nothing but
@@ -317,9 +323,11 @@ possibly billable dollars.
 //                  aiEnabled, ambientEnabled, playerChatEnabled,
 //                  hardAiEnabled, hardAmbientEnabled, hardPlayerChatEnabled,
 //                  maxTurns, hardMaxTurns, source:"durable-object", flagSource, liveToggle },
-//      budget:{ source:"durable-object", available, ... } }
+//      budget:{ source:"durable-object", durable:true, enforcement:"atomic_reservation",
+//               available, ... } }
 { "npc_action": "npcBudget" }
-// → { ok, budget:{ enabled, available, source:"durable-object", day, dayCapUsd,
+// → { ok, budget:{ enabled, available, source:"durable-object", durable:true,
+//                  enforcement:"atomic_reservation", day, dayCapUsd,
 //                  spentUsd, reservedUsd, remainingUsd, turnsToday, reservedTurns,
 //                  dailyTurnMax, attemptsToday, dailyAttemptMax, blocked } }
 { "npc_action": "npcAmbientTurn", "speaker":"sol", "listener":"jun", "topic":"model", "lang":"ko",
@@ -329,9 +337,12 @@ possibly billable dollars.
 // → { ok, line:"…", budget } | { ok:false, fallback:true, reason:"npc_budget_exhausted", budget }
 ```
 
-`npcConfig` and `npcBudget` only read flags/Governor state; they never invoke a model. When the binding is
-unavailable, they return `available:false`, `blocked:true`, and `source:"durable-object"` rather than an
-isolate-local estimate.
+`npcConfig` and `npcBudget` only read flags/Governor state; they never invoke a model. Every budget view,
+including a fail-closed unavailable response, declares `source:"durable-object"`, `durable:true`, and
+`enforcement:"atomic_reservation"`. These fields mean the configured enforcement mechanism is the single
+SQLite-backed Durable Object reservation ledger, never an isolate-local estimate. When that binding or its
+storage cannot be reached, `available:false` and `blocked:true` prevent a provider call; they do not downgrade
+to best-effort accounting.
 
 ### Env (all optional — defaults keep AI **off**)
 
