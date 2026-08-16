@@ -135,8 +135,11 @@ export async function runNpcBudgetGovernorTests(check) {
     const status = await operation(governor, { op: 'status', ...policy });
     check(reservations.filter((result) => result.accepted).length === 1
       && status.budget.reservedUsd === 0.0006
+      && status.budget.source === 'durable-object'
+      && status.budget.durable === true
+      && status.budget.enforcement === 'atomic_reservation'
       && status.budget.reservedUsd + status.budget.spentUsd <= status.budget.dayCapUsd,
-    'Durable governor serializes simultaneous reservations without cap overshoot');
+    'Durable governor advertises atomic reservation enforcement and serializes simultaneous reservations without cap overshoot');
   }
 
   {
@@ -402,7 +405,9 @@ export async function runNpcBudgetGovernorTests(check) {
       && success.budget.reservedUsd === 0
       && success.budget.remainingUsd === 0.9997135
       && success.budget.turnsToday === 1
-      && success.budget.source === 'durable-object',
+      && success.budget.source === 'durable-object'
+      && success.budget.durable === true
+      && success.budget.enforcement === 'atomic_reservation',
     'npcBudget reports authoritative spent, reserved, remaining, and turn values');
     check(!serializedState.includes('unique hermetic visitor')
       && !serializedEvents.includes('unique hermetic visitor')
@@ -446,6 +451,44 @@ export async function runNpcBudgetGovernorTests(check) {
     check(Math.abs(partialUsage.budget.spentUsd - billableEmpty.costUsd - partialUsage.costUsd) < 1e-12
       && partialUsage.budget.reservedUsd === 0,
     'billable fallback and partial usage remain reflected in authoritative budget totals');
+  }
+
+  {
+    const { governor } = makeGovernor();
+    const env = baseEnv(governor);
+    const plan = createNpcCallPlan(env, 'player', MESSAGES);
+    env.NPC_DAY_CAP_USD = String(plan.reservationNanos / 1_000_000_000);
+    let providerCalls = 0;
+    const attempted = await runBudgetedNpcCall({
+      env,
+      role: 'player',
+      messages: MESSAGES,
+      enabled: true,
+      providerCall: async () => {
+        providerCalls += 1;
+        return { ok: false, billable: true, reason: 'provider_http_error', usage: null };
+      },
+    });
+    const blocked = await runBudgetedNpcCall({
+      env,
+      role: 'player',
+      messages: MESSAGES,
+      enabled: true,
+      providerCall: async () => {
+        providerCalls += 1;
+        return { ok: true, text: 'must not run', usage: null };
+      },
+    });
+    const status = await npcBudgetStatus(env, true);
+    check(!attempted.ok && attempted.reason === 'provider_http_error'
+      && attempted.costUsd === plan.reservationNanos / 1_000_000_000
+      && !blocked.ok && blocked.reason === 'day_cap_exhausted'
+      && providerCalls === 1
+      && status.spentUsd === status.dayCapUsd && status.reservedUsd === 0
+      && status.turnsToday === 1 && status.attemptsToday === 1
+      && status.blocked && status.durable === true
+      && status.enforcement === 'atomic_reservation',
+    'a dispatched attempt with missing usage full-settles its conservative reservation and cannot overshoot or reopen the hard daily cap');
   }
 
   {
@@ -659,7 +702,10 @@ export async function runNpcBudgetGovernorTests(check) {
     });
     check(!unavailable.ok && unavailable.reason === 'npc_budget_governor_unavailable'
       && unavailable.budget.available === false && unavailable.budget.blocked
-      && unavailable.budget.source === 'durable-object' && providerCalls === 0,
-    'missing Durable Object binding fails closed before any provider call');
+      && unavailable.budget.source === 'durable-object'
+      && unavailable.budget.durable === true
+      && unavailable.budget.enforcement === 'atomic_reservation'
+      && providerCalls === 0,
+    'missing Durable Object binding retains the durable atomic contract and fails closed before any provider call');
   }
 }

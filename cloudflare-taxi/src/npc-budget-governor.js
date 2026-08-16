@@ -1,4 +1,9 @@
 const NPC_BUDGET_SOURCE = "durable-object";
+const NPC_BUDGET_VIEW_CONTRACT = Object.freeze({
+  source: NPC_BUDGET_SOURCE,
+  durable: true,
+  enforcement: "atomic_reservation",
+});
 const NPC_BUDGET_OBJECT_NAME = "npc-budget-canonical-v1";
 const NPC_LEDGER_KEY = "ledger";
 const NPC_ARCHIVED_LEDGER_PREFIX = "ledger:";
@@ -152,8 +157,8 @@ function publicBudget(ledger) {
   const turnBlocked = dailyTurnMax > 0 && ledger.turns + ledger.reservedTurns >= dailyTurnMax;
   const attemptBlocked = ledger.attempts >= ledger.dailyAttemptMax;
   return {
+    ...NPC_BUDGET_VIEW_CONTRACT,
     available: true,
-    source: NPC_BUDGET_SOURCE,
     day: ledger.day,
     dayCapUsd: nanosToUsd(capNanos),
     spentUsd: nanosToUsd(ledger.spentNanos),
@@ -170,9 +175,9 @@ function publicBudget(ledger) {
 
 function unavailableBudget(reason, policy) {
   return {
+    ...NPC_BUDGET_VIEW_CONTRACT,
     available: false,
     enabled: false,
-    source: NPC_BUDGET_SOURCE,
     day: null,
     dayCapUsd: policy?.ok ? nanosToUsd(policy.capNanos) : null,
     spentUsd: null,
@@ -215,7 +220,7 @@ function validReservationRecord(record) {
 function operationMeta(result, extra = {}) {
   const budget = result?.budget;
   return {
-    source: NPC_BUDGET_SOURCE,
+    ...NPC_BUDGET_VIEW_CONTRACT,
     ...extra,
     ...(budget?.day ? {
       day: budget.day,
