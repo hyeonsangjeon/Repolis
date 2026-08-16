@@ -38,7 +38,7 @@ wait for the slow KB to finish. Free plan, no card, and you already run a Worker
 
 ## What it holds (and what it doesn't)
 
-The Worker needs **two secrets** for the existing live KB/persona path:
+The Worker needs **two provider secrets** for the existing live KB/persona path:
 
 - your **Azure AI Search key** (`SEARCH_API_KEY`) — for KB retrieval, and
 - an **Entra ID service-principal secret** (`AAD_CLIENT_SECRET`) — so it can call Azure
@@ -58,6 +58,12 @@ AURI's stock source optionally adds `MARKET_LONGBRIDGE_ACCESS_TOKEN`, a dedicate
 OAuth access token. The Worker forwards it only to `longbridge-market-mcp-ks` through Azure AI
 Search query-time control headers. Coinbase spot data is public and keyless. Never use a
 full-trading token when a read-only market-data token is available.
+
+When `METRICS_URL` points at Repolis Observatory, also set `METRICS_INGEST_TOKEN` to the
+same random value configured on `repolis-metrics`. The Worker sends it only as
+`X-Repolis-Metrics-Key` to that collector. This keeps server provider calls, delivered answers,
+KB attempts, and final grounding paths out of the untrusted browser lane; prompt and answer text
+are never included.
 
 Deterministic navigation ("take me to the most popular repo") is handled in the client
 and never reaches here. If the KB is unreachable / slow / unconfigured, the Worker returns
@@ -97,7 +103,17 @@ npx wrangler secret put AAD_CLIENT_SECRET    # service principal password (the o
 If you skip (2), grounded answers still work; off-KB / small-talk questions just fall
 back to the client's Local reply instead of an in-persona answer.
 
-**(3) Ship it:**
+**(3) Authoritative Observatory telemetry** (required before publishing per-answer economics):
+
+```bash
+# Use the identical random value already set on repolis-metrics:
+npx wrangler secret put METRICS_INGEST_TOKEN
+```
+
+Deploy `repolis-metrics` first, then this Worker. Without the shared token, telemetry remains
+public diagnostic data and is deliberately excluded from provider/cost/answer attribution.
+
+**(4) Ship it:**
 
 ```bash
 npx wrangler deploy
@@ -105,7 +121,7 @@ npx wrangler deploy
 
 `wrangler deploy` prints your URL, e.g. `https://repolis-taxi.<you>.workers.dev`.
 
-**(4) AURI's optional market KB** — create the two MCP Knowledge Sources and the
+**(5) AURI's optional market KB** — create the two MCP Knowledge Sources and the
 `repolis-market-kb` described in [`../SCHOLARS.md`](../SCHOLARS.md), then set the Longbridge
 token server-side:
 
@@ -297,8 +313,10 @@ possibly billable dollars.
 
 ```jsonc
 { "npc_action": "npcConfig", "lang": "ko" }
-// → { ok, config:{ aiEnabled, ambientEnabled, playerChatEnabled, maxTurns, hardMaxTurns,
-//                  source:"durable-object", flagSource, liveToggle },
+// → { ok, config:{ requested, effective, pending, canEnable, blockReason,
+//                  aiEnabled, ambientEnabled, playerChatEnabled,
+//                  hardAiEnabled, hardAmbientEnabled, hardPlayerChatEnabled,
+//                  maxTurns, hardMaxTurns, source:"durable-object", flagSource, liveToggle },
 //      budget:{ source:"durable-object", available, ... } }
 { "npc_action": "npcBudget" }
 // → { ok, budget:{ enabled, available, source:"durable-object", day, dayCapUsd,
@@ -327,7 +345,7 @@ isolate-local estimate.
 | `NPC_MODEL_AMBIENT` / `NPC_MODEL_PLAYER` | — | Optional per-role deployment overrides; each deployed name needs a pricing entry. |
 | `NPC_MODEL_PRICING_JSON` | built-in `gpt-5.4-mini` table | JSON map of deployment alias to `inputPer1MUsd`, `cachedInputPer1MUsd`, `outputPer1MUsd`, `maxInputTokens`, and `maxOutputTokens`. Invalid/unknown/incomplete means no call. |
 | `NPC_MAX_COMPLETION_TOKENS` | `120` | Provider output cap and reservation output bound (1–4096). |
-| `NPC_DAY_CAP_USD` | `10` | Durable UTC-day hard cap. `0` disables calls. Invalid values fail closed. |
+| `NPC_DAY_CAP_USD` | `0.15` in this deployment (`10` code default) | Durable UTC-day hard cap. The committed value bounds a 31-day month to `$4.65` of resident Azure model calls. `0` disables calls; invalid values fail closed. |
 | `NPC_DAILY_TURN_MAX` | `0` (off) | Optional durable daily turn cap; in-flight reservations consume slots. |
 | `NPC_DAILY_ATTEMPT_MAX` | `5000` | Hard abuse/storage ceiling for accepted reservations, including provider failures. Must be positive. |
 | `NPC_BUDGET_TIMEOUT_MS` | `1500` | Internal Governor response deadline (100–10000 ms); timeout fails closed. |
@@ -335,16 +353,23 @@ isolate-local estimate.
 | `NPC_TIMEOUT_MS` | `12000` | Entra token + model request deadline; timeout aborts the request and releases its reservation. |
 | `NPC_MAX_TURNS` / `NPC_HARD_MAX_TURNS` | `6` / `10` | Advertised default / absolute ambient conversation caps. |
 | `METRICS_URL` | — | Optional private collector. Resident budget telemetry is anonymous aggregate operations only. |
+| `METRICS_INGEST_TOKEN` | — | Shared Worker secret for `X-Repolis-Metrics-Key`; identical value on `repolis-metrics`. Required for authoritative per-answer/provider/grounding attribution. |
 
 Model turns reuse the **same** Entra ID service principal as scholar chat (`AAD_*` + `AOAI_ENDPOINT`); no
 new secret is needed. Keep the committed `NPC_MODEL_PRICING_JSON` synchronized with the actual deployment
 meter before enabling the pilot. A custom deployment alias without a matching entry is deliberately rejected.
 
 Allowed resident-budget telemetry is limited to `npc_budget_reserve` (accepted/rejected),
-`npc_budget_settle` (settled/released), `npc_provider_error`, and `npc_budget_utc_reset`. Events may include
-role, reason, aggregate dollars/turns, and whether provider usage was authoritative. They never include prompt
-text, conversation text, speaker/visitor identity, instance ID, or reservation ID. Scholar/KB/MCP telemetry
-remains on its existing independent path.
+`npc_budget_settle` (settled/released), `npc_provider_error`, and `npc_budget_utc_reset`. Separate
+`ai_chat_turn` records distinguish each provider call (`providerCall=true`, `answer=false`) from the one
+user-visible delivered answer (`providerCall=false`, `answer=true`). Scholar grounding additionally emits
+one `ai_kb_query` only for a real Azure `/retrieve` attempt and one `ai_grounding_outcome` for the final
+KB or direct-MCP path. `pathRole=primary` distinguishes configured direct scholars from a real
+`pathRole=fallback`; only the latter carries `timeout`, `empty`, `error`, or `unconfigured`. Budget events
+may include role, categorical reason, aggregate dollars/turns, and
+whether provider usage was authoritative; they never include prompt text, conversation text, speaker/visitor
+identity, instance ID, or reservation ID. AI attribution events may add the coarse traffic class and an
+anonymous installation UUID already accepted by Observatory, but still never include prompt or answer text.
 
 ### Live kill switches
 
@@ -359,9 +384,11 @@ npx wrangler secret put NPC_LIVE_TOGGLE   # enter: true
 ```
 
 With `NPC_LIVE_TOGGLE="true"`, the Worker reads `ai_enabled`, `ambient_enabled`, and
-`player_chat_enabled` (`"true"`/`"false"`) on every resident request. KV may turn an env-enabled feature off,
-but can never turn an env-disabled feature on. A missing binding or KV read failure disables all resident AI
-for that request.
+`player_chat_enabled` (`"true"`/`"false"`) on every resident request. Every enabled feature requires an
+explicit KV `"true"`; missing or malformed keys fail closed. KV may permit an env-enabled feature, but can
+never turn an env-disabled feature on. A missing binding or KV read failure disables all resident AI for that
+request. `npcConfig` exposes the requested KV state separately from the effective env/budget-gated state so
+the dashboard can confirm asynchronous propagation instead of treating a successful write as activation.
 Cloudflare KV propagation can take up to about 60 seconds; use `NPC_AI_ENABLED=false` plus a Worker deploy for
 the account-level hard stop.
 

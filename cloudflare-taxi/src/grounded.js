@@ -28,6 +28,7 @@
 //   GROUNDED_TIMEOUT_MS    optional fetch abort ms (default 25000; CF has no 10 s wall)
 //   GROUNDED_MAX_RUNTIME_S optional KB runtime budget seconds (default 30; KB requires 11–599)
 //   ALLOW_ORIGIN           optional, e.g. https://<you>.github.io (default *)
+//   METRICS_INGEST_TOKEN   shared Observatory secret (X-Repolis-Metrics-Key; never commit)
 //
 // Chronopolis Kronos Council (POST {action:"council"}) — see councilHandler near the bottom.
 //   COUNCIL_LIVE_ENABLED   "true" turns on the money-spending Live debate. DEFAULT OFF: every
@@ -53,9 +54,9 @@ import {
 
 export { NpcBudgetGovernor };
 
-// --- Direct-MCP fallback for scholar NPCs. Used ONLY when the scholar's Azure Knowledge
-// Base is unreachable/unconfigured (clone-friendly, keyless). Normally scholars go through
-// the shared KB-retrieve pipeline below (GPT synthesis in the user's language + trace). ---
+// --- Direct MCP for scholar NPCs. DeepWiki/Context7/Hugging Face use it as their configured
+// primary path; MS Learn uses it only when Azure KB retrieval fails (clone-friendly, keyless).
+// Other scholars normally go through the shared KB pipeline below. ---
 const MCP_NPCS = {
   msdocs: {
     url: "https://learn.microsoft.com/api/mcp",
@@ -262,18 +263,24 @@ async function directMcpResponse(npc, question, evidence, refs, tools, env, extr
       phase: "direct_mcp_synthesis", model: synthesis.model, usage: synthesis.usage, ms: synthesis.ms,
     }, { refs: refs.length, ...(extra.requestMeta || {}) });
   }
-  npcMetric(env, "ai_kb_query", {
-    route: groundedRoute(npc), phase: "direct_mcp", ks: cfg.source, kb: "direct",
-    npc, ms: elapsed, refs: refs.length, ok: true, ...(extra.requestMeta || {}),
-  }, extra.ctx);
   const ko = String(extra.lang || "").toLowerCase().startsWith("ko");
   const rawMessage = npc === "huggingface" && refs.length
     ? (ko ? "Hugging Face에서 찾은 결과예요:\n" : "Here are the Hugging Face results:\n")
       + refs.map((r, i) => `${i + 1}. ${r.name}${r.snippet ? ` — ${r.snippet}` : ""}`).join("\n")
     : cleanProse(evidence).slice(0, 1800);
+  const message = synthesis?.text || rawMessage;
+  emitDirectGrounding(env, extra, npc, { ok: true, ms: elapsed, refs: refs.length });
+  if (hasDeliveredContent(message, refs.length)) {
+    emitDeliveredAnswer(env, extra.ctx, groundedRoute(npc), extra.groundingTelemetry?.ks || cfg.source, npc, {
+      ms: elapsed,
+      refs: refs.length,
+      model: synthesis?.model || "none",
+      ...(extra.requestMeta || {}),
+    });
+  }
   return json({
     kind: "docs",
-    message: synthesis?.text || rawMessage,
+    message,
     usage: synthesis?.usage || null,
     items: refs,
     trace: { ks: cfg.source, tools, refs, docs: true, direct: true, mcpMs: elapsed, totalMs: elapsed },
@@ -303,6 +310,7 @@ async function context7Ask(question, env, extra) {
     }
     if (!libraryId) {
       clearTimeout(timer);
+      emitDirectGrounding(env, extra, "context7", { ok: false, ms: Date.now() - started, refs: 0 });
       return json({ kind: "docs", notFound: true, items: [], trace: { ks: cfg.source, tools: ["resolve-library-id"] } }, 200, env);
     }
     tools.push("query-docs");
@@ -316,14 +324,19 @@ async function context7Ask(question, env, extra) {
       if (publicDocs.ok) { text = await publicDocs.text(); tools.push("context7-llms"); }
     }
     clearTimeout(timer);
-    if (!text) return json({ fallback: true, reason: "empty Context7 docs" }, 200, env);
+    if (!text) {
+      emitDirectGrounding(env, extra, "context7", { ok: false, ms: Date.now() - started, refs: 0 });
+      return json({ fallback: true, reason: "empty Context7 docs" }, 200, env);
+    }
     if (/quota exceeded|rate limit|too many requests/i.test(text)) {
+      emitDirectGrounding(env, extra, "context7", { ok: false, ms: Date.now() - started, refs: 0 });
       return json({ fallback: true, reason: "Context7 quota exceeded" }, 200, env);
     }
     const refs = refsFromMarkdown(text, `https://context7.com/${libraryId.replace(/^\//, "")}`, libraryId);
     return directMcpResponse("context7", question, text, refs, tools, env, extra, started);
   } catch (e) {
     clearTimeout(timer);
+    emitDirectGrounding(env, extra, "context7", { ok: false, ms: Date.now() - started, refs: 0 });
     return json({ fallback: true, reason: e?.name === "AbortError" ? `timeout ${timeoutMs}ms` : String(e).slice(0, 160) }, 200, env);
   }
 }
@@ -346,8 +359,12 @@ async function huggingFaceAsk(question, env, extra) {
     const call = await mcpRpc(cfg.url, "tools/call", { name: tool, arguments: args }, sid, false, ctrl.signal, headers);
     clearTimeout(timer);
     const result = mcpResult(call), text = mcpText(call);
-    if (!text || result?.isError) return json({ fallback: true, reason: "empty Hugging Face results" }, 200, env);
+    if (!text || result?.isError) {
+      emitDirectGrounding(env, extra, "huggingface", { ok: false, ms: Date.now() - started, refs: 0 });
+      return json({ fallback: true, reason: "empty Hugging Face results" }, 200, env);
+    }
     if (/^\s*No (?:repositories|papers) found/i.test(text)) {
+      emitDirectGrounding(env, extra, "huggingface", { ok: false, ms: Date.now() - started, refs: 0 });
       return json({ kind: "docs", notFound: true, items: [], trace: { ks: cfg.source, tools: [tool] } }, 200, env);
     }
     const entries = Array.isArray(result?.structuredContent?.entries) ? result.structuredContent.entries : [];
@@ -357,6 +374,7 @@ async function huggingFaceAsk(question, env, extra) {
     return directMcpResponse("huggingface", question, text, refs, [tool], env, extra, started);
   } catch (e) {
     clearTimeout(timer);
+    emitDirectGrounding(env, extra, "huggingface", { ok: false, ms: Date.now() - started, refs: 0 });
     return json({ fallback: true, reason: e?.name === "AbortError" ? `timeout ${timeoutMs}ms` : String(e).slice(0, 160) }, 200, env);
   }
 }
@@ -421,15 +439,27 @@ async function mcpAsk(npc, question, env, extra = {}) {
 
     // DeepWiki-style: the text block IS the answer (free-form markdown prose).
     if (cfg.prose) {
-      if (!textBlock) return json({ fallback: true, reason: "empty mcp" }, 200, env);
+      if (!textBlock) {
+        emitDirectGrounding(env, extra, npc, { ok: false, ms: Date.now() - started, refs: 0 });
+        return json({ fallback: true, reason: "empty mcp" }, 200, env);
+      }
       // DeepWiki returns isError:false even when the repo isn't indexed — detect that text.
       if (/Repository not found|to index it|not been indexed|isn'?t indexed/i.test(textBlock)) {
+        emitDirectGrounding(env, extra, npc, { ok: false, ms: Date.now() - started, refs: 0 });
         return json({ kind: "docs", notFound: true, repoName: extra.repoName, items: [],
           trace: { source: cfg.source, tool: cfg.tool, repo: extra.repoName } }, 200, env);
       }
       const prose = cleanProse(textBlock).slice(0, 1500);
-      if (!prose) return json({ fallback: true, reason: "empty prose" }, 200, env);
+      if (!prose) {
+        emitDirectGrounding(env, extra, npc, { ok: false, ms: Date.now() - started, refs: 0 });
+        return json({ fallback: true, reason: "empty prose" }, 200, env);
+      }
       const url = "https://deepwiki.com/" + extra.repoName;
+      const elapsed = Date.now() - started;
+      emitDirectGrounding(env, extra, npc, { ok: true, ms: elapsed, refs: 1 });
+      emitDeliveredAnswer(env, extra.ctx, groundedRoute(npc), extra.groundingTelemetry?.ks || cfg.source, npc, {
+        ms: elapsed, refs: 1, model: "none", ...(extra.requestMeta || {}),
+      });
       return json({
         kind: "docs",
         message: prose,
@@ -450,7 +480,15 @@ async function mcpAsk(npc, question, env, extra = {}) {
       snippet: cleanDoc(r.content).slice(0, 420),
     })).filter((i) => i.title || i.snippet);
 
-    if (!items.length) return json({ fallback: true, reason: "no docs" }, 200, env);
+    if (!items.length) {
+      emitDirectGrounding(env, extra, npc, { ok: false, ms: Date.now() - started, refs: 0 });
+      return json({ fallback: true, reason: "no docs" }, 200, env);
+    }
+    const elapsed = Date.now() - started;
+    emitDirectGrounding(env, extra, npc, { ok: true, ms: elapsed, refs: items.length });
+    emitDeliveredAnswer(env, extra.ctx, groundedRoute(npc), extra.groundingTelemetry?.ks || cfg.source, npc, {
+      ms: elapsed, refs: items.length, model: "none", ...(extra.requestMeta || {}),
+    });
     return json({
       kind: "docs",
       items,
@@ -459,6 +497,7 @@ async function mcpAsk(npc, question, env, extra = {}) {
   } catch (e) {
     clearTimeout(timer);
     const reason = e.name === "AbortError" ? "timeout " + timeoutMs + "ms" : String(e).slice(0, 160);
+    emitDirectGrounding(env, extra, npc, { ok: false, ms: Date.now() - started, refs: 0 });
     return json({ fallback: true, reason }, 200, env);
   }
 }
@@ -1307,7 +1346,10 @@ function npcRedact(m) {
 }
 function npcMetric(env, name, meta, ctx) {
   try { const url = env.METRICS_URL; if (!url) return;
-    const task = fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ev: name, ts: Date.now(), ...npcRedact(meta) }) }).catch(() => {});
+    const headers = { "Content-Type": "application/json" };
+    const ingestToken = String(env.METRICS_INGEST_TOKEN || "").trim();
+    if (ingestToken && !/[\r\n]/.test(ingestToken)) headers["X-Repolis-Metrics-Key"] = ingestToken;
+    const task = fetch(url, { method: "POST", headers, body: JSON.stringify({ ev: name, ts: Date.now(), ...npcRedact(meta) }) }).catch(() => {});
     if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(task);
     return task;
   } catch { /* metrics never break a turn */ }
@@ -1375,16 +1417,35 @@ function emitProviderUsage(env, ctx, route, ks, npc, activity, base) {
     npc: npc || "unknown",
     model: activity.model || "unknown",
     ms: activity.ms,
-    ok: true,
+    ok: activity.ok !== false,
     ai: true,
     providerCall: true,
     answer: false,
     tokensIn: u.prompt_tokens,
     cachedTokens: u.cached_tokens,
     tokensOut: u.completion_tokens,
-    costUsd: modelCostUsd(env, u),
+    costUsd: Number.isFinite(Number(activity.costUsd)) ? Math.max(0, Number(activity.costUsd)) : modelCostUsd(env, u),
     ...(base || {}),
   }, ctx);
+}
+function emitDeliveredAnswer(env, ctx, route, ks, npc, delivery) {
+  npcMetric(env, "ai_chat_turn", {
+    route,
+    phase: "delivered_answer",
+    ks: ks || "none",
+    npc: npc || "unknown",
+    model: delivery?.model || "none",
+    ms: Math.max(0, Number(delivery?.ms) || 0),
+    refs: Math.max(0, Number(delivery?.refs) || 0),
+    ok: true,
+    ai: true,
+    providerCall: false,
+    answer: true,
+    ...(delivery || {}),
+  }, ctx);
+}
+function hasDeliveredContent(message, refs) {
+  return !!String(message || "").trim() || Math.max(0, Number(refs) || 0) > 0;
 }
 function emitKbQuery(env, ctx, route, cfg, npc, out, base) {
   if (!out?.attempted) return;
@@ -1395,11 +1456,53 @@ function emitKbQuery(env, ctx, route, cfg, npc, out, base) {
     ks: cfg?.ks || "none",
     kb: cfg?.kb || "none",
     npc: npc || "unknown",
+    groundingPath: "grounded_via_kb",
+    pathRole: "primary",
     ms: Math.max(0, Number(out?.totalMs) || 0),
     refs,
     ok: !!out?.ok,
     ...base,
   }, ctx);
+}
+function boundedGroundingReason(out) {
+  const reason = String(out?.reason || "").toLowerCase();
+  if (!out?.attempted || /unconfig|not configured|missing/.test(reason)) return "unconfigured";
+  if (/timeout|abort/.test(reason)) return "timeout";
+  if (out?.ok && !out?.answer && !(out?.data?.references || []).length) return "empty";
+  if (/empty|no (?:docs|documents|references|sources|results)|not found/.test(reason)) return "empty";
+  return "error";
+}
+function emitGroundingOutcome(env, ctx, route, cfg, npc, outcome, base) {
+  const pathRole = outcome?.pathRole === "fallback" ? "fallback" : "primary";
+  const meta = {
+    route,
+    phase: "grounding_outcome",
+    ks: cfg?.ks || "none",
+    kb: cfg?.kb || "none",
+    npc: npc || "unknown",
+    groundingPath: outcome?.groundingPath,
+    pathRole,
+    ms: Math.max(0, Number(outcome?.ms) || 0),
+    refs: Math.max(0, Number(outcome?.refs) || 0),
+    ok: outcome?.ok === true,
+    ...(base || {}),
+  };
+  if (pathRole === "fallback") meta.fallbackReason = outcome?.fallbackReason || "unknown";
+  npcMetric(env, "ai_grounding_outcome", meta, ctx);
+}
+function emitDirectGrounding(env, extra, npc, result) {
+  const telemetry = extra?.groundingTelemetry || {};
+  emitGroundingOutcome(env, extra?.ctx, groundedRoute(npc), {
+    ks: telemetry.ks || MCP_NPCS[npc]?.source || "none",
+    kb: telemetry.kb || "none",
+  }, npc, {
+    groundingPath: "grounded_via_mcp_direct",
+    pathRole: telemetry.pathRole === "fallback" ? "fallback" : "primary",
+    fallbackReason: telemetry.fallbackReason,
+    ok: result?.ok === true,
+    ms: result?.ms,
+    refs: result?.refs,
+  }, extra?.requestMeta);
 }
 // Provider adapter. A caller must hold a Durable Object reservation; aiEnabled is a second hard ceiling.
 async function npcModelCall(env, role, plan, aiEnabled) {
@@ -1442,19 +1545,46 @@ async function npcModelCall(env, role, plan, aiEnabled) {
 }
 // --- Live flag resolver. NPC_LIVE_TOGGLE is the master kill-switch. When it is NOT "true",
 //     behaviour is exactly the env-gated default (KV ignored) — the safe, deploy-only posture.
-//     When "true", the shared NPC_FLAGS KV overrides per key in near real time (owner dashboard
-//     writes it), with the matching env var as the per-key fallback. AI can never be enabled unless
-//     this resolver returns aiEnabled=true, so the hard model-call ceiling is preserved. ---
+//     When "true", the shared NPC_FLAGS KV must explicitly allow each key in near real time (owner
+//     dashboard writes it). Missing/malformed keys fail closed. AI can never be enabled unless this
+//     resolver returns aiEnabled=true, so the hard model-call ceiling is preserved. ---
 async function npcResolveFlags(env) {
   const envAi = env.NPC_AI_ENABLED === "true";
   const envAmb = env.NPC_AMBIENT_ENABLED === "true";
   const envPc = env.NPC_PLAYER_CHAT_ENABLED === "true";
   const liveToggle = env.NPC_LIVE_TOGGLE === "true";
+  const hardCeiling = { ai: envAi, ambient: envAmb, player: envPc };
+  const contract = {
+    hardAiEnabled: envAi,
+    hardAmbientEnabled: envAmb,
+    hardPlayerChatEnabled: envPc,
+    hardCeiling,
+  };
   if (!liveToggle) {
-    return { aiEnabled: envAi, ambientEnabled: envAi && envAmb, playerChatEnabled: envAi && envPc, source: "env", liveToggle: false };
+    const effective = { ai: envAi, ambient: envAi && envAmb, player: envAi && envPc };
+    return {
+      ...contract,
+      aiEnabled: effective.ai,
+      ambientEnabled: effective.ambient,
+      playerChatEnabled: effective.player,
+      requested: effective,
+      effective,
+      source: "env",
+      liveToggle: false,
+    };
   }
   if (!env.NPC_FLAGS || typeof env.NPC_FLAGS.get !== "function") {
-    return { aiEnabled: false, ambientEnabled: false, playerChatEnabled: false, source: "kv-unavailable", liveToggle: true };
+    const effective = { ai: false, ambient: false, player: false };
+    return {
+      ...contract,
+      aiEnabled: false,
+      ambientEnabled: false,
+      playerChatEnabled: false,
+      requested: { ai: null, ambient: null, player: null },
+      effective,
+      source: "kv-unavailable",
+      liveToggle: true,
+    };
   }
   let kAi = null, kAmb = null, kPc = null;
   try {
@@ -1464,15 +1594,41 @@ async function npcResolveFlags(env) {
       env.NPC_FLAGS.get("player_chat_enabled"),
     ]);
   } catch {
-    return { aiEnabled: false, ambientEnabled: false, playerChatEnabled: false, source: "kv-unavailable", liveToggle: true };
+    const effective = { ai: false, ambient: false, player: false };
+    return {
+      ...contract,
+      aiEnabled: false,
+      ambientEnabled: false,
+      playerChatEnabled: false,
+      requested: { ai: null, ambient: null, player: null },
+      effective,
+      source: "kv-unavailable",
+      liveToggle: true,
+    };
   }
-  const allows = (kv) => kv !== "false";
-  const ai = envAi && allows(kAi);
+  // Live mode requires an explicit true. Missing/malformed keys fail closed, so
+  // enabling deployment ceilings can never awaken a latent default state.
+  const allows = (kv) => kv === "true";
+  const requestedAi = allows(kAi);
+  const requested = {
+    ai: requestedAi,
+    ambient: requestedAi && allows(kAmb),
+    player: requestedAi && allows(kPc),
+  };
+  const effective = {
+    ai: envAi && requested.ai,
+    ambient: envAi && envAmb && requested.ambient,
+    player: envAi && envPc && requested.player,
+  };
   return {
-    aiEnabled: ai,
-    ambientEnabled: ai && envAmb && allows(kAmb),
-    playerChatEnabled: ai && envPc && allows(kPc),
-    source: "kv", liveToggle: true,
+    ...contract,
+    aiEnabled: effective.ai,
+    ambientEnabled: effective.ambient,
+    playerChatEnabled: effective.player,
+    requested,
+    effective,
+    source: "kv",
+    liveToggle: true,
   };
 }
 async function npcHandler(body, request, env, ctx) {
@@ -1483,14 +1639,41 @@ async function npcHandler(body, request, env, ctx) {
   const ambientOn = flags.ambientEnabled;
   const playerOn = flags.playerChatEnabled;
   const emitBudgetMetric = (name, meta) => npcMetric(env, name, meta, ctx);
+  const requestMeta = metricContext(body, request);
 
   if (action === "npcConfig") {
     const budget = await npcBudgetStatus(env, aiEnabled, emitBudgetMetric);
     const budgetReady = budget.available === true;
+    const effective = {
+      ai: aiEnabled && budgetReady,
+      ambient: ambientOn && budgetReady,
+      player: playerOn && budgetReady,
+    };
+    const pending = Object.keys(effective).some((key) =>
+      typeof flags.requested?.[key] === "boolean" && flags.requested[key] !== effective[key]
+    );
+    const canEnable = flags.liveToggle === true
+      && flags.source === "kv"
+      && flags.hardAiEnabled === true
+      && budgetReady;
+    const blockReason = flags.liveToggle !== true ? "live_toggle_off"
+      : flags.source !== "kv" ? "kv_unavailable"
+      : flags.hardAiEnabled !== true ? "npc_hard_ceiling_off"
+      : !budgetReady ? "npc_budget_unavailable"
+      : null;
     return json({ ok: true, config: {
-      aiEnabled: aiEnabled && budgetReady,
-      ambientEnabled: ambientOn && budgetReady,
-      playerChatEnabled: playerOn && budgetReady,
+      aiEnabled: effective.ai,
+      ambientEnabled: effective.ambient,
+      playerChatEnabled: effective.player,
+      requested: flags.requested,
+      effective,
+      pending,
+      canEnable,
+      blockReason,
+      hardAiEnabled: flags.hardAiEnabled,
+      hardAmbientEnabled: flags.hardAmbientEnabled,
+      hardPlayerChatEnabled: flags.hardPlayerChatEnabled,
+      hardCeiling: flags.hardCeiling,
       maxTurns: Number(env.NPC_MAX_TURNS || 6), hardMaxTurns: Number(env.NPC_HARD_MAX_TURNS || 10),
       source: "durable-object", flagSource: flags.source, liveToggle: flags.liveToggle,
     }, budget }, 200, env);
@@ -1501,6 +1684,8 @@ async function npcHandler(body, request, env, ctx) {
 
   if (action === "npcAmbientTurn" || action === "npcPlayerChat") {
     const role = action === "npcAmbientTurn" ? "ambient" : "player";
+    const route = role === "ambient" ? "persona_ambient" : "persona_visitor";
+    const npc = String(body.speaker || "resident").slice(0, 40);
     const featureOn = role === "ambient" ? ambientOn : playerOn;
     if (String(body.speaker || "").toLowerCase() === "auri") {
       const budget = await npcBudgetStatus(env, aiEnabled, emitBudgetMetric);
@@ -1525,6 +1710,16 @@ async function npcHandler(body, request, env, ctx) {
       providerCall: (plan) => npcModelCall(env, role, plan, aiEnabled),
     });
     if (!turn.ok) {
+      if (turn.usage) {
+        emitProviderUsage(env, ctx, route, "none", npc, {
+          phase: role + "_model",
+          model: turn.model,
+          usage: turn.usage,
+          costUsd: turn.costUsd,
+          ms: 0,
+          ok: false,
+        }, requestMeta);
+      }
       const exhausted = ["day_cap_zero", "day_cap_exhausted", "daily_turn_max", "daily_attempt_max"].includes(turn.reason);
       return json({
         ok: !exhausted,
@@ -1533,9 +1728,23 @@ async function npcHandler(body, request, env, ctx) {
         budget: turn.budget,
       }, 200, env);
     }
+    const line = capLine(turn.value.text, role === "ambient" ? 90 : 180);
+    emitProviderUsage(env, ctx, route, "none", npc, {
+      phase: role + "_model",
+      model: turn.model,
+      usage: turn.usage,
+      costUsd: turn.costUsd,
+      ms: turn.value?.ms,
+    }, requestMeta);
+    emitDeliveredAnswer(env, ctx, route, "none", npc, {
+      model: turn.model,
+      ms: turn.value?.ms,
+      refs: 0,
+      ...requestMeta,
+    });
     return json({
       ok: true,
-      line: capLine(turn.value.text, role === "ambient" ? 90 : 180),
+      line,
       usage: turn.usage,
       model: turn.model,
       budget: turn.budget,
@@ -1594,6 +1803,7 @@ export default {
       const g = await chatLLM(who, history, question, lang, env);
       if (g) {
         emitProviderUsage(env, ctx, "persona_visitor", "none", who, { phase: "persona", model: g.model, usage: g.usage, ms: g.ms }, requestMeta);
+        emitDeliveredAnswer(env, ctx, "persona_visitor", "none", who, { model: g.model, ms: g.ms, refs: 0, ...requestMeta });
         return json({
         repo: null, message: g.text, general: true, usage: g.usage, model: g.model,
         trace: { general: true, model: env.AOAI_DEPLOYMENT || "gpt-5.4-mini" },
@@ -1620,7 +1830,22 @@ export default {
     // KB unreachable / slow / unconfigured / empty. A scholar with its own public MCP falls
     // back to a direct keyless call (clone-friendly); the taxi tells the client to use Local.
     if (out.fallback || (!out.answer && !(out.data?.references || []).length)) {
-      if (MCP_NPCS[who]) return mcpAsk(who, question, env, { repoName, lang, history, ctx, requestMeta });
+      if (MCP_NPCS[who]) {
+        const pathRole = cfg.kb ? "fallback" : "primary";
+        const groundingTelemetry = {
+          ks: cfg.ks || MCP_NPCS[who].source,
+          kb: cfg.kb || "none",
+          pathRole,
+          ...(pathRole === "fallback" ? { fallbackReason: boundedGroundingReason(out) } : {}),
+        };
+        return mcpAsk(who, question, env, { repoName, lang, history, ctx, requestMeta, groundingTelemetry });
+      }
+      if (out.attempted) {
+        emitGroundingOutcome(env, ctx, route, cfg, who, {
+          groundingPath: "grounded_via_kb", pathRole: "primary", ok: false,
+          ms: out.totalMs, refs: 0,
+        }, requestMeta);
+      }
       return json({ fallback: true, reason: out.reason || "empty grounding", detail: out.detail }, 200, env);
     }
 
@@ -1628,6 +1853,16 @@ export default {
       // Taxi driver → pick the best repo so the client can drive there.
       const refs = parseRefs(out.data.references);
       const repo = pickRepo(out.answer, refs);
+      emitGroundingOutcome(env, ctx, route, cfg, who, {
+        groundingPath: "grounded_via_kb", pathRole: "primary", ok: true,
+        ms: out.totalMs, refs: refs.length,
+      }, requestMeta);
+      if (hasDeliveredContent(out.answer, refs.length)) {
+        emitDeliveredAnswer(env, ctx, route, cfg.ks, who, {
+          model: (out.modelActivities || []).at(-1)?.model || "unknown",
+          ms: out.totalMs, refs: refs.length, ...requestMeta,
+        });
+      }
       return json({
         repo,
         message: out.answer,
@@ -1642,14 +1877,41 @@ export default {
     // exist we always surface them as references — even when the synthesized answer hedges —
     // so the user sees the sources they asked for instead of an unsourced "general" reply.
     if (!docs.length) {
+      emitGroundingOutcome(env, ctx, route, cfg, who, {
+        groundingPath: "grounded_via_kb", pathRole: "primary", ok: false,
+        ms: out.totalMs, refs: 0,
+      }, requestMeta);
       if (who === "market") return json({ fallback: true, reason: "market sources unavailable" }, 200, env);
       const g = await chatLLM(who, history, question, lang, env);
       if (g) {
         emitProviderUsage(env, ctx, "persona_visitor", "none", who, { phase: "persona", model: g.model, usage: g.usage, ms: g.ms }, requestMeta);
+        emitDeliveredAnswer(env, ctx, "persona_visitor", "none", who, { model: g.model, ms: g.ms, refs: 0, ...requestMeta });
         return json({
         repo: null, message: g.text, general: true, usage: g.usage, model: g.model,
         trace: { general: true, model: env.AOAI_DEPLOYMENT || "gpt-5.4-mini" },
       }, 200, env); }
+      if (hasDeliveredContent(out.answer, 0)) {
+        emitDeliveredAnswer(env, ctx, "persona_visitor", "none", who, {
+          model: (out.modelActivities || []).at(-1)?.model || "unknown",
+          ms: out.totalMs, refs: 0, ...requestMeta,
+        });
+      }
+      return json({
+        repo: null,
+        message: out.answer,
+        usage,
+        trace: { ks: cfg.ks, tools: out.tools, refs: [], docs: true, mcpMs: out.mcpMs, totalMs: out.totalMs, partial: out.status === 206 },
+      }, 200, env);
+    }
+    emitGroundingOutcome(env, ctx, route, cfg, who, {
+      groundingPath: "grounded_via_kb", pathRole: "primary", ok: true,
+      ms: out.totalMs, refs: docs.length,
+    }, requestMeta);
+    if (hasDeliveredContent(out.answer, docs.length)) {
+      emitDeliveredAnswer(env, ctx, route, cfg.ks, who, {
+        model: (out.modelActivities || []).at(-1)?.model || "unknown",
+        ms: out.totalMs, refs: docs.length, ...requestMeta,
+      });
     }
     return json({
       repo: null,
