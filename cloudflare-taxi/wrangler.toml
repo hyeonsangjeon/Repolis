@@ -66,6 +66,8 @@ AOAI_API_VERSION = "2025-04-01-preview"
 # Private aggregate telemetry target and model-cost attribution assumptions.
 # The prices match the observed Foundry Models input/cached-input/output meters
 # and are shown verbatim in the private Observatory methodology panel.
+# Set the same random secret on this Worker and repolis-metrics; never commit it:
+#   wrangler secret put METRICS_INGEST_TOKEN
 METRICS_URL = "https://repolis-metrics.wingnut0310.workers.dev/event"
 MODEL_PRICE_IN_PER_1M_USD = "0.75"
 MODEL_PRICE_CACHED_IN_PER_1M_USD = "0.075"
@@ -78,6 +80,13 @@ NPC_MAX_COMPLETION_TOKENS = "120"
 NPC_BUDGET_TIMEOUT_MS = "1500"
 NPC_DAILY_ATTEMPT_MAX = "5000"
 NPC_RESERVATION_LEASE_MS = "60000"
+# Deployment ceilings permit the owner-only KV switches to turn resident AI on.
+# Live mode still requires explicit KV "true" values; missing keys fail closed.
+NPC_AI_ENABLED = "true"
+NPC_AMBIENT_ENABLED = "true"
+NPC_PLAYER_CHAT_ENABLED = "true"
+# 31-day worst case = $4.65 for resident Azure model calls.
+NPC_DAY_CAP_USD = "0.15"
 
 # Set your Azure AI Search endpoint (not secret, but account-specific). Either
 # uncomment + edit here, or keep it out of git with `wrangler secret put SEARCH_ENDPOINT`:

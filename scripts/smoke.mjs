@@ -1142,17 +1142,160 @@ ok(/if \(body && body\.npc_action\) return npcHandler\(body, request, env, ctx\)
 ok(/async function npcHandler\(/.test(WORKER), 'npcHandler() exists');
 ok(/grounded_mcp_mslearn/.test(WORKER) && /grounded_mcp_deepwiki/.test(WORKER) && /grounded_kb_taxi/.test(WORKER), 'grounded AI routes use the report taxonomy');
 ok(/tokensIn: u\.prompt_tokens/.test(WORKER) && /cachedTokens: u\.cached_tokens/.test(WORKER) && /tokensOut: u\.completion_tokens/.test(WORKER), 'provider usage emits input, cached-input, and output tokens');
+ok(/headers\["X-Repolis-Metrics-Key"\] = ingestToken/.test(WORKER)
+  && /env\.METRICS_INGEST_TOKEN/.test(WORKER),
+  'server telemetry authenticates to Observatory with the shared ingest secret');
+ok((WORKER.match(/npcMetric\(env, "ai_kb_query"/g) || []).length === 1
+  && /groundingPath: "grounded_via_kb"/.test(WORKER)
+  && /pathRole: "primary"/.test(WORKER),
+  'ai_kb_query is emitted only by the real Azure KB retrieve-attempt helper');
+ok(/function emitGroundingOutcome\(/.test(WORKER)
+  && /npcMetric\(env, "ai_grounding_outcome"/.test(WORKER)
+  && /groundingPath: "grounded_via_mcp_direct"/.test(WORKER)
+  && /pathRole === "fallback"/.test(WORKER)
+  && /boundedGroundingReason\(out\)/.test(WORKER),
+  'final grounding telemetry separates KB from direct MCP and labels only true fallbacks');
+const reasonSource = (WORKER.match(/function boundedGroundingReason\([\s\S]*?(?=\nfunction emitGroundingOutcome)/) || [''])[0];
+const outcomeSource = (WORKER.match(/function emitGroundingOutcome\([\s\S]*?(?=\nfunction emitDirectGrounding)/) || [''])[0];
+if (reasonSource && outcomeSource) {
+  const boundedReason = new Function(`${reasonSource}; return boundedGroundingReason;`)();
+  ok(boundedReason({ attempted: false, reason: 'grounding not configured' }) === 'unconfigured'
+    && boundedReason({ attempted: true, reason: 'timeout 25000ms' }) === 'timeout'
+    && boundedReason({ attempted: true, ok: true, answer: '', data: { references: [] } }) === 'empty'
+    && boundedReason({ attempted: true, reason: 'kb 500' }) === 'error',
+    'fallback reasons collapse to the four metrics-safe categories');
+  const outcomes = [];
+  const emitOutcome = new Function('npcMetric', `${outcomeSource}; return emitGroundingOutcome;`)(
+    (_env, event, meta) => outcomes.push({ event, meta })
+  );
+  emitOutcome({}, null, 'grounded_mcp_context7', { ks: 'context7-direct', kb: 'none' }, 'context7', {
+    groundingPath: 'grounded_via_mcp_direct', pathRole: 'primary', fallbackReason: 'timeout', ok: true,
+  });
+  emitOutcome({}, null, 'grounded_mcp_mslearn', { ks: 'microsoft-learn-mcp-ks', kb: 'repolis-mslearn-kb' }, 'msdocs', {
+    groundingPath: 'grounded_via_mcp_direct', pathRole: 'fallback', fallbackReason: 'timeout', ok: true,
+  });
+  ok(outcomes[0].event === 'ai_grounding_outcome' && outcomes[0].meta.pathRole === 'primary'
+    && outcomes[0].meta.fallbackReason === undefined
+    && outcomes[1].meta.pathRole === 'fallback' && outcomes[1].meta.fallbackReason === 'timeout',
+    'direct-primary has no fallback reason while KB-to-direct fallback retains its bounded cause');
+}
+const providerTelemetry = (WORKER.match(/function emitProviderUsage\([\s\S]*?(?=\nfunction emitDeliveredAnswer)/) || [''])[0];
+const answerTelemetry = (WORKER.match(/function emitDeliveredAnswer\([\s\S]*?(?=\nfunction hasDeliveredContent)/) || [''])[0];
+ok(/providerCall: true/.test(providerTelemetry) && /answer: false/.test(providerTelemetry)
+  && /providerCall: false/.test(answerTelemetry) && /answer: true/.test(answerTelemetry)
+  && /phase: "delivered_answer"/.test(answerTelemetry),
+  'provider usage is additive and distinct from the exactly-one delivered-answer contract');
+const deliveredContentSource = (WORKER.match(/function hasDeliveredContent\([\s\S]*?(?=\nfunction emitKbQuery)/) || [''])[0];
+if (deliveredContentSource) {
+  const hasDeliveredContent = new Function(`${deliveredContentSource}; return hasDeliveredContent;`)();
+  ok(!hasDeliveredContent('', 0) && !hasDeliveredContent('   ', 0)
+    && hasDeliveredContent('answer', 0) && hasDeliveredContent('', 2),
+    'delivered-answer denominator requires visible text or visible result references');
+}
+ok(/if \(hasDeliveredContent\(out\.answer, 0\)\) \{[\s\S]{0,160}emitDeliveredAnswer\(env, ctx, "persona_visitor", "none"/.test(WORKER),
+  'a no-doc KB response is never mislabeled as a successful grounded delivered answer');
+const metricTransportSource = (WORKER.match(/function npcRedact\([\s\S]*?(?=\nfunction metricContext)/) || [''])[0];
+ok(!!metricTransportSource, 'trusted telemetry transport is extractable for behavioral checks');
+if (metricTransportSource) {
+  const originalFetch = globalThis.fetch;
+  const metricRequests = [];
+  globalThis.fetch = async (url, init) => {
+    metricRequests.push({ url, init });
+    return new Response(null, { status: 204 });
+  };
+  try {
+    const metric = new Function(`${metricTransportSource}; return npcMetric;`)();
+    await metric({ METRICS_URL: 'https://metrics.example/event', METRICS_INGEST_TOKEN: 'shared-secret' },
+      'ai_chat_turn', { answer: true, providerCall: false, question: 'private' });
+    const sent = metricRequests[0];
+    const sentBody = JSON.parse(sent.init.body);
+    ok(new Headers(sent.init.headers).get('X-Repolis-Metrics-Key') === 'shared-secret'
+      && sentBody.answer === true && sentBody.providerCall === false
+      && sentBody.question === undefined && sentBody.question_len === 7,
+      'trusted telemetry sends the secret header while redacting prompt text');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+ok(/route:'persona_ambient',npc:'resident',phase:'client_observation',answer:false,providerCall:false/.test(HTML),
+  'browser ambient observations are explicitly non-authoritative and never leak into the none route');
+ok(/function trackAiTurn\([\s\S]{0,260}phase:'client_observation', answer:false, providerCall:false/.test(HTML),
+  'browser scholar/taxi observations cannot duplicate the Worker delivered-answer denominator');
+ok(/who==='context7'\?'grounded_mcp_context7':who==='huggingface'\?'grounded_mcp_huggingface'/.test(HTML)
+  && /route==='market_grounded'\) return 'grounded_kb_market'/.test(HTML),
+  'client route aliases match the Worker taxonomy for Context7, Hugging Face, and market grounding');
 ok(/action === "npcConfig"/.test(WORKER) && /action === "npcBudget"/.test(WORKER) && /"npcAmbientTurn"/.test(WORKER) && /"npcPlayerChat"/.test(WORKER), 'all four npc actions (config/budget/ambientTurn/playerChat) handled');
 ok(/if \(!aiEnabled\) return \{ ok: false, reason: "npc_ai_disabled" \}/.test(WORKER), 'hard ceiling: npcModelCall refuses unless the resolved aiEnabled is true');
 ok(/async function npcResolveFlags\(/.test(WORKER), 'npcResolveFlags() resolves the effective NPC flags (env vs live KV)');
 ok(/env\.NPC_LIVE_TOGGLE === "true"/.test(WORKER), 'NPC_LIVE_TOGGLE is the master kill-switch for the live toggle');
-ok(/source: "env", liveToggle: false/.test(WORKER), 'live toggle OFF → resolver ignores KV and stays env-gated (safe deploy-only default)');
+ok(/source: "env"[\s\S]{0,80}liveToggle: false/.test(WORKER), 'live toggle OFF → resolver ignores KV and stays env-gated (safe deploy-only default)');
 ok(/env\.NPC_FLAGS\.get\(/.test(WORKER), 'live mode reads on/off from the shared NPC_FLAGS KV');
-ok(/const ai = envAi && allows\(kAi\)/.test(WORKER)
-  && /ambientEnabled: ai && envAmb && allows\(kAmb\)/.test(WORKER)
-  && /playerChatEnabled: ai && envPc && allows\(kPc\)/.test(WORKER)
+ok(/const allows = \(kv\) => kv === "true"/.test(WORKER)
+  && /ai: envAi && requested\.ai/.test(WORKER)
+  && /ambient: envAi && envAmb && requested\.ambient/.test(WORKER)
+  && /player: envAi && envPc && requested\.player/.test(WORKER)
   && /source: "kv-unavailable"/.test(WORKER),
-  'KV live flags can kill resident AI, never bypass env ceilings, and fail closed on read errors');
+  'KV live flags require explicit true, never bypass env ceilings, and fail closed on missing/read errors');
+const npcResolverSource = (WORKER.match(/async function npcResolveFlags\(env\) \{[\s\S]*?(?=\nasync function npcHandler)/) || [''])[0];
+ok(!!npcResolverSource, 'npcResolveFlags is extractable for behavioral contract tests');
+if (npcResolverSource) {
+  const resolveNpcFlags = new Function(`${npcResolverSource}; return npcResolveFlags;`)();
+  const liveKv = (values) => ({ get: async (key) => Object.prototype.hasOwnProperty.call(values, key) ? values[key] : null });
+  const hardOff = await resolveNpcFlags({
+    NPC_LIVE_TOGGLE: 'true',
+    NPC_AI_ENABLED: 'false', NPC_AMBIENT_ENABLED: 'false', NPC_PLAYER_CHAT_ENABLED: 'false',
+    NPC_FLAGS: liveKv({ ai_enabled: 'true', ambient_enabled: 'true', player_chat_enabled: 'true' }),
+  });
+  ok(hardOff.requested.ai === true && hardOff.effective.ai === false
+    && hardOff.hardAiEnabled === false,
+  'KV true cannot bypass an OFF deployment ceiling and both states remain observable');
+  const requestedOff = await resolveNpcFlags({
+    NPC_LIVE_TOGGLE: 'true',
+    NPC_AI_ENABLED: 'true', NPC_AMBIENT_ENABLED: 'true', NPC_PLAYER_CHAT_ENABLED: 'true',
+    NPC_FLAGS: liveKv({ ai_enabled: 'false', ambient_enabled: 'false', player_chat_enabled: 'false' }),
+  });
+  ok(requestedOff.requested.ai === false && requestedOff.effective.ai === false,
+    'explicit KV false keeps an enabled deployment ceiling effectively OFF');
+  const requestedOn = await resolveNpcFlags({
+    NPC_LIVE_TOGGLE: 'true',
+    NPC_AI_ENABLED: 'true', NPC_AMBIENT_ENABLED: 'true', NPC_PLAYER_CHAT_ENABLED: 'true',
+    NPC_FLAGS: liveKv({ ai_enabled: 'true', ambient_enabled: 'true', player_chat_enabled: 'true' }),
+  });
+  ok(requestedOn.requested.ai === true && requestedOn.effective.ai === true
+    && requestedOn.effective.ambient === true && requestedOn.effective.player === true,
+  'explicit KV true activates only features with ON deployment ceilings');
+  const missingKeys = await resolveNpcFlags({
+    NPC_LIVE_TOGGLE: 'true',
+    NPC_AI_ENABLED: 'true', NPC_AMBIENT_ENABLED: 'true', NPC_PLAYER_CHAT_ENABLED: 'true',
+    NPC_FLAGS: liveKv({}),
+  });
+  ok(missingKeys.requested.ai === false && missingKeys.effective.ai === false,
+    'missing KV keys fail closed instead of inheriting an enabled deployment default');
+  const readFailure = await resolveNpcFlags({
+    NPC_LIVE_TOGGLE: 'true',
+    NPC_AI_ENABLED: 'true', NPC_AMBIENT_ENABLED: 'true', NPC_PLAYER_CHAT_ENABLED: 'true',
+    NPC_FLAGS: { get: async () => { throw new Error('kv unavailable'); } },
+  });
+  ok(readFailure.requested.ai === null && readFailure.effective.ai === false
+    && readFailure.source === 'kv-unavailable',
+  'KV read failures expose unknown request state and fail effective flags closed');
+  let ignoredReads = 0;
+  const deployOnly = await resolveNpcFlags({
+    NPC_LIVE_TOGGLE: 'false',
+    NPC_AI_ENABLED: 'true', NPC_AMBIENT_ENABLED: 'true', NPC_PLAYER_CHAT_ENABLED: 'false',
+    NPC_FLAGS: { get: async () => { ignoredReads += 1; return 'false'; } },
+  });
+  ok(ignoredReads === 0 && deployOnly.source === 'env' && deployOnly.effective.ai === true
+    && deployOnly.effective.player === false,
+  'live toggle OFF ignores KV and reports the env-gated effective state');
+}
+ok(/requested: flags\.requested/.test(WORKER)
+  && /hardAiEnabled: flags\.hardAiEnabled/.test(WORKER)
+  && /hardAmbientEnabled: flags\.hardAmbientEnabled/.test(WORKER)
+  && /hardPlayerChatEnabled: flags\.hardPlayerChatEnabled/.test(WORKER)
+  && /pending,/.test(WORKER)
+  && /canEnable,/.test(WORKER),
+  'npcConfig exposes requested/effective/pending and per-feature deployment ceilings');
 ok(/runBudgetedNpcCall\(\{[\s\S]*?providerCall: \(plan\) => npcModelCall\(env, role, plan, aiEnabled\)/.test(WORKER),
   'model call is reachable only through the durable reserve/settle lifecycle');
 ok(/"npc_budget_exhausted"/.test(WORKER), 'over-budget returns npc_budget_exhausted (client falls back to scripted)');

@@ -6870,7 +6870,7 @@ function _advanceAmb(){ const C=_ambConv; if(!C||C.pending) return; const now=cl
   function done(line,ai,fb){ if(_ambConv!==C){ C.pending=false; return; } line=_capBub(line); speaker.bub.say(line,_hex(speaker.res.color)); speaker._gt=2.2;
     const turn={ t:Math.round(clock.elapsedTime), a:C.a.res.id, b:C.b.res.id, who:speaker.res.id, text:line, ai:!!ai, fb:!!fb };
     C.turns.push(turn); _pushTranscript(turn); if(fb) _npcBudget.fallbackTurns++; if(ai) _npcBudget.aiTurns++;
-    _emitMetric('npc_ambient_turn',{who:speaker.res.id,ai:!!ai,fb:!!fb,len:line.length});
+    _emitMetric('npc_ambient_turn',{route:'persona_ambient',npc:'resident',phase:'client_observation',answer:false,providerCall:false,who:speaker.res.id,ai:!!ai,fb:!!fb,len:line.length});
     C.i++; C.prevWho=speaker; C.si=(C.si+1)%C.members.length; C.nextAt=now + NPC_CFG.gapMin + Math.random()*(NPC_CFG.gapMax-NPC_CFG.gapMin); if(C.i>=C.max) _endAmb('done'); }   // the speaking turn round-robins through every circle member so all of them talk, not just two
   if(useAI){ C.pending=true; C.nextAt=now+9.5; _aiAmbientTurn(C,speaker,listener).then(line=>{ C.pending=false; if(line) done(line,true,false); else done(_scriptLine(speaker),false,true); }).catch(()=>{ C.pending=false; done(_scriptLine(speaker),false,true); }); }
   else done(_scriptLine(speaker),false,false); }
@@ -7097,9 +7097,9 @@ async function _npcFetch(payload){ const url=NPC_CFG.worker; if(!url) return nul
     if(!res.ok) return null; const data=await res.json(); if(data&&data.budget) _applyBudget(data.budget); return data; }
   catch(e){ clearTimeout(to); return null; } }
 async function _aiAmbientTurn(C,speaker,listener){ const data=await _npcFetch({ npc_action:'npcAmbientTurn', speaker:speaker.res.id, listener:listener.res.id, zone:speaker.res.zone, topic:C.topic, lang:LANG, last:C.turns.slice(-4).map(t=>({who:t.who,text:t.text})) });
-  if(!data){ _emitMetric('npc_fallback_used',{where:'ambient',reason:'fetch_fail'}); return null; }
-  if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{where:'ambient'}); } _emitMetric('npc_fallback_used',{where:'ambient',reason:data.reason||'no_line'}); return null; }
-  _emitMetric('npc_budget_spend',{where:'ambient',spent:_npcBudget.spentUsd}); return String(data.line); }
+  if(!data){ _emitMetric('npc_fallback_used',{route:'persona_ambient',npc:'resident',phase:'client_observation',answer:false,providerCall:false,where:'ambient',reason:'fetch_fail'}); return null; }
+  if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{route:'persona_ambient',npc:'resident',phase:'client_observation',answer:false,providerCall:false,where:'ambient'}); } _emitMetric('npc_fallback_used',{route:'persona_ambient',npc:'resident',phase:'client_observation',answer:false,providerCall:false,where:'ambient',reason:data.reason||'no_line'}); return null; }
+  _emitMetric('npc_budget_spend',{route:'persona_ambient',npc:'resident',phase:'client_observation',answer:false,providerCall:false,where:'ambient',spent:_npcBudget.spentUsd}); return String(data.line); }
 // ---- shared resident/group chat transcript: every speaker answers on top of the thread (and a chime-in reacts in context) ----
 let _resHist=[], _marketThread=false, _marketRequestSeq=0, _marketAbort=null;   // resident thread + cancellable AURI request generation
 function _plain(s){ return String(s==null?'':s).replace(/<[^>]*>/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim(); }
@@ -7108,9 +7108,9 @@ function _resHistWindow(){ return _resHist.slice(-10); }             // recent w
 async function _aiPlayerChat(res,q,opts){ opts=opts||{}; const payload={ npc_action:'npcPlayerChat', speaker:res.id, zone:res.zone, question:q, lang:LANG };
   if(opts.last&&opts.last.length) payload.last=opts.last; if(opts.chime){ payload.chime=true; if(opts.prev) payload.prev=opts.prev; }   // last=prior thread; chime/prev → react to the previous speaker
   const data=await _npcFetch(payload);
-  if(!data){ _emitMetric('npc_fallback_used',{where:'player',reason:'fetch_fail'}); return null; }
-  if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{where:'player'}); } _emitMetric('npc_fallback_used',{where:'player',reason:data.reason||'no_line'}); return null; }
-  _emitMetric('npc_budget_spend',{where:'player',spent:_npcBudget.spentUsd}); return String(data.line); }
+  if(!data){ _emitMetric('npc_fallback_used',{route:'persona_visitor',npc:'resident',phase:'client_observation',answer:false,providerCall:false,where:'player',reason:'fetch_fail'}); return null; }
+  if(data.fallback||!data.line){ if(data.reason==='npc_budget_exhausted'){ _npcBudget.blocked=true; _emitMetric('npc_budget_blocked',{route:'persona_visitor',npc:'resident',phase:'client_observation',answer:false,providerCall:false,where:'player'}); } _emitMetric('npc_fallback_used',{route:'persona_visitor',npc:'resident',phase:'client_observation',answer:false,providerCall:false,where:'player',reason:data.reason||'no_line'}); return null; }
+  _emitMetric('npc_budget_spend',{route:'persona_visitor',npc:'resident',phase:'client_observation',answer:false,providerCall:false,where:'player',spent:_npcBudget.spentUsd}); return String(data.line); }
 
 // ---- deterministic scripted player-chat reply (grounded in the resident's district/repos; good-topics only) ----
 function _zoneNames(n){ return ZONES.slice(0,n||3).map(z=>LANG==='ko'?z.ko:z.en).join(', '); }
@@ -7340,7 +7340,7 @@ async function npcBootConfig(){ NPC_CFG.worker=(typeof groundedUrl==='function'?
   if(data.config){ const c=data.config; NPC_CFG.aiEnabled=!!c.aiEnabled; NPC_CFG.ambientAiEnabled=!!c.aiEnabled&&!!c.ambientEnabled; NPC_CFG.playerChatAiEnabled=!!c.aiEnabled&&!!c.playerChatEnabled;
     if(c.maxTurns){ const cap=Math.min(NPC_CFG.hardMaxTurns,c.maxTurns); NPC_CFG.maxTurns=LOW_END?Math.min(NPC_CFG.maxTurns,cap):cap; } }   // LOW_END: worker may tighten turns, never loosen past the low-end cap
   if(data.budget) _applyBudget(data.budget);
-  _emitMetric('npc_mode_changed',{aiEnabled:NPC_CFG.aiEnabled,ambient:NPC_CFG.ambientAiEnabled,player:NPC_CFG.playerChatAiEnabled,source:'worker'}); }
+  _emitMetric('npc_mode_changed',{route:'persona_ambient',npc:'system',phase:'client_observation',answer:false,providerCall:false,aiEnabled:NPC_CFG.aiEnabled,ambient:NPC_CFG.ambientAiEnabled,player:NPC_CFG.playerChatAiEnabled,source:'worker'}); }
 setTimeout(()=>{ try{ npcBootConfig(); }catch(e){} }, 2600);
 
 /* ---- character (chibi, cute — soft rounded forms, no hard boxes) ---- */
@@ -8788,12 +8788,13 @@ function traceRefCount(tr){ return tr&&Array.isArray(tr.refs) ? tr.refs.length :
 function trackChatEvent(name, extra){ track(name, chatMeta(extra)); }
 function canonicalAiRoute(route,npc){ const who=npcKindOf(npc);
   if(route==='grounded') return 'grounded_kb_taxi';
-  if(route==='scholar_grounded') return who==='msdocs'?'grounded_mcp_mslearn':who==='deepwiki'?'grounded_mcp_deepwiki':'persona_visitor';
+  if(route==='market_grounded') return 'grounded_kb_market';
+  if(route==='scholar_grounded') return who==='msdocs'?'grounded_mcp_mslearn':who==='deepwiki'?'grounded_mcp_deepwiki':who==='context7'?'grounded_mcp_context7':who==='huggingface'?'grounded_mcp_huggingface':'persona_visitor';
   if(route==='general_chat'||route==='scholar') return 'persona_visitor';
   return route; }
 function aiRequestPayload(payload){ return Object.assign({},payload,analyticsIdentity()); }
 function trackAiTurn(route, npc, q, start, outcome){ const canonical=canonicalAiRoute(route,npc); trackChatEvent('ai_chat_turn', Object.assign({
-  route:canonical, legacyRoute:canonical===route?undefined:route, phase:'answer', answer:true, providerCall:false,
+  route:canonical, legacyRoute:canonical===route?undefined:route, phase:'client_observation', answer:false, providerCall:false,
   npc:npcKindOf(npc), qLen:qLenBucket(q), ms:elapsedMs(start)
 }, outcome||{})); }
 function stripHtml(h){ const d=document.createElement('div'); d.innerHTML=String(h||''); return (d.textContent||d.innerText||'').replace(/\s+/g,' ').trim().slice(0,600); }
