@@ -6,6 +6,20 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.85.0] — 2026-08-18
+
+### 👤 Town Creator Hall — make every cloned town personally ownable
+
+- A compact walkable pavilion now belongs to the active town owner on the canonical site, a GitHub Pages
+  fork, or a `?user=` public town. Its bounded adaptive placement avoids avenues, repo parcels, and civic props.
+- Opening the hall explicitly fetches one allowlisted public GitHub profile, caches only rendered fields for
+  24 hours, and combines it with local town facts: stars, languages, explainable badges, and three signature
+  projects. Rate limits fall back to repo facts already in the city.
+- Menu, Passport, map, Station taxi, walk-up prompts, KO/EN, focus trapping, sharing, and profile navigation
+  all lead to the same panel. The contextual Star action credits the upstream Repolis engine on every fork.
+- The pavilion adds 15 bounded draws, two textures, no light, and no backend; profile loading never runs at
+  page startup.
+
 ## [1.84.0] — 2026-08-15
 
 ### ↔ Twin Towns — turn a personal preview into a two-person invitation

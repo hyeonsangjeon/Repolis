@@ -15,6 +15,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   `scripts/build_repos.py` instead.
 - **Public repos only, by design.** Private repo names never appear. Untouched mirror forks are filtered
   out; only forks you've actually committed to are shown.
+- **Creator Hall reads one public profile explicitly.** Opening the hall requests GitHub's public
+  `/users/<login>` endpoint and caches only the fields it renders for 24 hours. Anonymous API rate limits
+  can hide the avatar/bio temporarily; the hall still falls back to the public repository facts already
+  present in town. Email, blog, contribution-calendar scraping, and private data are not collected.
 
 ## AI / scholars
 
