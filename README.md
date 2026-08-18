@@ -51,6 +51,7 @@ If this gives you a useful way to present repositories, **[star Repolis](https:/
 |---|---|---|
 | preview my public repos | use the live username field | a shareable metadata-built town in seconds |
 | introduce who built the town | visit **Town Creator Hall** or open **Meet the town creator** in the city menu | public bio, followers, GitHub tenure, top languages, badges, and signature projects tied to the current town owner |
+| watch my open-source history unfold | open **Town Growth Replay** from Wayfinding, the Passport, or my completed public-town preview | a creation-date timeline where repo houses rise year by year, with a shareable year link and era postcard |
 | connect with another developer | click **Connect with a friend** after a preview, or open **Twin Towns** in the city menu | a two-person link that opens both towns and their shared languages or topics |
 | keep my town on my GitHub profile | click **Put this town on my GitHub profile** when the preview is ready, or use **Town Postcard Studio** | a 600px portal that always opens my personalized town |
 | publish my own Repolis | use the template, enable Actions + Pages, run **Refresh Repolis data** once | your fork owner's public repos become the default town; no PAT required |
@@ -78,6 +79,7 @@ At ordinary walking distances, a one-draw architectural LOD keeps each repo hous
 
 - **Residents have lives, not idle loops.** Named townspeople wander their districts, keep daily rhythms, carry changing moods, visit cherished haunts, recognize friends, stroll and sit together, gather around the campfire, and sometimes celebrate a recent repository release. Their cottages form **Starlight Row** on the north-east edge, with resident-coloured gardens, three roof silhouettes, shutters, transoms, selected window boxes, canopies, chimneys, and roof finials. A shared flower bed, lanterns, hedges, and broadleaf/cypress trees care for the commons. Night brings residents home to warm windows and porch seats, while morning sends them back to their district work. Pairs also choose their own short **Shared Joy** excursions to real flower patches, visible night stars, or a real repo house—without a player prompt or AI call. Ask a specialist question and they introduce the right scholar instead of pretending to know: follow the compass and find that scholar in the world.
 - **Exploration has continuity.** The Explorer Passport records houses and landmarks, district progress shows what remains, and the daily **Village Chronicle** connects one resident to their cherished haunt and a truthful related repo or district.
+- **Your repository history becomes a moving city story.** **Town Growth Replay** reads the public creation date already carried by every repo house, then raises the town through its real repo-birth years from the first house to the present. The scrubber, play/pause controls, deep link, and era postcard work for the owner and every `?user=` public town. The timeline covers repos still public today; house appearance and language labels stay explicitly marked as today’s metadata. Replay adds no mesh, texture, light, backend, account, or stored history.
 - **Every repo house opens into one real room.** Its card leads to the reusable **Repository Atelier**: a walkable 3D exhibition whose Repository Core, history/data wall, and action terminals rebind deterministically to that repo. Entering costs no network or AI call; GitHub and Gitber run only when you choose a terminal.
 - **Daily refresh now means something on return.** The Passport's **Town Gazette** compares the current public repo snapshot with the last one this browser marked read, then highlights new repos, release tags when available, pushes, and positive metric growth. It is entirely local and costs nothing.
 - **Repositories form relationships.** The Stargazer's Observatory finds a truthful three-repo connection from shared topics or languages and draws it as a nighttime Constellation Trail.
@@ -157,6 +159,7 @@ Repolis stays a **zero-build static web app**. The main runtime remains in `inde
 | [`repolis.config.js`](repolis.config.js) | fork owner inference and safe optional-service defaults |
 | [`repos.json`](repos.json) | generated repository and traffic data |
 | [`scholars.js`](scholars.js) | scholar roster |
+| [`assets/town-growth.js`](assets/town-growth.js) | deterministic repo-birth timeline, year snapshots, and share links |
 | [`assets/world-tree/`](assets/world-tree/) | procedural World Tree factory |
 | [`cloudflare-taxi/`](cloudflare-taxi/) | grounded AI and optional resident dialogue Worker |
 | [`cloudflare/`](cloudflare/) | realtime presence Worker |
@@ -181,7 +184,7 @@ Repolis stays a **zero-build static web app**. The main runtime remains in `inde
 | wheel | zoom |
 | `Enter`, click, or the mobile door button | open the nearby place |
 | taxi button | ask Gitber |
-| menu / map / passport buttons | navigate and track exploration |
+| menu / map / passport buttons | navigate, track exploration, and replay the town's growth |
 | language and sun/moon buttons | switch language and time of day |
 
 ## Documentation
