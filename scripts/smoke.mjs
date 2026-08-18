@@ -38,6 +38,7 @@ import {
 } from '../assets/town-postcard.js';
 import { createTwinTownLink, createTwinTownMatch, summarizeTwinTown } from '../assets/twin-towns.js';
 import { selectTownCreatorFields, summarizeTownCreator } from '../assets/town-creator.js';
+import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from '../assets/town-growth.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -59,6 +60,7 @@ const POSTCARD_SRC = readFileSync(join(ROOT, 'assets/town-postcard.js'), 'utf8')
 const PUBLIC_TOWN_PROOF_SRC = readFileSync(join(ROOT, 'assets/public-town-proof.js'), 'utf8');
 const TWIN_TOWNS_SRC = readFileSync(join(ROOT, 'assets/twin-towns.js'), 'utf8');
 const TOWN_CREATOR_SRC = readFileSync(join(ROOT, 'assets/town-creator.js'), 'utf8');
+const TOWN_GROWTH_SRC = readFileSync(join(ROOT, 'assets/town-growth.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -354,10 +356,131 @@ ok(/window\.__creatorHall=\(\)=>/.test(HTML)
   && /meshes:CREATOR_HALL\.meshes,draws:CREATOR_HALL\.draws,textures:2,lights:0/.test(HTML),
   'browser diagnostics expose placement clearance, resources, current profile proof, and modal state');
 
+group('Town Growth Replay — a truthful personal history made from repo birth dates');
+const growthFixture=[
+  {repo:'gamma',lang:'Go',created:'2021-09-01T10:00:00Z'},
+  {repo:'alpha',lang:'Rust',created:'2019-01-02T00:00:00Z'},
+  {repo:'beta',lang:'Go',created:'2021-04-05T00:00:00Z'},
+  {repo:'unknown',lang:'Other',created:''},
+  {repo:'ALPHA',lang:'Python',created:'2020-01-01T00:00:00Z'}
+];
+const growthTimeline=buildTownGrowthTimeline(growthFixture);
+ok(growthTimeline.available && growthTimeline.firstYear===2019 && growthTimeline.lastYear===2021
+  && growthTimeline.knownCount===3 && growthTimeline.unknownCount===1 && growthTimeline.totalCount===4,
+  'creation dates produce one deduplicated, bounded timeline while unknown dates remain explicit');
+ok(growthTimeline.milestones.length===2
+  && growthTimeline.milestones[0].added.join(',')==='alpha'
+  && growthTimeline.milestones[1].added.join(',')==='beta,gamma'
+  && growthTimeline.milestones[1].total===3 && growthTimeline.milestones[1].languageCount===2
+  && Object.isFrozen(growthTimeline)&&Object.isFrozen(growthTimeline.entries)&&Object.isFrozen(growthTimeline.milestones),
+  'birth-year milestones sort deterministically and keep immutable cumulative counts and language diversity');
+const growthFirst=townGrowthSnapshot(growthTimeline,0),growthPresent=townGrowthSnapshot(growthTimeline,99);
+ok(growthFirst.year===2019&&growthFirst.visibleCount===1&&!growthFirst.isPresent
+  && growthPresent.year===2021&&growthPresent.visibleCount===4&&growthPresent.isPresent,
+  'unknown-date houses appear only in the truthful present snapshot, never in an invented historical year');
+ok(townGrowthIndexForYear(growthTimeline,2018)===0&&townGrowthIndexForYear(growthTimeline,2020)===0
+  && townGrowthIndexForYear(growthTimeline,2025)===1
+  && !buildTownGrowthTimeline([{repo:'one',created:'2020-01-01'},{repo:'two',created:'2020-05-01'}]).available,
+  'shared years resolve to the nearest real milestone and one-year towns fail soft');
+ok(createTownGrowthShareUrl('https://town.test/?user=octocat&twin=hub&dbg=1&perf=1&launch=1#repo=alpha',2021)
+  ==='https://town.test/?user=octocat&growth=2021&ref=growth-replay',
+  'the share URL preserves town identity while removing debug, launch, Twin Towns, and repo-modal state');
+ok(!/window|document|fetch\(|WebSocket|localStorage|Date\.now|Math\.random/.test(TOWN_GROWTH_SRC)
+  && TOWN_GROWTH_SRC.length<6000, 'the pure timeline helper is a small deterministic zero-network module');
+
+const townGrowthBlock=(HTML.match(/\/\*TOWN_GROWTH_REPLAY:START\*\/([\s\S]*?)\/\*TOWN_GROWTH_REPLAY:END\*\//)||[,''])[1];
+const growthFrame=(townGrowthBlock.match(/function _updateTownGrowthReplay\(dt\)\{([\s\S]*?)\n\}/)||[,''])[1];
+ok(townGrowthBlock.length>0
+  && /from '\.\/assets\/town-growth\.js\?v=town-growth-v1'/.test(HTML)
+  && /const TOWN_GROWTH=buildTownGrowthTimeline\(REPOS\)/.test(HTML),
+  'the loaded owner or public repo catalog feeds one local Growth Replay helper');
+ok(/id="growthMenuBtn"/.test(HTML)&&/id="introGrowth"/.test(HTML)&&/id="growthBox"/.test(HTML)
+  && /introGrowth\.hidden=!TOWN_GROWTH\.available/.test(HTML)
+  && /renderFreshness\(\); renderCourse\(\); renderGrowthPassport\(\)/.test(HTML),
+  'Wayfinding, personalized first-screen proof, and Passport expose the same available history');
+ok(/id="growthReplay" class="hidden" aria-hidden="true"/.test(HTML)
+  && /role="dialog" aria-modal="true" aria-labelledby="growthTitle" aria-describedby="growthSummary"/.test(HTML)
+  && /id="growthRange" type="range"/.test(HTML)
+  && /id="growthStatus" class="growthStatus" role="status" aria-live="polite" aria-atomic="true"/.test(HTML),
+  'the year scrubber is an accessible labelled modal with atomic live feedback');
+ok(/id="growthTruth" class="growthTruth" data-i18n="growthTruth"/.test(HTML)
+  && /document\.getElementById\('growthTruth'\)\.textContent=t\('growthTruth'\)/.test(townGrowthBlock),
+  'the replay always distinguishes truthful creation years from present-day building metrics');
+ok(/function _growthFocusables\(\)/.test(townGrowthBlock)
+  && /event\.key==='Escape'/.test(townGrowthBlock)&&/event\.key!=='Tab'/.test(townGrowthBlock)
+  && /function _growthSuspendBackground\(saved\)/.test(townGrowthBlock)
+  && /element\.inert=true/.test(townGrowthBlock)&&/function _growthRestoreBackground\(saved\)/.test(townGrowthBlock)
+  && /growthRange\.setAttribute\('aria-label',t\('growthRange'\)\+'\s·\s'\+snapshot\.year\)/.test(townGrowthBlock)
+  && /#growthReplay \.growthActions button, #growthReplay \.growthClose \{ min-height:44px/.test(HTML)
+  && /#growthReplay \.growthPanel \{ width:100%; max-height:min\(62vh,520px\)/.test(HTML),
+  'background UI is inert, focus is trapped, the slider names its year, and mobile actions stay 44px');
+ok(/const _reqGrowth = .*get\('growth'\)/.test(HTML)
+  && /startTownGrowthReplay\(\{entry:'link',year:_reqGrowth,autoplay:false\}\)/.test(HTML)
+  && /introGrowth\.onclick=.*startTownGrowthReplay\(\{entry:'intro',autoplay:true\}\)/.test(HTML),
+  'shared years open after town entry without autoplay while the explicit Watch action starts the story');
+ok(/repo\._growthHidden=!visible/.test(townGrowthBlock)
+  && /repo\._group\.visible=visible/.test(townGrowthBlock)
+  && /repo\._group\.scale\.set\(1,\.025,1\)/.test(townGrowthBlock)
+  && /newlyVisible\.slice\(0,3\)/.test(townGrowthBlock),
+  'existing repo groups hide by creation year and only newly born houses receive a bounded reveal');
+ok(/state\.entry\.forcedTier='far'; state\.entry\.active\.visible=false/.test(townGrowthBlock)
+  && /state\.entry\.forcedTier=state\.forced; state\.entry\.active\.visible=state\.activeVisible/.test(townGrowthBlock),
+  'the panoramic view forces existing far LOD and hides decorative active batches, then restores both exactly');
+ok(/function _growthSuspendScenery\(saved\)/.test(townGrowthBlock)
+  && /for\(const group of SWAY\) add\(group\)/.test(townGrowthBlock)
+  && /for\(const live of RESIDENTS_LIVE\) add\(live\.group\)/.test(townGrowthBlock)
+  && /MEMORIAL_TREE\.requestedVisible=false/.test(townGrowthBlock)
+  && /function _growthRestoreScenery\(saved\)/.test(townGrowthBlock)
+  && /MEMORIAL_TREE\.requestedVisible=saved\.worldTreeRequested/.test(townGrowthBlock),
+  'non-historical residents, rides, pets, tree motion, and scenery pause outside the panorama and restore exactly');
+ok(/cameraFar:camera\.far/.test(townGrowthBlock)&&/fogNear:scene\.fog\.near,fogFar:scene\.fog\.far/.test(townGrowthBlock)
+  && /skyT,skyTarget,skyAuto,skyPhaseIdx,isNight/.test(townGrowthBlock)
+  && /camera\.far=1100/.test(townGrowthBlock)&&/scene\.fog\.near=600; scene\.fog\.far=1100/.test(townGrowthBlock)
+  && /scene\.fog\.near=saved\.fogNear; scene\.fog\.far=saved\.fogFar/.test(townGrowthBlock),
+  'cinematic camera, daylight, and fog are replay-owned and restore the visitor world on close');
+ok(/if\(GROWTH_REPLAY\.active\) return 'town-growth-replay'/.test(HTML)
+  && /owner==='town-growth-replay'/.test(HTML)
+  && /else if\(GROWTH_REPLAY\.active\)\{\s*clearKeys\(\)/.test(HTML),
+  'Growth Replay owns camera and movement without competing with ClearSight or the player');
+ok(growthFrame.length>0&&!/new\s+|REPOS|scene\.traverse|\.map\(|\.filter\(|fetch\(|setTimeout|setInterval/.test(growthFrame)
+  && /GROWTH_REPLAY\.reveals/.test(growthFrame)&&/_growthPositionCamera\(dt,false\)/.test(growthFrame),
+  'steady playback only advances a bounded reveal list and reusable camera vectors');
+ok(!/new THREE\.(?:Mesh|InstancedMesh|Line|LineSegments|Points)|PointLight|SpotLight|DirectionalLight|fetch\(|WebSocket|setInterval/.test(townGrowthBlock)
+  && /resources:\{draws:0,textures:0,lights:0,network:0,timers:0\}/.test(townGrowthBlock),
+  'the feature adds no scene draw, texture, light, backend, or recurring timer');
+ok(/createTownGrowthShareUrl\(location\.href,snapshot\.year\)/.test(townGrowthBlock)
+  && /track\('share_click',\{channel:'town_growth'/.test(townGrowthBlock)
+  && /openPostcardStudio\('growth'\)/.test(townGrowthBlock)
+  && /params\.set\('growth',growth\); params\.set\('ref','growth-replay'\)/.test(HTML)
+  && /growthShot\?tf\('growthPostcardRepoCount'/.test(HTML),
+  'each era has a reversible share link and a truthful current-camera postcard with era-specific house counts');
+ok(/if\(POSTCARD\.entry==='growth'\)[\s\S]*?panel\.inert=true[\s\S]*?aria-hidden','true'/.test(HTML)
+  && /if\(modalOpen\)[\s\S]*?panel\.inert=false[\s\S]*?aria-hidden','false'/.test(HTML),
+  'the era postcard becomes the only accessible modal, then returns focus ownership to Growth Replay');
+ok(/maybeStarNudge\('town_growth_replay'\)/.test(townGrowthBlock)
+  && /track\('town_growth_complete'/.test(townGrowthBlock)
+  && /fireworksShow\(10\)/.test(townGrowthBlock),
+  'watching the full personal history earns one existing Star invitation and a bounded celebration');
+['growthMenu','growthMenuSub','growthPassportTitle','growthKicker','growthTitle','growthTitlePresent','growthSummary',
+  'growthAdded','growthRange','growthPlay','growthPause','growthPresent','growthShare','growthPostcard','growthClose',
+  'growthTruth','growthShared','growthComplete','growthUnavailable','growthPostcardRepoCount','growthPostcardSignature','introGrowth']
+  .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Town Growth key ${key} is bilingual`));
+ok(/window\.__townGrowth=/.test(townGrowthBlock)&&/window\.__growthOpen=/.test(townGrowthBlock)
+  &&/window\.__growthStep=/.test(townGrowthBlock)&&/window\.__growthFinish=/.test(townGrowthBlock)
+  &&/window\.__growthShare=/.test(townGrowthBlock)&&/window\.__growthPostcard=/.test(townGrowthBlock)
+  &&/window\.__growthClose=/.test(townGrowthBlock),
+  'diagnostics expose availability, exact years, visibility, playback, sharing, postcard, resources, and restoration');
+ok(/Your repository history becomes a moving city story/.test(README_EN)
+  &&/레포 역사가 움직이는 도시 이야기가 됩니다/.test(README_KO)
+  &&/timeline covers repos still public today; house appearance and language labels/.test(README_EN)
+  &&/현재도 공개된 레포만 시간축에 들어가며, 집의 모습과 언어 표시는 현재 메타데이터/.test(README_KO)
+  &&/assets\/town-growth\.js/.test(README_EN)&&/assets\/town-growth\.js/.test(README_KO),
+  'both READMEs explain the personal-history value, truth boundary, zero-cost runtime, and helper');
+
 const runtimeLocalFiles = [
   'index.html','repolis.config.js','scholars.js','repos.json','assets/contribution-library.json',
   'assets/world-tree/createRepolisHero.js','assets/camera-obstruction.js','assets/canal-ferry.js',
-  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js',
+  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js',
   'council/council.config.json','council/engine.js','council/fixtures.js','council/guards.js','council/live.js'
 ];
 const runtimeLocalBytes = runtimeLocalFiles.reduce((sum,file)=>sum+readFileSync(join(ROOT,file)).length,0);

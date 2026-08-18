@@ -6,6 +6,28 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.86.0] — 2026-08-18
+
+### ⏳ Town Growth Replay — watch an open-source history become a city
+
+The peer benchmark found the same adoption loop across Git City, GitCity, GitHub Skyline, `snk`, Metrics,
+and GitHub Readme Stats: developers respond most strongly when their own public record becomes a moving,
+customizable artifact they can share in one step. Repolis already had personalized towns, comparison,
+postcards, profile portals, badges, and exploration rewards; it did not yet show how a town came to exist.
+Growth Replay adds that missing personal-history story rather than duplicating those surfaces.
+
+- Wayfinding, the Explorer Passport, and a completed `?user=` preview now open a daylight time machine where
+  existing repo houses rise through their real public creation years. Play/pause and an accessible year
+  scrubber work without login, persistence, or another GitHub request.
+- `?growth=<year>&ref=growth-replay` preserves the current town and opens the nearest truthful milestone.
+  Native share or clipboard fallback and Town Postcard Studio both carry the selected era and cumulative
+  house count.
+- The boundary is explicit: years come from historical creation dates, while house size and decoration use
+  current public metrics. Invalid-date houses appear only at the present milestone.
+- Replay reuses existing house roots, far LOD, camera, sky, fog, fireworks, and earned Star invitation. It
+  adds zero draws, textures, lights, backends, recurring timers, storage keys, or static media, and restores
+  every borrowed render owner on close.
+
 ## [1.85.0] — 2026-08-18
 
 ### 👤 Town Creator Hall — make every cloned town personally ownable

@@ -196,7 +196,27 @@ the baseline and clears the Passport notification.
 
 ---
 
-## 10. Resident Agency — Shared Joy
+## 10. Town Growth Replay
+
+Growth Replay uses only each repo's public `created` timestamp. The pure
+[`assets/town-growth.js`](../assets/town-growth.js) helper deduplicates canonical repo names, rejects invalid
+dates, groups houses by UTC creation year, and returns immutable cumulative milestones. Two or more distinct
+birth years are required; unknown-date houses appear only in the present milestone.
+
+The runtime hides or reveals existing house roots, animates only newly visible roots, forces the existing far
+architectural LOD, and frames the visible bounds with reusable camera vectors. It adds no scene object, texture,
+light, backend, recurring timer, or storage key. Closing restores house visibility, LOD ownership, camera,
+fog, sky phase, player visibility, and navigation.
+
+`?growth=<year>&ref=growth-replay` resolves to the latest real milestone at or before that year. Era postcards
+capture the same visible houses and report their truthful cumulative count. Only repos that remain public
+today can appear. The year is historical; house height, width, garden, ornaments, languages, topics, and all
+other architecture still use **current** public metadata because Repolis does not possess historical metric
+snapshots.
+
+---
+
+## 11. Resident Agency — Shared Joy
 
 Shared Joy is a single session-local pair state in the resident social layer. When no stronger owner is
 active, a deterministic time-slice planner chooses two compatible idle residents, preferring named friends.
@@ -216,7 +236,7 @@ resident movement. The state is not persisted and makes no AI, MCP, network, ass
 
 ---
 
-## 11. Starlight Row — resident homes and routines
+## 12. Starlight Row — resident homes and routines
 
 Starlight Row is a fixed civic landmark at `(130, 130)`, outside the repository rings but inside the
 205-unit map and 215-unit player bounds. It contains one roster-bound cottage per resident. Shared instanced

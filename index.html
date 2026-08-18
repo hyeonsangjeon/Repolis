@@ -51,18 +51,19 @@
   #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
-  #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
+  #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
-  #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
-  #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active { transform: translateY(1px); }
-  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
+  #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active { transform: translateY(1px); }
+  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
     color: #fff8e7; background: linear-gradient(145deg,#365464,#173d55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); font-size: 17px; }
   #twinMenuBtn .pmIcon { background: linear-gradient(145deg,#6a4f86,#2e5667); }
   #creatorMenuBtn .pmIcon { background: linear-gradient(145deg,#ba783d,#6a4327); }
-  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
-  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #growthMenuBtn .pmIcon { background: linear-gradient(145deg,#6c5ea8,#345d7c); }
+  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
+  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .repoRow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 12px;
     cursor: pointer; transition: background .12s; }
   .repoRow:hover { background: #f6ecdb; }
@@ -78,7 +79,7 @@
   #repoSearch { width: 100%; border: 1px solid #ecdcc4; background: #fffdf8; border-radius: 11px;
     padding: 9px 12px; font-size: 13px; color: #4a2f1e; outline: none; margin-bottom: 8px; }
   #repoSearch:focus { border-color: #e0b07a; }
-  #repoList { max-height: min(58vh, 460px); overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
+  #repoList { max-height: min(46vh, 390px); overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
   #repoList::-webkit-scrollbar { width: 7px; }
   #repoList::-webkit-scrollbar-thumb { background: #e6d3b8; border-radius: 6px; }
   .secHead { font-size: 11px; font-weight: 800; letter-spacing: .03em; color: #b08a5e;
@@ -202,6 +203,13 @@
   .freshItem .fg { flex: 0 0 auto; color: #3b8b76; font-size: 12px; font-weight: 800; }
   .freshRead { width: 100%; min-height: 36px; margin-top: 7px; border-radius: 10px; border: 1px solid #b9d9d1;
     background: rgba(255,255,255,.74); color: #397565; font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
+  .growthBox { border-radius: 14px; padding: 10px 11px 11px; margin: 0 0 11px;
+    background: linear-gradient(145deg,#f1eefb 0%,#e8f2fb 100%); border: 1px solid #c9c4e8; }
+  .growthBox .gh { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#5d528b; font-size:11px; font-weight:850; letter-spacing:.03em; }
+  .growthBox .gr { font-size:10.5px; color:#716a91; line-height:1.45; margin:5px 1px 8px; }
+  .growthBox button { width:100%; min-height:38px; border:1px solid #bdb5df; border-radius:10px; cursor:pointer;
+    color:#413b70; background:rgba(255,255,255,.78); font:inherit; font-size:11.5px; font-weight:800; }
+  .growthBox button:hover { background:#fff; border-color:#9f94cf; }
   #passBtn { position: relative; }
   #passBtn.news { box-shadow: 0 0 0 2px #72bea7, 0 4px 14px rgba(47,157,106,.28); }
   #passBtn.news::after { content: ""; position: absolute; top: 4px; right: 5px; width: 7px; height: 7px; border-radius: 50%;
@@ -814,6 +822,7 @@
     color: #fff; font: inherit; font-size: 11.5px; line-height: 1.25; font-weight: 800; cursor: pointer; }
   #introPinProfile { border: 1px solid rgba(255,255,255,.7); background: #24292f; }
   #introPinProfile:disabled { cursor: wait; opacity: .58; }
+  #introGrowth { border: 1px solid rgba(255,230,164,.82); background: #66518d; }
   #introCompare { border: 1px solid rgba(255,255,255,.72); background: #345e6b; }
   #introTryAnother { border: 1px solid rgba(255,255,255,.48); background: rgba(255,255,255,.14); }
   #introProfileStatus { min-height: 0; color: rgba(255,255,255,.86); font-size: 10.5px; line-height: 1.35; }
@@ -1037,6 +1046,44 @@
   #mapLegend .mz .mzc { font-size: 10px; color: #a98a5f; font-weight: 700; }
   #mapLegend .mz i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
   .mapHint { font-size: 10.5px; color: #b0946a; text-align: center; padding: 9px 4px 0; line-height: 1.4; }
+
+  /* ⏳ Town Growth Replay — repository creation dates become a user-controlled city history */
+  #growthReplay { position:fixed; inset:0; z-index:21; display:flex; align-items:flex-end; justify-content:center;
+    padding:24px; opacity:1; visibility:visible; transition:opacity .18s ease,visibility .18s ease; }
+  #growthReplay.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+  #growthReplay .growthBackdrop { position:absolute; inset:0; background:linear-gradient(180deg,rgba(5,10,28,.05),rgba(5,10,28,.42)); }
+  #growthReplay .growthPanel { position:relative; width:min(640px,calc(100vw - 36px)); max-height:calc(100vh - 48px); overflow:auto;
+    padding:17px 18px 16px; border:1px solid rgba(186,206,255,.46); border-radius:20px; color:#eef4ff;
+    background:linear-gradient(145deg,rgba(17,25,58,.96),rgba(48,38,84,.96)); box-shadow:0 18px 54px rgba(4,8,28,.48); backdrop-filter:blur(12px); }
+  #growthReplay .growthClose { position:absolute; top:9px; right:9px; width:36px; height:36px; border:0; border-radius:50%;
+    color:#eaf1ff; background:rgba(255,255,255,.12); font:inherit; font-size:15px; cursor:pointer; }
+  #growthReplay .growthKicker { color:#a9cfff; font-size:10px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
+  #growthReplay h2 { margin:3px 42px 0 0; font-size:21px; line-height:1.18; color:#fff; }
+  #growthReplay .growthSummary { margin-top:6px; color:#cbd8f2; font-size:12px; line-height:1.45; }
+  #growthReplay .growthNames { min-height:18px; margin-top:6px; color:#ffdc91; font-size:11px; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #growthReplay .growthTruth { margin-top:3px; color:#9eafd1; font-size:9.5px; line-height:1.35; }
+  #growthReplay .growthRangeLabel { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;
+    color:#b8c8e7; font-size:10.5px; font-weight:750; }
+  #growthReplay input[type="range"] { width:100%; min-height:30px; margin:1px 0 5px; accent-color:#e9c05f; cursor:pointer; }
+  #growthReplay .growthActions { display:flex; flex-wrap:wrap; gap:7px; }
+  #growthReplay .growthActions button { flex:1 1 118px; min-height:42px; border:1px solid rgba(202,218,255,.28); border-radius:11px;
+    color:#eef4ff; background:rgba(255,255,255,.1); font:inherit; font-size:11.5px; font-weight:800; cursor:pointer; }
+  #growthReplay .growthActions button.primary { color:#2d284a; border-color:#f2d57e; background:linear-gradient(135deg,#ffe39a,#e9b94f); }
+  #growthReplay .growthActions button:hover { filter:brightness(1.08); }
+  #growthReplay .growthStatus { min-height:17px; margin-top:7px; color:#b8c8e7; font-size:10.5px; text-align:center; }
+  body.growth-replay-active #prompt, body.growth-replay-active #actBtn, body.growth-replay-active #taxiBtn,
+  body.growth-replay-active #emoteBtn, body.growth-replay-active #emoteBar, body.growth-replay-active #drivebar,
+  body.growth-replay-active #starTrailHud, body.growth-replay-active #lanternWatchHud, body.growth-replay-active #starNudge { display:none !important; }
+  @media (max-width:520px) {
+    #growthReplay { padding:0; }
+    #growthReplay .growthPanel { width:100%; max-height:min(62vh,520px); border-radius:20px 20px 0 0; padding:15px 14px calc(14px + env(safe-area-inset-bottom,0px)); }
+    #growthReplay h2 { font-size:18px; }
+    #growthReplay .growthActions button, #growthReplay .growthClose { min-height:44px; }
+    #growthReplay .growthClose { width:44px; height:44px; top:6px; right:7px; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    #growthReplay, #growthReplay .growthPanel { transition:none !important; }
+  }
 </style>
 </head>
 <body>
@@ -1063,6 +1110,10 @@
     <span class="pmIcon" aria-hidden="true">👤</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="creatorMenu">마을 만든 사람</span><span class="pmSub" data-i18n="creatorMenuSub">공개 GitHub 프로필과 대표 작업</span></span>
   </button>
+  <button id="growthMenuBtn" type="button">
+    <span class="pmIcon" aria-hidden="true">⏳</span>
+    <span class="pmCopy"><span class="pmTitle" data-i18n="growthMenu">도시 성장 리플레이</span><span class="pmSub" data-i18n="growthMenuSub">첫 레포부터 지금까지 마을이 자라는 장면</span></span>
+  </button>
   <button id="twinMenuBtn" type="button">
     <span class="pmIcon" aria-hidden="true">↔</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="twinMenu">Twin Towns</span><span class="pmSub" data-i18n="twinMenuSub">친구의 GitHub 마을과 연결하기</span></span>
@@ -1078,6 +1129,7 @@
 <div id="passport" class="hidden">
   <h3>🛂 <span data-i18n="passportTitle">탐험 여권</span></h3>
   <div class="psub" data-i18n="passportSub">마을을 거닐며 스탬프를 모아요.</div>
+  <div class="growthBox" id="growthBox" style="display:none;"></div>
   <div class="freshBox" id="freshBox" style="display:none;"></div>
   <div class="courseBox" id="courseBox" style="display:none;"></div>
   <div class="stampGrid" id="stampGrid"></div>
@@ -1350,6 +1402,27 @@
   </div>
 </div>
 
+<div id="growthReplay" class="hidden" aria-hidden="true">
+  <div class="growthBackdrop" aria-hidden="true"></div>
+  <section class="growthPanel" role="dialog" aria-modal="true" aria-labelledby="growthTitle" aria-describedby="growthSummary">
+    <button id="growthClose" class="growthClose" type="button" data-i18n-aria="growthClose" aria-label="닫기">✕</button>
+    <div class="growthKicker" data-i18n="growthKicker">REPOLIS TIME MACHINE</div>
+    <h2 id="growthTitle"></h2>
+    <div id="growthSummary" class="growthSummary"></div>
+    <div id="growthNames" class="growthNames"></div>
+    <div id="growthTruth" class="growthTruth" data-i18n="growthTruth">현재 공개 레포의 생성일 기준 · 건물과 언어는 현재 메타데이터</div>
+    <label class="growthRangeLabel" for="growthRange"><span data-i18n="growthRange">레포 탄생 연도</span><span id="growthStep"></span></label>
+    <input id="growthRange" type="range" min="0" max="0" value="0" step="1" data-i18n-aria="growthRange" aria-label="레포 탄생 연도" />
+    <div class="growthActions">
+      <button id="growthPlay" class="primary" type="button"></button>
+      <button id="growthPresent" type="button" data-i18n="growthPresent">현재로 이동</button>
+      <button id="growthShare" type="button" data-i18n="growthShare">이 연도 링크 공유</button>
+      <button id="growthPostcard" type="button" data-i18n="growthPostcard">이 시대 엽서 만들기</button>
+    </div>
+    <div id="growthStatus" class="growthStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+  </section>
+</div>
+
 <div id="intro">
   <div class="inner">
     <div class="langsel" id="introLang">
@@ -1369,6 +1442,7 @@
         <div class="introProofTop" id="introProofTop"></div>
         <div class="introProofActions">
           <button id="introPinProfile" type="button" data-i18n="introPinProfile">GitHub 프로필에 마을 붙이기</button>
+          <button id="introGrowth" type="button" data-i18n="introGrowth">⏳ 내 도시가 자라는 장면 보기</button>
           <button id="introCompare" type="button" data-i18n="introCompare">↔ 친구 마을과 연결하기</button>
           <button id="introTryAnother" type="button" data-i18n="introTryAnother">↻ 다른 GitHub 계정 보기</button>
         </div>
@@ -1454,6 +1528,7 @@ import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, crea
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
 import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
+import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1468,6 +1543,7 @@ let REPOS = [];
 const GH_LOGIN_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
 const _reqUser = (new URLSearchParams(location.search).get('user') || '').trim();
 const _reqTwin = (new URLSearchParams(location.search).get('twin') || '').trim();
+const _reqGrowth = (new URLSearchParams(location.search).get('growth') || '').trim();
 let currentUser = OWNER;
 let cityMode = 'owner';            // 'owner' | 'public'
 let dataSource = 'owner-ci';       // 'owner-ci' | 'github-public' | 'cache' | 'stale-cache'
@@ -1585,6 +1661,7 @@ if(cityMode === 'owner'){
   track(cityError ? 'city_data_load_fail' : 'city_data_load_success',
     { targetUser:currentUser, repoCount:REPOS.length, reason: cityError ? cityError.reason : undefined });
 }
+const TOWN_GROWTH=buildTownGrowthTimeline(REPOS);
 
 /* Chronopolis council config (sages/chair/ambient) — optional; chamber uses an inline fallback if missing */
 let CHRONO_CFG=null;
@@ -1641,6 +1718,17 @@ const I18N = {
     freshAdded:'새 레포가 마을에 들어왔어요', freshRemoved:'이 레포는 마을을 떠났어요', freshRelease:'새 릴리스 {tag}',
     freshPushed:'새 커밋 활동', freshGrowth:'지표가 자랐어요', freshRead:'✓ 소식 읽음으로 표시',
     freshBanner:'📰 지난 방문 이후 레포 {count}곳에 변화가 있어요. 여권에서 마을 소식을 확인하세요!', freshNav:'🧭 {repo}의 현재 집을 가리킬게요.',
+    growthMenu:'도시 성장 리플레이', growthMenuSub:'첫 레포부터 지금까지 마을이 자라는 장면',
+    growthPassportTitle:'도시 성장 기록', growthPassportSummary:'{first} → {last} · 레포 탄생 연도 {steps}개', growthPassportOpen:'⏳ 도시가 자라는 장면 보기',
+    growthKicker:'REPOLIS TIME MACHINE', growthTitle:'{year}년 · 도시의 {step}번째 장면', growthTitlePresent:'{year}년 · 현재의 마을',
+    growthSummary:'이때까지 공개 레포 집 {repos}채 · 사용 언어 {languages}개', growthAdded:'이 해에 생긴 집 · {repos}',
+    growthAddedNone:'이 해에 새로 생긴 집이 없어요.', growthTruth:'현재 공개 레포의 생성일 기준 · 건물과 언어는 현재 메타데이터', growthRange:'레포 탄생 연도', growthStep:'{step}/{total}',
+    growthPlay:'▶ 성장 재생', growthPause:'⏸ 일시정지', growthPresent:'현재로 이동', growthShare:'이 연도 링크 공유',
+    growthPostcard:'이 시대 엽서 만들기', growthClose:'도시 성장 리플레이 닫기',
+    growthPostcardRepoCount:'{year}년까지 태어난 공개 레포 집 {count}채', growthPostcardSignature:'{first}년 첫 레포부터 자라난 도시',
+    growthShared:'이 연도의 도시 장면을 공유했어요.', growthShareFailed:'링크를 공유하지 못했어요. 클립보드 권한을 확인해 주세요.',
+    growthComplete:'🏙️ 첫 레포부터 현재까지, 도시의 성장 기록을 모두 봤어요.', growthUnavailable:'성장 리플레이를 만들 서로 다른 레포 탄생 연도가 부족해요.',
+    growthShareTitle:'@{user}의 {year}년 Repolis', growthShareText:'첫 레포부터 자라난 GitHub 도시의 한 장면',
     zbSub:'이 구역의 대표 레포와 나의 탐험 진행률', zbBoard:'구역 안내판',
     zbReps:'대표 레포', zbRide:'🚕 대표 레포로 이동', zbUnseen:'🧭 아직 안 본 레포 안내',
     zbAsk:'❓ 이 구역이 궁금해요', zbAllSeen:'이 구역의 레포를 모두 둘러봤어요! 🎉', zbHubHint:'구역 안내판 열기',
@@ -1705,7 +1793,7 @@ const I18N = {
     introLaunchLabel:'내 공개 레포로 바로 보기', introUserPh:'GitHub username', introLaunchGo:'내 마을 만들기 →',
     introLaunchHint:'공개 레포만 사용 · 로그인 없음 · 포크 없음', introLaunchInvalid:'올바른 GitHub username을 입력해 주세요.',
     introReady:'@{user}의 마을이 준비됐어요', introProofStats:'공개 레포 {count}개 · ★ {stars} · 사용 언어 {languages}개',
-    introProofTop:'대표 집 · {repos}', introPinProfile:'GitHub 프로필에 마을 붙이기', introCompare:'↔ 친구 마을과 연결하기', introTryAnother:'↻ 다른 GitHub 계정 보기', enterTownPublic:'이 마을 입장 →',
+    introProofTop:'대표 집 · {repos}', introPinProfile:'GitHub 프로필에 마을 붙이기', introGrowth:'⏳ 내 도시가 자라는 장면 보기', introCompare:'↔ 친구 마을과 연결하기', introTryAnother:'↻ 다른 GitHub 계정 보기', enterTownPublic:'이 마을 입장 →',
     introProfileCopied:'프로필 README 코드를 복사했어요. 붙여 넣으면 이 마을로 바로 연결돼요.',
     introProfileCopyFailed:'복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
     starNudge:'이 마을이 마음에 드셨나요? Repolis는 오픈소스예요.', starNudgeGo:'⭐ GitHub에서 Star',
@@ -1878,6 +1966,17 @@ const I18N = {
     freshAdded:'A new repo moved into town', freshRemoved:'This repo left the town', freshRelease:'New release {tag}',
     freshPushed:'Fresh commit activity', freshGrowth:'Its metrics grew', freshRead:'✓ Mark Gazette read',
     freshBanner:'📰 {count} repos changed since your last visit. Open the Passport for the Town Gazette!', freshNav:'🧭 Pointing to {repo}\'s current house.',
+    growthMenu:'Town Growth Replay', growthMenuSub:'Watch the town grow from its first repo to now',
+    growthPassportTitle:'Town growth record', growthPassportSummary:'{first} → {last} · {steps} repo-birth years', growthPassportOpen:'⏳ Watch this town grow',
+    growthKicker:'REPOLIS TIME MACHINE', growthTitle:'{year} · scene {step} of this city', growthTitlePresent:'{year} · the town today',
+    growthSummary:'{repos} public repo houses existed · {languages} languages', growthAdded:'Houses born this year · {repos}',
+    growthAddedNone:'No new house was born this year.', growthTruth:"Current public repos by creation date · appearance and languages use today's metadata", growthRange:'Repository birth year', growthStep:'{step}/{total}',
+    growthPlay:'▶ Play growth', growthPause:'⏸ Pause', growthPresent:'Jump to present', growthShare:'Share this year',
+    growthPostcard:'Make an era postcard', growthClose:'Close Town Growth Replay',
+    growthPostcardRepoCount:'{count} public repo houses born by {year}', growthPostcardSignature:'A city growing from its first repo in {first}',
+    growthShared:'This year of the town was shared.', growthShareFailed:'Couldn\'t share the link. Check this browser\'s clipboard permission.',
+    growthComplete:'🏙️ You watched the city grow from its first repo to the present.', growthUnavailable:'This town needs repos born in at least two different years for a growth replay.',
+    growthShareTitle:'@{user}\'s Repolis in {year}', growthShareText:'A moment from a GitHub city growing from its first repository',
     zbSub:'Representative repos and your exploration here', zbBoard:'district board',
     zbReps:'Representative repos', zbRide:'🚕 Ride to a top repo', zbUnseen:'🧭 Guide me to an unseen one',
     zbAsk:'❓ Tell me about this district', zbAllSeen:'You\'ve visited every repo in this district! 🎉', zbHubHint:'open district board',
@@ -1942,7 +2041,7 @@ const I18N = {
     introLaunchLabel:'See the same engine with your public repos', introUserPh:'GitHub username', introLaunchGo:'Build my town →',
     introLaunchHint:'Public repos only · no login · no fork', introLaunchInvalid:'Enter a valid GitHub username.',
     introReady:"@{user}'s town is ready", introProofStats:'{count} public repos · ★ {stars} · {languages} languages',
-    introProofTop:'Featured houses · {repos}', introPinProfile:'Put this town on my GitHub profile', introCompare:'↔ Connect with a friend', introTryAnother:'↻ Try another GitHub account', enterTownPublic:'Enter this town →',
+    introProofTop:'Featured houses · {repos}', introPinProfile:'Put this town on my GitHub profile', introGrowth:'⏳ Watch my town grow', introCompare:'↔ Connect with a friend', introTryAnother:'↻ Try another GitHub account', enterTownPublic:'Enter this town →',
     introProfileCopied:'Profile README code copied. Paste it to link straight to this town.',
     introProfileCopyFailed:'Could not copy the code. Check this browser\'s clipboard permission.',
     starNudge:'Enjoying the town? Repolis is open source.', starNudgeGo:'⭐ Star on GitHub',
@@ -2130,6 +2229,7 @@ function applyLang(){
   if(typeof refreshCreatorHallSign==='function') refreshCreatorHallSign();
   if(typeof window.__creatorLangRefresh==='function') window.__creatorLangRefresh();
   if(typeof window.__postcardLangRefresh==='function') window.__postcardLangRefresh();
+  if(typeof window.__growthLangRefresh==='function') window.__growthLangRefresh();
   { const _zb=document.getElementById('zoneBoard'); if(typeof renderZoneBoard==='function' && _zb && _zb.classList.contains('show') && _zb._zid) renderZoneBoard(_zb._zid); }
   if(_mapReady && typeof syncMapChrome==='function') syncMapChrome();
   if(typeof window.__updateLiveTitle==='function') window.__updateLiveTitle();
@@ -5360,7 +5460,7 @@ const FERRIS_POS=new THREE.Vector3(160,0,-58);   // clear ESE flank (38u from th
   COLLIDERS.push({x:FERRIS_POS.x,z:FERRIS_POS.z, r:4.5});
   [AXLE,-AXLE].forEach(z=>[-1,1].forEach(sx=>{ const w=WX(sx*R*0.52,z); COLLIDERS.push({x:w.x,z:w.z,r:1.1}); }));
   FERRIS={ _isFerris:true, _pos:new THREE.Vector3(bw.x,0,bw.z), label:t('ferrisName'),
-           wheel:wheel, cabs:cabs, bulbMat:bulbMat, board:new THREE.Vector3(bw.x,0,bw.z) };
+           root:root, wheel:wheel, cabs:cabs, bulbMat:bulbMat, board:new THREE.Vector3(bw.x,0,bw.z) };
 })();
 
 /* ───────── 🎠 Carousel — a colourful funfair ride beside the Ferris wheel; board a horse for a gentle spin-and-bob
@@ -7647,6 +7747,7 @@ for(const npc of NPCS) if(npc.kind==='deepwiki') CAMERA_ARRIVAL_OCCLUDERS.push({
 });
 function _cameraOwnerAtFrameStart(){
   if(repositoryAtelierActive()) return 'repository-atelier';
+  if(GROWTH_REPLAY.active) return 'town-growth-replay';
   if(tour&&tour.active) return 'guided-tour';
   if(ride) return 'taxi-ride';
   if(ferris) return 'ferris';
@@ -7669,8 +7770,11 @@ function _setRequestedCameraPose(yaw=camYaw,distance=camDist){
     player.position.z+Math.cos(yaw)*horizontal);
 }
 function _updateClearSightCamera(dt,owner){
-  _setRequestedCameraPose();
   const state=CLEAR_SIGHT_CAMERA;
+  if(owner==='town-growth-replay'){
+    state.skips++; state.lastReason=owner; state.blocked=false; state.hit=null; state.clearance=0; return;
+  }
+  _setRequestedCameraPose();
   state.requestedDist=camDist;
   if(state.arrivalFrame===renderedFrame){
     state.skips++; state.lastReason='arrival-settle'; CAMERA_RESOLVED_TARGET.copy(camera.position);
@@ -7940,7 +8044,7 @@ function renderFreshness(){ const box=document.getElementById('freshBox'); if(!b
   box.querySelectorAll('button.freshItem').forEach(btn=>{ btn.onclick=()=>{ const repo=repoByKey(btn.dataset.repo); if(!repo) return;
       passportEl.classList.add('hidden'); setNav(repo); showWave(tf('freshNav',{repo:repo.label}),2800); track('town_gazette_nav',{repo:repo.repo}); }; });
   const read=document.getElementById('freshReadBtn'); if(read) read.onclick=markFreshnessRead; }
-function renderPassport(){ renderFreshness(); renderCourse(); const grid=document.getElementById('stampGrid'); if(!grid) return;
+function renderPassport(){ renderFreshness(); renderCourse(); renderGrowthPassport(); const grid=document.getElementById('stampGrid'); if(!grid) return;
   grid.innerHTML='';
   for(const lm of PASS_LANDMARKS){ const got=passHasStamp(lm.id);
     const d=document.createElement('div'); d.className='stamp'+(got?' got':'');
@@ -8546,11 +8650,12 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
   try{ if(REPOS.length){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
-  setTimeout(()=>{ try{ openRepoFromHash(); }catch(e){} }, 480); };
+  setTimeout(()=>{ try{ openRepoFromHash(); }catch(e){} }, 480);
+  if(_reqGrowth) setTimeout(()=>{ try{ startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false}); }catch(e){} },620); };
 const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introLaunch.querySelector('.launchLabel'),
   introLaunchForm=document.getElementById('introLaunchForm'),introLaunchHint=document.getElementById('introLaunchHint'),
   introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
-  introProofTop=document.getElementById('introProofTop'),introPinProfile=document.getElementById('introPinProfile'),
+  introProofTop=document.getElementById('introProofTop'),introPinProfile=document.getElementById('introPinProfile'),introGrowth=document.getElementById('introGrowth'),
   introCompare=document.getElementById('introCompare'),introTryAnother=document.getElementById('introTryAnother'),introProfileStatus=document.getElementById('introProfileStatus'),
   introStartBtn=document.getElementById('startBtn');
 let introChoosingAnother=false,introProfileResult=null;
@@ -8567,6 +8672,7 @@ function renderPublicIntro(){
     introLaunchLabel.textContent=tf('introReady',{user:summary.user});
     introProofStats.textContent=tf('introProofStats',{count:introProofNumber(summary.count),stars:introProofNumber(summary.stars),languages:introProofNumber(summary.languages)});
     const featured=summary.topRepos.join(' · '); introProofTop.textContent=tf('introProofTop',{repos:featured}); introProofTop.title=featured;
+    introGrowth.hidden=!TOWN_GROWTH.available;
     introStartBtn.textContent=t('enterTownPublic');
   }else{
     introProfileResult=null; introLaunchLabel.textContent=t('introLaunchLabel'); introStartBtn.textContent=t('enterTown');
@@ -8582,6 +8688,7 @@ async function copyIntroProfileReadme(){
 }
 window.__publicIntroRefresh=renderPublicIntro;
 introPinProfile.onclick=copyIntroProfileReadme;
+introGrowth.onclick=()=>{ introStartBtn.click(); setTimeout(()=>startTownGrowthReplay({entry:'intro',autoplay:true}),620); };
 introCompare.onclick=()=>openTwinTowns('intro');
 introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null; renderPublicIntro(); const input=document.getElementById('introUser'); input.value=''; setTimeout(()=>input.focus(),0); };
 (function(){ const form=introLaunchForm, input=document.getElementById('introUser'), err=document.getElementById('introLaunchErr');
@@ -8835,8 +8942,11 @@ const POSTCARD={open:false,busy:false,blob:null,entry:'menu',previousFocus:null,
   forceBlank:false,forceFallback:false,activeTargets:0,renders:0,failures:0,last:null,lastStatus:null,resourceBefore:null,resourceAfter:null,stateRestored:null};
 
 function _postcardShareUrl(){
-  const base=location.origin+location.pathname;
-  return cityMode==='public' ? base+'?user='+encodeURIComponent(currentUser) : base;
+  const base=location.origin+location.pathname,params=new URLSearchParams();
+  if(cityMode==='public') params.set('user',currentUser);
+  const growth=new URLSearchParams(location.search).get('growth');
+  if(document.body.classList.contains('growth-replay-active')&&/^\d{4}$/.test(growth||'')){ params.set('growth',growth); params.set('ref','growth-replay'); }
+  const query=params.toString(); return query?base+'?'+query:base;
 }
 function _postcardPublishedBase(){
   const local=/^(?:localhost|127\.0\.0\.1|::1)$/.test(location.hostname);
@@ -8946,9 +9056,14 @@ async function renderTownPostcard(trigger='retake'){
       if(renderId!==POSTCARD.renderId||!POSTCARD.open) return false;
       frame=_capturePostcardComposite();
       const format=postcardFormatForViewport(innerWidth,innerHeight),identity=_postcardIdentity(),shareUrl=_postcardShareUrl();
+      const growthYear=document.body.classList.contains('growth-replay-active')?Number(new URLSearchParams(location.search).get('growth')):NaN;
+      const growthIndex=Number.isFinite(growthYear)?townGrowthIndexForYear(TOWN_GROWTH,growthYear):-1;
+      const growthShot=growthIndex>=0?townGrowthSnapshot(TOWN_GROWTH,growthIndex):null;
       const composed=composeTownPostcard({canvas:postcardCanvas,sourceCanvas:frame.canvas,format,identity,
-        kicker:t('postcardKicker'),title:'@'+currentUser+' · '+(cityMode==='public'?tf('townOf',{user:currentUser}):t('myCity')),
-        repoLine:tf('postcardRepoCount',{count:REPOS.length}),signature:_postcardSummary(),shareUrl,madeWith:t('postcardMadeWith')});
+        kicker:growthShot?t('growthKicker'):t('postcardKicker'),
+        title:'@'+currentUser+' · '+(growthShot?String(growthShot.year):(cityMode==='public'?tf('townOf',{user:currentUser}):t('myCity'))),
+        repoLine:growthShot?tf('growthPostcardRepoCount',{count:growthShot.visibleCount,year:growthShot.year}):tf('postcardRepoCount',{count:REPOS.length}),
+        signature:growthShot?tf('growthPostcardSignature',{first:TOWN_GROWTH.firstYear}):_postcardSummary(),shareUrl,madeWith:t('postcardMadeWith')});
       const blob=await postcardCanvasToBlob(postcardCanvas);
       if(renderId!==POSTCARD.renderId) return false;
       POSTCARD.blob=blob; POSTCARD.last={ok:true,trigger,orientation:composed.orientation,width:composed.width,height:composed.height,
@@ -8975,10 +9090,12 @@ async function renderTownPostcard(trigger='retake'){
 }
 
 function openPostcardStudio(entry='menu'){
-  if(repositoryAtelierActive()||(modalOpen&&!POSTCARD.open)) return false;
+  if(repositoryAtelierActive()||(modalOpen&&!POSTCARD.open&&!document.body.classList.contains('growth-replay-active'))) return false;
   if(ride||ferris||carousel||canalFerryRide||performance.now()<ridePostActionUntil){ showWave(t('postcardMotionBusy'),2800); return false; }
   if(POSTCARD.open) return true;
-  POSTCARD.open=true; POSTCARD.entry=['menu','kiosk','debug'].includes(entry)?entry:'menu';
+  POSTCARD.open=true; POSTCARD.entry=['menu','kiosk','growth','debug'].includes(entry)?entry:'menu';
+  if(POSTCARD.entry==='growth'){ const replay=document.getElementById('growthReplay'),panel=replay?.querySelector('.growthPanel');
+    if(panel) panel.inert=true; replay?.setAttribute('aria-hidden','true'); }
   POSTCARD.previousFocus=POSTCARD.entry==='menu'?menuBtn:document.activeElement;
   POSTCARD.pausedTour=typeof _pauseTourForAtelier==='function'?_pauseTourForAtelier():null;
   panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.add('hidden');
@@ -8990,7 +9107,10 @@ function openPostcardStudio(entry='menu'){
 }
 function closePostcardStudio(){
   if(!POSTCARD.open) return false;
-  POSTCARD.open=false; postcardModal.classList.remove('show'); postcardModal.setAttribute('aria-hidden','true'); modalOpen=false;
+  POSTCARD.open=false; postcardModal.classList.remove('show'); postcardModal.setAttribute('aria-hidden','true');
+  modalOpen=document.body.classList.contains('growth-replay-active');
+  if(modalOpen){ const replay=document.getElementById('growthReplay'),panel=replay?.querySelector('.growthPanel');
+    if(panel) panel.inert=false; replay?.setAttribute('aria-hidden','false'); }
   const paused=POSTCARD.pausedTour,previous=POSTCARD.previousFocus; POSTCARD.pausedTour=null; POSTCARD.previousFocus=null;
   if(typeof _resumeTourAfterAtelier==='function') _resumeTourAfterAtelier(paused);
   if(previous&&previous.isConnected) setTimeout(()=>{ try{ previous.focus(); }catch(e){} },0);
@@ -9073,6 +9193,214 @@ postcardCopy.onclick=copyPostcardLink;
 postcardReadme.onclick=copyPostcardReadme;
 postcardMenuBtn.onclick=()=>openPostcardStudio('menu');
 syncPostcardStudioLang();
+
+/*TOWN_GROWTH_REPLAY:START*/
+const growthReplay=document.getElementById('growthReplay'),growthPanel=growthReplay.querySelector('.growthPanel'),
+  growthClose=document.getElementById('growthClose'),growthRange=document.getElementById('growthRange'),
+  growthPlay=document.getElementById('growthPlay'),growthPresent=document.getElementById('growthPresent'),
+  growthShare=document.getElementById('growthShare'),growthPostcard=document.getElementById('growthPostcard'),
+  growthMenuBtn=document.getElementById('growthMenuBtn'),growthBox=document.getElementById('growthBox');
+const GROWTH_REPLAY={
+  active:false,playing:false,index:0,elapsed:0,entry:'menu',completed:false,statusKey:'',
+  yearByRepo:new Map(TOWN_GROWTH.entries.map(entry=>[entry.repo,entry.year])),reveals:[],
+  focus:new THREE.Vector3(),focusTarget:new THREE.Vector3(),cameraTarget:new THREE.Vector3(),
+  distance:180,targetDistance:180,pitch:1.02,targetPitch:1.02,yaw:-Math.PI*.72,aspect:0,
+  saved:null,previousFocus:null
+};
+function _growthSuspendScenery(saved){
+  const roots=[],seen=new Set(),add=object=>{ if(!object||seen.has(object)) return; seen.add(object); roots.push({object,visible:object.visible}); object.visible=false; };
+  for(const group of SWAY) add(group);
+  for(const live of RESIDENTS_LIVE) add(live.group);
+  for(const hub of ZONE_HUBS) add(hub.group);
+  for(const npc of NPCS) add(npc.group);
+  for(const sage of CHRONO_SAGES) add(sage.grp);
+  for(const pet of CHOWS) if(pet.parent===scene) add(pet);
+  for(const peer of peers.values()) add(peer.group);
+  add(FERRIS&&(FERRIS.root||FERRIS.wheel)); add(CAROUSEL&&CAROUSEL.spin); add(MEMORIAL_TREE&&MEMORIAL_TREE.group);
+  add(RES_QUARTER&&RES_QUARTER.group); add(OBS&&OBS._group); add(taxi);
+  if(MEMORIAL_TREE){ saved.worldTreeRequested=MEMORIAL_TREE.requestedVisible; MEMORIAL_TREE.requestedVisible=false; MEMORIAL_TREE.bloomDirty=true; }
+  saved.scenery=roots;
+}
+function _growthRestoreScenery(saved){ for(const state of saved?.scenery||[]) state.object.visible=state.visible;
+  if(MEMORIAL_TREE&&saved){ MEMORIAL_TREE.requestedVisible=saved.worldTreeRequested; MEMORIAL_TREE.bloomDirty=true; } }
+function _growthSuspendBackground(saved){
+  saved.inertRoots=[]; for(const element of document.body.children){ if(element===growthReplay||element===postcardModal) continue;
+    saved.inertRoots.push({element,inert:element.inert}); element.inert=true; }
+}
+function _growthRestoreBackground(saved){ for(const state of saved?.inertRoots||[]) state.element.inert=state.inert; }
+function _growthSnapshot(){ return townGrowthSnapshot(TOWN_GROWTH,GROWTH_REPLAY.index); }
+function _growthRepoLabel(name){ const repo=REPOS.find(item=>item.repo===name); return repo?repo.label:name; }
+function _growthSetStatus(key=''){ GROWTH_REPLAY.statusKey=key; document.getElementById('growthStatus').textContent=key?t(key):''; }
+function _growthSetLocation(year){
+  try{ const url=new URL(location.href); url.searchParams.delete('twin'); url.searchParams.set('growth',String(year));
+    if(url.searchParams.get('ref')!=='growth-replay') url.searchParams.delete('ref'); url.hash='';
+    history.replaceState(null,'',url.pathname+url.search); }catch(e){}
+}
+function _growthClearLocation(){
+  try{ const url=new URL(location.href); url.searchParams.delete('growth');
+    if(url.searchParams.get('ref')==='growth-replay') url.searchParams.delete('ref');
+    history.replaceState(null,'',url.pathname+url.search+url.hash); }catch(e){}
+}
+function _growthFitCamera(){
+  let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity,found=0;
+  for(const repo of REPOS){ if(!repo._group||!repo._group.visible) continue; const radius=Math.max(2,repo._cw||3);
+    minX=Math.min(minX,repo._x-radius); maxX=Math.max(maxX,repo._x+radius);
+    minZ=Math.min(minZ,repo._z-radius); maxZ=Math.max(maxZ,repo._z+radius); found++; }
+  if(!found){ GROWTH_REPLAY.focusTarget.set(0,0,0); GROWTH_REPLAY.targetDistance=180; return; }
+  GROWTH_REPLAY.focusTarget.set((minX+maxX)*.5,0,(minZ+maxZ)*.5);
+  const span=Math.max(38,maxX-minX,maxZ-minZ),portrait=innerWidth/innerHeight<.78;
+  GROWTH_REPLAY.targetDistance=THREE.MathUtils.clamp(span*(portrait?1.38:.8)+(portrait?82:48),92,portrait?590:340);
+  GROWTH_REPLAY.targetPitch=portrait?1.18:1.02;
+}
+function _growthPositionCamera(dt=0,immediate=false){
+  const factor=immediate?1:1-Math.exp(-Math.max(0,dt)*3.8);
+  GROWTH_REPLAY.focus.lerp(GROWTH_REPLAY.focusTarget,factor);
+  GROWTH_REPLAY.distance=THREE.MathUtils.lerp(GROWTH_REPLAY.distance,GROWTH_REPLAY.targetDistance,factor);
+  GROWTH_REPLAY.pitch=THREE.MathUtils.lerp(GROWTH_REPLAY.pitch,GROWTH_REPLAY.targetPitch,factor);
+  const horizontal=Math.cos(GROWTH_REPLAY.pitch)*GROWTH_REPLAY.distance;
+  GROWTH_REPLAY.cameraTarget.set(
+    GROWTH_REPLAY.focus.x+Math.sin(GROWTH_REPLAY.yaw)*horizontal,
+    Math.sin(GROWTH_REPLAY.pitch)*GROWTH_REPLAY.distance+18,
+    GROWTH_REPLAY.focus.z+Math.cos(GROWTH_REPLAY.yaw)*horizontal
+  );
+  camera.position.lerp(GROWTH_REPLAY.cameraTarget,factor); camera.lookAt(GROWTH_REPLAY.focus);
+}
+function _renderTownGrowthReplay(){
+  const snapshot=_growthSnapshot(); if(!snapshot) return;
+  document.getElementById('growthTitle').textContent=tf(snapshot.isPresent?'growthTitlePresent':'growthTitle',{year:snapshot.year,step:snapshot.index+1});
+  document.getElementById('growthSummary').textContent=tf('growthSummary',{repos:snapshot.visibleCount,languages:snapshot.languageCount});
+  document.getElementById('growthTruth').textContent=t('growthTruth');
+  const names=snapshot.added.map(_growthRepoLabel),shown=names.slice(0,5).join(' · '),more=Math.max(0,names.length-5);
+  document.getElementById('growthNames').textContent=names.length?tf('growthAdded',{repos:shown+(more?` · +${more}`:'')}):t('growthAddedNone');
+  document.getElementById('growthStep').textContent=tf('growthStep',{step:snapshot.index+1,total:snapshot.steps});
+  growthRange.max=String(Math.max(0,snapshot.steps-1)); growthRange.value=String(snapshot.index);
+  growthPlay.textContent=t(GROWTH_REPLAY.playing?'growthPause':'growthPlay');
+  growthPresent.disabled=snapshot.isPresent; growthRange.setAttribute('aria-valuetext',String(snapshot.year));
+  growthRange.setAttribute('aria-label',t('growthRange')+' · '+snapshot.year);
+  if(GROWTH_REPLAY.statusKey) _growthSetStatus(GROWTH_REPLAY.statusKey);
+}
+function _applyTownGrowthIndex(index,animate=true,source='control'){
+  const snapshot=townGrowthSnapshot(TOWN_GROWTH,index); if(!snapshot) return null;
+  GROWTH_REPLAY.index=snapshot.index; GROWTH_REPLAY.reveals.length=0;
+  const newlyVisible=[];
+  for(const repo of REPOS){ const year=GROWTH_REPLAY.yearByRepo.get(repo.repo);
+    const visible=year==null?snapshot.isPresent:year<=snapshot.year,wasVisible=repo._group.visible;
+    repo._growthHidden=!visible;
+    if(visible&&!wasVisible&&animate&&!REDUCED){ repo._group.visible=true; repo._group.scale.set(1,.025,1); repo._growthReveal=0; GROWTH_REPLAY.reveals.push(repo); newlyVisible.push(repo); }
+    else { repo._group.visible=visible; repo._group.scale.set(1,1,1); if(visible&&!wasVisible) newlyVisible.push(repo); } }
+  const daylight=.25+(snapshot.index/Math.max(1,snapshot.steps-1))*.25;
+  skyT=skyTarget=daylight; skyAuto=false; applySky(daylight,true); setNightState(false);
+  skyPhaseIdx=snapshot.isPresent?0:3; updateDayIcon();
+  _growthFitCamera(); _growthSetLocation(snapshot.year); invalidateTownShadows('town-growth-replay');
+  if(animate&&!REDUCED) for(const repo of newlyVisible.slice(0,3)) popSparkle(repo._pos.x,Math.max(3,(repo._h||6)*.55),repo._pos.z,0xffd77d);
+  _renderTownGrowthReplay(); track('town_growth_step',{year:snapshot.year,index:snapshot.index,source,visible:snapshot.visibleCount});
+  return snapshot;
+}
+function _finishTownGrowthReplay(){
+  if(GROWTH_REPLAY.completed) return; GROWTH_REPLAY.completed=true; GROWTH_REPLAY.playing=false; _renderTownGrowthReplay();
+  _growthSetStatus('growthComplete'); if(!REDUCED) fireworksShow(10); maybeStarNudge('town_growth_replay');
+  track('town_growth_complete',{steps:TOWN_GROWTH.milestones.length,years:TOWN_GROWTH.lastYear-TOWN_GROWTH.firstYear});
+}
+function _updateTownGrowthReplay(dt){
+  if(!GROWTH_REPLAY.active) return;
+  if(GROWTH_REPLAY.aspect!==camera.aspect){ GROWTH_REPLAY.aspect=camera.aspect; _growthFitCamera(); }
+  if(GROWTH_REPLAY.playing){ GROWTH_REPLAY.elapsed+=dt;
+    if(GROWTH_REPLAY.elapsed>=1.35){ GROWTH_REPLAY.elapsed=0;
+      if(GROWTH_REPLAY.index>=TOWN_GROWTH.milestones.length-1) _finishTownGrowthReplay();
+      else { const snapshot=_applyTownGrowthIndex(GROWTH_REPLAY.index+1,true,'play');
+        if(snapshot&&snapshot.isPresent) _finishTownGrowthReplay(); } } }
+  for(let index=GROWTH_REPLAY.reveals.length-1;index>=0;index--){ const repo=GROWTH_REPLAY.reveals[index];
+    repo._growthReveal=Math.min(1,(repo._growthReveal||0)+dt/0.72);
+    const eased=1-Math.pow(1-repo._growthReveal,3); repo._group.scale.y=Math.max(.025,eased);
+    if(repo._growthReveal>=1){ repo._group.scale.y=1; GROWTH_REPLAY.reveals.splice(index,1); } }
+  _growthPositionCamera(dt,false);
+}
+function _growthFocusables(){ return [...growthPanel.querySelectorAll('button:not([disabled]),input:not([disabled])')]; }
+function startTownGrowthReplay(options={}){
+  if(GROWTH_REPLAY.active) return true;
+  if(!TOWN_GROWTH.available){ showWave(t('growthUnavailable'),3200); return false; }
+  if(repositoryAtelierActive()||ride||ferris||carousel||canalFerryRide||modalOpen) return false;
+  if(tour&&tour.active) endTour(false); if(sitting) standUp(); clearKeys();
+  const requested=options.year==null?0:townGrowthIndexForYear(TOWN_GROWTH,options.year),entry=options.entry||'menu';
+  GROWTH_REPLAY.saved={cameraPosition:camera.position.clone(),cameraQuaternion:camera.quaternion.clone(),cameraFar:camera.far,
+    playerVisible:player.visible,navVisible:navHolder.visible,camYaw,camPitch,camDist,freeLook,modalOpen,
+    skyT,skyTarget,skyAuto,skyPhaseIdx,isNight,fogNear:scene.fog.near,fogFar:scene.fog.far,
+    lod:BUILDING_LOD_PROTO.entries.map(entry=>({entry,forced:entry.forcedTier,tier:entry.tier,activeVisible:entry.active.visible}))};
+  GROWTH_REPLAY.previousFocus=(entry==='intro'||entry==='link')?menuBtn:document.activeElement;
+  GROWTH_REPLAY.active=true; GROWTH_REPLAY.playing=options.autoplay!==false&&!REDUCED; GROWTH_REPLAY.completed=false;
+  GROWTH_REPLAY.elapsed=0; GROWTH_REPLAY.entry=entry; GROWTH_REPLAY.statusKey=''; GROWTH_REPLAY.aspect=camera.aspect;
+  panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.add('hidden');
+  document.getElementById('station').classList.add('hidden'); if(typeof closeMap==='function') closeMap();
+  _growthSuspendBackground(GROWTH_REPLAY.saved);
+  modalOpen=true; player.visible=false; navHolder.visible=false; document.body.classList.add('growth-replay-active');
+  growthReplay.classList.remove('hidden'); growthReplay.setAttribute('aria-hidden','false');
+  for(const state of GROWTH_REPLAY.saved.lod){ state.entry.forcedTier='far'; state.entry.active.visible=false; _buildingLodAttach(state.entry,'far',true); }
+  camera.far=1100; camera.updateProjectionMatrix(); scene.fog.near=600; scene.fog.far=1100;
+  _applyTownGrowthIndex(requested<0?0:requested,false,entry); GROWTH_REPLAY.focus.copy(GROWTH_REPLAY.focusTarget);
+  _growthSuspendScenery(GROWTH_REPLAY.saved);
+  GROWTH_REPLAY.distance=GROWTH_REPLAY.targetDistance; GROWTH_REPLAY.pitch=GROWTH_REPLAY.targetPitch; _growthPositionCamera(0,true);
+  setTimeout(()=>{ try{ growthPlay.focus(); }catch(e){} },0);
+  track('town_growth_open',{entry,year:_growthSnapshot()?.year||null,steps:TOWN_GROWTH.milestones.length}); return true;
+}
+function closeTownGrowthReplay(){
+  if(!GROWTH_REPLAY.active) return false; if(POSTCARD.open) closePostcardStudio(); const saved=GROWTH_REPLAY.saved;
+  GROWTH_REPLAY.active=false; GROWTH_REPLAY.playing=false; GROWTH_REPLAY.reveals.length=0;
+  for(const repo of REPOS){ repo._growthHidden=false; repo._growthReveal=1; repo._group.visible=true; repo._group.scale.set(1,1,1); }
+  document.body.classList.remove('growth-replay-active'); growthReplay.classList.add('hidden'); growthReplay.setAttribute('aria-hidden','true');
+  if(saved){ player.visible=saved.playerVisible; navHolder.visible=saved.navVisible; camYaw=saved.camYaw; camPitch=saved.camPitch; camDist=saved.camDist; freeLook=saved.freeLook;
+    camera.far=saved.cameraFar; camera.updateProjectionMatrix(); camera.position.copy(saved.cameraPosition); camera.quaternion.copy(saved.cameraQuaternion); modalOpen=saved.modalOpen; }
+  if(saved) for(const state of saved.lod){ state.entry.forcedTier=state.forced; state.entry.active.visible=state.activeVisible; _buildingLodAttach(state.entry,state.tier,true); }
+  if(saved){ skyT=saved.skyT; skyTarget=saved.skyTarget; skyAuto=saved.skyAuto; skyPhaseIdx=saved.skyPhaseIdx;
+    scene.fog.near=saved.fogNear; scene.fog.far=saved.fogFar; applySky(skyT,true); setNightState(saved.isNight); updateDayIcon(); }
+  _growthRestoreScenery(saved);
+  _growthRestoreBackground(saved);
+  GROWTH_REPLAY.saved=null; _growthClearLocation(); invalidateTownShadows('town-growth-restore'); track('town_growth_close',{year:_growthSnapshot()?.year||null});
+  const previous=GROWTH_REPLAY.previousFocus; GROWTH_REPLAY.previousFocus=null;
+  setTimeout(()=>{ try{ (previous&&previous.isConnected?previous:menuBtn).focus(); }catch(e){} },0); flushStarNudge(); return true;
+}
+function renderGrowthPassport(){
+  if(!growthBox) return; if(!TOWN_GROWTH.available){ growthBox.style.display='none'; growthBox.innerHTML=''; return; }
+  growthBox.style.display=''; growthBox.innerHTML=`<div class="gh"><span>⏳ ${_esc(t('growthPassportTitle'))}</span><span>${TOWN_GROWTH.knownCount}</span></div>`
+    +`<div class="gr">${_esc(tf('growthPassportSummary',{first:TOWN_GROWTH.firstYear,last:TOWN_GROWTH.lastYear,steps:TOWN_GROWTH.milestones.length}))}</div>`
+    +`<button id="growthPassportOpen" type="button">${_esc(t('growthPassportOpen'))}</button>`;
+  document.getElementById('growthPassportOpen').onclick=()=>startTownGrowthReplay({entry:'passport',autoplay:true});
+}
+async function shareTownGrowth(){
+  const snapshot=_growthSnapshot(),url=snapshot&&createTownGrowthShareUrl(location.href,snapshot.year); if(!url) return false;
+  let ok=false;
+  if(typeof navigator.share==='function'){ try{ await navigator.share({title:tf('growthShareTitle',{user:currentUser,year:snapshot.year}),text:t('growthShareText'),url}); ok=true; }
+    catch(error){ if(error&&error.name==='AbortError') return false; ok=await _copyPostcardText(url); } }
+  else ok=await _copyPostcardText(url);
+  _growthSetStatus(ok?'growthShared':'growthShareFailed'); track('share_click',{channel:'town_growth',ok,year:snapshot.year}); return ok;
+}
+growthRange.oninput=()=>{ GROWTH_REPLAY.playing=false; GROWTH_REPLAY.completed=false; GROWTH_REPLAY.elapsed=0; _growthSetStatus('');
+  _applyTownGrowthIndex(+growthRange.value,true,'slider'); };
+growthPlay.onclick=()=>{ if(GROWTH_REPLAY.playing){ GROWTH_REPLAY.playing=false; _renderTownGrowthReplay(); return; }
+  if(GROWTH_REPLAY.index>=TOWN_GROWTH.milestones.length-1){ GROWTH_REPLAY.completed=false; _growthSetStatus(''); _applyTownGrowthIndex(0,false,'replay'); }
+  GROWTH_REPLAY.playing=true; GROWTH_REPLAY.elapsed=0; _renderTownGrowthReplay(); };
+growthPresent.onclick=()=>{ GROWTH_REPLAY.playing=false; GROWTH_REPLAY.completed=false; _growthSetStatus('');
+  _applyTownGrowthIndex(TOWN_GROWTH.milestones.length-1,true,'present'); };
+growthShare.onclick=shareTownGrowth;
+growthPostcard.onclick=()=>{ GROWTH_REPLAY.playing=false; _renderTownGrowthReplay(); openPostcardStudio('growth'); };
+growthClose.onclick=closeTownGrowthReplay; growthReplay.querySelector('.growthBackdrop').onclick=closeTownGrowthReplay;
+growthReplay.addEventListener('keydown',event=>{ if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeTownGrowthReplay(); return; }
+  if(event.key!=='Tab') return; const items=_growthFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
+  if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); } });
+growthMenuBtn.hidden=!TOWN_GROWTH.available; growthMenuBtn.onclick=()=>startTownGrowthReplay({entry:'menu',autoplay:true});
+window.__growthLangRefresh=()=>{ if(GROWTH_REPLAY.active) _renderTownGrowthReplay(); if(!passportEl.classList.contains('hidden')) renderGrowthPassport(); };
+window.__townGrowth=()=>{ const snapshot=_growthSnapshot(); return {available:TOWN_GROWTH.available,firstYear:TOWN_GROWTH.firstYear,lastYear:TOWN_GROWTH.lastYear,
+  steps:TOWN_GROWTH.milestones.length,known:TOWN_GROWTH.knownCount,unknown:TOWN_GROWTH.unknownCount,active:GROWTH_REPLAY.active,playing:GROWTH_REPLAY.playing,
+  index:GROWTH_REPLAY.index,year:snapshot?.year||null,visible:REPOS.filter(repo=>repo._group.visible).length,revealing:GROWTH_REPLAY.reveals.length,
+  camera:{far:camera.far,position:[+camera.position.x.toFixed(2),+camera.position.y.toFixed(2),+camera.position.z.toFixed(2)]},
+  resources:{draws:0,textures:0,lights:0,network:0,timers:0}}; };
+window.__growthOpen=(year=null,autoplay=false)=>{ startTownGrowthReplay({entry:'debug',year,autoplay}); return window.__townGrowth(); };
+window.__growthStep=index=>{ GROWTH_REPLAY.playing=false; _applyTownGrowthIndex(index,true,'debug'); return window.__townGrowth(); };
+window.__growthFinish=()=>{ GROWTH_REPLAY.playing=false; _applyTownGrowthIndex(TOWN_GROWTH.milestones.length-1,true,'debug'); return window.__townGrowth(); };
+window.__growthShare=shareTownGrowth;
+window.__growthPostcard=()=>{ GROWTH_REPLAY.playing=false; _renderTownGrowthReplay(); return openPostcardStudio('growth'); };
+window.__growthClose=()=>{ closeTownGrowthReplay(); return window.__townGrowth(); };
+/*TOWN_GROWTH_REPLAY:END*/
 
 /* ====================== LLM TAXI DRIVER ====================== */
 const chatEl=document.getElementById('chat'), chatLog=document.getElementById('chatLog'), chatText=document.getElementById('chatText');
@@ -10222,7 +10550,7 @@ function animate(){
   frame++;
   const _now=performance.now();
   const _idle=_effectiveIdle(_now);   // perf matrix can toggle cadence without synthetic input
-  if(_idle && !repositoryAtelierActive() && !(tour&&tour.active) && !ferris && !carousel && !canalFerryRide && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour/ferry keep full fps)
+  if(_idle && !repositoryAtelierActive() && !GROWTH_REPLAY.active && !(tour&&tour.active) && !ferris && !carousel && !canalFerryRide && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0 && _now-lastFrame<33) return;   // perf: idle → cap ~30fps (festival/visit-pops/guided-tour/ferry/growth replay keep full fps)
   lastFrame=_now; renderedFrame++;
   const dt=Math.min(clock.getDelta(),0.05);
   if(_repositoryAtelierFrame(dt)) return;   // one explicit gate: room or frozen transition, never the exterior simulation too
@@ -10268,6 +10596,8 @@ function animate(){
     if(carousel.turned>=Math.PI*2) disembarkCarousel();      // one full turn → step off at the platform
   } else if(canalFerryRide){
     _placeCanalFerryRider();
+  } else if(GROWTH_REPLAY.active){
+    clearKeys();
   } else {
     if(sitting&&userInput) standUp();
     if(keys['KeyW']||keys['ArrowUp']) mv.add(tF);
@@ -10301,6 +10631,7 @@ function animate(){
 
   if(!dragging&&moving&&!freeLook) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,0.04);
   _updateClearSightCamera(dt,cameraOwner);
+  _updateTownGrowthReplay(dt);
 
   nearest=null; let nd=Infinity;
   for(const b of buildings){
@@ -10332,7 +10663,7 @@ function animate(){
     const C=_ambConv; if(Math.hypot(player.position.x-C.center.x, player.position.z-C.center.z)<=NPC_INVITE_R){
       nearInviteCircle=C; if(!C._invited && clock.elapsedTime>=_ambInviteCd) _ambInvitePlayer(C); } }
   // 🏠 first walk-up to a house → a gentle sparkle + acknowledge bob (landmarks get their own reactions below; skip while a taxi drives you past many houses)
-  if(nearest && !nearest._isLibrary && !ride) greetBuilding(nearest);
+  if(nearest && !nearest._isLibrary && !ride && !GROWTH_REPLAY.active) greetBuilding(nearest);
   // 🛂 Passport landmark stamps (addStamp/addRepoVisit early-out once earned → no per-frame writes) + a localized sparkle on first stamp
   if(nearNpc && addStamp('scholar:'+nearNpc.kind)) popSparkle(nearNpc.pos.x,3.6,nearNpc.pos.z,0xbfe9ff);
   if(nearest && nearest._isLibrary && addStamp('library')) popSparkle(0,7,LIB._z,0xffe6a0);
@@ -10410,7 +10741,7 @@ function animate(){
   updateGlowFlora(clock.elapsedTime);
   updateHearth(clock.elapsedTime);
   rtTick(dt);
-  if(userInput||moving||ride||canalFerryRide||dragging||navTarget) lastAct=_now;   // dynamic state keeps interaction responsive; shadow invalidation is independent
+  if(userInput||moving||ride||canalFerryRide||dragging||navTarget||GROWTH_REPLAY.playing||GROWTH_REPLAY.reveals.length) lastAct=_now;   // dynamic state keeps interaction responsive; shadow invalidation is independent
   _updateVisualLod(renderedFrame);
   _updateBuildingLodPrototype(renderedFrame);
   _beginRenderMetrics(_idle); _renderWorldTreeFrame(); _endRenderMetrics();
