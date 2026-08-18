@@ -51,17 +51,18 @@
   #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
-  #postcardMenuBtn, #twinMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
+  #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
-  #postcardMenuBtn:hover, #twinMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
-  #postcardMenuBtn:active, #twinMenuBtn:active { transform: translateY(1px); }
-  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
+  #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active { transform: translateY(1px); }
+  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
     color: #fff8e7; background: linear-gradient(145deg,#365464,#173d55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); font-size: 17px; }
   #twinMenuBtn .pmIcon { background: linear-gradient(145deg,#6a4f86,#2e5667); }
-  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
-  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #creatorMenuBtn .pmIcon { background: linear-gradient(145deg,#ba783d,#6a4327); }
+  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
+  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .repoRow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 12px;
     cursor: pointer; transition: background .12s; }
   .repoRow:hover { background: #f6ecdb; }
@@ -496,6 +497,70 @@
   #libModal { position: fixed; inset: 0; z-index: 22; display: none; align-items: center; justify-content: center;
     background: rgba(24,14,6,.55); backdrop-filter: blur(5px); padding: 18px; }
   #libModal.show { display: flex; }
+  /* 👤 Creator Hall — the current town owner's public GitHub identity */
+  #creatorModal { position: fixed; inset: 0; z-index: 75; display: none; align-items: center; justify-content: center;
+    background: rgba(18,12,8,.66); backdrop-filter: blur(7px); padding: 18px; }
+  #creatorModal.show { display: flex; }
+  #creatorModal .libcard { width: 720px; max-height: calc(100dvh - 36px); background: #fffaf1; }
+  #creatorModal .libhead { padding: 20px 70px 18px 22px; background: linear-gradient(135deg,#7b4b2b 0%,#3b2c28 58%,#273d45 100%); }
+  .creatorHero { display: grid; grid-template-columns: 84px minmax(0,1fr); gap: 15px; align-items: center; }
+  .creatorAvatar { width: 84px; height: 84px; border-radius: 24px; overflow: hidden; display: grid; place-items: center;
+    background: linear-gradient(145deg,#d69a57,#3a6070); box-shadow: inset 0 0 0 2px rgba(255,255,255,.55),0 8px 24px rgba(0,0,0,.24);
+    color: #fff; font-size: 25px; font-weight: 900; letter-spacing: .04em; }
+  .creatorAvatar img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .creatorAvatar.has-image img { display: block; }
+  .creatorAvatar.has-image span { display: none; }
+  .creatorKicker { color: #f2cf9c; font-size: 10px; font-weight: 900; letter-spacing: .16em; }
+  .creatorName { margin-top: 3px; overflow: hidden; font-size: 23px; line-height: 1.18; text-overflow: ellipsis; white-space: nowrap; }
+  .creatorLogin { margin-top: 3px; color: rgba(255,255,255,.76); font-size: 12px; font-weight: 700; }
+  .creatorBody { overflow-y: auto; padding: 16px 20px 8px; -webkit-overflow-scrolling: touch; }
+  .creatorStatus { min-height: 20px; margin: 4px 2px 10px; color: #796653; font-size: 11.5px; line-height: 1.45; }
+  .creatorStatus:empty { min-height: 0; margin: 0; }
+  .creatorStatus[data-tone="error"] { color: #b34d37; font-weight: 700; }
+  .creatorStatus[data-tone="success"] { color: #2f7957; font-weight: 700; }
+  .creatorStatus button { margin-left: 7px; border: 1px solid #c58c63; border-radius: 8px; padding: 4px 8px;
+    background: #fff7e9; color: #8a4e2c; font: 800 10.5px/1.2 inherit; cursor: pointer; }
+  .creatorBio { margin: 0 2px 12px; color: #594737; font-size: 13px; line-height: 1.55; }
+  .creatorMeta { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 2px 12px; }
+  .creatorMeta span { max-width: 100%; overflow: hidden; padding: 5px 9px; border-radius: 999px; background: #efe4d4;
+    color: #735f4c; font-size: 10.5px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+  .creatorStats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
+  .creatorStat { min-width: 0; padding: 11px 8px; border: 1px solid #e6d7c1; border-radius: 13px; background: #fff; text-align: center; }
+  .creatorStat b { display: block; overflow: hidden; color: #4a3526; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+  .creatorStat span { display: block; margin-top: 2px; color: #9b8167; font-size: 9.5px; font-weight: 800; letter-spacing: .02em; }
+  .creatorSectionTitle { margin: 15px 2px 7px; color: #8a5c33; font-size: 10.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+  .creatorBadges, .creatorLanguages { display: flex; flex-wrap: wrap; gap: 7px; }
+  .creatorBadge, .creatorLanguage { padding: 6px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 800; }
+  .creatorBadge { color: #4f3a61; background: #eee6f5; border: 1px solid #dac9e8; }
+  .creatorLanguage { color: #315a55; background: #e4f2ec; border: 1px solid #c8e2d7; }
+  .creatorRepos { display: grid; gap: 7px; }
+  .creatorRepo { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 5px 10px; padding: 10px 12px; border: 1px solid #e6d7c1;
+    border-radius: 13px; background: #fff; color: inherit; text-decoration: none; }
+  .creatorRepo:hover { border-color: #c99a61; background: #fffdf8; }
+  .creatorRepo strong { overflow: hidden; color: #4d392a; font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+  .creatorRepo .metrics { color: #9a754e; font-size: 10.5px; font-weight: 800; white-space: nowrap; }
+  .creatorRepo .desc { grid-column: 1 / -1; overflow: hidden; color: #8b7763; font-size: 10.5px; line-height: 1.4;
+    text-overflow: ellipsis; white-space: nowrap; }
+  .creatorEmpty { padding: 12px; border-radius: 12px; background: #f3eadc; color: #806b57; font-size: 11.5px; text-align: center; }
+  .creatorFoot { padding: 13px 18px; border-top: 1px solid #eadac3; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+  .creatorFoot a, .creatorFoot button { min-height: 44px; display: grid; place-items: center; border: 0; border-radius: 12px; padding: 9px 11px;
+    font: 800 11.5px/1.3 inherit; text-align: center; text-decoration: none; cursor: pointer; }
+  #creatorGithub { color: #fff; background: #24292f; }
+  #creatorShare { color: #3b4f4b; background: #dcece6; }
+  #creatorStar { color: #3c2b08; background: linear-gradient(145deg,#f5d36e,#eab84c); }
+  .creatorPowered { grid-column: 1 / -1; color: #9c856c; font-size: 9.5px; line-height: 1.35; text-align: center; }
+  @media (max-width: 520px) {
+    #creatorModal { padding: 10px; align-items: flex-end; }
+    #creatorModal .libcard { max-height: calc(100dvh - 20px); border-radius: 20px; }
+    #creatorModal .libhead { padding: 15px 58px 13px 15px; }
+    .creatorHero { grid-template-columns: 62px minmax(0,1fr); gap: 11px; }
+    .creatorAvatar { width: 62px; height: 62px; border-radius: 19px; font-size: 19px; }
+    .creatorName { font-size: 19px; }
+    .creatorBody { padding: 13px 13px 7px; }
+    .creatorStats { grid-template-columns: 1fr 1fr; }
+    .creatorRepo .desc { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .creatorFoot { grid-template-columns: 1fr; padding: 11px 12px 13px; }
+  }
   #chronoModal { position: fixed; inset: 0; z-index: 22; display: none; align-items: center; justify-content: center;
     background: rgba(10,8,20,.6); backdrop-filter: blur(5px); padding: 18px; }
   #chronoModal.show { display: flex; }
@@ -994,6 +1059,10 @@
 
 <div id="panel" class="hidden">
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <button id="creatorMenuBtn" type="button">
+    <span class="pmIcon" aria-hidden="true">👤</span>
+    <span class="pmCopy"><span class="pmTitle" data-i18n="creatorMenu">마을 만든 사람</span><span class="pmSub" data-i18n="creatorMenuSub">공개 GitHub 프로필과 대표 작업</span></span>
+  </button>
   <button id="twinMenuBtn" type="button">
     <span class="pmIcon" aria-hidden="true">↔</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="twinMenu">Twin Towns</span><span class="pmSub" data-i18n="twinMenuSub">친구의 GitHub 마을과 연결하기</span></span>
@@ -1193,6 +1262,40 @@
   </div>
 </div>
 
+<div id="creatorModal" role="dialog" aria-modal="true" aria-labelledby="creatorName" aria-describedby="creatorBio" aria-hidden="true">
+  <section class="libcard" tabindex="-1">
+    <header class="libhead">
+      <button class="x" id="creatorClose" type="button" data-i18n-aria="close" aria-label="닫기">✕</button>
+      <div class="creatorHero">
+        <div class="creatorAvatar" id="creatorAvatar"><span id="creatorMonogram">GH</span><img id="creatorAvatarImg" width="84" height="84" alt="" referrerpolicy="no-referrer" /></div>
+        <div>
+          <div class="creatorKicker" data-i18n="creatorKicker">TOWN CREATOR</div>
+          <h2 class="creatorName" id="creatorName"></h2>
+          <div class="creatorLogin" id="creatorLogin"></div>
+        </div>
+      </div>
+    </header>
+    <div class="creatorBody">
+      <div class="creatorStatus" id="creatorStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+      <p class="creatorBio" id="creatorBio"></p>
+      <div class="creatorMeta" id="creatorMeta"></div>
+      <div class="creatorStats" id="creatorStats"></div>
+      <div class="creatorSectionTitle" data-i18n="creatorBadgesTitle">이 마을의 신호</div>
+      <div class="creatorBadges" id="creatorBadges"></div>
+      <div class="creatorSectionTitle" data-i18n="creatorLanguagesTitle">주요 언어</div>
+      <div class="creatorLanguages" id="creatorLanguages"></div>
+      <div class="creatorSectionTitle" data-i18n="creatorSignatureTitle">대표 프로젝트</div>
+      <div class="creatorRepos" id="creatorRepos"></div>
+    </div>
+    <footer class="creatorFoot">
+      <a id="creatorGithub" href="#" target="_blank" rel="noopener" data-i18n="creatorViewProfile">GitHub 프로필 보기 ↗</a>
+      <button id="creatorShare" type="button" data-i18n="creatorShareTown">이 마을 링크 복사</button>
+      <a id="creatorStar" href="https://github.com/hyeonsangjeon/Repolis" target="_blank" rel="noopener" data-i18n="creatorStarEngine">⭐ 이 도시 엔진에 Star</a>
+      <div class="creatorPowered" data-i18n="creatorPowered">이 마을은 공개 GitHub 데이터와 오픈소스 Repolis 엔진으로 만들어졌어요.</div>
+    </footer>
+  </section>
+</div>
+
 <div id="chronoModal">
   <div class="libcard">
     <div class="libhead">
@@ -1350,6 +1453,7 @@ import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } f
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
+import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1549,7 +1653,7 @@ const I18N = {
     chronicleZoneFound:'🧭 {name}이 알려준 {zone}에 도착했어요.',
     handoffGo:'🧭 {name} 찾으러 가기', handoffNav:'🧭 나침반이 {name}의 현재 위치를 가리켜요. 직접 찾아가 보세요!',
     lmPolaris:'POLARIS · 길잡이', lmVega:'VEGA · 기록자', lmRigel:'RIGEL · 지도제작자', lmMira:'MIRA · 시간지기', lmLyra:'LYRA · 창조의 대장장이',
-    lmLibrary:'기여 도서관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmRain:'비정원 · 날씨 종', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리', lmNightWatch:'고요한 저장소의 수호자', lmHomes:'별빛 주거구역',
+    lmLibrary:'기여 도서관', lmCreator:'마을 창작자 회관', lmPlaza:'중앙 광장', lmCanal:'쁘띠베니스 운하', lmRain:'비정원 · 날씨 종', lmChrono:'크로노폴리스 · 시간의 회의', lmObservatory:'STARGAZER · 별빛 전망대', lmConstellation:'저장소 별자리', lmNightWatch:'고요한 저장소의 수호자', lmHomes:'별빛 주거구역',
     chronoTitle:'크로노폴리스 · 시간의 회의', chronoReached:' — 시간의 회의장. <span class="key">Enter</span> 또는 클릭으로 입장',
     chronoSub:'주제를 입력하면 세 현자(옹호·회의·분석)가 실시간으로 토론하고, 시간의 의장 크로노스가 결론을 내립니다.',
     chronoPhilo:'토론은 쇼, 판정은 계산 — 시간이 심판한다.', chronoCases:'예시 주제를 골라 채워 보세요', chronoStage:'⚡ 라이브 AI 토론',
@@ -1627,6 +1731,21 @@ const I18N = {
     publicNetMsg:'마을을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
     stationRetry:'🚉 다른 마을 가기', goOwnerCity:'🏙️ {user} 님의 도시 가기',
     shareTown:'이 마을 공유', copyLink:'🔗 링크 복사', copied:'복사됨!',
+    creatorMenu:'마을 만든 사람', creatorMenuSub:'공개 GitHub 프로필과 대표 작업',
+    creatorKicker:'TOWN CREATOR', creatorHallSign:'CREATOR HALL · 창작자 회관',
+    creatorReached:' — 이 마을을 만든 사람의 공개 GitHub 기록. <span class="key">Enter</span> 또는 클릭으로 열기',
+    creatorLoading:'공개 GitHub 프로필을 불러오는 중…', creatorReady:'공개 프로필과 이 마을의 레포를 함께 정리했어요.',
+    creatorPartial:'프로필 세부 정보를 불러오지 못해 마을에 이미 있는 공개 레포 정보만 보여드려요.', creatorRetry:'다시 불러오기',
+    creatorNoBio:'공개 bio가 아직 없어요. 대신 이 마을의 레포가 소개를 이어갑니다.',
+    creatorCompany:'소속 · {value}', creatorLocation:'위치 · {value}', creatorJoined:'GitHub 시작 · {year}',
+    creatorStatRepos:'마을 레포', creatorStatStars:'받은 Star', creatorStatFollowers:'팔로워', creatorStatYears:'GitHub 활동', creatorYearsValue:'{count}년',
+    creatorBadgesTitle:'이 마을의 신호', creatorLanguagesTitle:'주요 언어', creatorSignatureTitle:'대표 프로젝트',
+    creatorBadgeBuilder:'🏗️ 공개 레포 빌더', creatorBadgePolyglot:'🌐 다중 언어', creatorBadgeMaintainer:'🛠️ 최근 관리', creatorBadgeStarred:'⭐ Star 받은 작업', creatorBadgeVeteran:'🧭 장기 메이커',
+    creatorNoBadges:'아직 배지를 만들 만큼 공개 신호가 쌓이지 않았어요.', creatorNoLanguages:'표시할 주요 언어가 없어요.', creatorNoRepos:'표시할 공개 대표 프로젝트가 없어요.',
+    creatorViewProfile:'GitHub 프로필 보기 ↗', creatorShareTown:'이 마을 링크 복사', creatorStarEngine:'⭐ 이 도시 엔진에 Star',
+    creatorPowered:'이 마을은 공개 GitHub 데이터와 오픈소스 Repolis 엔진으로 만들어졌어요.',
+    creatorShareCopied:'이 마을 링크를 복사했어요.', creatorShareFailed:'링크를 복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
+    lmArriveCreator:'🚕 마을 창작자 회관에 도착했어요! 이 도시를 만든 사람의 공개 GitHub 기록을 열어볼게요 👤',
     twinMenu:'Twin Towns', twinMenuSub:'친구의 GitHub 마을과 연결하기',
     twinTitle:'두 GitHub 마을 잇기', twinSub:'공통 언어와 주제로 두 사람의 공개 레포 마을 사이에 다리를 만들어요.',
     twinLead:'누구와 @{user}의 마을을 연결할까요?', twinUserPh:'GitHub username', twinGo:'마을 다리 만들기',
@@ -1771,7 +1890,7 @@ const I18N = {
     chronicleZoneFound:'🧭 You reached {zone}, recommended by {name}.',
     handoffGo:'🧭 Find {name}', handoffNav:'🧭 The compass now follows {name}\'s live position. Walk out and find them!',
     lmPolaris:'POLARIS · Wayfinder', lmVega:'VEGA · Archivist', lmRigel:'RIGEL · Cartographer', lmMira:'MIRA · Timekeeper', lmLyra:'LYRA · Forgemaster',
-    lmLibrary:'Contribution Library', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmRain:'Rain Garden · Weather Bell', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation', lmNightWatch:'Keeper of Quiet Repos', lmHomes:'Starlight Row',
+    lmLibrary:'Contribution Library', lmCreator:'Town Creator Hall', lmPlaza:'Town Square', lmCanal:'Petite-Venise Canal', lmRain:'Rain Garden · Weather Bell', lmChrono:'Chronopolis · Council of Time', lmObservatory:'STARGAZER · Observatory', lmConstellation:'Repository Constellation', lmNightWatch:'Keeper of Quiet Repos', lmHomes:'Starlight Row',
     chronoTitle:'Chronopolis · the Council of Time', chronoReached:' — the Council of Time. <span class="key">Enter</span> or click to enter',
     chronoSub:'Type a topic and three sages (advocate · skeptic · analyst) debate it live; the Chair of Time, KRONOS, delivers the verdict.',
     chronoPhilo:'The debate is theater; the verdict is computed — Time is the judge.', chronoCases:'Pick an example to fill the box', chronoStage:'⚡ Live AI debate',
@@ -1849,6 +1968,21 @@ const I18N = {
     publicNetMsg:"Couldn't load the town. Check your connection and try again.",
     stationRetry:'🚉 Visit another town', goOwnerCity:"🏙️ Visit {user}'s city",
     shareTown:'Share this town', copyLink:'🔗 Copy link', copied:'Copied!',
+    creatorMenu:'Meet the town creator', creatorMenuSub:'Public GitHub profile and signature work',
+    creatorKicker:'TOWN CREATOR', creatorHallSign:'CREATOR HALL',
+    creatorReached:" — the public GitHub story behind this town. Press <span class=\"key\">Enter</span> or click to open",
+    creatorLoading:'Loading the public GitHub profile…', creatorReady:'Public profile and town repositories are ready.',
+    creatorPartial:'Profile details could not be loaded, so this hall is using the public repository facts already in town.', creatorRetry:'Try again',
+    creatorNoBio:'No public bio yet. The repositories in this town continue the introduction.',
+    creatorCompany:'Company · {value}', creatorLocation:'Location · {value}', creatorJoined:'Joined GitHub · {year}',
+    creatorStatRepos:'Town repos', creatorStatStars:'Stars earned', creatorStatFollowers:'Followers', creatorStatYears:'On GitHub', creatorYearsValue:'{count}y',
+    creatorBadgesTitle:'Signals from this town', creatorLanguagesTitle:'Top languages', creatorSignatureTitle:'Signature projects',
+    creatorBadgeBuilder:'🏗️ Public repo builder', creatorBadgePolyglot:'🌐 Polyglot', creatorBadgeMaintainer:'🛠️ Recently maintained', creatorBadgeStarred:'⭐ Starred work', creatorBadgeVeteran:'🧭 Long-haul maker',
+    creatorNoBadges:'Not enough public signals for a town badge yet.', creatorNoLanguages:'No top language to show yet.', creatorNoRepos:'No public signature project to show yet.',
+    creatorViewProfile:'View GitHub profile ↗', creatorShareTown:'Copy this town link', creatorStarEngine:'⭐ Star this city engine',
+    creatorPowered:'This town is built from public GitHub data and the open-source Repolis engine.',
+    creatorShareCopied:'Town link copied.', creatorShareFailed:"Couldn't copy the link. Check this browser's clipboard permission.",
+    lmArriveCreator:"🚕 We've reached the Town Creator Hall! Opening the public GitHub story behind this city 👤",
     twinMenu:'Twin Towns', twinMenuSub:"Connect this town with a GitHub friend's",
     twinTitle:'Connect two GitHub towns', twinSub:'Build a bridge between two public-repo towns from their shared languages and topics.',
     twinLead:"Who should @{user}'s town connect with?", twinUserPh:'GitHub username', twinGo:'Build the town bridge',
@@ -1993,6 +2127,8 @@ function applyLang(){
   if(typeof refreshResidentTags==='function') refreshResidentTags();
   if(typeof refreshResidentHomeSigns==='function') refreshResidentHomeSigns();
   if(typeof refreshPostcardKioskSign==='function') refreshPostcardKioskSign();
+  if(typeof refreshCreatorHallSign==='function') refreshCreatorHallSign();
+  if(typeof window.__creatorLangRefresh==='function') window.__creatorLangRefresh();
   if(typeof window.__postcardLangRefresh==='function') window.__postcardLangRefresh();
   { const _zb=document.getElementById('zoneBoard'); if(typeof renderZoneBoard==='function' && _zb && _zb.classList.contains('show') && _zb._zid) renderZoneBoard(_zb._zid); }
   if(_mapReady && typeof syncMapChrome==='function') syncMapChrome();
@@ -2331,7 +2467,7 @@ function _visualLodRoot(object){ let root=object; while(root.parent&&root.parent
 function _finalizeVisualLod(){
   if(VISUAL_LOD.finalized) return; const protectedRoots=new Set(),protect=o=>{ if(o) protectedRoots.add(_visualLodRoot(o)); };
   protect(MEMORIAL_TREE&&MEMORIAL_TREE.group); protect(player); protect(taxi); protect(driver); protect(engineer); protect(rigel); protect(navHolder);
-  protect(CHRONO&&CHRONO._group); protect(OBS&&OBS._group); protect(STATION&&STATION._group); protect(LIB&&LIB._group); protect(HEARTH&&HEARTH.g); protect(RAIN_GARDEN&&RAIN_GARDEN.group);
+  protect(CHRONO&&CHRONO._group); protect(OBS&&OBS._group); protect(STATION&&STATION._group); protect(CREATOR_HALL&&CREATOR_HALL._group); protect(LIB&&LIB._group); protect(HEARTH&&HEARTH.g); protect(RAIN_GARDEN&&RAIN_GARDEN.group);
   if(FERRIS) protect(FERRIS.wheel); if(CAROUSEL) protect(CAROUSEL.spin); ZONE_HUBS.forEach(h=>protect(h.group)); NPCS.forEach(n=>protect(n.group));
   RESIDENTS_LIVE.forEach(L=>protect(L.group)); peers.forEach(p=>protect(p.group));
   for(const entry of [...VISUAL_LOD.outlines,...VISUAL_LOD.effects]) entry.eligible=!protectedRoots.has(_visualLodRoot(entry.object));
@@ -5096,11 +5232,18 @@ let CAROUSEL=null, nearCarousel=null, carousel=null;   // 🎠 carousel — boar
 /* ───────── civic arrival landmarks — visual-only props keep the busy plaza walkable ───────── */
 let STATION=null, nearStation=null, openStationModal=()=>{};
 let POSTCARD_KIOSK=null, nearPostcardKiosk=null;
+let CREATOR_HALL=null, nearCreatorHall=null, openCreatorHall=()=>{};
 function refreshPostcardKioskSign(){
   if(!POSTCARD_KIOSK) return;
   const map=POSTCARD_KIOSK._signMaps[LANG]||POSTCARD_KIOSK._signMaps.en;
   POSTCARD_KIOSK._boards.forEach(board=>{ board.material.map=map; board.material.needsUpdate=true; });
   POSTCARD_KIOSK.label=t('postcardKiosk');
+}
+function refreshCreatorHallSign(){
+  if(!CREATOR_HALL) return;
+  const old=CREATOR_HALL._board.material.map;
+  CREATOR_HALL._board.material.map=signTexture(t('creatorHallSign'),0xba783d); CREATOR_HALL._board.material.needsUpdate=true;
+  if(old) old.dispose(); CREATOR_HALL.label=t('lmCreator');
 }
 (function buildObservatory(){
   const og=new THREE.Group(); og.position.copy(OBS_POS);
@@ -6051,6 +6194,63 @@ NPCS.push({ group:driver, pos:driver.position.clone(), kind:'taxi', reach:4.6 })
   const ring=new THREE.Mesh(new THREE.RingGeometry(1.85,2.12,32),new THREE.MeshBasicMaterial({color:BRASS,transparent:true,opacity:0.5,side:THREE.DoubleSide}));
   ring.rotation.x=-Math.PI/2; ring.position.y=0.05; g.add(ring);
   POSTCARD_KIOSK={_isPostcardKiosk:true,_pos:KP.clone(),label:t('postcardKiosk'),_group:g,_boards:[board,board2],_signMaps:signMaps};
+})();
+
+/* ---- 👤 Town Creator Hall — a low-cost civic pavilion that belongs to the current town owner. ---- */
+function creatorCrestTexture(login){
+  const cv=document.createElement('canvas'); cv.width=cv.height=256; const x=cv.getContext('2d'), clean=String(login||'').replace(/[^a-z0-9]/gi,'');
+  const initials=(clean.slice(0,2)||'GH').toUpperCase(), short='@'+String(login||'').slice(0,18);
+  const bg=x.createLinearGradient(0,0,256,256); bg.addColorStop(0,'#d99a54'); bg.addColorStop(1,'#315b68');
+  x.fillStyle=bg; x.fillRect(0,0,256,256); x.strokeStyle='rgba(255,255,255,.7)'; x.lineWidth=10; x.beginPath(); x.arc(128,110,77,0,Math.PI*2); x.stroke();
+  x.fillStyle='#fffaf0'; x.textAlign='center'; x.textBaseline='middle'; x.font='900 74px system-ui,sans-serif'; x.fillText(initials,128,112);
+  x.font='800 24px system-ui,sans-serif'; x.fillText(short,128,214,220);
+  const tex=new THREE.CanvasTexture(cv); tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=Math.min(4,MAXANISO); tex.needsUpdate=true; return tex;
+}
+function creatorHallSpot(){
+  const fixed=[
+    {x:8,z:16,r:4,id:'station'},{x:-9.5,z:14.5,r:3,id:'postcard'},{x:20,z:-6,r:4,id:'rain'},
+    {x:12,z:9,r:4,id:'taxi'},{x:-10.5,z:0,r:3,id:'vega'},{x:6.5,z:-9.5,r:3,id:'rigel'}
+  ];
+  for(const hub of ZONE_HUBS) fixed.push({x:hub.x,z:hub.z,r:3.5,id:'hub:'+hub.id});
+  for(const collider of EXTRA_COLLIDERS) fixed.push({x:collider.x,z:collider.z,r:collider.r||0.5,id:'prop'});
+  let best={x:0,z:-28,gap:-Infinity,near:'fallback'};
+  for(const radius of [24,28,32,36,40]){
+    for(let i=0;i<48;i++){ const angle=i/48*Math.PI*2,avenue=Math.abs(((angle+Math.PI/6)%(Math.PI/3)+Math.PI/3)%(Math.PI/3)-Math.PI/6);
+      if(avenue<0.20) continue; const x=Math.cos(angle)*radius,z=Math.sin(angle)*radius; let gap=Infinity,near='';
+      for(const building of buildings){ if(building._isLibrary) continue; const edge=Math.max(building._yard||0,building._cw||3);
+        const candidate=Math.hypot(x-building._x,z-building._z)-edge-2.75; if(candidate<gap){ gap=candidate; near=building.repo; } }
+      for(const item of fixed){ const candidate=Math.hypot(x-item.x,z-item.z)-item.r-2.75; if(candidate<gap){ gap=candidate; near=item.id; } }
+      if(gap>best.gap) best={x,z,gap,near};
+    }
+  }
+  return best;
+}
+(function buildCreatorHall(){
+  const placement=creatorHallSpot(),POS=new THREE.Vector3(placement.x,0,placement.z),STONE=0xe6d8bd,DEEP=0x6f4930,TILE=0xba6f3b,GOLD=0xe9bc59;
+  const g=new THREE.Group(); g.position.copy(POS); g.rotation.y=Math.atan2(-POS.x,-POS.z); scene.add(g);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(3.7,4.0,0.34,28),toon(0xc9b896)); base.position.y=0.17; base.receiveShadow=true; g.add(base);
+  const step=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.45,0.28,28),toon(STONE)); step.position.y=0.45; g.add(step);
+  const wall=rbox(5.3,3.0,0.52,STONE,0.08); wall.position.set(0,1.95,-1.65); outline(wall,0.035); g.add(wall);
+  const columnGeo=new THREE.CylinderGeometry(0.28,0.34,3.15,12), columnMat=toon(0xf0e5d0);
+  const columns=new THREE.InstancedMesh(columnGeo,columnMat,4),dummy=new THREE.Object3D();
+  [[-2.25,-.65],[2.25,-.65],[-2.25,1.45],[2.25,1.45]].forEach(([x,z],i)=>{ dummy.position.set(x,2.0,z); dummy.updateMatrix(); columns.setMatrixAt(i,dummy.matrix); });
+  columns.instanceMatrix.needsUpdate=true; g.add(columns);
+  const cornice=rbox(6.0,0.34,4.2,DEEP,0.06); cornice.position.y=3.72; outline(cornice,0.025); g.add(cornice);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(4.55,1.75,4),toon(TILE)); roof.position.y=4.72; roof.rotation.y=Math.PI/4; outline(roof,0.04); g.add(roof);
+  const crest=new THREE.Mesh(new THREE.PlaneGeometry(1.72,1.72),new THREE.MeshBasicMaterial({map:creatorCrestTexture(currentUser)})); crest.position.set(0,2.15,-1.36); g.add(crest);
+  const ledger=rbox(1.75,0.25,1.15,0x7b5132,0.06); ledger.position.set(0,1.05,0.55); ledger.rotation.x=-0.22; g.add(ledger);
+  const page=rbox(1.5,0.06,0.95,0xfff7e7,0.04); page.position.set(0,1.22,0.52); page.rotation.x=-0.22; g.add(page);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(4.1,1.15),new THREE.MeshBasicMaterial({map:signTexture(t('creatorHallSign'),0xba783d),transparent:true}));
+  board.position.set(0,3.03,1.75); g.add(board);
+  const finial=new THREE.Mesh(new THREE.SphereGeometry(0.28,12,10),new THREE.MeshBasicMaterial({color:GOLD})); finial.position.y=5.75; g.add(finial);
+  const arrivalLocal=new THREE.Vector3(0,0,5.15),arrival=arrivalLocal.clone().applyAxisAngle(new THREE.Vector3(0,1,0),g.rotation.y).add(POS);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(1.75,2.15,32),new THREE.MeshBasicMaterial({color:GOLD,transparent:true,opacity:.5,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2; ring.position.copy(arrivalLocal); ring.position.y=.055; g.add(ring);
+  disableDynamicShadowCasters(g);
+  const collider={x:POS.x,z:POS.z,r:2.75}; COLLIDERS.push(collider); _registerCameraBlocker(collider,'creator','creator-hall','town-creator-hall',2.75,0,5.9);
+  let meshes=0; g.traverse(o=>{ if(o.isMesh) meshes++; });
+  CREATOR_HALL={_isCreatorHall:true,_pos:arrival,label:t('lmCreator'),_group:g,_board:board,_crest:crest,meshes,draws:meshes,
+    placement:{gap:placement.gap,near:placement.near,center:[placement.x,placement.z]}};
 })();
 
 // 📘 Microsoft Docs engineer — answers from the live Microsoft Learn MCP server (official docs)
@@ -7419,7 +7619,7 @@ addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)) return;
   keys[e.code]=true;
   if(e.code==='Space') e.preventDefault();
   if(e.code==='Enter'&&!modalOpen){ doAct(); }
-  if(e.code==='Escape'){ closeTwinTowns(); closePostcardStudio(); closeCard(); closeChat(); } });
+  if(e.code==='Escape'){ closeCreatorHall(); closeTwinTowns(); closePostcardStudio(); closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ keys[e.code]=false; });   /* always clear — never let a key stick when focus jumps to an input mid-press */
 addEventListener('blur',clearKeys); window.addEventListener('pagehide',clearKeys);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden){ clearKeys(); if(_sharedJoy) _endSharedJoy('hidden'); } });   /* tab/alt-tab away mid-press → don't keep walking or resume an excursion that lost its frames */
@@ -7626,6 +7826,7 @@ const PASS_LANDMARKS=[
   {id:'scholar:context7', ico:'📚', key:'lmMira'},
   {id:'scholar:huggingface', ico:'🤗', key:'lmLyra'},
   {id:'library',          ico:'📚', key:'lmLibrary'},
+  {id:'creator',          ico:'👤', key:'lmCreator'},
   {id:'plaza',            ico:'⛲', key:'lmPlaza'},
   {id:'rain',             ico:'🌦️', key:'lmRain'},
   {id:'canal',            ico:'🛶', key:'lmCanal'},
@@ -7813,6 +8014,7 @@ function _rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let x=M
 function _courseTownKey(){ const login=String(currentUser||'owner').toLowerCase();
   const catalog=REPOS.map(r=>String(r.repo||'').toLowerCase()).sort().join('|'); return login+':'+_seedFrom(catalog).toString(36); }
 function lmCourseDest(id){ switch(id){
+  case 'creator': return CREATOR_HALL?{label:t('lmCreator'),_pos:CREATOR_HALL._pos,_landmark:'creator'}:null;
   case 'chrono': return (typeof CHRONO!=='undefined'&&CHRONO)?{label:t('lmChrono'),_pos:CHRONO._pos,_landmark:'chrono'}:null;
   case 'observatory': return (typeof OBS!=='undefined'&&OBS)?{label:t('obsName'),_pos:OBS._pos,_landmark:'obs'}:null;
   case 'ferris': return (typeof FERRIS!=='undefined'&&FERRIS)?{label:t('ferrisName'),_pos:FERRIS._pos,_landmark:'ferris'}:null;
@@ -7886,7 +8088,7 @@ function tourCap(dot,html){ const e=document.getElementById('tourCap'); if(!e) r
   document.getElementById('tourDot').textContent=dot; document.getElementById('tourTxt').innerHTML=html; e.classList.remove('hidden'); }
 function hideTourCap(){ const e=document.getElementById('tourCap'); if(e) e.classList.add('hidden'); }
 function tourCloseModals(){ try{ if(modal.classList.contains('show')) closeCard(); }catch(e){}
-  try{ if(chronoModal.classList.contains('show')) closeChrono(); }catch(e){} try{ closePostcardStudio(); }catch(e){} try{ passportEl.classList.add('hidden'); }catch(e){} }
+  try{ if(chronoModal.classList.contains('show')) closeChrono(); }catch(e){} try{ closeCreatorHall(); }catch(e){} try{ closePostcardStudio(); }catch(e){} try{ passportEl.classList.add('hidden'); }catch(e){} }
 function buildTourSteps(){ const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.stars||0));
   const repo=pop[0]||REPOS[0]; const steps=[{kind:'welcome',dot:'👋',cap:'tourCap1',dwell:3.2}];
   if(repo) steps.push({kind:'repo',repo,dot:'🏠',cap:'tourCap2',dwell:3.6});
@@ -8172,6 +8374,123 @@ function closeLibrary(){ modalOpen=false; libModal.classList.remove('show'); }
 document.getElementById('libClose').onclick=closeLibrary;
 libModal.addEventListener('click',e=>{ if(e.target===libModal) closeLibrary(); });
 
+/* ---- 👤 Town Creator Hall panel — explicit-read public profile, cached locally for one day. ---- */
+const creatorModal=document.getElementById('creatorModal'),creatorCard=creatorModal.querySelector('.libcard'),
+  creatorClose=document.getElementById('creatorClose'),creatorAvatar=document.getElementById('creatorAvatar'),
+  creatorAvatarImg=document.getElementById('creatorAvatarImg'),creatorStatus=document.getElementById('creatorStatus'),
+  creatorMenuBtn=document.getElementById('creatorMenuBtn'),creatorShare=document.getElementById('creatorShare'),
+  creatorGithub=document.getElementById('creatorGithub'),creatorStar=document.getElementById('creatorStar');
+const CREATOR_CACHE_TTL=24*3600*1000,CREATOR_BADGE_KEYS={
+  builder:'creatorBadgeBuilder',polyglot:'creatorBadgePolyglot',maintainer:'creatorBadgeMaintainer',starred:'creatorBadgeStarred',veteran:'creatorBadgeVeteran'
+};
+const CREATOR_STATE={open:false,loading:false,summary:null,status:null,previousFocus:null,requestId:0,source:null};
+function _creatorNumber(value){ try{ return new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US').format(value); }catch(e){ return String(value); } }
+function _creatorCacheKey(user){ return 'repolis:town-creator:'+String(user||'').toLowerCase()+':v1'; }
+async function _loadTownCreatorProfile(user,force=false){
+  const key=_creatorCacheKey(user),now=Date.now(); let cached=null;
+  try{ cached=JSON.parse(localStorage.getItem(key)||'null'); if(cached?.profile) cached.profile=selectTownCreatorFields(cached.profile); }catch(e){ cached=null; }
+  if(!force&&cached?.profile&&now-(cached.fetchedAt||0)<CREATOR_CACHE_TTL) return {profile:cached.profile,source:'cache'};
+  try{
+    const response=await fetch('https://api.github.com/users/'+encodeURIComponent(user),{headers:{Accept:'application/vnd.github+json'}});
+    if(!response.ok){
+      if(cached?.profile) return {profile:cached.profile,source:'stale-cache'};
+      return {profile:null,source:'github-public',error:{status:response.status,reason:response.status===404?'not_found':response.status===403?'rate_limit':'http'}};
+    }
+    const profile=selectTownCreatorFields(await response.json());
+    try{ localStorage.setItem(key,JSON.stringify({fetchedAt:now,profile})); }catch(e){}
+    return {profile,source:'github-public'};
+  }catch(error){
+    if(cached?.profile) return {profile:cached.profile,source:'stale-cache'};
+    return {profile:null,source:'github-public',error:{status:0,reason:'network'}};
+  }
+}
+function _creatorFallbackProfile(){ return selectTownCreatorFields({login:currentUser,public_repos:REPOS.length}); }
+function _creatorStatusSet(key='',tone='',retry=false){
+  CREATOR_STATE.status=key?{key,tone,retry}:null; creatorStatus.textContent=key?t(key):''; creatorStatus.dataset.tone=tone||'';
+  if(retry){ const button=document.createElement('button'); button.type='button'; button.textContent=t('creatorRetry'); button.onclick=()=>loadCreatorHallProfile(true); creatorStatus.appendChild(button); }
+}
+function _creatorEmpty(container,key){ const empty=document.createElement('div'); empty.className='creatorEmpty'; empty.textContent=t(key); container.appendChild(empty); }
+function renderCreatorHall(summary=CREATOR_STATE.summary){
+  if(!summary) summary=summarizeTownCreator(_creatorFallbackProfile(),REPOS,_now);
+  CREATOR_STATE.summary=summary;
+  document.getElementById('creatorName').textContent=summary.displayName;
+  document.getElementById('creatorLogin').textContent='@'+summary.login;
+  const monogram=summary.login.replace(/[^a-z0-9]/gi,'').slice(0,2).toUpperCase()||'GH';
+  document.getElementById('creatorMonogram').textContent=monogram; creatorAvatar.classList.remove('has-image');
+  creatorAvatarImg.onload=()=>creatorAvatar.classList.add('has-image');
+  creatorAvatarImg.onerror=()=>{ creatorAvatar.classList.remove('has-image'); creatorAvatarImg.removeAttribute('src'); };
+  creatorAvatarImg.alt=summary.avatarUrl?('@'+summary.login):'';
+  if(summary.avatarUrl) creatorAvatarImg.src=summary.avatarUrl; else creatorAvatarImg.removeAttribute('src');
+  document.getElementById('creatorBio').textContent=summary.bio||t('creatorNoBio');
+  const meta=document.getElementById('creatorMeta'); meta.innerHTML='';
+  [[summary.company,'creatorCompany'],[summary.location,'creatorLocation']].forEach(([value,key])=>{ if(!value) return;
+    const chip=document.createElement('span'); chip.textContent=tf(key,{value}); meta.appendChild(chip); });
+  if(summary.joinedYear){ const chip=document.createElement('span'); chip.textContent=tf('creatorJoined',{year:summary.joinedYear}); meta.appendChild(chip); }
+  const stats=document.getElementById('creatorStats'); stats.innerHTML='';
+  [[summary.townRepos,'creatorStatRepos'],[summary.townStars,'creatorStatStars'],[summary.followers,'creatorStatFollowers'],
+    [summary.joinedYear?tf('creatorYearsValue',{count:summary.years}):'\u2014','creatorStatYears']].forEach(([value,key])=>{
+      const box=document.createElement('div'); box.className='creatorStat'; const number=document.createElement('b'),label=document.createElement('span');
+      number.textContent=typeof value==='number'?_creatorNumber(value):value; label.textContent=t(key); box.appendChild(number); box.appendChild(label); stats.appendChild(box); });
+  const badges=document.getElementById('creatorBadges'); badges.innerHTML='';
+  if(summary.badges.length) summary.badges.forEach(id=>{ const badge=document.createElement('span'); badge.className='creatorBadge'; badge.textContent=t(CREATOR_BADGE_KEYS[id]||id); badges.appendChild(badge); });
+  else _creatorEmpty(badges,'creatorNoBadges');
+  const languages=document.getElementById('creatorLanguages'); languages.innerHTML='';
+  if(summary.topLanguages.length) summary.topLanguages.forEach(item=>{ const language=document.createElement('span'); language.className='creatorLanguage'; language.textContent=item.name+' · '+item.count; languages.appendChild(language); });
+  else _creatorEmpty(languages,'creatorNoLanguages');
+  const repos=document.getElementById('creatorRepos'); repos.innerHTML='';
+  if(summary.signatureRepos.length) summary.signatureRepos.forEach(repo=>{ const link=document.createElement('a'); link.className='creatorRepo'; link.href=safeHref(repo.url)||summary.profileUrl; link.target='_blank'; link.rel='noopener';
+    const name=document.createElement('strong'); name.textContent=repo.name; const metrics=document.createElement('span'); metrics.className='metrics'; metrics.textContent='★ '+_creatorNumber(repo.stars)+' · ⑂ '+_creatorNumber(repo.forks);
+    const desc=document.createElement('span'); desc.className='desc'; desc.textContent=(repo.language?repo.language+(repo.description?' · ':''):'')+(repo.description||'');
+    link.appendChild(name); link.appendChild(metrics); link.appendChild(desc); repos.appendChild(link); });
+  else _creatorEmpty(repos,'creatorNoRepos');
+  creatorGithub.href=summary.profileUrl;
+  creatorStar.href=(window.REPOLIS_CONFIG&&REPOLIS_CONFIG.project&&REPOLIS_CONFIG.project.url)||creatorStar.href;
+  if(CREATOR_STATE.status) _creatorStatusSet(CREATOR_STATE.status.key,CREATOR_STATE.status.tone,CREATOR_STATE.status.retry);
+  return summary;
+}
+async function loadCreatorHallProfile(force=false){
+  const requestId=++CREATOR_STATE.requestId; CREATOR_STATE.loading=true; creatorCard.setAttribute('aria-busy','true');
+  _creatorStatusSet('creatorLoading'); renderCreatorHall(summarizeTownCreator(_creatorFallbackProfile(),REPOS,_now));
+  const result=await _loadTownCreatorProfile(currentUser,force);
+  if(requestId!==CREATOR_STATE.requestId) return false;
+  CREATOR_STATE.loading=false; CREATOR_STATE.source=result.source; creatorCard.setAttribute('aria-busy','false');
+  if(result.profile){
+    renderCreatorHall(summarizeTownCreator(result.profile,REPOS,_now)); _creatorStatusSet('creatorReady','success');
+    track('creator_profile_loaded',{source:result.source,partial:false}); return CREATOR_STATE.summary;
+  }
+  renderCreatorHall(summarizeTownCreator(_creatorFallbackProfile(),REPOS,_now)); _creatorStatusSet('creatorPartial','error',true);
+  track('creator_profile_loaded',{source:result.source,partial:true,reason:result.error?.reason||'unknown'}); return CREATOR_STATE.summary;
+}
+openCreatorHall=(entry='landmark')=>{
+  if(repositoryAtelierActive()||(modalOpen&&!CREATOR_STATE.open)) return false;
+  CREATOR_STATE.open=true; CREATOR_STATE.previousFocus=document.activeElement; panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false');
+  passportEl.classList.add('hidden'); document.getElementById('station').classList.add('hidden'); modalOpen=true;
+  creatorModal.classList.add('show'); creatorModal.setAttribute('aria-hidden','false'); renderCreatorHall(); track('creator_hall_open',{entry});
+  setTimeout(()=>{ try{ creatorClose.focus(); }catch(e){} },0);
+  if(!CREATOR_STATE.summary||entry==='landmark'||entry==='station') loadCreatorHallProfile(false);
+  return true;
+};
+function closeCreatorHall(){
+  if(!CREATOR_STATE.open) return false;
+  CREATOR_STATE.open=false; creatorModal.classList.remove('show'); creatorModal.setAttribute('aria-hidden','true'); modalOpen=false;
+  const previous=CREATOR_STATE.previousFocus; CREATOR_STATE.previousFocus=null; if(previous&&previous.isConnected) setTimeout(()=>{ try{ previous.focus(); }catch(e){} },0);
+  flushStarNudge(); return true;
+}
+function _creatorFocusables(){ return [...creatorCard.querySelectorAll('button:not([disabled]),a[href]')].filter(el=>!el.hidden); }
+creatorModal.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeCreatorHall(); return; }
+  if(event.key!=='Tab') return; const items=_creatorFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
+  if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+});
+creatorModal.addEventListener('click',event=>{ if(event.target===creatorModal) closeCreatorHall(); });
+creatorClose.onclick=closeCreatorHall; creatorMenuBtn.onclick=()=>openCreatorHall('menu');
+creatorGithub.onclick=()=>track('creator_profile_click');
+creatorShare.onclick=async()=>{ const ok=await _copyPostcardText(_postcardShareUrl()); _creatorStatusSet(ok?'creatorShareCopied':'creatorShareFailed',ok?'success':'error');
+  track('share_click',{channel:'creator_hall',ok}); };
+creatorStar.onclick=()=>{ track('project_star_click',{source:'creator_hall'}); _starNudgeClose('clicked'); };
+window.__creatorLangRefresh=()=>renderCreatorHall();
+
 /* a visited house lights up for good — every window lit + a warm lantern glow above it (day & night) */
 function lightVisitedHouse(repo, defer){ if(!repo||repo._litVisited) return; repo._litVisited=true;
   (repo._windows||[]).forEach(w=>{ w.userData.lit=true; });
@@ -8190,7 +8509,7 @@ const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null
 let nearInviteCircle=null;   // an active gathering that has waved you over (join it with Enter from a little further out than the walk-up reach)
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearPostcardKiosk) openPostcardStudio('kiosk'); else if(nearRainGarden) ringRainGarden(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearCreatorHall) openCreatorHall('landmark'); else if(nearPostcardKiosk) openPostcardStudio('kiosk'); else if(nearRainGarden) ringRainGarden(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -8406,7 +8725,7 @@ if(!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_reqTwin.toLowerCase()!
   const curName=document.getElementById('stationCurName');
   const stationClose=document.getElementById('stationClose');
   const EXAMPLES=['mrdoob','torvalds','karpathy','vercel','sindresorhus'];
-  const LANDMARK_STOPS=[{id:'plaza',ico:'⛲'},{id:'rain',ico:'🌦️'},{id:'homes',ico:'🏘️'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
+  const LANDMARK_STOPS=[{id:'plaza',ico:'⛲'},{id:'creator',ico:'👤'},{id:'rain',ico:'🌦️'},{id:'homes',ico:'🏘️'},{id:'library',ico:'📚'},{id:'chrono',ico:'⏳'},{id:'observatory',ico:'🔭'},{id:'canal',ico:'🛶'},{id:'ferris',ico:'🎡'},{id:'carousel',ico:'🎠'}];
   const baseUrl=()=>location.origin+location.pathname;
   const townName=()=> cityMode==='public' ? tf('townOf',{user:currentUser}) : t('myCity');
 
@@ -9362,6 +9681,7 @@ function arriveTaxi(repo){ ride=null; ridePostActionUntil=0; driveBar.style.disp
     addMsg('bot', t(key)||(LANG==='ko'?`🚕 <b>${repo.label}</b>에 도착했어요!`:`🚕 We've arrived at <b>${repo.label}</b>!`), {noHist:true});
     if(k==='chrono'){ ridePostActionUntil=performance.now()+900; setTimeout(()=>{ try{ openChrono(repo._chronoPreset||undefined); }catch(e){} }, 700); }
     if(k==='obs'){ ridePostActionUntil=performance.now()+900; setTimeout(()=>{ try{ openObservatory(); }catch(e){} }, 700); }
+    if(k==='creator'){ ridePostActionUntil=performance.now()+900; setTimeout(()=>{ try{ openCreatorHall('station'); }catch(e){} }, 700); }
     if(k==='ferris'){ ridePostActionUntil=performance.now()+1000; setTimeout(()=>{ try{ boardFerris(); }catch(e){} }, 800); }
     if(k==='carousel'){ ridePostActionUntil=performance.now()+1000; setTimeout(()=>{ try{ boardCarousel(); }catch(e){} }, 800); }
     return;
@@ -9398,6 +9718,7 @@ function drawMinimap(){
   if(typeof OBS!=='undefined'&&OBS) LM.push([OBS._pos.x,OBS._pos.z,'🔭']);
   if(typeof FERRIS!=='undefined'&&FERRIS) LM.push([FERRIS._pos.x,FERRIS._pos.z,'🎡']);
   if(typeof CAROUSEL!=='undefined'&&CAROUSEL) LM.push([CAROUSEL._pos.x,CAROUSEL._pos.z,'🎠']);
+  if(CREATOR_HALL) LM.push([CREATOR_HALL._pos.x,CREATOR_HALL._pos.z,'👤']);
   if(POSTCARD_KIOSK) LM.push([POSTCARD_KIOSK._pos.x,POSTCARD_KIOSK._pos.z,'📸']);
   if(RAIN_GARDEN) LM.push([RAIN_GARDEN.center.x,RAIN_GARDEN.center.z,'🌦️']);
   if(RES_QUARTER) LM.push([RES_QUARTER_POS.x,RES_QUARTER_POS.z,'🏘️']);
@@ -9997,6 +10318,7 @@ function animate(){
   nearChrono = (CHRONO && player.position.distanceTo(CHRONO._pos) < 8.5) ? CHRONO : null;
   nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
   nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
+  nearCreatorHall = (CREATOR_HALL && player.position.distanceTo(CREATOR_HALL._pos) < 6.0) ? CREATOR_HALL : null;
   nearPostcardKiosk = (POSTCARD_KIOSK && player.position.distanceTo(POSTCARD_KIOSK._pos) < 5.5) ? POSTCARD_KIOSK : null;
   nearRainGarden = (RAIN_GARDEN && player.position.distanceTo(RAIN_GARDEN._pos) < 5.8) ? RAIN_GARDEN : null;
   nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
@@ -10018,6 +10340,7 @@ function animate(){
     if(!passHasStamp('plaza') && px*px+pz*pz < 196){ if(addStamp('plaza')) popSparkle(px,3.0,pz,0xffd0e6); }
     if(nearChrono && !passHasStamp('chrono')){ if(addStamp('chrono')) popSparkle(CHRONO._pos.x,4,CHRONO._pos.z,0xffd86b); }
     if(nearObs && !passHasStamp('observatory')){ if(addStamp('observatory')) popSparkle(OBS._pos.x,5,OBS._pos.z,0x9fd0ff); }
+    if(nearCreatorHall && !passHasStamp('creator')){ if(addStamp('creator')) popSparkle(CREATOR_HALL._pos.x,3.4,CREATOR_HALL._pos.z,0xe9bc59); }
     if(RES_QUARTER && !passHasStamp('homes') && Math.hypot(px-RES_QUARTER_POS.x,pz-RES_QUARTER_POS.z)<22){ if(addStamp('homes')) popSparkle(RES_QUARTER_POS.x,4,RES_QUARTER_POS.z,0xc8b8ff); }
     if(!passHasStamp('canal')){ for(const c of CANAL_PTS){ const dx=px-c.x, dz=pz-c.z; if(dx*dx+dz*dz < 49){ if(addStamp('canal')) popSparkle(c.x,2.6,c.z,0x7fe3da); break; } } } }
   courseProximityTick();
@@ -10029,6 +10352,7 @@ function animate(){
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
   else if(nearObs&&!modalOpen){ promptEl.innerHTML=`<b>${t('obsName')}</b>${t('obsReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🔭'; }
   else if(nearStation&&!modalOpen){ promptEl.innerHTML=`<b>${t('stationLm')}</b>${t('stationReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚉'; }
+  else if(nearCreatorHall&&!modalOpen){ promptEl.innerHTML=`<b>${t('lmCreator')}</b>${t('creatorReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='👤'; }
   else if(nearPostcardKiosk&&!modalOpen){ promptEl.innerHTML=`<b>${t('postcardKiosk')}</b>${t('postcardReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='📸'; }
   else if(nearRainGarden&&!modalOpen){ promptEl.innerHTML=`<b>${t('rainName')}</b>${t(rainGardenActive?'rainReachedWet':'rainReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent=rainGardenActive?'☀️':'🌦️'; }
   else if(nearFerris&&!modalOpen){ promptEl.innerHTML=`<b>${t('ferrisName')}</b>${t('ferrisReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🎡'; }
@@ -10272,6 +10596,21 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__introProof=()=>renderPublicIntro();
   window.__introProfilePortal=()=>({portal:_postcardReadmePortal(),result:introProfileResult?{...introProfileResult}:null});
   window.__introCopyProfile=()=>copyIntroProfileReadme();
+  window.__creatorHall=()=>{ let repoGap=Infinity,nearestRepo=null; for(const b of buildings){ if(b._isLibrary) continue;
+      const gap=Math.hypot(b._x-CREATOR_HALL._group.position.x,b._z-CREATOR_HALL._group.position.z)-(b._cw||3)-2.75; if(gap<repoGap){ repoGap=gap; nearestRepo=b.repo; } }
+    const summary=CREATOR_STATE.summary; return {placed:!!CREATOR_HALL,position:_debugVec(CREATOR_HALL._pos),near:!!nearCreatorHall,
+      meshes:CREATOR_HALL.meshes,draws:CREATOR_HALL.draws,textures:2,lights:0,repoGap:+repoGap.toFixed(2),nearestRepo,
+      placement:{gap:+CREATOR_HALL.placement.gap.toFixed(2),near:CREATOR_HALL.placement.near,center:CREATOR_HALL.placement.center.map(value=>+value.toFixed(2))},
+      open:CREATOR_STATE.open,loading:CREATOR_STATE.loading,source:CREATOR_STATE.source,
+      profile:summary?{login:summary.login,name:summary.displayName,repos:summary.townRepos,stars:summary.townStars,followers:summary.followers,
+        languages:summary.topLanguages.map(item=>item.name),badges:summary.badges.slice(),signature:summary.signatureRepos.map(repo=>repo.name)}:null}; };
+  window.__creatorOpen=async(force=false)=>{ openCreatorHall('debug'); await loadCreatorHallProfile(force); return window.__creatorHall(); };
+  window.__creatorClose=()=>closeCreatorHall();
+  window.__tpCreator=(back=4.8)=>{ const p=CREATOR_HALL._pos,dx=p.x-CREATOR_HALL._group.position.x,dz=p.z-CREATOR_HALL._group.position.z,len=Math.hypot(dx,dz)||1;
+    player.position.set(p.x+dx/len*back,0,p.z+dz/len*back); const yaw=Math.atan2(CREATOR_HALL._group.position.x-player.position.x,CREATOR_HALL._group.position.z-player.position.z);
+    camYaw=yaw+Math.PI; camPitch=.2; camDist=15; model.rotation.y=yaw; return window.__creatorHall(); };
+  window.__frameCreator=(back=8)=>{ const state=window.__tpCreator(back); model.visible=false; camDist=10; camPitch=.18; return state; };
+  window.__unframeCreator=()=>{ model.visible=true; return true; };
   window.__twinTowns=()=>({open:TWIN.open,loading:TWIN.loading,entry:TWIN.entry,
     match:TWIN.match?{left:TWIN.match.left.user,right:TWIN.match.right.user,bridge:TWIN.match.bridgeKind,
       items:TWIN.match.bridgeItems.map(item=>item.name),combinedRepos:TWIN.match.combinedRepos,combinedStars:TWIN.match.combinedStars}:null,

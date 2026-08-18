@@ -37,6 +37,7 @@ import {
   flipPixelRows
 } from '../assets/town-postcard.js';
 import { createTwinTownLink, createTwinTownMatch, summarizeTwinTown } from '../assets/twin-towns.js';
+import { selectTownCreatorFields, summarizeTownCreator } from '../assets/town-creator.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -57,6 +58,7 @@ const CAMERA_MATH_SRC = readFileSync(join(ROOT, 'assets/camera-obstruction.js'),
 const POSTCARD_SRC = readFileSync(join(ROOT, 'assets/town-postcard.js'), 'utf8');
 const PUBLIC_TOWN_PROOF_SRC = readFileSync(join(ROOT, 'assets/public-town-proof.js'), 'utf8');
 const TWIN_TOWNS_SRC = readFileSync(join(ROOT, 'assets/twin-towns.js'), 'utf8');
+const TOWN_CREATOR_SRC = readFileSync(join(ROOT, 'assets/town-creator.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -263,10 +265,99 @@ ok(/track\('twin_compare_success',\{entry,bridge:TWIN\.match\.bridgeKind,combine
   && !/targetUser|cityUser|leftUser|rightUser/.test(twinBlock), 'Twin Towns funnel events omit both GitHub identities');
 ok(/connect with another developer/.test(README_EN) && /다른 개발자와 마을 연결/.test(README_KO)
   && /twin=torvalds&ref=twin-town/.test(readFileSync(join(ROOT, 'examples/share-links.md'), 'utf8')), 'EN/KO adoption docs and the URL reference explain the new loop');
+
+group('Town Creator Hall — a cloner-owned identity landmark and contextual Star path');
+const creatorNow = Date.parse('2026-08-18T00:00:00Z');
+const creatorFields = selectTownCreatorFields({
+  login:'octocat', name:'The Octocat', bio:'Public profile', company:'GitHub', location:'Internet',
+  avatar_url:'https://avatars.githubusercontent.com/u/583231?v=4', followers:9000, following:9,
+  public_repos:12, created_at:'2011-01-25T00:00:00Z', email:'must-not-cache@example.test', blog:'https://example.test'
+});
+ok(Object.keys(creatorFields).sort().join(',')==='avatarUrl,bio,company,createdAt,followers,following,location,login,name,publicRepos'
+  && !('email' in creatorFields) && !('blog' in creatorFields), 'profile selection allowlists only the public fields the hall actually renders');
+ok(creatorFields.avatarUrl.startsWith('https://avatars.githubusercontent.com/')
+  && selectTownCreatorFields({login:'octocat',avatar_url:'https://evil.example/avatar.png'}).avatarUrl==='',
+  'avatar URLs fail closed outside GitHub\'s dedicated avatar host');
+const creatorSummary = summarizeTownCreator(creatorFields, [
+  {repo:'alpha',lang:'Python',stars:5,forks:1,pushed:'2026-08-17T00:00:00Z',desc:'Alpha'},
+  {repo:'beta',lang:'Rust',stars:10,forks:2,pushed:'2025-01-01T00:00:00Z',desc:'Beta'},
+  {repo:'gamma',lang:'JavaScript',stars:2,forks:0,pushed:'2024-01-01T00:00:00Z'},
+  {repo:'delta',lang:'Go',stars:1,forks:0,pushed:'2023-01-01T00:00:00Z'}
+], creatorNow);
+ok(creatorSummary.displayName==='The Octocat' && creatorSummary.townRepos===4 && creatorSummary.townStars===18
+  && creatorSummary.townForks===3 && creatorSummary.years===15 && creatorSummary.joinedYear===2011,
+  'creator proof combines public profile age with truthful facts from the rendered town');
+ok(creatorSummary.topLanguages.map(item=>item.name).join(',')==='Go,JavaScript,Python,Rust'
+  && creatorSummary.signatureRepos.map(repo=>repo.name).join(',')==='beta,alpha,gamma',
+  'top languages and signature repositories are deterministic and bounded');
+ok(creatorSummary.badges.join(',')==='builder,polyglot,maintainer,veteran'
+  && Object.isFrozen(creatorSummary) && Object.isFrozen(creatorSummary.signatureRepos),
+  'public signals earn immutable, explainable creator badges without contribution scraping');
+let creatorLoginRejected=false;
+try{ selectTownCreatorFields({login:'bad--'}); }catch(error){ creatorLoginRejected=error instanceof TypeError; }
+ok(creatorLoginRejected && !/fetch\(|localStorage|document\.|innerHTML|Math\.random/.test(TOWN_CREATOR_SRC),
+  'the creator model is pure, hermetic, DOM-free, and rejects invalid GitHub identities');
+
+const creatorLandmarkBlock = (HTML.match(/\/\* ---- 👤 Town Creator Hall —[\s\S]*?\/\/ 📘 Microsoft Docs engineer/) || [''])[0];
+const creatorPanelBlock = (HTML.match(/\/\* ---- 👤 Town Creator Hall panel[\s\S]*?\/\* a visited house/) || [''])[0];
+ok(/import \{ selectTownCreatorFields, summarizeTownCreator \} from '\.\/assets\/town-creator\.js\?v=creator-hall-v1'/.test(HTML),
+  'the zero-build runtime imports the pure creator profile model');
+ok(/id="creatorModal" role="dialog" aria-modal="true" aria-labelledby="creatorName" aria-describedby="creatorBio" aria-hidden="true"/.test(HTML)
+  && /id="creatorStatus" role="status" aria-live="polite" aria-atomic="true"/.test(HTML),
+  'Creator Hall exposes a labelled modal and polite load/copy feedback');
+ok(/id="creatorMenuBtn" type="button"/.test(HTML)
+  && /\{id:'creator',\s+ico:'👤',\s+key:'lmCreator'\}/.test(HTML)
+  && /\{id:'creator',ico:'👤'\}/.test(HTML), 'the hall is discoverable from the city menu, Passport, and Station');
+ok(/function creatorHallSpot\(\)/.test(creatorLandmarkBlock)
+  && /if\(avenue<0\.20\) continue/.test(creatorLandmarkBlock)
+  && /for\(const building of buildings\)/.test(creatorLandmarkBlock)
+  && /for\(const collider of EXTRA_COLLIDERS\)/.test(creatorLandmarkBlock), 'placement searches bounded non-avenue gaps against repo parcels and civic props');
+ok(/new THREE\.InstancedMesh\(columnGeo,columnMat,4\)/.test(creatorLandmarkBlock)
+  && /disableDynamicShadowCasters\(g\)/.test(creatorLandmarkBlock)
+  && /meshes,draws:meshes/.test(creatorLandmarkBlock)
+  && !/PointLight|SpotLight|DirectionalLight/.test(creatorLandmarkBlock), 'the civic pavilion batches columns, casts no dynamic shadows, and adds no light');
+ok(/COLLIDERS\.push\(collider\)/.test(creatorLandmarkBlock)
+  && /_registerCameraBlocker\(collider,'creator','creator-hall'/.test(creatorLandmarkBlock), 'the solid plinth participates in player and camera collision');
+ok(/const CREATOR_CACHE_TTL=24\*3600\*1000/.test(creatorPanelBlock)
+  && /repolis:town-creator:/.test(creatorPanelBlock)
+  && /selectTownCreatorFields\(await response\.json\(\)\)/.test(creatorPanelBlock)
+  && /localStorage\.setItem\(key,JSON\.stringify\(\{fetchedAt:now,profile\}\)\)/.test(creatorPanelBlock),
+  'an explicit hall open caches only the selected public profile fields for one day');
+ok(/openCreatorHall=\(entry='landmark'\)=>/.test(creatorPanelBlock)
+  && /loadCreatorHallProfile\(false\)/.test(creatorPanelBlock)
+  && !/await _loadTownCreatorProfile\(currentUser/.test(HTML.slice(0,HTML.indexOf('openCreatorHall='))),
+  'profile network work starts from the hall interaction, never page startup');
+ok(/creatorAvatarImg\.src=summary\.avatarUrl/.test(creatorPanelBlock)
+  && /document\.getElementById\('creatorName'\)\.textContent=summary\.displayName/.test(creatorPanelBlock)
+  && /name\.textContent=repo\.name/.test(creatorPanelBlock)
+  && /desc\.textContent=/.test(creatorPanelBlock)
+  && /link\.href=safeHref\(repo\.url\)\|\|summary\.profileUrl/.test(creatorPanelBlock), 'untrusted profile and repo facts use allowlisted URLs and text-only sinks');
+ok(/creatorStar\.href=\(window\.REPOLIS_CONFIG&&REPOLIS_CONFIG\.project&&REPOLIS_CONFIG\.project\.url\)/.test(creatorPanelBlock)
+  && /track\('project_star_click',\{source:'creator_hall'\}\)/.test(creatorPanelBlock)
+  && /_starNudgeClose\('clicked'\)/.test(creatorPanelBlock), 'the earned in-context Star action always credits the upstream Repolis engine without a duplicate nudge');
+ok(/function _creatorFocusables\(\)/.test(creatorPanelBlock)
+  && /event\.key!=='Tab'/.test(creatorPanelBlock)
+  && /\.creatorFoot a, \.creatorFoot button \{[^}]*min-height: 44px/.test(HTML), 'Creator Hall traps keyboard focus and keeps every primary action touch-sized');
+ok(/case 'creator': return CREATOR_HALL\?/.test(HTML)
+  && /nearCreatorHall = \(CREATOR_HALL/.test(HTML)
+  && /else if\(nearCreatorHall\) openCreatorHall\('landmark'\)/.test(HTML)
+  && /addStamp\('creator'\)/.test(HTML)
+  && /LM\.push\(\[CREATOR_HALL\._pos\.x,CREATOR_HALL\._pos\.z,'👤'\]\)/.test(HTML)
+  && /if\(k==='creator'\)[\s\S]{0,140}openCreatorHall\('station'\)/.test(HTML), 'walk-up, Passport, map, Station taxi, and automatic arrival all converge on the same hall');
+['lmCreator','creatorMenu','creatorReached','creatorLoading','creatorReady','creatorStatRepos','creatorStatStars',
+  'creatorStatFollowers','creatorStatYears','creatorBadgesTitle','creatorLanguagesTitle','creatorSignatureTitle',
+  'creatorViewProfile','creatorShareTown','creatorStarEngine','creatorPowered','lmArriveCreator']
+  .forEach(key => ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2, `Creator Hall key ${key} is bilingual`));
+ok(/window\.__creatorLangRefresh=\(\)=>renderCreatorHall\(\)/.test(creatorPanelBlock)
+  && /if\(typeof refreshCreatorHallSign==='function'\) refreshCreatorHallSign\(\)/.test(HTML), 'live KO/EN switching refreshes both the modal and in-world sign');
+ok(/window\.__creatorHall=\(\)=>/.test(HTML)
+  && /meshes:CREATOR_HALL\.meshes,draws:CREATOR_HALL\.draws,textures:2,lights:0/.test(HTML),
+  'browser diagnostics expose placement clearance, resources, current profile proof, and modal state');
+
 const runtimeLocalFiles = [
   'index.html','repolis.config.js','scholars.js','repos.json','assets/contribution-library.json',
   'assets/world-tree/createRepolisHero.js','assets/camera-obstruction.js','assets/canal-ferry.js',
-  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js',
+  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js',
   'council/council.config.json','council/engine.js','council/fixtures.js','council/guards.js','council/live.js'
 ];
 const runtimeLocalBytes = runtimeLocalFiles.reduce((sum,file)=>sum+readFileSync(join(ROOT,file)).length,0);

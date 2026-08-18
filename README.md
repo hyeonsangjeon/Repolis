@@ -50,6 +50,7 @@ If this gives you a useful way to present repositories, **[star Repolis](https:/
 | Goal | What to do | Result |
 |---|---|---|
 | preview my public repos | use the live username field | a shareable metadata-built town in seconds |
+| introduce who built the town | visit **Town Creator Hall** or open **Meet the town creator** in the city menu | public bio, followers, GitHub tenure, top languages, badges, and signature projects tied to the current town owner |
 | connect with another developer | click **Connect with a friend** after a preview, or open **Twin Towns** in the city menu | a two-person link that opens both towns and their shared languages or topics |
 | keep my town on my GitHub profile | click **Put this town on my GitHub profile** when the preview is ready, or use **Town Postcard Studio** | a 600px portal that always opens my personalized town |
 | publish my own Repolis | use the template, enable Actions + Pages, run **Refresh Repolis data** once | your fork owner's public repos become the default town; no PAT required |
@@ -80,6 +81,7 @@ At ordinary walking distances, a one-draw architectural LOD keeps each repo hous
 - **Every repo house opens into one real room.** Its card leads to the reusable **Repository Atelier**: a walkable 3D exhibition whose Repository Core, history/data wall, and action terminals rebind deterministically to that repo. Entering costs no network or AI call; GitHub and Gitber run only when you choose a terminal.
 - **Daily refresh now means something on return.** The Passport's **Town Gazette** compares the current public repo snapshot with the last one this browser marked read, then highlights new repos, release tags when available, pushes, and positive metric growth. It is entirely local and costs nothing.
 - **Repositories form relationships.** The Stargazer's Observatory finds a truthful three-repo connection from shared topics or languages and draws it as a nighttime Constellation Trail.
+- **Every town introduces its creator.** **Town Creator Hall** belongs to the active town owner—canonical, fork, or `?user=` visitor—and combines an explicitly loaded public GitHub profile with the repositories already rendered in town. The hall highlights truthful stats, languages, earned badges, and three signature projects before crediting the upstream Repolis engine.
 - **Two developers can connect their towns.** **Twin Towns** compares public repo metadata, finds shared languages or topics, and creates a recipient-specific link that can be followed in either direction—without login or a backend.
 - **Quiet maintenance gets its own light.** The Observatory's Maintainers' Night Watch picks three recently tended, low-star repositories from public metadata and asks visitors to light their lanterns—celebrating care, not popularity.
 - **Landmarks carry the project story.** The Contribution Library archives papers, talks, open-source work, and awards; Chronopolis hosts the Council of Time; the plaza, observatory, park, and fairground make the city worth walking. At Petite-Venise, a boardable low-profile ferry follows the real canal curve beneath the flower bridges for one scenic town tour.
