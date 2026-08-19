@@ -319,7 +319,8 @@ possibly billable dollars.
 
 ```jsonc
 { "npc_action": "npcConfig", "lang": "ko" }
-// → { ok, config:{ requested, effective, pending, canEnable, blockReason,
+// → { ok, config:{ requested, controlEffective, effective, runtimeAvailable,
+//                  budgetReason, pending, canEnable, blockReason,
 //                  aiEnabled, ambientEnabled, playerChatEnabled,
 //                  hardAiEnabled, hardAmbientEnabled, hardPlayerChatEnabled,
 //                  maxTurns, hardMaxTurns, source:"durable-object", flagSource, liveToggle },
@@ -337,7 +338,10 @@ possibly billable dollars.
 // → { ok, line:"…", budget } | { ok:false, fallback:true, reason:"npc_budget_exhausted", budget }
 ```
 
-`npcConfig` and `npcBudget` only read flags/Governor state; they never invoke a model. Every budget view,
+`npcConfig` and `npcBudget` only read flags/Governor state; they never invoke a model. `controlEffective`
+reports the env∧KV control plane independently, while the backward-compatible `effective` remains the
+fail-closed runtime view. A transient Governor probe failure therefore reports `runtimeAvailable:false`
+and a bounded `budgetReason` without being mislabeled as KV propagation. Every budget view,
 including a fail-closed unavailable response, declares `source:"durable-object"`, `durable:true`, and
 `enforcement:"atomic_reservation"`. These fields mean the configured enforcement mechanism is the single
 SQLite-backed Durable Object reservation ledger, never an isolate-local estimate. When that binding or its
@@ -359,7 +363,7 @@ to best-effort accounting.
 | `NPC_DAY_CAP_USD` | `0.15` in this deployment (`10` code default) | Durable UTC-day hard cap. The committed value bounds a 31-day month to `$4.65` of resident Azure model calls. `0` disables calls; invalid values fail closed. |
 | `NPC_DAILY_TURN_MAX` | `0` (off) | Optional durable daily turn cap; in-flight reservations consume slots. |
 | `NPC_DAILY_ATTEMPT_MAX` | `5000` | Hard abuse/storage ceiling for accepted reservations, including provider failures. Must be positive. |
-| `NPC_BUDGET_TIMEOUT_MS` | `1500` | Internal Governor response deadline (100–10000 ms); timeout fails closed. |
+| `NPC_BUDGET_TIMEOUT_MS` | `3000` | Internal Governor response deadline (100–10000 ms); timeout fails closed. Retryable failures wait 100–250 ms before one idempotent retry; overload is not retried. |
 | `NPC_RESERVATION_LEASE_MS` | `60000` | Orphan lease; must exceed `NPC_TIMEOUT_MS + 2×NPC_BUDGET_TIMEOUT_MS + 10000` and be ≤300000. Expiry full-settles. |
 | `NPC_TIMEOUT_MS` | `12000` | Entra token + model request deadline; timeout aborts the request and releases its reservation. |
 | `NPC_MAX_TURNS` / `NPC_HARD_MAX_TURNS` | `6` / `10` | Advertised default / absolute ambient conversation caps. |

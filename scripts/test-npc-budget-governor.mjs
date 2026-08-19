@@ -1,6 +1,7 @@
 import {
   NpcBudgetGovernor,
   createNpcCallPlan,
+  npcControlStatus,
   npcBudgetStatus,
   runBudgetedNpcCall,
 } from '../cloudflare-taxi/src/npc-budget-governor.js';
@@ -125,6 +126,27 @@ const MESSAGES = [
 ];
 
 export async function runNpcBudgetGovernorTests(check) {
+  {
+    const flags = {
+      requested: { ai: true, ambient: true, player: true },
+      effective: { ai: true, ambient: true, player: true },
+    };
+    const unavailable = npcControlStatus(flags, {
+      available: false,
+      reason: 'npc_budget_governor_timeout',
+    });
+    const available = npcControlStatus(flags, { available: true });
+    check(unavailable.controlEffective.ai === true
+      && unavailable.effective.ai === false
+      && unavailable.runtimeAvailable === false
+      && unavailable.pending === false
+      && unavailable.budgetReason === 'npc_budget_governor_timeout'
+      && available.effective.ai === true
+      && available.runtimeAvailable === true
+      && available.budgetReason === null,
+    'control-plane state remains ON while an unavailable Governor independently fails runtime effective state closed');
+  }
+
   {
     const { governor } = makeGovernor();
     const policy = { capNanos: 1_000_000, dailyTurnMax: 0, dailyAttemptMax: 5000, reservationLeaseMs: 60_000 };
@@ -707,5 +729,63 @@ export async function runNpcBudgetGovernorTests(check) {
       && unavailable.budget.enforcement === 'atomic_reservation'
       && providerCalls === 0,
     'missing Durable Object binding retains the durable atomic contract and fails closed before any provider call');
+  }
+
+  {
+    const { governor } = makeGovernor();
+    const delays = [];
+    let calls = 0;
+    const env = {
+      ...baseEnv(governor),
+      __npcBudgetRandom: () => 0,
+      __npcBudgetSleep: async (ms) => { delays.push(ms); },
+      NPC_BUDGET_GOVERNOR: {
+        getByName() {
+          return {
+            async fetch(input, init) {
+              calls += 1;
+              if (calls === 1) {
+                const error = new Error('transient infrastructure failure');
+                error.retryable = true;
+                throw error;
+              }
+              return governor.fetch(new Request(input, init));
+            },
+          };
+        },
+      },
+    };
+    const status = await npcBudgetStatus(env, true);
+    check(status.available === true && calls === 2
+      && delays.length === 1 && delays[0] === 100,
+    'retryable Governor failures wait for bounded jittered backoff before one idempotent retry');
+  }
+
+  {
+    const { governor } = makeGovernor();
+    const delays = [];
+    let calls = 0;
+    const env = {
+      ...baseEnv(governor),
+      __npcBudgetSleep: async (ms) => { delays.push(ms); },
+      NPC_BUDGET_GOVERNOR: {
+        getByName() {
+          return {
+            async fetch() {
+              calls += 1;
+              const error = new Error('object overloaded');
+              error.overloaded = true;
+              error.retryable = true;
+              throw error;
+            },
+          };
+        },
+      },
+    };
+    const status = await npcBudgetStatus(env, true);
+    check(status.available === false
+      && status.reason === 'npc_budget_governor_overloaded'
+      && calls === 1 && delays.length === 0,
+    'an overloaded Governor fails closed without a retry that would amplify the overload');
   }
 }

@@ -49,6 +49,7 @@ import CouncilFixtures from "../../council/fixtures.js";
 import COUNCIL_CFG from "../../council/council.config.json";
 import {
   NpcBudgetGovernor,
+  npcControlStatus,
   npcBudgetStatus,
   runBudgetedNpcCall,
 } from "./npc-budget-governor.js";
@@ -1652,15 +1653,9 @@ async function npcHandler(body, request, env, ctx) {
 
   if (action === "npcConfig") {
     const budget = await npcBudgetStatus(env, aiEnabled, emitBudgetMetric);
-    const budgetReady = budget.available === true;
-    const effective = {
-      ai: aiEnabled && budgetReady,
-      ambient: ambientOn && budgetReady,
-      player: playerOn && budgetReady,
-    };
-    const pending = Object.keys(effective).some((key) =>
-      typeof flags.requested?.[key] === "boolean" && flags.requested[key] !== effective[key]
-    );
+    const status = npcControlStatus(flags, budget);
+    const budgetReady = status.runtimeAvailable;
+    const effective = status.effective;
     const canEnable = flags.liveToggle === true
       && flags.source === "kv"
       && flags.hardAiEnabled === true
@@ -1668,7 +1663,7 @@ async function npcHandler(body, request, env, ctx) {
     const blockReason = flags.liveToggle !== true ? "live_toggle_off"
       : flags.source !== "kv" ? "kv_unavailable"
       : flags.hardAiEnabled !== true ? "npc_hard_ceiling_off"
-      : !budgetReady ? "npc_budget_unavailable"
+      : !budgetReady ? status.budgetReason
       : null;
     return json({ ok: true, config: {
       aiEnabled: effective.ai,
@@ -1676,7 +1671,10 @@ async function npcHandler(body, request, env, ctx) {
       playerChatEnabled: effective.player,
       requested: flags.requested,
       effective,
-      pending,
+      controlEffective: status.controlEffective,
+      runtimeAvailable: status.runtimeAvailable,
+      budgetReason: status.budgetReason,
+      pending: status.pending,
       canEnable,
       blockReason,
       hardAiEnabled: flags.hardAiEnabled,

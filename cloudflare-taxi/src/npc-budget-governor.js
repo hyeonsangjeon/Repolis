@@ -111,7 +111,7 @@ function budgetPolicy(env) {
   const dailyTurnMax = parseNonNegativeInteger(env?.NPC_DAILY_TURN_MAX, 0);
   const dailyAttemptMax = parseNonNegativeInteger(env?.NPC_DAILY_ATTEMPT_MAX, 5000);
   const providerTimeoutMs = parseNonNegativeInteger(env?.NPC_TIMEOUT_MS, 12_000);
-  const governorTimeoutMs = parseNonNegativeInteger(env?.NPC_BUDGET_TIMEOUT_MS, 1500);
+  const governorTimeoutMs = parseNonNegativeInteger(env?.NPC_BUDGET_TIMEOUT_MS, 3000);
   const hasConfiguredLease = env?.NPC_RESERVATION_LEASE_MS !== undefined
     && env?.NPC_RESERVATION_LEASE_MS !== null
     && env?.NPC_RESERVATION_LEASE_MS !== "";
@@ -190,6 +190,36 @@ function unavailableBudget(reason, policy) {
     dailyAttemptMax: policy?.ok ? policy.dailyAttemptMax : null,
     blocked: true,
     reason,
+  };
+}
+
+// Keep the asynchronous flag-control plane distinct from a point-in-time
+// Governor health probe. A transient Durable Object failure must still fail the
+// runtime closed, but it is not KV propagation and must not be reported as such.
+export function npcControlStatus(flags, budget) {
+  const controlEffective = {
+    ai: flags?.effective?.ai === true,
+    ambient: flags?.effective?.ambient === true,
+    player: flags?.effective?.player === true,
+  };
+  const runtimeAvailable = budget?.available === true;
+  const effective = {
+    ai: controlEffective.ai && runtimeAvailable,
+    ambient: controlEffective.ambient && runtimeAvailable,
+    player: controlEffective.player && runtimeAvailable,
+  };
+  const pending = Object.keys(controlEffective).some((key) =>
+    typeof flags?.requested?.[key] === "boolean"
+      && flags.requested[key] !== controlEffective[key]
+  );
+  return {
+    controlEffective,
+    effective,
+    pending,
+    runtimeAvailable,
+    budgetReason: runtimeAvailable
+      ? null
+      : String(budget?.reason || "npc_budget_unavailable").slice(0, 64),
   };
 }
 
@@ -779,7 +809,7 @@ function governorStub(env) {
 }
 
 async function governorCall(env, payload) {
-  const timeoutMs = parseNonNegativeInteger(env?.NPC_BUDGET_TIMEOUT_MS, 1500);
+  const timeoutMs = parseNonNegativeInteger(env?.NPC_BUDGET_TIMEOUT_MS, 3000);
   if (timeoutMs === null || timeoutMs < 100 || timeoutMs > 10_000) {
     return { ok: false, reason: "npc_budget_timeout_invalid" };
   }
@@ -799,9 +829,19 @@ async function governorCall(env, payload) {
     const body = await response.json();
     return body?.ok ? body : { ok: false, reason: body?.reason || "npc_budget_governor_error" };
   } catch (error) {
+    const overloaded = error?.overloaded === true;
+    const bindingMisconfigured = ["npc_budget_binding_missing", "npc_budget_binding_invalid"]
+      .includes(error?.message);
     return {
       ok: false,
-      reason: error?.name === "AbortError" ? "npc_budget_governor_timeout" : "npc_budget_governor_unavailable",
+      reason: overloaded
+        ? "npc_budget_governor_overloaded"
+        : error?.name === "AbortError"
+          ? "npc_budget_governor_timeout"
+          : "npc_budget_governor_unavailable",
+      overloaded,
+      retryable: !overloaded && !bindingMisconfigured
+        && (error?.name === "AbortError" || error?.retryable !== false),
     };
   } finally {
     clearTimeout(timer);
@@ -809,6 +849,9 @@ async function governorCall(env, payload) {
 }
 
 function retryableGovernorFailure(result) {
+  if (result?.overloaded === true || result?.retryable === false
+    || result?.reason === "npc_budget_governor_overloaded") return false;
+  if (result?.retryable === true) return true;
   return [
     "npc_budget_governor_timeout",
     "npc_budget_governor_unavailable",
@@ -817,9 +860,28 @@ function retryableGovernorFailure(result) {
   ].includes(result?.reason);
 }
 
+function governorRetryDelayMs(env) {
+  const sampled = typeof env?.__npcBudgetRandom === "function"
+    ? Number(env.__npcBudgetRandom())
+    : Math.random();
+  const unit = Number.isFinite(sampled) ? Math.max(0, Math.min(1, sampled)) : 0;
+  return 100 + Math.floor(unit * 150);
+}
+
+async function waitBeforeGovernorRetry(env) {
+  const delayMs = governorRetryDelayMs(env);
+  if (typeof env?.__npcBudgetSleep === "function") {
+    await env.__npcBudgetSleep(delayMs);
+    return;
+  }
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
 async function reliableGovernorCall(env, payload) {
   const first = await governorCall(env, payload);
-  return retryableGovernorFailure(first) ? governorCall(env, payload) : first;
+  if (!retryableGovernorFailure(first)) return first;
+  await waitBeforeGovernorRetry(env);
+  return governorCall(env, payload);
 }
 
 function withEnabled(budget, enabled) {
