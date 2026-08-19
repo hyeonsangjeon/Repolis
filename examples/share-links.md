@@ -9,6 +9,7 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 | `https://hyeonsangjeon.github.io/Repolis/` | The owner's generated city snapshot. |
 | `https://hyeonsangjeon.github.io/Repolis/?launch=1` | The username launchpad, focused and ready to build a personal preview. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob` | A town built live from `mrdoob`'s public repos. |
+| `https://hyeonsangjeon.github.io/Repolis/?repo=mrdoob/three.js&ref=repo-portal` | The `three.js` building and Repository Atelier before the owner catalog. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=torvalds` | A town built from `torvalds`' public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob&twin=torvalds&ref=twin-town` | Twin Towns for two users, including shared languages/topics and a reversible visit link. |
 
@@ -16,6 +17,28 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 stale fallback). It activates only for a valid, non-owner username; a bad name shows a friendly "lost"
 overlay, and a "go home" button always returns to the owner city. Cross-town taxi driving is disabled in
 public mode.
+
+## Share one repository
+
+Paste a username, `owner/repo`, or a GitHub repository root URL into the first screen or **Station**. A
+repository becomes:
+
+```text
+?repo=<owner>/<repo>&ref=repo-portal
+```
+
+The link loads one target first, confirms its public facts, and opens its Repository Atelier after one entry
+click. **Copy Repo Portal** produces the same canonical address. **Explore @owner's full town** is an
+explicit second step that reuses the existing public-town loader and keeps the target focused.
+
+Trailing slashes and `.git` are accepted. Non-GitHub hosts, extra paths, query injection, traversal, and
+control characters are rejected before any GitHub request. If `repo` and `user` conflict, the repository
+owner wins; Portal links never mix `twin`, `growth`, postcard, or repo-card hash state.
+
+Arbitrary public repositories expose stars, forks, language, topics, dates, and issues. GitHub does not
+publish their visitor, view, or clone traffic, so Repolis leaves those fields unknown rather than showing
+synthetic values. One exact `GET /repos/{owner}/{repo}` request is cached locally for 15 minutes, with a
+bounded stale fallback.
 
 ## Connect two towns
 

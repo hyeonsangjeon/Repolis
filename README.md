@@ -16,7 +16,7 @@
 
 <sub>🎬 <strong>15-second demo:</strong> traffic → buildings · ask Gitber → taxi ride → real repo card</sub><br>
 <sub><code>WASD</code> / touch to walk · ask Gitber · <code>Enter</code> / tap to open · no sign-up or build · <strong><a href="#run-in-60-seconds">Run locally</a></strong> · ⭐ <strong><a href="https://github.com/hyeonsangjeon/Repolis">Star Repolis</a></strong></sub><br>
-<sub>Type any GitHub username on the first screen. Repolis uses public metadata only.</sub>
+<sub>Type a GitHub username, <code>owner/repo</code>, or repository URL on the first screen. Repolis uses public metadata only.</sub>
 
 [![Daily refresh](https://img.shields.io/github/actions/workflow/status/hyeonsangjeon/Repolis/refresh.yml?style=flat-square&label=daily%20refresh&logo=githubactions&logoColor=white)](https://github.com/hyeonsangjeon/Repolis/actions/workflows/refresh.yml)
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
@@ -33,7 +33,7 @@
 | Gitber searches by natural language, then physically drives to the result | repository discovery becomes an interaction, not another list |
 | `?user=<login>` rebuilds the town from any public GitHub account | you can test the same engine with your work before cloning or configuring anything |
 
-**Fastest proof:** open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)**, type your login, and walk through your public repos. No token, account connection, or fork is required.
+**Fastest proof:** open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)** and enter your login or one `owner/repo`. A username builds the public town; a repository opens that project first. No token, account connection, or fork is required.
 
 <div align="center">
 
@@ -50,6 +50,7 @@ If this gives you a useful way to present repositories, **[star Repolis](https:/
 | Goal | What to do | Result |
 |---|---|---|
 | preview my public repos | use the live username field | a shareable metadata-built town in seconds |
+| share one repository as an experience | paste `owner/repo` or a GitHub repository URL, then use **Copy Repo Portal** in its Atelier | a canonical `?repo=owner/repo&ref=repo-portal` link that loads one target before the owner catalog |
 | introduce who built the town | visit **Town Creator Hall** or open **Meet the town creator** in the city menu | public bio, followers, GitHub tenure, top languages, badges, and signature projects tied to the current town owner |
 | watch my open-source history unfold | open **Town Growth Replay** from Wayfinding, the Passport, or my completed public-town preview | a creation-date timeline where repo houses rise year by year, with a shareable year link and era postcard |
 | connect with another developer | click **Connect with a friend** after a preview, or open **Twin Towns** in the city menu | a two-person link that opens both towns and their shared languages or topics |
@@ -72,7 +73,7 @@ Repolis turns public GitHub metadata and cumulative traffic into a place instead
 | stars | roof ornaments |
 | recent activity | window glow at night |
 
-Repositories are grouped into topic districts with roads, signs, hubs, and a world map. The owner town refreshes daily from committed traffic history plus the GitHub API; `?user=<login>` can build a lighter town from any user's public repositories.
+Repositories are grouped into topic districts with roads, signs, hubs, and a world map. The owner town refreshes daily from committed traffic history plus the GitHub API. `?user=<login>` builds a lighter public town, while `?repo=<owner>/<repo>` loads one project first. GitHub does not publish visitor, view, or clone traffic for those public API modes, so their buildings use stars, forks, and update recency without inventing traffic.
 At ordinary walking distances, a one-draw architectural LOD keeps each repo house's textured walls and roof while preserving its plot, hedge, path, real window panes, shutters, sills, flower boxes, gutters, and tier-specific porch, balcony, or portico.
 
 ## A village that lives
@@ -80,7 +81,8 @@ At ordinary walking distances, a one-draw architectural LOD keeps each repo hous
 - **Residents have lives, not idle loops.** Named townspeople wander their districts, keep daily rhythms, carry changing moods, visit cherished haunts, recognize friends, stroll and sit together, gather around the campfire, and sometimes celebrate a recent repository release. Their cottages form **Starlight Row** on the north-east edge, with resident-coloured gardens, three roof silhouettes, shutters, transoms, selected window boxes, canopies, chimneys, and roof finials. A shared flower bed, lanterns, hedges, and broadleaf/cypress trees care for the commons. Night brings residents home to warm windows and porch seats, while morning sends them back to their district work. Pairs also choose their own short **Shared Joy** excursions to real flower patches, visible night stars, or a real repo house—without a player prompt or AI call. Ask a specialist question and they introduce the right scholar instead of pretending to know: follow the compass and find that scholar in the world.
 - **Exploration has continuity.** The Explorer Passport records houses and landmarks, district progress shows what remains, and the daily **Village Chronicle** connects one resident to their cherished haunt and a truthful related repo or district.
 - **Your repository history becomes a moving city story.** **Town Growth Replay** reads the public creation date already carried by every repo house, then raises the town through its real repo-birth years from the first house to the present. The scrubber, play/pause controls, deep link, and era postcard work for the owner and every `?user=` public town. The timeline covers repos still public today; house appearance and language labels stay explicitly marked as today’s metadata. Replay adds no mesh, texture, light, backend, account, or stored history.
-- **Every repo house opens into one real room.** Its card leads to the reusable **Repository Atelier**: a walkable 3D exhibition whose Repository Core, history/data wall, and action terminals rebind deterministically to that repo. Entering costs no network or AI call; GitHub and Gitber run only when you choose a terminal.
+- **A repository can be the front door.** **Repo Portal** accepts `owner/repo` or a GitHub URL, loads that one public target before the owner catalog, and takes the visitor into its Repository Atelier after one entry click. The Atelier can copy the canonical address, open GitHub, or expand into the owner's full town. A 15-minute, 512 KiB local cache and stale fallback keep the path bounded; unavailable traffic remains unknown.
+- **Every repo house opens into one finished exhibition.** Its card leads to the reusable **Repository Atelier**, now carrying the current Repolis chibi, a History/Data Wall, Impact/Signals Wall, metric artifacts, a curved data path, Repository Core, and action terminals that rebind deterministically to that repo. **Ask Gitber** and **Why this district?** open an in-room conversation without ejecting the visitor; only the exit returns to town, while GitHub remains an explicit external action. Entering still costs no network or AI call.
 - **Daily refresh now means something on return.** The Passport's **Town Gazette** compares the current public repo snapshot with the last one this browser marked read, then highlights new repos, release tags when available, pushes, and positive metric growth. It is entirely local and costs nothing.
 - **Repositories form relationships.** The Stargazer's Observatory finds a truthful three-repo connection from shared topics or languages and draws it as a nighttime Constellation Trail.
 - **Every town introduces its creator.** **Town Creator Hall** belongs to the active town owner—canonical, fork, or `?user=` visitor—and combines an explicitly loaded public GitHub profile with the repositories already rendered in town. The hall highlights truthful stats, languages, earned badges, and three signature projects before crediting the upstream Repolis engine.
@@ -124,7 +126,7 @@ GTM_DIR=data python3 scripts/build_repos.py
 
 ## Build your own city
 
-The quickest preview needs no fork: open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)** or share `https://hyeonsangjeon.github.io/Repolis/?user=<login>`.
+The quickest preview needs no fork: open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)**, share `https://hyeonsangjeon.github.io/Repolis/?user=<login>`, or point one project at `https://hyeonsangjeon.github.io/Repolis/?repo=<owner>/<repo>&ref=repo-portal`.
 
 For a persistent metadata-built city:
 
@@ -159,6 +161,7 @@ Repolis stays a **zero-build static web app**. The main runtime remains in `inde
 | [`repolis.config.js`](repolis.config.js) | fork owner inference and safe optional-service defaults |
 | [`repos.json`](repos.json) | generated repository and traffic data |
 | [`scholars.js`](scholars.js) | scholar roster |
+| [`assets/repo-portal.js`](assets/repo-portal.js) | strict target parsing, public projection, and canonical repository links |
 | [`assets/town-growth.js`](assets/town-growth.js) | deterministic repo-birth timeline, year snapshots, and share links |
 | [`assets/world-tree/`](assets/world-tree/) | procedural World Tree factory |
 | [`cloudflare-taxi/`](cloudflare-taxi/) | grounded AI and optional resident dialogue Worker |
@@ -191,6 +194,7 @@ Repolis stays a **zero-build static web app**. The main runtime remains in `inde
 
 - [`AGENTS.md`](AGENTS.md) — contributor and agent operating contract
 - [`docs/domain-model.md`](docs/domain-model.md) — repository data and feature model
+- [`docs/repo-portal-change-guide.md`](docs/repo-portal-change-guide.md) — Repo Portal URL, data, cache, privacy, and maintenance contract
 - [`docs/known-limitations.md`](docs/known-limitations.md) — intentional constraints
 - [`SCHOLARS.md`](SCHOLARS.md) — scholar roster and grounding roles
 - [`COUNCIL_PATTERN.md`](COUNCIL_PATTERN.md) — the debate-to-judge pattern

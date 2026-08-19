@@ -15,6 +15,14 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   `scripts/build_repos.py` instead.
 - **Public repos only, by design.** Private repo names never appear. Untouched mirror forks are filtered
   out; only forks you've actually committed to are shown.
+- **Public API modes do not have traffic.** Repo Portal and `?user=` receive stars, forks, issues, language,
+  topics, and lifecycle dates from unauthenticated public endpoints. GitHub does not return visitors, views,
+  or clones there, so Repolis keeps those fields unknown and uses stars, forks, and recency for architecture.
+  An exact Portal match in the generated owner snapshot may reuse its known cumulative traffic.
+- **Repo Portal is one unauthenticated request, not a proxy.** An arbitrary target uses one
+  `GET /repos/{owner}/{repo}` request with no retry. A 15-minute LRU cache is limited to 30 entries and 512
+  KiB; failed requests may use an explicitly labelled stale entry. Without one, the target error appears
+  over the existing owner town. GitHub's anonymous 403/429 limit still applies.
 - **Creator Hall reads one public profile explicitly.** Opening the hall requests GitHub's public
   `/users/<login>` endpoint and caches only the fields it renders for 24 hours. Anonymous API rate limits
   can hide the avatar/bio temporarily; the hall still falls back to the public repository facts already
@@ -63,6 +71,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   past Star, fork, traffic, topic, or language snapshots, so a visible house keeps its current architecture
   and language label and the UI says so explicitly. Repos without a valid creation date appear only in the
   present step. Replay state lives in the URL and is not persisted.
+- **Repository Atelier is a metadata exhibition, not a source-code IDE.** One reusable room redraws the
+  current repo description, topics, public metrics, lifecycle dates, and available traffic. It does not clone
+  source files, reconstruct old metrics, or simulate build/runtime behavior. Explicit Gitber questions use
+  the currently selected chat mode and its existing Local or backend fallback.
 - **Resident Shared Joy is bounded and session-local.** At most one pair takes a scripted excursion at a
   time; it is not remembered across reloads and does not use a model. Stargazing starts autonomously only
   while stars are visible, and visitor/chat/festival ownership intentionally interrupts an outing.

@@ -6,6 +6,51 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.87.0] — 2026-08-20
+
+### 🏛️ Repo Portal — let one repository bring visitors into the city
+
+Repo Portal is the most direct Star-growth change because it attaches Repolis to work developers already
+share. A recipient no longer has to understand the whole city before finding personal relevance: one
+`owner/repo` link loads that project, proves its public facts, and opens its Repository Atelier. GitHub and a
+copyable Portal remain one action away, while the owner catalog waits for an explicit expansion. The result
+is a useful repository artifact first and a Repolis discovery path second.
+
+- The intro and GitHub Station now share one strict resolver for usernames, `owner/repo`, and GitHub
+  repository root URLs. Canonical links use `?repo=owner/repo&ref=repo-portal`; repository ownership wins
+  over conflicting town, Twin Towns, Growth Replay, or card-hash state.
+- Arbitrary targets check the generated owner snapshot, a fresh bounded cache, then one exact public GitHub
+  repository request. A stale entry is labelled when it rescues 404/rate/network failure; otherwise the
+  existing owner town remains usable. The cache is limited to 15 minutes, 30 entries, and 512 KiB.
+- Public API projections no longer manufacture visitors, views, or clones. `trafficKnown:false` keeps those
+  fields `null`; public buildings use stars, forks, and update recency, and cards, search, and Atelier walls
+  explain the boundary. Exact owner-snapshot matches retain known cumulative traffic.
+- The first screen confirms target stars, forks, language, description, and source before one click enters
+  the Atelier. Its new actions copy the canonical Portal, open GitHub, or explicitly expand into the
+  existing owner-town loader while retaining the target focus.
+- Six coarse funnel events remove owner, repository, URL, input, query, `cityUser`, and persistent instance
+  identifiers. The existing earned Star invitation becomes eligible only after the target room reaches Aha
+  or a Portal is copied, then waits until the visitor returns outside.
+- The change adds one small pure module and no model, binary asset, texture, light, shadow, backend,
+  dependency, or build step. Hermetic guards cover parsing, hostile inputs, URL precedence, cache bounds,
+  stale/offline fallback, traffic truth, KO/EN, accessibility, telemetry privacy, and the 5 MiB runtime cap.
+
+## [1.86.1] — 2026-08-19
+
+### 🏛️ Repository Atelier completion — actions and identity stay inside
+
+- **Ask Gitber** and **Why this district?** no longer exit to the town. Both open a dark in-room conversation;
+  the former uses the existing selected Gitber mode and the latter gives the deterministic classifier reason.
+- Exterior taxi rides, scholar handoffs, and recommendation ride buttons are blocked while the room owns
+  interaction. GitHub remains an explicit safe new-tab terminal and the exit remains the only town return.
+- The primitive capsule avatar is replaced by the current Repolis chibi hierarchy with shared GPU resources
+  and mapped walk animation.
+- A new Impact/Signals Wall, three metric artifacts, ceiling architecture, framed side gallery, curved data
+  path, cleaner core shell, and ordered data spires complete the sparse room. Stars, forks, activity, score,
+  language, topics, creation, push, release, traffic, and district colors all rebind per repo.
+- The room remains lazy-created and reusable with three bounded canvas textures, zero exterior renders while
+  active, exact camera/UI/tour restoration, and no network or model call until the visitor asks.
+
 ## [1.86.0] — 2026-08-18
 
 ### ⏳ Town Growth Replay — watch an open-source history become a city

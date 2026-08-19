@@ -39,12 +39,30 @@ import {
 import { createTwinTownLink, createTwinTownMatch, summarizeTwinTown } from '../assets/twin-towns.js';
 import { selectTownCreatorFields, summarizeTownCreator } from '../assets/town-creator.js';
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from '../assets/town-growth.js';
+import {
+  REPO_PORTAL_LIMITS,
+  createRepoOwnerTownUrl,
+  createRepoPortalUrl,
+  parseRepoPortalInput,
+  projectPublicRepo,
+  projectPublicRepos,
+  repoPortalLatencyBucket,
+  resolveRepoPortalRequest
+} from '../assets/repo-portal.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HTML = readFileSync(join(ROOT, 'index.html'), 'utf8');
 const README_EN = readFileSync(join(ROOT, 'README.md'), 'utf8');
 const README_KO = readFileSync(join(ROOT, 'README.ko.md'), 'utf8');
+const AGENTS_GUIDE = readFileSync(join(ROOT, 'AGENTS.md'), 'utf8');
+const CHANGELOG = readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8');
+const DOMAIN_MODEL = readFileSync(join(ROOT, 'docs/domain-model.md'), 'utf8');
+const KNOWN_LIMITATIONS = readFileSync(join(ROOT, 'docs/known-limitations.md'), 'utf8');
+const REPO_PORTAL_GUIDE = readFileSync(join(ROOT, 'docs/repo-portal-change-guide.md'), 'utf8');
+const SHARE_LINKS = readFileSync(join(ROOT, 'examples/share-links.md'), 'utf8');
+const MANIFEST = readFileSync(join(ROOT, 'repolis.yaml'), 'utf8');
+const LLMS_INDEX = readFileSync(join(ROOT, 'llms.txt'), 'utf8');
 const DEMO_EN = readFileSync(join(ROOT, 'assets/demo.gif'));
 const DEMO_KO = readFileSync(join(ROOT, 'assets/demo.ko.gif'));
 const LAUNCH_GIF_EN = readFileSync(join(ROOT, 'assets/launch.gif'));
@@ -61,6 +79,7 @@ const PUBLIC_TOWN_PROOF_SRC = readFileSync(join(ROOT, 'assets/public-town-proof.
 const TWIN_TOWNS_SRC = readFileSync(join(ROOT, 'assets/twin-towns.js'), 'utf8');
 const TOWN_CREATOR_SRC = readFileSync(join(ROOT, 'assets/town-creator.js'), 'utf8');
 const TOWN_GROWTH_SRC = readFileSync(join(ROOT, 'assets/town-growth.js'), 'utf8');
+const REPO_PORTAL_SRC = readFileSync(join(ROOT, 'assets/repo-portal.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -131,7 +150,8 @@ ok(/border\s*:\s*2px/i.test(introTour), '#introTour keeps a visible 2px border')
 
 group('Launch Kit — personal preview + fork-safe runtime + PAT-optional refresh');
 ok(/id="introLaunchForm"/.test(HTML) && /id="introUser"/.test(HTML) && /data-i18n="introLaunchGo"/.test(HTML), 'intro contains the bilingual username launchpad');
-ok(/form\.onsubmit=e=>[\s\S]*?GH_LOGIN_RE\.test\(user\)[\s\S]*?\?user='\+encodeURIComponent\(user\)/.test(HTML), 'launchpad validates a GitHub login and reuses the established public-town URL');
+ok(/form\.onsubmit=e=>[\s\S]*?parseRepoPortalInput\(input\.value\)[\s\S]*?target\.kind==='repo'[\s\S]*?createRepoPortalUrl\(target,location\.href\)[\s\S]*?\?user='\+encodeURIComponent\(user\)/.test(HTML),
+  'launchpad resolves usernames and repo targets while preserving the established public-town URL');
 ok(/new URLSearchParams\(location\.search\)\.has\('launch'\)/.test(HTML), '?launch=1 focuses the personal preview field');
 ok((HTML.match(/introLaunchLabel:/g)||[]).length===2 && (HTML.match(/introLaunchInvalid:/g)||[]).length===2, 'launchpad labels and errors are bilingual');
 const townProof = summarizePublicTown('Octo-Cat', [
@@ -168,7 +188,7 @@ ok(/introProfileStatus\.textContent=introProfileResult\?t\(introProfileResult\.k
 ok(/\.introProofActions \{[^}]*display: flex[^}]*flex-wrap: wrap/.test(HTML)
   && /\.introProofActions button \{[^}]*flex: 1 1 150px[^}]*min-height: 44px/.test(HTML), 'the ready-state actions stay stable, touch-sized, and wrap instead of overflowing on mobile');
 ok(/document\.getElementById\('startBtn'\)\.onclick=[\s\S]*?showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/.test(HTML)
-  && /if\(!rb\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
+  && /if\(!rb&&!_reqFocus\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
   && (HTML.match(/showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/g)||[]).length===1,
   'a public-town arrival toast waits for actual entry and cannot cover the first-screen proof');
 ok(/Put this town on my GitHub profile/.test(README_EN) && /GitHub 프로필에 마을 붙이기/.test(README_KO), 'EN/KO adoption tables surface the same profile portal at the moment the preview is ready');
@@ -204,6 +224,172 @@ ok(/GTM_DIR=data\/towns\/\$REPO_OWNER/.test(REFRESH_WORKFLOW)
 ok(/\/users\/\{OWNER\}\/repos\?per_page=100&type=owner/.test(REPO_BUILDER)
   &&/Public owner endpoint works with the built-in Actions token/.test(REPO_BUILDER), 'builder lists public owner repos without requiring an authenticated user endpoint');
 ok(/Path\("data"\) \/ "towns" \/ OWNER/.test(REPO_BUILDER), 'manual non-upstream builds default to an owner-scoped traffic root');
+
+group('Repo Portal — one repository becomes the first shareable destination');
+const portalUser=parseRepoPortalInput('@Octo-Cat');
+const portalSlug=parseRepoPortalInput('Octo-Cat/hello-world.git/');
+const portalUrl=parseRepoPortalInput('https://github.com/Octo-Cat/hello-world.git/');
+const portalBareUrl=parseRepoPortalInput('github.com/Octo-Cat/hello-world');
+ok(portalUser.ok&&portalUser.kind==='user'&&portalUser.user==='Octo-Cat', 'parser keeps the established username grammar');
+ok(portalSlug.ok&&portalSlug.kind==='repo'&&portalSlug.slug==='Octo-Cat/hello-world'
+  && portalUrl.ok&&portalUrl.slug===portalSlug.slug&&portalBareUrl.ok&&portalBareUrl.slug===portalSlug.slug,
+  'owner/repo, GitHub root URLs, trailing slashes, and .git normalize to one target');
+[
+  'https://gitlab.com/octo/repo',
+  'https://github.com/octo/repo/issues',
+  'https://github.com/octo/repo?tab=readme',
+  'octo/../repo',
+  'octo/%2e%2e/repo',
+  'octo/repo?user=other',
+  'octo/repo\u0000',
+  'octo/repo/extra'
+].forEach(value=>ok(!parseRepoPortalInput(value).ok,`unsafe or non-root target fails closed: ${JSON.stringify(value)}`));
+const portalCanonical=createRepoPortalUrl(portalSlug,'https://example.test/Repolis/?user=other&twin=friend&growth=2020#repo=old');
+ok(portalCanonical==='https://example.test/Repolis/?repo=Octo-Cat/hello-world&ref=repo-portal',
+  'canonical Portal URL strips town, twin, growth, and hash state without hiding the owner/repo slash');
+ok(createRepoOwnerTownUrl(portalSlug,'https://example.test/Repolis/?repo=old','owner')
+    ==='https://example.test/Repolis/?user=Octo-Cat&focus=hello-world&ref=repo-portal'
+  && createRepoOwnerTownUrl('owner/repo','https://example.test/Repolis/','owner')
+    ==='https://example.test/Repolis/?focus=repo&ref=repo-portal',
+  'explicit expansion keeps the target focus and omits a redundant owner query');
+const portalWins=resolveRepoPortalRequest('?user=someone-else&repo=Octo-Cat/hello-world&twin=x&growth=2020','owner');
+const portalFocus=resolveRepoPortalRequest('?user=Octo-Cat&focus=hello-world&ref=repo-portal','owner');
+const portalBad=resolveRepoPortalRequest('?repo=Octo-Cat/../secret&user=someone','owner');
+const publicAtUser=resolveRepoPortalRequest('?user=@Octo-Cat','owner');
+ok(portalWins.mode==='portal'&&portalWins.repoWins&&portalWins.target.slug==='Octo-Cat/hello-world',
+  'repo is the single source of truth when user and legacy feature parameters conflict');
+ok(portalFocus.mode==='public'&&portalFocus.focus?.slug==='Octo-Cat/hello-world',
+  'owner-town expansion carries one validated repo focus without staying in target-first mode');
+ok(portalBad.mode==='portal'&&!portalBad.target&&!!portalBad.error, 'an invalid repo query stays an explicit Portal error instead of falling through to user mode');
+ok(publicAtUser.mode==='public'&&/const _reqUser = \(_QUERY\.get\('user'\) \|\| ''\)\.trim\(\)\.replace\(\/\^@\+\/,''\)/.test(HTML),
+  'an @-prefixed public-town query uses the same cleaned username for routing and the GitHub fetch');
+
+const portalRaw={
+  name:'hello-world',full_name:'Octo-Cat/hello-world',owner:{login:'Octo-Cat'},private:false,disabled:false,
+  description:'A public fixture',language:'JavaScript',topics:['demo','threejs'],homepage:'https://example.test/',
+  stargazers_count:12,forks_count:3,fork:false,size:44,open_issues_count:2,license:{spdx_id:'MIT'},
+  archived:false,default_branch:'main',created_at:'2020-01-02T00:00:00Z',pushed_at:'2026-08-19T00:00:00Z',
+  updated_at:'2026-08-19T00:00:00Z',email:'private@example.test',subscribers_count:999,watchers_count:999
+};
+const portalProjection=projectPublicRepo(portalRaw,'Octo-Cat',Date.parse('2026-08-20T00:00:00Z'));
+ok(portalProjection.repo==='hello-world'&&portalProjection.stars===12&&portalProjection.forks===3
+  &&portalProjection.trafficKnown===false&&portalProjection.visitors===null&&portalProjection.views===null&&portalProjection.clones===null,
+  'public projection keeps GitHub facts and represents unavailable traffic as unknown, never synthetic zero');
+ok(!('email' in portalProjection)&&!('subscribers_count' in portalProjection)&&!('watchers_count' in portalProjection)
+  &&projectPublicRepo({...portalRaw,private:true},'Octo-Cat')===null
+  &&projectPublicRepo({...portalRaw,owner:{login:'Other'}},'Octo-Cat')===null,
+  'projection allowlists rendered fields and rejects private or owner-mismatched responses');
+const portalRanked=projectPublicRepos([
+  {...portalRaw,name:'quiet',full_name:'Octo-Cat/quiet',stargazers_count:0,forks_count:0},
+  portalRaw
+],'Octo-Cat',Date.parse('2026-08-20T00:00:00Z'));
+ok(portalRanked.map(repo=>repo.repo).join(',')==='hello-world,quiet'&&portalRanked[0].rank===0&&portalRanked[1].rank===1,
+  'public projection ranks the same allowlisted signals deterministically');
+ok(repoPortalLatencyBucket(999)==='under-1s'&&repoPortalLatencyBucket(1000)==='1-3s'
+  &&repoPortalLatencyBucket(3000)==='3-10s'&&repoPortalLatencyBucket(10000)==='10s-plus',
+  'funnel latency uses four coarse buckets rather than exact request timing');
+
+const portalLoader=(HTML.match(/let _ownerSnapshotPromise=null;[\s\S]*?(?=\ntrack\('page_load'\);)/)||[''])[0];
+const portalTargetLoader=(portalLoader.match(/async function _loadRepoPortalTarget\(target\)\{[\s\S]*?\n\}/)||[''])[0];
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v1'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
+  'the zero-build runtime imports one small dedicated Portal module');
+ok(!/document|window|localStorage|sessionStorage|fetch\(|Math\.random|THREE/.test(REPO_PORTAL_SRC),
+  'parser, canonicalizer, projection, and link builders stay pure and browser-independent');
+ok(REPO_PORTAL_LIMITS.cacheTtlMs===15*60*1000&&REPO_PORTAL_LIMITS.cacheMaxBytes===512*1024&&REPO_PORTAL_LIMITS.cacheMaxEntries===30,
+  'public repo cache is fixed at 15 minutes, 512 KiB, and 30 LRU entries');
+ok(/_ownerRepos\(await _ownerSnapshot\(\)\)\.find/.test(portalTargetLoader)
+  &&portalTargetLoader.indexOf('_ownerSnapshot')<portalTargetLoader.indexOf('_repoPortalCacheLookup')
+  &&portalTargetLoader.indexOf('_repoPortalCacheLookup')<portalTargetLoader.indexOf("fetch('https://api.github.com/repos/"),
+  'target loading checks the local owner snapshot, then fresh cache, then one exact repo endpoint');
+ok((portalTargetLoader.match(/fetch\(/g)||[]).length===1
+  &&/if\(!res\.ok\)\{[\s\S]*?if\(cached\.stale\) return \{repo:cached\.stale,source:'repo-stale-cache',result:'stale'\}/.test(portalTargetLoader)
+  &&!/retry|setTimeout/.test(portalTargetLoader),
+  'the target path makes one GitHub request, never retries 403/429, and labels stale recovery');
+ok(/while\(bytes>REPO_PORTAL_LIMITS\.cacheMaxBytes&&cache\.order\.length>1\)/.test(portalLoader)
+  &&/cache\.order=\[key,\.\.\.cache\.order\.filter/.test(portalLoader)
+  &&/slice\(0,REPO_PORTAL_LIMITS\.cacheMaxEntries\)/.test(portalLoader),
+  'cache writes enforce byte and entry bounds while touching the latest target first');
+ok(/if\(!repoPortalTarget\) repoPortalResult=\{repo:null/.test(HTML)
+  &&/else repoPortalResult=await _loadRepoPortalTarget\(repoPortalTarget\)/.test(HTML),
+  'invalid repo queries perform no GitHub target request');
+ok(/if\(repoPortalResult\.repo\)\{ REPOS=\[repoPortalResult\.repo\]/.test(HTML)
+  &&/repoPortalFallback=true;[\s\S]*?REPOS=_ownerRepos\(await _ownerSnapshot\(\)\); cityMode='owner'/.test(HTML),
+  'success builds one target first while failure preserves the existing owner town');
+ok(/return projectPublicRepos\(raw,user,Date\.now\(\)\)/.test(HTML)
+  &&!/derived "liveliness"|derived → yard size|never a real clone count/.test(HTML)
+  &&/if\(repo\.trafficKnown===false\)\{[\s\S]*?starSignal[\s\S]*?forkSignal/.test(HTML),
+  'all public towns share truthful unknown traffic and map only stars, forks, and recency to architecture');
+ok(/REPOS\.every\(repo=>repo\.trafficKnown===false\)[\s\S]*?publicTrafficUnavailable/.test(HTML)
+  &&/repo\.trafficKnown===false\?`★\$\{repo\.stars\}/.test(HTML),
+  'search answers and repo facts never print unavailable traffic as observed zero');
+ok(/const freshnessTrackable=cityMode!=='portal'&&REPOS\.length>0&&!cityError/.test(HTML)
+  &&/if\(cityMode==='portal'\)\{ course=\{date,town,v:COURSE_V,items:\[\],completed:\[\],rewarded:false,available:false\}; return course; \}/.test(HTML),
+  'target-only visits cannot overwrite the owner Town Gazette baseline or Village Chronicle progress');
+
+ok(/id="introUser"[\s\S]*?maxlength="320"/.test(HTML)&&/id="stationInput"[\s\S]*?maxlength="320"/.test(HTML)
+  &&/data-i18n-aria="repoTargetAria"/.test(HTML),
+  'intro and Station accept the full target grammar through labelled bounded text fields');
+ok(/target=parseRepoPortalInput\(input\.value\)/.test(HTML)
+  &&/const target=parseRepoPortalInput\(String\(value\|\|''\)\)/.test(HTML)
+  &&/createRepoPortalUrl\(target,location\.href\)/.test(HTML),
+  'both entry surfaces use the same strict resolver and canonical link builder');
+ok(/const portalRepo=cityMode==='portal'[\s\S]*?introPortalReady[\s\S]*?introPortalStats/.test(HTML)
+  &&/introProofActions\.hidden=portalReady/.test(HTML)&&/introTourBtn\.hidden=portalReady/.test(HTML),
+  'a loaded target replaces generic actions with one concise repo proof and one exhibition CTA');
+ok(/if\(cityMode==='portal'&&repoPortalTarget\)[\s\S]*?enterRepositoryAtelier\(repo\)/.test(HTML)
+  &&/else if\(_reqFocus\)[\s\S]*?enterRepositoryAtelier\(repo\)/.test(HTML),
+  'shared targets and expanded owner towns arrive at the exact Atelier after one entry click');
+ok(/if\(!rb&&!_reqFocus\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
+  &&/if\(cityMode!=='portal'&&!_reqFocus&&REPOS\.length\)/.test(HTML),
+  'target arrivals suppress the generic public-town toast, Gazette, and Chronicle until after the focused Aha');
+ok(/id="atelierPortalActions" hidden role="group"[\s\S]*?id="atelierPortalCopy"[\s\S]*?id="atelierPortalGithub"[\s\S]*?id="atelierPortalExplore"/.test(HTML)
+  &&/#atelierPortalActions button, #atelierPortalActions a \{[\s\S]*?min-height:40px/.test(HTML)
+  &&/@media \(max-width: 520px\)[\s\S]*?#atelierPortalActions button, #atelierPortalActions a \{[^}]*min-height:44px/.test(HTML),
+  'Atelier exposes copy, GitHub, and full-town actions with desktop and mobile touch targets');
+ok(/createRepoOwnerTownUrl\(target,location\.href,OWNER\)/.test(HTML)
+  &&/_copyPostcardText\(createRepoPortalUrl\(target,_postcardPublishedBase\(\)\)\)/.test(HTML),
+  'Atelier can copy the canonical address or explicitly expand into the existing owner-town loader');
+ok(/if\(cityMode==='portal'&&repoPortalTarget\) return createRepoPortalUrl\(repoPortalTarget,base\)/.test(HTML),
+  'Postcard copy-link keeps the canonical target without composing postcard, growth, or twin state');
+ok(/atelierPortalExplore\.hidden=cityMode!=='portal'/.test(HTML)
+  &&/#atelierPortalActions \[hidden\] \{ display:none; \}/.test(HTML),
+  'full owner towns hide the now-redundant expansion action while keeping copy and GitHub');
+['introSubPortal','introPortalReady','introPortalStats','enterRepoPortal','portalSourceLocal','portalSourceApi',
+  'portalSourceCache','portalSourceStale','repoTargetAria','modePortalLabel','repoPortalOf','trainDepartRepo',
+  'fetchingRepo','portalInvalidTitle','portalInvalidMsg','portalNotFoundMsg','portalRateMsg','portalNetMsg',
+  'portalContinue','portalActionsAria','portalCopy','portalCopied','portalCopyFailed','portalExplore',
+  'atelierTrafficUnavailable','publicTrafficUnavailable']
+  .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Repo Portal key ${key} is bilingual`));
+ok(/id="introPublicProof" hidden role="status" aria-live="polite"/.test(HTML)
+  &&/id="introLaunchErr" role="alert"/.test(HTML)
+  &&/id="atelierPortalStatus" role="status" aria-live="polite" aria-atomic="true"/.test(HTML),
+  'loading proof, validation errors, and copy results use accessible live semantics');
+ok(/#intro \.langsel button\.active \{[^}]*color: #7a3f12/.test(HTML)
+  &&/#startBtn \{[^}]*color: #7a3f12/.test(HTML),
+  'active language and primary entry text retain AA contrast on white');
+ok(/const allowed=new Set\(\['ev','sessionId','ts','entry','device','lang','result','latency','channel'\]\)/.test(HTML)
+  &&/\['cityUser','targetUser','user','repo','owner','url','query','input','instanceId'\]/.test(HTML),
+  'Portal events remove identities, URLs, raw input, query text, and persistent instance IDs');
+['feature_seen','feature_started','aha_completed','share_created','github_repo_opened','project_star_click']
+  .forEach(event=>ok(HTML.includes(`'${event}'`),`privacy-safe Repo Portal event ${event} is instrumented`));
+ok(/repoPortalRequested&&!A\.ahaTracked[\s\S]*?trackPortal\('aha_completed'/.test(HTML)
+  &&/maybeStarNudge\('repo_portal_aha'\)/.test(HTML)&&/maybeStarNudge\('repo_portal_share'\)/.test(HTML),
+  'Aha fires only after the target room is inside, then reuses the earned Star invitation after exit or share');
+ok(/#atelierPortalActions \{[\s\S]*?pointer-events:auto/.test(HTML)
+  &&/#atelierPortalActions\[hidden\] \{ display:none; \}/.test(HTML)
+  &&/body\.atelier-chat-open #atelierPortalActions \{ display:none !important; \}/.test(HTML),
+  'Portal actions remain operable without overlapping the in-room chat');
+ok(/A repository can be the front door/.test(README_EN)&&/레포 하나가 입구가 됩니다/.test(README_KO)
+  &&/repo=mrdoob\/three\.js&ref=repo-portal/.test(SHARE_LINKS),
+  'EN/KO product docs and copy-ready examples expose the same repository-first loop');
+ok(/This is the product change most likely to improve Star acquisition/.test(REPO_PORTAL_GUIDE)
+  &&/trafficKnown: false/.test(REPO_PORTAL_GUIDE)&&/512 KiB/.test(REPO_PORTAL_GUIDE)
+  &&/These events may include only/.test(REPO_PORTAL_GUIDE),
+  'the change guide records the Star rationale, URL/data/cache boundary, and privacy allowlist');
+ok(/## 11\. Repo Portal/.test(DOMAIN_MODEL)&&/Public API modes do not have traffic/.test(KNOWN_LIMITATIONS)
+  &&/assets\/repo-portal\.js/.test(AGENTS_GUIDE)&&/id: repo-portal/.test(MANIFEST)
+  &&/Repo Portal: `\?repo=owner\/repo/.test(LLMS_INDEX)&&/\[1\.87\.0\]/.test(CHANGELOG),
+  'domain, limitations, agent guide, manifest, LLM index, and changelog stay in sync');
 
 group('Twin Towns — recipient-specific, reversible public-town referrals');
 const twinLeft = [
@@ -245,8 +431,9 @@ ok(/id="twinModal" role="dialog" aria-modal="true" aria-labelledby="twinTitle" a
   && /id="twinResult" hidden aria-live="polite" aria-atomic="true"/.test(HTML), 'comparison state is exposed as a labelled modal with polite live results');
 ok(/id="introCompare" type="button" data-i18n="introCompare"/.test(HTML)
   && /id="twinMenuBtn" type="button"/.test(HTML), 'Twin Towns is discoverable after personal proof and from the in-city menu');
-ok(/const _reqTwin = \(new URLSearchParams\(location\.search\)\.get\('twin'\)/.test(HTML)
-  && /setTimeout\(\(\)=>openTwinTowns\('link',_reqTwin\),120\)/.test(twinBlock), 'a shared twin parameter opens the recipient-specific comparison automatically');
+ok(/const _reqTwin = \(_QUERY\.get\('twin'\)/.test(HTML)
+  && /cityMode!=='portal'[\s\S]*?setTimeout\(\(\)=>openTwinTowns\('link',_reqTwin\),120\)/.test(twinBlock),
+  'a shared twin parameter opens its comparison automatically unless a repo target owns the route');
 ok(/const currentLoad=cityMode==='owner'\?_loadPublicCity\(currentUser\)/.test(twinBlock)
   && /Promise\.all\(\[currentLoad,_loadPublicCity\(user\)\]\)/.test(twinBlock)
   && /createTwinTownMatch\(currentUser,leftRepos,user,loaded\.repos\)/.test(twinBlock)
@@ -480,7 +667,7 @@ ok(/Your repository history becomes a moving city story/.test(README_EN)
 const runtimeLocalFiles = [
   'index.html','repolis.config.js','scholars.js','repos.json','assets/contribution-library.json',
   'assets/world-tree/createRepolisHero.js','assets/camera-obstruction.js','assets/canal-ferry.js',
-  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js',
+  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js',
   'council/council.config.json','council/engine.js','council/fixtures.js','council/guards.js','council/live.js'
 ];
 const runtimeLocalBytes = runtimeLocalFiles.reduce((sum,file)=>sum+readFileSync(join(ROOT,file)).length,0);
@@ -492,7 +679,7 @@ ok((HTML.match(/starNudge:'/g)||[]).length===2 && (HTML.match(/starNudgeGo:'/g)|
 ok(/if\(passport\.repos\.length>=3\) maybeStarNudge\('repos_visited'\)/.test(HTML)
   &&/if\(cityMode==='public'\)\{[\s\S]*?maybeStarNudge\('personal_town'\)/.test(HTML), 'the invitation is earned: three explored repo houses, or time spent in a self-built town');
 ok(/if\(_starNudgeShown\|\|_starNudgeSeen\(\)\) return false/.test(HTML)
-  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
+  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\|\|repositoryAtelierActive\(\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
   &&/function flushStarNudge\(\)/.test(HTML)
   &&/clearRepoHash\(\); flushStarNudge\(\);/.test(HTML)
   &&/localStorage\.setItem\(STAR_NUDGE_KEY,how\)/.test(HTML), 'it shows at most once per browser, waits out a modal or the tour, and returns when the visitor steps back out');
@@ -1105,21 +1292,32 @@ ok(atelierSrc.length>0, 'atelier runtime is a bounded, extractable integration b
 ok(/id="atelierBtn"/.test(HTML) && /class="btn atelier"/.test(HTML)
   && /class="btn gh"[\s\S]*?target="_blank" rel="noopener"/.test(HTML), 'repo card adds a clear room entry command without removing quick GitHub access');
 ok((HTML.match(/atelierEnter:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierExit:\s*['"]/g)||[]).length===2
-  && (HTML.match(/atelierAsk:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierWhy:\s*['"]/g)||[]).length===2, 'atelier card, exit, and terminal copy is bilingual');
+  && (HTML.match(/atelierAsk:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierWhy:\s*['"]/g)||[]).length===2
+  && (HTML.match(/atelierSignals:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierRoomHint:\s*['"]/g)||[]).length===2
+  && (HTML.match(/atelierChatTitle:\s*['"]/g)||[]).length===2, 'atelier card, exhibits, chat, exit, and terminal copy is bilingual');
 ok(/const REPOSITORY_ATELIER_LAYER=6/.test(atelierSrc) && /new THREE\.Scene\(\)/.test(atelierCreateSrc)
   && /renderer\.render\(A\.scene,camera\)/.test(atelierSrc), 'interior uses a dedicated scene plus camera layer instead of drawing the town behind it');
 ok(/if\(REPOSITORY_ATELIER&&REPOSITORY_ATELIER\.created\) return REPOSITORY_ATELIER/.test(atelierCreateSrc)
   && /A\.created=true; A\.createCount\+\+/.test(atelierCreateSrc), 'the single room is lazy-created once');
-ok((atelierCreateSrc.match(/_atelierCanvas\(/g)||[]).length===2
+ok((atelierCreateSrc.match(/_atelierCanvas\(/g)||[]).length===3
   && /history=_atelierCanvas\([^,]+,[^,]+,'history'\)/.test(atelierCreateSrc)
-  && /actions=_atelierCanvas\([^,]+,[^,]+,'actions'\)/.test(atelierCreateSrc), 'the reusable room owns exactly two bounded canvas textures');
+  && /signals=_atelierCanvas\([^,]+,[^,]+,'signals'\)/.test(atelierCreateSrc)
+  && /actions=_atelierCanvas\([^,]+,[^,]+,'actions'\)/.test(atelierCreateSrc), 'the reusable room owns exactly three bounded data, signal, and action atlases');
 ok(/A\.resources=\S*\|\|\{geometries:new Set\(\),materials:new Set\(\),textures:new Set\(\)\}/.test(atelierCreateSrc)
   && /resources:\{rooms:A\.created\?1:0,geometries:/.test(atelierSrc), 'room geometry, material, and texture resources are explicitly counted');
 ok(!/new THREE\.(?:CanvasTexture|Texture|Material|Geometry)/.test(atelierBindSrc)
-  && /_drawRepositoryAtelierHistory\(canonical\); _drawRepositoryAtelierActions\(canonical\)/.test(atelierBindSrc)
+  && /_drawRepositoryAtelierHistory\(canonical\); _drawRepositoryAtelierSignals\(canonical\); _drawRepositoryAtelierActions\(canonical\)/.test(atelierBindSrc)
   && /A\.bindings=\{github:canonical\.repo,ask:canonical\.repo,why:canonical\.repo\}/.test(atelierBindSrc), 'repo switches redraw existing atlases and rebind all actions without allocating a second room');
 ok(/RepositoryCore/.test(atelierCreateSrc) && /AtelierHistoryWall/.test(atelierCreateSrc)
-  && /AtelierTerminals/.test(atelierCreateSrc), 'Repository Core, History/Data Wall, and action terminals are real 3D exhibits');
+  && /AtelierSignalsWall/.test(atelierCreateSrc) && /AtelierTerminals/.test(atelierCreateSrc),
+  'Repository Core, History/Data Wall, Signals Wall, and action terminals are real 3D exhibits');
+ok(/AtelierArchitecture/.test(atelierCreateSrc)&&/AtelierDataPath/.test(atelierCreateSrc)
+  &&/AtelierMetricPillars/.test(atelierCreateSrc)&&/AtelierMetricArtifacts/.test(atelierCreateSrc),
+  'ceiling frames, a curved data path, and three metric artifacts replace the sparse placeholder floor');
+ok(/model\.clone\(true\)/.test(atelierCreateSrc)&&/AtelierVisitor_CurrentChibi/.test(atelierCreateSrc)
+  &&/avatarCloneOf\(armL\)/.test(atelierCreateSrc)&&/avatarCloneOf\(legL\)/.test(atelierCreateSrc)
+  &&!/new THREE\.CapsuleGeometry\(\.32,\.64/.test(atelierCreateSrc),
+  'the Atelier reuses the current chibi avatar design and mapped limb animation instead of a primitive placeholder');
 ok(/canonical\.stars/.test(atelierBindSrc) && /canonical\._activity/.test(atelierBindSrc) && /canonical\.score/.test(atelierBindSrc)
   && /langColor[\s\S]*?zoneColor[\s\S]*?hash=_atelierHash\(canonical\.repo\)/.test(atelierBindSrc), 'core size, light, structure, language, district, and deterministic repo identity all bind from shipped data');
 ok(/repo\.desc\|\|t\('noDesc'\)/.test(atelierSrc) && /repo\.topics\|\|\[\]/.test(atelierSrc)
@@ -1127,10 +1325,37 @@ ok(/repo\.desc\|\|t\('noDesc'\)/.test(atelierSrc) && /repo\.topics\|\|\[\]/.test
   && /repo\.license/.test(atelierSrc) && /repo\.created/.test(atelierSrc) && /repo\.pushed/.test(atelierSrc)
   && /repo\.release_tag/.test(atelierSrc) && /repo\.visitors/.test(atelierSrc) && /repo\.views/.test(atelierSrc)
   && /repo\.clones/.test(atelierSrc), 'data wall covers identity, description, topics, repo metrics, dates, releases, and available traffic');
-ok(/const hasTraffic=repo\.tracked===true/.test(atelierSrc), 'the TRAFFIC section appears only for genuinely tracked owner data, never public-mode synthetic metrics');
+ok(/const hasTraffic=repo\.trafficKnown===true/.test(atelierSrc)
+  && /else \{ y\+=58;[\s\S]*?atelierTrafficUnavailable/.test(atelierSrc),
+  'the TRAFFIC section appears only for known owner traffic and explains the public-metadata boundary otherwise');
+ok(/function _drawRepositoryAtelierSignals\(repo\)/.test(atelierSrc)
+  &&/canonical\.stars/.test(atelierBindSrc)&&/canonical\.forks/.test(atelierBindSrc)&&/canonical\._activity/.test(atelierBindSrc)
+  &&/A\.metricSignals=metricSignals/.test(atelierBindSrc)&&/atelierSignalsNow/.test(atelierSrc),
+  'the Signals Wall and metric artifacts bind stars, forks, activity, lifecycle, language, and topics from current public data');
 ok(/A\.terminalKinds=\['github','ask','why'\]/.test(atelierCreateSrc)
   && /window\.open\(repo\.url,'_blank','noopener'\)/.test(atelierSrc)
-  && /askInChat\(q\)/.test(atelierSrc) && /cardWhyZone\(repo\)/.test(atelierSrc), 'three terminals reuse exact GitHub, Gitber, and deterministic district paths only on activation');
+  && /_openRepositoryAtelierChat\(kind,repo\)/.test(atelierSrc)
+  && !/exitRepositoryAtelier\(\{kind,repoKey:repo\.repo\}\)/.test(atelierSrc),
+  'GitHub remains external while Ask and Why open their exact flows without leaving the room');
+ok(/function _openRepositoryAtelierChat\(kind,repo\)/.test(atelierSrc)
+  && /kind==='why'[\s\S]*?_showCardWhyZone\(repo\)/.test(atelierSrc)
+  && /chatText\.value=question; sendChat\(\)/.test(atelierSrc)
+  && /A\.inRoomChat=true; A\.roomPanel=kind/.test(atelierSrc),
+  'in-room Gitber sends a real repo question and renders deterministic district context under Atelier ownership');
+ok(/#chat\.atelierChat/.test(HTML)&&/body\.atelier-chat-open #prompt/.test(HTML)
+  &&/atelierRoomHint/.test(HTML)&&/atelierChatTitle/.test(HTML)&&/atelierChatPh/.test(HTML),
+  'the room owns a dark responsive chat surface, hides conflicting prompts, and explains its completed interaction model');
+ok(/#chat\.atelierChat \.msg\.bot span\[style\*="#ab8a66"\] \{ color:#dbcba8 !important; \}/.test(HTML)
+  && /#chat\.atelierChat \.msg \.alt \{ color:#244d7b; background:#edf4ff; \}/.test(HTML),
+  'in-room metric text and alternative repo chips retain AA contrast on the dark chat surface');
+ok(/if\(repositoryAtelierChatActive\(\)\) _syncRepositoryAtelierChatChrome\(\); \}/.test(HTML)
+  &&/if\(repositoryAtelierChatActive\(\)\) _syncRepositoryAtelierChatChrome\(\);/.test(atelierSrc),
+  'live language switching redraws all three walls and restores the in-room chat title and placeholder');
+ok(/opts&&opts\.repo&&!repositoryAtelierActive\(\)/.test(HTML)
+  &&/opts&&opts\.handoff&&!repositoryAtelierActive\(\)/.test(HTML)
+  &&/function taxiTo\(repo\)\{ if\(repositoryAtelierActive\(\)\) return false/.test(HTML)
+  &&/function startScholarHandoff\(kind\)\{ if\(repositoryAtelierActive\(\)\) return false/.test(HTML),
+  'chat replies cannot start an exterior taxi ride or scholar handoff while the room owns interaction');
 ok(!/fetch\(|new WebSocket|groundedAsk|webllmAsk|proxyAsk|import\(/.test(atelierCreateSrc+atelierBindSrc), 'entering and rebinding the room has no network, model, CDN, or dynamic-import work');
 ok(!/track\('atelier_(?:enter|exit)'/.test(atelierSrc) && /track\('atelier_terminal'/.test(atelierSrc),
   'enter and exit emit no remote analytics; only an explicit terminal action may record an event');
@@ -1143,20 +1368,24 @@ ok(/playerPosition:player\.position\.clone\(\)/.test(atelierSrc)
   && /cameraPosition:camera\.position\.clone\(\)/.test(atelierSrc)
   && /cameraLayerMask:camera\.layers\.mask,camYaw,camPitch,camDist/.test(atelierSrc)
   && /navTarget,navVisible:navHolder\.visible/.test(atelierSrc)
-  && /sitting,ride,ferris,carousel,modalOpen/.test(atelierSrc), 'entry snapshot owns exact player, camera, navigation, seat, ride, and UI safety state');
+  && /sitting,ride,ferris,carousel,modalOpen/.test(atelierSrc)
+  && /introInert:document\.getElementById\('intro'\)\.inert/.test(atelierSrc),
+  'entry snapshot owns exact player, camera, navigation, seat, ride, and UI accessibility state');
 ok(/player\.position\.copy\(s\.playerPosition\)/.test(atelierSrc)
   && /camera\.position\.copy\(s\.cameraPosition\)/.test(atelierSrc)
   && /camYaw=s\.camYaw; camPitch=s\.camPitch; camDist=s\.camDist/.test(atelierSrc)
   && /navTarget=s\.navTarget; navHolder\.visible=s\.navVisible/.test(atelierSrc)
+  && /document\.getElementById\('intro'\)\.inert=s\.introInert/.test(atelierSrc)
   && /if\(!s\|\|s\.restored\) return/.test(atelierSrc), 'exit restore is exact and idempotent');
 ok(/_resetRepositoryAtelierInput\(\)/.test(atelierSrc) && /clearKeys\(\); stickVec=\{x:0,y:0\}/.test(atelierSrc)
   && /moveTid=null; lookTid=null/.test(atelierSrc), 'entry and exit clear keyboard and touch ownership so movement cannot stick');
 ok(/if\(e\.code==='Enter'&&e\.repeat\)\{ e\.preventDefault\(\); return; \}/.test(HTML), 'held Enter cannot repeatedly fire a room terminal');
 ok(/const isUiKeyTarget=e=>/.test(HTML) && /if\(isTyping\(\)\|\|isUiKeyTarget\(e\)\) return/.test(HTML)
   && /\^\(BUTTON\|A\|INPUT\|SELECT\|TEXTAREA\)\$/.test(HTML), 'focused native controls own Enter/Space without also firing a world action');
-ok(/if\(!repositoryAtelierActive\(\)&&!chatEl\.classList\.contains\('hidden'\)\) chatText\.focus\(\)/.test(HTML)
-  && /if\(!_drainQueuedChat\(\)&&!_resumePendingChatNpc\(\)&&!repositoryAtelierActive\(\)&&!chatEl\.classList\.contains\('hidden'\)\) chatText\.focus\(\)/.test(HTML)
-  && /if\(document\.activeElement===chatText\) chatText\.blur\(\)/.test(atelierSrc), 'hidden or in-flight chat cannot steal keyboard focus from the room');
+ok(/!repositoryAtelierActive\(\)\|\|repositoryAtelierChatActive\(\)/.test(HTML)
+  && /\(!repositoryAtelierActive\(\)\|\|repositoryAtelierChatActive\(\)\)&&!chatEl\.classList\.contains\('hidden'\)/.test(HTML)
+  && /if\(document\.activeElement===chatText\) chatText\.blur\(\)/.test(atelierSrc),
+  'only the explicit in-room chat may own keyboard focus while the room is active');
 ok(/if\(repositoryAtelierActive\(\)\)\{ REPOSITORY_ATELIER\.pendingHash=true; exitRepositoryAtelier\(\); return; \}/.test(HTML)
   && /pendingHash=A\.pendingHash/.test(atelierSrc) && /if\(pendingHash\)\{ A\.afterExit=null; const key=repoHashKey\(\),repo=repoByKey\(key\); if\(repo\) openCard\(repo\)/.test(atelierSrc),
   'repo hash changes exit the room and rebuild the requested card only after the exterior reveal');
@@ -1164,8 +1393,9 @@ ok(/if\(pendingHash\)\{ A\.afterExit=null;/.test(atelierSrc), 'explicit hash nav
 ok(/const CHAT_QUEUE_MAX=4,queuedChatQuestions=\[\]; let pendingChatNpc=null/.test(HTML)
   && /if\(busy\)\{ chatText\.value=''; _queueChatQuestion\(q,npc\); return; \}/.test(HTML)
   && /function _queueChatAction\(action\)/.test(HTML) && /_queueChatAction\(\{kind:'ask',q,npc\}\)/.test(HTML)
-  && /function _drainQueuedChat\(\)\{ if\(busy\|\|repositoryAtelierActive\(\)\|\|!queuedChatQuestions\.length\)/.test(HTML)
-  && /if\(!_drainQueuedChat\(\)&&!_resumePendingChatNpc\(\)&&!repositoryAtelierActive\(\)/.test(HTML), 'busy chat preserves a bounded question plus target NPC and switches only after the current turn finishes');
+  && /function _drainQueuedChat\(\)\{ if\(busy\|\|\(repositoryAtelierActive\(\)&&!repositoryAtelierChatActive\(\)\)\|\|!queuedChatQuestions\.length\)/.test(HTML)
+  && /function _resumePendingChatNpc\(\)\{ if\(busy\|\|\(repositoryAtelierActive\(\)&&!repositoryAtelierChatActive\(\)\)\|\|!pendingChatNpc\)/.test(HTML),
+  'busy chat preserves a bounded question and may drain only inside the explicitly opened Atelier chat');
 ok(/if\(busy&&activeNpc&&npc!==activeNpc\)\{ pendingChatNpc=npc;/.test(HTML)
   && /function _resumePendingChatNpc\(\)/.test(HTML), 'an in-flight scholar answer cannot leak into a newly selected Gitber thread');
 ok(/_queueChatAction\(\{kind:'why',repoKey:repo\.repo,npc:_taxiNpc\(\)\}\)/.test(HTML)
@@ -1191,9 +1421,16 @@ ok(/function _realtimeExteriorPose\(\)/.test(HTML)
 ok(/\(LOW_END\|\|IS_MOBILE\)\?1024:1536/.test(atelierCreateSrc) && /LOW_END\?2:3/.test(atelierBindSrc)
   && /A\.rods\.count=LOW_END\?4/.test(atelierBindSrc), 'LOW_END reduces atlas and core detail without removing any exhibit');
 ok(/webglcontextrestored'[\s\S]*?_repositoryAtelierContextRestored/.test(HTML)
-  && /A\.resources\.textures\.forEach\(texture=>\{ texture\.needsUpdate=true; \}\)/.test(atelierSrc), 'context restore marks both reusable atlases for re-upload');
+  && /A\.resources\.textures\.forEach\(texture=>\{ texture\.needsUpdate=true; \}\)/.test(atelierSrc), 'context restore marks all reusable atlases for re-upload');
 ok(/window\.__repositoryAtelier=/.test(atelierSrc) && /window\.__atelierEnter=/.test(atelierSrc)
-  && /window\.__atelierSelect=/.test(atelierSrc), 'short diagnostics expose active repo, state, layers, resources, render cost, bindings, and poses');
+  && /window\.__atelierSelect=/.test(atelierSrc)
+  && /inRoomChat:!!A\.inRoomChat,roomPanel:A\.roomPanel/.test(atelierSrc)
+  && /sharedAvatarDraws:A\.avatarDraws/.test(atelierSrc),
+  'short diagnostics expose active repo, room chat ownership, current avatar, exhibits, resources, render cost, bindings, and poses');
+ok(/one finished exhibition/.test(README_EN)&&/완성된 전시실/.test(README_KO)
+  &&/Ask Gitber[\s\S]*?without ejecting the visitor/.test(README_EN)
+  &&/깃버에게 이 레포 질문[\s\S]*?밖으로 내보내지 않고/.test(README_KO),
+  'both READMEs describe the completed room and in-room action ownership');
 const atelierHashSrc=(atelierSrc.match(/function _atelierHash\(value\)\{[^\n]+\}/)||[''])[0];
 if(atelierHashSrc){ const hash=new Function(`${atelierHashSrc}; return _atelierHash;`)();
   ok(hash('Repolis')===hash('Repolis') && hash('Repolis')!==hash('jenkins-dind'), 'repo style seed is stable across re-entry and differs across repos');
@@ -1235,7 +1472,8 @@ ok(/const FRESHNESS_KEY='repolisFreshness:v1', FRESHNESS_MAX_TOWNS=5/.test(HTML)
 ok(/function _freshTownKey\(\)\{ return \(cityMode==='owner'\?'owner:':'public:'\)\+String\(currentUser/.test(HTML), 'owner and public-user town baselines are independently scoped');
 ok(/freshnessStore\.order=\[freshnessTown\][\s\S]*?slice\(0,FRESHNESS_MAX_TOWNS\)/.test(HTML), 'snapshot LRU pruning is wired');
 ok(/cityError=\{status:0,reason:'data_load'\}/.test(HTML), 'owner repos.json failure becomes an explicit city load error');
-ok(/const freshnessTrackable=REPOS\.length>0&&!cityError/.test(HTML)&&/if\(!freshnessBaseline&&freshnessTrackable\)/.test(HTML), 'only a successful non-empty town load can diff or establish a baseline');
+ok(/const freshnessTrackable=cityMode!=='portal'&&REPOS\.length>0&&!cityError/.test(HTML)&&/if\(!freshnessBaseline&&freshnessTrackable\)/.test(HTML),
+  'only a successful non-empty full-town load can diff or establish a baseline');
 ok(/function hasFreshness\(\)\{ return !!\(freshnessTrackable&&/.test(HTML), 'failed/empty loads can never announce mass-removal news');
 ok(/function markFreshnessRead\(\)[\s\S]*?_freshSetBaseline\(freshnessBaseline\)[\s\S]*?town_gazette_read/.test(HTML), 'baseline advances only through explicit mark-read');
 ok(/id="freshBox"/.test(HTML)&&/function renderFreshness\(\)/.test(HTML)&&/function renderPassport\(\)\{ renderFreshness\(\); renderCourse\(\)/.test(HTML), 'Gazette renders above Chronicle inside the existing Passport');
@@ -1701,7 +1939,8 @@ ok((HTML.match(/if\(_maybeScholarHandoff\(q\)\) return;/g)||[]).length===2, 'sol
 const residentSaySrc=(HTML.match(/async function residentSay\(q\)\{[\s\S]*?\n\}/)||[''])[0];
 const groupSaySrc=(HTML.match(/async function groupSay\(q\)\{[\s\S]*?\n\}/)||[''])[0];
 ok([residentSaySrc,groupSaySrc].every(src=>src.indexOf('_maybeFarewell(q)')<src.indexOf('_maybeScholarHandoff(q)')&&src.indexOf('_maybeScholarHandoff(q)')<src.indexOf('_maybeInvite(q)')), 'specialist handoff wins before resident-name invites (MIRA scholar vs Mira resident collision)');
-ok(/if\(opts&&opts\.handoff\)[\s\S]*?startScholarHandoff\(kind\)/.test(HTML), 'chat messages can render a specialist handoff action');
+ok(/if\(opts&&opts\.handoff&&!repositoryAtelierActive\(\)\)[\s\S]*?startScholarHandoff\(kind\)/.test(HTML),
+  'exterior chat messages can render a specialist handoff while Atelier chat keeps room ownership');
 const startHandoffSrc=(HTML.match(/function startScholarHandoff\(kind\)\{[\s\S]*?return true; \}/)||[''])[0];
 ok(/setNav\(\{label:sc\.star[\s\S]*?_pos:n\.group\.position/.test(startHandoffSrc), 'handoff compass follows the scholar live position');
 ok(!/taxiTo\(/.test(startHandoffSrc) && /closeChat\(\)/.test(startHandoffSrc), 'handoff closes resident chat but never taxis or auto-opens the scholar');
@@ -1861,7 +2100,7 @@ ok(/returning:v\.n>1/.test(HTML) && /longAway:\(v\.n>1 && awayDays>=7\)/.test(HT
 ok(/if\(VISITOR\.returning && Math\.random\(\)<0\.6\)\{/.test(npcBlock) && /VISITOR\.longAway \?/.test(npcBlock), 'a returning visitor gets a warmer resident hello ~60% of the time — with an extra-warm variant after a long absence');
 ok(/function _welcomeBackLine\(\)\{/.test(npcBlock) && /n>=5\?/.test(npcBlock) && /visit #\$\{n\}/.test(npcBlock), 'a one-time welcome-back toast greets a returning visitor (with a little milestone note from the 5th visit)');
 ok(/const rb=VISITOR\.returning, news=hasFreshness\(\)/.test(HTML)
-  && /if\(rb\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML)
+  && /if\(rb&&cityMode!=='portal'&&!_reqFocus\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML)
   && /const c=getCourse\(\), delay=rb\?4700:/.test(HTML), 'entering town shows welcome-back first, then a single deferred Gazette/Chronicle toast');
 ok(/window\.__visitor=\(\)=>/.test(HTML) && /window\.__setVisitor=\(o\)=>/.test(HTML) && /window\.__welcomeBack=\(\)=>/.test(HTML), '?dbg __visitor/__setVisitor/__welcomeBack read + preview the returning-visitor warmth without a reload');
 
