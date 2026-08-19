@@ -83,7 +83,7 @@ MODEL_PRICE_OUT_PER_1M_USD = "4.5"
 # Unknown deployments or malformed tables fail closed. max_completion_tokens uses the same bound.
 NPC_MODEL_PRICING_JSON = '{"gpt-5.4-mini":{"inputPer1MUsd":0.75,"cachedInputPer1MUsd":0.075,"outputPer1MUsd":4.5,"maxInputTokens":272000,"maxOutputTokens":128000}}'
 NPC_MAX_COMPLETION_TOKENS = "120"
-NPC_BUDGET_TIMEOUT_MS = "1500"
+NPC_BUDGET_TIMEOUT_MS = "3000"
 NPC_DAILY_ATTEMPT_MAX = "5000"
 NPC_RESERVATION_LEASE_MS = "60000"
 # Deployment ceilings permit the owner-only KV switches to turn resident AI on.

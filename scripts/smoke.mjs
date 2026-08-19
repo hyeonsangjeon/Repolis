@@ -1526,12 +1526,19 @@ if (npcResolverSource) {
   'live toggle OFF ignores KV and reports the env-gated effective state');
 }
 ok(/requested: flags\.requested/.test(WORKER)
+  && /controlEffective: status\.controlEffective/.test(WORKER)
+  && /runtimeAvailable: status\.runtimeAvailable/.test(WORKER)
+  && /budgetReason: status\.budgetReason/.test(WORKER)
   && /hardAiEnabled: flags\.hardAiEnabled/.test(WORKER)
   && /hardAmbientEnabled: flags\.hardAmbientEnabled/.test(WORKER)
   && /hardPlayerChatEnabled: flags\.hardPlayerChatEnabled/.test(WORKER)
   && /pending,/.test(WORKER)
   && /canEnable,/.test(WORKER),
   'npcConfig exposes requested/effective/pending and per-feature deployment ceilings');
+ok(/NPC_BUDGET_TIMEOUT_MS = "3000"/.test(TAXI_WRANGLER)
+  && /npc_budget_governor_overloaded/.test(NPC_GOVERNOR)
+  && /waitBeforeGovernorRetry/.test(NPC_GOVERNOR),
+  'Governor uses a 3-second deadline, bounded retry backoff, and an overload no-retry lane');
 ok(/runBudgetedNpcCall\(\{[\s\S]*?providerCall: \(plan\) => npcModelCall\(env, role, plan, aiEnabled\)/.test(WORKER),
   'model call is reachable only through the durable reserve/settle lifecycle');
 ok(/"npc_budget_exhausted"/.test(WORKER), 'over-budget returns npc_budget_exhausted (client falls back to scripted)');
