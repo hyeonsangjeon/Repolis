@@ -11,6 +11,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | Entity | Where it lives | Notes |
 |---|---|---|
 | **Repo** | one object in `repos.json` | The unit of the world — becomes one house. |
+| **Repo Portal target** | one allowlisted public repo projection | A target-first house and Atelier reached through `?repo=owner/repo`. |
 | **City / Town** | derived in `index.html` at load | The whole 3D scene built from the `repos.json` array. |
 | **District** | deterministic `zoneOf(repo)` result | A topic-shaped neighborhood with a hub, board, map destination, and progress. |
 | **Resident** | resident roster in `index.html` | A townsperson with a residential home, district work anchor, mood, relationships, and a cherished haunt. |
@@ -40,6 +41,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | `views` | number | 📈 → **garden** / fence size. |
 | `visitors` | number | 👁 unique visitors → building **height**. |
 | `clones` | number | ⬇ → **ornamentation** (banners, gold trim). |
+| `trafficKnown` | boolean | `true` for the generated owner snapshot; `false` for public API projections where views/visitors/clones stay `null`. |
 | `size` | number | Repo size (KB). |
 | `open_issues` | number | Shown as a live badge on the repo card. |
 | `license` | string | Shown as a badge. |
@@ -80,6 +82,11 @@ the body/roof silhouette so decorative ground geometry cannot pollute the frozen
 
 Counts are **cumulative since move-in day** (`first_seen`/`tracked`), because GitHub's traffic API only
 keeps a rolling 14-day window — a daily collector accumulates the lifetime totals offline.
+
+That mapping applies only when `trafficKnown` is true. GitHub's unauthenticated public repository endpoints
+do not expose visitors, views, or clones. Repo Portal and `?user=` projections leave those fields `null`;
+their architecture uses stars, forks, and update recency directly. Cards, search answers, and Atelier walls
+state the boundary instead of presenting derived values as observed traffic.
 
 ---
 
@@ -152,8 +159,11 @@ Three modes: **Local** (default, keyless, instant) · **WebLLM** (on-device WebG
 |---|---|---|
 | **Owner town** | bare URL | The generated owner snapshot from `repos.json`. The taxi + scholars are fully live. |
 | **Public town** | `?user=<login>` | Rebuilds the town from any public GitHub user's repos (cached in `localStorage`, stale-fallback). Cross-town taxi driving is disabled; a "go home" button returns to the owner city. |
+| **Repo Portal** | `?repo=<owner>/<repo>&ref=repo-portal` | Resolves one public repo first, shows a compact proof, then opens its Atelier after one entry click. |
+| **Expanded owner town** | `?user=<owner>&focus=<repo>&ref=repo-portal` | Loads the existing public-town catalog only after explicit expansion, merges the target when needed, and opens the same Atelier. |
 
-Public mode only activates for a **valid, non-owner** username; the bare URL always loads the owner city unchanged.
+Public mode only activates for a **valid, non-owner** username; the bare URL always loads the owner city
+unchanged. A valid `repo` query takes precedence over `user`, `twin`, `growth`, and repo-card hash state.
 
 ---
 
@@ -216,7 +226,61 @@ snapshots.
 
 ---
 
-## 11. Resident Agency — Shared Joy
+## 11. Repo Portal
+
+[`assets/repo-portal.js`](../assets/repo-portal.js) is the pure contract for username/repository parsing,
+query precedence, public repo projection, canonical share links, owner-town expansion links, and coarse
+latency buckets. It has no DOM, storage, network, Three.js, or random dependency.
+
+The runtime's target-first loader follows one bounded sequence:
+
+1. exact owner `repos.json` match;
+2. fresh 15-minute local cache;
+3. one unauthenticated `GET /repos/{owner}/{repo}`;
+4. explicitly labelled stale cache after failure;
+5. the existing owner town as a usable fallback.
+
+The Portal cache stores only projected public fields, uses LRU order, and is capped at 30 entries and 512
+KiB. A 403/429 is not retried. The target mode creates one normal repo object, so district classification,
+building construction, repo search, and Repository Atelier do not need a parallel rendering model.
+
+The intro and GitHub Station share the parser. A repository resolves to
+`?repo=owner/repo&ref=repo-portal`; entering hides unrelated proof actions and opens the bound Atelier. The
+Atelier can copy the same published address, open GitHub, or navigate to an explicit `?user=&focus=`
+expansion. Expansion is the only action that fetches the owner catalog before showing it.
+
+New Portal funnel events use a page-lifetime session ID and coarse enums only. They remove owner, repo, URL,
+raw input, query text, `cityUser`, and persistent instance ID before the optional analytics sink. See
+[`repo-portal-change-guide.md`](repo-portal-change-guide.md) for the full maintenance and QA contract.
+
+---
+
+## 12. Repository Atelier
+
+Every non-library repo card can enter one lazy-created dedicated Three.js scene. The room is reused rather
+than duplicated: three bounded canvas atlases redraw the History/Data, Impact/Signals, and Action walls, while
+the core shape, metric artifacts, instanced architecture, path, colors, and lighting rebind from the selected
+repo's current metadata. The visitor is a clone of the current Repolis chibi hierarchy with shared GPU
+geometry/materials, not a separate placeholder character.
+
+The room owns update, camera, input, and rendering until explicit exit; exterior simulation renders zero
+frames during that time. Entry snapshots the exact exterior player, camera, navigation, modal, chat, and tour
+state, and exit restores it idempotently.
+
+Terminal ownership is explicit:
+
+- **Open GitHub** is the only external action and opens a safe new tab.
+- **Ask Gitber about this repo** opens the existing Local/WebLLM/grounded chat as a dark in-room panel.
+- **Why this district?** renders the deterministic classifier explanation in the same panel.
+- Taxi rides, scholar handoffs, and repo recommendation ride buttons are unavailable while the room owns
+  interaction, so they cannot leak exterior state into the exhibition.
+
+Entering or rebinding performs no fetch, model call, dynamic import, or backend work. Only an explicit Ask
+turn may use the already selected Gitber mode.
+
+---
+
+## 13. Resident Agency — Shared Joy
 
 Shared Joy is a single session-local pair state in the resident social layer. When no stronger owner is
 active, a deterministic time-slice planner chooses two compatible idle residents, preferring named friends.
@@ -236,7 +300,7 @@ resident movement. The state is not persisted and makes no AI, MCP, network, ass
 
 ---
 
-## 12. Starlight Row — resident homes and routines
+## 14. Starlight Row — resident homes and routines
 
 Starlight Row is a fixed civic landmark at `(130, 130)`, outside the repository rings but inside the
 205-unit map and 215-unit player bounds. It contains one roster-bound cottage per resident. Shared instanced

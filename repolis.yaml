@@ -45,6 +45,7 @@ entrypoints:
   scholars: scholars.js
   world_tree: assets/world-tree/createRepolisHero.js
   town_growth: assets/town-growth.js
+  repo_portal: assets/repo-portal.js
   data_builder: scripts/build_repos.py
   launch_config: repolis.config.js
   library_builder: scripts/build-contribution-library.mjs
@@ -102,6 +103,13 @@ features:
     summary: Explorer Passport, district progress, daily Village Chronicle, and Repository Constellation Trail.
   - id: town-growth-replay
     summary: Public repo creation dates raise existing houses through a reversible, shareable year timeline without inventing historical metrics or adding render assets.
+  - id: repo-portal
+    summary: A canonical owner/repo link loads one public target before the owner catalog, opens its Atelier, and keeps unavailable traffic unknown.
+    url: "?repo=<owner>/<repo>&ref=repo-portal"
+    cache: "15 minutes, 30 entries, 512 KiB LRU"
+    cold_github_requests_before_aha: 1
+  - id: repository-atelier
+    summary: One reusable walkable exhibition rebinds repo history, current impact signals, the current chibi avatar, and in-room Gitber/district actions while restoring the exterior exactly.
   - id: village-chronicle
     summary: A deterministic town/day story connects one resident to their cherished haunt and a related repo or district.
   - id: town-gazette

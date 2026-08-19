@@ -33,6 +33,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`repos.json`** | Generated array of repo objects that build the current owner city. **Do not hand-edit.** | Never directly; regenerate (see below). |
 | **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
+| **`assets/repo-portal.js`** | Pure username/repository parser, route precedence, public projection, canonical Portal URL, and owner-town expansion link. | Changing `?repo=`, accepted GitHub inputs, public traffic truth, or target share links. |
 | **`assets/town-growth.js`** | Pure repo-creation timeline, year snapshot, and Growth Replay share-link logic. | Changing historical cutoffs, unknown-date policy, or `?growth=` links. |
 | **`assets/town-creator.js`** | Pure allowlisted public-profile + town-repo summary for Creator Hall. | Changing creator facts, badges, signature-repo ranking, or avatar safety. |
 | **`assets/twin-towns.js`** | Pure public-repo comparison and reversible Twin Towns link builder. | Changing the two-person referral bridge or its URL contract. |
@@ -141,9 +142,11 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | You want to… | Start here |
 |---|---|
 | Change how a repo becomes a building (height/size/ornaments) | `index.html` (city-build section) + score/rank in `scripts/build_repos.py`; model in [`docs/domain-model.md`](docs/domain-model.md). |
+| Change Repo Portal parsing, target-first loading, cache, expansion, or privacy events | `assets/repo-portal.js` + the repo data/intro/Station/Atelier blocks in `index.html` + `scripts/smoke.mjs`; preserve one repo request before Aha, `trafficKnown:false` for public API data, 15-minute/512 KiB LRU bounds, canonical `?repo=owner/repo&ref=repo-portal`, and [`docs/repo-portal-change-guide.md`](docs/repo-portal-change-guide.md). |
 | Change districts, Village Chronicle, passport, or exploration loops | `index.html` + the matching behavioral groups in `scripts/smoke.mjs`. |
 | Change Creator Hall profile facts, caching, or upstream Star handoff | `assets/town-creator.js` + the Creator Hall landmark/panel blocks in `index.html` + `scripts/smoke.mjs`; keep profile loading explicit-read and allowlisted. |
 | Change Town Growth Replay years, camera, reveal, share links, or era postcards | `assets/town-growth.js` + `/*TOWN_GROWTH_REPLAY*/` in `index.html` + the Growth Replay group in `scripts/smoke.mjs`; creation dates are historical, building metrics are current, and replay must restore camera/fog/sky/LOD exactly. |
+| Change Repository Atelier room, avatar, data walls, or action terminals | `/*REPOSITORY_ATELIER*/` in `index.html` + the Atelier group in `scripts/smoke.mjs`; preserve one lazy reusable room, three bounded canvas atlases, exact exterior restore, zero exterior renders inside, in-room Ask/Why ownership, and explicit-only exit/GitHub navigation. |
 | Change Twin Towns matching or two-person share links | `assets/twin-towns.js` + the Twin Towns block in `index.html` + `scripts/smoke.mjs`. |
 | Change Town Gazette / return-visit freshness | `/*FRESHNESS*/` + Passport render/start flow in `index.html`; keep snapshots local, bounded, per-town, and explicit-read only. |
 | Change resident homes, styles, gardens, routines, moods, friendships, haunts, or Shared Joy | The resident social layer + Starlight Row blocks in `index.html`; preserve the resident style map, 3 roof batches, 10/6 desktop/LOW_END detail-batch cap, 42-unit reserve, entrance gap, quarter colliders, home/work truth, owned porch seats, and social ownership guards. |
@@ -161,7 +164,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 A daily Action turns the owner's **public repos + committed traffic logs** into `repos.json`. `index.html`
 turns that array into metric-shaped buildings, topic districts, routes, maps, and exploration progress.
 Residents add named homes, home/work commutes, moods, friendships, haunts, Shared Joy excursions, gatherings, and festivals; landmarks include the
-Contribution Library, Chronopolis, Observatory, and imported procedural World Tree. Town Growth Replay turns public repo creation dates into a reversible, shareable city history without inventing historical metrics. Gitber/POLARIS and the
+Contribution Library, Chronopolis, Observatory, and imported procedural World Tree. Repo Portal lets one public `owner/repo` arrive before its owner catalog, then reuses the same building and Repository Atelier with truthful public-metadata boundaries. Every repo also rebinds one reusable Atelier where its data, impact signals, current avatar, and in-room Gitber stay inside the exhibition. Town Growth Replay turns public repo creation dates into a reversible, shareable city history without inventing historical metrics. Gitber/POLARIS and the
 scholars (VEGA · MS Learn, RIGEL · DeepWiki, MIRA · Context7, LYRA · Hugging Face) add natural-language
 navigation and grounded answers. Residents hand specialist questions to the right scholar instead of gaining
 their own MCP access. The Passport's local Town Gazette makes daily public-repo changes visible on return. Everything
