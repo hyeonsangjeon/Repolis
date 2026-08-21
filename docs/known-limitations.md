@@ -23,6 +23,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   `GET /repos/{owner}/{repo}` request with no retry. A 15-minute LRU cache is limited to 30 entries and 512
   KiB; failed requests may use an explicitly labelled stale entry. Without one, the target error appears
   over the existing owner town. GitHub's anonymous 403/429 limit still applies.
+- **Repo Route is a current-catalog path, not a permanent playlist.** Its URL contains two or three public
+  repository names from the town that created it. Renamed, deleted, privatized, or newly filtered repositories
+  cannot be reconstructed and make that shared route fail soft to the normal town. Route drafts are session-only,
+  and strict order means opening another house does not skip the current stop.
 - **Creator Hall reads one public profile explicitly.** Opening the hall requests GitHub's public
   `/users/<login>` endpoint and caches only the fields it renders for 24 hours. Anonymous API rate limits
   can hide the avatar/bio temporarily; the hall still falls back to the public repository facts already

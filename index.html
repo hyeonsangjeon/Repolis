@@ -51,19 +51,23 @@
   #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
-  #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
+  #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
-  #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
-  #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active { transform: translateY(1px); }
-  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover, #repoRouteMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
+  #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active, #repoRouteMenuBtn:active { transform: translateY(1px); }
+  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon, #repoRouteMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
     color: #fff8e7; background: linear-gradient(145deg,#365464,#173d55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); font-size: 17px; }
   #twinMenuBtn .pmIcon { background: linear-gradient(145deg,#6a4f86,#2e5667); }
   #creatorMenuBtn .pmIcon { background: linear-gradient(145deg,#ba783d,#6a4327); }
   #growthMenuBtn .pmIcon { background: linear-gradient(145deg,#6c5ea8,#345d7c); }
-  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
-  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #repoRouteMenuBtn .pmIcon { background: linear-gradient(145deg,#e07b42,#7f3f57); }
+  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy, #repoRouteMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle, #repoRouteMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
+  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub, #repoRouteMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #repoRouteMenuCount { flex:0 0 auto; min-width:34px; padding:4px 7px; border-radius:999px; color:#fff; background:#8e4f5d;
+    font-size:10px; font-weight:900; text-align:center; }
+  #repoRouteMenuCount[hidden] { display:none; }
   .repoRow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 12px;
     cursor: pointer; transition: background .12s; }
   .repoRow:hover { background: #f6ecdb; }
@@ -283,6 +287,7 @@
     border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; }
   .btn.gh { background: #2b2420; color: #fff; }
   .btn.live { background: #c2702f; color: #fff; }
+  .btn.route { background: linear-gradient(135deg,#e18044,#9c4d58); color: #fff; }
   .btn.atelier { flex-basis: 100%; background: linear-gradient(135deg,#253d46,#42636a); color: #fff;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
   .btn.atelier:disabled { cursor: default; opacity: .72; }
@@ -411,6 +416,54 @@
     .twinTop { min-height: 0; }
     .twinActions { grid-template-columns: 1fr; }
   }
+  /* Repo Route — a visitor-curated, ordered 2–3 house walk with one canonical link */
+  #repoRouteModal { position:fixed; inset:0; z-index:75; display:none; align-items:center; justify-content:center;
+    padding:18px; background:rgba(20,16,22,.74); backdrop-filter:blur(7px); }
+  #repoRouteModal.show { display:flex; }
+  .repoRouteStudio { position:relative; width:min(620px,100%); max-height:calc(100dvh - 36px); overflow-y:auto;
+    border:1px solid rgba(255,255,255,.22); border-radius:24px; color:#3f3028; background:#fffaf1;
+    box-shadow:0 24px 76px rgba(15,8,15,.48); -webkit-user-select:text; user-select:text; }
+  .repoRouteClose { position:absolute; z-index:2; top:12px; right:12px; width:44px; height:44px; border:0;
+    border-radius:50%; color:#704a4e; background:#f2dfd3; font:800 18px/1 inherit; cursor:pointer; }
+  .repoRouteHead { padding:23px 70px 16px 24px; border-radius:23px 23px 0 0; color:#fff;
+    background:linear-gradient(135deg,#7f3f57,#d87542); }
+  .repoRouteHead .rk { color:#ffe2bf; font-size:10px; font-weight:900; letter-spacing:.16em; }
+  .repoRouteHead h2 { margin-top:4px; font-size:24px; line-height:1.2; }
+  .repoRouteHead p { margin-top:6px; color:rgba(255,255,255,.85); font-size:12px; line-height:1.45; }
+  .repoRouteBody { padding:18px 22px 22px; }
+  #repoRouteEmpty { padding:18px; border:1px dashed #d7bda8; border-radius:15px; color:#8b705a; background:#fffdf8;
+    font-size:12px; line-height:1.55; text-align:center; }
+  #repoRouteEmpty[hidden], #repoRouteSuggestions[hidden] { display:none; }
+  #repoRouteStops { display:grid; gap:8px; }
+  .repoRouteStop { display:grid; grid-template-columns:34px minmax(0,1fr) auto; gap:9px; align-items:center;
+    min-height:54px; padding:8px 9px; border:1px solid #ead5c4; border-radius:14px; background:#fff; }
+  .repoRouteStop .num { width:32px; height:32px; display:grid; place-items:center; border-radius:11px; color:#fff;
+    background:linear-gradient(145deg,#8f4c5f,#d87542); font-size:12px; font-weight:900; }
+  .repoRouteStop .name { min-width:0; overflow:hidden; color:#4b382d; font-size:13px; font-weight:850;
+    text-overflow:ellipsis; white-space:nowrap; }
+  .repoRouteStop button, .repoRouteSuggestion { min-width:44px; min-height:44px; border:1px solid #e0c9b7; border-radius:11px;
+    color:#725746; background:#f7ecdf; font:800 11px/1.25 inherit; cursor:pointer; }
+  .repoRouteSuggestion { padding:8px 11px; overflow-wrap:anywhere; }
+  .repoRouteSuggestionsHead { margin:15px 0 7px; color:#80644e; font-size:11px; font-weight:850; }
+  .repoRouteSuggestionList { display:flex; flex-wrap:wrap; gap:7px; }
+  .repoRouteActions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:16px; }
+  .repoRouteActions button { min-height:44px; border:1px solid #d9c1b1; border-radius:11px; padding:9px 10px;
+    color:#634a3b; background:#fff; font:800 11.5px/1.3 inherit; cursor:pointer; }
+  .repoRouteActions button.primary { border-color:#8e4f5d; color:#fff; background:linear-gradient(135deg,#8e4f5d,#d87542); }
+  .repoRouteActions button:disabled { cursor:not-allowed; opacity:.42; }
+  #repoRouteStatus { min-height:18px; margin-top:9px; color:#7d6653; font-size:11px; line-height:1.4; text-align:center; }
+  #repoRouteStatus:empty { min-height:0; margin-top:0; }
+  #repoRouteStatus[data-tone="success"] { color:#2f7d5b; font-weight:700; }
+  #repoRouteStatus[data-tone="error"] { color:#b44530; font-weight:700; }
+  .repoRoutePrivacy { margin-top:10px; color:#725a47; font-size:10px; line-height:1.45; text-align:center; }
+  @media (max-width:520px) {
+    #repoRouteModal { padding:10px; align-items:flex-end; }
+    .repoRouteStudio { max-height:calc(100dvh - 20px); border-radius:20px; }
+    .repoRouteHead { padding:18px 62px 13px 17px; border-radius:19px 19px 0 0; }
+    .repoRouteHead h2 { font-size:20px; }
+    .repoRouteBody { padding:14px 13px calc(16px + env(safe-area-inset-bottom,0px)); }
+    .repoRouteActions { grid-template-columns:1fr; }
+  }
   /* Repository Atelier — one isolated, reusable 3D room */
   #atelierFade { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0;
     background: #11171a; will-change: opacity; }
@@ -444,7 +497,7 @@
   body.atelier-active #topbar, body.atelier-active #menuBtn, body.atelier-active #panel,
   body.atelier-active #passport, body.atelier-active #mapWrap, body.atelier-active #station,
   body.atelier-active #taxiBtn, body.atelier-active #emoteBtn, body.atelier-active #emoteBar,
-  body.atelier-active #drivebar, body.atelier-active #starTrailHud, body.atelier-active #lanternWatchHud, body.atelier-active #starNudge,
+  body.atelier-active #drivebar, body.atelier-active #starTrailHud, body.atelier-active #lanternWatchHud, body.atelier-active #repoRouteHud, body.atelier-active #starNudge,
   body.atelier-active #tourCap, body.atelier-active .hint { display: none !important; }
   body.atelier-active #prompt { bottom: calc(26px + env(safe-area-inset-bottom,0px)); max-width: min(660px,calc(100vw - 120px));
     white-space: normal; text-align: center; justify-content: center; line-height: 1.38; }
@@ -709,6 +762,24 @@
   #lanternWatchHud .stActions button { flex:1; min-height:36px; border:0; border-radius:10px; cursor:pointer;
     color:#3b260d; background:#ffd27a; font-family:inherit; font-size:11.5px; font-weight:800; }
   #lanternWatchHud.complete { background:linear-gradient(145deg,rgba(69,43,14,.96),rgba(91,58,51,.96)); border-color:rgba(255,224,143,.68); }
+  #repoRouteHud { position:fixed; z-index:12; left:14px; bottom:54px; width:min(330px,calc(100vw - 112px));
+    padding:12px 13px 11px; border-radius:16px; color:#fff2e9; background:linear-gradient(145deg,rgba(88,41,58,.95),rgba(151,71,52,.95));
+    border:1px solid rgba(255,198,151,.5); box-shadow:0 12px 34px rgba(44,16,25,.42); backdrop-filter:blur(9px);
+    visibility:visible; transition:opacity .18s ease,transform .18s ease; }
+  #repoRouteHud.hidden { opacity:0; transform:translateY(10px); visibility:hidden; pointer-events:none; }
+  #repoRouteHud .stClose { position:absolute; top:7px; right:7px; width:29px; height:29px; border:0; border-radius:50%;
+    cursor:pointer; color:#ffe0cb; background:rgba(255,255,255,.1); font-size:13px; }
+  #repoRouteHud .stK { color:#ffca9f; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  #repoRouteHud .stTheme { padding-right:28px; margin-top:2px; font-size:14px; font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #repoRouteHud .stSteps { display:flex; gap:6px; margin:8px 0 7px; }
+  #repoRouteHud .stSteps i { flex:1; height:5px; border-radius:4px; background:rgba(255,222,199,.2); box-shadow:inset 0 0 0 1px rgba(255,255,255,.05); }
+  #repoRouteHud .stSteps i.done { background:#ffd085; box-shadow:0 0 10px rgba(255,190,112,.72); }
+  #repoRouteHud .stSteps i.now { background:#fff0ca; box-shadow:0 0 11px rgba(255,226,163,.8); }
+  #repoRouteHud .stTarget { color:#f7ddcd; font-size:11.5px; line-height:1.45; overflow-wrap:anywhere; }
+  #repoRouteHud .stActions { display:flex; gap:7px; margin-top:9px; }
+  #repoRouteHud .stActions button { flex:1; min-height:36px; border:0; border-radius:10px; cursor:pointer;
+    color:#562c3a; background:#ffd49d; font-family:inherit; font-size:11.5px; font-weight:800; }
+  #repoRouteHud.complete { background:linear-gradient(145deg,rgba(101,46,65,.97),rgba(143,83,44,.97)); border-color:rgba(255,218,153,.7); }
   .chronoPhilo { font-size:12.5px; font-style:italic; color:#7a6a3a; padding:9px 12px 4px; }
   .chronoCases { padding:4px 8px 8px; display:flex; flex-wrap:wrap; gap:2px; }
   .chronoCase { display:inline-flex; align-items:center; gap:6px; margin:3px 4px 3px 0; padding:7px 12px; border-radius:999px;
@@ -869,7 +940,7 @@
   #introLaunchErr:empty { display: none; }
   #startBtn { background: #fff; color: #7a3f12; border: none; border-radius: 14px; padding: 14px 40px;
     font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(60,30,10,.25); }
-  #intro.hidden { opacity: 0; pointer-events: none; transition: opacity .4s; }
+  #intro.hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s, visibility 0s .4s; }
 
   #loading { position: fixed; inset: 0; z-index: 40; background: #5fb0a8; color: #fff; display: flex;
     align-items: center; justify-content: center; font-size: 15px; font-weight: 600; }
@@ -1050,10 +1121,11 @@
     #introLaunchGo { flex: 1 0 150px; min-height: 44px; }
     #introUser { min-height: 44px; }
     .chronoRecapBtn { min-height: 44px; }
-    .obsTrail button, #starTrailHud .stActions button, #lanternWatchHud .stActions button { min-height: 44px; }
-    #starTrailHud .stClose, #lanternWatchHud .stClose { width:44px; height:44px; top:1px; right:1px; }
+    .obsTrail button, #starTrailHud .stActions button, #lanternWatchHud .stActions button, #repoRouteHud .stActions button { min-height: 44px; }
+    #starTrailHud .stClose, #lanternWatchHud .stClose, #repoRouteHud .stClose { width:44px; height:44px; top:1px; right:1px; }
     #starTrailHud { left:12px; bottom:calc(100px + env(safe-area-inset-bottom,0px)); width:min(280px,calc(100vw - 112px)); }
     #lanternWatchHud { left:12px; bottom:calc(100px + env(safe-area-inset-bottom,0px)); width:min(280px,calc(100vw - 112px)); }
+    #repoRouteHud { left:12px; bottom:calc(100px + env(safe-area-inset-bottom,0px)); width:min(280px,calc(100vw - 112px)); }
   }
   /* ---- respect prefers-reduced-motion: keep every bit of info, drop the looping motion ---- */
   @media (prefers-reduced-motion: reduce) {
@@ -1109,7 +1181,7 @@
   #growthReplay .growthStatus { min-height:17px; margin-top:7px; color:#b8c8e7; font-size:10.5px; text-align:center; }
   body.growth-replay-active #prompt, body.growth-replay-active #actBtn, body.growth-replay-active #taxiBtn,
   body.growth-replay-active #emoteBtn, body.growth-replay-active #emoteBar, body.growth-replay-active #drivebar,
-  body.growth-replay-active #starTrailHud, body.growth-replay-active #lanternWatchHud, body.growth-replay-active #starNudge { display:none !important; }
+  body.growth-replay-active #starTrailHud, body.growth-replay-active #lanternWatchHud, body.growth-replay-active #repoRouteHud, body.growth-replay-active #starNudge { display:none !important; }
   @media (max-width:520px) {
     #growthReplay { padding:0; }
     #growthReplay .growthPanel { width:100%; max-height:min(62vh,520px); border-radius:20px 20px 0 0; padding:15px 14px calc(14px + env(safe-area-inset-bottom,0px)); }
@@ -1145,6 +1217,11 @@
   <button id="creatorMenuBtn" type="button">
     <span class="pmIcon" aria-hidden="true">👤</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="creatorMenu">마을 만든 사람</span><span class="pmSub" data-i18n="creatorMenuSub">공개 GitHub 프로필과 대표 작업</span></span>
+  </button>
+  <button id="repoRouteMenuBtn" type="button">
+    <span class="pmIcon" aria-hidden="true">🧭</span>
+    <span class="pmCopy"><span class="pmTitle" data-i18n="routeMenu">Repo Route</span><span class="pmSub" data-i18n="routeMenuSub">직접 본 레포 2~3곳을 코스로 공유</span></span>
+    <span id="repoRouteMenuCount" hidden aria-hidden="true"></span>
   </button>
   <button id="growthMenuBtn" type="button">
     <span class="pmIcon" aria-hidden="true">⏳</span>
@@ -1275,6 +1352,32 @@
   </section>
 </div>
 
+<div id="repoRouteModal" role="dialog" aria-modal="true" aria-labelledby="repoRouteTitle" aria-describedby="repoRouteSub" aria-hidden="true">
+  <section class="repoRouteStudio" tabindex="-1">
+    <button id="repoRouteClose" class="repoRouteClose" type="button" data-i18n-aria="routeClose" aria-label="Repo Route 닫기">✕</button>
+    <header class="repoRouteHead">
+      <div class="rk">REPO ROUTE</div>
+      <h2 id="repoRouteTitle" data-i18n="routeTitle">내가 발견한 레포 길 만들기</h2>
+      <p id="repoRouteSub" data-i18n="routeSub">직접 열어 본 집 2~3곳을 고른 순서대로 이어, 친구가 그대로 걸어보게 하세요.</p>
+    </header>
+    <div class="repoRouteBody">
+      <div id="repoRouteEmpty" data-i18n="routeEmpty">레포 집 카드를 열고 ‘Repo Route에 담기’를 누르세요. 두 곳부터 길을 시작하고 공유할 수 있어요.</div>
+      <div id="repoRouteStops" role="list" data-i18n-aria="routeStopsAria" aria-label="선택한 Repo Route 정류장"></div>
+      <div id="repoRouteSuggestions" hidden>
+        <div class="repoRouteSuggestionsHead" data-i18n="routeSuggestions">방금 둘러본 집에서 더 담기</div>
+        <div id="repoRouteSuggestionList" class="repoRouteSuggestionList"></div>
+      </div>
+      <div class="repoRouteActions">
+        <button id="repoRouteStart" class="primary" type="button" data-i18n="routeStart" disabled>이 길 따라가기</button>
+        <button id="repoRouteShare" type="button" data-i18n="routeShare" disabled>Repo Route 공유</button>
+        <button id="repoRouteCopy" type="button" data-i18n="routeCopy" disabled>링크 복사</button>
+      </div>
+      <div id="repoRouteStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+      <p class="repoRoutePrivacy" data-i18n="routePrivacy">현재 공개 레포 이름만 URL에 담기며, 계정 연결·새 백엔드·추적용 레포 목록은 만들지 않아요.</p>
+    </div>
+  </section>
+</div>
+
 <div id="trainOverlay">
   <div class="trainScene">
     <div class="rail"></div>
@@ -1323,6 +1426,14 @@
   <div class="stSteps" id="lanternWatchSteps"></div>
   <div class="stTarget" id="lanternWatchTarget"></div>
   <div class="stActions" id="lanternWatchActions"><button id="lanternWatchRide" type="button"></button></div>
+</div>
+<div id="repoRouteHud" class="hidden" aria-live="polite">
+  <button id="repoRouteHudClose" class="stClose" type="button" data-i18n-aria="routeStop" aria-label="Repo Route 끝내기">✕</button>
+  <div class="stK" id="repoRouteHudKicker">REPO ROUTE</div>
+  <div class="stTheme" id="repoRouteHudTheme"></div>
+  <div class="stSteps" id="repoRouteHudSteps"></div>
+  <div class="stTarget" id="repoRouteHudTarget"></div>
+  <div class="stActions"><button id="repoRouteHudRide" type="button"></button></div>
 </div>
 
 <div id="modal">
@@ -1573,6 +1684,7 @@ import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?
 import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
 import { REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolveRepoPortalRequest } from './assets/repo-portal.js?v=repo-portal-v1';
+import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1635,6 +1747,10 @@ function track(eventName, payload){
       const allowed=new Set(['ev','sessionId','ts','entry','device','lang','result','latency','channel']);
       Object.keys(ev).forEach(key=>{ if(!allowed.has(key)) delete ev[key]; });
     }
+    if(ev.__privacy==='repo-route'){
+      const allowed=new Set(['ev','ts','entry','device','lang','result','count','channel']);
+      Object.keys(ev).forEach(key=>{ if(!allowed.has(key)) delete ev[key]; });
+    }
     recentAnalyticsEvents.push(ev); if(recentAnalyticsEvents.length > 150) recentAnalyticsEvents.shift();
     if(_DBG) console.debug('[track]', eventName, ev);
     if(ANALYTICS_ENDPOINT){ try{
@@ -1649,6 +1765,14 @@ function track(eventName, payload){
 function trackPortal(eventName,payload){
   const safe={__privacy:'repo-portal'},allowed=['entry','device','lang','result','latency','channel'];
   for(const key of allowed){ const value=payload&&payload[key]; if(typeof value==='string'&&value.length<=32) safe[key]=value; }
+  track(eventName,safe);
+}
+function trackRepoRoute(eventName,payload){
+  const safe={__privacy:'repo-route'},allowed=['entry','device','lang','result','count','channel'];
+  for(const key of allowed){
+    const value=payload&&payload[key];
+    if((typeof value==='string'&&value.length<=32)||(key==='count'&&Number.isInteger(value)&&value>=0&&value<=REPO_ROUTE_LIMITS.maxStops)) safe[key]=value;
+  }
   track(eventName,safe);
 }
 function _repoPortalDevice(){ return matchMedia('(pointer:coarse)').matches||innerWidth<700?'mobile':'desktop'; }
@@ -1964,6 +2088,26 @@ const I18N = {
     creatorPowered:'이 마을은 공개 GitHub 데이터와 오픈소스 Repolis 엔진으로 만들어졌어요.',
     creatorShareCopied:'이 마을 링크를 복사했어요.', creatorShareFailed:'링크를 복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
     lmArriveCreator:'🚕 마을 창작자 회관에 도착했어요! 이 도시를 만든 사람의 공개 GitHub 기록을 열어볼게요 👤',
+    routeMenu:'Repo Route', routeMenuSub:'직접 본 레포 2~3곳을 코스로 공유',
+    routeTitle:'내가 발견한 레포 길 만들기', routeSub:'직접 열어 본 집 2~3곳을 고른 순서대로 이어, 친구가 그대로 걸어보게 하세요.',
+    routeClose:'Repo Route 닫기', routeEmpty:'레포 집 카드를 열고 ‘Repo Route에 담기’를 누르세요. 두 곳부터 길을 시작하고 공유할 수 있어요.',
+    routeStopsAria:'선택한 Repo Route 정류장', routeSuggestions:'방금 둘러본 집에서 더 담기',
+    routeStart:'이 길 따라가기', routeShare:'Repo Route 공유', routeCopy:'링크 복사',
+    routePrivacy:'현재 공개 레포 이름만 URL에 담기며, 계정 연결·새 백엔드·추적용 레포 목록은 만들지 않아요.',
+    routeRemove:'빼기', routeRemoveAria:'Repo Route에서 {repo} 빼기', routeAddCard:'🧭 Repo Route에 담기', routeRemoveCard:'✓ Repo Route에서 빼기',
+    routePicked:'🧭 Repo Route에 {count}/3곳을 담았어요.', routeRemoved:'Repo Route에서 뺐어요. 지금 {count}/3곳이에요.',
+    routeFull:'Repo Route는 최대 세 곳이에요. 길 만들기에서 하나를 빼고 바꿔 주세요.',
+    routeNeedMore:'레포 집 두 곳을 채우면 따라가기와 공유가 열려요.', routeReady:'Repo Route가 준비됐어요.',
+    routeCopied:'Repo Route 링크를 복사했어요.', routeCopyFailed:'링크를 복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
+    routeShared:'Repo Route를 공유했어요.', routeShareFailed:'공유를 완료하지 못했어요. 링크 복사를 사용해 주세요.',
+    routeShareTitle:'@{user}의 Repolis Repo Route', routeShareText:'이 GitHub 마을에서 직접 발견한 레포 집 {count}곳을 순서대로 걸어보세요.',
+    routeHudTheme:'@{user}의 레포 집 {count}곳', routeHudTarget:'{step}/{total} · {repo} 집을 열어 보세요.',
+    routeHudRide:'🧭 이 집 안내', routeHudShare:'이 길 공유', routeStop:'Repo Route 끝내기',
+    routeCompleteTitle:'Repo Route 완주', routeComplete:'🎉 고른 레포 집을 순서대로 모두 발견했어요. 이 길을 다른 개발자에게 건네보세요.',
+    routeStarted:'🧭 첫 번째 레포 집을 가리킬게요. 카드를 열면 다음 정류장으로 이어져요.',
+    routeFound:'🧭 {repo} 발견! {done}/{total} · 다음 집을 가리킬게요.',
+    introRouteReady:'친구가 고른 Repo Route가 준비됐어요', introRouteStats:'레포 집 {count}곳 · @{user} 마을의 실제 순서',
+    enterRoute:'Repo Route 시작 →',
     twinMenu:'Twin Towns', twinMenuSub:'친구의 GitHub 마을과 연결하기',
     twinTitle:'두 GitHub 마을 잇기', twinSub:'공통 언어와 주제로 두 사람의 공개 레포 마을 사이에 다리를 만들어요.',
     twinLead:'누구와 @{user}의 마을을 연결할까요?', twinUserPh:'GitHub username', twinGo:'마을 다리 만들기',
@@ -2226,6 +2370,26 @@ const I18N = {
     creatorPowered:'This town is built from public GitHub data and the open-source Repolis engine.',
     creatorShareCopied:'Town link copied.', creatorShareFailed:"Couldn't copy the link. Check this browser's clipboard permission.",
     lmArriveCreator:"🚕 We've reached the Town Creator Hall! Opening the public GitHub story behind this city 👤",
+    routeMenu:'Repo Route', routeMenuSub:'Share a 2–3 house path you actually explored',
+    routeTitle:'Build a route from what you found', routeSub:'Choose 2–3 houses you opened. A friend can walk them in the same order.',
+    routeClose:'Close Repo Route', routeEmpty:'Open a repository house card and choose “Add to Repo Route.” Two stops unlock following and sharing.',
+    routeStopsAria:'Selected Repo Route stops', routeSuggestions:'Add from houses you just explored',
+    routeStart:'Follow this route', routeShare:'Share Repo Route', routeCopy:'Copy link',
+    routePrivacy:'Only current public repository names enter the URL — no account connection, new backend, or tracked repository list.',
+    routeRemove:'Remove', routeRemoveAria:'Remove {repo} from Repo Route', routeAddCard:'🧭 Add to Repo Route', routeRemoveCard:'✓ Remove from Repo Route',
+    routePicked:'🧭 Saved {count}/3 stops to your Repo Route.', routeRemoved:'Removed from Repo Route. You now have {count}/3 stops.',
+    routeFull:'A Repo Route holds up to three stops. Open the builder to swap one out.',
+    routeNeedMore:'Following and sharing unlock when the route has two repository houses.', routeReady:'Your Repo Route is ready.',
+    routeCopied:'Repo Route link copied.', routeCopyFailed:"Couldn't copy the link. Check this browser's clipboard permission.",
+    routeShared:'Repo Route shared.', routeShareFailed:'Sharing could not finish. Use Copy link instead.',
+    routeShareTitle:"@{user}'s Repolis Repo Route", routeShareText:'Walk these {count} repository houses I found in this GitHub town.',
+    routeHudTheme:"@{user}'s {count}-house route", routeHudTarget:'{step}/{total} · Open the {repo} house.',
+    routeHudRide:'🧭 Guide this stop', routeHudShare:'Share this route', routeStop:'End Repo Route',
+    routeCompleteTitle:'Repo Route complete', routeComplete:'🎉 You found every chosen repository house in order. Pass this route to another developer.',
+    routeStarted:'🧭 Pointing to the first repository house. Open its card to reveal the next stop.',
+    routeFound:'🧭 Found {repo}! {done}/{total} · pointing to the next house.',
+    introRouteReady:"A friend's Repo Route is ready", introRouteStats:'{count} repository houses · a real path through @{user}',
+    enterRoute:'Start Repo Route →',
     twinMenu:'Twin Towns', twinMenuSub:"Connect this town with a GitHub friend's",
     twinTitle:'Connect two GitHub towns', twinSub:'Build a bridge between two public-repo towns from their shared languages and topics.',
     twinLead:"Who should @{user}'s town connect with?", twinUserPh:'GitHub username', twinGo:'Build the town bridge',
@@ -2366,6 +2530,7 @@ function applyLang(){
   if(typeof renderObservatory==='function' && typeof obsModal!=='undefined' && obsModal && obsModal.classList.contains('show')) renderObservatory();
   if(typeof renderStarTrailHud==='function') renderStarTrailHud();
   if(typeof renderLanternWatchHud==='function') renderLanternWatchHud();
+  if(typeof window.__repoRouteLangRefresh==='function') window.__repoRouteLangRefresh();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
   if(typeof window.__publicIntroRefresh==='function') window.__publicIntroRefresh();
   if(typeof window.__twinLangRefresh==='function') window.__twinLangRefresh();
@@ -6093,6 +6258,7 @@ function _clearStarTrailNav(){ if(!STAR_TRAIL||!navTarget||STAR_TRAIL.stops.inde
 function endStarTrail(){ _clearStarTrailNav(); _removeStarTrailVisuals(); STAR_TRAIL=null; renderStarTrailHud(); track('constellation_end'); }
 function startStarTrail(){
   const plan=dailyConstellation(); if(!plan) return false;
+  if(REPO_ROUTE.active||REPO_ROUTE.complete) endRepoRoute('replaced');
   if(LANTERN_WATCH) endLanternWatch();
   if(STAR_TRAIL&&STAR_TRAIL.active&&STAR_TRAIL.plan.id===plan.id){ closeObservatory(); setTimeOfDay(true); setNav(STAR_TRAIL.stops[STAR_TRAIL.index]); renderStarTrailHud(); return true; }
   _removeStarTrailVisuals(); STAR_TRAIL={plan,stops:plan.stops,index:0,active:true,complete:false,visual:null};
@@ -6197,6 +6363,7 @@ function _clearLanternWatchNav(){ if(!LANTERN_WATCH||!navTarget||LANTERN_WATCH.s
 function endLanternWatch(){ const had=!!LANTERN_WATCH; _clearLanternWatchNav(); _removeLanternWatchVisuals(); LANTERN_WATCH=null; renderLanternWatchHud(); if(had) track('night_watch_end'); }
 function startLanternWatch(){
   const plan=dailyLanternWatch(); if(!plan) return false;
+  if(REPO_ROUTE.active||REPO_ROUTE.complete) endRepoRoute('replaced');
   if(STAR_TRAIL) endStarTrail();
   if(LANTERN_WATCH&&LANTERN_WATCH.active&&LANTERN_WATCH.plan.id===plan.id){ closeObservatory(); setTimeOfDay(true); setNav(LANTERN_WATCH.stops[LANTERN_WATCH.index]); renderLanternWatchHud(); return true; }
   _removeLanternWatchVisuals(); LANTERN_WATCH={plan,stops:plan.stops,index:0,active:true,complete:false,visual:null};
@@ -8461,6 +8628,197 @@ function repoByKey(key){
   const nn=_repoNorm(raw); hit=REPOS.find(r=>_repoNorm(r.repo)===nn); if(hit) return hit;          // '-'/'_' insensitive
   return null; }
 
+/*REPO_ROUTE:START*/
+const REPO_ROUTE_REQUEST=resolveRepoRouteRequest(location.search,REPOS.filter(r=>!r._isLibrary).map(r=>r.repo));
+const REPO_ROUTE={
+  selected:REPO_ROUTE_REQUEST.valid?[...REPO_ROUTE_REQUEST.repos]:[],
+  stops:[],index:0,active:false,complete:false,open:false,entry:'menu',status:null,previousFocus:null,inert:[]
+};
+const repoRouteModal=document.getElementById('repoRouteModal'),repoRouteStudio=repoRouteModal.querySelector('.repoRouteStudio'),
+  repoRouteStops=document.getElementById('repoRouteStops'),repoRouteEmpty=document.getElementById('repoRouteEmpty'),
+  repoRouteSuggestions=document.getElementById('repoRouteSuggestions'),repoRouteSuggestionList=document.getElementById('repoRouteSuggestionList'),
+  repoRouteStatus=document.getElementById('repoRouteStatus'),repoRouteStart=document.getElementById('repoRouteStart'),
+  repoRouteShare=document.getElementById('repoRouteShare'),repoRouteCopy=document.getElementById('repoRouteCopy'),
+  repoRouteClose=document.getElementById('repoRouteClose'),repoRouteMenuBtn=document.getElementById('repoRouteMenuBtn'),
+  repoRouteMenuCount=document.getElementById('repoRouteMenuCount'),repoRouteHud=document.getElementById('repoRouteHud');
+function _repoRouteDevice(){ return matchMedia('(pointer:coarse)').matches||innerWidth<700?'mobile':'desktop'; }
+function _repoRouteSetStatus(key='',tone='',vars=null){
+  REPO_ROUTE.status=key?{key,tone,vars}:null;
+  repoRouteStatus.textContent=key?tf(key,vars||{}):''; repoRouteStatus.dataset.tone=tone||'';
+}
+function _repoRouteSelectedRepos(){ return REPO_ROUTE.selected.map(repoByKey).filter(repo=>repo&&!repo._isLibrary); }
+function _repoRouteHas(repo){ return !!repo&&REPO_ROUTE.selected.some(name=>name.toLowerCase()===repo.repo.toLowerCase()); }
+function _repoRouteBaseUrl(){ return location.origin+location.pathname; }
+function _repoRouteUrl(){ return createRepoRouteUrl(currentUser,REPO_ROUTE.selected,_repoRouteBaseUrl(),OWNER); }
+function renderRepoRouteStudio(){
+  const selected=_repoRouteSelectedRepos(),ready=selected.length>=REPO_ROUTE_LIMITS.minStops;
+  repoRouteStops.replaceChildren();
+  selected.forEach((repo,index)=>{
+    const row=document.createElement('div'); row.className='repoRouteStop'; row.setAttribute('role','listitem');
+    const num=document.createElement('span'); num.className='num'; num.textContent=String(index+1);
+    const name=document.createElement('span'); name.className='name'; name.textContent=repo.repo; name.title=repo.repo;
+    const remove=document.createElement('button'); remove.type='button'; remove.textContent=t('routeRemove');
+    remove.setAttribute('aria-label',tf('routeRemoveAria',{repo:repo.repo})); remove.onclick=()=>toggleRepoRoute(repo,'studio');
+    row.append(num,name,remove); repoRouteStops.appendChild(row);
+  });
+  repoRouteEmpty.hidden=selected.length>0;
+  const selectedKeys=new Set(selected.map(repo=>repo.repo.toLowerCase()));
+  const suggestions=REPOS.filter(repo=>repo._visited&&!repo._isLibrary&&!selectedKeys.has(repo.repo.toLowerCase()))
+    .slice(0,Math.max(0,6-selected.length));
+  repoRouteSuggestionList.replaceChildren();
+  suggestions.forEach(repo=>{
+    const button=document.createElement('button'); button.type='button'; button.className='repoRouteSuggestion';
+    button.textContent='+ '+repo.repo; button.onclick=()=>toggleRepoRoute(repo,'studio'); repoRouteSuggestionList.appendChild(button);
+  });
+  repoRouteSuggestions.hidden=!suggestions.length||selected.length>=REPO_ROUTE_LIMITS.maxStops;
+  repoRouteStart.disabled=!ready; repoRouteShare.disabled=!ready; repoRouteCopy.disabled=!ready;
+  repoRouteMenuCount.hidden=!selected.length; repoRouteMenuCount.textContent=selected.length+'/'+REPO_ROUTE_LIMITS.maxStops;
+  if(REPO_ROUTE.status) repoRouteStatus.textContent=tf(REPO_ROUTE.status.key,REPO_ROUTE.status.vars||{});
+}
+function renderRepoRouteHud(){
+  if(!REPO_ROUTE.active&&!REPO_ROUTE.complete){ repoRouteHud.classList.add('hidden'); return; }
+  const total=REPO_ROUTE.stops.length,done=REPO_ROUTE.index,complete=REPO_ROUTE.complete;
+  repoRouteHud.classList.remove('hidden'); repoRouteHud.classList.toggle('complete',complete);
+  document.getElementById('repoRouteHudTheme').textContent=complete?t('routeCompleteTitle'):tf('routeHudTheme',{user:currentUser,count:total});
+  document.getElementById('repoRouteHudSteps').innerHTML=REPO_ROUTE.stops.map((_,index)=>
+    `<i class="${index<done?'done':index===done&&REPO_ROUTE.active?'now':''}"></i>`).join('');
+  const target=REPO_ROUTE.stops[done];
+  document.getElementById('repoRouteHudTarget').textContent=complete?t('routeComplete'):
+    tf('routeHudTarget',{step:done+1,total,repo:target?target.repo:''});
+  const ride=document.getElementById('repoRouteHudRide'); ride.textContent=t(complete?'routeHudShare':'routeHudRide');
+  document.getElementById('repoRouteHudClose').setAttribute('aria-label',t('routeStop'));
+}
+function _clearRepoRouteNav(){
+  if(!navTarget||REPO_ROUTE.stops.indexOf(navTarget)<0) return;
+  navTarget=null; navHolder.visible=false; document.getElementById('navBadge').style.display='none';
+}
+function endRepoRoute(reason='dismissed'){
+  const had=REPO_ROUTE.active||REPO_ROUTE.complete;
+  _clearRepoRouteNav(); REPO_ROUTE.active=false; REPO_ROUTE.complete=false; REPO_ROUTE.stops=[]; REPO_ROUTE.index=0;
+  renderRepoRouteHud();
+  if(had) trackRepoRoute('repo_route_end',{entry:REPO_ROUTE.entry,device:_repoRouteDevice(),lang:LANG,result:reason,count:REPO_ROUTE.selected.length});
+  return had;
+}
+function toggleRepoRoute(repo,entry='card'){
+  if(!repo||repo._isLibrary) return false;
+  if(REPO_ROUTE.active||REPO_ROUTE.complete) endRepoRoute('edited');
+  const index=REPO_ROUTE.selected.findIndex(name=>name.toLowerCase()===repo.repo.toLowerCase());
+  let result;
+  if(index>=0){ REPO_ROUTE.selected.splice(index,1); result='removed'; _repoRouteSetStatus('routeRemoved','',{count:REPO_ROUTE.selected.length}); }
+  else {
+    if(REPO_ROUTE.selected.length>=REPO_ROUTE_LIMITS.maxStops){
+      _repoRouteSetStatus('routeFull','error'); showWave(t('routeFull'),2800); renderRepoRouteStudio();
+      trackRepoRoute('repo_route_pick',{entry,device:_repoRouteDevice(),lang:LANG,result:'full',count:REPO_ROUTE.selected.length}); return false;
+    }
+    REPO_ROUTE.selected.push(repo.repo); result='added';
+    _repoRouteSetStatus(REPO_ROUTE.selected.length>=REPO_ROUTE_LIMITS.minStops?'routeReady':'routeNeedMore',
+      REPO_ROUTE.selected.length>=REPO_ROUTE_LIMITS.minStops?'success':'',{missing:Math.max(0,REPO_ROUTE_LIMITS.minStops-REPO_ROUTE.selected.length)});
+  }
+  renderRepoRouteStudio();
+  showWave(tf(result==='added'?'routePicked':'routeRemoved',{count:REPO_ROUTE.selected.length}),2400);
+  trackRepoRoute('repo_route_pick',{entry,device:_repoRouteDevice(),lang:LANG,result,count:REPO_ROUTE.selected.length});
+  return true;
+}
+function _repoRouteSuspendBackground(){
+  REPO_ROUTE.inert=[];
+  for(const element of document.body.children){
+    if(element===repoRouteModal||element.tagName==='SCRIPT'||element.tagName==='STYLE') continue;
+    REPO_ROUTE.inert.push([element,element.inert]); element.inert=true;
+  }
+}
+function _repoRouteRestoreBackground(){ for(const [element,value] of REPO_ROUTE.inert) element.inert=value; REPO_ROUTE.inert=[]; }
+function openRepoRouteStudio(entry='menu'){
+  if(repositoryAtelierActive()||(modalOpen&&!REPO_ROUTE.open)) return false;
+  if(tour&&tour.active) endTour(false);
+  REPO_ROUTE.open=true; REPO_ROUTE.entry=['menu','card','link','hud','debug'].includes(entry)?entry:'menu';
+  REPO_ROUTE.previousFocus=document.activeElement; panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false');
+  passportEl.classList.add('hidden'); document.getElementById('station').classList.add('hidden');
+  modalOpen=true; _repoRouteSuspendBackground(); repoRouteModal.classList.add('show'); repoRouteModal.setAttribute('aria-hidden','false');
+  renderRepoRouteStudio(); trackRepoRoute('repo_route_open',{entry:REPO_ROUTE.entry,device:_repoRouteDevice(),lang:LANG,result:'shown',count:REPO_ROUTE.selected.length});
+  setTimeout(()=>{ try{ repoRouteClose.focus(); }catch(e){} },0); return true;
+}
+function closeRepoRouteStudio(){
+  if(!REPO_ROUTE.open) return false;
+  REPO_ROUTE.open=false; repoRouteModal.classList.remove('show'); repoRouteModal.setAttribute('aria-hidden','true');
+  _repoRouteRestoreBackground(); modalOpen=false; const previous=REPO_ROUTE.previousFocus; REPO_ROUTE.previousFocus=null;
+  if(previous&&previous.isConnected) setTimeout(()=>{ try{ previous.focus(); }catch(e){} },0);
+  flushStarNudge(); return true;
+}
+function startRepoRoute(entry='studio'){
+  const stops=_repoRouteSelectedRepos();
+  if(stops.length<REPO_ROUTE_LIMITS.minStops){
+    _repoRouteSetStatus('routeNeedMore','error',{missing:REPO_ROUTE_LIMITS.minStops-stops.length}); renderRepoRouteStudio(); return false;
+  }
+  if(REPO_ROUTE.open) closeRepoRouteStudio();
+  if(STAR_TRAIL) endStarTrail(); if(LANTERN_WATCH) endLanternWatch();
+  REPO_ROUTE.stops=stops; REPO_ROUTE.index=0; REPO_ROUTE.active=true; REPO_ROUTE.complete=false;
+  REPO_ROUTE.entry=['studio','link','debug','replay'].includes(entry)?entry:'studio';
+  setNav(stops[0]); renderRepoRouteHud(); showWave(t('routeStarted'),3600);
+  trackRepoRoute('repo_route_start',{entry:REPO_ROUTE.entry,device:_repoRouteDevice(),lang:LANG,result:'started',count:stops.length}); return true;
+}
+function repoRouteVisit(repo){
+  if(!REPO_ROUTE.active||REPO_ROUTE.stops[REPO_ROUTE.index]!==repo) return false;
+  REPO_ROUTE.index++; const done=REPO_ROUTE.index,total=REPO_ROUTE.stops.length;
+  trackRepoRoute('repo_route_stop',{entry:REPO_ROUTE.entry,device:_repoRouteDevice(),lang:LANG,result:done>=total?'complete':'progress',count:done});
+  if(done>=total){
+    REPO_ROUTE.active=false; REPO_ROUTE.complete=true; _clearRepoRouteNav(); renderRepoRouteHud();
+    fireworksShow(10); showWave(t('routeComplete'),4600); maybeStarNudge('repo_route_complete');
+    trackRepoRoute('repo_route_complete',{entry:REPO_ROUTE.entry,device:_repoRouteDevice(),lang:LANG,result:'complete',count:total});
+  }else{
+    setNav(REPO_ROUTE.stops[done]); renderRepoRouteHud();
+    showWave(tf('routeFound',{repo:repo.label,done,total}),3000);
+  }
+  return true;
+}
+async function copyRepoRouteLink(channel='clipboard'){
+  if(REPO_ROUTE.selected.length<REPO_ROUTE_LIMITS.minStops) return false;
+  let ok=false; try{ ok=await _copyPostcardText(_repoRouteUrl()); }catch(e){ ok=false; }
+  _repoRouteSetStatus(ok?'routeCopied':'routeCopyFailed',ok?'success':'error'); renderRepoRouteStudio();
+  showWave(t(ok?'routeCopied':'routeCopyFailed'),2400);
+  trackRepoRoute('repo_route_share',{entry:REPO_ROUTE.entry,device:_repoRouteDevice(),lang:LANG,result:ok?'success':'error',count:REPO_ROUTE.selected.length,channel});
+  return ok;
+}
+async function shareRepoRoute(){
+  if(REPO_ROUTE.selected.length<REPO_ROUTE_LIMITS.minStops) return false;
+  if(typeof navigator.share!=='function') return copyRepoRouteLink('clipboard_fallback');
+  try{
+    await navigator.share({title:tf('routeShareTitle',{user:currentUser}),text:tf('routeShareText',{count:REPO_ROUTE.selected.length}),url:_repoRouteUrl()});
+    _repoRouteSetStatus('routeShared','success'); renderRepoRouteStudio();
+    showWave(t('routeShared'),2400);
+    trackRepoRoute('repo_route_share',{entry:REPO_ROUTE.entry,device:_repoRouteDevice(),lang:LANG,result:'success',count:REPO_ROUTE.selected.length,channel:'native'}); return true;
+  }catch(error){
+    const cancelled=error&&error.name==='AbortError'; if(!cancelled){ _repoRouteSetStatus('routeShareFailed','error'); renderRepoRouteStudio(); }
+    trackRepoRoute('repo_route_share',{entry:REPO_ROUTE.entry,device:_repoRouteDevice(),lang:LANG,result:cancelled?'cancel':'error',count:REPO_ROUTE.selected.length,channel:'native'}); return false;
+  }
+}
+function _repoRouteFocusables(){ return [...repoRouteStudio.querySelectorAll('button:not([disabled])')]
+  .filter(element=>!element.hidden&&!element.closest('[hidden]')); }
+function syncRepoRouteCardButton(repo){
+  const button=document.getElementById('repoRouteCardBtn'); if(!button||!repo) return;
+  const selected=_repoRouteHas(repo); button.textContent=t(selected?'routeRemoveCard':'routeAddCard');
+  button.setAttribute('aria-pressed',selected?'true':'false');
+}
+repoRouteMenuBtn.onclick=()=>openRepoRouteStudio('menu');
+repoRouteClose.onclick=closeRepoRouteStudio;
+repoRouteModal.addEventListener('click',event=>{ if(event.target===repoRouteModal) closeRepoRouteStudio(); });
+repoRouteModal.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeRepoRouteStudio(); return; }
+  if(event.key!=='Tab') return; const items=_repoRouteFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
+  if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+});
+repoRouteStart.onclick=()=>startRepoRoute('studio'); repoRouteShare.onclick=shareRepoRoute; repoRouteCopy.onclick=()=>copyRepoRouteLink();
+document.getElementById('repoRouteHudClose').onclick=()=>endRepoRoute('dismissed');
+document.getElementById('repoRouteHudRide').onclick=()=>{ if(REPO_ROUTE.complete) shareRepoRoute();
+  else if(REPO_ROUTE.active) taxiTo(REPO_ROUTE.stops[REPO_ROUTE.index]); };
+if(REPO_ROUTE_REQUEST.requested) trackRepoRoute('repo_route_link_ready',{entry:'link',device:_repoRouteDevice(),lang:LANG,
+  result:REPO_ROUTE_REQUEST.valid?'ready':REPO_ROUTE_REQUEST.reason,count:REPO_ROUTE.selected.length});
+if(REPO_ROUTE_REQUEST.valid) _repoRouteSetStatus('routeReady','success');
+window.__repoRouteLangRefresh=()=>{ renderRepoRouteStudio(); renderRepoRouteHud();
+  const cardRepo=repoByKey(modal._repoKey); if(cardRepo) syncRepoRouteCardButton(cardRepo); };
+renderRepoRouteStudio(); renderRepoRouteHud();
+/*REPO_ROUTE:END*/
+
 /* ── repo deep link (#repo=<canonical key>) ───────────────────────────
    A shared/pasted URL opens the exact repo card; openCard writes the hash,
    closeCard clears it, and back/forward + hashchange stay in sync. Other
@@ -8483,6 +8841,7 @@ window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=re
 function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   starTrailVisit(repo); lanternWatchVisit(repo); courseMark('repo',repo.repo);
   modalOpen=true; modal.classList.add('show'); modal._repoKey=repo.repo||null; setRepoHash(repo);
+  repoRouteVisit(repo);
   document.getElementById('cardTop').style.background=repo.color;
   document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
   document.getElementById('cardName').textContent=repo.label;
@@ -8520,10 +8879,13 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   // 집(레포)에서 갑자기 토론장으로 튕기는 흐름을 없애기 위함. chronoMatch는 검색/디버그용으로만 유지.
   const inAtelier=repositoryAtelierActive();
   act.innerHTML=`<button class="btn atelier" id="atelierBtn"${inAtelier?' disabled':''}>${t(inAtelier?'atelierInside':'atelierEnter')}</button>`
+    +`<button class="btn route" id="repoRouteCardBtn" type="button" aria-pressed="false"></button>`
     +`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">${t('openGithub')}</a>`
     +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'')
     +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
   const atelierBtn=document.getElementById('atelierBtn'); if(atelierBtn&&!inAtelier) atelierBtn.onclick=()=>enterRepositoryAtelier(repo);
+  const routeBtn=document.getElementById('repoRouteCardBtn'); syncRepoRouteCardButton(repo);
+  if(routeBtn) routeBtn.onclick=()=>{ toggleRepoRoute(repo,'card'); syncRepoRouteCardButton(repo); };
   document.getElementById('closeBtn').onclick=closeCard;
   const ghBtn=act.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>{ if(cityMode==='portal') trackPortal('github_repo_opened',{entry:'card',device:_repoPortalDevice(),lang:LANG,channel:'github'});
     else track('github_click',{repo:repo.repo}); };
@@ -8810,7 +9172,7 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
   const rb=VISITOR.returning, news=hasFreshness();
   if(cityMode==='public'){
     if(!rb&&!_reqFocus) setTimeout(()=>{ try{ showWave(tf('arrived',{user:currentUser}),3600); }catch(e){} },850);
-    setTimeout(()=>{ try{ maybeStarNudge('personal_town'); }catch(e){} },14000); }   // only after they have actually walked their own town
+    if(!REPO_ROUTE_REQUEST.valid) setTimeout(()=>{ try{ maybeStarNudge('personal_town'); }catch(e){} },14000); }   // a shared route earns this invitation only after completion
   if(rb&&cityMode!=='portal'&&!_reqFocus){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} },850); }   // welcome a familiar face back before Gazette / Chronicle
   try{ if(cityMode!=='portal'&&!_reqFocus&&REPOS.length){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
@@ -8820,7 +9182,8 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
     else if(_reqFocus){ const repo=repoByKey(_reqFocus.repo); if(repo) enterRepositoryAtelier(repo); else openRepoFromHash(); }
     else openRepoFromHash();
   }catch(e){} }, 480);
-  if(_reqGrowth&&cityMode!=='portal') setTimeout(()=>{ try{ startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false}); }catch(e){} },620); };
+  if(REPO_ROUTE_REQUEST.valid&&cityMode!=='portal') setTimeout(()=>{ try{ startRepoRoute('link'); }catch(e){} },620);
+  else if(_reqGrowth&&cityMode!=='portal') setTimeout(()=>{ try{ startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false}); }catch(e){} },620); };
 const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introLaunch.querySelector('.launchLabel'),
   introLaunchForm=document.getElementById('introLaunchForm'),introLaunchHint=document.getElementById('introLaunchHint'),
   introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
@@ -8837,15 +9200,21 @@ function renderIntroProfileStatus(){
 function renderPublicIntro(){
   const summary=publicIntroSummary(),publicReady=cityMode==='public'&&!cityError&&summary.count>0&&!introChoosingAnother;
   const portalRepo=cityMode==='portal'&&!cityError&&repoPortalTarget?repoByKey(repoPortalTarget.repo):null;
-  const portalReady=!!portalRepo&&!introChoosingAnother,ready=publicReady||portalReady;
+  const portalReady=!!portalRepo&&!introChoosingAnother;
+  const routeReady=REPO_ROUTE_REQUEST.valid&&cityMode!=='portal'&&!cityError&&!introChoosingAnother,ready=publicReady||portalReady||routeReady;
   introLaunch.classList.toggle('ready',ready); introPublicProof.hidden=!ready; introLaunchForm.hidden=ready; introLaunchHint.hidden=ready;
-  introProofActions.hidden=portalReady; introTourBtn.hidden=portalReady;
+  introProofActions.hidden=portalReady||routeReady; introTourBtn.hidden=portalReady||routeReady;
   if(portalReady){
     introLaunchLabel.textContent=tf('introPortalReady',{repo:repoPortalTarget.slug});
     introProofStats.textContent=tf('introPortalStats',{stars:introProofNumber(portalRepo.stars),forks:introProofNumber(portalRepo.forks),language:portalRepo.lang||'Other'});
     introProofTop.textContent=portalRepo.desc||t('noDesc'); introProofTop.title=portalRepo.desc||'';
     const sourceKey=dataSource==='owner-snapshot'?'portalSourceLocal':(dataSource==='repo-cache'?'portalSourceCache':(dataSource==='repo-stale-cache'?'portalSourceStale':'portalSourceApi'));
     introProfileResult={key:sourceKey,tone:dataSource==='repo-stale-cache'?'':'success'}; introStartBtn.textContent=t('enterRepoPortal');
+  }else if(routeReady){
+    introProfileResult=null; introLaunchLabel.textContent=t('introRouteReady');
+    introProofStats.textContent=tf('introRouteStats',{count:REPO_ROUTE_REQUEST.repos.length,user:currentUser});
+    const routeNames=REPO_ROUTE_REQUEST.repos.join(' → '); introProofTop.textContent=routeNames; introProofTop.title=routeNames;
+    introStartBtn.textContent=t('enterRoute');
   }else if(publicReady){
     introLaunchLabel.textContent=tf('introReady',{user:summary.user});
     introProofStats.textContent=tf('introProofStats',{count:introProofNumber(summary.count),stars:introProofNumber(summary.stars),languages:introProofNumber(summary.languages)});
@@ -8856,7 +9225,7 @@ function renderPublicIntro(){
     introProfileResult=null; introProofActions.hidden=false; introTourBtn.hidden=false; introLaunchLabel.textContent=t('introLaunchLabel'); introStartBtn.textContent=t('enterTown');
   }
   renderIntroProfileStatus();
-  return {ready,publicReady,portalReady,choosingAnother:introChoosingAnother,summary};
+  return {ready,publicReady,portalReady,routeReady,choosingAnother:introChoosingAnother,summary};
 }
 async function copyIntroProfileReadme(){
   introPinProfile.disabled=true; let ok=false;
@@ -9523,6 +9892,7 @@ function startTownGrowthReplay(options={}){
   if(GROWTH_REPLAY.active) return true;
   if(!TOWN_GROWTH.available){ showWave(t('growthUnavailable'),3200); return false; }
   if(repositoryAtelierActive()||ride||ferris||carousel||canalFerryRide||modalOpen) return false;
+  if(REPO_ROUTE.active||REPO_ROUTE.complete) endRepoRoute('replaced');
   if(tour&&tour.active) endTour(false); if(sitting) standUp(); clearKeys();
   const requested=options.year==null?0:townGrowthIndexForYear(TOWN_GROWTH,options.year),entry=options.entry||'menu';
   GROWTH_REPLAY.saved={cameraPosition:camera.position.clone(),cameraQuaternion:camera.quaternion.clone(),cameraFar:camera.far,
@@ -11278,6 +11648,16 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__introProof=()=>renderPublicIntro();
   window.__introProfilePortal=()=>({portal:_postcardReadmePortal(),result:introProfileResult?{...introProfileResult}:null});
   window.__introCopyProfile=()=>copyIntroProfileReadme();
+  window.__repoRoute=()=>({request:{requested:REPO_ROUTE_REQUEST.requested,valid:REPO_ROUTE_REQUEST.valid,reason:REPO_ROUTE_REQUEST.reason,
+      count:REPO_ROUTE_REQUEST.repos.length},selected:[...REPO_ROUTE.selected],stops:REPO_ROUTE.stops.map(repo=>repo.repo),
+    index:REPO_ROUTE.index,active:REPO_ROUTE.active,complete:REPO_ROUTE.complete,open:REPO_ROUTE.open,
+    target:REPO_ROUTE.active?REPO_ROUTE.stops[REPO_ROUTE.index]?.repo||null:null,resources:{draws:0,textures:0,lights:0,network:0,timers:0}});
+  window.__repoRouteOpen=()=>openRepoRouteStudio('debug');
+  window.__repoRouteAdd=name=>{ const repo=repoByKey(name); return repo?toggleRepoRoute(repo,'debug'):false; };
+  window.__repoRouteStart=()=>startRepoRoute('debug');
+  window.__repoRouteVisit=name=>{ const repo=repoByKey(name||REPO_ROUTE.stops[REPO_ROUTE.index]?.repo); return repo?repoRouteVisit(repo):false; };
+  window.__repoRouteCopy=()=>copyRepoRouteLink('debug');
+  window.__repoRouteEnd=()=>endRepoRoute('debug');
   window.__creatorHall=()=>{ let repoGap=Infinity,nearestRepo=null; for(const b of buildings){ if(b._isLibrary) continue;
       const gap=Math.hypot(b._x-CREATOR_HALL._group.position.x,b._z-CREATOR_HALL._group.position.z)-(b._cw||3)-2.75; if(gap<repoGap){ repoGap=gap; nearestRepo=b.repo; } }
     const summary=CREATOR_STATE.summary; return {placed:!!CREATOR_HALL,position:_debugVec(CREATOR_HALL._pos),near:!!nearCreatorHall,

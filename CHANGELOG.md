@@ -6,6 +6,44 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.88.0] — 2026-08-22
+
+### 🧭 Repo Route — let a visitor hand the proven path to the next developer
+
+The benchmark showed why active GitHub portfolio tools keep earning Stars: Metrics and
+github-stats-extended turn personal proof into copyable embeds; GitProfile turns one login into a deployable
+portfolio; GitHub Skyline produces a tangible personalized artifact; github-profile-3d-contrib and
+repo-visualizer keep their outputs useful through recurring updates. Repolis already had whole-town, one-repo,
+two-person, time-based, postcard, and profile artifacts. What it lacked was a visitor-authored handoff made
+*after* the city proved useful: a small ordered story another developer can immediately follow.
+
+| Candidate | Impact | Novelty | Implementation safety | Mobile performance | Shareability | Total |
+|---|---:|---:|---:|---:|---:|---:|
+| Repo Route | 5 | 5 | 4 | 5 | 5 | **24** |
+| Open Source Quest Board | 4 | 5 | 2 | 4 | 4 | 19 |
+| Town Theme Forge | 3 | 3 | 4 | 3 | 5 | 18 |
+
+Scores use 5 as best, including lower implementation risk. Repo Route won because it changes the
+value-proof → referral → Star segment without another GitHub request, sparse issue dependency, visual-only
+customization, or overlap with the recently shipped Portal, Twin Towns, Growth Replay, Creator Hall, postcard,
+and profile flows.
+
+- Every real repo card can add or remove that house from a session-only ordered route. Two stops unlock
+  preview and sharing; three is the hard cap. Wayfinding opens an accessible builder with visited-house
+  suggestions, keyboard focus trapping, 44px mobile actions, KO/EN copy, native share, and clipboard fallback.
+- `?user=<owner>&route=<repo1>,<repo2>,<repo3>&ref=repo-route` confirms a valid route before town entry, then
+  reuses the existing compass/taxi and repo cards to advance strictly in order. Owner links omit `user`.
+  Repo Portal, Growth Replay, Twin Towns, and focused-Atelier queries take precedence rather than stacking HUDs.
+- Completion reuses the one earned, dismissible Star invitation. There is no arrival modal, reward gate,
+  recurring prompt, fake scarcity, or Star requirement; the visitor sees value first and may share the route
+  directly from the completion HUD.
+- [`assets/repo-route.js`](assets/repo-route.js) strictly validates 2–3 unique current public repo names and
+  produces the canonical URL. Invalid, duplicate, missing, private/deleted, overlong, overflow, and conflicting
+  inputs fail soft before runtime navigation.
+- New route telemetry is limited to entry, stop count, result, device, language, and channel; the shared
+  repository names, town owner, URL, session ID, and persistent instance ID are removed. The feature adds no
+  mesh, texture, light, media, backend, API key, dependency, storage key, or recurring timer.
+
 ## [1.87.0] — 2026-08-20
 
 ### 🏛️ Repo Portal — let one repository bring visitors into the city
