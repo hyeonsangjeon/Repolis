@@ -49,6 +49,12 @@ import {
   repoPortalLatencyBucket,
   resolveRepoPortalRequest
 } from '../assets/repo-portal.js';
+import {
+  REPO_ROUTE_LIMITS,
+  createRepoRouteUrl,
+  normalizeRepoRouteNames,
+  resolveRepoRouteRequest
+} from '../assets/repo-route.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -80,6 +86,7 @@ const TWIN_TOWNS_SRC = readFileSync(join(ROOT, 'assets/twin-towns.js'), 'utf8');
 const TOWN_CREATOR_SRC = readFileSync(join(ROOT, 'assets/town-creator.js'), 'utf8');
 const TOWN_GROWTH_SRC = readFileSync(join(ROOT, 'assets/town-growth.js'), 'utf8');
 const REPO_PORTAL_SRC = readFileSync(join(ROOT, 'assets/repo-portal.js'), 'utf8');
+const REPO_ROUTE_SRC = readFileSync(join(ROOT, 'assets/repo-route.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -664,10 +671,115 @@ ok(/Your repository history becomes a moving city story/.test(README_EN)
   &&/assets\/town-growth\.js/.test(README_EN)&&/assets\/town-growth\.js/.test(README_KO),
   'both READMEs explain the personal-history value, truth boundary, zero-cost runtime, and helper');
 
+group('Repo Route — a visitor-authored path from value proof to referral and earned Star');
+const routeCatalog=['Alpha','beta_repo','gamma.js'];
+const routeReady=resolveRepoRouteRequest('?user=octocat&route=alpha,beta_repo&ref=repo-route',routeCatalog);
+ok(routeReady.valid&&routeReady.reason==='ready'&&routeReady.repos.join(',')==='Alpha,beta_repo'
+  && Object.isFrozen(routeReady)&&Object.isFrozen(routeReady.repos),
+  'two current catalog names resolve case-insensitively to one immutable ordered route');
+ok(!resolveRepoRouteRequest('?route=Alpha,alpha',routeCatalog).valid
+  && !resolveRepoRouteRequest('?route=Alpha,missing',routeCatalog).valid
+  && !resolveRepoRouteRequest('?route=Alpha,beta_repo',[]).valid,
+  'duplicate, unavailable, and empty-catalog repository names fail closed instead of changing route meaning');
+const routeOverflow=resolveRepoRouteRequest('?route=Alpha,beta_repo,gamma.js,fourth',routeCatalog);
+const routeConflict=resolveRepoRouteRequest('?route=Alpha,beta_repo&repo=octocat/Alpha',routeCatalog);
+const routeAmbiguous=resolveRepoRouteRequest('?route=Alpha,beta_repo&route=beta_repo,gamma.js',routeCatalog);
+ok(!routeOverflow.valid&&routeOverflow.reason==='overflow'
+  && !routeConflict.valid&&routeConflict.reason==='conflict'&&routeConflict.conflict==='repo'
+  && !routeAmbiguous.valid&&routeAmbiguous.reason==='ambiguous',
+  'a fourth stop, repeated route, and exclusive product query conflicts fail soft before runtime navigation');
+ok(normalizeRepoRouteNames(['Alpha','alpha','bad/name','beta_repo'],routeCatalog).join(',')==='Alpha,beta_repo'
+  && REPO_ROUTE_LIMITS.minStops===2&&REPO_ROUTE_LIMITS.maxStops===3,
+  'normalization preserves first-seen order, canonical spelling, uniqueness, and the 2–3 stop boundary');
+const publicRouteUrl=new URL(createRepoRouteUrl('Octo-Cat',['Alpha','beta_repo'],
+  'https://town.test/?twin=friend&growth=2020&dbg=1#repo=old','owner'));
+const ownerRouteUrl=new URL(createRepoRouteUrl('owner',['Alpha','beta_repo'],'https://town.test/?user=elsewhere','OWNER'));
+ok(publicRouteUrl.searchParams.get('user')==='Octo-Cat'
+  && publicRouteUrl.searchParams.get('route')==='Alpha,beta_repo'
+  && publicRouteUrl.searchParams.get('ref')==='repo-route'
+  && !publicRouteUrl.searchParams.has('twin')&&!publicRouteUrl.searchParams.has('growth')&&!publicRouteUrl.hash,
+  'public-town share links preserve only town identity, ordered stops, and the Repo Route referral marker');
+ok(!ownerRouteUrl.searchParams.has('user')&&ownerRouteUrl.searchParams.get('route')==='Alpha,beta_repo',
+  'canonical owner routes omit the redundant username');
+let routeCreateRejected=0;
+for(const input of [['Alpha'],['Alpha','Alpha'],['Alpha','beta_repo','gamma.js','fourth'],['Alpha','bad/name']]){
+  try{ createRepoRouteUrl('owner',input,'https://town.test/','owner'); }catch(error){ routeCreateRejected++; }
+}
+ok(routeCreateRejected===4, 'the link builder rejects insufficient, duplicate, overflow, and hostile route inputs');
+ok(!/window|document|fetch\(|WebSocket|localStorage|sessionStorage|Date\.now|Math\.random/.test(REPO_ROUTE_SRC)
+  && REPO_ROUTE_SRC.length<6000, 'the pure route helper is small, deterministic, and has no browser, network, storage, clock, or random dependency');
+
+const repoRouteBlock=(HTML.match(/\/\*REPO_ROUTE:START\*\/([\s\S]*?)\/\*REPO_ROUTE:END\*\//)||[,''])[1];
+ok(repoRouteBlock.length>0
+  &&/from '\.\/assets\/repo-route\.js\?v=repo-route-v1'/.test(HTML)
+  &&/resolveRepoRouteRequest\(location\.search,REPOS\.filter/.test(repoRouteBlock),
+  'the loaded owner or public catalog feeds one pure current-town route resolver');
+ok(/id="repoRouteMenuBtn"/.test(HTML)&&/id="repoRouteCardBtn"/.test(HTML)
+  &&/id="repoRouteHud"/.test(HTML)&&/id="repoRouteMenuCount"/.test(HTML),
+  'Wayfinding, every real repo card, and the compact world HUD expose one shared route state');
+ok(/id="repoRouteModal" role="dialog" aria-modal="true" aria-labelledby="repoRouteTitle" aria-describedby="repoRouteSub"/.test(HTML)
+  &&/id="repoRouteStatus" role="status" aria-live="polite" aria-atomic="true"/.test(HTML)
+  &&/function _repoRouteFocusables\(\)/.test(repoRouteBlock)
+  &&/!element\.closest\('\[hidden\]'\)/.test(repoRouteBlock)
+  &&/event\.key==='Escape'/.test(repoRouteBlock)&&/event\.key!=='Tab'/.test(repoRouteBlock)
+  &&/function _repoRouteSuspendBackground\(\)/.test(repoRouteBlock)&&/element\.inert=true/.test(repoRouteBlock)
+  &&/\.repoRouteStop button, \.repoRouteSuggestion \{[^}]*min-width:44px; min-height:44px/.test(HTML)
+  &&/\.repoRoutePrivacy\s*\{[^}]*color:#725a47/.test(HTML),
+  'the bilingual builder is labelled, inert, focus-trapped, keyboard-safe, touch-sized, and contrast-safe');
+ok(/REPO_ROUTE\.stops\[REPO_ROUTE\.index\]!==repo/.test(repoRouteBlock)
+  &&/REPO_ROUTE\.index\+\+/.test(repoRouteBlock)
+  &&/setNav\(REPO_ROUTE\.stops\[done\]\)/.test(repoRouteBlock),
+  'only opening the current real house advances the ordered route and points to the next stop');
+ok(/REPO_ROUTE_REQUEST\.valid&&cityMode!=='portal'/.test(HTML)
+  &&/startRepoRoute\('link'\)/.test(HTML)
+  &&/introRouteReady/.test(HTML)&&/enterRoute/.test(HTML),
+  'a valid shared route proves its stop list before entry and starts only after the recipient enters town');
+ok(/#intro\.hidden\s*\{[^}]*visibility:\s*hidden/.test(HTML),
+  'the shared-route intro leaves the accessibility tree after its exit transition');
+ok(/createRepoRouteUrl\(currentUser,REPO_ROUTE\.selected,_repoRouteBaseUrl\(\),OWNER\)/.test(repoRouteBlock)
+  &&/typeof navigator\.share!=='function'/.test(repoRouteBlock)
+  &&/_copyPostcardText\(_repoRouteUrl\(\)\)/.test(repoRouteBlock),
+  'route sharing uses one canonical URL with native share and clipboard fallback');
+ok(/if\(STAR_TRAIL\) endStarTrail\(\); if\(LANTERN_WATCH\) endLanternWatch\(\)/.test(repoRouteBlock)
+  &&/if\(REPO_ROUTE\.active\|\|REPO_ROUTE\.complete\) endRepoRoute\('replaced'\)/.test(HTML)
+  &&/startTownGrowthReplay\(options=\{\}\)[\s\S]{0,520}endRepoRoute\('replaced'\)/.test(HTML),
+  'Repo Route, Constellation, Night Watch, and Growth Replay release competing HUD ownership');
+ok(/maybeStarNudge\('repo_route_complete'\)/.test(repoRouteBlock)
+  &&/if\(!REPO_ROUTE_REQUEST\.valid\) setTimeout\(\(\)=>\{ try\{ maybeStarNudge\('personal_town'\)/.test(HTML)
+  &&/fireworksShow\(10\)/.test(repoRouteBlock)
+  &&!/maybeStarNudge\(['"](?:repo_route_open|repo_route_start|repo_route_share)/.test(repoRouteBlock),
+  'the existing Star invitation is earned after ordered completion, never on open, start, or share');
+const routeTelemetry=(HTML.match(/function trackRepoRoute\(eventName,payload\)\{([\s\S]*?)\n\}/)||[,''])[1];
+ok(/if\(ev\.__privacy==='repo-route'\)[\s\S]{0,260}new Set\(\['ev','ts','entry','device','lang','result','count','channel'\]\)/.test(HTML)
+  &&routeTelemetry.length>0&&!/cityUser|targetUser|owner|url|sessionId|instanceId/.test(routeTelemetry)
+  &&!/track\('repo_route/.test(repoRouteBlock),
+  'route telemetry allowlists coarse funnel enums and cannot emit repository names or persistent identity');
+ok(!/new THREE\.|fetch\(|WebSocket|localStorage|sessionStorage|setInterval/.test(repoRouteBlock)
+  &&/resources:\{draws:0,textures:0,lights:0,network:0,timers:0\}/.test(HTML),
+  'the route reuses existing houses and navigation with zero scene, network, storage, or recurring timer resources');
+['routeMenu','routeMenuSub','routeTitle','routeSub','routeClose','routeEmpty','routeSuggestions','routeStart',
+  'routeShare','routeCopy','routePrivacy','routeRemove','routeAddCard','routeRemoveCard','routeFull','routeReady',
+  'routeCopied','routeShared','routeHudTheme','routeHudTarget','routeHudRide','routeHudShare','routeStop',
+  'routeCompleteTitle','routeComplete','routeStarted','routeFound','introRouteReady','introRouteStats','enterRoute']
+  .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Repo Route key ${key} is bilingual`));
+ok(/window\.__repoRoute=/.test(HTML)&&/window\.__repoRouteOpen=/.test(HTML)
+  &&/window\.__repoRouteAdd=/.test(HTML)&&/window\.__repoRouteStart=/.test(HTML)
+  &&/window\.__repoRouteVisit=/.test(HTML)&&/window\.__repoRouteCopy=/.test(HTML)&&/window\.__repoRouteEnd=/.test(HTML),
+  'browser diagnostics expose request, selection, order, progress, sharing, zero resources, and close behavior');
+ok(/hand another developer the best path I found/.test(README_EN)
+  &&/내가 발견한 가장 좋은 동선을 다른 개발자에게 건네기/.test(README_KO)
+  &&/A visitor can hand off the route that proved the town's value/.test(README_EN)
+  &&/방문자가 도시의 가치를 증명한 동선을 그대로 건넬 수 있습니다/.test(README_KO),
+  'both READMEs explain the value-first multi-repo handoff and earned Star boundary');
+ok(/## 12\. Repo Route/.test(DOMAIN_MODEL)&&/Repo Route is a current-catalog path/.test(KNOWN_LIMITATIONS)
+  &&/## Share a Repo Route/.test(SHARE_LINKS)&&/repo_route: assets\/repo-route\.js/.test(MANIFEST)
+  &&/assets\/repo-route\.js/.test(LLMS_INDEX)&&/\| Repo Route \| 5 \| 5 \| 4 \| 5 \| 5 \| \*\*24\*\* \|/.test(CHANGELOG),
+  'domain model, limitations, share contract, manifest, LLM index, and scored BOLT decision stay discoverable');
+
 const runtimeLocalFiles = [
   'index.html','repolis.config.js','scholars.js','repos.json','assets/contribution-library.json',
   'assets/world-tree/createRepolisHero.js','assets/camera-obstruction.js','assets/canal-ferry.js',
-  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js',
+  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js','assets/repo-route.js',
   'council/council.config.json','council/engine.js','council/fixtures.js','council/guards.js','council/live.js'
 ];
 const runtimeLocalBytes = runtimeLocalFiles.reduce((sum,file)=>sum+readFileSync(join(ROOT,file)).length,0);
@@ -2395,8 +2507,8 @@ ok(/id=["']lanternWatchHud["']/.test(HTML) && /id=["']obsNightWatchStart["']/.te
 ok(/#lanternWatchHud\.hidden\s*\{[^}]*visibility:hidden/.test(HTML), 'inactive watch HUD is removed from focus/accessibility visibility');
 ok(/#lanternWatchHud\s*\{\s*left:12px;\s*bottom:calc\(100px \+ env\(safe-area-inset-bottom,0px\)\)/.test(HTML),
   'touch watch HUD sits above the bottom interaction prompt and safe area');
-ok(/#starTrailHud \.stClose,\s*#lanternWatchHud \.stClose\s*\{\s*width:44px;\s*height:44px/.test(HTML),
-  'both route close controls meet the 44px coarse-pointer target');
+ok(/#starTrailHud \.stClose,\s*#lanternWatchHud \.stClose,\s*#repoRouteHud \.stClose\s*\{\s*width:44px;\s*height:44px/.test(HTML),
+  'all three route close controls meet the 44px coarse-pointer target');
 ok(/function startLanternWatch\(\)[\s\S]*?if\(STAR_TRAIL\) endStarTrail\(\)[\s\S]*?setTimeOfDay\(true\)[\s\S]*?setNav\(LANTERN_WATCH\.stops\[0\]\)/.test(watchBlock),
   'watch launch owns the route, turns on night, and guides to the first quiet repo');
 ok(/function startStarTrail\(\)[\s\S]{0,140}if\(LANTERN_WATCH\) endLanternWatch\(\)/.test(HTML),

@@ -12,6 +12,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 |---|---|---|
 | **Repo** | one object in `repos.json` | The unit of the world — becomes one house. |
 | **Repo Portal target** | one allowlisted public repo projection | A target-first house and Atelier reached through `?repo=owner/repo`. |
+| **Repo Route** | ordered list of 2–3 current repo canonical names | A session-authored or shared path that advances only when its next real house opens. |
 | **City / Town** | derived in `index.html` at load | The whole 3D scene built from the `repos.json` array. |
 | **District** | deterministic `zoneOf(repo)` result | A topic-shaped neighborhood with a hub, board, map destination, and progress. |
 | **Resident** | resident roster in `index.html` | A townsperson with a residential home, district work anchor, mood, relationships, and a cherished haunt. |
@@ -161,6 +162,7 @@ Three modes: **Local** (default, keyless, instant) · **WebLLM** (on-device WebG
 | **Public town** | `?user=<login>` | Rebuilds the town from any public GitHub user's repos (cached in `localStorage`, stale-fallback). Cross-town taxi driving is disabled; a "go home" button returns to the owner city. |
 | **Repo Portal** | `?repo=<owner>/<repo>&ref=repo-portal` | Resolves one public repo first, shows a compact proof, then opens its Atelier after one entry click. |
 | **Expanded owner town** | `?user=<owner>&focus=<repo>&ref=repo-portal` | Loads the existing public-town catalog only after explicit expansion, merges the target when needed, and opens the same Atelier. |
+| **Repo Route entry** | `?user=<login>&route=<repo1>,<repo2>,<repo3>&ref=repo-route` | Confirms an ordered current-catalog route before entry, then guides the existing town one real house at a time. |
 
 Public mode only activates for a **valid, non-owner** username; the bare URL always loads the owner city
 unchanged. A valid `repo` query takes precedence over `user`, `twin`, `growth`, and repo-card hash state.
@@ -255,7 +257,25 @@ raw input, query text, `cityUser`, and persistent instance ID before the optiona
 
 ---
 
-## 12. Repository Atelier
+## 12. Repo Route
+
+[`assets/repo-route.js`](../assets/repo-route.js) is the pure URL and validation contract. A route contains
+exactly two or three unique GitHub repository names, resolves case-insensitively to canonical names in the
+town currently loaded, and rejects invalid, unknown, duplicate, overflow, and conflicting input. A valid
+Repo Portal, focused Atelier, Growth Replay, or Twin Towns query wins instead of layering incompatible HUDs.
+
+The builder is session-only. A card can add the house the visitor actually opened; Wayfinding can then add
+other visited houses, remove stops, follow the order locally, or share one canonical URL. The recipient intro
+shows the stop list before entry. Progress advances only when the current repo card opens; unrelated cards do
+not skip stops. Completion reuses the existing earned Star invitation and bounded celebration.
+
+The runtime adds no scene object, texture, light, fetch, backend, storage key, or timer. Route events are
+allowlisted to entry, stop count, result, device, language, channel, and timestamp. Repository names, owner,
+URL, query, session ID, and persistent instance ID do not leave through this feature's telemetry.
+
+---
+
+## 13. Repository Atelier
 
 Every non-library repo card can enter one lazy-created dedicated Three.js scene. The room is reused rather
 than duplicated: three bounded canvas atlases redraw the History/Data, Impact/Signals, and Action walls, while
@@ -280,7 +300,7 @@ turn may use the already selected Gitber mode.
 
 ---
 
-## 13. Resident Agency — Shared Joy
+## 14. Resident Agency — Shared Joy
 
 Shared Joy is a single session-local pair state in the resident social layer. When no stronger owner is
 active, a deterministic time-slice planner chooses two compatible idle residents, preferring named friends.
@@ -300,7 +320,7 @@ resident movement. The state is not persisted and makes no AI, MCP, network, ass
 
 ---
 
-## 14. Starlight Row — resident homes and routines
+## 15. Starlight Row — resident homes and routines
 
 Starlight Row is a fixed civic landmark at `(130, 130)`, outside the repository rings but inside the
 205-unit map and 215-unit player bounds. It contains one roster-bound cottage per resident. Shared instanced

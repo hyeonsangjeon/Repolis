@@ -21,6 +21,7 @@
 - [assets/world-tree/createRepolisHero.js](assets/world-tree/createRepolisHero.js): procedural World Tree factory.
 - [assets/town-growth.js](assets/town-growth.js): deterministic repository creation timeline, year snapshots, and Growth Replay share links.
 - [assets/repo-portal.js](assets/repo-portal.js): strict GitHub target parser, public repo projection, route precedence, and canonical Repo Portal links.
+- [assets/repo-route.js](assets/repo-route.js): strict current-catalog validation and canonical links for ordered 2–3 house Repo Routes.
 - [assets/contribution-library.json](assets/contribution-library.json): generated bilingual Contribution Library data.
 
 ## Main product systems
@@ -29,6 +30,7 @@
 - Explorer Passport, district progress, the daily resident→haunt→repo/district Village Chronicle, Repository Constellation Trail, and Maintainers' Night Watch for recently tended low-star repos.
 - Town Growth Replay: repo houses rise through truthful public creation years, with a reversible year link and era postcard; building metrics remain explicitly current.
 - Repo Portal: `?repo=owner/repo&ref=repo-portal` loads one public target before the owner catalog, opens its Atelier, and never invents traffic.
+- Repo Route: after opening repo houses, visitors can share an ordered 2–3 stop path that recipients follow through the same real cards and compass.
 - Repository Atelier: one walkable room rebinds current repo history, impact signals, metric artifacts, current chibi avatar, and in-room Gitber/Why actions without rendering the exterior.
 - Local Town Gazette: added/removed repos, releases, pushes, and positive metric deltas since the last marked-read snapshot.
 - Named residents with individually styled Starlight Row cottages, resident-coloured gardens, a shared flower commons, perimeter trees, home/work commutes, moods, friendships, Shared Joy, conversations, festivals, and specialist handoffs.
