@@ -47,24 +47,25 @@
   #panel { position: fixed; z-index: 12; top: 70px; right: 14px; width: 300px; max-width: calc(100vw - 28px);
     background: rgba(255,251,242,.95); backdrop-filter: blur(10px); border-radius: 18px;
     box-shadow: 0 12px 40px rgba(70,40,15,.26); padding: 12px; transform-origin: top right;
-    transition: opacity .18s ease, transform .18s ease; }
+    max-height: calc(100dvh - 88px); overflow-y: auto; transition: opacity .18s ease, transform .18s ease; }
   #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
-  #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
+  #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
-  #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover, #repoRouteMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
-  #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active, #repoRouteMenuBtn:active { transform: translateY(1px); }
-  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon, #repoRouteMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover, #repoRouteMenuBtn:hover, #questMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
+  #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active, #repoRouteMenuBtn:active, #questMenuBtn:active { transform: translateY(1px); }
+  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon, #repoRouteMenuBtn .pmIcon, #questMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
     color: #fff8e7; background: linear-gradient(145deg,#365464,#173d55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); font-size: 17px; }
   #twinMenuBtn .pmIcon { background: linear-gradient(145deg,#6a4f86,#2e5667); }
   #creatorMenuBtn .pmIcon { background: linear-gradient(145deg,#ba783d,#6a4327); }
   #growthMenuBtn .pmIcon { background: linear-gradient(145deg,#6c5ea8,#345d7c); }
   #repoRouteMenuBtn .pmIcon { background: linear-gradient(145deg,#e07b42,#7f3f57); }
-  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy, #repoRouteMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle, #repoRouteMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
-  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub, #repoRouteMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #questMenuBtn .pmIcon { background: linear-gradient(145deg,#2f766d,#244d63); }
+  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy, #repoRouteMenuBtn .pmCopy, #questMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle, #repoRouteMenuBtn .pmTitle, #questMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
+  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub, #repoRouteMenuBtn .pmSub, #questMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #repoRouteMenuCount { flex:0 0 auto; min-width:34px; padding:4px 7px; border-radius:999px; color:#fff; background:#8e4f5d;
     font-size:10px; font-weight:900; text-align:center; }
   #repoRouteMenuCount[hidden] { display:none; }
@@ -288,6 +289,7 @@
   .btn.gh { background: #2b2420; color: #fff; }
   .btn.live { background: #c2702f; color: #fff; }
   .btn.route { background: linear-gradient(135deg,#e18044,#9c4d58); color: #fff; }
+  .btn.quest { background: linear-gradient(135deg,#2f766d,#244d63); color: #fff; }
   .btn.atelier { flex-basis: 100%; background: linear-gradient(135deg,#253d46,#42636a); color: #fff;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
   .btn.atelier:disabled { cursor: default; opacity: .72; }
@@ -463,6 +465,65 @@
     .repoRouteHead h2 { font-size:20px; }
     .repoRouteBody { padding:14px 13px calc(16px + env(safe-area-inset-bottom,0px)); }
     .repoRouteActions { grid-template-columns:1fr; }
+  }
+  /* Open Source Quest Board — explicit live issues become in-town contribution handoffs */
+  #questModal { position:fixed; inset:0; z-index:76; display:none; align-items:center; justify-content:center;
+    padding:18px; background:rgba(10,25,28,.76); backdrop-filter:blur(7px); }
+  #questModal.show { display:flex; }
+  .questStudio { position:relative; width:min(720px,100%); max-height:calc(100dvh - 36px); overflow-y:auto;
+    border:1px solid rgba(255,255,255,.22); border-radius:24px; color:#283b38; background:#f7fbf7;
+    box-shadow:0 24px 76px rgba(5,20,22,.5); -webkit-user-select:text; user-select:text; }
+  .questClose { position:absolute; z-index:2; top:12px; right:12px; width:44px; height:44px; border:0;
+    border-radius:50%; color:#315e59; background:#dcece6; font:800 18px/1 inherit; cursor:pointer; }
+  .questHead { padding:23px 70px 16px 24px; border-radius:23px 23px 0 0; color:#fff;
+    background:linear-gradient(135deg,#244d63,#2f766d); }
+  .questHead .qk { color:#bfe9d9; font-size:10px; font-weight:900; letter-spacing:.16em; }
+  .questHead h2 { margin-top:4px; font-size:24px; line-height:1.2; }
+  .questHead p { margin-top:6px; color:rgba(255,255,255,.86); font-size:12px; line-height:1.48; }
+  .questBody { padding:18px 22px 22px; }
+  .questLead { margin:0 0 12px; color:#58706b; font-size:11.5px; line-height:1.5; }
+  #questStatus { min-height:18px; margin:0 0 10px; color:#526b66; font-size:11px; font-weight:700; line-height:1.45; text-align:center; }
+  #questStatus:empty { min-height:0; margin:0; }
+  #questStatus[data-tone="error"] { color:#a63f32; }
+  #questStatus[data-tone="success"] { color:#24735c; }
+  #questList { display:grid; gap:10px; }
+  #questEmpty { padding:20px 16px; border:1px dashed #bad0c6; border-radius:15px; color:#617a74;
+    background:#fff; font-size:12px; line-height:1.55; text-align:center; }
+  #questEmpty[hidden] { display:none; }
+  .questCard { min-width:0; padding:14px; border:1px solid #cfe0d8; border-radius:16px; background:#fff;
+    box-shadow:0 5px 16px rgba(40,74,68,.08); }
+  .questCard.active { border-color:#3b8879; box-shadow:0 0 0 3px rgba(47,118,109,.13); }
+  .questMeta { display:flex; flex-wrap:wrap; gap:7px; align-items:center; min-width:0; }
+  .questTier { flex:0 0 auto; padding:4px 7px; border-radius:999px; color:#315c54; background:#dcefe6;
+    font-size:9.5px; font-weight:900; letter-spacing:.02em; }
+  .questTier[data-tier="good-first"] { color:#245541; background:#ccebd9; }
+  .questTier[data-tier="help-wanted"] { color:#69491e; background:#f5e2b5; }
+  .questRepo { min-width:0; overflow:hidden; color:#5e7771; font-size:10.5px; font-weight:800;
+    text-overflow:ellipsis; white-space:nowrap; }
+  .questTitle { margin:8px 0 0; color:#263b37; font-size:14px; line-height:1.4; overflow-wrap:anywhere; }
+  .questLabels { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+  .questLabels span { max-width:100%; padding:3px 6px; border-radius:7px; color:#667b76; background:#edf3f0;
+    font-size:9px; line-height:1.2; overflow-wrap:anywhere; }
+  .questFacts { margin-top:8px; color:#71847f; font-size:10px; line-height:1.4; }
+  .questCardActions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:11px; }
+  .questCardActions button, .questCardActions a, #questScan { display:flex; min-height:44px; align-items:center; justify-content:center;
+    border:1px solid #bcd3ca; border-radius:11px; padding:9px 10px; color:#315e58; background:#edf7f3;
+    font:800 11.5px/1.3 inherit; text-align:center; text-decoration:none; cursor:pointer; }
+  .questCardActions a { color:#fff; border-color:#244d63; background:#244d63; }
+  #questScan { width:100%; margin-top:13px; color:#fff; border:0; background:linear-gradient(135deg,#2f766d,#244d63); }
+  #questScan:disabled { cursor:wait; opacity:.58; }
+  #questScan[hidden] { display:none; }
+  .questPrivacy { margin:11px 0 0; color:#667c76; font-size:10px; line-height:1.45; text-align:center; }
+  @media (max-width:520px) {
+    #questModal { padding:10px; align-items:flex-end; }
+    .questStudio { max-height:calc(100dvh - 20px); border-radius:20px; }
+    .questHead { padding:18px 62px 13px 17px; border-radius:19px 19px 0 0; }
+    .questHead h2 { font-size:20px; }
+    .questBody { padding:14px 13px calc(16px + env(safe-area-inset-bottom,0px)); }
+    .questCardActions { grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    #questModal, .questStudio, .questCard { transition:none !important; }
   }
   /* Repository Atelier — one isolated, reusable 3D room */
   #atelierFade { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0;
@@ -1214,6 +1275,10 @@
 
 <div id="panel" class="hidden">
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <button id="questMenuBtn" type="button">
+    <span class="pmIcon" aria-hidden="true">🧩</span>
+    <span class="pmCopy"><span class="pmTitle" data-i18n="questMenu">오픈소스 퀘스트</span><span class="pmSub" data-i18n="questMenuSub">현재 공개 이슈를 실제 레포 집과 연결</span></span>
+  </button>
   <button id="creatorMenuBtn" type="button">
     <span class="pmIcon" aria-hidden="true">👤</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="creatorMenu">마을 만든 사람</span><span class="pmSub" data-i18n="creatorMenuSub">공개 GitHub 프로필과 대표 작업</span></span>
@@ -1374,6 +1439,26 @@
       </div>
       <div id="repoRouteStatus" role="status" aria-live="polite" aria-atomic="true"></div>
       <p class="repoRoutePrivacy" data-i18n="routePrivacy">현재 공개 레포 이름만 URL에 담기며, 계정 연결·새 백엔드·추적용 레포 목록은 만들지 않아요.</p>
+    </div>
+  </section>
+</div>
+
+<div id="questModal" role="dialog" aria-modal="true" aria-labelledby="questTitle" aria-describedby="questSub questLead" aria-hidden="true">
+  <section class="questStudio" tabindex="-1">
+    <button id="questClose" class="questClose" type="button" data-i18n-aria="questClose" aria-label="오픈소스 퀘스트 닫기">✕</button>
+    <header class="questHead">
+      <div class="qk">OPEN SOURCE QUEST BOARD</div>
+      <h2 id="questTitle" data-i18n="questTitle">이 도시에서 기여할 일 찾기</h2>
+      <p id="questSub" data-i18n="questSub">현재 공개 이슈에서 시작하기 좋은 과제를 골라, 그 일이 기다리는 레포 집까지 안내해요.</p>
+    </header>
+    <div class="questBody">
+      <p id="questLead" class="questLead" data-i18n="questLead">명시적으로 찾기를 눌렀을 때만 GitHub 공개 검색을 한 번 사용합니다. 결과는 이 탭에만 머물러요.</p>
+      <div id="questStatus" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></div>
+      <div id="questList" role="list" data-i18n-aria="questListAria" aria-label="현재 공개 기여 퀘스트">
+        <div id="questEmpty" data-i18n="questBeforeScan">지금 열려 있는 이슈를 살펴보고, 실제로 도울 수 있는 레포 집을 찾아보세요.</div>
+      </div>
+      <button id="questScan" type="button" data-i18n="questScan">공개 퀘스트 찾기</button>
+      <p class="questPrivacy" data-i18n="questPrivacy">로그인·토큰·새 백엔드 없이 현재 마을 주인의 공개 이슈만 읽으며, 이슈나 레포 이름을 분석 이벤트로 보내지 않아요.</p>
     </div>
   </section>
 </div>
@@ -1685,6 +1770,7 @@ import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-cre
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
 import { REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolveRepoPortalRequest } from './assets/repo-portal.js?v=repo-portal-v1';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
+import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1751,6 +1837,10 @@ function track(eventName, payload){
       const allowed=new Set(['ev','ts','entry','device','lang','result','count','channel']);
       Object.keys(ev).forEach(key=>{ if(!allowed.has(key)) delete ev[key]; });
     }
+    if(ev.__privacy==='contribution-quest'){
+      const allowed=new Set(['ev','ts','entry','device','lang','result','count','tier','channel']);
+      Object.keys(ev).forEach(key=>{ if(!allowed.has(key)) delete ev[key]; });
+    }
     recentAnalyticsEvents.push(ev); if(recentAnalyticsEvents.length > 150) recentAnalyticsEvents.shift();
     if(_DBG) console.debug('[track]', eventName, ev);
     if(ANALYTICS_ENDPOINT){ try{
@@ -1772,6 +1862,14 @@ function trackRepoRoute(eventName,payload){
   for(const key of allowed){
     const value=payload&&payload[key];
     if((typeof value==='string'&&value.length<=32)||(key==='count'&&Number.isInteger(value)&&value>=0&&value<=REPO_ROUTE_LIMITS.maxStops)) safe[key]=value;
+  }
+  track(eventName,safe);
+}
+function trackContributionQuest(eventName,payload){
+  const safe={__privacy:'contribution-quest'},allowed=['entry','device','lang','result','count','tier','channel'];
+  for(const key of allowed){
+    const value=payload&&payload[key];
+    if((typeof value==='string'&&value.length<=32)||(key==='count'&&Number.isInteger(value)&&value>=0&&value<=CONTRIBUTION_QUEST_LIMITS.maxQuests)) safe[key]=value;
   }
   track(eventName,safe);
 }
@@ -2088,6 +2186,19 @@ const I18N = {
     creatorPowered:'이 마을은 공개 GitHub 데이터와 오픈소스 Repolis 엔진으로 만들어졌어요.',
     creatorShareCopied:'이 마을 링크를 복사했어요.', creatorShareFailed:'링크를 복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.',
     lmArriveCreator:'🚕 마을 창작자 회관에 도착했어요! 이 도시를 만든 사람의 공개 GitHub 기록을 열어볼게요 👤',
+    questMenu:'오픈소스 퀘스트', questMenuSub:'현재 공개 이슈를 실제 레포 집과 연결',
+    questTitle:'이 도시에서 기여할 일 찾기', questSub:'현재 공개 이슈에서 시작하기 좋은 과제를 골라, 그 일이 기다리는 레포 집까지 안내해요.',
+    questClose:'오픈소스 퀘스트 닫기', questLead:'명시적으로 찾기를 눌렀을 때만 GitHub 공개 검색을 한 번 사용합니다. 결과는 이 탭에만 머물러요.',
+    questListAria:'현재 공개 기여 퀘스트', questBeforeScan:'지금 열려 있는 이슈를 살펴보고, 실제로 도울 수 있는 레포 집을 찾아보세요.',
+    questScan:'공개 퀘스트 찾기', questScanning:'GitHub에서 현재 공개 이슈를 찾는 중…', questTryAgain:'다시 찾기',
+    questReady:'레포 집 {repos}곳에서 공개 퀘스트 {count}개를 찾았어요.', questEmpty:'현재 이 마을의 공개 레포에는 열려 있는 기여 퀘스트가 없어요.',
+    questRate:'GitHub 공개 검색 한도에 도달했어요. 잠시 뒤 다시 시도해 주세요.', questNetwork:'공개 이슈를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
+    questTierGood:'처음 기여하기 좋아요', questTierHelp:'도움이 필요해요', questTierOpen:'열린 이슈',
+    questUpdatedToday:'오늘 업데이트', questUpdatedDays:'{days}일 전 업데이트', questUnassigned:'담당자 없음', questAssigned:'담당자 있음', questComments:'댓글 {count}개',
+    questVisit:'🚕 레포 집으로 이동', questVisitAria:'{repo} 레포 집으로 이동해 퀘스트 #{number} 보기',
+    questOpen:'GitHub 이슈 열기 ↗', questOpenAria:'GitHub에서 {repo} 퀘스트 #{number} 열기', questCardOpen:'🧩 퀘스트 #{number} 열기 ↗',
+    questGuiding:'🧩 {repo} 집으로 가요. 도착하면 퀘스트 #{number}를 열 수 있어요.', questHandoff:'GitHub에서 퀘스트 #{number}를 열었어요. 기여 여부는 Repolis가 추적하지 않아요.',
+    questUnavailable:'이 레포 집은 현재 마을에서 찾을 수 없어요.', questPrivacy:'로그인·토큰·새 백엔드 없이 현재 마을 주인의 공개 이슈만 읽으며, 이슈나 레포 이름을 분석 이벤트로 보내지 않아요.',
     routeMenu:'Repo Route', routeMenuSub:'직접 본 레포 2~3곳을 코스로 공유',
     routeTitle:'내가 발견한 레포 길 만들기', routeSub:'직접 열어 본 집 2~3곳을 고른 순서대로 이어, 친구가 그대로 걸어보게 하세요.',
     routeClose:'Repo Route 닫기', routeEmpty:'레포 집 카드를 열고 ‘Repo Route에 담기’를 누르세요. 두 곳부터 길을 시작하고 공유할 수 있어요.',
@@ -2370,6 +2481,19 @@ const I18N = {
     creatorPowered:'This town is built from public GitHub data and the open-source Repolis engine.',
     creatorShareCopied:'Town link copied.', creatorShareFailed:"Couldn't copy the link. Check this browser's clipboard permission.",
     lmArriveCreator:"🚕 We've reached the Town Creator Hall! Opening the public GitHub story behind this city 👤",
+    questMenu:'Open Source Quests', questMenuSub:'Connect current public issues to real repo houses',
+    questTitle:'Find a contribution in this city', questSub:'Pick an approachable task from current public issues, then travel to the repository house where it lives.',
+    questClose:'Close Open Source Quests', questLead:'Repolis makes one public GitHub search only after you explicitly choose Find. Results stay in this tab.',
+    questListAria:'Current public contribution quests', questBeforeScan:'Check the issues open right now and find a repository house where you can genuinely help.',
+    questScan:'Find public quests', questScanning:'Looking for current public GitHub issues…', questTryAgain:'Try again',
+    questReady:'Found {count} public quests across {repos} repository houses.', questEmpty:'This town has no open contribution quests in its current public repositories.',
+    questRate:"GitHub's public search limit was reached. Try again in a little while.", questNetwork:'Public issues could not be loaded. Check your connection and try again.',
+    questTierGood:'Good first issue', questTierHelp:'Help wanted', questTierOpen:'Open issue',
+    questUpdatedToday:'Updated today', questUpdatedDays:'Updated {days}d ago', questUnassigned:'Unassigned', questAssigned:'Assigned', questComments:'{count} comments',
+    questVisit:'🚕 Visit repo house', questVisitAria:'Visit the {repo} house for quest #{number}',
+    questOpen:'Open GitHub issue ↗', questOpenAria:'Open {repo} quest #{number} on GitHub', questCardOpen:'🧩 Open quest #{number} ↗',
+    questGuiding:"🧩 Heading to the {repo} house. Quest #{number} will be waiting when you arrive.", questHandoff:'Opened quest #{number} on GitHub. Repolis does not track whether you contribute.',
+    questUnavailable:'That repository house is no longer available in this town.', questPrivacy:'Reads only the current town owner’s public issues without login, a token, or a new backend; issue and repository names never enter analytics.',
     routeMenu:'Repo Route', routeMenuSub:'Share a 2–3 house path you actually explored',
     routeTitle:'Build a route from what you found', routeSub:'Choose 2–3 houses you opened. A friend can walk them in the same order.',
     routeClose:'Close Repo Route', routeEmpty:'Open a repository house card and choose “Add to Repo Route.” Two stops unlock following and sharing.',
@@ -2531,6 +2655,7 @@ function applyLang(){
   if(typeof renderStarTrailHud==='function') renderStarTrailHud();
   if(typeof renderLanternWatchHud==='function') renderLanternWatchHud();
   if(typeof window.__repoRouteLangRefresh==='function') window.__repoRouteLangRefresh();
+  if(typeof window.__questLangRefresh==='function') window.__questLangRefresh();
   if(typeof window.__cityLangRefresh==='function') window.__cityLangRefresh();
   if(typeof window.__publicIntroRefresh==='function') window.__publicIntroRefresh();
   if(typeof window.__twinLangRefresh==='function') window.__twinLangRefresh();
@@ -8819,6 +8944,184 @@ window.__repoRouteLangRefresh=()=>{ renderRepoRouteStudio(); renderRepoRouteHud(
 renderRepoRouteStudio(); renderRepoRouteHud();
 /*REPO_ROUTE:END*/
 
+/*CONTRIBUTION_QUESTS:START*/
+const questModal=document.getElementById('questModal'),questStudio=questModal.querySelector('.questStudio'),
+  questClose=document.getElementById('questClose'),questStatus=document.getElementById('questStatus'),
+  questList=document.getElementById('questList'),questEmpty=document.getElementById('questEmpty'),
+  questScan=document.getElementById('questScan'),questMenuBtn=document.getElementById('questMenuBtn');
+const CONTRIBUTION_QUESTS={
+  open:false,loading:false,loaded:false,quests:[],active:null,status:null,error:'',entry:'menu',
+  previousFocus:null,inert:[],requestId:0,abort:null,fetches:0,handedOff:false
+};
+function _questDevice(){ return matchMedia('(pointer:coarse)').matches||innerWidth<700?'mobile':'desktop'; }
+function _questSetStatus(key='',tone='',vars=null){
+  CONTRIBUTION_QUESTS.status=key?{key,tone,vars}:null;
+  questStatus.textContent=key?tf(key,vars||{}):''; questStatus.dataset.tone=tone||'';
+}
+function _questTierKey(tier){ return tier==='good-first'?'questTierGood':tier==='help-wanted'?'questTierHelp':'questTierOpen'; }
+function _questUpdated(quest){
+  const days=quest.updatedAt?Math.max(0,Math.floor((Date.now()-quest.updatedAt)/86400000)):0;
+  return days<1?t('questUpdatedToday'):tf('questUpdatedDays',{days});
+}
+function _questForRepo(repo){
+  const active=CONTRIBUTION_QUESTS.active;
+  return active&&repo&&active.repo.toLowerCase()===repo.repo.toLowerCase()?active:null;
+}
+function _questCard(quest){
+  const card=document.createElement('article'); card.className='questCard'; card.setAttribute('role','listitem');
+  if(CONTRIBUTION_QUESTS.active?.url===quest.url){ card.classList.add('active'); card.setAttribute('aria-current','true'); }
+  const meta=document.createElement('div'); meta.className='questMeta';
+  const tier=document.createElement('span'); tier.className='questTier'; tier.dataset.tier=quest.tier; tier.textContent=t(_questTierKey(quest.tier));
+  const repo=document.createElement('span'); repo.className='questRepo'; repo.textContent=quest.repo+' · #'+quest.number; repo.title=quest.repo+' #'+quest.number;
+  meta.append(tier,repo);
+  const title=document.createElement('h3'); title.className='questTitle'; title.textContent=quest.title;
+  card.append(meta,title);
+  if(quest.labels.length){
+    const labels=document.createElement('div'); labels.className='questLabels';
+    quest.labels.forEach(value=>{ const label=document.createElement('span'); label.textContent=value; labels.appendChild(label); });
+    card.appendChild(labels);
+  }
+  const facts=document.createElement('div'); facts.className='questFacts';
+  facts.textContent=[_questUpdated(quest),t(quest.assigned?'questAssigned':'questUnassigned'),tf('questComments',{count:quest.comments})].join(' · ');
+  const actions=document.createElement('div'); actions.className='questCardActions';
+  const visit=document.createElement('button'); visit.type='button'; visit.textContent=t('questVisit');
+  visit.setAttribute('aria-label',tf('questVisitAria',{repo:quest.repo,number:quest.number})); visit.onclick=()=>guideToContributionQuest(quest);
+  const issue=document.createElement('a'); issue.href=quest.url; issue.target='_blank'; issue.rel='noopener'; issue.textContent=t('questOpen');
+  issue.setAttribute('aria-label',tf('questOpenAria',{repo:quest.repo,number:quest.number}));
+  issue.onclick=()=>markContributionQuestHandoff(quest,'board');
+  actions.append(visit,issue); card.append(facts,actions); return card;
+}
+function renderContributionQuestBoard(){
+  questList.replaceChildren();
+  if(CONTRIBUTION_QUESTS.quests.length) CONTRIBUTION_QUESTS.quests.forEach(quest=>questList.appendChild(_questCard(quest)));
+  else {
+    questEmpty.textContent=t(CONTRIBUTION_QUESTS.loaded?'questEmpty':'questBeforeScan');
+    questList.appendChild(questEmpty);
+  }
+  questScan.hidden=CONTRIBUTION_QUESTS.loaded&&!CONTRIBUTION_QUESTS.error;
+  questScan.disabled=CONTRIBUTION_QUESTS.loading;
+  questScan.textContent=t(CONTRIBUTION_QUESTS.error?'questTryAgain':CONTRIBUTION_QUESTS.loading?'questScanning':'questScan');
+  questStudio.setAttribute('aria-busy',CONTRIBUTION_QUESTS.loading?'true':'false');
+  if(CONTRIBUTION_QUESTS.status) questStatus.textContent=tf(CONTRIBUTION_QUESTS.status.key,CONTRIBUTION_QUESTS.status.vars||{});
+  else questStatus.textContent='';
+}
+function _questSuspendBackground(){
+  CONTRIBUTION_QUESTS.inert=[];
+  for(const element of document.body.children){
+    if(element===questModal||element.tagName==='SCRIPT'||element.tagName==='STYLE') continue;
+    CONTRIBUTION_QUESTS.inert.push([element,element.inert]); element.inert=true;
+  }
+}
+function _questRestoreBackground(){
+  for(const [element,value] of CONTRIBUTION_QUESTS.inert) element.inert=value;
+  CONTRIBUTION_QUESTS.inert=[];
+}
+function openContributionQuestBoard(entry='menu'){
+  if(repositoryAtelierActive()||(modalOpen&&!CONTRIBUTION_QUESTS.open)) return false;
+  if(tour&&tour.active) endTour(false);
+  CONTRIBUTION_QUESTS.open=true; CONTRIBUTION_QUESTS.entry=['menu','debug'].includes(entry)?entry:'menu';
+  CONTRIBUTION_QUESTS.previousFocus=document.activeElement; panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false');
+  passportEl.classList.add('hidden'); document.getElementById('station').classList.add('hidden');
+  modalOpen=true; _questSuspendBackground(); questModal.classList.add('show'); questModal.setAttribute('aria-hidden','false');
+  renderContributionQuestBoard();
+  trackContributionQuest('contribution_quest_open',{entry:CONTRIBUTION_QUESTS.entry,device:_questDevice(),lang:LANG,result:'shown',count:CONTRIBUTION_QUESTS.quests.length});
+  setTimeout(()=>{ try{ questClose.focus(); }catch(e){} },0); return true;
+}
+function closeContributionQuestBoard(){
+  if(!CONTRIBUTION_QUESTS.open) return false;
+  CONTRIBUTION_QUESTS.open=false; CONTRIBUTION_QUESTS.requestId++;
+  if(CONTRIBUTION_QUESTS.abort){ try{ CONTRIBUTION_QUESTS.abort.abort(); }catch(e){} CONTRIBUTION_QUESTS.abort=null; }
+  if(CONTRIBUTION_QUESTS.loading){ CONTRIBUTION_QUESTS.loading=false; CONTRIBUTION_QUESTS.error=''; CONTRIBUTION_QUESTS.status=null; }
+  questModal.classList.remove('show'); questModal.setAttribute('aria-hidden','true'); _questRestoreBackground(); modalOpen=false;
+  const previous=CONTRIBUTION_QUESTS.previousFocus; CONTRIBUTION_QUESTS.previousFocus=null;
+  const focusTarget=previous&&previous.isConnected&&!previous.closest?.('.hidden')?previous:menuBtn;
+  setTimeout(()=>{ try{ focusTarget.focus(); }catch(e){} },0);
+  trackContributionQuest('contribution_quest_close',{entry:CONTRIBUTION_QUESTS.entry,device:_questDevice(),lang:LANG,result:'closed',count:CONTRIBUTION_QUESTS.quests.length});
+  flushStarNudge(); return true;
+}
+async function loadContributionQuests(){
+  if(CONTRIBUTION_QUESTS.loading||CONTRIBUTION_QUESTS.loaded) return false;
+  const requestId=++CONTRIBUTION_QUESTS.requestId,controller=new AbortController();
+  const returnFocus=document.activeElement===questScan;
+  CONTRIBUTION_QUESTS.abort=controller; CONTRIBUTION_QUESTS.loading=true; CONTRIBUTION_QUESTS.error=''; CONTRIBUTION_QUESTS.fetches++;
+  _questSetStatus('questScanning'); renderContributionQuestBoard();
+  const timeout=setTimeout(()=>controller.abort(),9000);
+  try{
+    const response=await fetch(createContributionQuestSearchUrl(currentUser),{
+      headers:{Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},signal:controller.signal
+    });
+    if(!response.ok){ const error=new Error('github-search'); error.status=response.status; throw error; }
+    const data=await response.json();
+    if(requestId!==CONTRIBUTION_QUESTS.requestId) return false;
+    CONTRIBUTION_QUESTS.quests=[...selectContributionQuests(data?.items,currentUser,REPOS.filter(repo=>!repo._isLibrary&&!repo.archived).map(repo=>repo.repo))];
+    CONTRIBUTION_QUESTS.loaded=true; CONTRIBUTION_QUESTS.loading=false; CONTRIBUTION_QUESTS.error='';
+    const repos=new Set(CONTRIBUTION_QUESTS.quests.map(quest=>quest.repo.toLowerCase())).size;
+    _questSetStatus(CONTRIBUTION_QUESTS.quests.length?'questReady':'questEmpty',CONTRIBUTION_QUESTS.quests.length?'success':'',{count:CONTRIBUTION_QUESTS.quests.length,repos});
+    renderContributionQuestBoard();
+    if(returnFocus&&CONTRIBUTION_QUESTS.open) setTimeout(()=>questStatus.focus(),0);
+    trackContributionQuest('contribution_quest_scan',{entry:CONTRIBUTION_QUESTS.entry,device:_questDevice(),lang:LANG,
+      result:CONTRIBUTION_QUESTS.quests.length?'ready':'empty',count:CONTRIBUTION_QUESTS.quests.length}); return true;
+  }catch(error){
+    if(requestId!==CONTRIBUTION_QUESTS.requestId) return false;
+    CONTRIBUTION_QUESTS.loading=false; CONTRIBUTION_QUESTS.loaded=false;
+    CONTRIBUTION_QUESTS.error=error?.status===403||error?.status===429?'rate':'network';
+    _questSetStatus(CONTRIBUTION_QUESTS.error==='rate'?'questRate':'questNetwork','error'); renderContributionQuestBoard();
+    if(returnFocus&&CONTRIBUTION_QUESTS.open) setTimeout(()=>questScan.focus(),0);
+    trackContributionQuest('contribution_quest_scan',{entry:CONTRIBUTION_QUESTS.entry,device:_questDevice(),lang:LANG,
+      result:CONTRIBUTION_QUESTS.error,count:0}); return false;
+  }finally{
+    clearTimeout(timeout);
+    if(requestId===CONTRIBUTION_QUESTS.requestId) CONTRIBUTION_QUESTS.abort=null;
+  }
+}
+function guideToContributionQuest(quest){
+  const repo=quest&&repoByKey(quest.repo);
+  if(!repo){ _questSetStatus('questUnavailable','error'); renderContributionQuestBoard(); return false; }
+  CONTRIBUTION_QUESTS.active=quest; _questSetStatus('questGuiding','success',{repo:repo.repo,number:quest.number});
+  trackContributionQuest('contribution_quest_select',{entry:CONTRIBUTION_QUESTS.entry,device:_questDevice(),lang:LANG,
+    result:'guided',count:1,tier:quest.tier});
+  closeContributionQuestBoard(); showWave(tf('questGuiding',{repo:repo.label,number:quest.number}),3200); taxiTo(repo); return true;
+}
+function markContributionQuestHandoff(quest,channel='board'){
+  if(!quest) return false;
+  CONTRIBUTION_QUESTS.active=quest; CONTRIBUTION_QUESTS.handedOff=true;
+  _questSetStatus('questHandoff','success',{number:quest.number});
+  if(CONTRIBUTION_QUESTS.open) renderContributionQuestBoard();
+  trackContributionQuest('contribution_quest_handoff',{entry:CONTRIBUTION_QUESTS.entry,device:_questDevice(),lang:LANG,
+    result:'opened',count:1,tier:quest.tier,channel});
+  maybeStarNudge('contribution_quest_handoff'); return true;
+}
+function syncContributionQuestCardAction(repo,container=document.getElementById('cardActions')){
+  const existing=document.getElementById('contributionQuestCardBtn'); if(existing) existing.remove();
+  const quest=_questForRepo(repo); if(!quest||!container) return false;
+  const link=document.createElement('a'); link.id='contributionQuestCardBtn'; link.className='btn quest';
+  link.href=quest.url; link.target='_blank'; link.rel='noopener'; link.textContent=tf('questCardOpen',{number:quest.number});
+  link.onclick=()=>markContributionQuestHandoff(quest,'repo_card');
+  const github=container.querySelector('a.gh'); container.insertBefore(link,github||null); return true;
+}
+function _questFocusables(){ return [...questStudio.querySelectorAll('button:not([disabled]),a[href]')]
+  .filter(element=>!element.hidden&&!element.closest('[hidden]')); }
+questMenuBtn.onclick=()=>openContributionQuestBoard('menu'); questClose.onclick=closeContributionQuestBoard; questScan.onclick=loadContributionQuests;
+questModal.addEventListener('click',event=>{ if(event.target===questModal) closeContributionQuestBoard(); });
+questModal.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeContributionQuestBoard(); return; }
+  if(event.key!=='Tab') return; const items=_questFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
+  if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+});
+window.__questLangRefresh=()=>{ if(CONTRIBUTION_QUESTS.open) renderContributionQuestBoard();
+  const repo=repoByKey(modal?._repoKey); if(repo) syncContributionQuestCardAction(repo); };
+window.__questBoard=()=>({open:CONTRIBUTION_QUESTS.open,loading:CONTRIBUTION_QUESTS.loading,loaded:CONTRIBUTION_QUESTS.loaded,
+  count:CONTRIBUTION_QUESTS.quests.length,active:CONTRIBUTION_QUESTS.active?{repo:CONTRIBUTION_QUESTS.active.repo,number:CONTRIBUTION_QUESTS.active.number,tier:CONTRIBUTION_QUESTS.active.tier}:null,
+  handedOff:CONTRIBUTION_QUESTS.handedOff,quests:CONTRIBUTION_QUESTS.quests.map(quest=>({repo:quest.repo,number:quest.number,tier:quest.tier})),
+  resources:{draws:0,textures:0,lights:0,startupNetwork:0,explicitRequests:CONTRIBUTION_QUESTS.fetches,storage:0,recurringTimers:0}});
+window.__questOpen=()=>openContributionQuestBoard('debug'); window.__questLoad=()=>loadContributionQuests();
+window.__questSelect=(index=0)=>guideToContributionQuest(CONTRIBUTION_QUESTS.quests[index]);
+window.__questHandoff=(index=0)=>markContributionQuestHandoff(CONTRIBUTION_QUESTS.quests[index],'debug');
+window.__questClose=()=>closeContributionQuestBoard();
+renderContributionQuestBoard();
+/*CONTRIBUTION_QUESTS:END*/
+
 /* ── repo deep link (#repo=<canonical key>) ───────────────────────────
    A shared/pasted URL opens the exact repo card; openCard writes the hash,
    closeCard clears it, and back/forward + hashchange stay in sync. Other
@@ -8883,6 +9186,7 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
     +`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">${t('openGithub')}</a>`
     +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'')
     +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
+  syncContributionQuestCardAction(repo,act);
   const atelierBtn=document.getElementById('atelierBtn'); if(atelierBtn&&!inAtelier) atelierBtn.onclick=()=>enterRepositoryAtelier(repo);
   const routeBtn=document.getElementById('repoRouteCardBtn'); syncRepoRouteCardButton(repo);
   if(routeBtn) routeBtn.onclick=()=>{ toggleRepoRoute(repo,'card'); syncRepoRouteCardButton(repo); };

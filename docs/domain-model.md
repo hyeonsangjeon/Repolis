@@ -13,6 +13,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **Repo** | one object in `repos.json` | The unit of the world — becomes one house. |
 | **Repo Portal target** | one allowlisted public repo projection | A target-first house and Atelier reached through `?repo=owner/repo`. |
 | **Repo Route** | ordered list of 2–3 current repo canonical names | A session-authored or shared path that advances only when its next real house opens. |
+| **Contribution Quest** | one bounded projection of a current public GitHub issue | An explicit-read task connected to its current repository house and exact issue URL. |
 | **City / Town** | derived in `index.html` at load | The whole 3D scene built from the `repos.json` array. |
 | **District** | deterministic `zoneOf(repo)` result | A topic-shaped neighborhood with a hub, board, map destination, and progress. |
 | **Resident** | resident roster in `index.html` | A townsperson with a residential home, district work anchor, mood, relationships, and a cherished haunt. |
@@ -275,7 +276,33 @@ URL, query, session ID, and persistent instance ID do not leave through this fea
 
 ---
 
-## 13. Repository Atelier
+## 13. Open Source Quests
+
+[`assets/contribution-quests.js`](../assets/contribution-quests.js) is the pure boundary between GitHub
+Search data and the product. It validates the current town owner and catalog, excludes pull requests and
+closed issues, requires a canonical `/owner/repo/issues/<number>` URL, trims untrusted text, caps labels, and
+returns immutable projections. Ranking is deterministic: `good first issue`, then `help wanted`, then other
+open issues; newer work wins within a tier. At most 50 API items are inspected, three quests are displayed,
+and no repository can occupy more than two slots.
+
+Opening Wayfinding or the Quest Board performs no request. Only **Find public quests** makes one anonymous
+`GET /search/issues?q=user:<owner> is:issue is:open` request with a nine-second timeout. A successful result is
+held in memory for the tab and is not refetched. Rate, network, and empty states stay inside the accessible
+dialog. No login, token, issue mutation, proxy, cache, or new backend exists.
+
+Selecting a quest closes the board and reuses the real taxi, house, and repo card. The exact GitHub issue
+link appears on that card, so the journey remains city → repository → contribution rather than becoming
+another issue list. Only clicking an issue link makes the existing earned Star invitation eligible; it still
+waits until modal ownership clears and remains dismissible. Telemetry is limited to coarse entry, result,
+count, tier, device, language, and channel values and removes all owner, repo, issue, URL, session, and
+persistent instance identity.
+
+The feature adds no Three.js object, texture, light, storage key, dependency, startup network request, or
+recurring timer. Its only network work is the visitor-triggered public search.
+
+---
+
+## 14. Repository Atelier
 
 Every non-library repo card can enter one lazy-created dedicated Three.js scene. The room is reused rather
 than duplicated: three bounded canvas atlases redraw the History/Data, Impact/Signals, and Action walls, while
@@ -300,7 +327,7 @@ turn may use the already selected Gitber mode.
 
 ---
 
-## 14. Resident Agency — Shared Joy
+## 15. Resident Agency — Shared Joy
 
 Shared Joy is a single session-local pair state in the resident social layer. When no stronger owner is
 active, a deterministic time-slice planner chooses two compatible idle residents, preferring named friends.
@@ -320,7 +347,7 @@ resident movement. The state is not persisted and makes no AI, MCP, network, ass
 
 ---
 
-## 15. Starlight Row — resident homes and routines
+## 16. Starlight Row — resident homes and routines
 
 Starlight Row is a fixed civic landmark at `(130, 130)`, outside the repository rings but inside the
 205-unit map and 215-unit player bounds. It contains one roster-bound cottage per resident. Shared instanced
