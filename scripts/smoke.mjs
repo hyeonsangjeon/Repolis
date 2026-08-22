@@ -55,6 +55,12 @@ import {
   normalizeRepoRouteNames,
   resolveRepoRouteRequest
 } from '../assets/repo-route.js';
+import {
+  CONTRIBUTION_QUEST_LIMITS,
+  createContributionQuestSearchUrl,
+  projectContributionQuest,
+  selectContributionQuests
+} from '../assets/contribution-quests.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -87,6 +93,7 @@ const TOWN_CREATOR_SRC = readFileSync(join(ROOT, 'assets/town-creator.js'), 'utf
 const TOWN_GROWTH_SRC = readFileSync(join(ROOT, 'assets/town-growth.js'), 'utf8');
 const REPO_PORTAL_SRC = readFileSync(join(ROOT, 'assets/repo-portal.js'), 'utf8');
 const REPO_ROUTE_SRC = readFileSync(join(ROOT, 'assets/repo-route.js'), 'utf8');
+const CONTRIBUTION_QUEST_SRC = readFileSync(join(ROOT, 'assets/contribution-quests.js'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -776,10 +783,126 @@ ok(/## 12\. Repo Route/.test(DOMAIN_MODEL)&&/Repo Route is a current-catalog pat
   &&/assets\/repo-route\.js/.test(LLMS_INDEX)&&/\| Repo Route \| 5 \| 5 \| 4 \| 5 \| 5 \| \*\*24\*\* \|/.test(CHANGELOG),
   'domain model, limitations, share contract, manifest, LLM index, and scored BOLT decision stay discoverable');
 
+group('Open Source Quests — current public work becomes a contribution journey');
+const questSearchUrl=new URL(createContributionQuestSearchUrl('Octo-Cat'));
+ok(questSearchUrl.origin==='https://api.github.com'&&questSearchUrl.pathname==='/search/issues'
+  &&questSearchUrl.searchParams.get('q')==='user:Octo-Cat is:issue is:open'
+  &&questSearchUrl.searchParams.get('per_page')==='50'&&questSearchUrl.searchParams.get('sort')==='updated'
+  &&questSearchUrl.searchParams.get('order')==='desc',
+  'one bounded anonymous search asks only for the current town owner’s open public issues');
+const questIssue={
+  state:'open',number:7,title:'  Fix keyboard focus in the town menu  ',updated_at:'2026-08-22T12:00:00Z',comments:4,
+  repository_url:'https://api.github.com/repos/Octo-Cat/Alpha',
+  html_url:'https://github.com/Octo-Cat/Alpha/issues/7',
+  labels:[{name:'good first issue'},{name:'accessibility'},{name:'accessibility'},{name:'frontend'},{name:'overflow'}],
+  assignees:[]
+};
+const projectedQuest=projectContributionQuest(questIssue,'octo-cat',['Alpha','Beta']);
+ok(projectedQuest?.repo==='Alpha'&&projectedQuest.number===7&&projectedQuest.tier==='good-first'
+  &&projectedQuest.url==='https://github.com/octo-cat/Alpha/issues/7'
+  &&projectedQuest.labels.join(',')==='good first issue,accessibility,frontend,overflow'&&projectedQuest.assigned===false
+  &&Object.isFrozen(projectedQuest)&&Object.isFrozen(projectedQuest.labels),
+  'the pure projection keeps only safe issue facts, canonical catalog spelling, bounded labels, and immutable output');
+ok(projectContributionQuest({...questIssue,pull_request:{}},'octo-cat',['Alpha'])===null
+  &&projectContributionQuest({...questIssue,state:'closed'},'octo-cat',['Alpha'])===null
+  &&projectContributionQuest({...questIssue,state:undefined},'octo-cat',['Alpha'])===null
+  &&projectContributionQuest({...questIssue,updated_at:'invalid'},'octo-cat',['Alpha'])===null
+  &&projectContributionQuest({...questIssue,repository_url:'https://api.github.com/repos/elsewhere/Alpha'},'octo-cat',['Alpha'])===null
+  &&projectContributionQuest({...questIssue,html_url:'https://evil.test/redirect'},'octo-cat',['Alpha'])?.url==='https://github.com/octo-cat/Alpha/issues/7'
+  &&projectContributionQuest({...questIssue,repository_url:'https://api.github.com/repos/Octo-Cat/Missing',
+    html_url:'https://github.com/Octo-Cat/Missing/issues/7'},'octo-cat',['Alpha'])===null,
+  'pull requests, non-open or undated work, foreign owners, and non-town repositories fail closed while hostile issue URLs are replaced canonically');
+const questCandidate=(repo,number,label,updated)=>({...questIssue,number,title:`Issue ${number}`,
+  repository_url:`https://api.github.com/repos/Octo-Cat/${repo}`,
+  html_url:`https://github.com/Octo-Cat/${repo}/issues/${number}`,updated_at:updated,
+  labels:label?[{name:label}]:[]});
+const selectedQuests=selectContributionQuests([
+  questCandidate('Alpha',1,'good first issue','2026-08-20T00:00:00Z'),
+  questCandidate('Alpha',2,'help wanted','2026-08-23T00:00:00Z'),
+  questCandidate('Alpha',3,'','2026-08-22T00:00:00Z'),
+  questCandidate('Beta',4,'','2026-08-21T00:00:00Z')
+],'octo-cat',['Alpha','Beta']);
+ok(selectedQuests.map(quest=>`${quest.repo}#${quest.number}`).join(',')==='Alpha#1,Alpha#2,Beta#4'
+  &&selectedQuests.length===CONTRIBUTION_QUEST_LIMITS.maxQuests
+  &&selectedQuests.filter(quest=>quest.repo==='Alpha').length===CONTRIBUTION_QUEST_LIMITS.maxPerRepo
+  &&Object.isFrozen(selectedQuests),
+  'selection ranks good-first/help-wanted work first, then recent open work, while preserving repo diversity and a three-card cap');
+ok(CONTRIBUTION_QUEST_LIMITS.maxItems===50&&CONTRIBUTION_QUEST_LIMITS.maxQuests===3
+  &&CONTRIBUTION_QUEST_LIMITS.maxPerRepo===2&&CONTRIBUTION_QUEST_LIMITS.maxLabels===8
+  &&!/window|document|fetch\(|WebSocket|localStorage|sessionStorage|Date\.now|Math\.random/.test(CONTRIBUTION_QUEST_SRC)
+  &&CONTRIBUTION_QUEST_SRC.length<9000,
+  'the quest helper is small, deterministic, bounded, and independent of browser, network, storage, clock, and random state');
+
+const contributionQuestBlock=(HTML.match(/\/\*CONTRIBUTION_QUESTS:START\*\/([\s\S]*?)\/\*CONTRIBUTION_QUESTS:END\*\//)||[,''])[1];
+ok(contributionQuestBlock.length>0
+  &&/from '\.\/assets\/contribution-quests\.js\?v=open-source-quests-v1'/.test(HTML)
+  &&/id="questMenuBtn"/.test(HTML)&&/id="questModal" role="dialog" aria-modal="true" aria-labelledby="questTitle" aria-describedby="questSub questLead"/.test(HTML),
+  'Wayfinding exposes one labelled Open Source Quests dialog backed by the pure helper');
+ok(/id="questStatus" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"/.test(HTML)
+  &&/id="questList" role="list" data-i18n-aria="questListAria"/.test(HTML)
+  &&/function _questFocusables\(\)/.test(contributionQuestBlock)
+  &&/event\.key==='Escape'/.test(contributionQuestBlock)&&/event\.key!=='Tab'/.test(contributionQuestBlock)
+  &&/function _questSuspendBackground\(\)/.test(contributionQuestBlock)&&/element\.inert=true/.test(contributionQuestBlock)
+  &&/const focusTarget=previous&&previous\.isConnected&&!previous\.closest\?\.\('\.hidden'\)\?previous:menuBtn/.test(contributionQuestBlock)
+  &&/\.questCardActions button, \.questCardActions a, #questScan \{[^}]*min-height:44px/.test(HTML)
+  &&/@media \(max-width:520px\) \{[\s\S]*?\.questCardActions \{ grid-template-columns:1fr; \}/.test(HTML)
+  &&/@media \(prefers-reduced-motion:reduce\) \{[\s\S]*?\.questStudio, \.questCard \{ transition:none/.test(HTML),
+  'the modal is live-announced, inert, focus-trapped, keyboard-safe, touch-sized, mobile-stacked, and reduced-motion-safe');
+ok((contributionQuestBlock.match(/fetch\(/g)||[]).length===1
+  &&/questScan\.onclick=loadContributionQuests/.test(contributionQuestBlock)
+  &&/questMenuBtn\.onclick=\(\)=>openContributionQuestBoard\('menu'\)/.test(contributionQuestBlock)
+  &&/fetch\(createContributionQuestSearchUrl\(currentUser\)/.test(contributionQuestBlock)
+  &&/REPOS\.filter\(repo=>!repo\._isLibrary&&!repo\.archived\)/.test(contributionQuestBlock)
+  &&/if\(CONTRIBUTION_QUESTS\.loading\|\|CONTRIBUTION_QUESTS\.loaded\) return false/.test(contributionQuestBlock)
+  &&/setTimeout\(\(\)=>controller\.abort\(\),9000\)/.test(contributionQuestBlock)
+  &&/if\(returnFocus&&CONTRIBUTION_QUESTS\.open\) setTimeout\(\(\)=>questStatus\.focus\(\),0\)/.test(contributionQuestBlock),
+  'GitHub is read once only after Find, with one request, a timeout, no startup call, no repeat, and a visible focus destination');
+ok(/title\.textContent=quest\.title/.test(contributionQuestBlock)
+  &&/repo\.textContent=quest\.repo\+'\ · #'\+quest\.number/.test(contributionQuestBlock)
+  &&/issue\.href=quest\.url/.test(contributionQuestBlock)
+  &&/tf\('questVisitAria',\{repo:quest\.repo,number:quest\.number\}\)/.test(contributionQuestBlock)
+  &&/tf\('questOpenAria',\{repo:quest\.repo,number:quest\.number\}\)/.test(contributionQuestBlock)
+  &&!/innerHTML/.test(contributionQuestBlock),
+  'untrusted issue titles, labels, repository names, and canonical links enter the UI without HTML injection');
+ok(/guideToContributionQuest\(quest\)[\s\S]*?taxiTo\(repo\)/.test(contributionQuestBlock)
+  &&/syncContributionQuestCardAction\(repo,act\)/.test(HTML)
+  &&/link\.href=quest\.url/.test(contributionQuestBlock)
+  &&/link\.onclick=\(\)=>markContributionQuestHandoff\(quest,'repo_card'\)/.test(contributionQuestBlock),
+  'a selected quest reuses the real taxi and repository card before the exact issue handoff');
+ok((contributionQuestBlock.match(/maybeStarNudge\(/g)||[]).length===1
+  &&/maybeStarNudge\('contribution_quest_handoff'\)/.test(contributionQuestBlock)
+  &&/flushStarNudge\(\)/.test(contributionQuestBlock)
+  &&!/window\.open/.test(contributionQuestBlock),
+  'the existing dismissible Star invitation becomes eligible only after an explicit GitHub issue handoff and never auto-navigates');
+const questTelemetry=(HTML.match(/function trackContributionQuest\(eventName,payload\)\{([\s\S]*?)\n\}/)||[,''])[1];
+ok(/if\(ev\.__privacy==='contribution-quest'\)[\s\S]{0,300}new Set\(\['ev','ts','entry','device','lang','result','count','tier','channel'\]\)/.test(HTML)
+  &&questTelemetry.length>0&&!/cityUser|targetUser|owner|repo|issue|number|title|url|sessionId|instanceId/.test(questTelemetry)
+  &&!/track\('contribution_quest/.test(contributionQuestBlock),
+  'quest telemetry permits coarse funnel enums only and cannot emit owner, repository, issue, URL, or persistent identity');
+ok(!/new THREE\.|WebSocket|localStorage|sessionStorage|setInterval/.test(contributionQuestBlock)
+  &&/resources:\{draws:0,textures:0,lights:0,startupNetwork:0,explicitRequests:CONTRIBUTION_QUESTS\.fetches,storage:0,recurringTimers:0\}/.test(contributionQuestBlock),
+  'quests add no scene resource, storage, backend, or recurring timer; diagnostics distinguish zero startup traffic from explicit reads');
+['questMenu','questMenuSub','questTitle','questSub','questClose','questLead','questListAria','questBeforeScan',
+  'questScan','questScanning','questTryAgain','questReady','questEmpty','questRate','questNetwork','questTierGood',
+  'questTierHelp','questTierOpen','questUpdatedToday','questUpdatedDays','questUnassigned','questAssigned','questComments',
+  'questVisit','questVisitAria','questOpen','questOpenAria','questCardOpen','questGuiding','questHandoff','questUnavailable','questPrivacy']
+  .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Open Source Quests key ${key} is bilingual`));
+ok(/window\.__questBoard=/.test(contributionQuestBlock)&&/window\.__questOpen=/.test(contributionQuestBlock)
+  &&/window\.__questLoad=/.test(contributionQuestBlock)&&/window\.__questSelect=/.test(contributionQuestBlock)
+  &&/window\.__questHandoff=/.test(contributionQuestBlock)&&/window\.__questClose=/.test(contributionQuestBlock),
+  'browser diagnostics expose explicit requests, sanitized quest identities, selection, handoff, resources, and close behavior');
+ok(/current public issues ranked for approachability, each connected to its real repo house/.test(README_EN)
+  &&/실제로 도울 수 있는 레포 집/.test(README_KO)
+  &&/## 13\. Open Source Quests/.test(DOMAIN_MODEL)&&/Open Source Quests uses GitHub's anonymous search/.test(KNOWN_LIMITATIONS)
+  &&/contribution_quests: assets\/contribution-quests\.js/.test(MANIFEST)
+  &&/assets\/contribution-quests\.js/.test(LLMS_INDEX)
+  &&/\| Open Source Quest Board \| 5 \| 5 \| 5 \| 4 \| 3 \| \*\*22\*\* \|/.test(CHANGELOG),
+  'READMEs, domain model, limitations, manifest, LLM index, and scored BOLT decision make the contribution loop discoverable');
+
 const runtimeLocalFiles = [
   'index.html','repolis.config.js','scholars.js','repos.json','assets/contribution-library.json',
   'assets/world-tree/createRepolisHero.js','assets/camera-obstruction.js','assets/canal-ferry.js',
-  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js','assets/repo-route.js',
+  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js','assets/repo-route.js','assets/contribution-quests.js',
   'council/council.config.json','council/engine.js','council/fixtures.js','council/guards.js','council/live.js'
 ];
 const runtimeLocalBytes = runtimeLocalFiles.reduce((sum,file)=>sum+readFileSync(join(ROOT,file)).length,0);

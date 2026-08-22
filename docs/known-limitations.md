@@ -27,6 +27,11 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   repository names from the town that created it. Renamed, deleted, privatized, or newly filtered repositories
   cannot be reconstructed and make that shared route fail soft to the normal town. Route drafts are session-only,
   and strict order means opening another house does not skip the current stop.
+- **Open Source Quests uses GitHub's anonymous search, not an issue mirror.** It reads up to 50 current open
+  public issues only after the visitor presses Find, displays at most three, and keeps results in memory for
+  this tab. Anonymous Search API rate limits can produce an explicit temporary error. A changed, closed,
+  renamed, deleted, private, or newly filtered issue disappears on the next page load; Repolis does not claim,
+  assign, cache, refresh, or track contribution outcomes.
 - **Creator Hall reads one public profile explicitly.** Opening the hall requests GitHub's public
   `/users/<login>` endpoint and caches only the fields it renders for 24 hours. Anonymous API rate limits
   can hide the avatar/bio temporarily; the hall still falls back to the public repository facts already

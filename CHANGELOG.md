@@ -6,6 +6,44 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.89.0] — 2026-08-23
+
+### 🧩 Open Source Quests — turn a repository city into a path to real contribution
+
+A fresh public benchmark found the strongest recurring loops in
+[GitHub Readme Stats](https://github.com/anuraghazra/github-readme-stats) (~79.8k Stars),
+[Metrics](https://github.com/lowlighter/metrics) (~17.1k),
+[Star History](https://github.com/star-history/star-history) (~9.4k),
+[GitProfile](https://github.com/arifszn/gitprofile) (~2.3k), and
+[github-profile-3d-contrib](https://github.com/yoshi389111/github-profile-3d-contrib) (~1.7k):
+live outputs stay useful, personal identity is portable, and a developer can act on the result. Repolis
+already covered discovery, return visits, self-expression, personal deployment, and visitor-authored sharing.
+Its clearest missing loop was **collaboration**—the living repository houses did not yet reveal work a
+developer could help move forward.
+
+| Candidate | Star impact | Novelty | Repolis identity | Mobile performance | Implementation safety | Total |
+|---|---:|---:|---:|---:|---:|---:|
+| Open Source Quest Board | 5 | 5 | 5 | 4 | 3 | **22** |
+| Fork Launch Kit | 4 | 4 | 5 | 4 | 3 | 20 |
+| Town Watchlist | 4 | 3 | 4 | 5 | 3 | 19 |
+
+Open Source Quests won because it adds a genuine contribution journey instead of repackaging the existing
+Portal, Route, Gazette, Passport, postcard, profile, or fork loops:
+
+- Wayfinding opens an accessible KO/EN Quest Board. Only an explicit **Find public quests** action makes one
+  anonymous `search/issues` request for the current town owner; success is capped at 50 inputs and three
+  rendered cards, with at most two from one repository.
+- A pure helper rejects pull requests, closed work, foreign owners, non-catalog repositories, and malformed
+  URLs. It ranks `good first issue`, then `help wanted`, then other recent open issues and projects only
+  bounded public facts into immutable values.
+- Choosing a quest reuses the existing taxi and real repository house. Its card then exposes the exact
+  canonical GitHub issue; Repolis never claims, assigns, or tracks a contribution.
+- The existing one-time, dismissible earned Star invitation becomes eligible only after that explicit issue
+  handoff. Opening, searching, or riding never triggers it, and no action automatically opens GitHub.
+- Issue results remain in memory for the tab. Coarse telemetry excludes owner, repository, issue, title, URL,
+  session ID, and persistent instance ID. The feature adds no scene object, texture, light, storage key,
+  backend, dependency, startup request, or recurring timer.
+
 ## [1.88.0] — 2026-08-22
 
 ### 🧭 Repo Route — let a visitor hand the proven path to the next developer
