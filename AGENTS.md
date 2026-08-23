@@ -35,6 +35,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`assets/city-time.js`** | Pure wear (`recent` / `faded` / `mossed`), ruin, reference-date, and seasonal palette rules. | Changing how public time metadata affects the city. |
 | **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
+| **`assets/world-tree/world-tree-state.js`** | Pure Phase 2 projection for Chronicle, Roots, sap-flow freshness/mode, and bounded star/repo growth. | Changing how generated city state reaches the silent World Tree. |
 | **`assets/repo-portal.js`** | Pure username/repository parser, route precedence, public projection, canonical Portal URL, and owner-town expansion link. | Changing `?repo=`, accepted GitHub inputs, public traffic truth, or target share links. |
 | **`assets/repo-route.js`** | Pure 2–3 stop route validator, current-catalog resolver, conflict policy, and canonical Repo Route URL. | Changing visitor-curated multi-repo paths or `?route=` links. |
 | **`assets/contribution-quests.js`** | Pure current-owner/catalog issue projector and bounded quest ranker. | Changing Open Source Quest validation, tier priority, or result diversity. |

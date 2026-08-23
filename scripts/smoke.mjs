@@ -68,6 +68,14 @@ import {
   resolveCitySeason,
   seasonPalette
 } from '../assets/city-time.js';
+import {
+  SAP_FLOW_LIMITS,
+  WORLD_TREE_GROWTH_LIMITS,
+  projectWorldTreeChronicle,
+  projectWorldTreeGrowth,
+  resolveSapFlowFreshness,
+  resolveSapFlowMode
+} from '../assets/world-tree/world-tree-state.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -102,6 +110,7 @@ const REPO_PORTAL_SRC = readFileSync(join(ROOT, 'assets/repo-portal.js'), 'utf8'
 const REPO_ROUTE_SRC = readFileSync(join(ROOT, 'assets/repo-route.js'), 'utf8');
 const CONTRIBUTION_QUEST_SRC = readFileSync(join(ROOT, 'assets/contribution-quests.js'), 'utf8');
 const CITY_TIME_SRC = readFileSync(join(ROOT, 'assets/city-time.js'), 'utf8');
+const WORLD_TREE_STATE_SRC = readFileSync(join(ROOT, 'assets/world-tree/world-tree-state.js'), 'utf8');
 const CITY_STATE = JSON.parse(readFileSync(join(ROOT, 'data/city-state.json'), 'utf8'));
 const CITY_STATE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/city-state.schema.json'), 'utf8'));
 const CITY_REPOS = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
@@ -324,6 +333,54 @@ ok((HTML.match(/wearRecent:/g)||[]).length===2
   'wear, ruin, and season copy is bilingual');
 ok(/citySeason/.test(HTML)&&/cityTimeFixtures/.test(HTML)&&/prefers-reduced-motion:reduce/.test(HTML),
   'debug fixtures and the existing reduced-motion contract cover static time treatments');
+
+group('World Tree Phase 2 — city-state projection, roots, growth, and sap freshness');
+const worldTreeFixture=(stars,repositories,roots=[],lastSapFlow='2026-08-23T00:00:00Z')=>({
+  schema:'repolis.city-state',version:1,last_sap_flow:lastSapFlow,
+  era:{as_of:'2026-08-23',founded_on:'2017-01-23',oldest_repository:'first-repo',city_age_years:9.58,city_year:10,basis:'fixture'},
+  season:{value:'spring',fallback:{used:false},inputs:{recent_active_repositories:4,repositories_with_push_date:repositories,recent_to_historical_ratio:1.5}},
+  stats:{repository_count:repositories,active_repository_count:Math.max(0,repositories-roots.length),archived_repository_count:roots.length,
+    total_stars:stars,total_forks:7,language_distribution:[{language:'JavaScript',repositories:Math.max(1,repositories)}],
+    commit_history:{available:false,total:null,limitation:'Complete commit history is unavailable.'}},
+  roots
+});
+const growthMinimum=projectWorldTreeGrowth(worldTreeFixture(0,0));
+const growthMiddle=projectWorldTreeGrowth(worldTreeFixture(420,54));
+const growthMaximum=projectWorldTreeGrowth(worldTreeFixture(
+  WORLD_TREE_GROWTH_LIMITS.starSaturation*3,
+  WORLD_TREE_GROWTH_LIMITS.repositorySaturation*3
+));
+ok(growthMinimum.scale===WORLD_TREE_GROWTH_LIMITS.minimumScale
+  &&growthMaximum.scale===WORLD_TREE_GROWTH_LIMITS.maximumScale
+  &&growthMiddle.scale>growthMinimum.scale&&growthMiddle.scale<growthMaximum.scale,
+  'total-star plus public-repo growth is monotonic and clamped at minimum, middle, and maximum fixtures');
+ok(projectWorldTreeGrowth(null).scale===1
+  &&projectWorldTreeGrowth(CITY_STATE).stars===CITY_STATE.stats.total_stars
+  &&projectWorldTreeGrowth(CITY_STATE).repositories===CITY_STATE.stats.repository_count,
+  'growth consumes the generated city-state totals and preserves neutral scale when the contract is unavailable');
+const manyRoots=Array.from({length:18},(_,index)=>({
+  repo:`archived-${String(index+1).padStart(2,'0')}`,
+  active_years:{from:2000+index,to:2002+index,count:3},
+  achievement:`Public achievement ${index+1}.`
+}));
+const emptyChronicle=projectWorldTreeChronicle(worldTreeFixture(0,0,[]),{now:Date.parse('2026-08-23T12:00:00Z')});
+const manyChronicle=projectWorldTreeChronicle(worldTreeFixture(500,24,manyRoots),{now:Date.parse('2026-08-23T12:00:00Z')});
+ok(emptyChronicle.roots.length===0
+  &&manyChronicle.roots.length===manyRoots.length
+  &&manyChronicle.roots[0].repo==='archived-01'
+  &&manyChronicle.roots.at(-1).activeYears.count===3,
+  'Chronicle keeps an honest empty Roots state and preserves every bounded root in a many-roots fixture');
+const recentSap=resolveSapFlowFreshness('2026-08-23T00:00:00Z',Date.parse('2026-08-23T12:00:00Z'));
+const staleSap=resolveSapFlowFreshness('2026-07-20T00:00:00Z',Date.parse('2026-08-23T12:00:00Z'));
+ok(recentSap.animate&&recentSap.freshness==='recent'
+  &&!staleSap.animate&&staleSap.freshness==='stale'
+  &&resolveSapFlowMode(recentSap)==='travel'
+  &&resolveSapFlowMode(recentSap,{reducedMotion:true})==='static'
+  &&resolveSapFlowMode(recentSap,{lowEnd:true})==='static'
+  &&resolveSapFlowMode(staleSap)==='static',
+  'sap travel is short-lived only for a recent record; stale, reduced-motion, and LOW_END fixtures stay static');
+ok(SAP_FLOW_LIMITS.travelSeconds<7&&!/\bfetch\s*\(|api\.github|workers\.dev|\/taxi\b/i.test(WORLD_TREE_STATE_SRC),
+  'World Tree projection is bounded, local-only, and adds no runtime GitHub, LLM, or service request');
 
 group('Repo Portal — one repository becomes the first shareable destination');
 const portalUser=parseRepoPortalInput('@Octo-Cat');
@@ -2745,6 +2802,7 @@ ok(/updateLanternWatch\(clock\.elapsedTime\)/.test(HTML), 'the main world loop u
 
 group('one colossal deterministic World Tree Pillar supports the village');
 const memorialTreeBlock = (HTML.match(/\/\*MEMORIAL_TREE:START\*\/([\s\S]*?)\/\*MEMORIAL_TREE:END\*\//) || [, ''])[1];
+const worldTreeChronicleBlock = (HTML.match(/\/\*WORLD_TREE_CHRONICLE:START\*\/([\s\S]*?)\/\*WORLD_TREE_CHRONICLE:END\*\//) || [, ''])[1];
 const visualLodBlock = (HTML.match(/\/\*VISUAL_LOD:START\*\/([\s\S]*?)\/\*VISUAL_LOD:END\*\//) || [, ''])[1];
 const staticInstanceBlock = (HTML.match(/\/\*STATIC_INSTANCES:START\*\/([\s\S]*?)\/\*STATIC_INSTANCES:END\*\//) || [, ''])[1];
 const buildingLodPrototypeBlock = (HTML.match(/\/\*BUILDING_LOD_PROTOTYPE:START\*\/([\s\S]*?)\/\*BUILDING_LOD_PROTOTYPE:END\*\//) || [, ''])[1];
@@ -2755,6 +2813,7 @@ const buildingLodUpdateBlock = (HTML.match(/function _updateBuildingLodPrototype
 const worldTreeBloomPrepBlock = (HTML.match(/function _prepareWorldTreeBloom\(\)\{([\s\S]*?)\n\}\nfunction _renderWorldTreeFrame/) || [, ''])[1];
 const worldTreeBloomProjectionBlock = (HTML.match(/function _updateWorldTreeBloomProjection\(\)\{([\s\S]*?)\n\}\nfunction _captureWorldTreeBloomProjection/) || [, ''])[1];
 ok(memorialTreeBlock.length > 0, 'world-tree procedural block is extractable from index.html');
+ok(worldTreeChronicleBlock.length > 0, 'World Tree Chronicle interaction block is extractable from index.html');
 ok(visualLodBlock.length > 0, 'projected-size visual LOD block is extractable from index.html');
 ok(staticInstanceBlock.length > 0, 'exact-static instance block is extractable from index.html');
 ok(buildingLodPrototypeBlock.length > 0, '2C-A representative building LOD block is extractable from index.html');
@@ -2796,6 +2855,41 @@ ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
   && (HTML.match(/if\(memorial\) makeMemorialTree\(cx,cz\)/g) || []).length === 1, 'exactly one memorial tree is requested, at the north rest park centre');
 ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
+ok(/world-tree-state\.js\?v=world-tree-phase2-v1/.test(HTML)
+  &&/hero\.runtime\.nodes\['living-system'\]\.scale\.setScalar\(WORLD_TREE_GROWTH\.scale\)/.test(memorialTreeBlock)
+  &&/const collider=\{x,z,r:11\.6,_memorialTree:true\}/.test(memorialTreeBlock)
+  &&/growthScale:WORLD_TREE_GROWTH\.scale/.test(memorialTreeBlock),
+  'bounded generated-state growth scales the living silhouette while preserving the established root collider and factory');
+ok(/function makeWorldTreeSapFlow\(\)/.test(HTML)
+  &&/new THREE\.Points\(geometry,material\)/.test(HTML)
+  &&/WORLD_TREE_SAP_MODE==='travel'/.test(HTML)
+  &&/if\(finished\)\{ flow\.finished=true/.test(HTML)
+  &&/function _setWorldTreeSapVisible\(visible\)/.test(HTML)
+  &&/_setWorldTreeSapVisible\(requestedTreeVisible&&!treeOff\)/.test(HTML)
+  &&/MEMORIAL_TREE\.requestedVisible=false; _setWorldTreeSapVisible\(false\)/.test(HTML)
+  &&/updateWorldTreeSapFlow\(clock\.elapsedTime\)/.test(HTML),
+  'one batched point signal travels from the tree to every repo once, then settles without an infinite animation');
+ok(/id="worldTreeTrigger"[\s\S]*?aria-haspopup="dialog"[\s\S]*?aria-keyshortcuts="Enter Space"/.test(HTML)
+  &&/id="worldTreeModal" role="dialog" aria-modal="true" aria-labelledby="worldTreeTitle"/.test(HTML)
+  &&/worldTreeAtScreen\(cx,cy\)/.test(HTML)
+  &&/\(e\.code==='Enter'\|\|e\.code==='Space'\)&&nearWorldTree&&!nearNpc/.test(HTML),
+  'World Tree supports named pointer, touch, Enter, and Space activation through the existing landmark controls');
+ok(/worldTreeModal\.addEventListener\('keydown',event=>\{ if\(event\.key==='Escape'\)/.test(worldTreeChronicleBlock)
+  &&/event\.key!=='Tab'/.test(worldTreeChronicleBlock)
+  &&/WORLD_TREE_UI\.previousFocus=source\|\|document\.activeElement\|\|worldTreeTrigger/.test(worldTreeChronicleBlock)
+  &&/previous&&previous\.isConnected&&!previous\.hidden\?previous:fallback/.test(worldTreeChronicleBlock)
+  &&/actBtn\.addEventListener\('click',\(\)=>\{ if\(modalOpen\) return; doAct\(actBtn\); \}\)/.test(HTML)
+  &&/if\(event\.target===worldTreeModal\) closeWorldTreeChronicle\(\)/.test(worldTreeChronicleBlock),
+  'Chronicle traps focus, closes by Escape or backdrop, and restores the originating trigger');
+ok(/worldTreeRootSearchWrap\.hidden=total<10/.test(worldTreeChronicleBlock)
+  &&/worldTreeRootsEmpty/.test(worldTreeChronicleBlock)
+  &&(worldTreeChronicleBlock.match(/empty\.setAttribute\('role','listitem'\)/g)||[]).length===2
+  &&/role="status" aria-live="polite"/.test(HTML),
+  'Roots stays quiet when empty and only exposes an accessible search when the generated list is large');
+ok((HTML.match(/worldTreeTitle:/g)||[]).length===2
+  &&(HTML.match(/worldTreeRootsEmpty:/g)||[]).length===2
+  &&(HTML.match(/worldTreeSapStale:/g)||[]).length===2,
+  'Chronicle, Roots, and sap-flow states have Korean and English parity');
 ok(/macroBranchSpecs\(\)/.test(WORLD_TREE_FACTORY) && /secondaryBranches\(spec, seed/.test(WORLD_TREE_FACTORY)
   && /fineBranches\(spec, seed\)/.test(WORLD_TREE_FACTORY) && /mergedFineGeometry/.test(WORLD_TREE_FACTORY), 'factory preserves macro → secondary → merged fine branch hierarchy');
 ok(/REPOLIS_FACTORY_REVISION = 'azimuth-energy-v6-dual-face-b-pendant-bloom'/.test(WORLD_TREE_FACTORY)
@@ -3153,10 +3247,11 @@ ok(/bloomBounds:\{value:new THREE\.Vector4\(0,0,1,1\)\}/.test(HTML)
 ok(/ratio=MEM_TREE_HERO_SCALE\/MEM_TREE_HERO_NATIVE_SCALE/.test(memorialTreeBlock)
   && !/MEMORIAL_TREE\.light\.intensity\*=/.test(memorialTreeBlock)
   && /MEMORIAL_TREE\.light\.distance=7\*ratio/.test(memorialTreeBlock), 'factory PointLight keeps its authored local range and exact pulse intensity');
-ok(/if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x4f240c\); m\.bark\.emissiveIntensity=0\.14; m\.ornamentEnergy\.emissiveIntensity=1\.9\+Math\.sin\(elapsed\*2\.3\)\*0\.08; m\.amberLeaf\.emissiveIntensity=0\.58; m\.cyanLeaf\.emissiveIntensity=0\.78/.test(memorialTreeBlock)
-  && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=1\.3; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
+ok(/gain=MEMORIAL_TREE\.growth\.energyGain/.test(memorialTreeBlock)
+  && /if\(isNight\)\{ m\.bark\.emissive\.setHex\(0x4f240c\); m\.bark\.emissiveIntensity=0\.14; m\.ornamentEnergy\.emissiveIntensity=\(1\.9\+Math\.sin\(elapsed\*2\.3\)\*0\.08\)\*gain; m\.amberLeaf\.emissiveIntensity=0\.58\*gain; m\.cyanLeaf\.emissiveIntensity=0\.78\*gain/.test(memorialTreeBlock)
+  && /if\(REDUCED\)\{ m\.energy\.emissiveIntensity=1\.3\*gain; MEMORIAL_TREE\.light\.intensity=18/.test(memorialTreeBlock)
   && /else \{ m\.bark\.emissive\.setHex\(0x603016\)/.test(memorialTreeBlock)
-  && /m\.energy\.emissiveIntensity=0\.28; m\.ornamentEnergy\.emissiveIntensity=0\.36; m\.amberLeaf\.emissiveIntensity=0\.28; m\.cyanLeaf\.emissiveIntensity=0\.34/.test(memorialTreeBlock)
+  && /m\.energy\.emissiveIntensity=0\.28\*gain; m\.ornamentEnergy\.emissiveIntensity=0\.36\*gain; m\.amberLeaf\.emissiveIntensity=0\.28\*gain; m\.cyanLeaf\.emissiveIntensity=0\.34\*gain/.test(memorialTreeBlock)
   && /_setWorldTreeGlowLayers\(night\)/.test(HTML)
   && /worldBloom\.strength=night\?1\.35:0\.04/.test(HTML), 'day calms ornaments while night gives every amber/cyan leaf a readable emissive base');
 ok(/effectPhase=isNight\|\|WORLD_TREE_RENDER_MODE==='emissive-only'\|\|WORLD_TREE_RENDER_MODE==='bloom-only'/.test(HTML), 'day/dawn/dusk final mode skips emissive and bloom HDR passes entirely');
