@@ -16,7 +16,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **Contribution Quest** | one bounded projection of a current public GitHub issue | An explicit-read task connected to its current repository house and exact issue URL. |
 | **City / Town** | derived in `index.html` at load | The whole 3D scene built from the `repos.json` array. |
 | **District** | deterministic `zoneOf(repo)` result | A topic-shaped neighborhood with a hub, board, map destination, and progress. |
-| **Resident** | resident roster in `index.html` | A townsperson with a residential home, district work anchor, mood, relationships, and a cherished haunt. |
+| **Resident** | generated `data/residents/` profile + bounded roster in `index.html` | A townsperson bound to one public repo building, with a Starlight cottage, social life, and server-authorized Bound memory. |
 | **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, Town Gazette baselines, constellation completion, and the Maintainers' Night Watch stamp. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
 | **Taxi** | the POLARIS scholar (`kind: taxi`) | Finds a repo and physically drives you there. |
@@ -101,8 +101,11 @@ github-traffic-monitor (private, daily)        Repolis (public)
   └ cumulative traffic → data/logs/*.csv ──┐
                                            ├─▶ .github/workflows/refresh.yml (daily)
   gh api: owner's public repos (+ committed forks) ─┘  └ scripts/build_repos.py
-                                                         ├─▶ repos.json ──────────┐
-                                                         └─▶ data/city-state.json ┴─▶ index.html
+                                                         ├─▶ repos.json ─────────────────────┐
+                                                         ├─▶ data/city-state.json ───────────┤
+                                                         ├─▶ data/residents/index.json ──────┤
+                                                         ├─▶ data/residents/{safe-slug}.json ┤
+                                                         └─▶ generated Worker registry ──────┴─▶ index.html / Worker
 ```
 
 - Only **public** repos appear (created repos + forks you actually committed to; mirror forks skipped).
@@ -131,6 +134,35 @@ The owner town uses this state for a restrained static sky/fog/light palette. Ot
 the neutral summer palette because no owner-specific city-state artifact is fetched for them.
 Buildings derive wear from the same reference date, while archived buildings preserve their footprint,
 silhouette, nameplate, collision, and card identity. These effects require no runtime GitHub or LLM call.
+
+### 4.2 Repository-bound resident profiles
+
+The same daily public-data build emits one compact, schema-versioned profile per included repository.
+Age comes from `created_at`; job and personality come from bounded rules over language, topics, public
+activity recency, releases, and the reported open-work count. At most three current public issue/PR titles
+and four release/commit/issue/PR memories survive strict sanitization and byte caps. Missing public history
+stays empty with provenance rather than being invented. Archived profiles remain in data and the World Tree
+Roots, but `dialogue_available=false` keeps them out of the active 3D roster.
+
+`data/residents/index.json` is the only resident artifact fetched during owner-town boot. It contains paths,
+hashes, public identity, and a deterministic nine-slot active roster; profile details lazy-load and hash-check
+only when the visitor explicitly opens that resident's conversation. Missing, stale, unsupported, or fork-local
+artifacts fail soft to the existing rules-based introduction and repo navigation. No resident feature calls the
+GitHub API in the browser.
+
+The active strategy deliberately reuses the existing nine named residents and binds them, in slot order, to
+the nine highest-ranked non-archived repo buildings. It does **not** create one 3D character per profile.
+Residents still own their Starlight cottage and porch seat, return there at night, and keep the existing social
+simulation; their day/work anchor is the entrance of the bound repo building. Job color plus at most one tiny
+desktop prop adds identity without changing labels, colliders, cottage batches, or LOW_END geometry.
+
+The Worker imports a generated registry. The client sends only a resident id, a stable authority digest,
+the bounded question, and at most six short history items. It never sends a repo name, profile JSON, Bound
+memory, role, system text, or prompt. The server chooses the resident and Bound source, quotes sanitized public
+evidence as untrusted data, and constructs the prompt. A question naming another repo returns a deterministic
+redirect to that house before model planning. The authority digest excludes the daily age/shared clock, so
+ordinary refreshes do not disable dialogue; a real Bound-source change fails closed to local behavior until the
+Worker registry is redeployed.
 
 ---
 

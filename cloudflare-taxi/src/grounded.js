@@ -53,6 +53,10 @@ import {
   npcBudgetStatus,
   runBudgetedNpcCall,
 } from "./npc-budget-governor.js";
+import {
+  authorizeResidentDialogue,
+  capResidentDialogueLine,
+} from "./resident-dialogue.js";
 
 export { NpcBudgetGovernor };
 
@@ -1687,6 +1691,101 @@ async function npcHandler(body, request, env, ctx) {
   }
   if (action === "npcBudget") {
     return json({ ok: true, budget: await npcBudgetStatus(env, aiEnabled, emitBudgetMetric) }, 200, env);
+  }
+
+  if (action === "residentDialogue") {
+    const authorized = authorizeResidentDialogue(body);
+    const residentMeta = {
+      instanceOrigin: requestMeta.instanceOrigin,
+      cityMode: requestMeta.cityMode,
+    };
+    if (!authorized.ok) {
+      return json({
+        ok: true,
+        fallback: true,
+        reason: authorized.reason,
+      }, 200, env);
+    }
+    if (authorized.kind === "redirect") {
+      return json({
+        ok: true,
+        line: authorized.line,
+        redirect: {
+          residentId: authorized.target.resident_id || null,
+          repo: authorized.target.repo,
+        },
+        trace: authorized.trace,
+      }, 200, env);
+    }
+    if (!playerOn) {
+      const budget = await npcBudgetStatus(env, false, emitBudgetMetric, "resident-dialogue");
+      return json({
+        ok: true,
+        fallback: true,
+        reason: "npc_ai_disabled",
+        trace: authorized.trace,
+        budget,
+      }, 200, env);
+    }
+    const turn = await runBudgetedNpcCall({
+      env,
+      role: "player",
+      scope: "resident-dialogue",
+      messages: authorized.messages,
+      enabled: aiEnabled,
+      emit: emitBudgetMetric,
+      providerCall: (plan) => npcModelCall(env, "player", plan, aiEnabled),
+    });
+    const route = "resident_bound_visitor";
+    const residentId = authorized.resident.resident_id;
+    if (!turn.ok) {
+      if (turn.usage) {
+        emitProviderUsage(env, ctx, route, "resident_registry", residentId, {
+          phase: "resident_model",
+          model: turn.model,
+          usage: turn.usage,
+          costUsd: turn.costUsd,
+          ms: 0,
+          ok: false,
+        }, residentMeta);
+      }
+      const exhausted = [
+        "day_cap_zero",
+        "day_cap_exhausted",
+        "daily_turn_max",
+        "daily_attempt_max",
+      ].includes(turn.reason);
+      const rateLimited = turn.reason === "rate_limit";
+      return json({
+        ok: true,
+        fallback: true,
+        reason: rateLimited
+          ? "resident_rate_limited"
+          : exhausted ? "resident_budget_exhausted" : turn.reason,
+        trace: authorized.trace,
+        budget: turn.budget,
+      }, 200, env);
+    }
+    const line = capResidentDialogueLine(turn.value.text);
+    emitProviderUsage(env, ctx, route, "resident_registry", residentId, {
+      phase: "resident_model",
+      model: turn.model,
+      usage: turn.usage,
+      costUsd: turn.costUsd,
+      ms: turn.value?.ms,
+    }, residentMeta);
+    emitDeliveredAnswer(env, ctx, route, "resident_registry", residentId, {
+      model: turn.model,
+      ms: turn.value?.ms,
+      refs: authorized.trace.sourceKinds.length,
+      ...residentMeta,
+    });
+    return json({
+      ok: true,
+      line,
+      trace: authorized.trace,
+      budget: turn.budget,
+    }, 200, env);
   }
 
   if (action === "npcAmbientTurn" || action === "npcPlayerChat") {

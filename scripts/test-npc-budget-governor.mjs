@@ -788,4 +788,81 @@ export async function runNpcBudgetGovernorTests(check) {
       && calls === 1 && delays.length === 0,
     'an overloaded Governor fails closed without a retry that would amplify the overload');
   }
+
+  {
+    const { governor, nowRef } = makeGovernor();
+    const policy = {
+      scope: 'resident-dialogue',
+      capNanos: 1_000_000,
+      dailyTurnMax: 10,
+      dailyAttemptMax: 20,
+      rateMax: 1,
+      rateWindowSeconds: 60,
+      reservationLeaseMs: 60_000,
+    };
+    const firstId = reservationId(90);
+    const first = await operation(governor, {
+      op: 'reserve', ...policy, reservationId: firstId, amountNanos: 100_000,
+    });
+    await operation(governor, { op: 'release', ...policy, reservationId: firstId });
+    const limited = await operation(governor, {
+      op: 'reserve', ...policy, reservationId: reservationId(91), amountNanos: 100_000,
+    });
+    nowRef.value += 61_000;
+    const nextWindow = await operation(governor, {
+      op: 'reserve', ...policy, reservationId: reservationId(92), amountNanos: 100_000,
+    });
+    check(first.accepted
+      && !limited.accepted && limited.reason === 'rate_limit'
+      && limited.budget.rateMax === 1 && limited.budget.rateCount === 1
+      && nextWindow.accepted && nextWindow.budget.rateCount === 1,
+    'resident dialogue enforces a durable aggregate rate window and resets only after the window advances');
+  }
+
+  {
+    const npc = makeGovernor();
+    const resident = makeGovernor();
+    const env = {
+      ...baseEnv(npc.governor),
+      RESIDENT_DIALOGUE_DAY_CAP_USD: '1',
+      RESIDENT_DIALOGUE_DAILY_TURN_MAX: '10',
+      RESIDENT_DIALOGUE_DAILY_ATTEMPT_MAX: '20',
+      RESIDENT_DIALOGUE_RATE_MAX: '10',
+      RESIDENT_DIALOGUE_RATE_WINDOW_S: '60',
+      RESIDENT_DIALOGUE_MAX_COMPLETION_TOKENS: '96',
+      NPC_BUDGET_GOVERNOR: {
+        getByName(name) {
+          const governor = name === 'resident-dialogue-budget-v1'
+            ? resident.governor
+            : name === 'npc-budget-canonical-v1' ? npc.governor : null;
+          if (!governor) throw new Error('unexpected governor name');
+          return { fetch: (input, init) => governor.fetch(new Request(input, init)) };
+        },
+      },
+    };
+    let providerCalls = 0;
+    const turn = await runBudgetedNpcCall({
+      env,
+      role: 'player',
+      scope: 'resident-dialogue',
+      messages: MESSAGES,
+      enabled: true,
+      providerCall: async () => {
+        providerCalls += 1;
+        return {
+          ok: true,
+          text: 'bounded resident answer',
+          usage: { prompt_tokens: 40, completion_tokens: 8, total_tokens: 48 },
+        };
+      },
+    });
+    const residentStatus = await npcBudgetStatus(env, true, null, 'resident-dialogue');
+    const npcStatus = await npcBudgetStatus(env, true);
+    const residentPlan = createNpcCallPlan(env, 'player', MESSAGES, 'resident-dialogue');
+    check(turn.ok && providerCalls === 1
+      && residentStatus.scope === 'resident-dialogue' && residentStatus.turnsToday === 1
+      && npcStatus.scope === 'npc' && npcStatus.turnsToday === 0
+      && residentPlan.maxOutputTokens === 96,
+    'visitor resident dialogue has a separate Durable Object ledger, turn counters, and stricter output-token cap');
+  }
 }

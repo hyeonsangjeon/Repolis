@@ -270,9 +270,11 @@ kill switch is on **and** the Durable NPC Budget Governor accepts a worst-case r
 ### Durable hard-cap design
 
 `NPC_BUDGET_GOVERNOR` is a SQLite-backed Durable Object binding. Every Worker isolate addresses the same
-`npc-budget-canonical-v1` instance, which serializes and persists the UTC-day budget:
+`npc-budget-canonical-v1` instance for ambient/legacy NPC traffic and the separate
+`resident-dialogue-budget-v1` instance for explicit repository-bound visitor dialogue:
 
-- aggregate only: `spent`, `reserved`, completed/in-flight turns, and bounded daily attempts;
+- aggregate only: `spent`, `reserved`, completed/in-flight turns, bounded daily attempts, and a short
+  aggregate rate-window count;
 - idempotency records: reservation day, amount, and pending/settled/released status;
 - **never** prompts, conversation text, visitor identifiers, or personal data.
 
@@ -336,7 +338,17 @@ possibly billable dollars.
 // → { ok, line:"one short line", budget:{…} } | { ok, fallback:true, reason, budget }
 { "npc_action": "npcPlayerChat", "speaker":"nari", "zone":"web", "question":"…", "lang":"ko" }
 // → { ok, line:"…", budget } | { ok:false, fallback:true, reason:"npc_budget_exhausted", budget }
+{ "npc_action": "residentDialogue", "resident_id":"nari", "authority_digest":"<generated sha256>",
+  "question":"이 집의 최근 고민은?", "history":[], "lang":"ko" }
+// → own Bound answer | deterministic other-home redirect | { fallback:true, reason, budget }
 ```
+
+`residentDialogue` is the repository-bound route used by the browser. The Worker imports the generated
+resident registry and accepts only a resident id plus its stable authority digest. Client-supplied repo names,
+profile JSON, Bound arrays, roles, messages, system text, or prompts are rejected. Public issue/PR/commit text
+is bounded, sanitized during generation, and quoted as untrusted evidence. A question naming another repo is
+redirected to that house before any model reservation. Response traces expose only source kind, public
+resident/repo identity, and redirect identity — never prompts or another resident's Bound payload.
 
 `npcConfig` and `npcBudget` only read flags/Governor state; they never invoke a model. `controlEffective`
 reports the env∧KV control plane independently, while the backward-compatible `effective` remains the
@@ -367,6 +379,11 @@ to best-effort accounting.
 | `NPC_RESERVATION_LEASE_MS` | `60000` | Orphan lease; must exceed `NPC_TIMEOUT_MS + 2×NPC_BUDGET_TIMEOUT_MS + 10000` and be ≤300000. Expiry full-settles. |
 | `NPC_TIMEOUT_MS` | `12000` | Entra token + model request deadline; timeout aborts the request and releases its reservation. |
 | `NPC_MAX_TURNS` / `NPC_HARD_MAX_TURNS` | `6` / `10` | Advertised default / absolute ambient conversation caps. |
+| `RESIDENT_DIALOGUE_MAX_COMPLETION_TOKENS` | `96` | Separate explicit resident-dialogue output/reservation cap. |
+| `RESIDENT_DIALOGUE_DAY_CAP_USD` | `0.05` | Separate daily visitor resident-dialogue cap (31-day worst case `$1.55`). Missing configuration defaults to zero and fails closed. |
+| `RESIDENT_DIALOGUE_DAILY_TURN_MAX` | `120` | Separate completed/in-flight visitor dialogue cap. |
+| `RESIDENT_DIALOGUE_DAILY_ATTEMPT_MAX` | `240` | Separate accepted-attempt/storage ceiling. |
+| `RESIDENT_DIALOGUE_RATE_MAX` / `RESIDENT_DIALOGUE_RATE_WINDOW_S` | `12` / `60` | Durable aggregate rate cap; stores counts only, with no IP, user agent, cookie, transcript, or visitor identity. |
 | `METRICS_URL` | — | Optional private collector. Resident budget telemetry is anonymous aggregate operations only. |
 | `METRICS_INGEST_TOKEN` | — | Shared Worker secret for `X-Repolis-Metrics-Key`; identical value on `repolis-metrics`. Required for authoritative per-answer/provider/grounding attribution. |
 

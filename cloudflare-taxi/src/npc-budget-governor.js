@@ -4,7 +4,10 @@ const NPC_BUDGET_VIEW_CONTRACT = Object.freeze({
   durable: true,
   enforcement: "atomic_reservation",
 });
-const NPC_BUDGET_OBJECT_NAME = "npc-budget-canonical-v1";
+const NPC_BUDGET_OBJECT_NAMES = Object.freeze({
+  npc: "npc-budget-canonical-v1",
+  "resident-dialogue": "resident-dialogue-budget-v1",
+});
 const NPC_LEDGER_KEY = "ledger";
 const NPC_ARCHIVED_LEDGER_PREFIX = "ledger:";
 const NPC_RESERVATION_PREFIX = "reservation:";
@@ -60,10 +63,16 @@ function nanosToUsd(value) {
 function validLedger(ledger) {
   return !!ledger
     && /^\d{4}-\d{2}-\d{2}$/.test(String(ledger.day || ""))
+    && Object.prototype.hasOwnProperty.call(NPC_BUDGET_OBJECT_NAMES, ledger.scope)
     && isSafeNonNegativeInteger(ledger.capNanos)
     && isSafeNonNegativeInteger(ledger.dailyTurnMax)
     && isSafeNonNegativeInteger(ledger.dailyAttemptMax)
     && ledger.dailyAttemptMax > 0
+    && isSafeNonNegativeInteger(ledger.rateMax)
+    && isSafeNonNegativeInteger(ledger.rateWindowSeconds)
+    && ledger.rateWindowSeconds > 0
+    && isSafeNonNegativeInteger(ledger.rateWindowKey)
+    && isSafeNonNegativeInteger(ledger.rateCount)
     && isSafeNonNegativeInteger(ledger.spentNanos)
     && isSafeNonNegativeInteger(ledger.reservedNanos)
     && isSafeNonNegativeInteger(ledger.turns)
@@ -71,12 +80,17 @@ function validLedger(ledger) {
     && isSafeNonNegativeInteger(ledger.attempts);
 }
 
-function freshLedger(day, capNanos, dailyTurnMax, dailyAttemptMax) {
+function freshLedger(day, scope, capNanos, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds, nowMs) {
   return {
     day,
+    scope,
     capNanos,
     dailyTurnMax,
     dailyAttemptMax,
+    rateMax,
+    rateWindowSeconds,
+    rateWindowKey: Math.floor(nowMs / (rateWindowSeconds * 1000)),
+    rateCount: 0,
     spentNanos: 0,
     reservedNanos: 0,
     turns: 0,
@@ -85,31 +99,70 @@ function freshLedger(day, capNanos, dailyTurnMax, dailyAttemptMax) {
   };
 }
 
+function upgradeLedger(ledger) {
+  if (!ledger || typeof ledger !== "object") return ledger;
+  if (ledger.scope === undefined) ledger.scope = "npc";
+  if (ledger.rateMax === undefined) ledger.rateMax = 0;
+  if (ledger.rateWindowSeconds === undefined) ledger.rateWindowSeconds = 60;
+  if (ledger.rateWindowKey === undefined) ledger.rateWindowKey = 0;
+  if (ledger.rateCount === undefined) ledger.rateCount = 0;
+  return ledger;
+}
+
 function tighterTurnMax(current, incoming) {
   if (current === 0) return incoming;
   if (incoming === 0) return current;
   return Math.min(current, incoming);
 }
 
-function tightenPolicy(ledger, capNanos, dailyTurnMax, dailyAttemptMax) {
+function tightenPolicy(ledger, capNanos, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds) {
   const nextCap = Math.min(ledger.capNanos, capNanos);
   const nextTurnMax = tighterTurnMax(ledger.dailyTurnMax, dailyTurnMax);
   const nextAttemptMax = Math.min(ledger.dailyAttemptMax, dailyAttemptMax);
+  const nextRateMax = tighterTurnMax(ledger.rateMax, rateMax);
+  const nextRateWindowSeconds = Math.max(ledger.rateWindowSeconds, rateWindowSeconds);
   const changed = nextCap !== ledger.capNanos
     || nextTurnMax !== ledger.dailyTurnMax
-    || nextAttemptMax !== ledger.dailyAttemptMax;
+    || nextAttemptMax !== ledger.dailyAttemptMax
+    || nextRateMax !== ledger.rateMax
+    || nextRateWindowSeconds !== ledger.rateWindowSeconds;
   if (changed) {
     ledger.capNanos = nextCap;
     ledger.dailyTurnMax = nextTurnMax;
     ledger.dailyAttemptMax = nextAttemptMax;
+    ledger.rateMax = nextRateMax;
+    ledger.rateWindowSeconds = nextRateWindowSeconds;
   }
   return changed;
 }
 
-function budgetPolicy(env) {
-  const capNanos = usdToNanos(env?.NPC_DAY_CAP_USD, 10);
-  const dailyTurnMax = parseNonNegativeInteger(env?.NPC_DAILY_TURN_MAX, 0);
-  const dailyAttemptMax = parseNonNegativeInteger(env?.NPC_DAILY_ATTEMPT_MAX, 5000);
+function validScope(value) {
+  return Object.prototype.hasOwnProperty.call(NPC_BUDGET_OBJECT_NAMES, value);
+}
+
+function budgetPolicy(env, scope = "npc") {
+  if (!validScope(scope)) return { ok: false, reason: "npc_budget_scope_invalid" };
+  const resident = scope === "resident-dialogue";
+  const capNanos = usdToNanos(
+    resident ? env?.RESIDENT_DIALOGUE_DAY_CAP_USD : env?.NPC_DAY_CAP_USD,
+    resident ? 0 : 10,
+  );
+  const dailyTurnMax = parseNonNegativeInteger(
+    resident ? env?.RESIDENT_DIALOGUE_DAILY_TURN_MAX : env?.NPC_DAILY_TURN_MAX,
+    resident ? 120 : 0,
+  );
+  const dailyAttemptMax = parseNonNegativeInteger(
+    resident ? env?.RESIDENT_DIALOGUE_DAILY_ATTEMPT_MAX : env?.NPC_DAILY_ATTEMPT_MAX,
+    resident ? 240 : 5000,
+  );
+  const rateMax = parseNonNegativeInteger(
+    resident ? env?.RESIDENT_DIALOGUE_RATE_MAX : 0,
+    resident ? 12 : 0,
+  );
+  const rateWindowSeconds = parseNonNegativeInteger(
+    resident ? env?.RESIDENT_DIALOGUE_RATE_WINDOW_S : 60,
+    60,
+  );
   const providerTimeoutMs = parseNonNegativeInteger(env?.NPC_TIMEOUT_MS, 12_000);
   const governorTimeoutMs = parseNonNegativeInteger(env?.NPC_BUDGET_TIMEOUT_MS, 3000);
   const hasConfiguredLease = env?.NPC_RESERVATION_LEASE_MS !== undefined
@@ -126,6 +179,8 @@ function budgetPolicy(env) {
     : Math.max(60_000, minimumLeaseMs || 0);
   if (capNanos === null || dailyTurnMax === null
     || dailyAttemptMax === null || dailyAttemptMax < 1
+    || rateMax === null || rateWindowSeconds === null
+    || rateWindowSeconds < 10 || rateWindowSeconds > 3600
     || providerTimeoutMs === null || providerTimeoutMs < 100 || providerTimeoutMs > 120_000
     || governorTimeoutMs === null || governorTimeoutMs < 100 || governorTimeoutMs > 10_000
     || reservationLeaseMs === null || reservationLeaseMs < minimumLeaseMs
@@ -134,18 +189,25 @@ function budgetPolicy(env) {
   }
   return {
     ok: true,
+    scope,
     capNanos,
     dailyTurnMax,
     dailyAttemptMax,
+    rateMax,
+    rateWindowSeconds,
     reservationLeaseMs,
   };
 }
 
 function validPolicyPayload(body) {
-  return isSafeNonNegativeInteger(body?.capNanos)
+  return validScope(body?.scope)
+    && isSafeNonNegativeInteger(body?.capNanos)
     && isSafeNonNegativeInteger(body?.dailyTurnMax)
     && isSafeNonNegativeInteger(body?.dailyAttemptMax)
     && body.dailyAttemptMax > 0
+    && isSafeNonNegativeInteger(body?.rateMax)
+    && isSafeNonNegativeInteger(body?.rateWindowSeconds)
+    && body.rateWindowSeconds > 0
     && isSafeNonNegativeInteger(body?.reservationLeaseMs)
     && body.reservationLeaseMs > 0;
 }
@@ -156,9 +218,11 @@ function publicBudget(ledger) {
   const remainingNanos = Math.max(0, capNanos - committedNanos);
   const turnBlocked = dailyTurnMax > 0 && ledger.turns + ledger.reservedTurns >= dailyTurnMax;
   const attemptBlocked = ledger.attempts >= ledger.dailyAttemptMax;
+  const rateBlocked = ledger.rateMax > 0 && ledger.rateCount >= ledger.rateMax;
   return {
     ...NPC_BUDGET_VIEW_CONTRACT,
     available: true,
+    scope: ledger.scope,
     day: ledger.day,
     dayCapUsd: nanosToUsd(capNanos),
     spentUsd: nanosToUsd(ledger.spentNanos),
@@ -169,7 +233,10 @@ function publicBudget(ledger) {
     dailyTurnMax,
     attemptsToday: ledger.attempts,
     dailyAttemptMax: ledger.dailyAttemptMax,
-    blocked: capNanos === 0 || committedNanos >= capNanos || turnBlocked || attemptBlocked,
+    rateMax: ledger.rateMax,
+    rateWindowSeconds: ledger.rateWindowSeconds,
+    rateCount: ledger.rateCount,
+    blocked: capNanos === 0 || committedNanos >= capNanos || turnBlocked || attemptBlocked || rateBlocked,
   };
 }
 
@@ -178,6 +245,7 @@ function unavailableBudget(reason, policy) {
     ...NPC_BUDGET_VIEW_CONTRACT,
     available: false,
     enabled: false,
+    scope: policy?.scope || null,
     day: null,
     dayCapUsd: policy?.ok ? nanosToUsd(policy.capNanos) : null,
     spentUsd: null,
@@ -188,6 +256,9 @@ function unavailableBudget(reason, policy) {
     dailyTurnMax: policy?.ok ? policy.dailyTurnMax : null,
     attemptsToday: null,
     dailyAttemptMax: policy?.ok ? policy.dailyAttemptMax : null,
+    rateMax: policy?.ok ? policy.rateMax : null,
+    rateWindowSeconds: policy?.ok ? policy.rateWindowSeconds : null,
+    rateCount: null,
     blocked: true,
     reason,
   };
@@ -253,6 +324,7 @@ function operationMeta(result, extra = {}) {
     ...NPC_BUDGET_VIEW_CONTRACT,
     ...extra,
     ...(budget?.day ? {
+      scope: budget.scope || "npc",
       day: budget.day,
       spentUsd: budget.spentUsd,
       reservedUsd: budget.reservedUsd,
@@ -262,6 +334,9 @@ function operationMeta(result, extra = {}) {
       dailyTurnMax: budget.dailyTurnMax,
       attemptsToday: budget.attemptsToday,
       dailyAttemptMax: budget.dailyAttemptMax,
+      rateMax: budget.rateMax,
+      rateWindowSeconds: budget.rateWindowSeconds,
+      rateCount: budget.rateCount,
     } : {}),
   };
 }
@@ -292,7 +367,8 @@ export class NpcBudgetGovernor {
       else if (record.day !== day && record.day !== retainDay) deleteKeys.push(key);
     }
     const archived = await this.state.storage.list({ prefix: NPC_ARCHIVED_LEDGER_PREFIX });
-    for (const [key, ledger] of archived) {
+    for (const [key, rawLedger] of archived) {
+      const ledger = upgradeLedger(rawLedger);
       if (!validLedger(ledger)) throw new Error("npc_budget_corrupt");
       if (!pendingDays.has(ledger.day)) deleteKeys.push(key);
     }
@@ -301,23 +377,57 @@ export class NpcBudgetGovernor {
     }
   }
 
-  async loadLedger(capNanos, dailyTurnMax, dailyAttemptMax) {
+  async loadLedger(scope, capNanos, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds) {
     const day = utcDay(this.now());
-    const stored = await this.state.storage.get(NPC_LEDGER_KEY);
+    const nowMs = this.now();
+    const stored = upgradeLedger(await this.state.storage.get(NPC_LEDGER_KEY));
     if (!stored) {
-      const ledger = freshLedger(day, capNanos, dailyTurnMax, dailyAttemptMax);
+      const ledger = freshLedger(
+        day,
+        scope,
+        capNanos,
+        dailyTurnMax,
+        dailyAttemptMax,
+        rateMax,
+        rateWindowSeconds,
+        nowMs,
+      );
       await this.state.storage.put(NPC_LEDGER_KEY, ledger);
       return { ledger, reset: false };
     }
     if (!validLedger(stored)) throw new Error("npc_budget_corrupt");
+    if (stored.scope !== scope) throw new Error("npc_budget_corrupt");
     if (stored.day === day) {
-      if (tightenPolicy(stored, capNanos, dailyTurnMax, dailyAttemptMax)) {
+      let changed = tightenPolicy(
+        stored,
+        capNanos,
+        dailyTurnMax,
+        dailyAttemptMax,
+        rateMax,
+        rateWindowSeconds,
+      );
+      const rateWindowKey = Math.floor(nowMs / (stored.rateWindowSeconds * 1000));
+      if (stored.rateWindowKey !== rateWindowKey) {
+        stored.rateWindowKey = rateWindowKey;
+        stored.rateCount = 0;
+        changed = true;
+      }
+      if (changed) {
         await this.state.storage.put(NPC_LEDGER_KEY, stored);
       }
       return { ledger: stored, reset: false };
     }
 
-    const ledger = freshLedger(day, capNanos, dailyTurnMax, dailyAttemptMax);
+    const ledger = freshLedger(
+      day,
+      scope,
+      capNanos,
+      dailyTurnMax,
+      dailyAttemptMax,
+      rateMax,
+      rateWindowSeconds,
+      nowMs,
+    );
     await this.state.storage.put({
       [archivedLedgerKey(stored.day)]: stored,
       [NPC_LEDGER_KEY]: ledger,
@@ -331,7 +441,7 @@ export class NpcBudgetGovernor {
       return { ledger: currentLedger, key: NPC_LEDGER_KEY };
     }
     const key = archivedLedgerKey(record.day);
-    const ledger = await this.state.storage.get(key);
+    const ledger = upgradeLedger(await this.state.storage.get(key));
     if (!validLedger(ledger)) throw new Error("npc_budget_corrupt");
     return { ledger, key };
   }
@@ -345,7 +455,7 @@ export class NpcBudgetGovernor {
 
   async reconcileExpiredReservations() {
     const nowMs = this.now();
-    const currentLedger = await this.state.storage.get(NPC_LEDGER_KEY);
+    const currentLedger = upgradeLedger(await this.state.storage.get(NPC_LEDGER_KEY));
     if (!currentLedger) return;
     if (!validLedger(currentLedger)) throw new Error("npc_budget_corrupt");
     const records = await this.state.storage.list({ prefix: NPC_RESERVATION_PREFIX });
@@ -393,11 +503,23 @@ export class NpcBudgetGovernor {
     } catch {
       return internalJson({ ok: false, reason: "bad body" }, 400);
     }
+    if (body && typeof body === "object") {
+      if (body.scope === undefined) body.scope = "npc";
+      if (body.rateMax === undefined) body.rateMax = 0;
+      if (body.rateWindowSeconds === undefined) body.rateWindowSeconds = 60;
+    }
     if (!validPolicyPayload(body)) {
       return internalJson({ ok: false, reason: "invalid_policy" }, 400);
     }
 
-    const loaded = await this.loadLedger(body.capNanos, body.dailyTurnMax, body.dailyAttemptMax);
+    const loaded = await this.loadLedger(
+      body.scope,
+      body.capNanos,
+      body.dailyTurnMax,
+      body.dailyAttemptMax,
+      body.rateMax,
+      body.rateWindowSeconds,
+    );
     const currentBudget = () => publicBudget(loaded.ledger);
     if (body.op === "status") {
       return internalJson({ ok: true, reset: loaded.reset, budget: currentBudget() });
@@ -464,6 +586,9 @@ export class NpcBudgetGovernor {
       if (loaded.ledger.attempts >= loaded.ledger.dailyAttemptMax) {
         return internalJson({ ok: true, reset: loaded.reset, accepted: false, reason: "daily_attempt_max", budget: currentBudget() });
       }
+      if (loaded.ledger.rateMax > 0 && loaded.ledger.rateCount >= loaded.ledger.rateMax) {
+        return internalJson({ ok: true, reset: loaded.reset, accepted: false, reason: "rate_limit", budget: currentBudget() });
+      }
 
       const expiresAtMs = this.now() + body.reservationLeaseMs;
       if (!Number.isSafeInteger(expiresAtMs)) {
@@ -472,6 +597,7 @@ export class NpcBudgetGovernor {
       loaded.ledger.reservedNanos += body.amountNanos;
       loaded.ledger.reservedTurns += 1;
       loaded.ledger.attempts += 1;
+      loaded.ledger.rateCount += 1;
       await this.state.storage.put({
         [NPC_LEDGER_KEY]: loaded.ledger,
         [key]: {
@@ -644,7 +770,7 @@ function maxCostNanos(maxInputTokens, maxOutputTokens, pricing) {
   return Number.isSafeInteger(nanos) && nanos > 0 ? nanos : null;
 }
 
-export function createNpcCallPlan(env, role, messages) {
+export function createNpcCallPlan(env, role, messages, scope = "npc") {
   if (role !== "ambient" && role !== "player") {
     return { ok: false, reason: "npc_role_invalid" };
   }
@@ -655,7 +781,9 @@ export function createNpcCallPlan(env, role, messages) {
   const pricing = modelPricing(env, deployment);
   if (!pricing.ok) return pricing;
   const maxOutputTokens = parseNonNegativeInteger(
-    env?.NPC_MAX_COMPLETION_TOKENS,
+    scope === "resident-dialogue"
+      ? env?.RESIDENT_DIALOGUE_MAX_COMPLETION_TOKENS
+      : env?.NPC_MAX_COMPLETION_TOKENS,
     NPC_DEFAULT_MAX_COMPLETION_TOKENS,
   );
   if (maxOutputTokens === null || maxOutputTokens < 1 || maxOutputTokens > 4096) {
@@ -796,19 +924,21 @@ function settledCost(plan, usage, requireOutputTokens) {
   return { usage: normalized, actualNanos, usageAuthoritative: true, reason: null };
 }
 
-function governorStub(env) {
+function governorStub(env, scope) {
   const namespace = env?.NPC_BUDGET_GOVERNOR;
   if (!namespace) throw new Error("npc_budget_binding_missing");
+  const objectName = NPC_BUDGET_OBJECT_NAMES[scope];
+  if (!objectName) throw new Error("npc_budget_scope_invalid");
   if (typeof namespace.getByName === "function") {
-    return namespace.getByName(NPC_BUDGET_OBJECT_NAME);
+    return namespace.getByName(objectName);
   }
   if (typeof namespace.idFromName === "function" && typeof namespace.get === "function") {
-    return namespace.get(namespace.idFromName(NPC_BUDGET_OBJECT_NAME));
+    return namespace.get(namespace.idFromName(objectName));
   }
   throw new Error("npc_budget_binding_invalid");
 }
 
-async function governorCall(env, payload) {
+async function governorCall(env, payload, scope) {
   const timeoutMs = parseNonNegativeInteger(env?.NPC_BUDGET_TIMEOUT_MS, 3000);
   if (timeoutMs === null || timeoutMs < 100 || timeoutMs > 10_000) {
     return { ok: false, reason: "npc_budget_timeout_invalid" };
@@ -816,7 +946,7 @@ async function governorCall(env, payload) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const response = await governorStub(env).fetch("https://npc-budget.internal/", {
+    const response = await governorStub(env, scope).fetch("https://npc-budget.internal/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -877,21 +1007,21 @@ async function waitBeforeGovernorRetry(env) {
   await new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
-async function reliableGovernorCall(env, payload) {
-  const first = await governorCall(env, payload);
+async function reliableGovernorCall(env, payload, scope) {
+  const first = await governorCall(env, payload, scope);
   if (!retryableGovernorFailure(first)) return first;
   await waitBeforeGovernorRetry(env);
-  return governorCall(env, payload);
+  return governorCall(env, payload, scope);
 }
 
 function withEnabled(budget, enabled) {
   return { ...budget, enabled: !!enabled && budget.available === true };
 }
 
-export async function npcBudgetStatus(env, enabled, emit) {
-  const policy = budgetPolicy(env);
+export async function npcBudgetStatus(env, enabled, emit, scope = "npc") {
+  const policy = budgetPolicy(env, scope);
   if (!policy.ok) return unavailableBudget(policy.reason, policy);
-  const result = await reliableGovernorCall(env, { op: "status", ...policy });
+  const result = await reliableGovernorCall(env, { op: "status", ...policy }, scope);
   if (!result.ok || !result.budget) {
     return unavailableBudget(result.reason || "npc_budget_governor_unavailable", policy);
   }
@@ -899,24 +1029,25 @@ export async function npcBudgetStatus(env, enabled, emit) {
   return withEnabled(result.budget, enabled);
 }
 
-async function releaseReservation(env, policy, reservationId) {
-  return reliableGovernorCall(env, { op: "release", ...policy, reservationId });
+async function releaseReservation(env, policy, reservationId, scope) {
+  return reliableGovernorCall(env, { op: "release", ...policy, reservationId }, scope);
 }
 
 export async function runBudgetedNpcCall({
   env,
   role,
+  scope = "npc",
   messages,
   enabled,
   emit,
   providerCall,
 }) {
-  const policy = budgetPolicy(env);
+  const policy = budgetPolicy(env, scope);
   if (!enabled) {
     return {
       ok: false,
       reason: "npc_ai_disabled",
-      budget: await npcBudgetStatus(env, false, emit),
+      budget: await npcBudgetStatus(env, false, emit, scope),
     };
   }
   if (!policy.ok) {
@@ -929,9 +1060,9 @@ export async function runBudgetedNpcCall({
     return { ok: false, reason: policy.reason, budget };
   }
 
-  const plan = createNpcCallPlan(env, role, messages);
+  const plan = createNpcCallPlan(env, role, messages, scope);
   if (!plan.ok) {
-    const budget = await npcBudgetStatus(env, enabled, emit);
+    const budget = await npcBudgetStatus(env, enabled, emit, scope);
     emit?.("npc_budget_reserve", operationMeta({ budget }, {
       role,
       accepted: false,
@@ -946,7 +1077,7 @@ export async function runBudgetedNpcCall({
     ...policy,
     reservationId,
     amountNanos: plan.reservationNanos,
-  });
+  }, scope);
   emitReset(emit, reserved);
   if (!reserved.ok || !reserved.accepted) {
     const budget = reserved.budget
@@ -966,7 +1097,7 @@ export async function runBudgetedNpcCall({
   }
   const reservedBudget = withEnabled(reserved.budget, enabled);
   if (reservedBudget.day !== workerUtcDay(env)) {
-    const released = await releaseReservation(env, policy, reservationId);
+    const released = await releaseReservation(env, policy, reservationId, scope);
     const budget = released.ok && released.budget
       ? withEnabled(released.budget, enabled)
       : unavailableBudget(released.reason || "npc_budget_governor_unavailable", policy);
@@ -994,7 +1125,7 @@ export async function runBudgetedNpcCall({
     };
   }
   if (!provider?.ok && !provider?.billable) {
-    const released = await releaseReservation(env, policy, reservationId);
+    const released = await releaseReservation(env, policy, reservationId, scope);
     emitReset(emit, released);
     const budget = released.ok && released.budget
       ? withEnabled(released.budget, enabled)
@@ -1023,7 +1154,7 @@ export async function runBudgetedNpcCall({
     ...policy,
     reservationId,
     actualNanos: cost.actualNanos,
-  });
+  }, scope);
   emitReset(emit, settled);
   if (!settled.ok || !settled.budget) {
     const budget = unavailableBudget(settled.reason || "npc_budget_governor_unavailable", policy);

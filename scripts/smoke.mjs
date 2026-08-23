@@ -16,6 +16,8 @@ import { createRequire } from 'module';
 import { createHash } from 'crypto';
 import { runInNewContext } from 'vm';
 import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
+import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
+import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
 import {
   CAMERA_OBSTRUCTION_DEFAULTS,
   CAMERA_ARRIVAL_OFFSETS,
@@ -116,6 +118,9 @@ const CITY_STATE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/city-state.sc
 const CITY_REPOS = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
 const CITY_STATE_BUILDER = readFileSync(join(ROOT, 'scripts/city_state.py'), 'utf8');
 const CITY_STATE_VALIDATOR = readFileSync(join(ROOT, 'scripts/validate_city_state.py'), 'utf8');
+const RESIDENT_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/resident-profiles.js'), 'utf8');
+const RESIDENT_DIALOGUE_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/resident-dialogue.js'), 'utf8');
+const RESIDENT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'data/residents/index.json'), 'utf8'));
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -2164,9 +2169,10 @@ ok(/NPC_MODEL_DEFAULT[\s\S]*?"gpt-5\.4-mini"/.test(NPC_GOVERNOR), 'provider adap
 ok(/env\?\.NPC_DAY_CAP_USD/.test(NPC_GOVERNOR) && !/COUNCIL_/.test(NPC_GOVERNOR), 'NPC budget uses the NPC_* namespace (separate from COUNCIL_*)');
 ok(/function npcMetric\(/.test(WORKER) && /env\.METRICS_URL/.test(WORKER), 'redacted fire-and-forget metrics emit (env.METRICS_URL) present');
 ok(/export class NpcBudgetGovernor/.test(NPC_GOVERNOR)
-  && /NPC_BUDGET_OBJECT_NAME = "npc-budget-canonical-v1"/.test(NPC_GOVERNOR)
+  && /npc: "npc-budget-canonical-v1"/.test(NPC_GOVERNOR)
+  && /"resident-dialogue": "resident-dialogue-budget-v1"/.test(NPC_GOVERNOR)
   && /blockConcurrencyWhile\(run\)/.test(NPC_GOVERNOR),
-  'one canonical Durable Object serializes persistent budget mutations');
+  'separate canonical Durable Object names serialize NPC and resident-dialogue budget mutations');
 ok(!/_npcLedger|source: "module"|module-scope ledger/.test(WORKER + NPC_GOVERNOR),
   'isolate-local NPC budget ledger is fully removed');
 ok(/NPC_DAILY_ATTEMPT_MAX/.test(NPC_GOVERNOR)
@@ -2201,6 +2207,37 @@ ok(/source: "durable-object"/.test(WORKER)
 group('Durable NPC budget governor — hermetic atomicity and fail-closed behavior');
 await runNpcBudgetGovernorTests(ok);
 
+group('resident profiles — manifest-only boot, lazy detail, and local Bound fallback');
+await runResidentRuntimeTests(ok);
+
+group('resident Shared/Bound authority — generated registry and adversarial requests');
+await runResidentDialogueTests(ok);
+ok(RESIDENT_MANIFEST.profile_count === CITY_REPOS.length
+  && RESIDENT_MANIFEST.active_count === 9
+  && RESIDENT_MANIFEST.active_roster.every(entry => !RESIDENT_MANIFEST.profiles.find(profile => profile.slug === entry.slug)?.archived),
+  'the manifest covers every public repo while the bounded active roster excludes archives');
+ok(/await loadResidentManifest\(\{owner:currentUser\}\)/.test(HTML)
+  && /async function ensureResidentProfile\(res,retry=false\)/.test(HTML)
+  && !/api\.github\.com/.test(RESIDENT_RUNTIME_SRC),
+  'boot loads only the local manifest and profile details stay interaction-lazy with zero resident GitHub API calls');
+ok(/payload=payload\.npc_action==='residentDialogue'\?Object\.assign\(\{\},payload\)/.test(HTML)
+  && /ALLOWED_CLIENT_FIELDS/.test(RESIDENT_DIALOGUE_SRC)
+  && /FORBIDDEN_CLIENT_FIELDS/.test(RESIDENT_DIALOGUE_SRC),
+  'Bound dialogue omits analytics identity and the Worker rejects every field outside the narrow request contract');
+ok(/const bound=res\.bound&&res\.bound\.repoRecord/.test(HTML)
+  && /boundHome:res\.bound\?\{repo:res\.bound\.repo/.test(HTML)
+  && /if\(LOW_END\|\|!res\.bound\) return null/.test(HTML),
+  'active residents anchor to real repo entrances while Starlight home truth and LOW_END prop limits remain intact');
+ok(/chatEl\.addEventListener\('keydown'/.test(HTML)
+  && /event\.key==='Escape'/.test(HTML)
+  && /chatPreviousFocus/.test(HTML)
+  && /residentProfileRetry/.test(HTML),
+  'resident dialogue includes focus trap/restore, Escape close, and explicit retry chrome');
+ok(/test_resident_profiles\.py/.test(REFRESH_WORKFLOW)
+  && /validate_resident_profiles\.py/.test(REFRESH_WORKFLOW)
+  && /scan_public_artifacts\.py/.test(REFRESH_WORKFLOW),
+  'daily publication is gated by resident determinism, schema, and public-safety checks');
+
 group('AURI market oracle — grounded market KB + read-only crypto MCP');
 const marketActionSrc=(HTML.match(/function marketActionQuestion\(q\)\{[\s\S]*?(?=\nfunction marketQuestion)/)||[''])[0];
 const marketDetectorSrc=(HTML.match(/function marketQuestion\(q\)\{[\s\S]*?return domain\|\|tickerMetric\|\|marketActionQuestion\(s\); \}/)||[''])[0];
@@ -2220,12 +2257,12 @@ if(marketActionSrc&&marketDetectorSrc&&explicitMarketSrc){
 }
 ok(/async function marketResidentAsk\(res,q\)[\s\S]*?npc:'market'[\s\S]*?trace:data\.trace/.test(npcBlock), 'AURI sends market questions to the market KB and preserves source traces');
 ok(/function marketFollowup\(q\)\{ if\(!_marketThread\) return false;[\s\S]*?yesterday/.test(npcBlock)
-  &&/const marketIntent=res\.oracle==='market'&&marketQuestion\(q\), handoff=scholarHandoffKind\(q\)/.test(npcBlock)
+  &&/const marketIntent=res\.oracle==='market'&&!boundCue&&marketQuestion\(q\), handoff=scholarHandoffKind\(q\)/.test(npcBlock)
   &&/if\(marketIntent&&\(!handoff\|\|explicitMarketQuestion\(q\)\)\)\{ await marketResidentAsk\(res,q\); return; \}/.test(npcBlock)
-  &&/if\(res\.oracle==='market' && marketFollowup\(q\)\)\{ await marketResidentAsk\(res,q\); return; \}/.test(npcBlock)
+  &&/if\(res\.oracle==='market' && !boundCue && marketFollowup\(q\)\)\{ await marketResidentAsk\(res,q\); return; \}/.test(npcBlock)
   &&/async function marketResidentAsk\(res,q\)\{[\s\S]*?_marketThread=false;[\s\S]*?if\(data\.message\)\{[\s\S]*?_marketThread=true/.test(npcBlock)
   &&/if\(handoff\)\{ if\(res\.oracle==='market'\)\{ cancelMarketRequest\(\); _marketThread=false; \} if\(_maybeScholarHandoff\(q\)\) return; \}/.test(npcBlock)
-  &&/marketLocalIntent\(q\)\)\{ marketResidentLocalSay\(res,q\); return; \}[\s\S]*?marketFollowup\(q\)/.test(npcBlock)
+  &&/!boundCue && marketLocalIntent\(q\)\)\{ marketResidentLocalSay\(res,q\); return; \}[\s\S]*?!boundCue && marketFollowup\(q\)/.test(npcBlock)
   &&/\^\(\?:\[A-Z\]\{1,5\}/.test(npcBlock)
   &&/_resHist=\[\]; _marketThread=false/.test(HTML), 'AURI keeps follow-up context only after a successful market response and clears it on handoff, failure, or chat switch');
 ok(/function cancelMarketRequest\(\)\{ _marketRequestSeq\+\+;[\s\S]*?_marketAbort\.abort\(\)/.test(npcBlock)
@@ -2422,10 +2459,15 @@ ok(/window\.__joinGroup=/.test(HTML) && /window\.__groupChat=/.test(HTML), '?dbg
 group('resident chat carries conversation context (answers stay on the visitor\'s question)');
 ok(/let _resHist=\[\]/.test(npcBlock) && /function _resHistPush\(who,text\)/.test(npcBlock) && /function _resHistWindow\(\)/.test(npcBlock), 'a shared _resHist transcript (push + recent window) backs resident + group multi-turn memory');
 ok(/if\(_resHist\.length>12\) _resHist=_resHist\.slice\(-12\)/.test(npcBlock) && /return _resHist\.slice\(-10\)/.test(npcBlock), 'the transcript is bounded (keep 12, hand the last 10 to the worker) so the prompt never runs away');
-ok(/async function _aiPlayerChat\(res,q,opts\)\{/.test(npcBlock) && /if\(opts\.last&&opts\.last\.length\) payload\.last=opts\.last/.test(npcBlock), '_aiPlayerChat forwards the prior thread (payload.last) so the speaker follows the flow, not just the raw question');
-ok(/if\(opts\.chime\)\{ payload\.chime=true; if\(opts\.prev\) payload\.prev=opts\.prev/.test(npcBlock), '_aiPlayerChat marks a chime-in (chime+prev) so the worker tells the 2nd speaker to build on the previous one');
+ok(/async function _aiPlayerChat\(res,q,opts\)\{/.test(npcBlock)
+  && /npc_action:'residentDialogue', resident_id:res\.id, authority_digest:res\.bound\.authorityDigest/.test(npcBlock)
+  && /payload\.history=opts\.last\.slice\(-6\)/.test(npcBlock),
+  '_aiPlayerChat sends only server-authorized identity/digest plus a six-turn bounded history');
+ok(!/payload\.(?:profile|bound_memories|repo|system|messages)=/.test(npcBlock),
+  'resident chat never sends client-owned profile, Bound payload, repo identity, or role/system text');
 ok(/const last=_resHistWindow\(\); _resHistPush\('visitor',q\)/.test(npcBlock) && /_resHistPush\(res\.id,c\)/.test(npcBlock), 'residentSay snapshots history then records both the question and the reply, so a follow-up keeps context');
-ok(/const ctx=base\.concat\(\[\{who:pres\.id,text:mainLine\}\]\)/.test(npcBlock) && /_aiPlayerChat\(other,q,\{last:ctx,chime:true,prev:pres\.id\}\)/.test(npcBlock), "groupSay feeds the 2nd resident the primary's just-given answer so the chime-in reacts to it (context-aware, on the same question)");
+ok(/const ctx=base\.concat\(\[\{who:pres\.id,text:mainLine\}\]\)/.test(npcBlock) && /_aiPlayerChat\(other,q,\{last:ctx\}\)/.test(npcBlock),
+  "groupSay feeds the 2nd resident the primary's answer as bounded history without client-authored prompt controls");
 ok(/_resHistPush\(pres\.id,mainLine\)/.test(npcBlock) && /_resHistPush\(other\.id,chime\)/.test(npcBlock), 'every group answer is recorded to the shared thread so later turns build on the whole exchange');
 ok(/_resHist=\[\]/.test(HTML.match(/if\(activeNpc!==npc\)\{[\s\S]*?\}/)?.[0] || ''), 'switching the chat NPC clears _resHist so a new gathering starts with a fresh thread');
 ok(/window\.__resTranscript=\(\)=>_resHist\.slice\(-12\)/.test(HTML), '?dbg __resTranscript surfaces the shared resident/group thread for verification');

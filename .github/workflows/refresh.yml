@@ -59,13 +59,16 @@ jobs:
         run: |
           python3 scripts/test_city_state.py
           python3 scripts/validate_city_state.py
+          python3 scripts/test_resident_profiles.py
+          python3 scripts/validate_resident_profiles.py
+          python3 scripts/scan_public_artifacts.py
           node scripts/test-city-time.mjs
 
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A data repos.json
+          git add -A data repos.json cloudflare-taxi/src/generated/resident-registry.js
           if git diff --cached --quiet; then
             echo "no changes"
           else

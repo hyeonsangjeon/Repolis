@@ -29,6 +29,7 @@ import subprocess
 from pathlib import Path
 
 from city_state import build_city_state, write_city_state
+from resident_profiles import write_resident_artifacts
 
 def resolve_owner():
     configured = os.environ.get("REPO_OWNER", "").strip()
@@ -54,6 +55,13 @@ GTM_DIR = Path(_configured_gtm) if _configured_gtm else (
 OUT = Path(os.environ.get("OUT", "repos.json"))
 CITY_STATE_OUT = Path(os.environ.get("CITY_STATE_OUT", "data/city-state.json"))
 CITY_STATE_AS_OF = os.environ.get("CITY_STATE_AS_OF", "").strip() or None
+RESIDENTS_OUT = Path(os.environ.get("RESIDENTS_OUT", "data/residents"))
+RESIDENT_REGISTRY_OUT = Path(
+    os.environ.get(
+        "RESIDENT_REGISTRY_OUT",
+        "cloudflare-taxi/src/generated/resident-registry.js",
+    )
+)
 
 
 def gh_api(path):
@@ -73,6 +81,116 @@ def latest_release(full_name):
         return {"tag": d.get("tag_name") or "", "date": (d.get("published_at") or "")[:10]}
     except (subprocess.CalledProcessError, json.JSONDecodeError):
         return None
+
+
+def resident_history(full_name):
+    """Bounded public issue/PR/release/commit evidence for one public repo."""
+    owner, name = full_name.split("/", 1)
+    query = """
+query($owner:String!,$name:String!){
+  repository(owner:$owner,name:$name){
+    issues(first:3,states:OPEN,orderBy:{field:UPDATED_AT,direction:DESC}){
+      nodes{number title url updatedAt}
+    }
+    pullRequests(first:3,states:OPEN,orderBy:{field:UPDATED_AT,direction:DESC}){
+      nodes{number title url updatedAt}
+    }
+    historyIssues:issues(first:2,states:[OPEN,CLOSED],orderBy:{field:UPDATED_AT,direction:DESC}){
+      nodes{number title url updatedAt}
+    }
+    historyPullRequests:pullRequests(first:2,states:[MERGED,CLOSED],orderBy:{field:UPDATED_AT,direction:DESC}){
+      nodes{number title url updatedAt}
+    }
+    releases(first:2,orderBy:{field:CREATED_AT,direction:DESC}){
+      nodes{name tagName url publishedAt createdAt}
+    }
+    defaultBranchRef{
+      target{
+        ... on Commit{
+          history(first:3){nodes{oid messageHeadline committedDate url}}
+        }
+      }
+    }
+  }
+}"""
+    try:
+        raw = subprocess.check_output(
+            [
+                "gh", "api", "graphql",
+                "-f", "query=" + query,
+                "-F", "owner=" + owner,
+                "-F", "name=" + name,
+            ],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        repository = ((json.loads(raw).get("data") or {}).get("repository")) or {}
+    except (subprocess.CalledProcessError, json.JSONDecodeError, ValueError):
+        return {"available": False}
+
+    def nodes(key):
+        return ((repository.get(key) or {}).get("nodes")) or []
+
+    return {
+        "available": True,
+        "issues": [
+            {
+                "number": item.get("number"),
+                "title": item.get("title"),
+                "url": item.get("url"),
+                "updated_at": item.get("updatedAt"),
+            }
+            for item in nodes("issues")
+        ],
+        "pull_requests": [
+            {
+                "number": item.get("number"),
+                "title": item.get("title"),
+                "url": item.get("url"),
+                "updated_at": item.get("updatedAt"),
+            }
+            for item in nodes("pullRequests")
+        ],
+        "history_issues": [
+            {
+                "number": item.get("number"),
+                "title": item.get("title"),
+                "url": item.get("url"),
+                "updated_at": item.get("updatedAt"),
+            }
+            for item in nodes("historyIssues")
+        ],
+        "history_pull_requests": [
+            {
+                "number": item.get("number"),
+                "title": item.get("title"),
+                "url": item.get("url"),
+                "updated_at": item.get("updatedAt"),
+            }
+            for item in nodes("historyPullRequests")
+        ],
+        "releases": [
+            {
+                "name": item.get("name") or item.get("tagName"),
+                "tag_name": item.get("tagName"),
+                "url": item.get("url"),
+                "published_at": item.get("publishedAt") or item.get("createdAt"),
+            }
+            for item in nodes("releases")
+        ],
+        "commits": [
+            {
+                "oid": item.get("oid"),
+                "message": item.get("messageHeadline"),
+                "url": item.get("url"),
+                "committed_at": item.get("committedDate"),
+            }
+            for item in (
+                (((repository.get("defaultBranchRef") or {}).get("target") or {})
+                 .get("history") or {}).get("nodes") or []
+            )
+        ],
+    }
 
 
 def i_committed(full_name):
@@ -166,6 +284,7 @@ def build():
     social = social_map(OWNER)
     out = []
     source_timestamps = {}
+    resident_histories = {}
     for r in repos:
         if r.get("private"):
             continue
@@ -186,6 +305,7 @@ def build():
         if lic_name in ("NOASSERTION", "NONE"):
             lic_name = ""
         rel = latest_release(full)
+        resident_histories[name] = resident_history(full)
         source_timestamps[name] = max(
             (value for value in (r.get("updated_at"), r.get("pushed_at"), r.get("created_at")) if value),
             default="",
@@ -234,6 +354,14 @@ def build():
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
     city_state = build_city_state(out, source_timestamps, as_of=CITY_STATE_AS_OF)
     write_city_state(CITY_STATE_OUT, city_state)
+    resident_summary = write_resident_artifacts(
+        out,
+        resident_histories,
+        OWNER,
+        city_state,
+        output_dir=RESIDENTS_OUT,
+        registry_path=RESIDENT_REGISTRY_OUT,
+    )
 
     downtown = sum(1 for o in out if o["rank"] < 14)
     tracked_n = sum(1 for o in out if o["tracked"])
@@ -242,6 +370,10 @@ def build():
     print(
         f"wrote {CITY_STATE_OUT} schema={city_state['version']} "
         f"season={city_state['season']['value']} roots={len(city_state['roots'])}"
+    )
+    print(
+        f"wrote {RESIDENTS_OUT} profiles={resident_summary['profiles']} "
+        f"active={resident_summary['active']} manifest={resident_summary['manifest_bytes']}B"
     )
     print(f"  downtown(rank<14)={downtown} hometown={len(out) - downtown} tracked={tracked_n}")
 
