@@ -2237,6 +2237,9 @@ ok(/test_resident_profiles\.py/.test(REFRESH_WORKFLOW)
   && /validate_resident_profiles\.py/.test(REFRESH_WORKFLOW)
   && /scan_public_artifacts\.py/.test(REFRESH_WORKFLOW),
   'daily publication is gated by resident determinism, schema, and public-safety checks');
+ok(/NPC_AMBIENT_ENABLED = "false"/.test(TAXI_WRANGLER)
+  && /scriptedAmbient:true/.test(npcBlock),
+  'canonical ambient town life is scripted and zero-cost; only explicit resident dialogue may reach a model');
 
 group('AURI market oracle — grounded market KB + read-only crypto MCP');
 const marketActionSrc=(HTML.match(/function marketActionQuestion\(q\)\{[\s\S]*?(?=\nfunction marketQuestion)/)||[''])[0];
