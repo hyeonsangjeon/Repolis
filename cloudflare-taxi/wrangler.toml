@@ -86,10 +86,10 @@ NPC_MAX_COMPLETION_TOKENS = "120"
 NPC_BUDGET_TIMEOUT_MS = "3000"
 NPC_DAILY_ATTEMPT_MAX = "5000"
 NPC_RESERVATION_LEASE_MS = "60000"
-# Deployment ceilings permit the owner-only KV switches to turn resident AI on.
-# Live mode still requires explicit KV "true" values; missing keys fail closed.
+# Explicit visitor dialogue may be enabled by the owner-only KV switches. Model-powered
+# ambient chatter stays hard-off so background town life is always scripted and $0.
 NPC_AI_ENABLED = "true"
-NPC_AMBIENT_ENABLED = "true"
+NPC_AMBIENT_ENABLED = "false"
 NPC_PLAYER_CHAT_ENABLED = "true"
 # 31-day worst case = $4.65 for resident Azure model calls.
 NPC_DAY_CAP_USD = "0.15"
