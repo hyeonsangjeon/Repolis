@@ -47,10 +47,19 @@ jobs:
         if: ${{ env.GH_PAT == '' }}
         run: echo "GH_PAT is not set; building from public metadata. Add GH_PAT later to grow cumulative traffic."
 
-      - name: Build repos.json
+      - name: Set deterministic city reference day
+        run: echo "CITY_STATE_AS_OF=$(date -u +%FT00:00:00Z)" >> "$GITHUB_ENV"
+
+      - name: Build generated city data
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
         run: python3 scripts/build_repos.py
+
+      - name: Validate deterministic city state
+        run: |
+          python3 scripts/test_city_state.py
+          python3 scripts/validate_city_state.py
+          node scripts/test-city-time.mjs
 
       - name: Commit if changed
         run: |

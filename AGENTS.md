@@ -30,7 +30,9 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 |---|---|---|
 | **`index.html`** | Primary app runtime — 3D engine, UI, navigation, residents, exploration, i18n, day/night. | Any UI / gameplay / client behavior change. |
 | **`repolis.config.js`** | Fork-facing runtime identity and optional-service policy. GitHub Pages infers the fork owner; upstream Workers stay off on forks. | Changing owner inference, template behavior, or canonical endpoints. |
-| **`repos.json`** | Generated array of repo objects that build the current owner city. **Do not hand-edit.** | Never directly; regenerate (see below). |
+| **`repos.json` + `data/city-state.json`** | Generated repo catalog plus deterministic era, season, statistics, sap timestamp, and archived roots for the current owner city. **Do not hand-edit.** | Never directly; regenerate (see below). |
+| **`data/city-state.schema.json`** | Strict JSON Schema for the generated city-state artifact. | Changing the city-state contract. |
+| **`assets/city-time.js`** | Pure wear (`recent` / `faded` / `mossed`), ruin, reference-date, and seasonal palette rules. | Changing how public time metadata affects the city. |
 | **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
 | **`assets/repo-portal.js`** | Pure username/repository parser, route precedence, public projection, canonical Portal URL, and owner-town expansion link. | Changing `?repo=`, accepted GitHub inputs, public traffic truth, or target share links. |
@@ -39,7 +41,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`assets/town-growth.js`** | Pure repo-creation timeline, year snapshot, and Growth Replay share-link logic. | Changing historical cutoffs, unknown-date policy, or `?growth=` links. |
 | **`assets/town-creator.js`** | Pure allowlisted public-profile + town-repo summary for Creator Hall. | Changing creator facts, badges, signature-repo ranking, or avatar safety. |
 | **`assets/twin-towns.js`** | Pure public-repo comparison and reversible Twin Towns link builder. | Changing the two-person referral bridge or its URL contract. |
-| **`scripts/build_repos.py`** | Rebuilds `repos.json` from `data/logs/*` traffic + `gh api`. | Refreshing the city data locally. |
+| **`scripts/build_repos.py`** | Rebuilds `repos.json` and `data/city-state.json` from `data/logs/*` traffic + `gh api`. | Refreshing the city data locally. |
 | **`scripts/smoke.mjs`** | Hermetic static and behavioral regression guards for the city runtime. | Any client feature, navigation, or generated-module integration change. |
 | **`.github/workflows/refresh.yml`** | "Refresh Repolis data" — daily Action that regenerates `repos.json` and pushes `chore: refresh`. | CI / data-refresh changes. |
 | **`scripts/build-contribution-library.mjs` + `assets/contribution-library.json`** | Generates the in-app **Contribution Library** JSON from the sibling `Hyeonsang-AI-Contributions` README (KO/EN); `index.html` fetches it at runtime. JSON is **generated — do not hand-edit.** Daily via `.github/workflows/update-contribution-library.yml`. | Changing the library landmark's data/source. |
@@ -66,9 +68,11 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 # 1) Run the city (static)
 python3 -m http.server 8000
 
-# 2) Rebuild repos.json from the owner's public repos + committed traffic logs (needs gh CLI, logged in)
+# 2) Rebuild repos.json + data/city-state.json from public repos and committed traffic logs
 gh auth login
-GTM_DIR=data python3 scripts/build_repos.py     # regenerates repos.json (do not hand-edit)
+GTM_DIR=data python3 scripts/build_repos.py     # generated artifacts; do not hand-edit
+# Optional reproducible clock override (the daily workflow supplies its UTC run day):
+CITY_STATE_AS_OF=2026-08-23T00:00:00Z GTM_DIR=data python3 scripts/build_repos.py
 
 # 3) Rebuild the Contribution Library JSON from the sibling Hyeonsang-AI-Contributions README (KO/EN)
 node scripts/build-contribution-library.mjs     # regenerates assets/contribution-library.json (deterministic)
@@ -78,6 +82,11 @@ node scripts/build-contribution-library.mjs     # regenerates assets/contributio
 `repo, desc, lang, topics[], url, home, stars, forks, fork, views, visitors, clones, size, open_issues,
 license, archived, default_branch, release_tag, release_date, created, pushed, tracked, first_seen,
 social, social_custom, score, rank`. Full meaning: [`docs/domain-model.md`](docs/domain-model.md).
+
+`data/city-state.json` is a deterministic projection of that public catalog. It carries `schema`,
+`version`, `era`, `season`, honest aggregate `stats`, `last_sap_flow`, and archived-only `roots`.
+The daily workflow injects its UTC run day; local builds without that input use the newest
+reproducible public source timestamp.
 
 ---
 
@@ -109,6 +118,9 @@ zero LLM, zero cost — so run them freely:
 node council/test.mjs        # deterministic Council crosscheck
 node council/test-live.mjs   # live guards + state machine
 node scripts/smoke.mjs       # city/runtime static + behavioral regression guards
+python3 scripts/test_city_state.py
+python3 scripts/validate_city_state.py
+node scripts/test-city-time.mjs
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js
 node --check assets/repo-route.js
