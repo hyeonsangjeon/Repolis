@@ -13,6 +13,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   collector will show stars/forks/issues but flat/zero visitor·clone·view history.
 - **`repos.json` is generated.** Hand edits are overwritten on the next refresh. Change
   `scripts/build_repos.py` instead.
+- **Resident profiles are generated and public-only.** `data/residents/*.json` contains only bounded,
+  sanitized public repository metadata available during refresh. Missing issue/PR/commit/release history stays
+  empty. Details load only after explicit interaction; a Bound-source change may temporarily use the local
+  fallback until the generated Worker registry is redeployed.
 - **Public repos only, by design.** Private repo names never appear. Untouched mirror forks are filtered
   out; only forks you've actually committed to are shown.
 - **Public API modes do not have traffic.** Repo Portal and `?user=` receive stars, forks, issues, language,

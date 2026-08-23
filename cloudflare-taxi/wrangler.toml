@@ -94,6 +94,15 @@ NPC_PLAYER_CHAT_ENABLED = "true"
 # 31-day worst case = $4.65 for resident Azure model calls.
 NPC_DAY_CAP_USD = "0.15"
 
+# Explicit visitor-to-resident Bound dialogue uses its own Durable Object ledger.
+# It is stricter than ambient NPC traffic and stays separate from scholar usage.
+RESIDENT_DIALOGUE_MAX_COMPLETION_TOKENS = "96"
+RESIDENT_DIALOGUE_DAY_CAP_USD = "0.05"
+RESIDENT_DIALOGUE_DAILY_TURN_MAX = "120"
+RESIDENT_DIALOGUE_DAILY_ATTEMPT_MAX = "240"
+RESIDENT_DIALOGUE_RATE_MAX = "12"
+RESIDENT_DIALOGUE_RATE_WINDOW_S = "60"
+
 # Set your Azure AI Search endpoint (not secret, but account-specific). Either
 # uncomment + edit here, or keep it out of git with `wrangler secret put SEARCH_ENDPOINT`:
 # SEARCH_ENDPOINT = "https://<your-search>.search.windows.net"
