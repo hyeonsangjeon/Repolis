@@ -1258,6 +1258,75 @@
   @media (prefers-reduced-motion:reduce) {
     #growthReplay, #growthReplay .growthPanel { transition:none !important; }
   }
+  /* World Tree Chronicle — a quiet dated ledger, not another chat surface */
+  #worldTreeTrigger { position:fixed; z-index:9; width:48px; height:48px; padding:0; border:1px solid rgba(255,232,178,.72);
+    border-radius:50%; color:#fff4ce; background:rgba(55,37,22,.74); box-shadow:0 5px 18px rgba(34,20,9,.3);
+    font:24px/1 system-ui,sans-serif; cursor:pointer; transform:translate(-50%,-50%); backdrop-filter:blur(5px); }
+  #worldTreeTrigger:hover { background:rgba(78,51,27,.86); }
+  #worldTreeTrigger:focus-visible { outline:3px solid #ffe19a; outline-offset:3px; }
+  #worldTreeModal { position:fixed; inset:0; z-index:76; display:none; align-items:center; justify-content:center; padding:18px;
+    background:rgba(24,16,9,.66); backdrop-filter:blur(7px); }
+  #worldTreeModal.show { display:flex; }
+  .worldTreeChronicle { position:relative; width:min(720px,100%); max-height:calc(100dvh - 36px); overflow:auto;
+    border:1px solid rgba(228,199,136,.55); border-radius:22px; color:#443422;
+    background:linear-gradient(155deg,#fffaf0 0%,#f5ead2 100%); box-shadow:0 24px 76px rgba(18,11,5,.5);
+    -webkit-user-select:text; user-select:text; }
+  .worldTreeClose { position:absolute; top:10px; right:10px; width:48px; height:48px; border:1px solid rgba(98,70,38,.2);
+    border-radius:50%; color:#4d3823; background:rgba(255,250,240,.9); font:700 18px/1 inherit; cursor:pointer; }
+  .worldTreeClose:focus-visible, #worldTreeRootSearch:focus-visible { outline:3px solid rgba(120,84,39,.45); outline-offset:2px; }
+  .worldTreeHead { padding:25px 68px 17px 24px; border-bottom:1px solid rgba(112,79,42,.17); }
+  .worldTreeKicker { color:#876a42; font-size:10px; font-weight:850; letter-spacing:.14em; text-transform:uppercase; }
+  .worldTreeHead h2 { margin:4px 0 0; color:#38291a; font:750 27px/1.14 Georgia,serif; }
+  .worldTreeSilence { margin:8px 0 0; color:#8c7558; font:italic 12px/1.5 Georgia,serif; }
+  .worldTreeBody { padding:4px 24px 22px; }
+  .worldTreeUnavailable { margin:18px 0 0; padding:14px 0; border-top:1px solid rgba(112,79,42,.18);
+    border-bottom:1px solid rgba(112,79,42,.18); color:#745f45; font-size:13px; line-height:1.55; }
+  .worldTreeLedger { margin:0; }
+  .worldTreeLedger > div { display:grid; grid-template-columns:minmax(105px,.34fr) minmax(0,1fr); gap:16px; padding:13px 0;
+    border-bottom:1px solid rgba(112,79,42,.15); }
+  .worldTreeLedger dt { color:#8c714d; font-size:10px; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
+  .worldTreeLedger dd { margin:0; color:#473625; font:650 13px/1.5 Georgia,serif; }
+  .worldTreeLedger dd small { display:block; margin-top:2px; color:#8b755b; font:500 10.5px/1.45 system-ui,sans-serif; }
+  .worldTreeStats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); margin:16px 0 0; padding:12px 0;
+    border-top:1px solid rgba(112,79,42,.2); border-bottom:1px solid rgba(112,79,42,.2); }
+  .worldTreeStat { min-width:0; padding:0 9px; border-left:1px solid rgba(112,79,42,.16); text-align:center; }
+  .worldTreeStat:first-child { border-left:0; }
+  .worldTreeStat b { display:block; color:#3f2e1d; font:750 18px/1.1 Georgia,serif; overflow:hidden; text-overflow:ellipsis; }
+  .worldTreeStat span { display:block; margin-top:4px; color:#8c714d; font-size:9px; line-height:1.25; text-transform:uppercase; }
+  .worldTreeCommitNote { margin:7px 0 0; color:#968067; font-size:9.5px; line-height:1.45; }
+  .worldTreeRootsHead { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-top:21px; }
+  .worldTreeRootsHead h3 { margin:0; color:#3e2d1d; font:750 20px/1.15 Georgia,serif; }
+  .worldTreeRootsHead p { margin:3px 0 0; color:#90795e; font-size:10.5px; line-height:1.45; }
+  #worldTreeRootSearchWrap { display:block; flex:0 1 230px; }
+  #worldTreeRootSearchWrap[hidden] { display:none; }
+  #worldTreeRootSearch { width:100%; min-height:48px; box-sizing:border-box; border:1px solid rgba(112,79,42,.25);
+    border-radius:11px; padding:0 12px; color:#463522; background:rgba(255,255,255,.62); font:inherit; font-size:12px; }
+  .worldTreeRootStatus { min-height:15px; margin:6px 0 0; color:#9a8369; font-size:9.5px; text-align:right; }
+  .worldTreeRoots { margin-top:2px; }
+  .worldTreeRoot { display:grid; grid-template-columns:minmax(120px,.35fr) minmax(0,1fr); gap:15px; padding:12px 0;
+    border-top:1px solid rgba(112,79,42,.15); }
+  .worldTreeRootName { color:#47301c; font:750 13px/1.35 Georgia,serif; overflow-wrap:anywhere; }
+  .worldTreeRootYears { display:block; margin-top:3px; color:#9a8062; font:600 9.5px/1.35 system-ui,sans-serif; }
+  .worldTreeRootAchievement { margin:0; color:#665039; font:500 12px/1.5 Georgia,serif; }
+  .worldTreeRootsEmpty { padding:18px 0 4px; border-top:1px solid rgba(112,79,42,.15); color:#8b755d;
+    font:italic 12px/1.5 Georgia,serif; }
+  @media (max-width:520px) {
+    #worldTreeModal { padding:0; align-items:flex-end; }
+    .worldTreeChronicle { max-height:calc(100dvh - 12px); border-radius:20px 20px 0 0; }
+    .worldTreeHead { padding:20px 62px 14px 17px; }
+    .worldTreeHead h2 { font-size:22px; }
+    .worldTreeBody { padding:2px 17px calc(18px + env(safe-area-inset-bottom,0px)); }
+    .worldTreeLedger > div { grid-template-columns:88px minmax(0,1fr); gap:11px; }
+    .worldTreeStats { grid-template-columns:repeat(3,minmax(0,1fr)); row-gap:12px; }
+    .worldTreeStat:nth-child(4) { border-left:0; }
+    .worldTreeRootsHead { display:block; }
+    #worldTreeRootSearchWrap { margin-top:10px; }
+    .worldTreeRoot { display:block; }
+    .worldTreeRootAchievement { margin-top:6px; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    #worldTreeModal, .worldTreeChronicle, #worldTreeTrigger { transition:none !important; }
+  }
 </style>
 </head>
 <body>
@@ -1332,6 +1401,41 @@
   </div>
 </div>
 <div id="ruinNameplates" class="srOnly" role="list" data-i18n-aria="ruinListAria" aria-label="아카이브 레포 이름 명패"></div>
+<button id="worldTreeTrigger" type="button" data-i18n-aria="worldTreeOpen" aria-label="세계수 연대기 열기"
+  aria-haspopup="dialog" aria-controls="worldTreeModal" aria-keyshortcuts="Enter Space" hidden><span aria-hidden="true">🌳</span></button>
+
+<div id="worldTreeModal" role="dialog" aria-modal="true" aria-labelledby="worldTreeTitle" aria-describedby="worldTreeSilence" aria-hidden="true">
+  <section class="worldTreeChronicle" tabindex="-1">
+    <button id="worldTreeClose" class="worldTreeClose" type="button" data-i18n-aria="worldTreeClose" aria-label="세계수 연대기 닫기">✕</button>
+    <header class="worldTreeHead">
+      <div class="worldTreeKicker" data-i18n="worldTreeKicker">CITY CHRONICLE</div>
+      <h2 id="worldTreeTitle" data-i18n="worldTreeTitle">세계수 연대기</h2>
+      <p id="worldTreeSilence" class="worldTreeSilence" data-i18n="worldTreeSilence">말은 없다. 날짜가 붙은 기록 하나.</p>
+    </header>
+    <div class="worldTreeBody">
+      <p id="worldTreeUnavailable" class="worldTreeUnavailable" data-i18n="worldTreeUnavailable" hidden>이 마을에는 생성된 도시 기록이 없습니다.</p>
+      <div id="worldTreeRecord">
+        <dl class="worldTreeLedger">
+          <div><dt data-i18n="worldTreeEraLabel">도시력</dt><dd id="worldTreeEra"></dd></div>
+          <div><dt data-i18n="worldTreeSeasonLabel">계절</dt><dd id="worldTreeSeason"></dd></div>
+          <div><dt data-i18n="worldTreeSapLabel">마지막 수액</dt><dd id="worldTreeSap"></dd></div>
+        </dl>
+        <div id="worldTreeStats" class="worldTreeStats" role="list" data-i18n-aria="worldTreeStatsAria" aria-label="도시 공개 집계"></div>
+        <p id="worldTreeCommitNote" class="worldTreeCommitNote"></p>
+        <section aria-labelledby="worldTreeRootsTitle">
+          <div class="worldTreeRootsHead">
+            <div><h3 id="worldTreeRootsTitle" data-i18n="worldTreeRootsTitle">The Roots</h3><p data-i18n="worldTreeRootsSub">이름 · 활동한 해 · 남은 한 줄</p></div>
+            <label id="worldTreeRootSearchWrap" hidden><span class="srOnly" data-i18n="worldTreeRootSearch">뿌리 기록 찾기</span>
+              <input id="worldTreeRootSearch" type="search" autocomplete="off" data-i18n-ph="worldTreeRootSearch" data-i18n-aria="worldTreeRootSearch" aria-label="뿌리 기록 찾기" />
+            </label>
+          </div>
+          <div id="worldTreeRootStatus" class="worldTreeRootStatus" role="status" aria-live="polite"></div>
+          <div id="worldTreeRoots" class="worldTreeRoots" role="list"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
 
 <div id="station" class="hidden">
   <button class="sclose" id="stationClose" type="button" aria-label="닫기">✕</button>
@@ -1771,6 +1875,7 @@ import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstr
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
 import { CITY_STATE_SCHEMA, CITY_STATE_VERSION, cityReferenceTimestamp, projectCityTime, resolveCitySeason, seasonPalette } from './assets/city-time.js?v=world-tree-phase1-v1';
+import { SAP_FLOW_LIMITS, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=world-tree-phase2-v1';
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
@@ -2094,6 +2199,19 @@ const I18N = {
     growthShared:'이 연도의 도시 장면을 공유했어요.', growthShareFailed:'링크를 공유하지 못했어요. 클립보드 권한을 확인해 주세요.',
     growthComplete:'🏙️ 첫 레포부터 현재까지, 도시의 성장 기록을 모두 봤어요.', growthUnavailable:'성장 리플레이를 만들 서로 다른 레포 탄생 연도가 부족해요.',
     growthShareTitle:'@{user}의 {year}년 Repolis', growthShareText:'첫 레포부터 자라난 GitHub 도시의 한 장면',
+    worldTreeOpen:'세계수 연대기 열기', worldTreeClose:'세계수 연대기 닫기', worldTreeKicker:'CITY CHRONICLE',
+    worldTreeTitle:'세계수 연대기', worldTreeSilence:'말은 없다. 날짜가 붙은 기록 하나.', worldTreeUnavailable:'이 마을에는 생성된 도시 기록이 없습니다.',
+    worldTreeEraLabel:'도시력', worldTreeSeasonLabel:'계절', worldTreeSapLabel:'마지막 수액', worldTreeRootsTitle:'The Roots',
+    worldTreeRootsSub:'이름 · 활동한 해 · 남은 한 줄', worldTreeRootSearch:'뿌리 기록 찾기', worldTreeRootsEmpty:'이 기록에는 아카이브된 공개 레포가 없습니다.',
+    worldTreeRootsNoMatch:'일치하는 뿌리 기록이 없습니다.', worldTreeRootsCount:'기록 {shown}/{total}', worldTreeStatsAria:'도시 공개 집계',
+    worldTreeStatRepos:'공개 레포', worldTreeStatStars:'스타', worldTreeStatForks:'포크', worldTreeStatArchived:'아카이브', worldTreeStatLanguages:'언어',
+    worldTreeCityYear:'도시력 {year}년', worldTreeFounded:'{date} 시작 · 첫 기록 {repo}',
+    worldTreeSeasonRatio:'최근 30일 latest-push {recent}개 · 앞선 6개 구간 평균의 {ratio}배',
+    worldTreeSeasonFallback:'최근 30일 latest-push {recent}/{total}개 · 기록 부족 규칙',
+    worldTreeSapRecent:'{date} · 최근 일일 기록', worldTreeSapStored:'{date} · 저장된 일일 기록', worldTreeSapStale:'{date} · 오래된 일일 기록',
+    worldTreeSapUnavailable:'기록 없음', worldTreeYears:'{from}–{to} · {count}년', worldTreeYearsOpen:'{from}–{to}', worldTreeYearsUnknown:'활동 연도 기록 없음',
+    worldTreeCommitUnavailable:'커밋 합계 없음 · 공개 입력에는 전체 커밋 이력이 없습니다.',
+    worldTreeReached:' — 말 없는 도시 기록. <span class="key">Enter</span>/<span class="key">Space</span> 또는 클릭으로 열기',
     zbSub:'이 구역의 대표 레포와 나의 탐험 진행률', zbBoard:'구역 안내판',
     zbReps:'대표 레포', zbRide:'🚕 대표 레포로 이동', zbUnseen:'🧭 아직 안 본 레포 안내',
     zbAsk:'❓ 이 구역이 궁금해요', zbAllSeen:'이 구역의 레포를 모두 둘러봤어요! 🎉', zbHubHint:'구역 안내판 열기',
@@ -2393,6 +2511,19 @@ const I18N = {
     growthShared:'This year of the town was shared.', growthShareFailed:'Couldn\'t share the link. Check this browser\'s clipboard permission.',
     growthComplete:'🏙️ You watched the city grow from its first repo to the present.', growthUnavailable:'This town needs repos born in at least two different years for a growth replay.',
     growthShareTitle:'@{user}\'s Repolis in {year}', growthShareText:'A moment from a GitHub city growing from its first repository',
+    worldTreeOpen:'Open the World Tree Chronicle', worldTreeClose:'Close the World Tree Chronicle', worldTreeKicker:'CITY CHRONICLE',
+    worldTreeTitle:'World Tree Chronicle', worldTreeSilence:'No voice. One dated record.', worldTreeUnavailable:'No generated city record is available for this town.',
+    worldTreeEraLabel:'City era', worldTreeSeasonLabel:'Season', worldTreeSapLabel:'Last sap flow', worldTreeRootsTitle:'The Roots',
+    worldTreeRootsSub:'Name · active years · one surviving line', worldTreeRootSearch:'Search root records', worldTreeRootsEmpty:'No archived public repository appears in this record.',
+    worldTreeRootsNoMatch:'No root record matches.', worldTreeRootsCount:'Records {shown}/{total}', worldTreeStatsAria:'Public city aggregates',
+    worldTreeStatRepos:'Public repos', worldTreeStatStars:'Stars', worldTreeStatForks:'Forks', worldTreeStatArchived:'Archived', worldTreeStatLanguages:'Languages',
+    worldTreeCityYear:'City year {year}', worldTreeFounded:'Founded {date} · first record {repo}',
+    worldTreeSeasonRatio:'{recent} latest-push signals in 30 days · {ratio}× the prior six-bucket average',
+    worldTreeSeasonFallback:'{recent}/{total} latest-push signals in 30 days · limited-history rule',
+    worldTreeSapRecent:'{date} · recent daily record', worldTreeSapStored:'{date} · stored daily record', worldTreeSapStale:'{date} · older daily record',
+    worldTreeSapUnavailable:'No record', worldTreeYears:'{from}–{to} · {count} years', worldTreeYearsOpen:'{from}–{to}', worldTreeYearsUnknown:'Active years unrecorded',
+    worldTreeCommitUnavailable:'No commit total · complete commit history is absent from the public input.',
+    worldTreeReached:' — a silent city record. Press <span class="key">Enter</span>/<span class="key">Space</span> or click to open',
     zbSub:'Representative repos and your exploration here', zbBoard:'district board',
     zbReps:'Representative repos', zbRide:'🚕 Ride to a top repo', zbUnseen:'🧭 Guide me to an unseen one',
     zbAsk:'❓ Tell me about this district', zbAllSeen:'You\'ve visited every repo in this district! 🎉', zbHubHint:'open district board',
@@ -2699,6 +2830,7 @@ function applyLang(){
   if(typeof window.__creatorLangRefresh==='function') window.__creatorLangRefresh();
   if(typeof window.__postcardLangRefresh==='function') window.__postcardLangRefresh();
   if(typeof window.__growthLangRefresh==='function') window.__growthLangRefresh();
+  if(typeof window.__worldTreeLangRefresh==='function') window.__worldTreeLangRefresh();
   { const _zb=document.getElementById('zoneBoard'); if(typeof renderZoneBoard==='function' && _zb && _zb.classList.contains('show') && _zb._zid) renderZoneBoard(_zb._zid); }
   if(_mapReady && typeof syncMapChrome==='function') syncMapChrome();
   if(typeof window.__updateLiveTitle==='function') window.__updateLiveTitle();
@@ -2855,6 +2987,9 @@ const IS_MOBILE = _coarse && Math.min(innerWidth, innerHeight) <= 820;      // p
 const LOW_END = (navigator.hardwareConcurrency||8) <= 4 || (navigator.deviceMemory||8) <= 4 || (IS_MOBILE && innerWidth <= 430);
 const DETAIL = IS_MOBILE ? (LOW_END ? 0.5 : 0.72) : (LOW_END ? 0.82 : 1);   // scene-density multiplier (1=full desktop)
 const detail = n => Math.max(0, Math.round(n*DETAIL));                       // scale a per-instance count by the device tier
+const WORLD_TREE_RECORD=projectWorldTreeChronicle(CITY_STATE,{now:Date.now()});
+const WORLD_TREE_GROWTH=projectWorldTreeGrowth(CITY_STATE);
+const WORLD_TREE_SAP_MODE=resolveSapFlowMode(WORLD_TREE_RECORD.lastSapFlow,{reducedMotion:REDUCED,lowEnd:LOW_END});
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(CITY_SEASON_STYLE.fog, 150, 460);
@@ -2974,10 +3109,14 @@ function _prepareWorldTreeBloom(){
   worldBloom.strength=1.35; worldBloom.radius=0.58; worldBloom.threshold=0.06;
   finalMix.uniforms.bloomFeather.value.set(Math.min(0.04,32/innerWidth),Math.min(0.04,32/innerHeight));
 }
+function _setWorldTreeSapVisible(visible){
+  const flow=MEMORIAL_TREE&&MEMORIAL_TREE.sapFlow; if(!flow) return;
+  flow.points.visible=visible; flow.halo.visible=visible;
+}
 function _renderWorldTreeFrame(){
   const now=performance.now(),savedTone=renderer.toneMapping,savedSpace=renderer.outputColorSpace,savedClear=renderer.getClearColor(WORLD_TREE_SAVED_CLEAR),savedAlpha=renderer.getClearAlpha(),mask=camera.layers.mask,treeOff=WORLD_TREE_RENDER_MODE==='tree-off',
     requestedTreeVisible=MEMORIAL_TREE?MEMORIAL_TREE.requestedVisible!==false:false;
-  if(MEMORIAL_TREE){ MEMORIAL_TREE.group.visible=requestedTreeVisible&&!treeOff; MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=requestedTreeVisible&&!treeOff; }); }
+  if(MEMORIAL_TREE){ MEMORIAL_TREE.group.visible=requestedTreeVisible&&!treeOff; _setWorldTreeSapVisible(requestedTreeVisible&&!treeOff); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=requestedTreeVisible&&!treeOff; }); }
   renderer.toneMapping=THREE.NoToneMapping; renderer.outputColorSpace=THREE.LinearSRGBColorSpace; camera.layers.set(0);
   const refreshTownShadows=TOWN_SHADOW.dirty,baseToken=_beginMeasuredPass('base');
   if(refreshTownShadows) camera.layers.enable(BUILDING_LOD_SHADOW_LAYER);
@@ -3013,7 +3152,7 @@ function _renderWorldTreeFrame(){
   finalMix.uniforms.bloomWeight.value=needBloom?1:0;
   const finalToken=_beginMeasuredPass('final'); finalComposer.render(); _recordRenderPass('final',finalToken);
   if(MEMORIAL_TREE){ if(forceProofLayer) _setWorldTreeGlowLayers(false);
-    MEMORIAL_TREE.group.visible=requestedTreeVisible; MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=requestedTreeVisible; }); }
+    MEMORIAL_TREE.group.visible=requestedTreeVisible; _setWorldTreeSapVisible(requestedTreeVisible); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=requestedTreeVisible; }); }
 }
 
 /* toon gradient + material factory */
@@ -4484,9 +4623,9 @@ function _setWorldTreeGlowLayers(night){
 }
 function _memHeroUpdate(elapsed){
   if(!MEMORIAL_TREE) return; if(!REDUCED) MEMORIAL_TREE.hero.update(elapsed);
-  const ratio=MEM_TREE_HERO_SCALE/MEM_TREE_HERO_NATIVE_SCALE,m=MEMORIAL_TREE.hero.materials; MEMORIAL_TREE.light.distance=7*ratio;
-  if(isNight){ m.bark.emissive.setHex(0x4f240c); m.bark.emissiveIntensity=0.14; m.ornamentEnergy.emissiveIntensity=1.9+Math.sin(elapsed*2.3)*0.08; m.amberLeaf.emissiveIntensity=0.58; m.cyanLeaf.emissiveIntensity=0.78; if(REDUCED){ m.energy.emissiveIntensity=1.3; MEMORIAL_TREE.light.intensity=18; } }
-  else { m.bark.emissive.setHex(0x603016); m.bark.emissiveIntensity=0.2; m.energy.emissiveIntensity=0.28; m.ornamentEnergy.emissiveIntensity=0.36; m.amberLeaf.emissiveIntensity=0.28; m.cyanLeaf.emissiveIntensity=0.34; MEMORIAL_TREE.light.intensity=2; }
+  const ratio=MEM_TREE_HERO_SCALE/MEM_TREE_HERO_NATIVE_SCALE,m=MEMORIAL_TREE.hero.materials,gain=MEMORIAL_TREE.growth.energyGain; MEMORIAL_TREE.light.distance=7*ratio;
+  if(isNight){ m.bark.emissive.setHex(0x4f240c); m.bark.emissiveIntensity=0.14; m.ornamentEnergy.emissiveIntensity=(1.9+Math.sin(elapsed*2.3)*0.08)*gain; m.amberLeaf.emissiveIntensity=0.58*gain; m.cyanLeaf.emissiveIntensity=0.78*gain; if(REDUCED){ m.energy.emissiveIntensity=1.3*gain; MEMORIAL_TREE.light.intensity=18; } else m.energy.emissiveIntensity*=gain; }
+  else { m.bark.emissive.setHex(0x603016); m.bark.emissiveIntensity=0.2; m.energy.emissiveIntensity=0.28*gain; m.ornamentEnergy.emissiveIntensity=0.36*gain; m.amberLeaf.emissiveIntensity=0.28*gain; m.cyanLeaf.emissiveIntensity=0.34*gain; MEMORIAL_TREE.light.intensity=2; }
   const pulse=REDUCED?1:(0.93+Math.sin(elapsed*1.5)*0.07);
   MEMORIAL_TREE.glowHalos.forEach(halo=>{ halo.material.opacity=isNight?halo.userData.nightOpacity*pulse:0; });
 }
@@ -4494,6 +4633,7 @@ function makeMemorialTree(x,z){
   if(MEMORIAL_TREE) return MEMORIAL_TREE;
   const stage='full', hero=createRepolisHero({seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage}), root=hero.root;
   root.traverse(o=>{ if(o.isMesh) o.castShadow=false; });   // plugin motion stays live without stale moving shadows under Repolis's frozen-shadow policy
+  hero.runtime.nodes['living-system'].scale.setScalar(WORLD_TREE_GROWTH.scale);
   const nativeBox=_memHeroBox(root); root.name='RepolisWorldTreeSolarArchive'; root.scale.setScalar(MEM_TREE_HERO_SCALE);
   root.position.set(x,-nativeBox.min.y*MEM_TREE_HERO_SCALE,z); scene.add(root); const environment=_memHeroEnvironment(root); invalidateTownShadows('world-tree-added');
   let light=null; root.traverse(o=>{ if(o.isPointLight){ light=o; o.name='WorldTree_GuideLight'; o.castShadow=false; } });
@@ -4501,18 +4641,18 @@ function makeMemorialTree(x,z){
   new Set(crowns.map(leaves=>leaves.geometry)).forEach(geometry=>{ geometry.computeBoundingBox(); geometry.computeBoundingSphere(); });
   const glowHalos=[[0,1.1,0.3,7.5,9.5,0.16],[0,7.2,-0.6,14.5,10.5,0.08]].map(([hx,hy,hz,sw,sh,nightOpacity],i)=>{
     const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:i?0xffb347:0xff8f2f,transparent:true,opacity:0,depthWrite:false,depthTest:true,fog:false,blending:THREE.AdditiveBlending}));
-    halo.name=i?'WorldTree_CrownHalo':'WorldTree_RootHalo'; halo.position.set(hx,hy,hz); halo.scale.set(sw,sh,1); halo.userData.nightOpacity=nightOpacity; root.add(halo); return halo; });
+    halo.name=i?'WorldTree_CrownHalo':'WorldTree_RootHalo'; halo.position.set(hx,hy,hz); halo.scale.set(sw*WORLD_TREE_GROWTH.haloScale,sh*WORLD_TREE_GROWTH.haloScale,1); halo.userData.nightOpacity=nightOpacity; root.add(halo); return halo; });
   const sockets={}, customSockets={TaxiArrival:[0,nativeBox.min.y,-5.4],InteractionFocus:[0,2.4,-3],Foundation:[0,nativeBox.min.y,0],Crotch:[0,4.8,0],CrownApex:[0,nativeBox.max.y,0],GlowFocus:[0,1,1.4]};
   Object.entries(customSockets).forEach(([name,p])=>{ const s=new THREE.Object3D(); s.name='WorldTree_Socket_'+name; s.position.set(...p); root.add(s); sockets[name]=s; });
   ['left-foundation:tip','right-foundation:tip','left-crown:tip','right-crown:tip','center-left-spire:tip','center-right-spire:tip','left-rear:tip','right-rear:tip'].forEach((id,i)=>{ const s=hero.runtime.sockets[id]; if(s) sockets['Bough'+String(i+1).padStart(2,'0')]=s; });
   const collider={x,z,r:11.6,_memorialTree:true}; EXTRA_COLLIDERS.push(collider);
   const size=nativeBox.getSize(new THREE.Vector3()).multiplyScalar(MEM_TREE_HERO_SCALE);
   root.userData.worldTree={seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage,factorySha256:MEM_TREE_FACTORY_SHA,factoryRevision:REPOLIS_FACTORY_REVISION,collider,crownOnlySway:false,leafAttachment:hero.stats.leafAttachmentContract,
-    target:{height:+size.y.toFixed(1),crownSpan:+size.x.toFixed(1),crownDepth:+size.z.toFixed(1)},lightPolicy:'distance-invariant-emissive-extraction',sockets:Object.keys(sockets)};
+    growth:WORLD_TREE_GROWTH,target:{height:+size.y.toFixed(1),crownSpan:+size.x.toFixed(1),crownDepth:+size.z.toFixed(1)},lightPolicy:'distance-invariant-emissive-extraction',sockets:Object.keys(sockets)};
   root.userData.repolisAdapter={factoryUnmodified:false,factorySourceModified:true,factoryRevision:REPOLIS_FACTORY_REVISION,energyRevision:hero.runtime.nodes['energy-network']?.userData.energyRevision||REPOLIS_FACTORY_REVISION,energyProfile:hero.stats.energyProfile,groundVisible:true,pulseDisabled:false,leafScale:1.22,bloom:{constant:[1.35,0.58,0.06],hz:MEM_TREE_BLOOM_HZ},
     selectiveBloom:true,sharpGlowInBase:true,depthAware:true,unlitExtraction:true,distanceCompensated:false,emissionPolicy:'constant-world-luminance',bloomMotion:'captured-bounds-current-camera-uv-reprojection',guideLightInBase:false,pointLightRole:'runtime-topology-only',
     emissiveHalos:2,haloMode:'world-space-constant-emission',branchGlow:'base-emissive-only',branchEndOrnaments:'attached-stem-bulb-selective-soft-bloom-1.35',bloomSources:['leaves','glyphs','energy-core-knots','energy-veins','branch-end-ornaments'],
-    scale:MEM_TREE_HERO_SCALE,leafScale:1.22,leafScaleMode:'factory-root-pivot',qualityMode:'full',bloomMinFrameGap:_treeBloomMinFrameGap()};
+    scale:MEM_TREE_HERO_SCALE,growthScale:WORLD_TREE_GROWTH.scale,leafScale:1.22,leafScaleMode:'factory-root-pivot',qualityMode:'full',bloomMinFrameGap:_treeBloomMinFrameGap()};
   const bloomRoots=[...crowns,hero.runtime.nodes['energy-network'],hero.runtime.meshes['gold-code-glyphs'],hero.runtime.meshes['cyan-code-glyphs']].filter(Boolean);
   const bloomMeshes=new Set(); bloomRoots.forEach(o=>o.traverse(n=>{ n.userData.worldTreeBloom=true; if(n.isMesh) bloomMeshes.add(n); }));
   hero.runtime.nodes.constellations?.traverse(n=>{ if(n.isMesh&&n.material===hero.materials.ornamentEnergy){ n.userData.worldTreeBloom=true; bloomMeshes.add(n); } });
@@ -4536,7 +4676,7 @@ function makeMemorialTree(x,z){
   MEMORIAL_TREE={hero,group:root,runtime:hero.runtime,crowns,sockets,light,environment,bloomRoots,bloomLights,bloomMaterials,bloomMaterialList:Object.values(bloomMaterials),bloomExtractEntries,bloomExtractMeshSet,extractingBloom:false,
     branchGlowMeshes,branchDepthMeshes,pendantBloomMeshes,glowHalos,glowWorld:new THREE.Vector3(),distanceLod:0,glowDistance:0,lastBloomAt:-Infinity,lastBloomFrame:-Infinity,bloomDirty:true,
     bloomCurrentBounds:new THREE.Vector4(),bloomCaptureBounds:new THREE.Vector4(),bloomCurrentValid:false,bloomCaptureValid:false,bloomReprojectionPx:0,bloomReprojectionMaxPx:0,bloomReprojectedFrames:0,bloomReprojectionRejectedFrames:0,
-    dynamicOccluderGroups:new Set(),occludersReady:false,requestedVisible:true,treeShadowDirty:false,stats:hero.stats,collider,seed:MEMORIAL_TREE_SEED,nativeBox};
+    dynamicOccluderGroups:new Set(),occludersReady:false,requestedVisible:true,treeShadowDirty:false,stats:hero.stats,collider,seed:MEMORIAL_TREE_SEED,nativeBox,growth:WORLD_TREE_GROWTH,sapFlow:null};
   _setWorldTreeGlowLayers(false);
   return MEMORIAL_TREE;
 }
@@ -5150,6 +5290,41 @@ function makeBuilding(repo){
   repo._group=g; repo._pos=new THREE.Vector3(repo._x,0,repo._z); repo._visited=false; buildings.push(repo);
 }
 REPOS.forEach(makeBuilding);
+function makeWorldTreeSapFlow(){
+  if(!MEMORIAL_TREE||WORLD_TREE_SAP_MODE==='none') return null;
+  const repos=buildings.filter(repo=>!repo._isLibrary&&repo._pos),count=repos.length;
+  if(!count) return null;
+  const positions=new Float32Array(count*3),targets=new Float32Array(count*3),start=new THREE.Vector3();
+  MEMORIAL_TREE.sockets.GlowFocus.getWorldPosition(start); start.y=Math.max(.7,start.y*.16);
+  repos.forEach((repo,index)=>{ const offset=index*3,targetY=.45+Math.min(2.4,(repo._h||6)*.16);
+    targets[offset]=repo._pos.x; targets[offset+1]=targetY; targets[offset+2]=repo._pos.z;
+    if(WORLD_TREE_SAP_MODE==='travel'){ positions[offset]=start.x; positions[offset+1]=start.y; positions[offset+2]=start.z; }
+    else { positions[offset]=targets[offset]; positions[offset+1]=targets[offset+1]; positions[offset+2]=targets[offset+2]; } });
+  const geometry=new THREE.BufferGeometry(); geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  const material=new THREE.PointsMaterial({map:GLOW_TEX,color:0xffc85a,size:WORLD_TREE_SAP_MODE==='travel'?1.35:1.05,transparent:true,
+    opacity:WORLD_TREE_RECORD.lastSapFlow.freshness==='stale' ? .12 : .22,depthWrite:false,fog:true,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+  const points=new THREE.Points(geometry,material); points.name='WorldTree_DailySapEndpoints'; points.frustumCulled=false; scene.add(points);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffad35,transparent:true,
+    opacity:WORLD_TREE_RECORD.lastSapFlow.freshness==='stale' ? .1 : .18,depthWrite:false,depthTest:true,fog:false,blending:THREE.AdditiveBlending}));
+  halo.name='WorldTree_DailySapRecord'; halo.position.copy(start); halo.scale.set(8.5,8.5,1); scene.add(halo);
+  const flow={mode:WORLD_TREE_SAP_MODE,points,halo,positions,targets,start,count,startedAt:null,finished:WORLD_TREE_SAP_MODE!=='travel',
+    duration:SAP_FLOW_LIMITS.travelSeconds,maxDelay:1.15,updates:0};
+  MEMORIAL_TREE.sapFlow=flow; return flow;
+}
+function updateWorldTreeSapFlow(elapsed){
+  const flow=MEMORIAL_TREE&&MEMORIAL_TREE.sapFlow; if(!flow||flow.finished||flow.mode!=='travel') return;
+  if(flow.startedAt===null&&worldTreeTrigger.hidden) return;
+  if(flow.startedAt===null) flow.startedAt=elapsed;
+  const local=Math.max(0,elapsed-flow.startedAt),attribute=flow.points.geometry.attributes.position,array=attribute.array; let finished=true;
+  for(let index=0;index<flow.count;index++){ const offset=index*3,delay=(index/Math.max(1,flow.count-1))*flow.maxDelay;
+    const progress=THREE.MathUtils.clamp((local-delay)/flow.duration,0,1),eased=progress*progress*(3-2*progress);
+    array[offset]=THREE.MathUtils.lerp(flow.start.x,flow.targets[offset],eased);
+    array[offset+1]=THREE.MathUtils.lerp(flow.start.y,flow.targets[offset+1],eased)+Math.sin(progress*Math.PI)*(1.2+Math.hypot(flow.targets[offset]-flow.start.x,flow.targets[offset+2]-flow.start.z)*.012);
+    array[offset+2]=THREE.MathUtils.lerp(flow.start.z,flow.targets[offset+2],eased); if(progress<1) finished=false; }
+  attribute.needsUpdate=true; flow.updates++;
+  if(finished){ flow.finished=true; flow.points.material.size=1.05; flow.points.material.opacity=.22; flow.halo.material.opacity=.18; }
+}
+makeWorldTreeSapFlow();
 function _seasonCopyKey(){ return {spring:'seasonSpring',summer:'seasonSummer',autumn:'seasonAutumn',winter:'seasonWinter'}[CITY_SEASON]||'seasonSummer'; }
 function _wearCopyKey(repo){ return {recent:'wearRecent',faded:'wearFaded',mossed:'wearMossed'}[repo?._wearState]||'wearMossed'; }
 function refreshRepoCardTimeTrace(repo){
@@ -5868,7 +6043,7 @@ let OBS=null, nearObs=null, obsScope=null;
 let FERRIS=null, nearFerris=null, ferris=null;   // 🎡 grand Ferris wheel — board it to ride up high for a whole-village panorama
 let CAROUSEL=null, nearCarousel=null, carousel=null;   // 🎠 carousel — board a horse for a gentle spin-and-bob at the ESE funfair
 /* ───────── civic arrival landmarks — visual-only props keep the busy plaza walkable ───────── */
-let STATION=null, nearStation=null, openStationModal=()=>{};
+let STATION=null, nearStation=null, nearWorldTree=null, openStationModal=()=>{};
 let POSTCARD_KIOSK=null, nearPostcardKiosk=null;
 let CREATOR_HALL=null, nearCreatorHall=null, openCreatorHall=()=>{};
 function refreshPostcardKioskSign(){
@@ -8256,12 +8431,13 @@ const isUiKeyTarget=e=>{ const target=e&&e.target; return !!(target&&(target.isC
 addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)) return;
   if(e.code==='Escape'&&repositoryAtelierActive()){ e.preventDefault(); exitRepositoryAtelier(); return; }
   if(repositoryAtelierTransitioning()){ if(MOVE.has(e.code)) e.preventDefault(); clearKeys(); return; }
+  if((e.code==='Enter'||e.code==='Space')&&nearWorldTree&&!nearNpc&&!modalOpen){ e.preventDefault(); if(!e.repeat) openWorldTreeChronicle('keyboard',worldTreeTrigger); return; }
   if(e.code==='Enter'&&e.repeat){ e.preventDefault(); return; }
   if(!e.repeat && MOVE.has(e.code) && keys[e.code]){ keys[e.code]=false; if(e.code==='Space') e.preventDefault(); return; }  /* stuck key: a real second press of an already-down move key = stop walking */
   keys[e.code]=true;
   if(e.code==='Space') e.preventDefault();
   if(e.code==='Enter'&&!modalOpen){ doAct(); }
-  if(e.code==='Escape'){ closeCreatorHall(); closeTwinTowns(); closePostcardStudio(); closeCard(); closeChat(); } });
+  if(e.code==='Escape'){ closeWorldTreeChronicle(); closeCreatorHall(); closeTwinTowns(); closePostcardStudio(); closeCard(); closeChat(); } });
 addEventListener('keyup',e=>{ keys[e.code]=false; });   /* always clear — never let a key stick when focus jumps to an input mid-press */
 addEventListener('blur',clearKeys); window.addEventListener('pagehide',clearKeys);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden){ clearKeys(); if(_sharedJoy) _endSharedJoy('hidden'); } });   /* tab/alt-tab away mid-press → don't keep walking or resume an excursion that lost its frames */
@@ -8455,7 +8631,7 @@ dom.addEventListener('pointerup',endTouch);
 dom.addEventListener('pointercancel',endTouch);
 /* round action button (bottom-right): open the repo you're standing at (mobile substitute for Enter) */
 const actBtn=document.getElementById('actBtn');
-actBtn.addEventListener('click',()=>{ if(modalOpen) return; doAct(); });
+actBtn.addEventListener('click',()=>{ if(modalOpen) return; doAct(actBtn); });
 
 /* ====================== UI ====================== */
 document.getElementById('totalCount').textContent=REPOS.length;
@@ -8827,6 +9003,99 @@ document.querySelectorAll('#introLang button').forEach(b=> b.onclick=()=> setLan
 applyLang();
 function setNav(repo){ navTarget=repo; navHolder.visible=true;
   document.getElementById('navBadge').style.display=''; document.getElementById('navName').textContent=repo.label; }
+
+/*WORLD_TREE_CHRONICLE:START*/
+const worldTreeModal=document.getElementById('worldTreeModal'),worldTreePanel=worldTreeModal.querySelector('.worldTreeChronicle'),
+  worldTreeClose=document.getElementById('worldTreeClose'),worldTreeTrigger=document.getElementById('worldTreeTrigger'),
+  worldTreeRootSearch=document.getElementById('worldTreeRootSearch'),worldTreeRootSearchWrap=document.getElementById('worldTreeRootSearchWrap');
+const WORLD_TREE_UI={open:false,previousFocus:null,entry:null};
+const WORLD_TREE_TRIGGER_WORLD=new THREE.Vector3(),WORLD_TREE_TRIGGER_PROJECTED=new THREE.Vector3(),
+  WORLD_TREE_TRIGGER_DIRECTION=new THREE.Vector3(),WORLD_TREE_TRIGGER_TOWARD=new THREE.Vector3();
+function _worldTreeNumber(value){ return new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US').format(Number(value)||0); }
+function _worldTreeDate(value,withTime=false){ const parsed=Date.parse(String(value||'')); if(!Number.isFinite(parsed)) return t('worldTreeSapUnavailable');
+  return new Intl.DateTimeFormat(LANG==='ko'?'ko-KR':'en-US',withTime
+    ?{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'UTC',timeZoneName:'short'}
+    :{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'}).format(parsed); }
+function _worldTreeLedgerValue(element,primary,secondary=''){ element.replaceChildren(document.createTextNode(primary));
+  if(secondary){ const small=document.createElement('small'); small.textContent=secondary; element.appendChild(small); } }
+function _worldTreeYears(root){ const years=root.activeYears;
+  if(years.from!==null&&years.to!==null&&years.count!==null) return tf('worldTreeYears',{from:years.from,to:years.to,count:years.count});
+  if(years.from!==null&&years.to!==null) return tf('worldTreeYearsOpen',{from:years.from,to:years.to});
+  return t('worldTreeYearsUnknown'); }
+function renderWorldTreeRoots(query=''){
+  const roots=WORLD_TREE_RECORD.roots,total=roots.length,normalized=String(query||'').trim().toLocaleLowerCase(LANG==='ko'?'ko-KR':'en-US');
+  const filtered=normalized?roots.filter(root=>(root.repo+' '+root.achievement+' '+_worldTreeYears(root)).toLocaleLowerCase(LANG==='ko'?'ko-KR':'en-US').includes(normalized)):roots;
+  const list=document.getElementById('worldTreeRoots'),status=document.getElementById('worldTreeRootStatus'); list.replaceChildren();
+  worldTreeRootSearchWrap.hidden=total<10;
+  if(!total){ const empty=document.createElement('p'); empty.className='worldTreeRootsEmpty'; empty.setAttribute('role','listitem'); empty.textContent=t('worldTreeRootsEmpty'); list.appendChild(empty); status.textContent=''; return; }
+  if(!filtered.length){ const empty=document.createElement('p'); empty.className='worldTreeRootsEmpty'; empty.setAttribute('role','listitem'); empty.textContent=t('worldTreeRootsNoMatch'); list.appendChild(empty); }
+  else filtered.forEach(root=>{ const item=document.createElement('article'); item.className='worldTreeRoot'; item.setAttribute('role','listitem');
+    const identity=document.createElement('div'),name=document.createElement('div'),years=document.createElement('span'),achievement=document.createElement('p');
+    name.className='worldTreeRootName'; name.textContent=root.repo; years.className='worldTreeRootYears'; years.textContent=_worldTreeYears(root);
+    achievement.className='worldTreeRootAchievement'; achievement.textContent=root.achievement; identity.append(name,years); item.append(identity,achievement); list.appendChild(item); });
+  status.textContent=tf('worldTreeRootsCount',{shown:filtered.length,total});
+}
+function renderWorldTreeChronicle(){
+  const record=WORLD_TREE_RECORD,unavailable=document.getElementById('worldTreeUnavailable'),content=document.getElementById('worldTreeRecord');
+  unavailable.hidden=record.available; content.hidden=!record.available; if(!record.available) return;
+  const era=record.era,season=record.season,sap=record.lastSapFlow;
+  _worldTreeLedgerValue(document.getElementById('worldTreeEra'),tf('worldTreeCityYear',{year:era.cityYear??'—'}),
+    tf('worldTreeFounded',{date:_worldTreeDate(era.foundedOn),repo:era.oldestRepository||'—'}));
+  const seasonKey={spring:'seasonSpring',summer:'seasonSummer',autumn:'seasonAutumn',winter:'seasonWinter'}[season.value]||'seasonSummer';
+  const seasonBasis=season.fallbackUsed||season.ratio===null
+    ?tf('worldTreeSeasonFallback',{recent:season.recentRepositories,total:season.repositoriesWithPushDate})
+    :tf('worldTreeSeasonRatio',{recent:season.recentRepositories,ratio:season.ratio.toFixed(2)});
+  _worldTreeLedgerValue(document.getElementById('worldTreeSeason'),t(seasonKey),seasonBasis);
+  const sapKey={recent:'worldTreeSapRecent',stored:'worldTreeSapStored',stale:'worldTreeSapStale'}[sap.freshness]||'worldTreeSapUnavailable';
+  _worldTreeLedgerValue(document.getElementById('worldTreeSap'),sap.available?tf(sapKey,{date:_worldTreeDate(sap.timestamp,true)}):t(sapKey));
+  const stats=record.stats,languageCount=stats.languages.length,rows=[
+    [stats.repositories,'worldTreeStatRepos'],[stats.stars,'worldTreeStatStars'],[stats.forks,'worldTreeStatForks'],
+    [stats.archivedRepositories,'worldTreeStatArchived'],[languageCount,'worldTreeStatLanguages']];
+  const statsEl=document.getElementById('worldTreeStats'); statsEl.replaceChildren(...rows.map(([value,key])=>{ const item=document.createElement('div'); item.className='worldTreeStat'; item.setAttribute('role','listitem');
+    const number=document.createElement('b'),label=document.createElement('span'); number.textContent=_worldTreeNumber(value); label.textContent=t(key); item.append(number,label); return item; }));
+  document.getElementById('worldTreeCommitNote').textContent=stats.commitTotal===null?t('worldTreeCommitUnavailable'):'';
+  renderWorldTreeRoots(worldTreeRootSearch.value);
+}
+function _worldTreeFocusables(){ return [...worldTreePanel.querySelectorAll('button:not([disabled]),input:not([disabled])')]
+  .filter(element=>!element.hidden&&!element.closest('[hidden]')); }
+function _updateWorldTreeTrigger(){
+  const intro=document.getElementById('intro');
+  if(!MEMORIAL_TREE||!MEMORIAL_TREE.requestedVisible||WORLD_TREE_RENDER_MODE==='tree-off'||modalOpen||GROWTH_REPLAY.active||repositoryAtelierActive()||(intro&&!intro.classList.contains('hidden'))){
+    worldTreeTrigger.hidden=true; return false; }
+  const socket=MEMORIAL_TREE.sockets.InteractionFocus||MEMORIAL_TREE.group; socket.getWorldPosition(WORLD_TREE_TRIGGER_WORLD);
+  camera.getWorldDirection(WORLD_TREE_TRIGGER_DIRECTION); WORLD_TREE_TRIGGER_TOWARD.copy(WORLD_TREE_TRIGGER_WORLD).sub(camera.position);
+  WORLD_TREE_TRIGGER_PROJECTED.copy(WORLD_TREE_TRIGGER_WORLD).project(camera);
+  const visible=WORLD_TREE_TRIGGER_TOWARD.dot(WORLD_TREE_TRIGGER_DIRECTION)>0&&WORLD_TREE_TRIGGER_PROJECTED.z>=-1&&WORLD_TREE_TRIGGER_PROJECTED.z<=1
+    &&Math.abs(WORLD_TREE_TRIGGER_PROJECTED.x)<=.94&&Math.abs(WORLD_TREE_TRIGGER_PROJECTED.y)<=.9;
+  worldTreeTrigger.hidden=!visible; if(!visible) return false;
+  worldTreeTrigger.style.left=((WORLD_TREE_TRIGGER_PROJECTED.x*.5+.5)*innerWidth)+'px';
+  worldTreeTrigger.style.top=((-WORLD_TREE_TRIGGER_PROJECTED.y*.5+.5)*innerHeight)+'px'; return true;
+}
+function openWorldTreeChronicle(entry='landmark',source=null){
+  if(WORLD_TREE_UI.open) return true; if(modalOpen||repositoryAtelierActive()||repositoryAtelierTransitioning()||GROWTH_REPLAY.active) return false;
+  WORLD_TREE_UI.open=true; WORLD_TREE_UI.entry=entry; WORLD_TREE_UI.previousFocus=source||document.activeElement||worldTreeTrigger;
+  clearKeys(); panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.add('hidden');
+  renderWorldTreeChronicle(); modalOpen=true; worldTreeModal.classList.add('show'); worldTreeModal.setAttribute('aria-hidden','false');
+  setTimeout(()=>worldTreeClose.focus(),0); track('world_tree_chronicle_open',{entry,roots:WORLD_TREE_RECORD.roots.length,sap:WORLD_TREE_RECORD.lastSapFlow.freshness}); return true;
+}
+function closeWorldTreeChronicle(){
+  if(!WORLD_TREE_UI.open) return false; const previous=WORLD_TREE_UI.previousFocus;
+  WORLD_TREE_UI.open=false; WORLD_TREE_UI.previousFocus=null; WORLD_TREE_UI.entry=null; modalOpen=false;
+  worldTreeModal.classList.remove('show'); worldTreeModal.setAttribute('aria-hidden','true'); worldTreeRootSearch.value='';
+  _updateWorldTreeTrigger(); const fallback=!worldTreeTrigger.hidden?worldTreeTrigger:menuBtn;
+  setTimeout(()=>{ const target=previous&&previous.isConnected&&!previous.hidden?previous:fallback; try{ target.focus(); }catch(e){} },0);
+  track('world_tree_chronicle_close'); return true;
+}
+worldTreeTrigger.onclick=()=>openWorldTreeChronicle('tree',worldTreeTrigger);
+worldTreeClose.onclick=closeWorldTreeChronicle;
+worldTreeModal.addEventListener('click',event=>{ if(event.target===worldTreeModal) closeWorldTreeChronicle(); });
+worldTreeRootSearch.addEventListener('input',event=>renderWorldTreeRoots(event.target.value));
+worldTreeModal.addEventListener('keydown',event=>{ if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeWorldTreeChronicle(); return; }
+  if(event.key!=='Tab') return; const items=_worldTreeFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
+  if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); } });
+window.__worldTreeLangRefresh=()=>{ if(WORLD_TREE_UI.open) renderWorldTreeChronicle(); };
+/*WORLD_TREE_CHRONICLE:END*/
 
 const modal=document.getElementById('modal'); let modalOpen=false;
 
@@ -9542,7 +9811,7 @@ const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null
 let nearInviteCircle=null;   // an active gathering that has waved you over (join it with Enter from a little further out than the walk-up reach)
 let sitting=null, nearestSeat=null;
 /* one action resolves to whatever you're standing at: an NPC to talk to, a building to open, or a seat */
-function doAct(){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearCreatorHall) openCreatorHall('landmark'); else if(nearPostcardKiosk) openPostcardStudio('kiosk'); else if(nearRainGarden) ringRainGarden(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
+function doAct(source=null){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } if(ferris||carousel||canalFerryRide) return; if(sitting) standUp(); else if(nearNpc) openChat(nearNpc); else if(nearWorldTree) openWorldTreeChronicle('landmark',source||worldTreeTrigger); else if(nearChrono) openChrono(); else if(nearObs) openObservatory(); else if(nearStation) openStationModal(); else if(nearCreatorHall) openCreatorHall('landmark'); else if(nearPostcardKiosk) openPostcardStudio('kiosk'); else if(nearRainGarden) ringRainGarden(); else if(nearFerris) boardFerris(); else if(nearCarousel) boardCarousel(); else if(nearCanalFerry) boardCanalFerry(); else if(nearest) openCard(nearest); else if(nearHub) openZoneBoard(nearHub.id); else if(nearResident){ const met=courseMark('resident',nearResident.id), _g=_groupNear(nearResident); if(met){ const r=RESIDENTS.find(x=>x.id===nearResident.id); if(r) showWave(tf('chronicleMet',{name:(r[LANG]||r.ko).name}),2800); } if(_g) openGroupChat(_g); else openChat(nearResident); } else if(nearInviteCircle){ openGroupChat(nearInviteCircle.members.slice()); } else if(nearestSeat) sitDown(nearestSeat); }
 function npcPrompt(n){ const sc=window.scholarByKind&&n&&window.scholarByKind(n.kind);
   const nm = sc ? `${sc.emoji||'\u2726'} ${sc.star} \u00b7 ${LANG==='ko'?sc.epithetKo:sc.epithetEn}` : ((n&&n.kind==='msdocs')? t('npcEng') : t('npcTaxi'));
   return (LANG==='ko'?`<b>${nm}</b> · <span class="key">Enter</span>/클릭으로 <b>말 걸기</b> 💬`:`<b>${nm}</b> · <span class="key">Enter</span>/click to <b>talk</b> 💬`); }
@@ -10193,11 +10462,11 @@ function _growthSuspendScenery(saved){
   for(const peer of peers.values()) add(peer.group);
   add(FERRIS&&(FERRIS.root||FERRIS.wheel)); add(CAROUSEL&&CAROUSEL.spin); add(MEMORIAL_TREE&&MEMORIAL_TREE.group);
   add(RES_QUARTER&&RES_QUARTER.group); add(OBS&&OBS._group); add(taxi);
-  if(MEMORIAL_TREE){ saved.worldTreeRequested=MEMORIAL_TREE.requestedVisible; MEMORIAL_TREE.requestedVisible=false; MEMORIAL_TREE.bloomDirty=true; }
+  if(MEMORIAL_TREE){ saved.worldTreeRequested=MEMORIAL_TREE.requestedVisible; MEMORIAL_TREE.requestedVisible=false; _setWorldTreeSapVisible(false); MEMORIAL_TREE.bloomDirty=true; }
   saved.scenery=roots;
 }
 function _growthRestoreScenery(saved){ for(const state of saved?.scenery||[]) state.object.visible=state.visible;
-  if(MEMORIAL_TREE&&saved){ MEMORIAL_TREE.requestedVisible=saved.worldTreeRequested; MEMORIAL_TREE.bloomDirty=true; } }
+  if(MEMORIAL_TREE&&saved){ MEMORIAL_TREE.requestedVisible=saved.worldTreeRequested; _setWorldTreeSapVisible(MEMORIAL_TREE.requestedVisible!==false); MEMORIAL_TREE.bloomDirty=true; } }
 function _growthSuspendBackground(saved){
   saved.inertRoots=[]; for(const element of document.body.children){ if(element===growthReplay||element===postcardModal) continue;
     saved.inertRoots.push({element,inert:element.inert}); element.inert=true; }
@@ -11774,6 +12043,7 @@ function animate(){
   nearObs = (OBS && player.position.distanceTo(OBS._pos) < 8.5) ? OBS : null;
   nearStation = (STATION && player.position.distanceTo(STATION._pos) < 6.0) ? STATION : null;
   nearCreatorHall = (CREATOR_HALL && player.position.distanceTo(CREATOR_HALL._pos) < 6.0) ? CREATOR_HALL : null;
+  nearWorldTree = (MEMORIAL_TREE && Math.hypot(player.position.x-MEMORIAL_TREE.collider.x,player.position.z-MEMORIAL_TREE.collider.z) < MEMORIAL_TREE.collider.r+5.2) ? MEMORIAL_TREE : null;
   nearPostcardKiosk = (POSTCARD_KIOSK && player.position.distanceTo(POSTCARD_KIOSK._pos) < 5.5) ? POSTCARD_KIOSK : null;
   nearRainGarden = (RAIN_GARDEN && player.position.distanceTo(RAIN_GARDEN._pos) < 5.8) ? RAIN_GARDEN : null;
   nearFerris = (FERRIS && !ferris && player.position.distanceTo(FERRIS.board) < 6.0) ? FERRIS : null;
@@ -11804,6 +12074,7 @@ function animate(){
   else if(carousel){ promptEl.innerHTML = t('carouselRiding'); promptEl.classList.add('show'); actBtn.classList.remove('avail'); }
   else if(sitting){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> / 버튼으로 <b>일어서기</b>`:`<span class="key">Enter</span> / button to <b>stand up</b>`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🧍'; }
   else if(nearNpc&&!modalOpen){ promptEl.innerHTML=npcPrompt(nearNpc); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
+  else if(nearWorldTree&&!modalOpen){ promptEl.innerHTML=`<b>${t('worldTreeTitle')}</b>${t('worldTreeReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🌳'; }
   else if(nearChrono&&!modalOpen){ promptEl.innerHTML=`<b>${t('chronoTitle')}</b>${t('chronoReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='⏳'; }
   else if(nearObs&&!modalOpen){ promptEl.innerHTML=`<b>${t('obsName')}</b>${t('obsReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🔭'; }
   else if(nearStation&&!modalOpen){ promptEl.innerHTML=`<b>${t('stationLm')}</b>${t('stationReached')}`; promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🚉'; }
@@ -11823,6 +12094,7 @@ function animate(){
       promptEl.innerHTML=(LANG==='ko'?`<b>👋 ${esc(nm)} 님이 불러요</b> · <span class="key">Enter</span>/버튼으로 <b>대화에 끼기</b> 💬`:`<b>👋 ${esc(nm)} is waving you over</b> · <span class="key">Enter</span>/button to <b>join in</b> 💬`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='💬'; }
   else if(nearestSeat&&!modalOpen){ promptEl.innerHTML = (LANG==='ko'?`<span class="key">Enter</span> 또는 버튼으로 <b>앉기</b> 🪑`:`<span class="key">Enter</span> or button to <b>sit</b> 🪑`); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent='🪑'; }
   else { promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪'; }
+  actBtn.setAttribute('aria-label',nearWorldTree&&!nearNpc?t('worldTreeOpen'):t('ctrlOpen'));
 
   if(navTarget){ const dir=Math.atan2(navTarget._pos.x-player.position.x,navTarget._pos.z-player.position.z);
     navHolder.rotation.y=dir; navHolder.position.y=3.5+Math.sin(clock.elapsedTime*3)*0.15;
@@ -11838,6 +12110,8 @@ function animate(){
   updateGarlands(clock.elapsedTime);
   updateSway(clock.elapsedTime);
   _memHeroUpdate(clock.elapsedTime);   // exact plugin pulse/motion plus uniform-scale light compensation
+  _updateWorldTreeTrigger();
+  updateWorldTreeSapFlow(clock.elapsedTime);
   updateChows(clock.elapsedTime,dt);
   updateChrono(dt);
   if(obsScope) obsScope.rotation.y+=dt*0.05;   // the great telescope slowly sweeps the sky
@@ -11976,8 +12250,12 @@ function emoteBubble(group,kind){ if(!group) return; const E=EMOTES[kind]||EMOTE
 function playEmote(kind){ const E=EMOTES[kind]; if(!E||emoteT>0.3) return; emoteT=E.dur; emoteKind=kind; emoteBubble(model,kind); rtSend({t:'emote',id:guestId(),kind}); }
 const _ray=new THREE.Raycaster(), _ndc=new THREE.Vector2();
 function peerAtScreen(cx,cy){ if(!peers.size) return null; const r=dom.getBoundingClientRect(); _ndc.x=((cx-r.left)/r.width)*2-1; _ndc.y=-((cy-r.top)/r.height)*2+1; _ray.setFromCamera(_ndc,camera); let best=null,bd=Infinity; for(const [id,p] of peers){ const hit=_ray.intersectObject(p.group,true); if(hit.length&&hit[0].distance<bd){ bd=hit[0].distance; best={id,p}; } } return best; }
+function worldTreeAtScreen(cx,cy){ if(!MEMORIAL_TREE||!MEMORIAL_TREE.group.visible) return false; const r=dom.getBoundingClientRect();
+  _ndc.x=((cx-r.left)/r.width)*2-1; _ndc.y=-((cy-r.top)/r.height)*2+1; _ray.setFromCamera(_ndc,camera);
+  return _ray.intersectObject(MEMORIAL_TREE.group,true).length>0; }
 function greetPeer(id,p){ emoteT=EMOTES.wave.dur; emoteKind='wave'; if(p) emoteBubble(p.group,'wave'); rtSend({t:'wave',id:guestId(),to:id}); showWave(LANG==='ko'?`${(p&&p.name)||'방문자'}에게 인사했어요 👋`:`Waved at ${(p&&p.name)||'visitor'} 👋`); }
-function tapAt(cx,cy){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return; } doAct(); }
+function tapAt(cx,cy){ if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return; }
+  if(worldTreeAtScreen(cx,cy)){ openWorldTreeChronicle('pointer',worldTreeTrigger); return; } doAct(); }
 const greetToast=document.createElement('div'); greetToast.style.cssText='position:fixed;left:50%;top:13%;transform:translateX(-50%);background:rgba(38,28,18,.86);color:#fff7ec;padding:9px 16px;border-radius:14px;font:600 14px system-ui,sans-serif;z-index:30;pointer-events:none;opacity:0;transition:opacity .25s;max-width:80vw;text-align:center'; document.body.appendChild(greetToast); let greetTid=0;
 function showWave(msg,dur){ greetToast.textContent=msg; greetToast.style.opacity='1'; clearTimeout(greetTid); greetTid=setTimeout(()=>{ greetToast.style.opacity='0'; },dur||1900); }
 function rtSend(o){ if(rtSock&&rtSock.readyState===1) rtSock.send(JSON.stringify(o)); }
@@ -12509,9 +12787,17 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__perfReset=()=>{ RENDER_METRICS.history.length=0; RENDER_METRICS.latest=null; RENDER_METRICS.lastStartedAt=0; return true; };
   window.__perfDiagnostics=()=>({enabled:_DIAGNOSTICS,debug:_DBG,autoReset:renderer.info.autoReset,shadowWrapped:!!renderer.shadowMap.render.__repolisMetrics,
     frameAllocations:RENDER_METRICS.frameAllocations,passTokenAllocations:RENDER_METRICS.passTokenAllocations,historyWrites:RENDER_METRICS.historyWrites,history:RENDER_METRICS.history.length,gpuSupported:GPU_TIMER.supported});
+  window.__worldTreeChronicle=()=>{ const flow=MEMORIAL_TREE&&MEMORIAL_TREE.sapFlow; return {
+    open:WORLD_TREE_UI.open,available:WORLD_TREE_RECORD.available,roots:WORLD_TREE_RECORD.roots.length,rootSearch:!worldTreeRootSearchWrap.hidden,
+    modal:{role:worldTreeModal.getAttribute('role'),hidden:worldTreeModal.getAttribute('aria-hidden'),active:document.activeElement&&document.activeElement.id},
+    trigger:{hidden:worldTreeTrigger.hidden,label:worldTreeTrigger.getAttribute('aria-label')},growth:{...WORLD_TREE_GROWTH},
+    sap:{available:WORLD_TREE_RECORD.lastSapFlow.available,freshness:WORLD_TREE_RECORD.lastSapFlow.freshness,mode:WORLD_TREE_SAP_MODE,
+      points:flow?flow.count:0,moving:!!(flow&&flow.mode==='travel'&&!flow.finished),finished:!!(flow&&flow.finished),visible:!!(flow&&flow.points.visible&&flow.halo.visible),updates:flow?flow.updates:0,draws:flow?2:0}}; };
+  window.__worldTreeOpen=()=>{ _updateWorldTreeTrigger(); return {opened:openWorldTreeChronicle('debug',worldTreeTrigger),state:window.__worldTreeChronicle()}; };
+  window.__worldTreeClose=()=>{ const closed=closeWorldTreeChronicle(); return {closed,state:window.__worldTreeChronicle()}; };
   window.__memorialTree=()=>{ if(!MEMORIAL_TREE) return null; const b=_memHeroBox(MEMORIAL_TREE.group),s=MEMORIAL_TREE.stats,c=MEMORIAL_TREE.collider,wt=MEMORIAL_TREE.group.userData.worldTree,adapter=MEMORIAL_TREE.group.userData.repolisAdapter;
     return {count:1,name:MEMORIAL_TREE.group.name,seed:MEMORIAL_TREE.seed,at:[+MEMORIAL_TREE.group.position.x.toFixed(1),+MEMORIAL_TREE.group.position.z.toFixed(1)],
-      variant:wt.variant,stage:wt.stage,factory:{sha256:wt.factorySha256,revision:wt.factoryRevision,unmodified:adapter.factoryUnmodified,sourceModified:adapter.factorySourceModified,scale:adapter.scale,groundVisible:adapter.groundVisible,pulseDisabled:adapter.pulseDisabled,bloom:adapter.bloom},
+      variant:wt.variant,stage:wt.stage,factory:{sha256:wt.factorySha256,revision:wt.factoryRevision,unmodified:adapter.factoryUnmodified,sourceModified:adapter.factorySourceModified,scale:adapter.scale,growthScale:adapter.growthScale,groundVisible:adapter.groundVisible,pulseDisabled:adapter.pulseDisabled,bloom:adapter.bloom},
       macroBranches:s.macroBranches,secondaryBranches:s.secondaryBranches,fineBranches:s.fineBranches,leafInstances:s.leafInstances,leafAnchorCount:s.leafAnchorCount,leafRootedInstances:s.leafRootedInstances,mossInstances:s.mossInstances,glyphInstances:s.glyphInstances,branchVertices:s.branchVertices,generationMs:+s.generationMs.toFixed(1),
       mobile:IS_MOBILE,lowEnd:LOW_END,lite:MEM_TREE_LITE,reduced:REDUCED,runtime:{
         qualityMode:adapter.qualityMode,nodes:Object.keys(MEMORIAL_TREE.runtime.nodes).length,meshes:Object.keys(MEMORIAL_TREE.runtime.meshes).length,sockets:Object.keys(MEMORIAL_TREE.sockets).length,
@@ -12523,7 +12809,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
         energySupportVeinCount:s.energySupportVeinCount,energySupportVeinIds:s.energySupportVeinIds,energySideSupportVeinCount:s.energySideSupportVeinCount,energySideSupportVeinIds:s.energySideSupportVeinIds,energyDominantRadius:s.energyDominantRadius,energySupportRadius:s.energySupportRadius,energySourceWeights:s.energySourceWeights,energyBarkHaloPolicy:s.energyBarkHaloPolicy,
         energyKnotCount:s.energyKnotCount,energyKnotDistribution:s.energyKnotDistribution,energyKnotSizes:s.energyKnotSizes,energyKnotRoles:s.energyKnotRoles,energyDrawMeshes:s.energyDrawMeshes,hangingLightCount:s.hangingLightCount,hangingLightMeshCount:s.hangingLightMeshCount,hangingLightPartCount:s.hangingLightPartCount,hangingLightPolicy:s.hangingLightPolicy,
         bloomHz:MEM_TREE_BLOOM_HZ,bloomMinFrameGap:_treeBloomMinFrameGap(),dynamicOccluders:MEMORIAL_TREE.dynamicOccluderGroups.size,staticProxies:MEMORIAL_TREE.staticProxyCount||0,objectPerf:_memHeroObjectPerf(MEMORIAL_TREE.group)},
-      crownOnlySway:wt.crownOnlySway,sockets:Object.keys(MEMORIAL_TREE.sockets),collider:{x:c.x,z:c.z,r:c.r},target:wt.target,
+      crownOnlySway:wt.crownOnlySway,sockets:Object.keys(MEMORIAL_TREE.sockets),collider:{x:c.x,z:c.z,r:c.r},target:wt.target,growth:{...MEMORIAL_TREE.growth},
       nightGuide:{night:isNight,light:+MEMORIAL_TREE.light.intensity.toFixed(1),rendered:MEMORIAL_TREE.light.visible,range:+MEMORIAL_TREE.light.distance.toFixed(1),energy:+MEMORIAL_TREE.hero.materials.energy.emissiveIntensity.toFixed(2),amber:+MEMORIAL_TREE.hero.materials.amberLeaf.emissiveIntensity.toFixed(2),cyan:+MEMORIAL_TREE.hero.materials.cyanLeaf.emissiveIntensity.toFixed(2),
         distance:+MEMORIAL_TREE.glowDistance.toFixed(1),distanceLod:+MEMORIAL_TREE.distanceLod.toFixed(2),halos:MEMORIAL_TREE.glowHalos.length,haloMode:adapter.haloMode,pointLightRole:adapter.pointLightRole,environmentLights:0,
         layers:{energy:MEMORIAL_TREE.hero.runtime.nodes['energy-network'].layers.mask,amber:MEMORIAL_TREE.crowns[0].layers.mask,light:MEMORIAL_TREE.light.layers.mask}},
@@ -12531,7 +12817,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__tpMemorialTree=(back=55)=>{ if(!MEMORIAL_TREE) return null; const p=MEMORIAL_TREE.group.position; player.position.set(p.x,0,p.z-back); camYaw=Math.PI; camPitch=0.08; camDist=22; model.rotation.y=0; return window.__memorialTree(); };
   window.__frameMemorialTree=(back=44,height=15,angle=0)=>{ if(!MEMORIAL_TREE) return null; const p=MEMORIAL_TREE.group.position,dx=Math.sin(angle),dz=Math.cos(angle); player.position.set(p.x-dx*back,height,p.z-dz*back); model.visible=false; camYaw=angle+Math.PI; camPitch=0; camDist=18; return window.__memorialTree(); };
   window.__unframeMemorialTree=()=>{ model.visible=true; player.position.y=0; return true; };
-  window.__memorialTreeVisible=(visible=true)=>{ if(!MEMORIAL_TREE) return false; MEMORIAL_TREE.requestedVisible=visible!==false; MEMORIAL_TREE.group.visible=MEMORIAL_TREE.requestedVisible; MEMORIAL_TREE.bloomDirty=true; return MEMORIAL_TREE.requestedVisible; };
+  window.__memorialTreeVisible=(visible=true)=>{ if(!MEMORIAL_TREE) return false; MEMORIAL_TREE.requestedVisible=visible!==false; MEMORIAL_TREE.group.visible=MEMORIAL_TREE.requestedVisible; _setWorldTreeSapVisible(MEMORIAL_TREE.requestedVisible); MEMORIAL_TREE.bloomDirty=true; return MEMORIAL_TREE.requestedVisible; };
   window.__worldTreeRenderMode=(mode)=>{ const modes=['base-only','emissive-only','bloom-only','final-composite','tree-off']; if(modes.includes(mode)){ WORLD_TREE_RENDER_MODE=mode; if(MEMORIAL_TREE) MEMORIAL_TREE.bloomDirty=true; } return {mode:WORLD_TREE_RENDER_MODE,modes}; };
   window.__worldTreeRenderTargets=()=>({base:{type:'HalfFloatType',colorSpace:baseTarget.texture.colorSpace,depth:true,size:[baseTarget.width,baseTarget.height]},emissive:{type:'HalfFloatType',colorSpace:emissiveTarget.texture.colorSpace,mode:'unlit-depth-aware',depth:true,size:[emissiveTarget.width,emissiveTarget.height]},
     bloom:{type:'HalfFloatType',colorSpace:worldBloom.renderTargetsHorizontal[0].texture.colorSpace,source:'UnrealBloomPass.renderTargetsHorizontal[0]',hz:MEM_TREE_BLOOM_HZ,depth:false,size:[worldBloom.renderTargetsHorizontal[0].width,worldBloom.renderTargetsHorizontal[0].height]},
