@@ -275,6 +275,11 @@
   #modal.show { display: flex; }
   .card { background: #fffaf2; border-radius: 22px; width: 420px; max-width: 100%; overflow: hidden; position: relative;
     box-shadow: 0 24px 70px rgba(40,22,8,.4); animation: pop .22s cubic-bezier(.2,.9,.3,1.3); }
+  .card:focus { outline: 3px solid rgba(111,143,102,.55); outline-offset: 3px; }
+  .timeTrace { margin: 0 18px 12px; padding: 9px 11px; border-radius: 11px; background: #edf2e6; color: #486044;
+    font-size: 12px; line-height: 1.45; font-weight: 700; }
+  .srOnly { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important;
+    overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
   @keyframes pop { from { transform: scale(.9) translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
   .card .top { padding: 22px 24px; color: #fff; }
   .card .top .lang { font-size: 12px; font-weight: 700; opacity: .92; letter-spacing: .03em; }
@@ -1190,7 +1195,7 @@
   }
   /* ---- respect prefers-reduced-motion: keep every bit of info, drop the looping motion ---- */
   @media (prefers-reduced-motion: reduce) {
-    #trainOverlay .rail, #trainOverlay .train, .msg .tdots i, a.libitem, .postcardSpinner { animation: none !important; }
+    #trainOverlay .rail, #trainOverlay .train, .msg .tdots i, a.libitem, .postcardSpinner, .card { animation: none !important; }
     .msg .tdots i { opacity: .6; }
     a.libitem { opacity: 1; }
   }
@@ -1326,6 +1331,7 @@
     <div id="mapHint" class="mapHint"></div>
   </div>
 </div>
+<div id="ruinNameplates" class="srOnly" role="list" data-i18n-aria="ruinListAria" aria-label="아카이브 레포 이름 명패"></div>
 
 <div id="station" class="hidden">
   <button class="sclose" id="stationClose" type="button" aria-label="닫기">✕</button>
@@ -1521,8 +1527,8 @@
   <div class="stActions"><button id="repoRouteHudRide" type="button"></button></div>
 </div>
 
-<div id="modal">
-  <div class="card">
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="cardName" aria-describedby="cardDesc cardTimeTrace" aria-hidden="true">
+  <div class="card" tabindex="-1">
     <img id="cardImg" class="hero" alt="repo social preview" />
     <div class="sociallabel" id="cardSocialTag">🎨 <span data-i18n="socialPreview">소셜 프리뷰</span></div>
     <div class="top" id="cardTop">
@@ -1531,6 +1537,7 @@
       <div class="stars" id="cardStars"></div>
     </div>
     <div class="chips" id="cardChips"></div>
+    <div class="timeTrace" id="cardTimeTrace" role="status"></div>
     <div class="since" id="cardSince"></div>
     <div class="body"><p id="cardDesc"></p></div>
     <div class="metricnote" id="cardMetricNote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).</div>
@@ -1763,6 +1770,7 @@ import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree
 import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstruction, stepCameraResolvedDistance, chooseCameraArrivalYaw } from './assets/camera-obstruction.js?v=clearsight-v1';
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
+import { CITY_STATE_SCHEMA, CITY_STATE_VERSION, cityReferenceTimestamp, projectCityTime, resolveCitySeason, seasonPalette } from './assets/city-time.js?v=world-tree-phase1-v1';
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
@@ -1780,7 +1788,7 @@ import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectCont
    The owner city stays the premium / full-data experience. ================ */
 const OWNER = window.REPOLIS_CONFIG?.town?.owner || 'hyeonsangjeon';
 document.title = `Repolis · ${OWNER}'s City of Repos`;
-let REPOS = [];
+let REPOS = [], CITY_STATE = null;
 
 /* --- which town are we in? --- */
 const GH_LOGIN_RE = GITHUB_LOGIN_RE;
@@ -1915,6 +1923,17 @@ function _ownerSnapshot(){
   });
   return _ownerSnapshotPromise;
 }
+let _cityStatePromise=null;
+function _cityStateSnapshot(){
+  if(_cityStatePromise) return _cityStatePromise;
+  _cityStatePromise=fetch('data/city-state.json',{cache:'no-cache'}).then(async res=>{
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    if(data?.schema!==CITY_STATE_SCHEMA||data?.version!==CITY_STATE_VERSION) throw new Error('unsupported city-state schema');
+    return data;
+  });
+  return _cityStatePromise;
+}
 function _ownerRepos(data){
   return (Array.isArray(data)?data:[]).map(repo=>Object.assign({},repo,{_owner:OWNER,trafficKnown:true,trafficSource:'owner-snapshot'}));
 }
@@ -1976,7 +1995,8 @@ track('page_load');
 trackPortal('feature_seen',{entry:repoPortalRequested?'link':'intro',device:_repoPortalDevice(),lang:_repoPortalLang()});
 
 if(cityMode === 'owner'){
-  try { REPOS=_ownerRepos(await _ownerSnapshot()); }
+  const cityStateLoad=_cityStateSnapshot().catch(error=>{ console.warn('city-state.json load failed',error); return null; });
+  try { REPOS=_ownerRepos(await _ownerSnapshot()); CITY_STATE=await cityStateLoad; }
   catch(e){ cityError={status:0,reason:'data_load'}; console.error('repos.json load failed', e); }
   track(REPOS.length ? 'city_data_load_success' : 'city_data_load_fail', { repoCount:REPOS.length });
 } else if(cityMode === 'public') {
@@ -2002,6 +2022,9 @@ if(cityMode === 'owner'){
   }
   trackPortal('feature_started',{entry:'link',device:_repoPortalDevice(),lang:_repoPortalLang(),result:repoPortalResult.result,
     latency:repoPortalLatencyBucket((typeof performance!=='undefined'?performance.now():Date.now())-repoPortalStartedAt)});
+}
+if(!CITY_STATE&&currentUser.toLowerCase()===OWNER.toLowerCase()&&(cityMode==='owner'||dataSource==='owner-snapshot')){
+  try{ CITY_STATE=await _cityStateSnapshot(); }catch(error){ console.warn('city-state.json load failed',error); }
 }
 const TOWN_GROWTH=buildTownGrowthTimeline(REPOS);
 
@@ -2129,6 +2152,10 @@ const I18N = {
     rainName:'비정원 날씨 종', rainReached:' — 종을 울려 36초 동안 햇빛 소나기를 불러요. <span class="key">Enter</span> 또는 클릭으로 울리기', rainReachedWet:' — 소나기가 내려요. <span class="key">Enter</span> 또는 클릭으로 맑게 하기', rainStarted:'🌦️ 날씨 종이 울렸어요! 구름이 모이고 주민들이 우산을 펼쳐요', rainStopped:'☀️ 종소리를 따라 소나기가 걷혔어요', rainEnded:'🌤️ 짧은 소나기가 지나가고 마을이 다시 맑아졌어요', lmDriveRain:'🌦️ 비정원의 날씨 종으로 갑니다…', lmArriveRain:'🚕 <b>비정원</b>에 도착했어요! 종을 울려 햇빛 소나기를 불러보세요 🌦️',
     festAllStamps:'🎆 마을을 모두 둘러봤어요! 모든 명소 스탬프 완성 — 축제를 즐겨요!', festRepos:'🎆 레포 {n}곳 방문 달성! 불꽃이 터져요.',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
+    seasonSpring:'봄', seasonSummer:'여름', seasonAutumn:'가을', seasonWinter:'겨울', seasonCity:'도시 계절',
+    wearRecent:'최근 손길', wearFaded:'빛바랜 흔적', wearMossed:'이끼 낀 시간',
+    ruinStatus:'들꽃이 핀 온화한 폐허', ruinNote:'이 공개 레포는 아카이브되어 잠들었지만, 건물의 실루엣과 이름 명패는 도시의 기억으로 남아 있어요.',
+    ruinListAria:'아카이브 레포 이름 명패',
     cityOfRepos:'레포들의 도시',
     introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>깃버에게 물어보면 그 레포까지 데려다줘요.',
     introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
@@ -2424,6 +2451,10 @@ const I18N = {
     rainName:'Rain Garden Weather Bell', rainReached:' — ring for one 36-second sunshower. Press <span class="key">Enter</span> or click to ring', rainReachedWet:' — the sunshower is falling. Press <span class="key">Enter</span> or click to clear it', rainStarted:'🌦️ The Weather Bell rang! Clouds gather and the residents open their umbrellas', rainStopped:'☀️ The sunshower clears with the bell', rainEnded:'🌤️ The brief shower passes and the town brightens again', lmDriveRain:'🌦️ Off to the Rain Garden Weather Bell…', lmArriveRain:"🚕 We've reached the <b>Rain Garden</b>! Ring the bell to call a sunshower 🌦️",
     festAllStamps:'🎆 You\'ve explored the whole village! Every landmark stamped — enjoy the festival!', festRepos:'🎆 {n} repos visited! Fireworks light up the sky.',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
+    seasonSpring:'Spring', seasonSummer:'Summer', seasonAutumn:'Autumn', seasonWinter:'Winter', seasonCity:'City season',
+    wearRecent:'Recently tended', wearFaded:'Faded traces', wearMossed:'Mossed by time',
+    ruinStatus:'Gentle ruin with wildflowers', ruinNote:'This public repository is archived and resting, while its original silhouette and accessible nameplate remain part of the city memory.',
+    ruinListAria:'Archived repository nameplates',
     cityOfRepos:'the city of repos',
     introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask Gitber and it'll drive you right to any repo.",
     introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
@@ -2672,16 +2703,32 @@ function applyLang(){
   if(_mapReady && typeof syncMapChrome==='function') syncMapChrome();
   if(typeof window.__updateLiveTitle==='function') window.__updateLiveTitle();
   if(typeof _refreshRepositoryAtelierLanguage==='function') _refreshRepositoryAtelierLanguage();
+  if(typeof refreshTimeTraceLabels==='function') refreshTimeTraceLabels();
 }
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
 const _maxVis    = Math.max(1, ...REPOS.map(r=>r.visitors||0));
 const _maxViews  = Math.max(1, ...REPOS.map(r=>r.views||0));
-const _now = Date.now();
-REPOS.forEach(repo=>{
+const _CITY_SEASON_OVERRIDE=_DBG?_QUERY.get('citySeason')||'':'';
+const _CITY_TIME_FIXTURES=_DBG&&_QUERY.get('cityTimeFixtures')==='1';
+const CITY_SEASON=resolveCitySeason(CITY_STATE,_CITY_SEASON_OVERRIDE);
+const CITY_SEASON_STYLE=seasonPalette(CITY_SEASON);
+const _now=CITY_STATE?cityReferenceTimestamp(CITY_STATE,REPOS,Date.now()):Date.now();
+const _cityTint=(color,target,amount)=>new THREE.Color(color).lerp(new THREE.Color(target),amount).getHex();
+REPOS.forEach((repo,index)=>{
   const p = pal(repo.lang);
+  const sampleWear=_CITY_TIME_FIXTURES&&index<3?['recent','faded','mossed'][index]:'';
+  const cityTime=projectCityTime(repo,CITY_STATE,REPOS,{referenceTimestamp:_now,season:CITY_SEASON,
+    wear:sampleWear,archived:_CITY_TIME_FIXTURES&&index===3});
+  repo._wearState=cityTime.state; repo._wearDays=cityTime.daysSincePush; repo._ruin=cityTime.archived;
   repo.label = labelOf(repo.repo);
-  repo.wall = p.wall; repo.roof = p.roof; repo.accent = p.accent; repo.color = hexstr(p.accent);
+  repo.wall=_cityTint(p.wall,CITY_SEASON_STYLE.building,CITY_SEASON_STYLE.buildingMix);
+  repo.roof=_cityTint(p.roof,CITY_SEASON_STYLE.building,CITY_SEASON_STYLE.buildingMix*.65);
+  repo.accent=_cityTint(p.accent,CITY_SEASON_STYLE.building,CITY_SEASON_STYLE.buildingMix*.45);
+  if(repo._wearState==='faded'){ repo.wall=_cityTint(repo.wall,0xb7aa96,.14); repo.roof=_cityTint(repo.roof,0xa98370,.1); repo.accent=_cityTint(repo.accent,0x87918b,.1); }
+  else if(repo._wearState==='mossed'){ repo.wall=_cityTint(repo.wall,0x90977a,.17); repo.roof=_cityTint(repo.roof,0x718064,.16); repo.accent=_cityTint(repo.accent,0x718a6b,.12); }
+  if(repo._ruin){ repo.wall=_cityTint(repo.wall,0xa49e88,.24); repo.roof=_cityTint(repo.roof,0x68775c,.28); repo.accent=_cityTint(repo.accent,0x72865f,.26); }
+  repo.color = hexstr(repo.accent);
   repo.live = repo.home || ''; repo.vuniq = repo.visitors;
   const days = repo.pushed ? Math.max(0,(_now - new Date(repo.pushed).getTime())/86400000) : 3650;
   const recency = Math.exp(-days/120);
@@ -2708,10 +2755,11 @@ REPOS.forEach(repo=>{
       + 0.3*(Math.log1p(repo.clones||0)/Math.log1p(_maxClones))
       + 0.1*(Math.log1p(repo.views||0)/Math.log1p(_maxViews)));
   }
+  if(repo._ruin) repo._activity=Math.min(repo._activity,0.08);
   repo._downtown = (repo.rank||0) < 14;
   // data-driven town events: a recent release throws a party (garland + confetti); open issues fire up a busy workshop (chimney smoke)
   repo._relDays = repo.release_date ? Math.max(0,(_now - new Date(repo.release_date).getTime())/86400000) : null;
-  repo._fresh = repo._relDays!=null && repo._relDays<=60;
+  repo._fresh = !repo._ruin && repo._relDays!=null && repo._relDays<=60;
   repo._issues = repo.open_issues||0;
   repo._busy = Math.min(1, repo._issues/12);
 });
@@ -2809,7 +2857,7 @@ const DETAIL = IS_MOBILE ? (LOW_END ? 0.5 : 0.72) : (LOW_END ? 0.82 : 1);   // s
 const detail = n => Math.max(0, Math.round(n*DETAIL));                       // scale a per-instance count by the device tier
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0xd9e4c8, 150, 460);
+scene.fog = new THREE.Fog(CITY_SEASON_STYLE.fog, 150, 460);
 const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, 0.1, 760);
 const _cappedTargetDpr=(cap,maxPixels)=>Math.min(renderer.getPixelRatio(),cap,Math.sqrt(maxPixels/Math.max(1,innerWidth*innerHeight)));
 const _treeEmissiveTargetDpr=()=>_cappedTargetDpr(_desktopFrameDropGuard()?0.55:0.75,_desktopFrameDropGuard()?700000:1200000);
@@ -3974,7 +4022,7 @@ function zoneOf(repo){
   const aff=ZLANG[repo.lang]||{}; for(const z in aff) s[z]+=aff[z];
   const best=Math.max(s.ai,s.infra,s.web,s.data,s.library);
   const junk=/\b(temp|tmp|test ?bed|xmas|christmas|competition|myipynb|scratch|playground|sandbox)\b/i.test(repo.repo+' '+(repo.desc||''));
-  const age=repo.pushed?Math.max(0,(Date.now()-new Date(repo.pushed).getTime())/86400000):3650;
+  const age=repo.pushed?Math.max(0,(_now-new Date(repo.pushed).getTime())/86400000):3650;
   if(junk || (best<=1 && (repo.stars||0)<=1 && age>420 && (repo.rank||0)>=40)) return 'ruins';
   const order=['ai','infra','library','data','web']; let bz='commons', bs=0;
   for(const z of order){ if(s[z]>bs){ bs=s[z]; bz=z; } }
@@ -4756,6 +4804,8 @@ const GEO_STEM=new THREE.CylinderGeometry(0.03,0.03,0.42,5), GEO_FLOWER=new THRE
       GEO_TRUNK=new THREE.CylinderGeometry(0.12,0.16,0.9,6), GEO_CROWN=new THREE.SphereGeometry(0.7,10,8);
 const MAT_STEM=toon(0x5aa048), MAT_TRUNK=toon(0x7a5230), MAT_CROWN=toon(0x5aa048);
 const FLOWER_MATS=[0xff6f91,0xffd23f,0xff8c42,0xb06fe0,0xffffff].map(c=>basic(c));
+const RUIN_MOSS_GEO=new THREE.SphereGeometry(0.32,8,6), RUIN_MOSS_MAT=toon(0x688354),
+      RUIN_FLOWER_MAT=new THREE.MeshBasicMaterial({color:0xffffff});
 // 🐕 chow-chow — clean rounded shape in 3 coat colors (아이보리 / 갈색 / 검정)
 const CHOW_COATS=[
   { fur:0xe9dcc0, fur2:0xd6c2a0, snout:0xfff3e0, nose:0x2a2018, eye:0x2a2018 },   // ivory
@@ -4936,6 +4986,20 @@ function addRoofTech(g,w,topH){
   sky.rotation.x=-Math.PI/2; sky.position.set(w*0.22,St+0.03,w*0.22); g.add(sky);
   const hv=rbox(w*0.2,0.42,w*0.2,0xbcc3cb,0.03); hv.position.set(-w*0.24,St+0.22,-w*0.22); outline(hv,0.03); g.add(hv);
 }
+function addGentleRuin(g,repo,w,h,d,yr,topH){
+  if(!repo._ruin) return;
+  const seed=hashStr(repo.repo),sample=i=>((Math.imul((seed^(i*0x9e3779b9))>>>0,2654435761)>>>0)/4294967296);
+  const mossN=LOW_END?5:9,moss=new THREE.InstancedMesh(RUIN_MOSS_GEO,RUIN_MOSS_MAT,mossN),dummy=new THREE.Object3D();
+  for(let i=0;i<mossN;i++){ const roof=i>=mossN-2,x=(sample(i)-.5)*w*.72,y=roof?topH+.22:h*(.18+sample(i+13)*.7),z=roof?(sample(i+23)-.5)*d*.55:d*.5+.14;
+    dummy.position.set(x,y,z); dummy.scale.set(.7+sample(i+31)*.9,.22+sample(i+41)*.28,.52+sample(i+53)*.62); dummy.rotation.set(sample(i+61)*.5,sample(i+71)*Math.PI,.12); dummy.updateMatrix(); moss.setMatrixAt(i,dummy.matrix); }
+  moss.name=`RuinMoss_${repo.repo}`; moss.castShadow=false; moss.receiveShadow=true; g.add(moss);
+  const flowerN=LOW_END?4:7,flowers=new THREE.InstancedMesh(GEO_FLOWER,RUIN_FLOWER_MAT,flowerN),colors=[0xf0d56d,0xe7a3bd,0xb9a7dd,0xf7eee1];
+  for(let i=0;i<flowerN;i++){ const side=i%2?-1:1,x=side*(.7+sample(i+83)*Math.max(1,yr*.55)),z=d*.5+.82+sample(i+97)*1.5;
+    dummy.position.set(x,.18+sample(i+109)*.18,z); const s=.8+sample(i+127)*.8; dummy.scale.setScalar(s); dummy.rotation.set(0,sample(i+139)*Math.PI,0); dummy.updateMatrix();
+    flowers.setMatrixAt(i,dummy.matrix); flowers.setColorAt(i,new THREE.Color(colors[i%colors.length])); }
+  flowers.name=`RuinWildflowers_${repo.repo}`; flowers.castShadow=false; g.add(flowers);
+  repo._ruinDetails={moss:mossN,flowers:flowerN,draws:2};
+}
 function makeBuilding(repo){
   repo._cat = repoCategory(repo);
   const typ = typology(repo);
@@ -4996,7 +5060,8 @@ function makeBuilding(repo){
     addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, wx); addWing(g, w*0.5, wh, d*0.82, repo.wall, repo.roof, -wx); }
   // central roof
   repo._lodSpec={kind,roof:typ.roof,tier:typ.tier,w,h,d,topH,topW,wall:repo.wall,roofColor:repo.roof,accent:repo.accent,entranceColor:(CATS[repo._cat]||CATS.Software).color,
-    yardRadius:yr,yardColor:repo._downtown?0xcbb888:0x86c069,hedgeColor:repo._downtown?0xb7a274:0x5d9e46,rich,fancy,flags,stars:repo.stars||0};
+    yardRadius:yr,yardColor:repo._downtown?0xcbb888:0x86c069,hedgeColor:repo._downtown?0xb7a274:0x5d9e46,rich,fancy,flags,stars:repo.stars||0,
+    wear:repo._wearState,ruin:repo._ruin};
   const cameraRoofRadius=topW*({flat:.73,hip:.9,gambrel:.96,mansard:1,aframe:.82,shed:.76,barrel:.74}[typ.roof]||.95);
   const cameraRoofRise=typ.roof==='flat'?1.1:typ.roof==='hip'?1.75:typ.roof==='gambrel'?2.35:typ.roof==='mansard'?2.32:
     typ.roof==='aframe'?2.22:typ.roof==='shed'?1.55:typ.roof==='barrel'?topW*.52+0.12:2.65;
@@ -5013,8 +5078,8 @@ function makeBuilding(repo){
   const roof=makeRoof(typ.roof, topW, topH, repo.roof); g.add(roof); repo._roof=roof;
   const flatTop = (typ.roof==='flat');
   if(typ.roof!=='flat' && typ.roof!=='aframe'){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+1.4,d*0.22); outline(chim,0.04); g.add(chim);
-    if(rich>0.18 || repo._busy>0) addSmoke(g, w*0.32, topH+2.3, d*0.22, repo._busy); }
-  else if(repo._busy>0){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+0.9,d*0.22); outline(chim,0.04); g.add(chim);
+    if(!repo._ruin&&(rich>0.18 || repo._busy>0)) addSmoke(g, w*0.32, topH+2.3, d*0.22, repo._busy); }
+  else if(!repo._ruin&&repo._busy>0){ const chim=rbox(0.55,1.2,0.55,0x6e4a32,0.08); chim.position.set(w*0.32,topH+0.9,d*0.22); outline(chim,0.04); g.add(chim);
     addSmoke(g, w*0.32, topH+1.8, d*0.22, repo._busy); }   // busy workshop still smokes even under a flat/aframe roof
   if(kind==='tower'){ const tank=new THREE.Mesh(new THREE.CylinderGeometry(w*0.16,w*0.16,0.9,10), toon(0x8a98a6)); tank.position.set(w*0.2,h+1.0,-d*0.18); outline(tank,0.04); g.add(tank); }
   if(kind==='house' && typ.roof!=='shed' && typ.roof!=='aframe'){ addDormer(g,d,topH+0.55); }
@@ -5040,7 +5105,7 @@ function makeBuilding(repo){
     const fr=rbox(1.18,1.30,0.16,0xeadfca,0.05); fr.position.set(wx,wy,d/2+0.01); g.add(fr);
     const sill=rbox(1.32,0.16,0.30,0xe0d2b4,0.04); sill.position.set(wx,wy-0.74,d/2+0.10); g.add(sill);
     const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.96,1.06), new THREE.MeshBasicMaterial({map:_winTex,transparent:true,color:DAY_GLASS}));
-    gl.position.set(wx,wy,d/2+0.11); gl.userData={ lit: Math.random()<(0.3+0.55*repo._activity), j:0.82+Math.random()*0.32 }; g.add(gl); repo._windows.push(gl);
+    gl.position.set(wx,wy,d/2+0.11); gl.userData={ lit: !repo._ruin&&Math.random()<(0.3+0.55*repo._activity), j:0.82+Math.random()*0.32 }; g.add(gl); repo._windows.push(gl);
     // operable shutters flank windows on traditional pitched-roof homes — Provence pastel (lavender/sage/blue)
     if(typ.tier>=2 && typ.roof!=='flat' && typ.roof!=='shed' && kind!=='tower'){ const shCol=shade(repo.accent,-6), off=0.72;
       [-1,1].forEach(s=>{ const sx=wx+s*off; if(Math.abs(sx)+0.16 > w*0.5-0.05) return;
@@ -5065,11 +5130,13 @@ function makeBuilding(repo){
   if(kind==='manor'||kind==='mansion'){ signW=3.5; signH=1.19; signY=3.66; signZ=d/2+1.72; }  // on the portico frieze, in front of the columns
   else if(kind==='house'){ signY=3.24; signZ=d/2+0.46; }                                       // above the porch roof
   else if(kind==='shop'){ signY=3.04; signZ=d/2+0.36; }                                        // above the shop awning
-  const board=new THREE.Mesh(new THREE.PlaneGeometry(signW,signH), new THREE.MeshBasicMaterial({map:signTexture(repo.label,(CATS[repo._cat]||CATS.Software).color),transparent:true}));
+  const boardAccent=repo._ruin?0x6d8257:(CATS[repo._cat]||CATS.Software).color;
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(signW,signH), new THREE.MeshBasicMaterial({map:signTexture(repo.label,boardAccent),transparent:true}));
   board.position.set(0,signY,signZ); g.add(board); repo._sign=board;
   // category emblem high on the front, facing street
   const emb=new THREE.Mesh(new THREE.PlaneGeometry(1.1,1.1), new THREE.MeshBasicMaterial({map:emblemTexture(repo._cat),transparent:true,depthWrite:false}));
   emb.position.set(0, h+(typ.roof==='flat'?0.62:1.05), d/2+0.06); g.add(emb); repo._emblem=emb;
+  addGentleRuin(g,repo,w,h,d,yr,topH);
   // destination ring on the plot
   const ring=new THREE.Mesh(new THREE.RingGeometry(Math.max(2,yr-1.4),Math.max(2.7,yr-0.8),40),
     new THREE.MeshBasicMaterial({color:repo.color,transparent:true,opacity:.42,side:THREE.DoubleSide}));
@@ -5083,6 +5150,24 @@ function makeBuilding(repo){
   repo._group=g; repo._pos=new THREE.Vector3(repo._x,0,repo._z); repo._visited=false; buildings.push(repo);
 }
 REPOS.forEach(makeBuilding);
+function _seasonCopyKey(){ return {spring:'seasonSpring',summer:'seasonSummer',autumn:'seasonAutumn',winter:'seasonWinter'}[CITY_SEASON]||'seasonSummer'; }
+function _wearCopyKey(repo){ return {recent:'wearRecent',faded:'wearFaded',mossed:'wearMossed'}[repo?._wearState]||'wearMossed'; }
+function refreshRepoCardTimeTrace(repo){
+  if(!repo) return;
+  const wear=document.getElementById('cardWearChip'),season=document.getElementById('cardSeasonChip'),archive=document.getElementById('cardArchiveChip'),note=document.getElementById('cardTimeTrace');
+  if(wear) wear.textContent=({recent:'✨',faded:'☀️',mossed:'🌿'}[repo._wearState]||'🌿')+' '+t(_wearCopyKey(repo));
+  if(season) season.textContent='◌ '+t(_seasonCopyKey())+' · '+t('seasonCity');
+  if(archive){ archive.hidden=!repo._ruin; archive.textContent='🌼 '+t('ruinStatus'); }
+  if(note){ note.hidden=!repo._ruin; note.textContent=repo._ruin?t('ruinNote'):''; }
+}
+function refreshTimeTraceLabels(){
+  for(const repo of REPOS){ if(!repo._sign) continue; const accent=repo._ruin?0x6d8257:(CATS[repo._cat]||CATS.Software).color,old=repo._sign.material.map;
+    repo._sign.material.map=signTexture(repo.label,accent); repo._sign.material.needsUpdate=true; if(old) old.dispose(); }
+  const list=document.getElementById('ruinNameplates'); if(list){ list.setAttribute('aria-label',t('ruinListAria'));
+    list.replaceChildren(...REPOS.filter(repo=>repo._ruin).map(repo=>{ const item=document.createElement('span'); item.setAttribute('role','listitem'); item.textContent=repo.label+' — '+t('ruinStatus'); return item; })); }
+  const active=REPOS.find(repo=>repo.repo===(document.getElementById('modal')?._repoKey||'')); if(active) refreshRepoCardTimeTrace(active);
+}
+refreshTimeTraceLabels();
 
 /*BUILDING_LOD_PROTOTYPE:START*/
 const BUILDING_LOD_NIGHT={value:0};
@@ -5210,6 +5295,9 @@ function _buildingLodReadabilityGeometry(repo){
   const banners=Math.min(3,Math.max(0,Number(spec.flags)||0)); for(let i=0;i<banners;i++) addBox(.18,.48,.08,(i-(banners-1)*.5)*.5,spec.h-.42,front+.14,i%2?accent:entrance,'metric-banner');
   const gardenN=(spec.rich??0)>.66?3:(spec.rich??0)>.22?2:1; for(let i=0;i<gardenN;i++){ const side=i%2?-1:1,x=side*(1.45+Math.floor(i/2)*.48);
     addBox(.72,.18,.54,x,.12,front+1.4,hedgeColor,'garden-bed'); addBox(.16,.28,.16,x,.31,front+1.4,i%2?accent:warm,'garden-bloom'); }
+  if(spec.ruin){ addBox(spec.w*.66,.18,.18,-spec.w*.08,spec.h*.72,front+.17,0x688354,'ruin-ivy');
+    addBox(spec.w*.38,.16,.2,spec.w*.2,spec.topH+.16,0,0x718064,'ruin-roof-moss');
+    for(let i=-1;i<=1;i++) addBox(.16,.26,.16,i*.54,.22,front+1.12,i===0?0xe7a3bd:0xf0d56d,'ruin-wildflower'); }
   const geometry=new THREE.BufferGeometry(); geometry.setIndex(indices);
   geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3)); geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
   geometry.computeBoundingBox(); geometry.computeBoundingSphere(); geometry.userData={sources:[...sources],kind:spec.kind,roof:spec.roof}; return geometry;
@@ -6556,8 +6644,10 @@ const SKY_KEYS=[
   {t:0.50, top:0x3f93d6,mid:0xa9d4ea,bot:0xf8e4bf, sunI:1.50,sunC:0xffd89a, hemiI:0.85,hemiC:0xe0ecda,hemiG:0x8e9a66, fog:0xd9e4c8, exp:1.08, rimC:0xcfeaff,rimS:0.16,rimP:2.8, sunUp:0.95,sunA:0.0, sunOp:1.0},
   {t:0.75, top:0x2a3a6e,mid:0xc2697e,bot:0xffa862, sunI:0.85,sunC:0xff985a, hemiI:0.62,hemiC:0xc88a78,hemiG:0x6a5848, fog:0xc8845a, exp:1.08, rimC:0xffb088,rimS:0.26,rimP:2.4, sunUp:0.08,sunA:1.35, sunOp:0.9},
 ];
-SKY_KEYS.forEach(k=>{ k.cTop=new THREE.Color(k.top); k.cMid=new THREE.Color(k.mid); k.cBot=new THREE.Color(k.bot);
-  k.cSun=new THREE.Color(k.sunC); k.cHemi=new THREE.Color(k.hemiC); k.cHemiG=new THREE.Color(k.hemiG); k.cFog=new THREE.Color(k.fog); k.cRim=new THREE.Color(k.rimC); });
+const _seasonSky=new THREE.Color(CITY_SEASON_STYLE.sky),_seasonFog=new THREE.Color(CITY_SEASON_STYLE.fog),_seasonLight=new THREE.Color(CITY_SEASON_STYLE.light);
+SKY_KEYS.forEach(k=>{ k.cTop=new THREE.Color(k.top).lerp(_seasonSky,CITY_SEASON_STYLE.skyMix); k.cMid=new THREE.Color(k.mid).lerp(_seasonSky,CITY_SEASON_STYLE.skyMix*.72); k.cBot=new THREE.Color(k.bot).lerp(_seasonSky,CITY_SEASON_STYLE.skyMix*.48);
+  k.cSun=new THREE.Color(k.sunC).lerp(_seasonLight,CITY_SEASON_STYLE.lightMix); k.cHemi=new THREE.Color(k.hemiC).lerp(_seasonLight,CITY_SEASON_STYLE.lightMix);
+  k.cHemiG=new THREE.Color(k.hemiG).lerp(_seasonFog,CITY_SEASON_STYLE.fogMix*.45); k.cFog=new THREE.Color(k.fog).lerp(_seasonFog,CITY_SEASON_STYLE.fogMix); k.cRim=new THREE.Color(k.rimC); });
 
 // paint sky gradient / lights / fog / sun-disc for a continuous time-of-day t∈[0,1)
 function applySky(t,forceShadow=false){
@@ -6603,13 +6693,13 @@ function setNightState(night){
   npcFaces.forEach(m=>m.emissive.setHex(night?0x4a3a24:0x000000));   // softer than the player so the hero still reads brightest
   buildings.forEach(b=>{
     (b._windows||[]).forEach(w=>{ const m=w.material;
-      if(night){ if(w.userData.lit){ m.map=_roomTex; m.color.copy(_cRoom).multiplyScalar((0.5+0.5*b._activity)*w.userData.j); }
+      if(night){ if(!b._ruin&&w.userData.lit){ m.map=_roomTex; m.color.copy(_cRoom).multiplyScalar((0.5+0.5*b._activity)*w.userData.j); }
                  else { m.map=_winTex; m.color.setHex(0x2b3442); } }
       else { m.map=_winTex; m.color.setHex(DAY_GLASS); }
       m.needsUpdate=true; });
-    if(b._body){ if(night) b._body.material.emissive.setRGB(0.5,0.32,0.12).multiplyScalar(0.45*b._activity);
+    if(b._body){ if(night&&!b._ruin) b._body.material.emissive.setRGB(0.5,0.32,0.12).multiplyScalar(0.45*b._activity);
                  else b._body.material.emissive.setHex(0x000000); }
-    if(b._glowPool) b._glowPool.material.opacity = night ? (0.06+0.5*b._activity) : 0;
+    if(b._glowPool) b._glowPool.material.opacity = night&&!b._ruin ? (0.06+0.5*b._activity) : 0;
   });
   libNightBoost.forEach(o=>{ o.material.opacity = night ? o._n : o._d; });
   if(LIB&&LIB._group) LIB._group.traverse(o=>{ if(o.userData&&o.userData.libGlow!==undefined&&o.material&&o.material.emissive) o.material.emissive.setHex(night?o.userData.libGlow:0x000000); });
@@ -9143,7 +9233,8 @@ window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=re
 
 function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   starTrailVisit(repo); lanternWatchVisit(repo); courseMark('repo',repo.repo);
-  modalOpen=true; modal.classList.add('show'); modal._repoKey=repo.repo||null; setRepoHash(repo);
+  if(!modal.classList.contains('show')) modal._previousFocus=document.activeElement;
+  modalOpen=true; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal._repoKey=repo.repo||null; setRepoHash(repo);
   repoRouteVisit(repo);
   document.getElementById('cardTop').style.background=repo.color;
   document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
@@ -9165,7 +9256,9 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
     (repo.open_issues?`<span class="chip">◎ <b>${repo.open_issues}</b> issues</span>`:'')+
     (repo.license?`<span class="chip">⚖ <b>${repo.license}</b></span>`:'')+
     (repo.release_tag?`<span class="chip" title="${repo.release_date||''}">🏷 <b>${repo.release_tag}</b></span>`:'')+
-    (repo.archived?`<span class="chip">📦 ${LANG==='ko'?'보관됨':'archived'}</span>`:'');
+    `<span class="chip" id="cardWearChip"></span><span class="chip" id="cardSeasonChip"></span>`+
+    `<span class="chip" id="cardArchiveChip"${repo._ruin?'':' hidden'}></span>`;
+  refreshRepoCardTimeTrace(repo);
   const mnote=document.getElementById('cardMetricNote');
   if(mnote) mnote.textContent = repo.trafficKnown===false ? t('publicMetricNote') : t('metricNote');
   const since=document.getElementById('cardSince');
@@ -9196,8 +9289,9 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
   track('repo_card_open',{repo:repo.repo});
   renderCardAsk(repo);
-  markVisited(repo); }
-function closeCard(){ modalOpen=false; modal.classList.remove('show'); modal._repoKey=null; clearRepoHash(); flushStarNudge(); }
+  markVisited(repo); setTimeout(()=>{ const close=document.getElementById('closeBtn'); if(close) close.focus(); },0); }
+function closeCard(){ const previous=modal._previousFocus; modalOpen=false; modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); modal._repoKey=null; modal._previousFocus=null; clearRepoHash(); flushStarNudge();
+  if(previous&&previous.isConnected&&typeof previous.focus==='function') previous.focus(); }
 /* ───────── 🚕 Repo-card actions — reuse the existing taxi/chat flow (no new backend) ───────── */
 function _taxiNpc(){ return (typeof NPCS!=='undefined'&&NPCS)?(NPCS.find(n=>n.kind==='taxi')||activeNpc||NPCS[0]):activeNpc; }
 function askInChat(q){ if(!q) return; const npc=_taxiNpc(); closeCard();   // routes through taxi → localIntent/grounded, same as typing it
@@ -9265,6 +9359,10 @@ function renderCardAsk(repo){ const box=document.getElementById('cardAsk'); if(!
   const sb=box.querySelector('[data-ca="similar"]'); if(sb) sb.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'similar'}); cardSimilar(repo); };
   box.querySelectorAll('.caChip').forEach(el=>{ el.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'chip'}); askInChat(el.dataset.caq); }; }); }
 modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
+modal.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); closeCard(); return; } if(e.key!=='Tab') return;
+  const items=[...modal.querySelectorAll('button:not([disabled]),a[href]')].filter(item=>!item.hidden); if(!items.length) return;
+  const first=items[0],last=items[items.length-1]; if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } });
 
 /* ---- Contribution Library panel ---- */
 const libModal=document.getElementById('libModal');
@@ -9425,8 +9523,9 @@ creatorShare.onclick=async()=>{ const ok=await _copyPostcardText(_postcardShareU
 creatorStar.onclick=()=>{ track('project_star_click',{source:'creator_hall'}); _starNudgeClose('clicked'); };
 window.__creatorLangRefresh=()=>renderCreatorHall();
 
-/* a visited house lights up for good — every window lit + a warm lantern glow above it (day & night) */
+/* a visited house lights up for good — active windows glow while ruins keep their quiet, unlit identity */
 function lightVisitedHouse(repo, defer){ if(!repo||repo._litVisited) return; repo._litVisited=true;
+  if(repo._ruin){ (repo._windows||[]).forEach(w=>{ w.userData.lit=false; }); _syncBuildingLodFacade(repo); return; }
   (repo._windows||[]).forEach(w=>{ w.userData.lit=true; });
   _syncBuildingLodFacade(repo);
   if(repo._group && !repo._visitMark){ const h=repo._h||6;
@@ -12151,7 +12250,10 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__ride=()=>ride?ride.phase:null; window.__taxiPos=()=>({x:+taxi.position.x.toFixed(1),z:+taxi.position.z.toFixed(1),vis:model.visible});
   window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; };
   window.__taxi=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name)); if(r&&r._pos){ taxiTo(r); return true; } return false; };
-  window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom}));
+  window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom,wear:r._wearState,ruin:!!r._ruin}));
+  window.__cityTime=()=>({schema:CITY_STATE?.schema||null,version:CITY_STATE?.version||null,season:CITY_SEASON,reference:new Date(_now).toISOString(),
+    fallback:!!CITY_STATE?.season?.fallback?.used,wear:REPOS.reduce((out,repo)=>{ out[repo._wearState]=(out[repo._wearState]||0)+1; return out; },{}),
+    ruins:REPOS.filter(repo=>repo._ruin).map(repo=>({repo:repo.repo,details:repo._ruinDetails||null})),roots:CITY_STATE?.roots?.length||0,fixture:_CITY_TIME_FIXTURES});
   window.__card=(name)=>{ const r=repoByKey(name); if(r){ openCard(r); return {repo:r.repo,license:r.license,open_issues:r.open_issues,release_tag:r.release_tag,archived:r.archived,chips:[...document.querySelectorAll('#cardChips .chip')].map(c=>c.textContent.trim())}; } return null; };
   window.__modal=()=>modalOpen;
   window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, total:allCountEl.textContent, entriesToday:entryCountEl?entryCountEl.textContent:null, entriesTotal:entryTotalCountEl?entryTotalCountEl.textContent:null, ws:rtSock?rtSock.readyState:-1,join:_lastRealtimeJoinPose});

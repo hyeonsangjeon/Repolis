@@ -61,6 +61,13 @@ import {
   projectContributionQuest,
   selectContributionQuests
 } from '../assets/contribution-quests.js';
+import {
+  WEAR_THRESHOLDS_DAYS,
+  classifyBuildingWear,
+  cityReferenceTimestamp,
+  resolveCitySeason,
+  seasonPalette
+} from '../assets/city-time.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -94,6 +101,12 @@ const TOWN_GROWTH_SRC = readFileSync(join(ROOT, 'assets/town-growth.js'), 'utf8'
 const REPO_PORTAL_SRC = readFileSync(join(ROOT, 'assets/repo-portal.js'), 'utf8');
 const REPO_ROUTE_SRC = readFileSync(join(ROOT, 'assets/repo-route.js'), 'utf8');
 const CONTRIBUTION_QUEST_SRC = readFileSync(join(ROOT, 'assets/contribution-quests.js'), 'utf8');
+const CITY_TIME_SRC = readFileSync(join(ROOT, 'assets/city-time.js'), 'utf8');
+const CITY_STATE = JSON.parse(readFileSync(join(ROOT, 'data/city-state.json'), 'utf8'));
+const CITY_STATE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/city-state.schema.json'), 'utf8'));
+const CITY_REPOS = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
+const CITY_STATE_BUILDER = readFileSync(join(ROOT, 'scripts/city_state.py'), 'utf8');
+const CITY_STATE_VALIDATOR = readFileSync(join(ROOT, 'scripts/validate_city_state.py'), 'utf8');
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -238,6 +251,79 @@ ok(/GTM_DIR=data\/towns\/\$REPO_OWNER/.test(REFRESH_WORKFLOW)
 ok(/\/users\/\{OWNER\}\/repos\?per_page=100&type=owner/.test(REPO_BUILDER)
   &&/Public owner endpoint works with the built-in Actions token/.test(REPO_BUILDER), 'builder lists public owner repos without requiring an authenticated user endpoint');
 ok(/Path\("data"\) \/ "towns" \/ OWNER/.test(REPO_BUILDER), 'manual non-upstream builds default to an owner-scoped traffic root');
+
+group('deterministic city state — generated time, wear, ruins, and season');
+ok(CITY_STATE.schema==='repolis.city-state' && CITY_STATE.version===1
+  &&['era','season','stats','last_sap_flow','roots'].every(key=>key in CITY_STATE),
+  'generated city state exposes the versioned minimum contract');
+ok(CITY_STATE_SCHEMA.$id==='https://hyeonsangjeon.github.io/Repolis/data/city-state.schema.json'
+  &&CITY_STATE_SCHEMA.additionalProperties===false
+  &&CITY_STATE_SCHEMA.required.every(key=>key in CITY_STATE),
+  'city-state schema is strict and matches the checked-in artifact');
+const archivedCityRepos=CITY_REPOS.filter(repo=>repo.archived);
+ok(CITY_STATE.stats.repository_count===CITY_REPOS.length
+  &&CITY_STATE.stats.active_repository_count+CITY_STATE.stats.archived_repository_count===CITY_REPOS.length
+  &&CITY_STATE.stats.archived_repository_count===archivedCityRepos.length,
+  'city-state repository totals reconcile with repos.json');
+ok(CITY_STATE.stats.total_stars===CITY_REPOS.reduce((sum,repo)=>sum+(repo.stars||0),0)
+  &&CITY_STATE.stats.total_forks===CITY_REPOS.reduce((sum,repo)=>sum+(repo.forks||0),0),
+  'city-state public star and fork totals reconcile with repos.json');
+ok(CITY_STATE.stats.commit_history.available===false
+  &&CITY_STATE.stats.commit_history.total===null
+  &&/not complete commit history/i.test(CITY_STATE.stats.commit_history.limitation),
+  'unavailable commit history is explicit and never estimated');
+ok(CITY_STATE.roots.length===archivedCityRepos.length
+  &&CITY_STATE.roots.every(root=>archivedCityRepos.some(repo=>repo.repo===root.repo)),
+  'roots contain every and only archived public repository');
+ok(/sort_keys=True/.test(CITY_STATE_BUILDER)
+  &&/schema_path/.test(CITY_STATE_VALIDATOR)
+  &&/CITY_STATE_AS_OF=\$\(date -u \+%FT00:00:00Z\)/.test(REFRESH_WORKFLOW)
+  &&/scripts\/test_city_state\.py/.test(REFRESH_WORKFLOW)
+  &&/scripts\/validate_city_state\.py/.test(REFRESH_WORKFLOW)
+  &&/scripts\/test-city-time\.mjs/.test(REFRESH_WORKFLOW),
+  'stable serialization, schema validation, and fixture tests gate daily refresh');
+const cityReference=cityReferenceTimestamp(CITY_STATE,CITY_REPOS);
+const cityReferenceDate=new Date(cityReference).toISOString().slice(0,10);
+const cityDateBefore=days=>new Date(cityReference-days*86400000).toISOString().slice(0,10);
+ok(cityReferenceDate===CITY_STATE.season.inputs.reference_date
+  &&cityReferenceDate===CITY_STATE.era.as_of,
+  'runtime reference date agrees with the generated artifact');
+ok(WEAR_THRESHOLDS_DAYS.recent===90 && WEAR_THRESHOLDS_DAYS.faded===365
+  &&classifyBuildingWear({pushed:cityDateBefore(0)},cityReference).state==='recent'
+  &&classifyBuildingWear({pushed:cityDateBefore(120)},cityReference).state==='faded'
+  &&classifyBuildingWear({pushed:cityDateBefore(500)},cityReference).state==='mossed'
+  &&classifyBuildingWear({pushed:cityDateBefore(0),archived:true},cityReference).archived,
+  'wear thresholds and archived ruin state are deterministic');
+ok(resolveCitySeason(CITY_STATE)===CITY_STATE.season.value
+  &&resolveCitySeason({...CITY_STATE,season:{...CITY_STATE.season,value:'spring'}})==='spring'
+  &&resolveCitySeason({...CITY_STATE,season:{...CITY_STATE.season,value:'winter'}})==='winter'
+  &&resolveCitySeason({season:{value:'not-a-season'}})==='summer'
+  &&seasonPalette('spring').sky!==seasonPalette('winter').sky,
+  'season accepts four generated values, falls back neutrally, and has distinct fixture palettes');
+ok(!/\bfetch\s*\(|api\.github|workers\.dev|\/taxi\b/i.test(CITY_TIME_SRC),
+  'city-time projection is local and adds no runtime API, LLM, or backend call');
+ok(/fetch\('data\/city-state\.json',\{cache:'no-cache'\}\)/.test(HTML)
+  &&/cityStateLoad/.test(HTML)
+  &&/scene\.fog = new THREE\.Fog\(CITY_SEASON_STYLE\.fog/.test(HTML)
+  &&/SKY_KEYS\.forEach\(k=>/.test(HTML)
+  &&/projectCityTime\(repo,CITY_STATE,REPOS/.test(HTML),
+  'owner runtime loads static city state before applying season and wear');
+ok(/function addGentleRuin\(g,repo,w,h,d,yr,topH\)/.test(HTML)
+  &&/repo\._wearState=cityTime\.state/.test(HTML)
+  &&/wear:repo\._wearState,ruin:repo\._ruin/.test(HTML)
+  &&/spec\.ruin/.test(HTML)
+  &&/RUIN_FLOWER_MAT=new THREE\.MeshBasicMaterial\(\{color:0xffffff\}\)/.test(HTML),
+  'gentle ruin identity survives full and LOD building paths');
+ok(/if\(repo\._ruin\)\{ \(repo\._windows\|\|\[\]\)\.forEach\(w=>\{ w\.userData\.lit=false; \}\); _syncBuildingLodFacade\(repo\); return; \}/.test(HTML),
+  'visiting a ruin cannot relight its full, mid, or far LOD windows');
+ok((HTML.match(/wearRecent:/g)||[]).length===2
+  &&(HTML.match(/wearFaded:/g)||[]).length===2
+  &&(HTML.match(/wearMossed:/g)||[]).length===2
+  &&(HTML.match(/ruinNote:/g)||[]).length===2
+  &&(HTML.match(/seasonSpring:/g)||[]).length===2,
+  'wear, ruin, and season copy is bilingual');
+ok(/citySeason/.test(HTML)&&/cityTimeFixtures/.test(HTML)&&/prefers-reduced-motion:reduce/.test(HTML),
+  'debug fixtures and the existing reduced-motion contract cover static time treatments');
 
 group('Repo Portal — one repository becomes the first shareable destination');
 const portalUser=parseRepoPortalInput('@Octo-Cat');
@@ -900,9 +986,9 @@ ok(/current public issues ranked for approachability, each connected to its real
   'READMEs, domain model, limitations, manifest, LLM index, and scored BOLT decision make the contribution loop discoverable');
 
 const runtimeLocalFiles = [
-  'index.html','repolis.config.js','scholars.js','repos.json','assets/contribution-library.json',
+  'index.html','repolis.config.js','scholars.js','repos.json','data/city-state.json','assets/contribution-library.json',
   'assets/world-tree/createRepolisHero.js','assets/camera-obstruction.js','assets/canal-ferry.js',
-  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js','assets/repo-route.js','assets/contribution-quests.js',
+  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js','assets/repo-route.js','assets/contribution-quests.js','assets/city-time.js',
   'council/council.config.json','council/engine.js','council/fixtures.js','council/guards.js','council/live.js'
 ];
 const runtimeLocalBytes = runtimeLocalFiles.reduce((sum,file)=>sum+readFileSync(join(ROOT,file)).length,0);
@@ -1435,6 +1521,8 @@ const zcSrc = (HTML.match(/\/\*ZONECLASSIFIER:START\*\/([\s\S]*?)\/\*ZONECLASSIF
 ok(zcSrc.length > 0, 'ZONECLASSIFIER block extractable from index.html');
 ok(/const ZONE_CAT\s*=\s*\[/.test(zcSrc), 'ZONE_CAT district catalog exists');
 ok(/function zoneOf\(repo\)/.test(zcSrc), 'zoneOf() classifier exists');
+ok(/_now-new Date\(repo\.pushed\)/.test(zcSrc)&&!/Date\.now\(\)/.test(zcSrc),
+  'district age uses the generated city reference instead of the viewer clock');
 ok(/const ZONE_SYN\s*=\s*\{/.test(HTML), 'ZONE_SYN travel-synonym namespace exists (separate from repoByKey)');
 ok(/function districtNav\(q\)\{/.test(HTML) && /const dz=districtNav\(q\);/.test(HTML), 'districtNav wired into _coreIntent (every taxi mode)');
 ok(/function zoneOf\(repo\)/.test(HTML) && /REPOS\.forEach\(r=>\{\s*r\._zone\s*=\s*zoneOf\(r\)/.test(HTML), 'every repo is assigned r._zone at build');
@@ -1450,7 +1538,7 @@ if (zcSrc && normSrc) {
   try {
     const rj = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
     repos = Array.isArray(rj) ? rj : (rj.repos || []);
-    const built = new Function(`${zcSrc}\nreturn { ZONE_CAT, zoneOf };`)();
+    const built = new Function('_now', `${zcSrc}\nreturn { ZONE_CAT, zoneOf };`)(cityReference);
     CAT = built.ZONE_CAT; zoneOf = built.zoneOf;
   } catch (e) { console.log('  ✗ zoneOf harness: ' + e.message); }
   ok(!!(zoneOf && CAT && repos.length), 'zoneOf + ZONE_CAT + repos.json loaded for behavioral check');

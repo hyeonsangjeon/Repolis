@@ -2,8 +2,8 @@
 """Repolis data builder.
 
 Aggregates the GitHub traffic history collected by ``scripts/collect_traffic.py``
-(stored in ``data/logs/``) with live repo metadata, and writes ``repos.json`` —
-the data that powers the Repolis 3D city (one building per repo).
+(stored in ``data/logs/``) with live repo metadata, and writes ``repos.json`` and
+``data/city-state.json`` — the data that powers the Repolis 3D city.
 
 Only PUBLIC repos are included, so the public site never exposes private
 repository names: every repo the owner created, plus any fork the owner has
@@ -16,6 +16,9 @@ Env vars:
   GTM_DIR     Directory holding the collected logs/ tree. Defaults to data for
               upstream and data/towns/<owner> for every other owner.
   OUT         Output path (default: repos.json)
+  CITY_STATE_AS_OF  Optional ISO-8601 city reference time. The daily workflow
+                   supplies its UTC run day; local builds fall back to the
+                   newest reproducible public source timestamp.
   GH_TOKEN    Token used by `gh` (PAT that can list the repos)
 """
 import csv
@@ -24,6 +27,8 @@ import math
 import os
 import subprocess
 from pathlib import Path
+
+from city_state import build_city_state, write_city_state
 
 def resolve_owner():
     configured = os.environ.get("REPO_OWNER", "").strip()
@@ -47,6 +52,8 @@ GTM_DIR = Path(_configured_gtm) if _configured_gtm else (
     Path("data") if OWNER.lower() == UPSTREAM_OWNER else Path("data") / "towns" / OWNER
 )
 OUT = Path(os.environ.get("OUT", "repos.json"))
+CITY_STATE_OUT = Path(os.environ.get("CITY_STATE_OUT", "data/city-state.json"))
+CITY_STATE_AS_OF = os.environ.get("CITY_STATE_AS_OF", "").strip() or None
 
 
 def gh_api(path):
@@ -158,6 +165,7 @@ def build():
     repos = gh_api(f"/users/{OWNER}/repos?per_page=100&type=owner&sort=full_name")
     social = social_map(OWNER)
     out = []
+    source_timestamps = {}
     for r in repos:
         if r.get("private"):
             continue
@@ -178,6 +186,10 @@ def build():
         if lic_name in ("NOASSERTION", "NONE"):
             lic_name = ""
         rel = latest_release(full)
+        source_timestamps[name] = max(
+            (value for value in (r.get("updated_at"), r.get("pushed_at"), r.get("created_at")) if value),
+            default="",
+        )
         score = (
             math.log1p(visitors) * 1.0
             + math.log1p(clones) * 0.7
@@ -220,11 +232,17 @@ def build():
         o["rank"] = i
 
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
+    city_state = build_city_state(out, source_timestamps, as_of=CITY_STATE_AS_OF)
+    write_city_state(CITY_STATE_OUT, city_state)
 
     downtown = sum(1 for o in out if o["rank"] < 14)
     tracked_n = sum(1 for o in out if o["tracked"])
     forks_n = sum(1 for o in out if o.get("fork"))
     print(f"wrote {OUT} with {len(out)} public repos ({forks_n} forks I committed to)")
+    print(
+        f"wrote {CITY_STATE_OUT} schema={city_state['version']} "
+        f"season={city_state['season']['value']} roots={len(city_state['roots'])}"
+    )
     print(f"  downtown(rank<14)={downtown} hometown={len(out) - downtown} tracked={tracked_n}")
 
 

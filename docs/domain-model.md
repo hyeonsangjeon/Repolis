@@ -47,10 +47,10 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | `size` | number | Repo size (KB). |
 | `open_issues` | number | Shown as a live badge on the repo card. |
 | `license` | string | Shown as a badge. |
-| `archived` | boolean | Archived repos render muted. |
+| `archived` | boolean | Archived repos remain in place as warm, gentle ruins with their identity intact. |
 | `default_branch` | string | e.g. `main`. |
 | `release_tag` / `release_date` | string | Latest release badge. |
-| `created` / `pushed` | string | Timestamps; `pushed` feeds night-glow recency. |
+| `created` / `pushed` | string | Timestamps; `pushed` feeds night-glow recency and deterministic building wear. |
 | `tracked` / `first_seen` | string | When the house was "built" (drives the *since YYYY-MM-DD* note). |
 | `social` / `social_custom` | string/bool | Social-preview image for the card. |
 | `score` | number | Ranking score (see §3). |
@@ -70,6 +70,8 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | 📈 views | **garden** · fence |
 | ⭐ stars | **gold-star** roof ornaments |
 | 🌙 recent push · clones · views | **window glow** at night |
+| 🕰 latest push | **wear**: recent (≤90d), faded (91–365d), or mossed (>365d/unknown) |
+| 🏛 archived | a named **gentle ruin** with moss, vines, and wildflowers |
 
 `score` / `rank` are computed in `scripts/build_repos.py` from these signals. Rank chooses the house tier
 (`cabin → cottage → house → villa → manor → portico mansion`), while the client-side deterministic
@@ -99,11 +101,36 @@ github-traffic-monitor (private, daily)        Repolis (public)
   └ cumulative traffic → data/logs/*.csv ──┐
                                            ├─▶ .github/workflows/refresh.yml (daily)
   gh api: owner's public repos (+ committed forks) ─┘  └ scripts/build_repos.py
-                                                          └─▶ repos.json ──▶ index.html (3D city)
+                                                         ├─▶ repos.json ──────────┐
+                                                         └─▶ data/city-state.json ┴─▶ index.html
 ```
 
 - Only **public** repos appear (created repos + forks you actually committed to; mirror forks skipped).
+- Both outputs are generated together; `data/city-state.json` is validated against
+  `data/city-state.schema.json` and fixture-tested before the refresh can commit.
 - The daily Action commits `chore: refresh` to `main` — **always rebase before pushing** (see AGENTS.md rule 2).
+
+### 4.1 Deterministic city state
+
+`data/city-state.json` records the city's public, reproducible time state:
+
+- `era` is founded on the oldest public repository creation date. The daily workflow injects its UTC
+  run day as `as_of`, so quiet repositories continue to age; local builds without that explicit input
+  fall back to the newest reproducible public source timestamp.
+- `season` compares repositories pushed in the latest 30-day window with six preceding 30-day
+  buckets. Sparse histories use the recorded recent-active share fallback. The value is one of
+  `spring`, `summer`, `autumn`, or `winter`, with its inputs and reason stored beside it.
+- `stats` contains only aggregates defensible from the current public catalog. Complete commit
+  history is unavailable, so `commit_history.total` stays `null` rather than being estimated.
+- `last_sap_flow` is that explicit UTC batch day or, for local fallback builds, the latest reproducible
+  source timestamp. It is never an implicit wall-clock read inside the generator.
+- `roots` contains archived public repositories only, with active years and a one-line achievement
+  derived from public metadata. It is correctly empty when the catalog has no archived repos.
+
+The owner town uses this state for a restrained static sky/fog/light palette. Other public towns use
+the neutral summer palette because no owner-specific city-state artifact is fetched for them.
+Buildings derive wear from the same reference date, while archived buildings preserve their footprint,
+silhouette, nameplate, collision, and card identity. These effects require no runtime GitHub or LLM call.
 
 ---
 

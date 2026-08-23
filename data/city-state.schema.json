@@ -1,0 +1,333 @@
+{
+  "$id": "https://hyeonsangjeon.github.io/Repolis/data/city-state.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "era": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "format": "date",
+          "type": "string"
+        },
+        "basis": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "city_age_days": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "city_age_years": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "city_year": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "founded_on": {
+          "format": "date",
+          "type": "string"
+        },
+        "oldest_repository": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "founded_on",
+        "oldest_repository",
+        "as_of",
+        "city_age_days",
+        "city_age_years",
+        "city_year",
+        "basis"
+      ],
+      "type": "object"
+    },
+    "last_sap_flow": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "roots": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "achievement": {
+            "maxLength": 180,
+            "minLength": 1,
+            "type": "string"
+          },
+          "active_years": {
+            "additionalProperties": false,
+            "properties": {
+              "count": {
+                "minimum": 1,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "from": {
+                "minimum": 1970,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "to": {
+                "minimum": 1970,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "count"
+            ],
+            "type": "object"
+          },
+          "repo": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "repo",
+          "active_years",
+          "achievement"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "repolis.city-state",
+      "type": "string"
+    },
+    "season": {
+      "additionalProperties": false,
+      "properties": {
+        "fallback": {
+          "additionalProperties": false,
+          "properties": {
+            "rule": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "used": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "used",
+            "rule"
+          ],
+          "type": "object"
+        },
+        "inputs": {
+          "additionalProperties": false,
+          "properties": {
+            "active_repository_share": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            "activity_signal": {
+              "const": "latest_push_per_repository",
+              "type": "string"
+            },
+            "historical_average": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "historical_bucket_counts": {
+              "items": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maxItems": 6,
+              "minItems": 6,
+              "type": "array"
+            },
+            "historical_bucket_days": {
+              "const": 30,
+              "type": "integer"
+            },
+            "recent_active_repositories": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "recent_to_historical_ratio": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "recent_window_days": {
+              "const": 30,
+              "type": "integer"
+            },
+            "reference_date": {
+              "format": "date",
+              "type": "string"
+            },
+            "repositories_with_push_date": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "reference_date",
+            "activity_signal",
+            "recent_window_days",
+            "recent_active_repositories",
+            "historical_bucket_days",
+            "historical_bucket_counts",
+            "historical_average",
+            "recent_to_historical_ratio",
+            "active_repository_share",
+            "repositories_with_push_date"
+          ],
+          "type": "object"
+        },
+        "reason": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "value": {
+          "enum": [
+            "spring",
+            "summer",
+            "autumn",
+            "winter"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "inputs",
+        "reason",
+        "fallback"
+      ],
+      "type": "object"
+    },
+    "stats": {
+      "additionalProperties": false,
+      "properties": {
+        "active_repository_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "archived_repository_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "commit_history": {
+          "additionalProperties": false,
+          "properties": {
+            "available": {
+              "const": false,
+              "type": "boolean"
+            },
+            "limitation": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "total": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "available",
+            "total",
+            "limitation"
+          ],
+          "type": "object"
+        },
+        "language_distribution": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "language": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "repositories": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "language",
+              "repositories"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "latest_push_signal": {
+          "additionalProperties": false,
+          "properties": {
+            "recent_30d_repositories": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "repositories_with_push_date": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "repositories_with_push_date",
+            "recent_30d_repositories"
+          ],
+          "type": "object"
+        },
+        "repository_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_forks": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_stars": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "repository_count",
+        "active_repository_count",
+        "archived_repository_count",
+        "total_stars",
+        "total_forks",
+        "language_distribution",
+        "latest_push_signal",
+        "commit_history"
+      ],
+      "type": "object"
+    },
+    "version": {
+      "const": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "version",
+    "era",
+    "season",
+    "stats",
+    "last_sap_flow",
+    "roots"
+  ],
+  "title": "Repolis deterministic city state",
+  "type": "object"
+}
