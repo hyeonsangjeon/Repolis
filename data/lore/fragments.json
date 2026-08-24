@@ -1,0 +1,127 @@
+{
+  "schema": "repolis.lore-fragments",
+  "version": 1,
+  "fragments": [
+    {
+      "id": "calling-wind",
+      "line": {
+        "ko": "어릴 적엔 나무 쪽 바람이 꼭 누가 부르는 것처럼 들렸어요. 요즘은 그냥 바람이죠.",
+        "en": "As a child, the wind by the tree sounded like a voice. Now it is only wind."
+      },
+      "contexts": ["tree", "night"],
+      "tags": ["silence", "rumor"],
+      "variant_group": "tree-voice",
+      "contradiction_group": "heard-something"
+    },
+    {
+      "id": "root-bell",
+      "line": {
+        "ko": "말소리였다고요? 나는 뿌리 밑에서 종이 한 번 울린 걸로 기억해요.",
+        "en": "A voice? I remember one low bell under the roots, nothing more."
+      },
+      "contexts": ["tree", "quiet"],
+      "tags": ["silence", "roots"],
+      "variant_group": "tree-voice",
+      "contradiction_group": "heard-something"
+    },
+    {
+      "id": "no-sound-at-all",
+      "line": {
+        "ko": "다들 무언가 들었다지만, 그날 밤 나는 아무 소리도 못 들었어요. 그래서 더 선명해요.",
+        "en": "Everyone heard something that night. I heard nothing, and still remember it."
+      },
+      "contexts": ["night", "quiet"],
+      "tags": ["silence", "doubt"],
+      "contradiction_group": "heard-something"
+    },
+    {
+      "id": "sap-before-breakfast",
+      "line": {
+        "ko": "아침밥 전에 수액빛이 길을 스친 날엔, 이상하게 오래된 집 냄새가 났어요.",
+        "en": "Some dawns, sap-light crossed before breakfast. The town smelled of old timber."
+      },
+      "contexts": ["dawn", "porch"],
+      "tags": ["sap", "memory"],
+      "variant_group": "sap-rhythm"
+    },
+    {
+      "id": "sap-missed-days",
+      "line": {
+        "ko": "매일 빛이 흘렀다는 사람도 있죠. 나는 며칠씩 못 본 적이 더 많았는데.",
+        "en": "Some swear the light came daily. I remember many mornings without it."
+      },
+      "contexts": ["dawn", "quiet"],
+      "tags": ["sap", "doubt"],
+      "contradiction_group": "sap-rhythm"
+    },
+    {
+      "id": "porch-humming",
+      "line": {
+        "ko": "예전 우리 집 현관은 밤마다 희미하게 울렸어요. 나무 탓인지는 아직도 모르겠네요.",
+        "en": "Our porch used to hum after dark. I never knew whether the tree caused it."
+      },
+      "contexts": ["home", "porch", "night"],
+      "tags": ["home", "rumor"],
+      "variant_group": "home-echo"
+    },
+    {
+      "id": "borrowed-memory",
+      "line": {
+        "ko": "이 기억이 내 것인지, 먼저 살던 이에게 들은 건지 가끔 헷갈려요.",
+        "en": "I cannot tell if this memory is mine or borrowed from an older neighbour."
+      },
+      "contexts": ["home", "quiet"],
+      "tags": ["memory", "doubt"]
+    },
+    {
+      "id": "spring-whisper",
+      "line": {
+        "ko": "봄 첫비 뒤엔 나무 가까이서 속삭임이 난다더군요. 나는 젖은 잎 소리라고 봐요.",
+        "en": "They say spring rain brings whispers by the tree. I hear only wet leaves."
+      },
+      "contexts": ["spring", "tree"],
+      "tags": ["season", "rumor"],
+      "variant_group": "season-whisper"
+    },
+    {
+      "id": "autumn-name",
+      "line": {
+        "ko": "가을이면 낙엽 사이에서 내 이름을 들었다는 이가 있었어요. 정작 나는 못 들었지만.",
+        "en": "One autumn, a neighbour heard my name in the leaves. I heard nothing."
+      },
+      "contexts": ["autumn", "tree"],
+      "tags": ["season", "doubt"],
+      "contradiction_group": "heard-something"
+    },
+    {
+      "id": "winter-sap",
+      "line": {
+        "ko": "겨울 수액빛은 느렸어요. 멈춘 줄 알고 돌아서면 뒤에서 길이 밝아지곤 했죠.",
+        "en": "Winter sap-light moved slowly. I would turn away, then see the road glow."
+      },
+      "contexts": ["winter", "night"],
+      "tags": ["sap", "season"],
+      "variant_group": "sap-rhythm"
+    },
+    {
+      "id": "forgotten-argument",
+      "line": {
+        "ko": "나무가 마지막으로 한 말 때문에 다퉜다는데, 누구도 그 말이 뭐였는지는 기억 못 해요.",
+        "en": "The town once argued over the tree's last words. No one recalls them."
+      },
+      "contexts": ["tree", "quiet"],
+      "tags": ["silence", "memory"],
+      "variant_group": "last-words"
+    },
+    {
+      "id": "quiet-after",
+      "line": {
+        "ko": "어느 날부터 마을이 조용해졌다는 말은 맞아요. 다만 정확히 어느 날인지는 사람마다 달라요.",
+        "en": "We agree the town grew quiet. Ask when, and every elder names another day."
+      },
+      "contexts": ["porch", "dusk", "quiet"],
+      "tags": ["silence", "contradiction"],
+      "contradiction_group": "silence-day"
+    }
+  ]
+}

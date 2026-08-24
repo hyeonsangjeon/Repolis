@@ -77,6 +77,13 @@ and never reaches here. If the KB is unreachable / slow / unconfigured, the Work
 general chat is configured, the scholar still answers in persona; if *neither* is
 configured, a fresh clone degrades gracefully (direct keyless MCP where possible).
 
+POLARIS is also constrained by `src/taxi-boundary.js`. The taxi receives Shared city-state context only.
+Any client-supplied resident/profile/Bound field is rejected before prompt or provider planning. A household
+memory question naming a known public repo returns a deterministic home handoff; an untargeted one is refused.
+Season/district ride observations are generated entirely in the browser and never call this Worker. Requests
+explicitly marked as a foreign public/portal town fail closed to local navigation instead of receiving this
+owner deployment's generated Shared season or resident-home registry.
+
 ## Deploy
 
 ```bash

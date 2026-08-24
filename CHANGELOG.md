@@ -6,6 +6,24 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.90.0] — 2026-08-24
+
+### 🌳 The Silence — elder fragments, newcomer houses, and a traveler taxi
+
+- Added 12 short hand-authored KO/EN recollections with strict public-safety validation. The oldest eligible
+  20% of the existing active resident roster receive them by stable balanced allocation; rare local delivery is
+  capped, contextual, non-repeating, session-only, and never gives the silent World Tree a voice.
+- Repository age now uses the generated city clock. Houses younger than 90 days gain one bounded side-scaffold
+  draw in full LOD and existing mid-LOD geometry, while newcomer residents use short rules-based local lines.
+  Archived houses retain the existing lazy ivy, wildflower, readable-name, and dialogue-unavailable contract.
+- POLARIS now speaks as the city's only all-district traveler, answers Shared city state locally, redirects
+  household memory to the correct repo home, and offers at most one local season/district observation per ride.
+  The Worker rejects forged household context before retrieval and never places resident Bound evidence in a
+  taxi prompt.
+- Lore, ride observations, and construction details add no external runtime request, model call, persistent
+  visitor identity, transcript telemetry, dependency, or build step. Canonical model-powered ambient traffic
+  remains hard-off.
+
 ## [1.89.0] — 2026-08-23
 
 ### 🧩 Open Source Quests — turn a repository city into a path to real contribution

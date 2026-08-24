@@ -257,6 +257,33 @@ function cap(value, max = 220) {
   return clipped.slice(0, boundary > max * 0.6 ? boundary : max - 1).trim() + '\u2026';
 }
 
+export function isResidentNewcomer(resident, profile) {
+  if (profile?.archived || resident?.bound?.repoRecord?.archived) return false;
+  if (Number.isFinite(profile?.age?.days)) return profile.age.days < 90;
+  return resident?.bound?.repoRecord?._newcomer === true;
+}
+
+export function residentNewcomerLine({
+  resident,
+  profile,
+  lang = 'ko',
+  variant = 0,
+} = {}) {
+  if (!isResidentNewcomer(resident, profile)) return '';
+  const repo = resident?.bound?.repo || profile?.repo?.name || '';
+  const ko = lang !== 'en';
+  const bank = ko ? [
+    `아직 ${repo} 집의 상자도 다 못 풀었어요. 길은 조금 헷갈리지만 천천히 익히는 중이에요.`,
+    `새 간판이 아직 낯설어요. ${repo}에서 하나씩 배워 가고 있어요.`,
+    `${repo}에 온 지 얼마 안 됐어요. 아는 길보다 모르는 골목이 더 많네요.`,
+  ] : [
+    `I still have boxes unopened at ${repo}. The roads confuse me a little, but I am learning them.`,
+    `The new sign still feels unfamiliar. I am learning ${repo} one corner at a time.`,
+    `I have not been at ${repo} long. There are still more unknown lanes than familiar ones.`,
+  ];
+  return cap(bank[Math.abs(Number(variant) || 0) % bank.length], 180);
+}
+
 export function residentLocalResponse({
   resident,
   profile,
@@ -299,6 +326,15 @@ export function residentLocalResponse({
       targetRepo: bound.repo,
       text: ko ? `\uc81c\uac00 \ubb36\uc778 \uc9d1\uc740 ${bound.repo}\uc608\uc694. \uc774 \ub300\ud654\uc5d0\uc11c \ubc14\ub85c \uc548\ub0b4\ud560\uac8c\uc694.` : `My bound home is ${bound.repo}. I can guide you straight there.`,
     };
+  }
+  const newcomer = residentNewcomerLine({
+    resident,
+    profile,
+    lang,
+    variant: String(resident?.id || '').length,
+  });
+  if (newcomer) {
+    return { intent: 'newcomer_introduction', targetRepo: bound.repo, text: newcomer };
   }
   return {
     intent: 'introduction',

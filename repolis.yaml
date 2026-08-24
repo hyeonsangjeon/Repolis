@@ -39,6 +39,10 @@ data:
     file: assets/contribution-library.json
     generated: true
     generator: scripts/build-contribution-library.mjs
+  elder_lore:
+    file: data/lore/fragments.json
+    generated: false
+    validator: scripts/validate-lore-fragments.mjs
 
 entrypoints:
   app: index.html
@@ -48,6 +52,8 @@ entrypoints:
   repo_portal: assets/repo-portal.js
   repo_route: assets/repo-route.js
   contribution_quests: assets/contribution-quests.js
+  elder_lore: assets/lore-fragments.js
+  taxi_voice: assets/taxi-voice.js
   data_builder: scripts/build_repos.py
   launch_config: repolis.config.js
   library_builder: scripts/build-contribution-library.mjs
@@ -130,7 +136,11 @@ features:
   - id: town-gazette
     summary: A bounded local per-town snapshot makes daily public-repo changes visible on return.
   - id: gitber-taxi
-    summary: Natural-language repo finder that physically drives to a selected house.
+    summary: Shared-only all-district traveler that finds a repo, redirects household memory, and adds one local seasonal or district observation per ride.
+  - id: elder-lore
+    summary: Hand-authored bilingual recollections are deterministically shared among the oldest eligible 20% of the bounded active roster and delivered rarely without model or network calls.
+  - id: newcomer-buildings
+    summary: Repositories younger than 90 generated-clock days receive bounded full/mid-LOD scaffolding and a rules-based local newcomer voice.
   - id: scholars
     summary: POLARIS, VEGA/MS Learn, RIGEL/DeepWiki, roaming MIRA/Context7, and roaming LYRA/Hugging Face.
   - id: resident-scholar-handoff
@@ -152,6 +162,7 @@ verify:
     - node council/test.mjs
     - node council/test-live.mjs
     - node scripts/smoke.mjs
+    - node scripts/validate-lore-fragments.mjs
     - node --check scholars.js
     - node --check cloudflare-taxi/src/grounded.js
     - node --check assets/repo-route.js

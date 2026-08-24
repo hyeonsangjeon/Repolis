@@ -4,6 +4,7 @@ import {
   createResidentProfileStore,
   loadResidentManifest,
   residentLocalResponse,
+  residentNewcomerLine,
   validateResidentManifest,
 } from '../assets/resident-profiles.js';
 
@@ -132,6 +133,23 @@ export async function runResidentRuntimeTests(check) {
     && cross.targetRepo === 'beta-house'
     && !cross.text.includes('v1.2.0'),
   'local fallback answers only the selected resident memory and redirects cross-resident Bound questions');
+
+  const newcomerProfile = {
+    ...loadedProfile,
+    age: { ...loadedProfile.age, days: 89, years: 0.24 },
+  };
+  const newcomer = residentLocalResponse({
+    resident: slots[0], profile: newcomerProfile, question: 'hello', lang: 'en', manifest: loaded,
+  });
+  const newcomerAlt = residentNewcomerLine({
+    resident: slots[0], profile: newcomerProfile, lang: 'ko', variant: 2,
+  });
+  check(newcomer.intent === 'newcomer_introduction'
+    && newcomer.targetRepo === 'alpha-lab'
+    && !/World Tree|세계수/i.test(newcomer.text + newcomerAlt)
+    && newcomer.text.length <= 180
+    && newcomerAlt.length <= 180,
+  'young residents use a short local newcomer voice without claiming old-world lore');
 
   let drifted = true;
   const retryStore = createResidentProfileStore({

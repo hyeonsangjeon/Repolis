@@ -1883,7 +1883,7 @@ import { createRepolisHero, REPOLIS_FACTORY_REVISION } from './assets/world-tree
 import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstruction, stepCameraResolvedDistance, chooseCameraArrivalYaw } from './assets/camera-obstruction.js?v=clearsight-v1';
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
-import { CITY_STATE_SCHEMA, CITY_STATE_VERSION, cityReferenceTimestamp, projectCityTime, resolveCitySeason, seasonPalette } from './assets/city-time.js?v=world-tree-phase1-v1';
+import { CITY_STATE_SCHEMA, CITY_STATE_VERSION, REPO_NEWCOMER_DAYS, cityReferenceTimestamp, constructionScaffoldPlan, projectCityTime, resolveCitySeason, seasonPalette } from './assets/city-time.js?v=world-tree-phase4-v1';
 import { SAP_FLOW_LIMITS, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=world-tree-phase2-v1';
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
@@ -1893,7 +1893,9 @@ import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYe
 import { REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolveRepoPortalRequest } from './assets/repo-portal.js?v=repo-portal-v1';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
-import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse } from './assets/resident-profiles.js?v=world-tree-phase3-v1';
+import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse, residentNewcomerLine } from './assets/resident-profiles.js?v=world-tree-phase4-v1';
+import { allocateElderFragments, createLoreDeliveryState, loadLoreFragments } from './assets/lore-fragments.js?v=world-tree-phase4-v1';
+import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from './assets/taxi-voice.js?v=world-tree-phase4-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -1903,7 +1905,8 @@ import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, re
    The owner city stays the premium / full-data experience. ================ */
 const OWNER = window.REPOLIS_CONFIG?.town?.owner || 'hyeonsangjeon';
 document.title = `Repolis · ${OWNER}'s City of Repos`;
-let REPOS = [], CITY_STATE = null, RESIDENT_MANIFEST = null, RESIDENT_MANIFEST_STATE = 'local';
+let REPOS = [], CITY_STATE = null, RESIDENT_MANIFEST = null, RESIDENT_MANIFEST_STATE = 'local',
+    LORE_FRAGMENTS = null, LORE_FRAGMENT_STATE = 'local';
 
 /* --- which town are we in? --- */
 const GH_LOGIN_RE = GITHUB_LOGIN_RE;
@@ -2142,8 +2145,12 @@ if(!CITY_STATE&&currentUser.toLowerCase()===OWNER.toLowerCase()&&(cityMode==='ow
   try{ CITY_STATE=await _cityStateSnapshot(); }catch(error){ console.warn('city-state.json load failed',error); }
 }
 if(cityMode==='owner'&&currentUser.toLowerCase()===OWNER.toLowerCase()){
-  try{ RESIDENT_MANIFEST=await loadResidentManifest({owner:currentUser}); RESIDENT_MANIFEST_STATE='ready'; }
-  catch(error){ RESIDENT_MANIFEST=null; RESIDENT_MANIFEST_STATE='local'; }
+  const [residentLoad,loreLoad]=await Promise.allSettled([
+    loadResidentManifest({owner:currentUser}),
+    loadLoreFragments(),
+  ]);
+  if(residentLoad.status==='fulfilled'){ RESIDENT_MANIFEST=residentLoad.value; RESIDENT_MANIFEST_STATE='ready'; }
+  if(loreLoad.status==='fulfilled'){ LORE_FRAGMENTS=loreLoad.value; LORE_FRAGMENT_STATE='ready'; }
 }
 const RESIDENT_PROFILE_STORE=createResidentProfileStore({manifest:RESIDENT_MANIFEST});
 const TOWN_GROWTH=buildTownGrowthTimeline(REPOS);
@@ -2870,6 +2877,7 @@ const _maxVis    = Math.max(1, ...REPOS.map(r=>r.visitors||0));
 const _maxViews  = Math.max(1, ...REPOS.map(r=>r.views||0));
 const _CITY_SEASON_OVERRIDE=_DBG?_QUERY.get('citySeason')||'':'';
 const _CITY_TIME_FIXTURES=_DBG&&_QUERY.get('cityTimeFixtures')==='1';
+const _PHASE4_FIXTURES=_DBG&&_QUERY.get('phase4Fixtures')==='1';
 const CITY_SEASON=resolveCitySeason(CITY_STATE,_CITY_SEASON_OVERRIDE);
 const CITY_SEASON_STYLE=seasonPalette(CITY_SEASON);
 const _now=CITY_STATE?cityReferenceTimestamp(CITY_STATE,REPOS,Date.now()):Date.now();
@@ -2877,9 +2885,12 @@ const _cityTint=(color,target,amount)=>new THREE.Color(color).lerp(new THREE.Col
 REPOS.forEach((repo,index)=>{
   const p = pal(repo.lang);
   const sampleWear=_CITY_TIME_FIXTURES&&index<3?['recent','faded','mossed'][index]:'';
+  const phase4Ruin=_PHASE4_FIXTURES&&index>=Math.max(0,REPOS.length-2);
+  const phase4Age=_PHASE4_FIXTURES&&index<3?89:null;
   const cityTime=projectCityTime(repo,CITY_STATE,REPOS,{referenceTimestamp:_now,season:CITY_SEASON,
-    wear:sampleWear,archived:_CITY_TIME_FIXTURES&&index===3});
+    wear:sampleWear,archived:(_CITY_TIME_FIXTURES&&index===3)||phase4Ruin,ageDays:phase4Age});
   repo._wearState=cityTime.state; repo._wearDays=cityTime.daysSincePush; repo._ruin=cityTime.archived;
+  repo._ageDays=cityTime.ageDays; repo._newcomer=cityTime.newcomer;
   repo.label = labelOf(repo.repo);
   repo.wall=_cityTint(p.wall,CITY_SEASON_STYLE.building,CITY_SEASON_STYLE.buildingMix);
   repo.roof=_cityTint(p.roof,CITY_SEASON_STYLE.building,CITY_SEASON_STYLE.buildingMix*.65);
@@ -4972,7 +4983,8 @@ const GEO_STEM=new THREE.CylinderGeometry(0.03,0.03,0.42,5), GEO_FLOWER=new THRE
 const MAT_STEM=toon(0x5aa048), MAT_TRUNK=toon(0x7a5230), MAT_CROWN=toon(0x5aa048);
 const FLOWER_MATS=[0xff6f91,0xffd23f,0xff8c42,0xb06fe0,0xffffff].map(c=>basic(c));
 const RUIN_MOSS_GEO=new THREE.SphereGeometry(0.32,8,6), RUIN_MOSS_MAT=toon(0x688354),
-      RUIN_FLOWER_MAT=new THREE.MeshBasicMaterial({color:0xffffff});
+      RUIN_FLOWER_MAT=new THREE.MeshBasicMaterial({color:0xffffff}),
+      YOUNG_SCAFFOLD_MAT=new THREE.MeshLambertMaterial({vertexColors:true});
 // 🐕 chow-chow — clean rounded shape in 3 coat colors (아이보리 / 갈색 / 검정)
 const CHOW_COATS=[
   { fur:0xe9dcc0, fur2:0xd6c2a0, snout:0xfff3e0, nose:0x2a2018, eye:0x2a2018 },   // ivory
@@ -5153,19 +5165,52 @@ function addRoofTech(g,w,topH){
   sky.rotation.x=-Math.PI/2; sky.position.set(w*0.22,St+0.03,w*0.22); g.add(sky);
   const hv=rbox(w*0.2,0.42,w*0.2,0xbcc3cb,0.03); hv.position.set(-w*0.24,St+0.22,-w*0.22); outline(hv,0.03); g.add(hv);
 }
-function addGentleRuin(g,repo,w,h,d,yr,topH){
+function prepareGentleRuin(repo,w,h,d,yr,topH){
   if(!repo._ruin) return;
-  const seed=hashStr(repo.repo),sample=i=>((Math.imul((seed^(i*0x9e3779b9))>>>0,2654435761)>>>0)/4294967296);
-  const mossN=LOW_END?5:9,moss=new THREE.InstancedMesh(RUIN_MOSS_GEO,RUIN_MOSS_MAT,mossN),dummy=new THREE.Object3D();
+  repo._ruinSpec={w,h,d,yr,topH}; repo._ruinDetails={moss:LOW_END?5:9,flowers:LOW_END?4:7,draws:0,lazy:true,loaded:false,colliders:0};
+}
+function ensureGentleRuin(repo){
+  const spec=repo&&repo._ruinSpec,details=repo&&repo._ruinDetails; if(!spec||!details||details.loaded) return false;
+  const {w,h,d,yr,topH}=spec,seed=hashStr(repo.repo),sample=i=>((Math.imul((seed^(i*0x9e3779b9))>>>0,2654435761)>>>0)/4294967296);
+  const mossN=details.moss,moss=new THREE.InstancedMesh(RUIN_MOSS_GEO,RUIN_MOSS_MAT,mossN),dummy=new THREE.Object3D();
   for(let i=0;i<mossN;i++){ const roof=i>=mossN-2,x=(sample(i)-.5)*w*.72,y=roof?topH+.22:h*(.18+sample(i+13)*.7),z=roof?(sample(i+23)-.5)*d*.55:d*.5+.14;
     dummy.position.set(x,y,z); dummy.scale.set(.7+sample(i+31)*.9,.22+sample(i+41)*.28,.52+sample(i+53)*.62); dummy.rotation.set(sample(i+61)*.5,sample(i+71)*Math.PI,.12); dummy.updateMatrix(); moss.setMatrixAt(i,dummy.matrix); }
-  moss.name=`RuinMoss_${repo.repo}`; moss.castShadow=false; moss.receiveShadow=true; g.add(moss);
-  const flowerN=LOW_END?4:7,flowers=new THREE.InstancedMesh(GEO_FLOWER,RUIN_FLOWER_MAT,flowerN),colors=[0xf0d56d,0xe7a3bd,0xb9a7dd,0xf7eee1];
+  moss.name=`RuinMoss_${repo.repo}`; moss.castShadow=false; moss.receiveShadow=true;
+  const flowerN=details.flowers,flowers=new THREE.InstancedMesh(GEO_FLOWER,RUIN_FLOWER_MAT,flowerN),colors=[0xf0d56d,0xe7a3bd,0xb9a7dd,0xf7eee1];
   for(let i=0;i<flowerN;i++){ const side=i%2?-1:1,x=side*(.7+sample(i+83)*Math.max(1,yr*.55)),z=d*.5+.82+sample(i+97)*1.5;
     dummy.position.set(x,.18+sample(i+109)*.18,z); const s=.8+sample(i+127)*.8; dummy.scale.setScalar(s); dummy.rotation.set(0,sample(i+139)*Math.PI,0); dummy.updateMatrix();
     flowers.setMatrixAt(i,dummy.matrix); flowers.setColorAt(i,new THREE.Color(colors[i%colors.length])); }
-  flowers.name=`RuinWildflowers_${repo.repo}`; flowers.castShadow=false; g.add(flowers);
-  repo._ruinDetails={moss:mossN,flowers:flowerN,draws:2};
+  flowers.name=`RuinWildflowers_${repo.repo}`; flowers.castShadow=false;
+  const entry=repo._lodPrototype,parent=entry?(entry.originalsMode?repo._group:entry.groups.full):repo._group; parent.add(moss,flowers);
+  if(entry){ entry.originalChildren.push(moss,flowers); }
+  repo._ruinMeshes=[moss,flowers]; repo._ruinDetails={...details,draws:2,loaded:true}; return true;
+}
+function _appendYoungScaffold(addBox,w,h,d,lowEnd,kind){
+  const timber=0xa87949,joint=0xe2c99e,plan=constructionScaffoldPlan({width:w,height:h,depth:d,lowEnd,kind});
+  const centerZ=(plan.z[0]+plan.z[plan.z.length-1])*.5;
+  for(const z of plan.z) addBox(.14,plan.height,.14,plan.sideX,plan.height*.5,z,timber,'newcomer-scaffold-pole');
+  for(const level of plan.levels) addBox(.14,.14,plan.span,plan.sideX,plan.height*level,centerZ,joint,'newcomer-scaffold-rail');
+  for(const level of plan.deckLevels) addBox(.68,.1,plan.span,plan.sideX-.22,plan.height*level,centerZ,timber,'newcomer-scaffold-deck');
+  return plan;
+}
+function _youngScaffoldGeometry(w,h,d,lowEnd,kind){
+  const positions=[],colors=[],indices=[],sources=new Set();
+  const addBox=(bw,bh,bd,x,y,z,color,name)=>{ const base=positions.length/3,hx=bw*.5,hy=bh*.5,hz=bd*.5,c=new THREE.Color(color);
+    const verts=[[-hx,-hy,hz],[hx,-hy,hz],[hx,hy,hz],[-hx,hy,hz],[-hx,-hy,-hz],[hx,-hy,-hz],[hx,hy,-hz],[-hx,hy,-hz]];
+    for(const v of verts){ positions.push(x+v[0],y+v[1],z+v[2]); colors.push(c.r,c.g,c.b); }
+    indices.push(base,base+1,base+2,base,base+2,base+3,base+5,base+4,base+7,base+5,base+7,base+6,
+      base+1,base+5,base+6,base+1,base+6,base+2,base+4,base,base+3,base+4,base+3,base+7,
+      base+3,base+2,base+6,base+3,base+6,base+7,base+4,base+5,base+1,base+4,base+1,base);
+    sources.add(name); };
+  const details=_appendYoungScaffold(addBox,w,h,d,lowEnd,kind),geometry=new THREE.BufferGeometry(); geometry.setIndex(indices);
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3)); geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere(); geometry.userData.sources=[...sources]; return {geometry,details};
+}
+function addYoungScaffolding(g,repo,w,h,d,kind){
+  if(!repo._newcomer||repo._ruin) return;
+  const built=_youngScaffoldGeometry(w,h,d,LOW_END,kind),mesh=new THREE.Mesh(built.geometry,YOUNG_SCAFFOLD_MAT);
+  mesh.name=`NewcomerScaffold_${repo.repo}`; mesh.castShadow=false; mesh.receiveShadow=true; g.add(mesh); repo._scaffold=mesh;
+  repo._constructionDetails={...built.details,ageDays:repo._ageDays};
 }
 function makeBuilding(repo){
   repo._cat = repoCategory(repo);
@@ -5228,7 +5273,7 @@ function makeBuilding(repo){
   // central roof
   repo._lodSpec={kind,roof:typ.roof,tier:typ.tier,w,h,d,topH,topW,wall:repo.wall,roofColor:repo.roof,accent:repo.accent,entranceColor:(CATS[repo._cat]||CATS.Software).color,
     yardRadius:yr,yardColor:repo._downtown?0xcbb888:0x86c069,hedgeColor:repo._downtown?0xb7a274:0x5d9e46,rich,fancy,flags,stars:repo.stars||0,
-    wear:repo._wearState,ruin:repo._ruin};
+    wear:repo._wearState,ruin:repo._ruin,newcomer:repo._newcomer};
   const cameraRoofRadius=topW*({flat:.73,hip:.9,gambrel:.96,mansard:1,aframe:.82,shed:.76,barrel:.74}[typ.roof]||.95);
   const cameraRoofRise=typ.roof==='flat'?1.1:typ.roof==='hip'?1.75:typ.roof==='gambrel'?2.35:typ.roof==='mansard'?2.32:
     typ.roof==='aframe'?2.22:typ.roof==='shed'?1.55:typ.roof==='barrel'?topW*.52+0.12:2.65;
@@ -5303,7 +5348,8 @@ function makeBuilding(repo){
   // category emblem high on the front, facing street
   const emb=new THREE.Mesh(new THREE.PlaneGeometry(1.1,1.1), new THREE.MeshBasicMaterial({map:emblemTexture(repo._cat),transparent:true,depthWrite:false}));
   emb.position.set(0, h+(typ.roof==='flat'?0.62:1.05), d/2+0.06); g.add(emb); repo._emblem=emb;
-  addGentleRuin(g,repo,w,h,d,yr,topH);
+  addYoungScaffolding(g,repo,w,h,d,kind);
+  prepareGentleRuin(repo,w,h,d,yr,topH);
   // destination ring on the plot
   const ring=new THREE.Mesh(new THREE.RingGeometry(Math.max(2,yr-1.4),Math.max(2.7,yr-0.8),40),
     new THREE.MeshBasicMaterial({color:repo.color,transparent:true,opacity:.42,side:THREE.DoubleSide}));
@@ -5497,6 +5543,7 @@ function _buildingLodReadabilityGeometry(repo){
   const banners=Math.min(3,Math.max(0,Number(spec.flags)||0)); for(let i=0;i<banners;i++) addBox(.18,.48,.08,(i-(banners-1)*.5)*.5,spec.h-.42,front+.14,i%2?accent:entrance,'metric-banner');
   const gardenN=(spec.rich??0)>.66?3:(spec.rich??0)>.22?2:1; for(let i=0;i<gardenN;i++){ const side=i%2?-1:1,x=side*(1.45+Math.floor(i/2)*.48);
     addBox(.72,.18,.54,x,.12,front+1.4,hedgeColor,'garden-bed'); addBox(.16,.28,.16,x,.31,front+1.4,i%2?accent:warm,'garden-bloom'); }
+  if(spec.newcomer&&!spec.ruin) _appendYoungScaffold(addBox,spec.w,spec.h,spec.d,LOW_END,spec.kind);
   if(spec.ruin){ addBox(spec.w*.66,.18,.18,-spec.w*.08,spec.h*.72,front+.17,0x688354,'ruin-ivy');
     addBox(spec.w*.38,.16,.2,spec.w*.2,spec.topH+.16,0,0x718064,'ruin-roof-moss');
     for(let i=-1;i<=1;i++) addBox(.16,.26,.16,i*.54,.22,front+1.12,i===0?0xe7a3bd:0xf0d56d,'ruin-wildflower'); }
@@ -5532,7 +5579,7 @@ function _buildingLodCloneWithoutOutlines(source){
   remove.forEach(o=>o.parent&&o.parent.remove(o)); return clone;
 }
 function _buildingLodAttach(entry,tier,forced=false){
-  const group=entry.groups[tier]; if(entry.tier===tier) return;
+  const group=entry.groups[tier]; if(tier==='full') ensureGentleRuin(entry.repo); if(entry.tier===tier) return;
   for(const candidate of [entry.groups.full,entry.groups.mid,entry.groups.far]) if(candidate.parent===entry.root) entry.root.remove(candidate);
   if(group){ if(group.parent) group.parent.remove(group); group.parent=entry.root; entry.root.children.splice(Math.min(entry.visualIndex,entry.root.children.length),0,group); }
   if(!forced&&renderedFrame-entry.lastSwitchFrame<24) BUILDING_LOD_PROTO.flaps++; entry.lastSwitchFrame=renderedFrame; entry.tier=tier; entry.pending=null; entry.pendingCount=0; BUILDING_LOD_PROTO.switches++;
@@ -5552,7 +5599,8 @@ function _updateBuildingLodPrototype(frame,force=false){
   for(const entry of BUILDING_LOD_PROTO.entries){ if(entry.originalsMode) continue; entry.worldCenter.copy(entry.localCenter).applyMatrix4(entry.root.matrixWorld); entry.projected.copy(entry.worldCenter).project(camera);
     entry.root.getWorldScale(entry.worldScale); const scale=Math.max(entry.worldScale.x,entry.worldScale.y,entry.worldScale.z),distance=Math.max(0.01,camera.position.distanceTo(entry.worldCenter));
     entry.projectedPx=2*entry.radius*scale/distance*focal; const radiusNdc=entry.projectedPx/innerHeight*2,outside=entry.projected.z<-1||entry.projected.z>1||entry.projected.x+radiusNdc<-1.08||entry.projected.x-radiusNdc>1.08||entry.projected.y+radiusNdc<-1.08||entry.projected.y-radiusNdc>1.08;
-    const desired=_buildingLodDesired(entry,entry.projectedPx,outside); if(desired===entry.tier){ entry.pending=null; entry.pendingCount=0; continue; }
+    const desired=_buildingLodDesired(entry,entry.projectedPx,outside); if(desired==='full') ensureGentleRuin(entry.repo);
+    if(desired===entry.tier){ entry.pending=null; entry.pendingCount=0; continue; }
     if(entry.pending===desired) entry.pendingCount++; else { entry.pending=desired; entry.pendingCount=1; }
     if((force||entry.pendingCount>=BUILDING_LOD_PROTO.thresholds.settle)&&(force||frame-entry.lastSwitchFrame>=BUILDING_LOD_PROTO.thresholds.minDwellFrames)) _buildingLodAttach(entry,desired); }
 }
@@ -5562,6 +5610,7 @@ function _syncBuildingLodFacade(repo){
 }
 function _setBuildingLodPrototypeOriginals(entry,originals){
   if(entry.originalsMode===originals) return; const root=entry.root;
+  if(originals) ensureGentleRuin(entry.repo);
   for(const group of [entry.groups.full,entry.groups.mid,entry.groups.far,entry.functional,entry.active,entry.shadowProxy]) if(group.parent===root) root.remove(group);
   if(originals){ for(const child of entry.originalChildren){ if(child.parent) child.parent.remove(child); root.add(child); } entry.originalShadowCasters.forEach(mesh=>{ mesh.castShadow=true; }); }
   else { for(const child of entry.originalChildren){ if(child.parent) child.parent.remove(child); (child.userData.buildingLodActive?entry.active:entry.groups.full).add(child); }
@@ -7373,6 +7422,21 @@ const RESIDENTS=[
 ];
 const RESIDENT_ROSTER=bindResidentSlots(RESIDENTS,RESIDENT_MANIFEST,REPOS);
 RESIDENTS.splice(0,RESIDENTS.length,...RESIDENT_ROSTER.residents);
+const ELDER_LORE_REPOSITORIES=_PHASE4_FIXTURES?REPOS.map(repo=>({
+  ...repo,
+  archived:!!repo._ruin,
+  created:repo._newcomer?new Date(_now-Math.max(0,repo._ageDays||0)*86400000).toISOString().slice(0,10):repo.created,
+})):REPOS;
+const ELDER_LORE=allocateElderFragments({manifest:RESIDENT_MANIFEST,repositories:ELDER_LORE_REPOSITORIES,cityState:CITY_STATE,lore:LORE_FRAGMENTS});
+for(const res of RESIDENTS){
+  res.newcomer=!!res.bound?.repoRecord?._newcomer;
+  res.loreFragments=ELDER_LORE.assignments[res.id]||[];
+}
+const LORE_DELIVERY=createLoreDeliveryState({
+  allocation:ELDER_LORE,
+  seed:`${CITY_STATE?.last_sap_flow||''}|${RESIDENT_MANIFEST?.registry_digest||''}`,
+  debug:_PHASE4_FIXTURES,
+});
 window.RESIDENTS=RESIDENTS;
 const _ZWHY={ ai:{ko:'LLM·RAG·에이전트·모델',en:'LLMs, RAG, agents and models'}, infra:{ko:'NAS·도커·자동화·서버',en:'NAS, Docker, automation and servers'},
   web:{ko:'웹·프론트엔드·대시보드',en:'web, frontend and dashboards'}, data:{ko:'수집·분석·파이프라인',en:'scraping, analytics and pipelines'},
@@ -7599,10 +7663,11 @@ function makeResBubble(){ const W=448,H=252, cv=document.createElement('canvas')
     c.fillStyle='rgba(255,251,242,0.97)'; c.fill(); c.lineWidth=4; c.strokeStyle=hex||'#caa'; c.stroke();
     c.beginPath(); c.moveTo(W/2-14,top+bh-2); c.lineTo(W/2+14,top+bh-2); c.lineTo(W/2-10,top+bh+20); c.closePath(); c.fillStyle='rgba(255,251,242,0.97)'; c.fill();
     c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle'; lines.forEach((ln,i)=>{ c.fillText(ln, W/2, top+24+i*LH); }); tex.needsUpdate=true; }
-  return { sprite:sp, say(text,hex){ draw(text,hex); life=Math.min(11, 4.0 + String(text).length*0.035); }, clear(){ life=0; },
+  return { sprite:sp, say(text,hex){ sp.userData.currentLine=String(text); draw(text,hex); life=Math.min(11, 4.0 + String(text).length*0.035); }, clear(){ life=0; sp.userData.currentLine=''; },
     update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0; sp.material.opacity+=(want-sp.material.opacity)*0.14; sp.position.y=4.55+Math.sin(clock.elapsedTime*1.5)*0.05; } }; }
 
 const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
+function _residentSpeechLocked(L,tt=clock.elapsedTime){ return !!L && tt<(L._speechLockUntil||0); }
 // ---- wander + rendezvous tuning: townsfolk stroll around home and walk toward one another to actually meet before talking ----
 // LOW_END walks at a lifelike pace (0.9 — only a touch under desktop 1.05) with the SAME roam radius + pauses as desktop; the cost/perf saving on low-end
 // comes ONLY from the conversation side (fewer turns, longer gaps, one at a time, AI off/low-freq) — locomotion and its perceived speed are never throttled.
@@ -7667,7 +7732,7 @@ function _moodTell(m){ return m==='dozy'?{droop:0.05,bob:0.018,rate:1.25} : m===
 // 🤝 fellow-feeling: two residents who are both idle and pass close by turn, greet by name (sometimes remarking on how the other seems), and the other warmly answers back a beat later. Rare, cooldown-gated, zero-AI.
 const NPC_PEER_R=(LOW_END?6.0:6.8), NPC_PEER_CD_MIN=(LOW_END?52:38), NPC_PEER_CD_MAX=(LOW_END?96:74); let _peerGlobalCd=0;
 function _socialResident(L){ return !!L && !L.res.oracle; }
-function _peerIdle(L){ return _socialResident(L) && !L._rt && !L._rest && !L._joinWalk && !L._joy && (L._stretch||0)<=0 && !L._pNear; }
+function _peerIdle(L){ return _socialResident(L) && !_residentSpeechLocked(L) && !L._rt && !L._rest && !L._joinWalk && !L._joy && (L._stretch||0)<=0 && !L._pNear; }
 function _peerNoticeLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko', m=_resMood(P);
   if(m==='dozy' && Math.random()<0.6) return ko?`${nm}, 오늘 좀 피곤해 보여요. 쉬엄쉬엄해요.`:`${nm}, you look a bit tired — take it easy.`;
   if(m==='bright' && Math.random()<0.6) return ko?`${nm}, 표정이 밝네요! 좋은 일 있어요?`:`${nm}, you look bright! Good news?`;
@@ -7732,7 +7797,7 @@ const _JOY_LINES={
 let _sharedJoy=null, _joyLast=null, _joyNextAt=(LOW_END?90:42)+Math.random()*(LOW_END?55:36); const _joyMemory=new Map();
 function _joyKey(A,B){ return [A.res.id,B.res.id].sort().join('|'); }
 function _joySpeed(L){ return Math.max(L._wspd*1.1,LOW_END?1.0:1.25); }
-function _joyFree(L,tt){ return _socialResident(L) && !L._rt && !L._rest && !L._joinWalk && !L._stroll && !L._joy && !L._pNear && (L._stretch||0)<=0
+function _joyFree(L,tt){ return _socialResident(L) && !_residentSpeechLocked(L,tt) && !L._rt && !L._rest && !L._joinWalk && !L._stroll && !L._joy && !L._pNear && (L._stretch||0)<=0
   && (L._gt||0)<=0 && (!activeGroupMembers||activeGroupMembers.indexOf(L)<0) && (!_ambConv||_ambConv.members.indexOf(L)<0) && (_resCd.get(L.res.id)||0)<=tt; }
 function _joyClear(x,z,gap=3.0,minR=20){ if(!Number.isFinite(x)||!Number.isFinite(z)||Math.hypot(x,z)<minR||Math.hypot(x,z)>207||_hubGap(x,z)<gap) return false;
   return !(typeof EXTRA_COLLIDERS!=='undefined'&&EXTRA_COLLIDERS.some(c=>Math.hypot(x-c.x,z-c.z)<(c.r||0)+2.2)); }
@@ -7786,7 +7851,7 @@ function _sharedJoyTick(tt,dt=0){ const J=_sharedJoy;
     if(J.phase==='enjoy'&&tt>=J.endAt) return _endSharedJoy('complete',tt); return true; }
   if(tt<_joyNextAt||_festival||_ambConv||_resChatActive()||document.hidden||!NPC_CFG.motionEnabled) return false; const pair=_joyPair(tt);
   if(!pair){ _joyNextAt=tt+12; return false; } return _startSharedJoy(pair.A,pair.B,tt); }
-function _tryPeerNotice(L,tt,force){ if(!_socialResident(L)) return null; if((_ambConv||_festival||document.hidden) && !force) return null;
+function _tryPeerNotice(L,tt,force){ if(!_socialResident(L)||(!force&&_residentSpeechLocked(L,tt))) return null; if((_ambConv||_festival||document.hidden) && !force) return null;
   if(!force && (L._gt>0 || tt<(L._noticeCd||0) || tt<_peerGlobalCd)) return null;
   let P=null,pd=1e9; for(const O of RESIDENTS_LIVE){ if(O===L || !_peerIdle(O)) continue; if(!force && (O._gt>0 || tt<(O._noticeCd||0))) continue; if(_ambConv && _ambConv.members.indexOf(O)>=0) continue;
     const d=Math.hypot(O.group.position.x-L.group.position.x, O.group.position.z-L.group.position.z); if(d<=(force?9999:NPC_PEER_R) && d<pd){ pd=d; P=O; } }
@@ -7897,7 +7962,24 @@ function _capBub(s){ s=String(s||'').replace(/\s+/g,' ').trim(); const MAX=80;  
   const sp=cut.lastIndexOf(' '); if(sp>=40) return cut.slice(0,sp).trim()+'\u2026';
   return cut.trim()+'\u2026'; }
 function _pushTranscript(t){ _npcTranscript.push(t); if(_npcTranscript.length>60) _npcTranscript.shift(); }
-function _scriptLine(L){ const bank=(L.res.amb&&(L.res.amb[LANG]||L.res.amb.ko))||['\u2026']; let i=(Math.random()*bank.length)|0; if(bank.length>1 && i===L.lastLine) i=(i+1)%bank.length; L.lastLine=i; return bank[i]; }
+function _scriptLine(L){ if(L.res.newcomer&&Math.random()<.45){ L._newcomerLine=((L._newcomerLine||0)+1)%3;
+    return residentNewcomerLine({resident:L.res,profile:L.res._profile,lang:LANG,variant:L._newcomerLine}); }
+  const bank=(L.res.amb&&(L.res.amb[LANG]||L.res.amb.ko))||['\u2026']; let i=(Math.random()*bank.length)|0; if(bank.length>1 && i===L.lastLine) i=(i+1)%bank.length; L.lastLine=i; return bank[i]; }
+function _residentLoreContexts(L){
+  const contexts=['quiet',CITY_SEASON],part=_partOfDay(); if(part==='morn') contexts.push('dawn'); else if(part==='eve') contexts.push('dusk'); else if(part==='night') contexts.push('night');
+  if(L._atHome||Math.hypot(L.group.position.x-L.home.x,L.group.position.z-L.home.z)<3.2) contexts.push('home','porch');
+  if(MEMORIAL_TREE&&Math.hypot(L.group.position.x-MEMORIAL_TREE.collider.x,L.group.position.z-MEMORIAL_TREE.collider.z)<MEMORIAL_TREE.collider.r+8) contexts.push('tree');
+  return contexts;
+}
+function _tryResidentLore(L,tt,force=false,contextOverride=null){
+  const quiet=force||(!_festival&&!_ambConv&&!_sharedJoy&&!_resChatActive()&&!document.hidden&&!L._rest&&!L._stroll&&!L._joy&&!L._joinWalk&&!L._rt&&!L._commute&&!L._pNear&&L._gt<=0);
+  const picked=LORE_DELIVERY.next({residentId:L.res.id,contexts:contextOverride?[contextOverride]:_residentLoreContexts(L),now:tt,quiet,force});
+  if(!picked) return null; const line=_capBub(picked.fragment.line[LANG]||picked.fragment.line.ko);
+  const hold=Math.min(11,4+line.length*.035)+.2,until=tt+hold;
+  L.bub.say(line,_hex(L.res.color)); L._gt=hold; L._speechLockUntil=until; L._emoteCd=Math.max(L._emoteCd||0,until); L._noticeCd=Math.max(L._noticeCd||0,until);
+  L._noticeTryAt=Math.max(L._noticeTryAt||0,until); L._routineLock=Math.max(L._routineLock||0,until); _resCd.set(L.res.id,Math.max(_resCd.get(L.res.id)||0,until));
+  return {id:picked.fragment.id,context:picked.context,line,hold:+hold.toFixed(2)};
+}
 function _ambientAllowed(){ return NPC_CFG.modeEnabled && !_sharedJoy && !document.hidden && !_resChatActive() && RESIDENTS_LIVE.length>=NPC_CFG.activeMin && (NPC_CFG.scriptedAmbient || (NPC_CFG.aiEnabled&&NPC_CFG.ambientAiEnabled)); }
 function _endAmb(reason){ const C=_ambConv; _ambConv=null; if(C){ const until=clock.elapsedTime + NPC_CFG.pairCooldownMin + Math.random()*(NPC_CFG.pairCooldownMax-NPC_CFG.pairCooldownMin);
     _pairCd.set(_pairKey(C.a,C.b), until); for(const m of C.members) _resCd.set(m.res.id, until);   // every circle member rests a beat before joining another gathering (not just the seed pair)
@@ -7944,7 +8026,7 @@ function _festLine(res){ const ko=LANG==='ko', b= ko?['다 같이 모였네요! 
                                     :['We\u2019re all here! 🎉','What a night!','Cheers to our city! 🥂','The fireworks are lovely…','Good to be together!','Let\u2019s do this again!'];
   return b[(Math.random()*b.length)|0]; }
 function _freshRepoName(){ try{ const f=REPOS.filter(r=>r&&r._fresh); if(f.length){ const r=f[(Math.random()*f.length)|0]; return r.label||r.repo; } }catch(e){} return null; }
-function startFestival(repo){ if(_festival) return false; if(_sharedJoy) _endSharedJoy('festival'); if(_ambConv) _endAmb('festival');
+function startFestival(repo){ if(_festival||RESIDENTS_LIVE.some(L=>_residentSpeechLocked(L))) return false; if(_sharedJoy) _endSharedJoy('festival'); if(_ambConv) _endAmb('festival');
   const c=(typeof HEARTH!=='undefined'&&HEARTH)?{x:HEARTH.x,z:HEARTH.z}:{x:0,z:8}, now=clock.elapsedTime, nm=repo||_freshRepoName();
   _festival={ phase:'gather', center:c, celebrateAt:now+5, endAt:now+(LOW_END?18:23), nextFw:0, repo:nm };
   for(const L of RESIDENTS_LIVE){ L._festSlot=null; L._festSay=0; L._commute=null; L._rt=null; L._toFav=false; L._toBond=false;
@@ -7995,7 +8077,7 @@ function _repoReactLine(res, repo){ const ko=LANG==='ko', nm=repo.label||repo.re
   return _capBub(c[(Math.random()*c.length)|0]); }
 function _residentReactToRepo(repo){ if(!repo||!repo.repo||repo._isLibrary||document.hidden) return; const now=clock.elapsedTime;
   let best=null, bestScore=Infinity, joyBest=null, joyScore=Infinity;                              // the nearest free local within reach reacts; the district's caretaker is preferred
-  for(const L of RESIDENTS_LIVE){ if(_ambConv && _ambConv.members.indexOf(L)>=0) continue; if(activeGroupMembers && activeGroupMembers.indexOf(L)>=0) continue;
+  for(const L of RESIDENTS_LIVE){ if(_residentSpeechLocked(L,now)) continue; if(_ambConv && _ambConv.members.indexOf(L)>=0) continue; if(activeGroupMembers && activeGroupMembers.indexOf(L)>=0) continue;
     if(activeNpc && activeNpc.res===L.res && _resChatActive()) continue; if((L._reactCd||0)>now) continue;
     const raw=Math.hypot(player.position.x-L.group.position.x, player.position.z-L.group.position.z); if(raw>RES_REACT_R) continue;
     const score=raw-((repo._zone && repo._zone===L.res.zone)?4:0); if(L._joy){ if(score<joyScore){ joyScore=score; joyBest=L; } continue; }
@@ -8047,7 +8129,7 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
     // warm welcome: the moment the visitor steps up, the resident notices — a wave + a short hello (edge-triggered + cooldown, so it never spams)
     if(!inConv && !chatBound && !hidden){
       const pnear=Math.hypot(player.position.x-g.position.x, player.position.z-g.position.z)<RES_GREET_DIST;
-      if(pnear && !L._pNear && tt>=L._greetCd){ L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6;
+      if(pnear && !L._pNear && tt>=L._greetCd && !_residentSpeechLocked(L,tt)){ L.bub.say(_resGreetLine(L.res), _hex(L.res.color)); L._gt=2.6;
         L._greetCd=tt+RES_GREET_CD_MIN+Math.random()*(RES_GREET_CD_MAX-RES_GREET_CD_MIN); }
       L._pNear=pnear;
     } else { L._pNear=false; if(chatBound) L.bub.clear(); }   // while the visitor is chatting with THIS resident, keep its floating greeting/emote bubble hidden — the dialogue lives in the chat panel (a just-fired greeting could otherwise linger for a few seconds into the chat)
@@ -8105,7 +8187,7 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
       else if(L._rest && L._rest.phase==='goto'){   // strolling over to the chosen bench, then sit
         if(_resWalk(L,L._rest.seat.x,L._rest.seat.z,L._wspd,dt)){ L._rest.phase='sit'; L._rest.until=tt+RES_MOVE.restMin+Math.random()*(RES_MOVE.restMax-RES_MOVE.restMin); _resSit(L,L._rest.seat); L.bub.update(dt); continue; } else moving=true;
       } else {
-        if(!L._rt && tt>=L._rp){
+        if(!L._rt && tt>=L._rp && !_residentSpeechLocked(L,tt)){
           const commute=_residentCommuteTarget(L,tt);
           if(commute) _startResidentCommute(L,commute,tt);
           else { const _bt=(tt>=(L._bondSeekCd||0) && Math.random()<0.22)?_bondSeekTarget(L):null;   // now and then, go find a close friend
@@ -8123,13 +8205,14 @@ function updateResidents(dt){ if(!RESIDENTS_LIVE.length) return; const tt=clock.
             else L._rp=tt+RES_MOVE.pauseMin+Math.random()*(RES_MOVE.pauseMax-RES_MOVE.pauseMin); } else moving=true; } } }
     if(moving){ if(L._gt>0) L._gt-=dt; if(g._armL) g._armL.rotation.z*=0.85; if(g._armR) g._armR.rotation.z*=0.85; L.bub.update(dt); continue; }
     // a quiet solo flourish now and then — only when idle, alone, not mid-gesture and the visitor isn't right here (greeting takes precedence). Ambient town life, with a daily rhythm.
-    if(!_festival && !inConv && !chatBound && !L._pNear && L._gt<=0 && (L._stretch||0)<=0 && tt>=L._emoteCd){
+    const loreDelivered=_tryResidentLore(L,tt);
+    if(!loreDelivered && !_festival && !inConv && !chatBound && !L._pNear && L._gt<=0 && (L._stretch||0)<=0 && tt>=L._emoteCd){
       L._emoteCd=tt+RES_EMOTE_CD_MIN+Math.random()*(RES_EMOTE_CD_MAX-RES_EMOTE_CD_MIN);
       if(_partOfDay()==='morn' && tt>=(L._stretchCd||0)){ L._stretchCd=tt+120+Math.random()*90; L._stretch=1.4; L.bub.say(_resTodLine(), _hex(L.res.color)); }   // 🌅 a slow morning stretch + a good-morning word (the town wakes up)
       else if(Math.random()<0.7){ const r=Math.random(); L.bub.say(r<0.34?_resMoodLine(L):r<0.67?_resTodLine():_resIdleEmote(), _hex(L.res.color)); L._gt=1.6; } }   // idle chatter mixes an inner-mood murmur, a time-of-day line, and a generic emote
     // 🤝 residents notice each other: answer a neighbour who just greeted us, or (idle + off-cooldown) greet a nearby idle neighbour by name
     if(!_festival && !inConv && !chatBound && !L._pNear){
-      if(L._replyPeer && tt>=(L._replyAt||0)){ const P=L._replyPeer; L._replyPeer=null;
+      if(L._replyPeer && tt>=(L._replyAt||0) && !_residentSpeechLocked(L,tt)){ const P=L._replyPeer; L._replyPeer=null;
         if(L._gt<=0 && _peerIdle(L) && P && Math.hypot(P.group.position.x-g.position.x,P.group.position.z-g.position.z)<=NPC_PEER_R+1.5){ L.bub.say(_isFriend(L,P)?_bondReplyLine(L,P):_peerReplyLine(L,P), _hex(L.res.color)); L._gt=1.8; L._facePeer=P; L._facePeerUntil=tt+2.0; if(_isFriend(L,P)) _startStroll(P,L); } }   // close friends amble off together after the hello
       else if(L._gt<=0 && tt>=(L._noticeTryAt||0)){ L._noticeTryAt=tt+3+Math.random()*4; _tryPeerNotice(L,tt); } }
     let tgt;
@@ -11047,6 +11130,11 @@ function districtNav(q){ const z=zoneResolve(q); if(!z) return null;
 }
 function _coreIntent(q){
   const ql=q.toLowerCase();
+  const household=taxiHouseholdHandoff({question:q,lang:LANG,manifest:RESIDENT_MANIFEST,repositories:REPOS});
+  if(household){ const home=household.targetRepo&&REPOS.find(repo=>repo.repo.toLowerCase()===household.targetRepo.toLowerCase());
+    return {repo:home||null,message:esc(household.text),alts:[],_taxiBoundary:household.intent}; }
+  const shared=taxiSharedResponse({question:q,lang:LANG,cityState:CITY_STATE});
+  if(shared) return {repo:null,message:esc(shared.text),alts:[],_taxiBoundary:shared.intent};
   const lore=townLore(q,'taxi'); if(lore) return { repo:null, message:lore, alts:[] };
   const st=smalltalk(q); if(st){ const p=(st==='stWho'?scholarPersona('taxi','who'):st==='stHelp'?scholarPersona('taxi','help'):null); return { repo:null, message:p||t(st), alts:[] }; }
   const meta=townMeta(q); if(meta) return { repo:null, message:meta, alts:[] };
@@ -11313,14 +11401,20 @@ async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; b
     if(!_drainQueuedChat()&&!_resumePendingChatNpc()&&(!repositoryAtelierActive()||repositoryAtelierChatActive())&&!chatEl.classList.contains('hidden')) chatText.focus(); } }
 
 /* ---- taxi ride: the cab drives to you, picks you up, carries you there ---- */
-let ride=null, ridePostActionUntil=0; // ride phases plus a brief guard for delayed arrival UI
+let ride=null, ridePostActionUntil=0, _taxiRideSeq=0, _lastTaxiObservation=null; // ride phases plus a brief guard for delayed arrival UI
 function driveTaxiToward(px,pz,speed,dt,stop=0){
   const dx=px-taxi.position.x, dz=pz-taxi.position.z, dd=Math.hypot(dx,dz);
   if(dd>stop+0.01){ const step=Math.min(dd-stop, speed*dt); taxi.position.x+=dx/dd*step; taxi.position.z+=dz/dd*step;
     taxi.rotation.y=lerpA(taxi.rotation.y, Math.atan2(-dz,dx), 0.2); }
   return dd;
 }
-function taxiTo(repo){ if(repositoryAtelierActive()) return false; standUp(); ridePostActionUntil=0; ride={repo, phase:'coming', t:0}; setNav(repo); closeChat(); freeLook=false; model.visible=true;
+function _showTaxiRideObservation(current){
+  if(!current||current.observationShown) return null; current.observationShown=true;
+  const observation=taxiRideObservation({destination:current.repo,season:CITY_SEASON,lang:LANG,rideId:current.id});
+  current.observation=observation; _lastTaxiObservation={rideId:current.id,...observation}; showWave('🚕 '+observation.text,3600); return observation;
+}
+function taxiTo(repo){ if(repositoryAtelierActive()) return false; standUp(); ridePostActionUntil=0;
+  ride={repo, phase:'coming', t:0, id:++_taxiRideSeq, observationShown:false, observation:null}; setNav(repo); closeChat(); freeLook=false; model.visible=true;
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; ridePostActionUntil=0; driveBar.style.display='none'; model.visible=true; }
@@ -12053,7 +12147,7 @@ function animate(){
         model.rotation.y=lerpA(model.rotation.y,Math.atan2(taxi.position.x-player.position.x,taxi.position.z-player.position.z),0.15);
         if(dd<3.6){ ride.phase='boarding'; ride.t=0; }
       } else if(ride.phase==='boarding'){
-        if(ride.t>0.55){ model.visible=false; ride.phase='riding'; ride.t=0; }
+        if(ride.t>0.55){ model.visible=false; ride.phase='riding'; ride.t=0; _showTaxiRideObservation(ride); }
       } else if(ride.phase==='riding'){
         const dd=driveTaxiToward(ride.repo._pos.x,ride.repo._pos.z, ((ride.repo._isLibrary||ride.repo._landmark==='chrono'||ride.repo._landmark==='obs')?44:26)*(_tourBoost?1.7:1), dt,6.0);
         player.position.set(taxi.position.x,0,taxi.position.z);
@@ -12614,12 +12708,16 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__tpSway=(index=0,back=10,showModel=false)=>{ const g=SWAY[Math.max(0,Math.min(SWAY.length-1,index|0))]; if(!g) return null; const p=new THREE.Vector3(); g.getWorldPosition(p);
     player.position.set(p.x,0,p.z-back); camYaw=Math.PI; camPitch=0.3; camDist=12; model.visible=showModel===true; freeLook=true; return {index:index|0,target:_debugVec(p),camera:window.__cam()}; };
   window.__ride=()=>ride?ride.phase:null; window.__taxiPos=()=>({x:+taxi.position.x.toFixed(1),z:+taxi.position.z.toFixed(1),vis:model.visible});
+  window.__taxiObservation=()=>({active:ride?{id:ride.id,phase:ride.phase,shown:ride.observationShown,observation:ride.observation}:null,last:_lastTaxiObservation,rides:_taxiRideSeq});
+  window.__taxiObservationFixture=(zone='plaza',rideId=1)=>_DBG?taxiRideObservation({destination:{_zone:zone,label:zone},season:CITY_SEASON,lang:LANG,rideId}):null;
   window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; };
   window.__taxi=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name)); if(r&&r._pos){ taxiTo(r); return true; } return false; };
   window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom,wear:r._wearState,ruin:!!r._ruin}));
   window.__cityTime=()=>({schema:CITY_STATE?.schema||null,version:CITY_STATE?.version||null,season:CITY_SEASON,reference:new Date(_now).toISOString(),
     fallback:!!CITY_STATE?.season?.fallback?.used,wear:REPOS.reduce((out,repo)=>{ out[repo._wearState]=(out[repo._wearState]||0)+1; return out; },{}),
-    ruins:REPOS.filter(repo=>repo._ruin).map(repo=>({repo:repo.repo,details:repo._ruinDetails||null})),roots:CITY_STATE?.roots?.length||0,fixture:_CITY_TIME_FIXTURES});
+    newcomers:REPOS.filter(repo=>repo._newcomer&&!repo._ruin).map(repo=>({repo:repo.repo,ageDays:repo._ageDays,details:repo._constructionDetails||null})),
+    newcomerThresholdDays:REPO_NEWCOMER_DAYS,ruins:REPOS.filter(repo=>repo._ruin).map(repo=>({repo:repo.repo,details:repo._ruinDetails||null})),
+    roots:CITY_STATE?.roots?.length||0,fixture:_CITY_TIME_FIXTURES,phase4Fixture:_PHASE4_FIXTURES});
   window.__card=(name)=>{ const r=repoByKey(name); if(r){ openCard(r); return {repo:r.repo,license:r.license,open_issues:r.open_issues,release_tag:r.release_tag,archived:r.archived,chips:[...document.querySelectorAll('#cardChips .chip')].map(c=>c.textContent.trim())}; } return null; };
   window.__modal=()=>modalOpen;
   window.__rt=()=>({peers:peers.size, live:liveCountEl.textContent, total:allCountEl.textContent, entriesToday:entryCountEl?entryCountEl.textContent:null, entriesTotal:entryTotalCountEl?entryTotalCountEl.textContent:null, ws:rtSock?rtSock.readyState:-1,join:_lastRealtimeJoinPose});
@@ -12671,6 +12769,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__roofOf=(name)=>{const r=REPOS.find(x=>x.repo===name);return r?{...typology(r),x:+(r._x||0).toFixed(1),z:+(r._z||0).toFixed(1)}:null;};
   window.__cand=(q)=>{ const sc=searchCandidates(q,8); return {strong:sc.strong, list:sc.list.map(r=>r.repo)}; };
   window.__intent=(q)=>{ const r=localIntent(q); return { repo:(r.repo&&(r.repo.repo||r.repo.label))||null, isLib:!!(r.repo&&r.repo._isLibrary), alts:(r.alts||[]).map(a=>a.label) }; };
+  window.__taxiLocal=(q)=>{ const r=localIntent(q); return r?{repo:(r.repo&&(r.repo.repo||r.repo.label))||null,message:stripHtml(r.message),boundary:r._taxiBoundary||null}:null; };
   window.__det=(q)=>{ const d=deterministicIntent(q); return d?{repo:(d.repo&&(d.repo.repo||d.repo.label))||null, isLib:!!(d.repo&&d.repo._isLibrary), alts:(d.alts||[]).map(a=>a.label)}:null; };
   window.__idx=()=>{ buildSearchIndex(); return {built:_idxBuilt, tokens:INVIDX.size, repos:REPOS.length}; };
   window.__pos=()=>({x:+player.position.x.toFixed(2),z:+player.position.z.toFixed(2)});
@@ -12939,6 +13038,12 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     maxGroup:NPC_CFG.maxGroup, groupR:RES_MOVE.groupR, joinR:RES_MOVE.joinR, groupChat:(activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null), groupSize:(_ambConv?_ambConv.members.length:0), moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), resting:RESIDENTS_LIVE.filter(L=>L._rest).length, joy:_sharedJoy?{type:_sharedJoy.type,phase:_sharedJoy.phase,members:_sharedJoy.members.map(m=>m.res.id)}:null, seats:SEATS.length, flora:GLOW_FLORA.length, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
   window.__residentProfiles=()=>({state:RESIDENT_MANIFEST_STATE,schema:RESIDENT_MANIFEST&&RESIDENT_MANIFEST.schema||null,version:RESIDENT_MANIFEST&&RESIDENT_MANIFEST.version||null,
     profiles:RESIDENT_ROSTER.profileCount,active:RESIDENT_ROSTER.activeCount,loaded:RESIDENTS.filter(res=>!!res._profile).map(res=>res.id),registryDigest:RESIDENT_MANIFEST&&RESIDENT_MANIFEST.registry_digest||null});
+  window.__loreState=()=>({state:LORE_FRAGMENT_STATE,schema:LORE_FRAGMENTS&&LORE_FRAGMENTS.schema||null,version:LORE_FRAGMENTS&&LORE_FRAGMENTS.version||null,
+    fragments:ELDER_LORE.fragmentCount,eligible:ELDER_LORE.eligibleCount,elders:ELDER_LORE.elders.map(elder=>({residentId:elder.residentId,repo:elder.repo,createdOn:elder.createdOn,fragmentCount:elder.fragmentCount,fragmentIds:[...elder.fragmentIds]})),
+    newcomers:RESIDENTS.filter(res=>res.newcomer).map(res=>res.id),overlap:RESIDENTS.filter(res=>res.newcomer&&res.loreFragments.length).map(res=>res.id),
+    delivery:LORE_DELIVERY.snapshot(),reason:ELDER_LORE.reason});
+  window.__loreForce=(id,context='quiet')=>{ if(!_DBG) return {ok:false,reason:'debug_only'}; const L=RESIDENTS_LIVE.find(item=>item.res.id===id)||RESIDENTS_LIVE.find(item=>item.res.loreFragments&&item.res.loreFragments.length);
+    if(!L) return {ok:false,reason:'no_elder'}; const result=_tryResidentLore(L,clock.elapsedTime,true,context); return result?{ok:true,residentId:L.res.id,...result}:{ok:false,reason:'no_fragment',state:LORE_DELIVERY.snapshot()}; };
   window.__residentLocal=(id,q)=>{ const res=RESIDENTS.find(item=>item.id===id)||RESIDENTS[0]; if(!res) return null; return residentLocalResponse({resident:res,profile:res._profile,question:q||'',lang:LANG,manifest:RESIDENT_MANIFEST}); };
   window.__residentStatus=(state,id)=>{ const res=RESIDENTS.find(item=>item.id===id)||(activeNpc&&activeNpc.res)||RESIDENTS[0]; if(!res) return null; setResidentChatStatus(state||'local',res); return {state:residentStatusEl.dataset.state,text:residentStatusText.textContent}; };
   window.__seats=()=>SEATS.map((s,i)=>({ i, pos:[+s.x.toFixed(1),+s.z.toFixed(1)], hearth:!!s._hearth, home:s._residentHome||null, occupied:s._occ?s._occ.res.id:null }));

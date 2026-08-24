@@ -57,6 +57,10 @@ import {
   authorizeResidentDialogue,
   capResidentDialogueLine,
 } from "./resident-dialogue.js";
+import {
+  authorizeTaxiRequest,
+  taxiSystemPrompt,
+} from "./taxi-boundary.js";
 
 export { NpcBudgetGovernor };
 
@@ -882,6 +886,7 @@ const PERSONA = {
 };
 
 function personaPrompt(who, lang) {
+  if (who === "taxi") return taxiSystemPrompt({ lang, grounded: false });
   const p = PERSONA[who] || PERSONA.taxi;
   const ko = String(lang || "").toLowerCase().startsWith("ko");
   if (ko) {
@@ -900,6 +905,7 @@ function personaPrompt(who, lang) {
 }
 
 function groundedPersonaPrompt(who, lang) {
+  if (who === "taxi") return taxiSystemPrompt({ lang, grounded: true });
   const p = PERSONA[who] || PERSONA.taxi;
   const ko = String(lang || "").toLowerCase().startsWith("ko");
   if (ko) {
@@ -1890,6 +1896,30 @@ export default {
     // only the knowledge base / source differ. Multi-turn history is threaded in.
     const who = npc && scholarConfig(npc, env) ? npc : "taxi";
     const cfg = scholarConfig(who, env);
+    if (who === "taxi") {
+      const authorized = authorizeTaxiRequest(body);
+      if (!authorized.ok) {
+        return json({ fallback: true, reason: authorized.reason }, 200, env);
+      }
+      question = authorized.question;
+      history = authorized.history;
+      if (authorized.kind === "unavailable") {
+        return json({ fallback: true, reason: authorized.reason }, 200, env);
+      }
+      if (authorized.kind !== "continue") {
+        return json({
+          repo: authorized.target?.repo || null,
+          message: authorized.line,
+          general: true,
+          redirect: authorized.target || null,
+          trace: {
+            general: true,
+            sourceKind: "taxi_shared_boundary",
+            sources: false,
+          },
+        }, 200, env);
+      }
+    }
     const messages = buildMessages(history, question);
     const requestMeta = metricContext(body, request);
     const boundary = who === "market" ? marketBoundary(question, lang, history) : "";

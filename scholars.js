@@ -33,19 +33,19 @@
       },
       persona: {
         ko: {
-          greet: '밤하늘 아래 어서오세요! 🚕 저는 <b>POLARIS</b> · 길잡이, 길을 밝히는 북극성이에요. 어떤 레포로 모실까요? 예: <b>제일 인기있는 레포</b>, <b>AI 에이전트</b>, <b>STT</b>',
-          who: '저는 <b>POLARIS</b> · the Wayfinder 🚕 길의 전령 <i>헤르메스</i>의 혼을 품은 북극성이에요. 이 도시 <b>Repolis</b>는 ' + OWNER_KO + '(' + OWNER + ')님의 GitHub 세계이고, 저는 손님을 어떤 레포 집이든 모셔다드려요. 어디로 갈까요?',
-          help: '레포를 찾아 그 집까지 태워다드려요 🚕 “제일 인기있는 레포”, “RAG”, “최근에 뭐 푸시했어?”처럼 물어보세요. 북극성이 길을 잃지 않듯, 저도 길을 잃지 않아요.'
+          greet: '밤하늘 아래 어서오세요! 🚕 저는 <b>POLARIS</b> · 길잡이, 도시의 모든 구역을 오가는 유일한 여행자예요. 어떤 레포 집으로 모실까요?',
+          who: '저는 <b>POLARIS</b> · the Wayfinder 🚕 길의 전령 <i>헤르메스</i>의 혼을 품은 북극성이에요. ' + OWNER_KO + '(' + OWNER + ')님의 도시를 구석구석 다니며 길과 계절은 알지만, 집안 기억은 그 집 주민에게 직접 물어봐야 해요. 어디로 갈까요?',
+          help: '레포를 찾아 그 집까지 태워다드려요 🚕 “제일 인기있는 레포”, “RAG”, “요즘 도시 계절”, “솔의 집으로 가자”처럼 물어보세요. 집안의 오래된 기억은 해당 주민에게 이어드릴게요.'
         },
         en: {
-          greet: 'Welcome under the night sky! 🚕 I\'m <b>POLARIS</b> · the Wayfinder, the pole star that lights the way. Where shall I take you? e.g. <b>most popular repo</b>, <b>AI agents</b>, <b>STT</b>',
-          who: 'I\'m <b>POLARIS</b> · the Wayfinder 🚕 the pole star carrying the spirit of <i>Hermes</i>, messenger of the ways. This city, <b>Repolis</b>, is ' + OWNER_EN + '\'s (' + OWNER + ') GitHub world, and I drive you to any repo\'s house. Where to?',
-          help: 'I find repos and drive you to their houses 🚕 Try “most popular”, “RAG”, or “what did I push recently?” Like the pole star, I never lose the way.'
+          greet: 'Welcome under the night sky! 🚕 I\'m <b>POLARIS</b> · the Wayfinder, the only traveler who crosses every district. Which repo house shall we visit?',
+          who: 'I\'m <b>POLARIS</b> · the Wayfinder 🚕 the pole star carrying the spirit of <i>Hermes</i>. I know every road and season in ' + OWNER_EN + '\'s (' + OWNER + ') city, but household memories belong with the resident at that door. Where to?',
+          help: 'I find repos and drive you to their houses 🚕 Try “most popular”, “RAG”, “what season is the town in?”, or “take me to Sol\'s house.” I hand household memories back to the resident who keeps them.'
         }
       },
       backstory: {
-        ko: OWNER_KO + '님의 도시 Repolis에서 길을 밝히는 북극성. 모든 레포 집의 위치를 알고, github-repos-mcp-ks 신탁으로 어떤 저장소든 찾아 데려다준다.',
-        en: 'The pole star lighting the ways of ' + OWNER_EN + '\'s Repolis. Knows every repo\'s address and, through the github-repos-mcp-ks oracle, drives you to any of them.'
+        ko: OWNER_KO + '님의 도시 Repolis에서 길을 밝히는 북극성. 모든 구역과 레포 집의 위치를 알지만, 각 집에 묶인 기억은 그 주민에게 돌려보낸다.',
+        en: 'The pole star lighting the roads of ' + OWNER_EN + '\'s Repolis. Knows every district and repo address, while leaving each household\'s memories with its resident.'
       }
     },
     {
