@@ -17,7 +17,7 @@
       "used": false
     },
     "inputs": {
-      "active_repository_share": 0.29411764705882354,
+      "active_repository_share": 0.30434782608695654,
       "activity_signal": "latest_push_per_repository",
       "historical_average": 1.333,
       "historical_bucket_counts": [
@@ -29,17 +29,17 @@
         0
       ],
       "historical_bucket_days": 30,
-      "recent_active_repositories": 20,
-      "recent_to_historical_ratio": 15.0,
+      "recent_active_repositories": 21,
+      "recent_to_historical_ratio": 15.75,
       "recent_window_days": 30,
       "reference_date": "2026-08-24",
-      "repositories_with_push_date": 68
+      "repositories_with_push_date": 69
     },
-    "reason": "Recent latest-push count is 15.00x the average of the prior 6 30-day buckets.",
+    "reason": "Recent latest-push count is 15.75x the average of the prior 6 30-day buckets.",
     "value": "spring"
   },
   "stats": {
-    "active_repository_count": 68,
+    "active_repository_count": 69,
     "archived_repository_count": 0,
     "commit_history": {
       "available": false,
@@ -49,7 +49,7 @@
     "language_distribution": [
       {
         "language": "Python",
-        "repositories": 26
+        "repositories": 27
       },
       {
         "language": "Jupyter Notebook",
@@ -93,10 +93,10 @@
       }
     ],
     "latest_push_signal": {
-      "recent_30d_repositories": 20,
-      "repositories_with_push_date": 68
+      "recent_30d_repositories": 21,
+      "repositories_with_push_date": 69
     },
-    "repository_count": 68,
+    "repository_count": 69,
     "total_forks": 135,
     "total_stars": 564
   },
