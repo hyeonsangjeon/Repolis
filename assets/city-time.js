@@ -2,6 +2,7 @@ export const CITY_STATE_SCHEMA = 'repolis.city-state';
 export const CITY_STATE_VERSION = 1;
 export const CITY_SEASONS = Object.freeze(['spring', 'summer', 'autumn', 'winter']);
 export const WEAR_THRESHOLDS_DAYS = Object.freeze({ recent: 90, faded: 365 });
+export const REPO_NEWCOMER_DAYS = 90;
 
 const DAY_MS = 86400000;
 const PALETTES = Object.freeze({
@@ -58,13 +59,73 @@ export function classifyBuildingWear(repo, referenceTimestamp, override = '') {
   });
 }
 
+export function repositoryAgeDays(repo, referenceTimestamp) {
+  const createdAt = timestamp(repo?.created);
+  if (createdAt === null || !Number.isFinite(referenceTimestamp)) return null;
+  return Math.max(0, Math.floor((referenceTimestamp - createdAt) / DAY_MS));
+}
+
+export function constructionScaffoldPlan({
+  width,
+  height,
+  depth,
+  kind = '',
+  lowEnd = false,
+  newcomer = true,
+  archived = false,
+} = {}) {
+  if (!newcomer || archived) {
+    return Object.freeze({
+      enabled: false,
+      poles: 0,
+      rails: 0,
+      decks: 0,
+      parts: 0,
+      draws: 0,
+      colliders: 0,
+    });
+  }
+  const w = Math.min(32, Math.max(2, Number(width) || 2));
+  const h = Math.min(24, Math.max(2, Number(height) || 2));
+  const d = Math.min(32, Math.max(2, Number(depth) || 2));
+  const z = lowEnd ? [-d * 0.34, d * 0.1] : [-d * 0.38, -d * 0.1, d * 0.18];
+  const levels = lowEnd ? [0.34, 0.72] : [0.25, 0.52, 0.8];
+  const decks = lowEnd ? [0.5] : [0.38, 0.68];
+  const scaffoldHeight = Math.min(8, Math.max(3.2, h * 0.72));
+  const winged = ['villa', 'manor', 'mansion'].includes(String(kind));
+  return Object.freeze({
+    enabled: true,
+    poles: z.length,
+    rails: levels.length,
+    decks: decks.length,
+    parts: z.length + levels.length + decks.length,
+    draws: 1,
+    colliders: 0,
+    lod: 'full+mid',
+    side: 'non-entrance',
+    sideX: w * (winged ? 1.02 : 0.5) + 0.38,
+    z: Object.freeze(z),
+    levels: Object.freeze(levels),
+    deckLevels: Object.freeze(decks),
+    span: Math.max(1.8, z[z.length - 1] - z[0] + 0.24),
+    height: Number(scaffoldHeight.toFixed(2)),
+    frontClearance: Number((d * 0.5 - z[z.length - 1]).toFixed(2)),
+  });
+}
+
 export function projectCityTime(repo, cityState, repositories = [], options = {}) {
   const referenceTimestamp = options.referenceTimestamp
     ?? cityReferenceTimestamp(cityState, repositories, options.fallbackTimestamp);
   const wear = classifyBuildingWear(repo, referenceTimestamp, options.wear);
+  const archived = options.archived === true || wear.archived;
+  const ageDays = Number.isInteger(options.ageDays)
+    ? Math.max(0, options.ageDays)
+    : repositoryAgeDays(repo, referenceTimestamp);
   return Object.freeze({
     ...wear,
-    archived: options.archived === true || wear.archived,
+    archived,
+    ageDays,
+    newcomer: !archived && ageDays !== null && ageDays < REPO_NEWCOMER_DAYS,
     season: resolveCitySeason(cityState, options.season)
   });
 }

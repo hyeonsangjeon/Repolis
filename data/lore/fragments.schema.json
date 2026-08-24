@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hyeonsangjeon.github.io/Repolis/data/lore/fragments.schema.json",
+  "title": "Repolis elder lore fragments",
+  "type": "object",
+  "required": ["schema", "version", "fragments"],
+  "properties": {
+    "schema": { "const": "repolis.lore-fragments" },
+    "version": { "const": 1 },
+    "fragments": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "required": ["id", "line", "contexts", "tags"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "maxLength": 64
+          },
+          "line": {
+            "type": "object",
+            "required": ["ko", "en"],
+            "properties": {
+              "ko": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "en": { "type": "string", "minLength": 1, "maxLength": 80 }
+            },
+            "additionalProperties": false
+          },
+          "contexts": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "home",
+                "porch",
+                "tree",
+                "quiet",
+                "dawn",
+                "dusk",
+                "night",
+                "spring",
+                "summer",
+                "autumn",
+                "winter"
+              ]
+            }
+          },
+          "tags": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "maxLength": 32
+            }
+          },
+          "variant_group": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "maxLength": 48
+          },
+          "contradiction_group": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "maxLength": 48
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

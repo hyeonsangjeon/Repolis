@@ -19,6 +19,9 @@
 - [scripts/build_repos.py](scripts/build_repos.py): rebuilds `repos.json` from committed traffic logs plus `gh api`.
 - [scholars.js](scholars.js): POLARIS, VEGA, RIGEL, MIRA, and LYRA scholar roster.
 - [assets/world-tree/createRepolisHero.js](assets/world-tree/createRepolisHero.js): procedural World Tree factory.
+- [data/lore/fragments.json](data/lore/fragments.json): hand-authored bilingual elder recollections; never generated.
+- [assets/lore-fragments.js](assets/lore-fragments.js): strict lore validation, elder allocation, and session-bounded delivery.
+- [assets/taxi-voice.js](assets/taxi-voice.js): local Shared-state taxi replies, home redirects, and ride observations.
 - [assets/town-growth.js](assets/town-growth.js): deterministic repository creation timeline, year snapshots, and Growth Replay share links.
 - [assets/repo-portal.js](assets/repo-portal.js): strict GitHub target parser, public repo projection, route precedence, and canonical Repo Portal links.
 - [assets/repo-route.js](assets/repo-route.js): strict current-catalog validation and canonical links for ordered 2–3 house Repo Routes.
@@ -36,7 +39,7 @@
 - Repository Atelier: one walkable room rebinds current repo history, impact signals, metric artifacts, current chibi avatar, and in-room Gitber/Why actions without rendering the exterior.
 - Local Town Gazette: added/removed repos, releases, pushes, and positive metric deltas since the last marked-read snapshot.
 - Named residents with individually styled Starlight Row cottages, resident-coloured gardens, a shared flower commons, perimeter trees, home/work commutes, moods, friendships, Shared Joy, conversations, festivals, and specialist handoffs.
-- Gitber/POLARIS taxi: keyless Local search by default; optional WebLLM and grounded AI.
+- Gitber/POLARIS taxi: keyless Local search, Shared-only household boundary, and one local observation per ride; optional WebLLM and grounded AI.
 - VEGA via Microsoft Learn, RIGEL via DeepWiki, roaming MIRA via Context7, and roaming LYRA via Hugging Face, all with answer traces.
 - Contribution Library, Chronopolis Council, Observatory, World Tree, canals, parks, and fairground.
 - Optional realtime visitors and counters; absent backend means solo play.

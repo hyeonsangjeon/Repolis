@@ -17,9 +17,10 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **City / Town** | derived in `index.html` at load | The whole 3D scene built from the `repos.json` array. |
 | **District** | deterministic `zoneOf(repo)` result | A topic-shaped neighborhood with a hub, board, map destination, and progress. |
 | **Resident** | generated `data/residents/` profile + bounded roster in `index.html` | A townsperson bound to one public repo building, with a Starlight cottage, social life, and server-authorized Bound memory. |
+| **Elder fragment** | hand-authored `data/lore/fragments.json` | A short bilingual recollection allocated only to the oldest eligible 20% of the nine-resident active roster and delivered rarely in local life contexts. |
 | **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, Town Gazette baselines, constellation completion, and the Maintainers' Night Watch stamp. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
-| **Taxi** | the POLARIS scholar (`kind: taxi`) | Finds a repo and physically drives you there. |
+| **Taxi** | the POLARIS scholar (`kind: taxi`) | The only all-district traveler; finds a repo, drives there, knows Shared city state, and redirects household memory to that home. |
 | **Grounding Worker** | `cloudflare-taxi/` (`repolis-taxi`) | Server brain: KB retrieval + in-persona chat. |
 | **Council** | `council/` | Separate deterministic debate→verdict engine. |
 
@@ -71,6 +72,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | ⭐ stars | **gold-star** roof ornaments |
 | 🌙 recent push · clones · views | **window glow** at night |
 | 🕰 latest push | **wear**: recent (≤90d), faded (91–365d), or mossed (>365d/unknown) |
+| 🪜 creation age <90 generated-clock days | bounded side scaffolding + a local newcomer voice |
 | 🏛 archived | a named **gentle ruin** with moss, vines, and wildflowers |
 
 `score` / `rank` are computed in `scripts/build_repos.py` from these signals. Rank chooses the house tier
@@ -106,6 +108,8 @@ github-traffic-monitor (private, daily)        Repolis (public)
                                                          ├─▶ data/residents/index.json ──────┤
                                                          ├─▶ data/residents/{safe-slug}.json ┤
                                                          └─▶ generated Worker registry ──────┴─▶ index.html / Worker
+
+  hand-authored data/lore/fragments.json ─ strict validator ─▶ active-roster elder allocation
 ```
 
 - Only **public** repos appear (created repos + forks you actually committed to; mirror forks skipped).
@@ -164,6 +168,30 @@ redirect to that house before model planning. The authority digest excludes the 
 ordinary refreshes do not disable dialogue; a real Bound-source change fails closed to local behavior until the
 Worker registry is redeployed.
 
+### 4.3 Elder lore and newcomer time
+
+`data/lore/fragments.json` is intentionally hand-authored rather than generated. Its strict versioned contract
+permits 10–15 short independent KO/EN lines, bounded context/tag lists, and optional variant or contradiction
+groups. Runtime and CI reject HTML/control characters, instruction-shaped text, internal-service language,
+duplicate IDs/lines, and oversized data.
+
+“Active” means the existing generated `active_roster`, not all 68 public profiles. Allocation first requires a
+matching non-archived manifest/profile entry and a valid public `created` date, then excludes repositories younger
+than 90 days. It sorts by creation date and stable slug/id, takes `ceil(eligible × 0.2)` with a minimum of one and
+maximum of the eligible count, and distributes the fragment set by stable hashed round-robin. In the 2026-08-24
+snapshot, seven of nine active residents are eligible; Noa (`gotty-docker`) and Sol (`youtube-dl-nas`) are the two
+elders and receive six fragments each. A missing/mismatched manifest, date, city state, or lore file yields no lore.
+
+Delivery stays in memory for the tab: at most two fragments per session, one per elder, and one per context, after
+an initial delay and global cooldown. Only an idle elder at a matching home/porch, World Tree vicinity, time,
+season, or quiet context can speak. Seen fragment and variant IDs prevent repeats. There is no visitor identity,
+saved timeline, transcript telemetry, model call, or production lore control. The World Tree itself remains silent.
+
+Repository age uses the generated city reference clock (`last_sap_flow` / `era.as_of`), never reload wall time.
+Young active houses get one low-poly merged scaffold draw in full LOD, folded into the existing mid-LOD detail
+mesh, omitted from far LOD, and add no collider. LOW_END uses fewer scaffold parts. Archived ruins continue to
+allocate their two ivy/wildflower batches only when an archived repo exists and remain dialogue-unavailable.
+
 ---
 
 ## 5. Scholars & the taxi (NPCs)
@@ -211,6 +239,13 @@ question → ① intent agent (deterministic: landmarks, "most popular/cloned/fo
 
 Three modes: **Local** (default, keyless, instant) · **WebLLM** (on-device WebGPU) ·
 **🛰️ AI Foundry Live** (the Worker). Anything unconfigured → silent Local fallback.
+
+Before any search or model path, taxi questions about a named household's memory are redirected to that repository
+home; untargeted household-memory requests are refused. The server rejects forged profile/Bound payload fields and
+constructs taxi prompts from Shared city state only. During physical travel, one deterministic local seasonal or
+district observation may appear per ride. Navigation and observations never invoke the Worker. The generated
+owner Shared/home registry is used only for an owner-town request; explicit public/portal foreign-town requests
+fail closed to that town's local navigation rather than inheriting the owner's season or residents.
 
 ---
 

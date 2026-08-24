@@ -16,8 +16,11 @@ import { createRequire } from 'module';
 import { createHash } from 'crypto';
 import { runInNewContext } from 'vm';
 import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
+import { runLoreTests } from './test-lore.mjs';
 import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
+import { runTaxiBoundaryTests } from './test-taxi-boundary.mjs';
+import { runTaxiVoiceTests } from './test-taxi-voice.mjs';
 import {
   CAMERA_OBSTRUCTION_DEFAULTS,
   CAMERA_ARRIVAL_OFFSETS,
@@ -65,8 +68,11 @@ import {
 } from '../assets/contribution-quests.js';
 import {
   WEAR_THRESHOLDS_DAYS,
+  REPO_NEWCOMER_DAYS,
   classifyBuildingWear,
   cityReferenceTimestamp,
+  constructionScaffoldPlan,
+  repositoryAgeDays,
   resolveCitySeason,
   seasonPalette
 } from '../assets/city-time.js';
@@ -121,6 +127,11 @@ const CITY_STATE_VALIDATOR = readFileSync(join(ROOT, 'scripts/validate_city_stat
 const RESIDENT_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/resident-profiles.js'), 'utf8');
 const RESIDENT_DIALOGUE_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/resident-dialogue.js'), 'utf8');
 const RESIDENT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'data/residents/index.json'), 'utf8'));
+const LORE_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/lore-fragments.js'), 'utf8');
+const TAXI_VOICE_SRC = readFileSync(join(ROOT, 'assets/taxi-voice.js'), 'utf8');
+const TAXI_BOUNDARY_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/taxi-boundary.js'), 'utf8');
+const LORE_SOURCE = readFileSync(join(ROOT, 'data/lore/fragments.json'), 'utf8');
+const LORE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/lore/fragments.schema.json'), 'utf8'));
 
 let pass = 0, fail = 0; const fails = [];
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; fails.push(msg); console.log('  ✗ ' + msg); } }
@@ -322,7 +333,8 @@ ok(/fetch\('data\/city-state\.json',\{cache:'no-cache'\}\)/.test(HTML)
   &&/SKY_KEYS\.forEach\(k=>/.test(HTML)
   &&/projectCityTime\(repo,CITY_STATE,REPOS/.test(HTML),
   'owner runtime loads static city state before applying season and wear');
-ok(/function addGentleRuin\(g,repo,w,h,d,yr,topH\)/.test(HTML)
+ok(/function prepareGentleRuin\(repo,w,h,d,yr,topH\)/.test(HTML)
+  &&/function ensureGentleRuin\(repo\)/.test(HTML)
   &&/repo\._wearState=cityTime\.state/.test(HTML)
   &&/wear:repo\._wearState,ruin:repo\._ruin/.test(HTML)
   &&/spec\.ruin/.test(HTML)
@@ -2216,7 +2228,7 @@ ok(RESIDENT_MANIFEST.profile_count === CITY_REPOS.length
   && RESIDENT_MANIFEST.active_count === 9
   && RESIDENT_MANIFEST.active_roster.every(entry => !RESIDENT_MANIFEST.profiles.find(profile => profile.slug === entry.slug)?.archived),
   'the manifest covers every public repo while the bounded active roster excludes archives');
-ok(/await loadResidentManifest\(\{owner:currentUser\}\)/.test(HTML)
+ok(/loadResidentManifest\(\{owner:currentUser\}\)/.test(HTML)
   && /async function ensureResidentProfile\(res,retry=false\)/.test(HTML)
   && !/api\.github\.com/.test(RESIDENT_RUNTIME_SRC),
   'boot loads only the local manifest and profile details stay interaction-lazy with zero resident GitHub API calls');
@@ -2240,6 +2252,100 @@ ok(/test_resident_profiles\.py/.test(REFRESH_WORKFLOW)
 ok(/NPC_AMBIENT_ENABLED = "false"/.test(TAXI_WRANGLER)
   && /scriptedAmbient:true/.test(npcBlock),
   'canonical ambient town life is scripted and zero-cost; only explicit resident dialogue may reach a model');
+
+group('Phase 4 lore, newcomers, warm ruins, and Shared-only taxi travel');
+await runLoreTests(ok);
+await runTaxiVoiceTests(ok);
+await runTaxiBoundaryTests(ok);
+const loreDeliveryBlock=(HTML.match(/function _residentLoreContexts\(L\)\{[\s\S]*?function _ambientAllowed\(\)/)||[''])[0];
+const taxiRideBlock=(HTML.match(/\/\* ---- taxi ride:[\s\S]*?\/\* ---- 🗺️ World map/)||[''])[0];
+const scaffoldBlock=(HTML.match(/function _appendYoungScaffold\([\s\S]*?function makeBuilding\(repo\)/)||[''])[0];
+const taxiPromptBlock=(TAXI_BOUNDARY_SRC.match(/export function taxiSystemPrompt\([\s\S]*$/)||[''])[0];
+ok(LORE_SCHEMA.properties.fragments.minItems===10
+  && LORE_SCHEMA.properties.fragments.maxItems===15
+  && Buffer.byteLength(LORE_SOURCE)<32768
+  && /loadLoreFragments\(\)/.test(HTML)
+  && /allocateElderFragments\(\{manifest:RESIDENT_MANIFEST,repositories:ELDER_LORE_REPOSITORIES,cityState:CITY_STATE,lore:LORE_FRAGMENTS\}\)/.test(HTML),
+  'owner boot validates one bounded hand-authored lore file and allocates it from the existing active roster');
+ok(loreDeliveryBlock.length>0
+  && /session: 2/.test(LORE_RUNTIME_SRC)
+  && /perResident: 1/.test(LORE_RUNTIME_SRC)
+  && /perContext: 1/.test(LORE_RUNTIME_SRC)
+  && /seenIds/.test(LORE_RUNTIME_SRC)
+  && /seenVariants/.test(LORE_RUNTIME_SRC)
+  && /_festival&&!_ambConv&&!_sharedJoy&&!_resChatActive/.test(loreDeliveryBlock)
+  && /const hold=Math\.min\(11,4\+line\.length\*\.035\)\+\.2,until=tt\+hold/.test(loreDeliveryBlock)
+  && /L\._speechLockUntil=until/.test(loreDeliveryBlock)
+  && /_resCd\.set\(L\.res\.id,Math\.max\(_resCd\.get\(L\.res\.id\)\|\|0,until\)\)/.test(loreDeliveryBlock)
+  && /function _residentSpeechLocked\(L,tt=clock\.elapsedTime\)/.test(HTML)
+  && /pnear && !L\._pNear && tt>=L\._greetCd && !_residentSpeechLocked\(L,tt\)/.test(HTML)
+  && /for\(const L of RESIDENTS_LIVE\)\{ if\(_residentSpeechLocked\(L,now\)\) continue/.test(HTML)
+  && /if\(!L\._rt && tt>=L\._rp && !_residentSpeechLocked\(L,tt\)\)/.test(HTML)
+  && /if\(_festival\|\|RESIDENTS_LIVE\.some\(L=>_residentSpeechLocked\(L\)\)\) return false/.test(HTML)
+  && !/fetch\(|_npcFetch|npcModelCall|_emitMetric|track\(/.test(loreDeliveryBlock),
+  'elder lore stays rare, contextual, bubble-owned, session-bounded, non-repetitive, locally scripted, and transcript-free');
+ok(/if\(!_DBG\) return \{ok:false,reason:'debug_only'\}/.test(HTML)
+  && /_PHASE4_FIXTURES=_DBG&&_QUERY\.get\('phase4Fixtures'\)==='1'/.test(HTML)
+  && /const ELDER_LORE_REPOSITORIES=_PHASE4_FIXTURES\?REPOS\.map/.test(HTML)
+  && /created:repo\._newcomer\?new Date\(_now-Math\.max\(0,repo\._ageDays\|\|0\)\*86400000\)/.test(HTML)
+  && !/phase4Fixtures[^]*?(button|onclick)/i.test(HTML.slice(0,1875)),
+  'deterministic Phase 4 forcing is debug-gated, shares newcomer/elder fixture age, and has no visible production control');
+ok(!/(npc_action\s*:\s*['"]worldTree|worldTree(?:Voice|Prompt|Speech)|WorldTree_(?:Voice|Speech))/i.test(HTML+WORKER+LORE_RUNTIME_SRC),
+  'the World Tree remains silent with no voice, speech, prompt, or model endpoint');
+ok(REPO_NEWCOMER_DAYS===90
+  && repositoryAgeDays({created:'2026-05-27'},Date.parse('2026-08-24T00:00:00Z'))===89
+  && repositoryAgeDays({created:'2026-05-26'},Date.parse('2026-08-24T00:00:00Z'))===90
+  && repositoryAgeDays({created:'2026-05-25'},Date.parse('2026-08-24T00:00:00Z'))===91
+  && /repo\._ageDays=cityTime\.ageDays; repo\._newcomer=cityTime\.newcomer/.test(HTML),
+  'newcomer age uses the generated reference clock with exact 89/90/91-day boundaries');
+ok(scaffoldBlock.length>0
+  && /if\(!repo\._newcomer\|\|repo\._ruin\) return/.test(scaffoldBlock)
+  && /constructionScaffoldPlan\(\{width:w,height:h,depth:d,lowEnd,kind\}\)/.test(scaffoldBlock)
+  && /repo\._constructionDetails=\{\.\.\.built\.details,ageDays:repo\._ageDays\}/.test(scaffoldBlock)
+  && constructionScaffoldPlan({width:3,height:3,depth:3}).draws===1
+  && constructionScaffoldPlan({width:9,height:12,depth:9,lowEnd:true}).parts<constructionScaffoldPlan({width:9,height:12,depth:9}).parts
+  && !/EXTRA_COLLIDERS|COLLIDERS\.push|PointLight|fetch\(/.test(scaffoldBlock)
+  && /if\(spec\.newcomer&&!spec\.ruin\) _appendYoungScaffold/.test(HTML),
+  'young-house scaffolding is lazy, one-draw, non-colliding, entrance-safe, and retained only through full/mid LOD');
+ok(/function prepareGentleRuin\(repo,w,h,d,yr,topH\)\{\s*if\(!repo\._ruin\) return/.test(HTML)
+  && /draws:0,lazy:true,loaded:false,colliders:0/.test(HTML)
+  && /function ensureGentleRuin\(repo\)\{[\s\S]*?details\.loaded/.test(HTML)
+  && /repo\._ruinDetails=\{\.\.\.details,draws:2,loaded:true\}/.test(HTML)
+  && /if\(desired==='full'\) ensureGentleRuin\(entry\.repo\)/.test(HTML)
+  && /_PHASE4_FIXTURES&&index>=Math\.max\(0,REPOS\.length-2\)/.test(HTML)
+  && /ruin-ivy/.test(HTML) && /ruin-wildflower/.test(HTML),
+  'warm ruin meshes stay absent until a full LOD is relevant and remain bounded while fixtures exercise multiple archives');
+ok(taxiRideBlock.length>0
+  && /observationShown:false/.test(taxiRideBlock)
+  && /if\(!current\|\|current\.observationShown\) return null; current\.observationShown=true/.test(taxiRideBlock)
+  && /ride\.phase='riding'; ride\.t=0; _showTaxiRideObservation\(ride\)/.test(HTML)
+  && !/fetch\(|_npcFetch|generalChat|provider/.test(taxiRideBlock),
+  'each boarded ride immediately emits exactly one local seasonal/district observation and navigation makes no model request');
+ok(/const authorized = authorizeTaxiRequest\(body\)/.test(WORKER)
+  && WORKER.indexOf('const authorized = authorizeTaxiRequest(body)')<WORKER.indexOf('const messages = buildMessages(history, question)')
+  && /taxi_untrusted_household_context/.test(TAXI_BOUNDARY_SRC)
+  && /FORGED_BOUND_MARKER/.test(TAXI_BOUNDARY_SRC)
+  && /function normalizeHistory/.test(TAXI_BOUNDARY_SRC)
+  && /function validScalarFields/.test(TAXI_BOUNDARY_SRC)
+  && /ALLOWED_TAXI_FIELDS/.test(TAXI_BOUNDARY_SRC)
+  && /EN_HOME_NAV/.test(TAXI_BOUNDARY_SRC)
+  && /KO_HOME_NAV/.test(TAXI_BOUNDARY_SRC)
+  && /function navigationHome/.test(TAXI_BOUNDARY_SRC)
+  && /kind: "navigation"/.test(TAXI_BOUNDARY_SRC)
+  && /kind: "unavailable"/.test(TAXI_BOUNDARY_SRC)
+  && /taxi_town_context_unavailable/.test(TAXI_BOUNDARY_SRC)
+  && /question = authorized\.question;\s*history = authorized\.history/.test(WORKER)
+  && /if \(authorized\.kind === "unavailable"\)/.test(WORKER)
+  && /EN_HOME_NAV/.test(TAXI_VOICE_SRC)
+  && /KO_HOME_NAV/.test(TAXI_VOICE_SRC)
+  && /function navigationHome/.test(TAXI_VOICE_SRC)
+  && /window\.__taxiLocal=/.test(HTML)
+  && /SHARED_CITY_STATE=/.test(TAXI_BOUNDARY_SRC)
+  && !/RESIDENT_REGISTRY|bound_memories|BOUND_REPOSITORY=/.test(taxiPromptBlock),
+  'the server taxi enforces its Shared-only boundary before prompt or provider planning');
+ok(/validate-lore-fragments\.mjs/.test(REFRESH_WORKFLOW)
+  && /scripts\/smoke\.mjs/.test(REFRESH_WORKFLOW),
+  'daily publication is gated by lore writing/schema and taxi boundary regressions');
 
 group('AURI market oracle — grounded market KB + read-only crypto MCP');
 const marketActionSrc=(HTML.match(/function marketActionQuestion\(q\)\{[\s\S]*?(?=\nfunction marketQuestion)/)||[''])[0];
@@ -2410,11 +2516,11 @@ ok(/window\.__playerLight=/.test(HTML), '?dbg __playerLight hook present to insp
 group('resident warmth (greet + idle emote)');
 ok(/function _resGreetLine\(res\)\{/.test(HTML), '_resGreetLine() builds a short localized wave-hello');
 ok(/const RES_GREET_DIST=5\.2, RES_GREET_CD_MIN=24, RES_GREET_CD_MAX=44;/.test(HTML), 'greet radius + cooldown constants present (edge-triggered, not spammy)');
-ok(/if\(pnear && !L\._pNear && tt>=L\._greetCd\)\{ L\.bub\.say\(_resGreetLine\(L\.res\), _hex\(L\.res\.color\)\); L\._gt=2\.6;/.test(HTML), 'proximity greeting is edge-triggered (_pNear), cooldown-gated (_greetCd), and waves (_gt) with a bubble');
+ok(/if\(pnear && !L\._pNear && tt>=L\._greetCd && !_residentSpeechLocked\(L,tt\)\)\{ L\.bub\.say\(_resGreetLine\(L\.res\), _hex\(L\.res\.color\)\); L\._gt=2\.6;/.test(HTML), 'proximity greeting is edge-triggered, cooldown-gated, and cannot overwrite an owned lore bubble');
 ok(/if\(!inConv && !chatBound && !hidden\)\{/.test(HTML), 'greeting is suppressed during a conversation / bound chat / hidden tab (never clobbers ambient bubbles)');
 ok(/if\(chatBound\) L\.bub\.clear\(\);/.test(HTML), 'a resident the visitor is chatting with hides its floating greeting/emote bubble (no residual bubble lingers into the chat)');
 ok(/function _resIdleEmote\(\)\{/.test(HTML) && /else if\(Math\.random\(\)<0\.7\)\{ const r=Math\.random\(\); L\.bub\.say\(r<0\.34\?_resMoodLine\(L\):r<0\.67\?_resTodLine\(\):_resIdleEmote\(\), _hex\(L\.res\.color\)\); L\._gt=1\.6;/.test(HTML), 'low-frequency solo idle emote adds ambient town life (now mood + time-flavored)');
-ok(/if\(!_festival && !inConv && !chatBound && !L\._pNear && L\._gt<=0 && \(L\._stretch\|\|0\)<=0 && tt>=L\._emoteCd\)\{/.test(HTML), 'idle emote only fires when idle, alone, visitor not right here, no festival, not mid-stretch/gesture (greeting has precedence)');
+ok(/if\(!loreDelivered && !_festival && !inConv && !chatBound && !L\._pNear && L\._gt<=0 && \(L\._stretch\|\|0\)<=0 && tt>=L\._emoteCd\)\{/.test(HTML), 'idle emote only fires when lore did not claim the bubble and the resident is idle, alone, visitor not right here, no festival, or active gesture');
 ok(/const RES_EMOTE_CD_MIN=\(LOW_END\?46:30\), RES_EMOTE_CD_MAX=\(LOW_END\?90:64\);/.test(HTML), 'LOW_END keeps the greeting warmth but spaces solo emotes further (saving stays on the AI side)');
 ok(/window\.__greet=\(id\)=>/.test(HTML) && /greetDist:RES_GREET_DIST, greetCd:\[RES_GREET_CD_MIN,RES_GREET_CD_MAX\]/.test(HTML), '?dbg __greet hook + __npcState greet/emote config present');
 
@@ -2540,7 +2646,7 @@ ok(/window\.__farewell=\(q\)=>/.test(HTML) && /window\.__byeMatch=\(q\)=>/.test(
 
 group('plaza bonfire festival — once a session the whole town gathers to celebrate');
 ok(/let _festival=null, ?_festDone=false, ?_festNextAt=\(LOW_END\?150:80\)\+Math\.random\(\)\*80/.test(npcBlock), 'the festival is a once-a-session event, armed for a while into the visit (later on LOW_END)');
-ok(/function startFestival\(repo\)\{ if\(_festival\) return false; if\(_sharedJoy\) _endSharedJoy\('festival'\); if\(_ambConv\) _endAmb\('festival'\)/.test(npcBlock) && /fireworksShow\(LOW_END\?4:6\)/.test(npcBlock) && /_festDone=true/.test(npcBlock), 'startFestival ends shared joy/ambient chat, kicks off fireworks + a toast, and marks the session done');
+ok(/function startFestival\(repo\)\{ if\(_festival\|\|RESIDENTS_LIVE\.some\(L=>_residentSpeechLocked\(L\)\)\) return false; if\(_sharedJoy\) _endSharedJoy\('festival'\); if\(_ambConv\) _endAmb\('festival'\)/.test(npcBlock) && /fireworksShow\(LOW_END\?4:6\)/.test(npcBlock) && /_festDone=true/.test(npcBlock), 'startFestival waits for owned lore speech, then ends shared joy/ambient chat and starts its toast');
 ok(/function _festivalTick\(tt\)\{/.test(npcBlock) && /launchFirework\(F\.center\.x\+Math\.cos\(a\)\*r, ?F\.center\.z\+Math\.sin\(a\)\*r/.test(npcBlock) && /if\(_festDone \|\| _sharedJoy \|\| document\.hidden \|\| _resChatActive\(\) \|\| !NPC_CFG\.motionEnabled \|\| RESIDENTS_LIVE\.length<2 \|\| tt<_festNextAt\) return;/.test(npcBlock), '_festivalTick never auto-starts over an active shared excursion');
 ok(/if\(_festival\) return;\s*\/\/ no ambient chatter during the festival/.test(npcBlock), 'ambient chatter is suspended during the festival — everyone is at the bonfire');
 ok(/if\(_festival && !chatBound && !hidden && NPC_CFG\.motionEnabled\)\{[\s\S]*?_resWalk\(L,fx,fz,RES_MOVE\.meetSpd,dt\)/.test(npcBlock) && /if\(_festival\.phase==='celebrate' && !L\._pNear\)\{[\s\S]*?_festLine\(L\.res\)/.test(npcBlock), 'every free resident walks to a ring slot around the fire, then (in the celebrate phase) waves + cheers');

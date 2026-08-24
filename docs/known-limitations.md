@@ -17,6 +17,13 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   sanitized public repository metadata available during refresh. Missing issue/PR/commit/release history stays
   empty. Details load only after explicit interaction; a Bound-source change may temporarily use the local
   fallback until the generated Worker registry is redeployed.
+- **Elder lore is sparse and hand-authored.** It is allocated only across the eligible nine-resident active
+  roster, not all generated profiles, and is deliberately rare enough that a short visit may reveal none.
+  The in-memory seen/cooldown state resets on reload. The fragments hint through fallible recollection; they are
+  not a factual history screen, and the World Tree never answers.
+- **Newcomer and ruin visuals follow reproducible public dates.** A repository is new only while its generated
+  city-reference age is under 90 days. The current snapshot has no archived repository, so warm ruin composition
+  and unavailable dialogue are exercised with deterministic fixtures rather than fabricated production history.
 - **Public repos only, by design.** Private repo names never appear. Untouched mirror forks are filtered
   out; only forks you've actually committed to are shown.
 - **Public API modes do not have traffic.** Repo Portal and `?user=` receive stars, forks, issues, language,
@@ -46,6 +53,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 - **Grounded answers depend on a backend.** The live grounding needs the `repolis-taxi` Cloudflare Worker
   plus an Azure AI Search Knowledge Base. A fresh clone with no backend falls back to **keyless Local
   search** — accurate navigation, but no grounded prose Q&A. This is graceful, not an error.
+- **Taxi travel does not require the backend.** Shared season/count answers, household redirects, and the single
+  seasonal/district ride observation are deterministic local behavior. The taxi never receives resident Bound
+  profiles; a forged household payload is rejected server-side before retrieval or model planning. Public/portal
+  foreign towns do not borrow the generated owner Shared state or resident homes and stay on local navigation.
 - **KB latency is real.** A cold/complex Knowledge Base + MCP round-trip can take **15–21 s**. Cloudflare
   Workers tolerate it (they bill CPU time, not awaited wall-clock); the optional **Vercel Hobby** path caps
   at ~10 s and silently falls back to Local — so the Vercel function is best-effort only.

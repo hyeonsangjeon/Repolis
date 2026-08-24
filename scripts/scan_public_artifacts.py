@@ -22,6 +22,19 @@ RESIDENT_PATTERNS = (
     ("email identity", re.compile(rb"\b[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b")),
     ("control character", re.compile(rb"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")),
 )
+LORE_PATTERNS = (
+    ("html content", re.compile(rb"<[^>]+>")),
+    ("instruction-shaped content", re.compile(
+        rb"ignore (?:all|any|previous)|follow (?:these|the) instructions|"
+        rb"reveal (?:the )?(?:prompt|secret)|system\s*:",
+        re.I,
+    )),
+    ("internal infrastructure term", re.compile(
+        rb"\b(?:openai|anthropic|gemini|cloudflare|azure|worker|api|tokens?|provider|llm|chatgpt)\b",
+        re.I,
+    )),
+    ("control character", re.compile(rb"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")),
+)
 
 
 def tracked_files():
@@ -49,6 +62,10 @@ def main():
                     findings.append(f"{relative}: {label}")
         if relative.startswith("data/residents/") or relative.endswith("resident-registry.js"):
             for label, pattern in RESIDENT_PATTERNS:
+                if pattern.search(data):
+                    findings.append(f"{relative}: {label}")
+        if relative == "data/lore/fragments.json":
+            for label, pattern in LORE_PATTERNS:
                 if pattern.search(data):
                     findings.append(f"{relative}: {label}")
     if findings:

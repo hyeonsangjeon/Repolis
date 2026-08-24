@@ -33,6 +33,8 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`repos.json` + `data/city-state.json`** | Generated repo catalog plus deterministic era, season, statistics, sap timestamp, and archived roots for the current owner city. **Do not hand-edit.** | Never directly; regenerate (see below). |
 | **`data/city-state.schema.json`** | Strict JSON Schema for the generated city-state artifact. | Changing the city-state contract. |
 | **`assets/city-time.js`** | Pure wear (`recent` / `faded` / `mossed`), ruin, reference-date, and seasonal palette rules. | Changing how public time metadata affects the city. |
+| **`data/lore/fragments.json` + `assets/lore-fragments.js`** | Hand-authored KO/EN elder fragments plus strict validation, deterministic active-roster allocation, and session-bounded delivery. | Changing The Silence fragments or their rarity/allocation contract. Never generate or overwrite the JSON. |
+| **`assets/taxi-voice.js`** | Pure local taxi Shared-state answers, household redirect, and once-per-ride seasonal/district observations. | Changing travel voice without adding a backend call. |
 | **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
 | **`assets/world-tree/world-tree-state.js`** | Pure Phase 2 projection for Chronicle, Roots, sap-flow freshness/mode, and bounded star/repo growth. | Changing how generated city state reaches the silent World Tree. |
@@ -123,8 +125,10 @@ node scripts/smoke.mjs       # city/runtime static + behavioral regression guard
 python3 scripts/test_city_state.py
 python3 scripts/validate_city_state.py
 node scripts/test-city-time.mjs
+node scripts/validate-lore-fragments.mjs
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js
+node --check cloudflare-taxi/src/taxi-boundary.js
 node --check assets/repo-route.js
 node --check assets/contribution-quests.js
 ```
@@ -170,6 +174,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | Change Twin Towns matching or two-person share links | `assets/twin-towns.js` + the Twin Towns block in `index.html` + `scripts/smoke.mjs`. |
 | Change Town Gazette / return-visit freshness | `/*FRESHNESS*/` + Passport render/start flow in `index.html`; keep snapshots local, bounded, per-town, and explicit-read only. |
 | Change resident homes, styles, gardens, routines, moods, friendships, haunts, or Shared Joy | The resident social layer + Starlight Row blocks in `index.html`; preserve the resident style map, 3 roof batches, 10/6 desktop/LOW_END detail-batch cap, 42-unit reserve, entrance gap, quarter colliders, home/work truth, owned porch seats, and social ownership guards. |
+| Change elder lore, newcomer voice/scaffolding, or taxi travel observations | `data/lore/fragments.json`, `assets/lore-fragments.js`, `assets/taxi-voice.js`, `assets/city-time.js`, and the Phase 4 blocks in `index.html`; preserve the nine-resident active roster, World Tree silence, local-only delivery, and one observation per ride. |
 | Fix / improve a scholar's answer or references | `cloudflare-taxi/src/grounded.js` (server) + the trace panel in `index.html`. |
 | Add a new scholar NPC | `scholars.js` + `scholarConfig`/`MCP_NPCS` in `cloudflare-taxi/src/grounded.js`; choose KB-backed or direct MCP deliberately; document in `SCHOLARS.md`. |
 | Tune the taxi's repo search/intent routing | `index.html` (Local search: inverted index + intent agent). |
@@ -183,9 +188,8 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 
 A daily Action turns the owner's **public repos + committed traffic logs** into `repos.json`. `index.html`
 turns that array into metric-shaped buildings, topic districts, routes, maps, and exploration progress.
-Residents add named homes, home/work commutes, moods, friendships, haunts, Shared Joy excursions, gatherings, and festivals; landmarks include the
-Contribution Library, Chronopolis, Observatory, and imported procedural World Tree. Repo Portal lets one public `owner/repo` arrive before its owner catalog, then reuses the same building and Repository Atelier with truthful public-metadata boundaries. Repo Route lets a visitor hand off an ordered 2–3 house path they actually explored. Open Source Quests connects an explicitly loaded current public issue to its real repo house before GitHub handoff. Every repo also rebinds one reusable Atelier where its data, impact signals, current avatar, and in-room Gitber stay inside the exhibition. Town Growth Replay turns public repo creation dates into a reversible, shareable city history without inventing historical metrics. Gitber/POLARIS and the
+Residents add named homes, home/work commutes, moods, friendships, haunts, Shared Joy excursions, gatherings, and festivals. The oldest eligible 20% of the bounded active roster can rarely let slip a hand-authored local lore fragment; repositories younger than 90 generated-clock days receive a lightweight construction layer and newcomer voice. Landmarks include the Contribution Library, Chronopolis, Observatory, and imported procedural World Tree. Repo Portal lets one public `owner/repo` arrive before its owner catalog, then reuses the same building and Repository Atelier with truthful public-metadata boundaries. Repo Route lets a visitor hand off an ordered 2–3 house path they actually explored. Open Source Quests connects an explicitly loaded current public issue to its real repo house before GitHub handoff. Every repo also rebinds one reusable Atelier where its data, impact signals, current avatar, and in-room Gitber stay inside the exhibition. Town Growth Replay turns public repo creation dates into a reversible, shareable city history without inventing historical metrics. Gitber/POLARIS and the
 scholars (VEGA · MS Learn, RIGEL · DeepWiki, MIRA · Context7, LYRA · Hugging Face) add natural-language
 navigation and grounded answers. Residents hand specialist questions to the right scholar instead of gaining
-their own MCP access. The Passport's local Town Gazette makes daily public-repo changes visible on return. Everything
+their own MCP access. Gitber remains the only all-district traveler: ride observations and Shared-state answers are local, while household memory questions return to the correct repo home. The Passport's local Town Gazette makes daily public-repo changes visible on return. Everything
 degrades gracefully to keyless Local search and solo play.
