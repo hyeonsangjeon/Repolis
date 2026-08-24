@@ -23,6 +23,24 @@ The controlled Chrome cold baseline is 3,001,294 decoded bytes and 42 requests a
 - The footprint boundary contains no storage, cookie, analytics, network, WebSocket, peer/resident,
   identity, or collider path. Page navigation clears or tears down the one pool.
 
+## Public-fork-lineage ship evidence
+
+- Current generated data: **9/68 forks with lineage, 0 non-forks with lineage, 0 archived repos**. Every
+  lineage object has exactly a canonical public `source` owner/name and `url`.
+- The normal daily build performs a lookup only after a fork passes the existing committed-to filter:
+  at most nine added REST reads in the current snapshot. Private, inaccessible, deleted, malformed,
+  self, and non-GitHub sources fail soft to no field.
+- Cold boot after footprints: 3,019,980 decoded bytes and 44 requests, a direct lineage delta of
+  **+9,096 bytes / +1 request**. The full Phase 5 delta is **+18,686 bytes / +2 requests**.
+- Frozen-pose desktop crest A/B: **+1 draw, +36 triangles, 0.00% render median**. LOW_END:
+  **+1 draw, +36 triangles, +1.59% render median**.
+- All nine crests share one geometry, material, draw, and six-color deterministic palette with zero
+  steady-state allocations; there are no source textures, lights, colliders, or runtime GitHub requests.
+  Growth Replay hides the whole batch.
+- KO/EN cards say only “갈라져 나온 공개 fork / Public fork branched from”, expose the exact
+  `github.com` source with `target=_blank rel=noopener`, and make no family, authorship, ownership, or
+  maintainer claim. Non-forks and unknown/foreign runtime sources render no lineage UI.
+
 ## Guardrails for the two approved experiments
 
 - Each experiment ships in its own branch, commit, PR, test boundary, merge, Pages deployment, and live QA.

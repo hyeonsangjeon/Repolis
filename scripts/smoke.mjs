@@ -84,6 +84,11 @@ import {
   resolveSapFlowFreshness,
   resolveSapFlowMode
 } from '../assets/world-tree/world-tree-state.js';
+import {
+  FORK_LINEAGE_PALETTE,
+  forkLineagePaletteIndex,
+  projectForkLineage
+} from '../assets/fork-lineage.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -120,6 +125,8 @@ const CONTRIBUTION_QUEST_SRC = readFileSync(join(ROOT, 'assets/contribution-ques
 const CITY_TIME_SRC = readFileSync(join(ROOT, 'assets/city-time.js'), 'utf8');
 const WORLD_TREE_STATE_SRC = readFileSync(join(ROOT, 'assets/world-tree/world-tree-state.js'), 'utf8');
 const SESSION_FOOTPRINT_SRC = readFileSync(join(ROOT, 'assets/session-footprints.js'), 'utf8');
+const FORK_LINEAGE_SRC = readFileSync(join(ROOT, 'assets/fork-lineage.js'), 'utf8');
+const FORK_LINEAGE_BUILDER = readFileSync(join(ROOT, 'scripts/fork_lineage.py'), 'utf8');
 const CITY_STATE = JSON.parse(readFileSync(join(ROOT, 'data/city-state.json'), 'utf8'));
 const CITY_STATE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/city-state.schema.json'), 'utf8'));
 const CITY_REPOS = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
@@ -2379,6 +2386,56 @@ ok(/addEventListener\('pagehide'/.test(footprintBlock)
   && /if\(_DBG\)\{[\s\S]*?window\.__footprints/.test(footprintBlock)
   && /test-session-footprints\.mjs/.test(REFRESH_WORKFLOW),
   'navigation clears or tears down the pool, while fixtures remain debug-only and daily publication runs the hermetic suite');
+
+group('Phase 5 public fork lineage — static source truth and one subtle crest batch');
+const lineageBlock=(HTML.match(/\/\*FORK_LINEAGE:START\*\/[\s\S]*?\/\*FORK_LINEAGE:END\*\//)||[''])[0];
+const lineageCardBlock=(HTML.match(/function refreshRepoCardLineage\(repo\)\{[\s\S]*?function closeCard\(\)/)||[''])[0];
+const currentForks=CITY_REPOS.filter(repo=>repo.fork),currentLineages=currentForks.map(repo=>projectForkLineage({...repo,_owner:'hyeonsangjeon'}));
+ok(currentForks.length>0
+  && currentLineages.every(Boolean)
+  && CITY_REPOS.filter(repo=>!repo.fork).every(repo=>!Object.hasOwn(repo,'lineage')),
+  'every current committed-to fork carries valid lineage while non-forks carry no lineage field');
+ok(projectForkLineage({fork:false,lineage:{source:'a/b',url:'https://github.com/a/b'}})===null
+  && projectForkLineage({fork:true,_owner:'owner',repo:'child',lineage:{source:'bad source',url:'https://github.com/bad/source'}})===null
+  && projectForkLineage({fork:true,_owner:'owner',repo:'child',lineage:{source:'source/repo',url:'https://example.com/source/repo'}})===null
+  && projectForkLineage({fork:true,_owner:'owner',repo:'child',lineage:{source:'owner/child',url:'https://github.com/owner/child'}})===null,
+  'non-forks, unknown/malformed sources, non-GitHub URLs, and self-lineage fail soft');
+ok(FORK_LINEAGE_PALETTE.length===6
+  && forkLineagePaletteIndex('source/repo')===forkLineagePaletteIndex('source/repo')
+  && new Set(currentLineages.map(lineage=>lineage.paletteIndex)).size<=FORK_LINEAGE_PALETTE.length,
+  'crest assignment is deterministic and bounded to one shared six-color palette');
+const publicForkProjection=projectPublicRepo({
+  name:'child',full_name:'visitor/child',owner:{login:'visitor'},private:false,disabled:false,fork:true,
+  source:{full_name:'source/repo',html_url:'https://github.com/source/repo'}
+},'visitor',Date.parse('2026-08-24T00:00:00Z'));
+ok(publicForkProjection?.fork===true && !Object.hasOwn(publicForkProjection,'lineage')
+  && /public_fork_lineage\(full\) if r\.get\("fork"\) else None/.test(REPO_BUILDER)
+  && /if record\.get\("fork"\) is True:[\s\S]*?public_fork_lineage/.test(REPO_BUILDER),
+  'foreign/public runtime projections invent no lineage; only included generated forks receive bounded build-time lookups');
+ok(/source\.get\("private"\) is True/.test(FORK_LINEAGE_BUILDER)
+  && /visibility/.test(FORK_LINEAGE_BUILDER)
+  && /parsed\.hostname != "github\.com"/.test(FORK_LINEAGE_BUILDER)
+  && /except \(subprocess\.CalledProcessError, json\.JSONDecodeError, ValueError\):\s+return None/.test(FORK_LINEAGE_BUILDER),
+  'private, inaccessible, deleted, malformed, and non-GitHub sources are rejected without failing the daily build');
+ok(lineageBlock.length>0
+  && (lineageBlock.match(/new THREE\.InstancedMesh/g)||[]).length===1
+  && /count:FORK_LINEAGE_RECORDS\.length,paletteSize:FORK_LINEAGE_PALETTE\.length,draws:1,textures:0,sourceSpecificMaterials:0,colliders:0/.test(lineageBlock)
+  && !/Texture|fetch\(|PointLight|DoubleSide|COLLIDERS\.push|EXTRA_COLLIDERS\.push/.test(lineageBlock),
+  'all source crests share one instanced draw, geometry, material, and bounded palette with zero textures, lights, or colliders');
+ok(/lineageFrom:'🌿 \{source\}에서 갈라져 나온 공개 fork'/.test(HTML)
+  && /lineageFrom:'🌿 Public fork branched from \{source\}'/.test(HTML)
+  && /link\.target='_blank'; link\.rel='noopener'/.test(lineageCardBlock)
+  && !/(family|kinship|bloodline|authored by|created by|가족|혈통|만든 사람)/i.test((HTML.match(/lineageFrom:[^\n]+/g)||[]).join('\n')),
+  'KO/EN card copy states only a public branch fact and the exact GitHub source link is noopener-safe');
+ok(/_setForkLineageCrestsVisible\(false\)/.test(HTML)
+  && /_setForkLineageCrestsVisible\(true\)/.test(HTML)
+  && /repo\._lineage=projectForkLineage\(repo\)/.test(HTML)
+  && !/fetch\(|api\.github\.com|WebSocket|track\(/.test(FORK_LINEAGE_SRC+lineageBlock+lineageCardBlock),
+  'crest visibility cannot ghost through Growth Replay and lineage adds no runtime API, socket, or telemetry path');
+ok(/test_fork_lineage\.py/.test(REFRESH_WORKFLOW)
+  && /test-fork-lineage\.mjs/.test(REFRESH_WORKFLOW)
+  && /FORK_LINEAGE_ONLY/.test(REPO_BUILDER),
+  'daily publication runs sanitizer/catalog fixtures and supports an independent lineage-only generated-data refresh');
 
 group('AURI market oracle — grounded market KB + read-only crypto MCP');
 const marketActionSrc=(HTML.match(/function marketActionQuestion\(q\)\{[\s\S]*?(?=\nfunction marketQuestion)/)||[''])[0];

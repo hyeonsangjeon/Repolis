@@ -288,6 +288,12 @@
   .card .body { padding: 18px 24px 8px; }
   .card .body p { font-size: 14px; line-height: 1.55; color: #5a4636; }
   .card .body p.empty { color: #b39f8c; font-style: italic; }
+  .cardLineage { margin: 0 24px 4px; padding: 10px 12px; border-radius: 11px; background: #f0eee2;
+    color: #53604c; font-size: 11.5px; line-height: 1.45; display: flex; align-items: center; gap: 8px; }
+  .cardLineage[hidden] { display: none; }
+  .cardLineage .crest { width: 12px; height: 15px; flex: 0 0 auto; clip-path: polygon(50% 0,100% 25%,86% 76%,50% 100%,14% 76%,0 25%); }
+  .cardLineage .copy { flex: 1; min-width: 0; }
+  .cardLineage a { color: #456d62; font-weight: 800; text-decoration-thickness: 1px; text-underline-offset: 2px; }
   .card .actions { padding: 16px 24px 22px; display: flex; gap: 10px; flex-wrap: wrap; }
   .btn { flex: 1; min-width: 130px; text-align: center; text-decoration: none; padding: 12px 14px;
     border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; }
@@ -1639,7 +1645,7 @@
   <div class="stActions"><button id="repoRouteHudRide" type="button"></button></div>
 </div>
 
-<div id="modal" role="dialog" aria-modal="true" aria-labelledby="cardName" aria-describedby="cardDesc cardTimeTrace" aria-hidden="true">
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="cardName" aria-describedby="cardDesc cardTimeTrace cardLineage" aria-hidden="true">
   <div class="card" tabindex="-1">
     <img id="cardImg" class="hero" alt="repo social preview" />
     <div class="sociallabel" id="cardSocialTag">🎨 <span data-i18n="socialPreview">소셜 프리뷰</span></div>
@@ -1652,6 +1658,7 @@
     <div class="timeTrace" id="cardTimeTrace" role="status"></div>
     <div class="since" id="cardSince"></div>
     <div class="body"><p id="cardDesc"></p></div>
+    <div class="cardLineage" id="cardLineage" hidden></div>
     <div class="metricnote" id="cardMetricNote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).</div>
     <div class="cardAsk" id="cardAsk"></div>
     <div class="actions" id="cardActions"></div>
@@ -1897,6 +1904,7 @@ import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, re
 import { allocateElderFragments, createLoreDeliveryState, loadLoreFragments } from './assets/lore-fragments.js?v=world-tree-phase4-v1';
 import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from './assets/taxi-voice.js?v=world-tree-phase4-v1';
 import { clearSessionFootprints, createSessionFootprintState, sessionFootprintScale, sessionFootprintSnapshot, stepSessionFootprints, teardownSessionFootprints } from './assets/session-footprints.js?v=world-tree-phase5-footprints-v1';
+import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -2293,6 +2301,7 @@ const I18N = {
     rainName:'비정원 날씨 종', rainReached:' — 종을 울려 36초 동안 햇빛 소나기를 불러요. <span class="key">Enter</span> 또는 클릭으로 울리기', rainReachedWet:' — 소나기가 내려요. <span class="key">Enter</span> 또는 클릭으로 맑게 하기', rainStarted:'🌦️ 날씨 종이 울렸어요! 구름이 모이고 주민들이 우산을 펼쳐요', rainStopped:'☀️ 종소리를 따라 소나기가 걷혔어요', rainEnded:'🌤️ 짧은 소나기가 지나가고 마을이 다시 맑아졌어요', lmDriveRain:'🌦️ 비정원의 날씨 종으로 갑니다…', lmArriveRain:'🚕 <b>비정원</b>에 도착했어요! 종을 울려 햇빛 소나기를 불러보세요 🌦️',
     festAllStamps:'🎆 마을을 모두 둘러봤어요! 모든 명소 스탬프 완성 — 축제를 즐겨요!', festRepos:'🎆 레포 {n}곳 방문 달성! 불꽃이 터져요.',
     metricNote:'🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).',
+    lineageFrom:'🌿 {source}에서 갈라져 나온 공개 fork', lineageOpen:'공개 원본 저장소 열기 ↗',
     seasonSpring:'봄', seasonSummer:'여름', seasonAutumn:'가을', seasonWinter:'겨울', seasonCity:'도시 계절',
     wearRecent:'최근 손길', wearFaded:'빛바랜 흔적', wearMossed:'이끼 낀 시간',
     ruinStatus:'들꽃이 핀 온화한 폐허', ruinNote:'이 공개 레포는 아카이브되어 잠들었지만, 건물의 실루엣과 이름 명패는 도시의 기억으로 남아 있어요.',
@@ -2611,6 +2620,7 @@ const I18N = {
     rainName:'Rain Garden Weather Bell', rainReached:' — ring for one 36-second sunshower. Press <span class="key">Enter</span> or click to ring', rainReachedWet:' — the sunshower is falling. Press <span class="key">Enter</span> or click to clear it', rainStarted:'🌦️ The Weather Bell rang! Clouds gather and the residents open their umbrellas', rainStopped:'☀️ The sunshower clears with the bell', rainEnded:'🌤️ The brief shower passes and the town brightens again', lmDriveRain:'🌦️ Off to the Rain Garden Weather Bell…', lmArriveRain:"🚕 We've reached the <b>Rain Garden</b>! Ring the bell to call a sunshower 🌦️",
     festAllStamps:'🎆 You\'ve explored the whole village! Every landmark stamped — enjoy the festival!', festRepos:'🎆 {n} repos visited! Fireworks light up the sky.',
     metricNote:'🏠 Buildings grow from metrics — 👁 visitors = height · ⑂ forks = width · ⬇ clones = decoration · 📈 views = yard · ★ = gold star · 🌙 at night, window glow = repo activity.',
+    lineageFrom:'🌿 Public fork branched from {source}', lineageOpen:'Open public source ↗',
     seasonSpring:'Spring', seasonSummer:'Summer', seasonAutumn:'Autumn', seasonWinter:'Winter', seasonCity:'City season',
     wearRecent:'Recently tended', wearFaded:'Faded traces', wearMossed:'Mossed by time',
     ruinStatus:'Gentle ruin with wildflowers', ruinNote:'This public repository is archived and resting, while its original silhouette and accessible nameplate remain part of the city memory.',
@@ -2871,6 +2881,7 @@ function applyLang(){
   if(typeof window.__updateLiveTitle==='function') window.__updateLiveTitle();
   if(typeof _refreshRepositoryAtelierLanguage==='function') _refreshRepositoryAtelierLanguage();
   if(typeof refreshTimeTraceLabels==='function') refreshTimeTraceLabels();
+  { const cardModal=document.getElementById('modal'); if(typeof refreshRepoCardLineage==='function'&&cardModal?.classList.contains('show')&&cardModal._repoKey) refreshRepoCardLineage(repoByKey(cardModal._repoKey)); }
 }
 
 const _maxClones = Math.max(1, ...REPOS.map(r=>r.clones||0));
@@ -2892,6 +2903,7 @@ REPOS.forEach((repo,index)=>{
     wear:sampleWear,archived:(_CITY_TIME_FIXTURES&&index===3)||phase4Ruin,ageDays:phase4Age});
   repo._wearState=cityTime.state; repo._wearDays=cityTime.daysSincePush; repo._ruin=cityTime.archived;
   repo._ageDays=cityTime.ageDays; repo._newcomer=cityTime.newcomer;
+  repo._lineage=projectForkLineage(repo);
   repo.label = labelOf(repo.repo);
   repo.wall=_cityTint(p.wall,CITY_SEASON_STYLE.building,CITY_SEASON_STYLE.buildingMix);
   repo.roof=_cityTint(p.roof,CITY_SEASON_STYLE.building,CITY_SEASON_STYLE.buildingMix*.65);
@@ -5364,6 +5376,31 @@ function makeBuilding(repo){
   repo._group=g; repo._pos=new THREE.Vector3(repo._x,0,repo._z); repo._visited=false; buildings.push(repo);
 }
 REPOS.forEach(makeBuilding);
+/*FORK_LINEAGE:START*/
+const FORK_LINEAGE_RECORDS=REPOS.filter(repo=>repo._lineage&&repo._group&&repo._sign);
+let FORK_LINEAGE_CREST_MESH=null;
+function _buildForkLineageCrests(){
+  if(!FORK_LINEAGE_RECORDS.length) return null;
+  const shape=new THREE.Shape(); shape.moveTo(0,.31); shape.lineTo(.27,.16); shape.lineTo(.22,-.18); shape.lineTo(0,-.34);
+  shape.lineTo(-.22,-.18); shape.lineTo(-.27,.16); shape.closePath();
+  const geometry=new THREE.ShapeGeometry(shape),material=new THREE.MeshBasicMaterial({color:0xffffff,vertexColors:true,transparent:true,opacity:.82,
+    depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+  const mesh=new THREE.InstancedMesh(geometry,material,FORK_LINEAGE_RECORDS.length),dummy=new THREE.Object3D(),local=new THREE.Vector3(),world=new THREE.Vector3(),quaternion=new THREE.Quaternion();
+  mesh.name='PublicForkLineageCrests'; mesh.castShadow=false; mesh.receiveShadow=false; mesh.renderOrder=2;
+  FORK_LINEAGE_RECORDS.forEach((repo,index)=>{ const sign=repo._sign,signW=sign.geometry.parameters.width||3.1;
+    const x=-signW*.5+.25,y=sign.position.y,z=sign.position.z+.025;
+    repo._group.updateMatrixWorld(true); local.set(x,y,z); world.copy(local).applyMatrix4(repo._group.matrixWorld); repo._group.getWorldQuaternion(quaternion);
+    dummy.position.copy(world); dummy.quaternion.copy(quaternion); dummy.scale.setScalar(LOW_END?.52:.62); dummy.updateMatrix(); mesh.setMatrixAt(index,dummy.matrix);
+    mesh.setColorAt(index,new THREE.Color(FORK_LINEAGE_PALETTE[repo._lineage.paletteIndex])); repo._lineageCrest={index,paletteIndex:repo._lineage.paletteIndex,local:[x,y,z]}; });
+  mesh.instanceMatrix.needsUpdate=true; if(mesh.instanceColor) mesh.instanceColor.needsUpdate=true;
+  mesh.userData={count:FORK_LINEAGE_RECORDS.length,paletteSize:FORK_LINEAGE_PALETTE.length,draws:1,textures:0,sourceSpecificMaterials:0,colliders:0,
+    geometries:1,materials:1,steadyStateAllocations:0,
+    trianglesPerInstance:geometry.index?geometry.index.count/3:geometry.attributes.position.count/3};
+  scene.add(mesh); FORK_LINEAGE_CREST_MESH=mesh; return mesh;
+}
+function _setForkLineageCrestsVisible(visible){ if(FORK_LINEAGE_CREST_MESH) FORK_LINEAGE_CREST_MESH.visible=visible!==false; }
+_buildForkLineageCrests();
+/*FORK_LINEAGE:END*/
 function makeWorldTreeSapFlow(){
   if(!MEMORIAL_TREE||WORLD_TREE_SAP_MODE==='none') return null;
   const repos=buildings.filter(repo=>!repo._isLibrary&&repo._pos),count=repos.length;
@@ -9733,6 +9770,7 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   const desc=document.getElementById('cardDesc');
   if(repo.desc){ desc.textContent=repo.desc; desc.className=''; }
   else { desc.textContent=t('noDesc'); desc.className='empty'; }
+  refreshRepoCardLineage(repo);
   const act=document.getElementById('cardActions');
   // 레포 카드에서는 '관련 토론 보기'(크로노폴리스 이동) 버튼을 노출하지 않는다 —
   // 집(레포)에서 갑자기 토론장으로 튕기는 흐름을 없애기 위함. chronoMatch는 검색/디버그용으로만 유지.
@@ -9753,6 +9791,16 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   track('repo_card_open',{repo:repo.repo});
   renderCardAsk(repo);
   markVisited(repo); setTimeout(()=>{ const close=document.getElementById('closeBtn'); if(close) close.focus(); },0); }
+function refreshRepoCardLineage(repo){
+  const box=document.getElementById('cardLineage'); if(!box) return;
+  box.replaceChildren(); const lineage=repo&&repo._lineage;
+  if(!lineage){ box.hidden=true; return; }
+  const crest=document.createElement('span'); crest.className='crest'; crest.setAttribute('aria-hidden','true');
+  crest.style.background='#'+FORK_LINEAGE_PALETTE[lineage.paletteIndex].toString(16).padStart(6,'0');
+  const copy=document.createElement('span'); copy.className='copy'; copy.append(document.createTextNode(tf('lineageFrom',{source:lineage.source})+' · '));
+  const link=document.createElement('a'); link.href=lineage.url; link.target='_blank'; link.rel='noopener'; link.textContent=t('lineageOpen'); copy.append(link);
+  box.append(crest,copy); box.hidden=false;
+}
 function closeCard(){ const previous=modal._previousFocus; modalOpen=false; modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); modal._repoKey=null; modal._previousFocus=null; clearRepoHash(); flushStarNudge();
   if(previous&&previous.isConnected&&typeof previous.focus==='function') previous.focus(); }
 /* ───────── 🚕 Repo-card actions — reuse the existing taxi/chat flow (no new backend) ───────── */
@@ -10771,6 +10819,7 @@ function startTownGrowthReplay(options={}){
   panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.add('hidden');
   document.getElementById('station').classList.add('hidden'); if(typeof closeMap==='function') closeMap();
   _growthSuspendBackground(GROWTH_REPLAY.saved);
+  _setForkLineageCrestsVisible(false);
   modalOpen=true; player.visible=false; navHolder.visible=false; document.body.classList.add('growth-replay-active');
   growthReplay.classList.remove('hidden'); growthReplay.setAttribute('aria-hidden','false');
   for(const state of GROWTH_REPLAY.saved.lod){ state.entry.forcedTier='far'; state.entry.active.visible=false; _buildingLodAttach(state.entry,'far',true); }
@@ -10789,6 +10838,7 @@ function closeTownGrowthReplay(){
   if(saved){ player.visible=saved.playerVisible; navHolder.visible=saved.navVisible; camYaw=saved.camYaw; camPitch=saved.camPitch; camDist=saved.camDist; freeLook=saved.freeLook;
     camera.far=saved.cameraFar; camera.updateProjectionMatrix(); camera.position.copy(saved.cameraPosition); camera.quaternion.copy(saved.cameraQuaternion); modalOpen=saved.modalOpen; }
   if(saved) for(const state of saved.lod){ state.entry.forcedTier=state.forced; state.entry.active.visible=state.activeVisible; _buildingLodAttach(state.entry,state.tier,true); }
+  _setForkLineageCrestsVisible(true);
   if(saved){ skyT=saved.skyT; skyTarget=saved.skyTarget; skyAuto=saved.skyAuto; skyPhaseIdx=saved.skyPhaseIdx;
     scene.fog.near=saved.fogNear; scene.fog.far=saved.fogFar; applySky(skyT,true); setNightState(saved.isNight); updateDayIcon(); }
   _growthRestoreScenery(saved);
@@ -12548,6 +12598,18 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__cam=()=>({camYaw:+camYaw.toFixed(6),camPitch:+camPitch.toFixed(6),camDist:+camDist.toFixed(4),charYaw:+model.rotation.y.toFixed(6),freeLook,dragging,dragBtn,
     camera:{position:_debugVec(camera.position),quaternion:[+camera.quaternion.x.toFixed(6),+camera.quaternion.y.toFixed(6),+camera.quaternion.z.toFixed(6),+camera.quaternion.w.toFixed(6)]},
     player:{position:_debugVec(player.position)},renderMode:WORLD_TREE_RENDER_MODE,night:isNight});
+  if(_DBG){
+    window.__forkLineage=()=>({forks:REPOS.filter(repo=>repo.fork).length,lineages:FORK_LINEAGE_RECORDS.length,unknown:REPOS.filter(repo=>repo.fork&&!repo._lineage).length,
+      mesh:FORK_LINEAGE_CREST_MESH?{count:FORK_LINEAGE_CREST_MESH.count,visible:FORK_LINEAGE_CREST_MESH.visible,...FORK_LINEAGE_CREST_MESH.userData}:null,
+      records:FORK_LINEAGE_RECORDS.map(repo=>({repo:repo.repo,source:repo._lineage.source,url:repo._lineage.url,...repo._lineageCrest})),
+      runtimeGithubRequests:0,sourceSpecificMaterials:0,colliders:0});
+    window.__lineageFixture=repo=>projectForkLineage(repo);
+    window.__lineageVisible=(visible=true)=>{ _setForkLineageCrestsVisible(visible!==false); return window.__forkLineage(); };
+    window.__lineageView=(name,back=14)=>{ const repo=FORK_LINEAGE_RECORDS.find(item=>item.repo===name)||FORK_LINEAGE_RECORDS[0]; if(!repo) return null;
+      const front=new THREE.Vector3(0,0,1).applyQuaternion(repo._group.quaternion).normalize(),focus=repo._pos.clone().addScaledVector(front,(repo._lodSpec?.d||4)*.5+2.6);
+      player.position.copy(focus); camYaw=Math.atan2(front.x,front.z); camPitch=.16; camDist=back; model.visible=false; freeLook=true;
+      return {repo:repo.repo,source:repo._lineage.source,focus:_debugVec(focus),front:_debugVec(front)}; };
+  }
   window.__postcard=()=>_postcardDebugState();
   window.__postcardOpen=async()=>{ const opened=openPostcardStudio('debug'); if(!opened) return _postcardDebugState();
     await POSTCARD.renderPromise; return _postcardDebugState(); };
@@ -12657,7 +12719,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     const keys=['opaque','transparent','additive','outline','pointsSprites','shadowCasters'],counts=Object.fromEntries(keys.map(k=>[k,0])),coverage=Object.fromEntries(keys.map(k=>[k,0]));
     const groups=new Map(),rootGroups=new Map(),viewportArea=Math.max(1,innerWidth*innerHeight),focal=innerHeight/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov)*0.5));
     const rootOf=o=>{ let root=o; while(root.parent&&root.parent!==scene) root=root.parent; return root; },semanticRoots=new Map(),mark=(o,label)=>{ if(o) semanticRoots.set(rootOf(o),label); };
-    mark(starsGroup,'night-sky'); mark(cloudMesh,'clouds'); mark(player,'player'); mark(SESSION_FOOTPRINT_MESH,'session-footprints'); mark(taxi,'taxi'); mark(driver,'npc'); mark(engineer,'npc'); mark(rigel,'npc');
+    mark(starsGroup,'night-sky'); mark(cloudMesh,'clouds'); mark(player,'player'); mark(SESSION_FOOTPRINT_MESH,'session-footprints'); mark(FORK_LINEAGE_CREST_MESH,'fork-lineage'); mark(taxi,'taxi'); mark(driver,'npc'); mark(engineer,'npc'); mark(rigel,'npc');
     if(MEMORIAL_TREE) mark(MEMORIAL_TREE.group,'world-tree'); if(FERRIS) mark(FERRIS.wheel,'ferris'); if(CAROUSEL) mark(CAROUSEL.spin,'carousel');
     if(CHRONO&&CHRONO._group) mark(CHRONO._group,'chronopolis'); if(OBS&&OBS._group) mark(OBS._group,'observatory'); if(STATION&&STATION._group) mark(STATION._group,'station'); if(HEARTH&&HEARTH.g) mark(HEARTH.g,'hearth');
     ZONE_HUBS.forEach(h=>mark(h.group,'zone-hubs')); if(RES_QUARTER) mark(RES_QUARTER.group,'resident-quarter'); RESIDENTS_LIVE.forEach(L=>mark(L.group,'residents')); peers.forEach(p=>mark(p.group,'peers')); SWAY.forEach(g=>mark(g,'sway-trees')); CHOWS.filter(g=>g.parent===scene).forEach(g=>mark(g,'pets'));
@@ -12879,7 +12941,9 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     const id=chronoMatch(r); return { repo:r.repo, lang:r.lang, topics:(r.topics||[]).length, match:id, sig:(id&&CF&&CF.get)?(CF.get(id).sline):null, question:(id&&CF&&CF.get)?fxQuestion(CF.get(id)):null }; };
   window.__card=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name))||null; if(!r) return {found:false}; openCard(r);
     const b=document.getElementById('relChronoBtn');
-    return { repo:r.repo, cardShown:modal.classList.contains('show'), hasRelBtn:!!b, relText:b?b.textContent:null }; };
+    const lineage=document.getElementById('cardLineage'),link=lineage&&lineage.querySelector('a');
+    return { repo:r.repo, cardShown:modal.classList.contains('show'), hasRelBtn:!!b, relText:b?b.textContent:null,
+      lineage:lineage&&!lineage.hidden?{text:lineage.textContent.trim(),href:link&&link.href,target:link&&link.target,rel:link&&link.rel}:null }; };
   window.__walkSim=(fromX,fromZ,dirX,dirZ,steps=300)=>{
     // drive the player from a start point along a fixed direction through the REAL collider resolver,
     // one physics step (9 u/s @60fps) at a time — proves they never wedge (stop while still moving forward)

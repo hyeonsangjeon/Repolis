@@ -42,6 +42,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | `stars` | number | ⭐ → gold-star roof ornaments. |
 | `forks` | number | ⑂ → building **width** (lot size). |
 | `fork` | boolean | Is this repo itself a fork? (mirror forks are filtered out upstream). |
+| `lineage` | object | Present only for a proven included public fork: canonical public `source` owner/name and `url`. It is origin metadata, not an authorship or maintainer claim. |
 | `views` | number | 📈 → **garden** / fence size. |
 | `visitors` | number | 👁 unique visitors → building **height**. |
 | `clones` | number | ⬇ → **ornamentation** (banners, gold trim). |
@@ -103,7 +104,7 @@ state the boundary instead of presenting derived values as observed traffic.
 github-traffic-monitor (private, daily)        Repolis (public)
   └ cumulative traffic → data/logs/*.csv ──┐
                                            ├─▶ .github/workflows/refresh.yml (daily)
-  gh api: owner's public repos (+ committed forks) ─┘  └ scripts/build_repos.py
+  gh api: owner's public repos (+ committed forks and bounded public source lookup) ─┘  └ scripts/build_repos.py
                                                          ├─▶ repos.json ─────────────────────┐
                                                          ├─▶ data/city-state.json ───────────┤
                                                          ├─▶ data/residents/index.json ──────┤
@@ -114,6 +115,8 @@ github-traffic-monitor (private, daily)        Repolis (public)
 ```
 
 - Only **public** repos appear (created repos + forks you actually committed to; mirror forks skipped).
+- Only those included forks receive a bounded parent/source lookup. Private, deleted, inaccessible, self,
+  malformed, or non-GitHub sources fail soft to no `lineage` field.
 - Both outputs are generated together; `data/city-state.json` is validated against
   `data/city-state.schema.json` and fixture-tested before the refresh can commit.
 - The daily Action commits `chore: refresh` to `main` — **always rebase before pushing** (see AGENTS.md rule 2).

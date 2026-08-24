@@ -61,10 +61,12 @@ jobs:
           python3 scripts/validate_city_state.py
           python3 scripts/test_resident_profiles.py
           python3 scripts/validate_resident_profiles.py
+          python3 scripts/test_fork_lineage.py
           python3 scripts/scan_public_artifacts.py
           node scripts/validate-lore-fragments.mjs
           node scripts/test-city-time.mjs
           node scripts/test-session-footprints.mjs
+          node scripts/test-fork-lineage.mjs
           node scripts/smoke.mjs
 
       - name: Commit if changed

@@ -26,6 +26,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   and unavailable dialogue are exercised with deterministic fixtures rather than fabricated production history.
 - **Public repos only, by design.** Private repo names never appear. Untouched mirror forks are filtered
   out; only forks you've actually committed to are shown.
+- **Fork lineage is public origin metadata, not credit assignment.** The generated field exists only when
+  GitHub exposes a canonical public source for an included committed-to fork. Deleted, private, inaccessible,
+  malformed, and foreign runtime-only sources show no crest or card row. The shared crest color groups equal
+  sources but does not claim family, authorship, ownership, or a current maintainer relationship.
 - **Public API modes do not have traffic.** Repo Portal and `?user=` receive stars, forks, issues, language,
   topics, and lifecycle dates from unauthenticated public endpoints. GitHub does not return visitors, views,
   or clones there, so Repolis keeps those fields unknown and uses stars, forks, and recency for architecture.
