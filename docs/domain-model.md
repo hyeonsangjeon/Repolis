@@ -19,6 +19,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **Resident** | generated `data/residents/` profile + bounded roster in `index.html` | A townsperson bound to one public repo building, with a Starlight cottage, social life, and server-authorized Bound memory. |
 | **Elder fragment** | hand-authored `data/lore/fragments.json` | A short bilingual recollection allocated only to the oldest eligible 20% of the nine-resident active roster and delivered rarely in local life contexts. |
 | **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, Town Gazette baselines, constellation completion, and the Maintainers' Night Watch stamp. |
+| **Session footprint** | current-tab memory + one instanced mesh | A short local-player walking trace; never persisted, synchronized, or derived from residents/peers. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
 | **Taxi** | the POLARIS scholar (`kind: taxi`) | The only all-district traveler; finds a repo, drives there, knows Shared city state, and redirects household memory to that home. |
 | **Grounding Worker** | `cloudflare-taxi/` (`repolis-taxi`) | Server brain: KB retrieval + in-persona chat. |

@@ -64,6 +64,7 @@ jobs:
           python3 scripts/scan_public_artifacts.py
           node scripts/validate-lore-fragments.mjs
           node scripts/test-city-time.mjs
+          node scripts/test-session-footprints.mjs
           node scripts/smoke.mjs
 
       - name: Commit if changed

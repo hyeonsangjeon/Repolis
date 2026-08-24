@@ -35,6 +35,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`assets/city-time.js`** | Pure wear (`recent` / `faded` / `mossed`), ruin, reference-date, and seasonal palette rules. | Changing how public time metadata affects the city. |
 | **`data/lore/fragments.json` + `assets/lore-fragments.js`** | Hand-authored KO/EN elder fragments plus strict validation, deterministic active-roster allocation, and session-bounded delivery. | Changing The Silence fragments or their rarity/allocation contract. Never generate or overwrite the JSON. |
 | **`assets/taxi-voice.js`** | Pure local taxi Shared-state answers, household redirect, and once-per-ride seasonal/district observations. | Changing travel voice without adding a backend call. |
+| **`assets/session-footprints.js`** | Pure bounded current-tab footprint ring: movement threshold, lifetime, LOW_END/reduced-motion policy, and teardown. | Changing the local player's ephemeral walking trace. |
 | **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
 | **`assets/world-tree/world-tree-state.js`** | Pure Phase 2 projection for Chronicle, Roots, sap-flow freshness/mode, and bounded star/repo growth. | Changing how generated city state reaches the silent World Tree. |
@@ -125,6 +126,7 @@ node scripts/smoke.mjs       # city/runtime static + behavioral regression guard
 python3 scripts/test_city_state.py
 python3 scripts/validate_city_state.py
 node scripts/test-city-time.mjs
+node scripts/test-session-footprints.mjs
 node scripts/validate-lore-fragments.mjs
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js
@@ -175,6 +177,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | Change Town Gazette / return-visit freshness | `/*FRESHNESS*/` + Passport render/start flow in `index.html`; keep snapshots local, bounded, per-town, and explicit-read only. |
 | Change resident homes, styles, gardens, routines, moods, friendships, haunts, or Shared Joy | The resident social layer + Starlight Row blocks in `index.html`; preserve the resident style map, 3 roof batches, 10/6 desktop/LOW_END detail-batch cap, 42-unit reserve, entrance gap, quarter colliders, home/work truth, owned porch seats, and social ownership guards. |
 | Change elder lore, newcomer voice/scaffolding, or taxi travel observations | `data/lore/fragments.json`, `assets/lore-fragments.js`, `assets/taxi-voice.js`, `assets/city-time.js`, and the Phase 4 blocks in `index.html`; preserve the nine-resident active roster, World Tree silence, local-only delivery, and one observation per ride. |
+| Change session footprints | `assets/session-footprints.js` + `/*SESSION_FOOTPRINTS*/` in `index.html` + the Phase 5 group in `scripts/smoke.mjs`; preserve current-tab memory only, local post-collision walking truth, one fixed instanced pool, zero storage/network/analytics/sync, and no colliders. |
 | Fix / improve a scholar's answer or references | `cloudflare-taxi/src/grounded.js` (server) + the trace panel in `index.html`. |
 | Add a new scholar NPC | `scholars.js` + `scholarConfig`/`MCP_NPCS` in `cloudflare-taxi/src/grounded.js`; choose KB-backed or direct MCP deliberately; document in `SCHOLARS.md`. |
 | Tune the taxi's repo search/intent routing | `index.html` (Local search: inverted index + intent agent). |
