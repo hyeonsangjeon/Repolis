@@ -1896,6 +1896,7 @@ import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectCont
 import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse, residentNewcomerLine } from './assets/resident-profiles.js?v=world-tree-phase4-v1';
 import { allocateElderFragments, createLoreDeliveryState, loadLoreFragments } from './assets/lore-fragments.js?v=world-tree-phase4-v1';
 import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from './assets/taxi-voice.js?v=world-tree-phase4-v1';
+import { clearSessionFootprints, createSessionFootprintState, sessionFootprintScale, sessionFootprintSnapshot, stepSessionFootprints, teardownSessionFootprints } from './assets/session-footprints.js?v=world-tree-phase5-footprints-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -8556,6 +8557,52 @@ faceMat=head.material;
 player.position.set(2.6,0,-3.2);   // spawn beside the plaza fountain (not inside the basin)
 disableDynamicShadowCasters(model);
 scene.add(player);
+/*SESSION_FOOTPRINTS:START*/
+const SESSION_FOOTPRINT_STATE=createSessionFootprintState({lowEnd:LOW_END,reducedMotion:REDUCED});
+const SESSION_FOOTPRINT_GEO=new THREE.CircleGeometry(1,6); SESSION_FOOTPRINT_GEO.rotateX(-Math.PI/2);
+const SESSION_FOOTPRINT_MAT=new THREE.MeshBasicMaterial({color:0x715f48,transparent:true,opacity:.28,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+const SESSION_FOOTPRINT_MESH=new THREE.InstancedMesh(SESSION_FOOTPRINT_GEO,SESSION_FOOTPRINT_MAT,SESSION_FOOTPRINT_STATE.config.capacity);
+SESSION_FOOTPRINT_MESH.name='SessionFootprints'; SESSION_FOOTPRINT_MESH.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+SESSION_FOOTPRINT_MESH.castShadow=false; SESSION_FOOTPRINT_MESH.receiveShadow=false; SESSION_FOOTPRINT_MESH.frustumCulled=false; SESSION_FOOTPRINT_MESH.renderOrder=1;
+const SESSION_FOOTPRINT_DUMMY=new THREE.Object3D(), SESSION_FOOTPRINT_SAMPLE={x:player.position.x,y:player.position.y,z:player.position.z,heading:0,dt:0,walking:false,resetAnchor:false};
+let SESSION_FOOTPRINT_ATTACHED=true;
+function _syncSessionFootprints(){
+  const state=SESSION_FOOTPRINT_STATE, cfg=state.config;
+  for(let i=0;i<cfg.capacity;i++){ const scale=sessionFootprintScale(state,i);
+    SESSION_FOOTPRINT_DUMMY.position.set(state.x[i],state.y[i],state.z[i]); SESSION_FOOTPRINT_DUMMY.rotation.set(0,state.heading[i],0);
+    SESSION_FOOTPRINT_DUMMY.scale.set(cfg.width*scale,1,cfg.length*scale); SESSION_FOOTPRINT_DUMMY.updateMatrix(); SESSION_FOOTPRINT_MESH.setMatrixAt(i,SESSION_FOOTPRINT_DUMMY.matrix); }
+  SESSION_FOOTPRINT_MESH.instanceMatrix.needsUpdate=true; SESSION_FOOTPRINT_MESH.visible=SESSION_FOOTPRINT_ATTACHED&&state.activeCount>0;
+}
+function _updateSessionFootprints(dt,walking,suspended=false){
+  const sample=SESSION_FOOTPRINT_SAMPLE; sample.x=player.position.x; sample.y=player.position.y; sample.z=player.position.z; sample.heading=model.rotation.y; sample.dt=dt;
+  sample.walking=walking&&!suspended&&!document.hidden; sample.resetAnchor=suspended||document.hidden;
+  const before=SESSION_FOOTPRINT_STATE.activeCount,slot=stepSessionFootprints(SESSION_FOOTPRINT_STATE,sample);
+  if(before||SESSION_FOOTPRINT_STATE.activeCount||slot>=0) _syncSessionFootprints();
+}
+function _clearSessionFootprintScene(){
+  clearSessionFootprints(SESSION_FOOTPRINT_STATE); _syncSessionFootprints();
+  if(SESSION_FOOTPRINT_MESH.parent) SESSION_FOOTPRINT_MESH.parent.remove(SESSION_FOOTPRINT_MESH); SESSION_FOOTPRINT_ATTACHED=false;
+}
+function _teardownSessionFootprintScene(){
+  if(SESSION_FOOTPRINT_STATE.disposed) return; _clearSessionFootprintScene(); teardownSessionFootprints(SESSION_FOOTPRINT_STATE);
+  SESSION_FOOTPRINT_GEO.dispose(); SESSION_FOOTPRINT_MAT.dispose();
+}
+scene.add(SESSION_FOOTPRINT_MESH); _syncSessionFootprints();
+addEventListener('pagehide',event=>{ if(event.persisted) _clearSessionFootprintScene(); else _teardownSessionFootprintScene(); });
+addEventListener('pageshow',event=>{ if(event.persisted&&!SESSION_FOOTPRINT_STATE.disposed){ clearSessionFootprints(SESSION_FOOTPRINT_STATE,{resetTotals:true});
+  if(!SESSION_FOOTPRINT_MESH.parent) scene.add(SESSION_FOOTPRINT_MESH); SESSION_FOOTPRINT_ATTACHED=true; _syncSessionFootprints(); } });
+function _sessionFootprintDebug(){ const snapshot=sessionFootprintSnapshot(SESSION_FOOTPRINT_STATE); return {...snapshot,
+  drawCalls:SESSION_FOOTPRINT_MESH.visible?1:0,triangles:snapshot.capacity*6,sceneChildren:scene.children.filter(child=>child===SESSION_FOOTPRINT_MESH).length,
+  allocations:{geometries:1,materials:1,steadyState:0},colliders:0,stored:false,synced:false}; }
+if(_DBG){
+  window.__footprints=()=>_sessionFootprintDebug();
+  window.__footprintReset=()=>{ clearSessionFootprints(SESSION_FOOTPRINT_STATE,{resetTotals:true}); _syncSessionFootprints(); return _sessionFootprintDebug(); };
+  window.__footprintStep=(x,z,walking=true,suspended=false,dt=.2)=>{ const sample=SESSION_FOOTPRINT_SAMPLE;
+    sample.x=Number(x)||0; sample.y=0; sample.z=Number(z)||0; sample.heading=Math.atan2(sample.x-SESSION_FOOTPRINT_STATE.anchorX,sample.z-SESSION_FOOTPRINT_STATE.anchorZ);
+    sample.dt=dt; sample.walking=walking===true&&!suspended; sample.resetAnchor=suspended===true; stepSessionFootprints(SESSION_FOOTPRINT_STATE,sample); _syncSessionFootprints(); return _sessionFootprintDebug(); };
+  window.__footprintTeardown=()=>{ _teardownSessionFootprintScene(); return _sessionFootprintDebug(); };
+}
+/*SESSION_FOOTPRINTS:END*/
 // ✦ player aura — 서원이도 별빛을 두른다 (따뜻한 금빛, 밤에 더 밝게)
 { const pa1=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xffe6b8,transparent:true,opacity:0.09,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); pa1.scale.set(3.6,3.6,1); pa1.position.y=1.35; model.add(pa1);
   const pa2=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:0xfff4dd,transparent:true,opacity:0.15,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); pa2.scale.set(2.1,2.1,1); pa2.position.y=1.25; model.add(pa2);
@@ -12059,6 +12106,7 @@ function _renderRepositoryAtelier(){
 }
 function _repositoryAtelierFrame(dt){
   const mode=_repositoryAtelierTransition(dt); if(!mode) return false;
+  _updateSessionFootprints(dt,false,true);
   if(mode==='interior'){ _updateRepositoryAtelier(dt); _renderRepositoryAtelier(); }
   else { _beginRenderMetrics(true); _renderWorldTreeFrame(); _endRenderMetrics(); }
   return true;
@@ -12138,6 +12186,7 @@ function animate(){
   const userInput = keys['Space']||keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
   if(tour&&tour.active&&!tour.waiting&&!ride&&userInput){ endTour(false); }
   const cameraOwner=_cameraOwnerAtFrameStart();
+  const footprintTransit=!!(ride||ferris||carousel||canalFerryRide||GROWTH_REPLAY.active);
   let moving=false;
   if(ride){
     { // ride no longer auto-cancels on key input — exit only via the hold-to-get-off button
@@ -12186,6 +12235,7 @@ function animate(){
       resolveColliders(player.position);
       model.rotation.y=lerpA(model.rotation.y,Math.atan2(mv.x,mv.z),0.2); walk+=dt*10; }
   }
+  _updateSessionFootprints(dt,moving,footprintTransit);
   if(!moving) walk*=0.85;
   if(canalFerryRide){
     legL.rotation.x=legR.rotation.x=-1.5; legL.rotation.z=legR.rotation.z=0;
@@ -12607,7 +12657,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     const keys=['opaque','transparent','additive','outline','pointsSprites','shadowCasters'],counts=Object.fromEntries(keys.map(k=>[k,0])),coverage=Object.fromEntries(keys.map(k=>[k,0]));
     const groups=new Map(),rootGroups=new Map(),viewportArea=Math.max(1,innerWidth*innerHeight),focal=innerHeight/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov)*0.5));
     const rootOf=o=>{ let root=o; while(root.parent&&root.parent!==scene) root=root.parent; return root; },semanticRoots=new Map(),mark=(o,label)=>{ if(o) semanticRoots.set(rootOf(o),label); };
-    mark(starsGroup,'night-sky'); mark(cloudMesh,'clouds'); mark(player,'player'); mark(taxi,'taxi'); mark(driver,'npc'); mark(engineer,'npc'); mark(rigel,'npc');
+    mark(starsGroup,'night-sky'); mark(cloudMesh,'clouds'); mark(player,'player'); mark(SESSION_FOOTPRINT_MESH,'session-footprints'); mark(taxi,'taxi'); mark(driver,'npc'); mark(engineer,'npc'); mark(rigel,'npc');
     if(MEMORIAL_TREE) mark(MEMORIAL_TREE.group,'world-tree'); if(FERRIS) mark(FERRIS.wheel,'ferris'); if(CAROUSEL) mark(CAROUSEL.spin,'carousel');
     if(CHRONO&&CHRONO._group) mark(CHRONO._group,'chronopolis'); if(OBS&&OBS._group) mark(OBS._group,'observatory'); if(STATION&&STATION._group) mark(STATION._group,'station'); if(HEARTH&&HEARTH.g) mark(HEARTH.g,'hearth');
     ZONE_HUBS.forEach(h=>mark(h.group,'zone-hubs')); if(RES_QUARTER) mark(RES_QUARTER.group,'resident-quarter'); RESIDENTS_LIVE.forEach(L=>mark(L.group,'residents')); peers.forEach(p=>mark(p.group,'peers')); SWAY.forEach(g=>mark(g,'sway-trees')); CHOWS.filter(g=>g.parent===scene).forEach(g=>mark(g,'pets'));

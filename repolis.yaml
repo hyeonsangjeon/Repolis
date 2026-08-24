@@ -54,6 +54,7 @@ entrypoints:
   contribution_quests: assets/contribution-quests.js
   elder_lore: assets/lore-fragments.js
   taxi_voice: assets/taxi-voice.js
+  session_footprints: assets/session-footprints.js
   data_builder: scripts/build_repos.py
   launch_config: repolis.config.js
   library_builder: scripts/build-contribution-library.mjs
@@ -109,6 +110,13 @@ features:
     summary: One idle pair autonomously visits real flowers, visible night stars, or a rendered repo house without AI or network calls.
   - id: exploration
     summary: Explorer Passport, district progress, daily Village Chronicle, and Repository Constellation Trail.
+  - id: session-footprints
+    summary: The local avatar leaves a short current-tab trail in one fixed instanced pool, with no storage, identity, synchronization, analytics, or network request.
+    desktop_cap: 36
+    low_end_cap: 18
+    reduced_motion_cap: 8
+    added_draw_calls_while_visible: 1
+    added_network_requests: 0
   - id: town-growth-replay
     summary: Public repo creation dates raise existing houses through a reversible, shareable year timeline without inventing historical metrics or adding render assets.
   - id: repo-portal
@@ -162,6 +170,7 @@ verify:
     - node council/test.mjs
     - node council/test-live.mjs
     - node scripts/smoke.mjs
+    - node scripts/test-session-footprints.mjs
     - node scripts/validate-lore-fragments.mjs
     - node --check scholars.js
     - node --check cloudflare-taxi/src/grounded.js

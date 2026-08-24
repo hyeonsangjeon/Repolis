@@ -99,6 +99,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   current repo description, topics, public metrics, lifecycle dates, and available traffic. It does not clone
   source files, reconstruct old metrics, or simulate build/runtime behavior. Explicit Gitber questions use
   the currently selected chat mode and its existing Local or backend fallback.
+- **Session footprints are deliberately forgetful.** Only post-collision movement by the local exterior avatar
+  can create them. A fixed 36/18/8-slot desktop/LOW_END/reduced-motion pool fades or expires in memory; taxi,
+  rides, teleports, hidden tabs, Growth Replay, Atelier movement, reloads, and navigation do not become a trail.
+  No footprint is stored, synchronized, analyzed, or attached to a visitor, resident, or peer identity.
 - **Resident Shared Joy is bounded and session-local.** At most one pair takes a scripted excursion at a
   time; it is not remembered across reloads and does not use a model. Stargazing starts autonomously only
   while stars are visible, and visitor/chat/festival ownership intentionally interrupts an outing.

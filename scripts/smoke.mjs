@@ -119,6 +119,7 @@ const REPO_ROUTE_SRC = readFileSync(join(ROOT, 'assets/repo-route.js'), 'utf8');
 const CONTRIBUTION_QUEST_SRC = readFileSync(join(ROOT, 'assets/contribution-quests.js'), 'utf8');
 const CITY_TIME_SRC = readFileSync(join(ROOT, 'assets/city-time.js'), 'utf8');
 const WORLD_TREE_STATE_SRC = readFileSync(join(ROOT, 'assets/world-tree/world-tree-state.js'), 'utf8');
+const SESSION_FOOTPRINT_SRC = readFileSync(join(ROOT, 'assets/session-footprints.js'), 'utf8');
 const CITY_STATE = JSON.parse(readFileSync(join(ROOT, 'data/city-state.json'), 'utf8'));
 const CITY_STATE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/city-state.schema.json'), 'utf8'));
 const CITY_REPOS = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
@@ -2346,6 +2347,38 @@ ok(/const authorized = authorizeTaxiRequest\(body\)/.test(WORKER)
 ok(/validate-lore-fragments\.mjs/.test(REFRESH_WORKFLOW)
   && /scripts\/smoke\.mjs/.test(REFRESH_WORKFLOW),
   'daily publication is gated by lore writing/schema and taxi boundary regressions');
+
+group('Phase 5 session footprints — ephemeral local walking trace');
+const footprintBlock=(HTML.match(/\/\*SESSION_FOOTPRINTS:START\*\/[\s\S]*?\/\*SESSION_FOOTPRINTS:END\*\//)||[''])[0];
+ok(footprintBlock.length>0
+  && /new THREE\.InstancedMesh\(SESSION_FOOTPRINT_GEO,SESSION_FOOTPRINT_MAT,SESSION_FOOTPRINT_STATE\.config\.capacity\)/.test(footprintBlock)
+  && /DynamicDrawUsage/.test(footprintBlock)
+  && /steadyState:0/.test(footprintBlock),
+  'one fixed instanced pool owns every footprint with zero steady-state geometry or material allocation');
+ok(/desktop: Object\.freeze\(\{ capacity: 36, spacing: 1\.35, lifetime: 5\.2/.test(SESSION_FOOTPRINT_SRC)
+  && /lowEnd: Object\.freeze\(\{ capacity: 18, spacing: 1\.8, lifetime: 4\.0/.test(SESSION_FOOTPRINT_SRC)
+  && /reduced: Object\.freeze\(\{ capacity: 8, spacing: 3\.0, lifetime: 1\.2/.test(SESSION_FOOTPRINT_SRC)
+  && /distance < state\.config\.spacing/.test(SESSION_FOOTPRINT_SRC)
+  && /distance > state\.config\.teleportDistance/.test(SESSION_FOOTPRINT_SRC),
+  'movement threshold, teleport reset, LOW_END cap, and reduced-motion lifetime are explicit bounded policy');
+ok(/const footprintTransit=!!\(ride\|\|ferris\|\|carousel\|\|canalFerryRide\|\|GROWTH_REPLAY\.active\)/.test(HTML)
+  && /sample\.walking=walking&&!suspended&&!document\.hidden/.test(footprintBlock)
+  && /_updateSessionFootprints\(dt,false,true\)/.test(HTML)
+  && /sample\.y=player\.position\.y/.test(footprintBlock)
+  && /surfaceOffset: 0\.035/.test(SESSION_FOOTPRINT_SRC)
+  && /polygonOffset:true/.test(footprintBlock),
+  'only post-collision local exterior walking reaches the terrain-offset trail; transit, growth, Atelier, and hidden tabs reset it');
+ok(!/(?:localStorage|sessionStorage|indexedDB|document\.cookie|fetch\(|sendBeacon|WebSocket|track\()/.test(SESSION_FOOTPRINT_SRC+footprintBlock)
+  && !/(?:COLLIDERS|EXTRA_COLLIDERS|RES_QUARTER_COLLIDERS)\.push/.test(footprintBlock)
+  && /colliders:0,stored:false,synced:false/.test(footprintBlock),
+  'the footprint boundary has no storage, identity, network, analytics, synchronization, or collider path');
+ok(/addEventListener\('pagehide'/.test(footprintBlock)
+  && /addEventListener\('pageshow'/.test(footprintBlock)
+  && /teardownSessionFootprints\(SESSION_FOOTPRINT_STATE\)/.test(footprintBlock)
+  && /SESSION_FOOTPRINT_GEO\.dispose\(\); SESSION_FOOTPRINT_MAT\.dispose\(\)/.test(footprintBlock)
+  && /if\(_DBG\)\{[\s\S]*?window\.__footprints/.test(footprintBlock)
+  && /test-session-footprints\.mjs/.test(REFRESH_WORKFLOW),
+  'navigation clears or tears down the pool, while fixtures remain debug-only and daily publication runs the hermetic suite');
 
 group('AURI market oracle — grounded market KB + read-only crypto MCP');
 const marketActionSrc=(HTML.match(/function marketActionQuestion\(q\)\{[\s\S]*?(?=\nfunction marketQuestion)/)||[''])[0];
