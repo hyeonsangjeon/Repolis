@@ -19,6 +19,9 @@ Env vars:
   CITY_STATE_AS_OF  Optional ISO-8601 city reference time. The daily workflow
                    supplies its UTC run day; local builds fall back to the
                    newest reproducible public source timestamp.
+  FORK_LINEAGE_ONLY  Set to 1 to enrich an existing generated snapshot without
+                    refreshing unrelated repository fields.
+  FORK_LINEAGE_INPUT  Optional input snapshot for FORK_LINEAGE_ONLY (default: OUT).
   GH_TOKEN    Token used by `gh` (PAT that can list the repos)
 """
 import csv
@@ -29,6 +32,7 @@ import subprocess
 from pathlib import Path
 
 from city_state import build_city_state, write_city_state
+from fork_lineage import public_fork_lineage
 from resident_profiles import write_resident_artifacts
 
 def resolve_owner():
@@ -53,6 +57,8 @@ GTM_DIR = Path(_configured_gtm) if _configured_gtm else (
     Path("data") if OWNER.lower() == UPSTREAM_OWNER else Path("data") / "towns" / OWNER
 )
 OUT = Path(os.environ.get("OUT", "repos.json"))
+FORK_LINEAGE_ONLY = os.environ.get("FORK_LINEAGE_ONLY", "").strip() == "1"
+FORK_LINEAGE_INPUT = Path(os.environ.get("FORK_LINEAGE_INPUT", str(OUT)))
 CITY_STATE_OUT = Path(os.environ.get("CITY_STATE_OUT", "data/city-state.json"))
 CITY_STATE_AS_OF = os.environ.get("CITY_STATE_AS_OF", "").strip() or None
 RESIDENTS_OUT = Path(os.environ.get("RESIDENTS_OUT", "data/residents"))
@@ -277,6 +283,38 @@ def first_date(path):
     return earliest or ""
 
 
+def record_with_lineage(record, lineage):
+    output = {}
+    for key, value in record.items():
+        if key == "lineage":
+            continue
+        if key == "rank" and lineage:
+            output["lineage"] = lineage
+        output[key] = value
+    if lineage and "lineage" not in output:
+        output["lineage"] = lineage
+    return output
+
+
+def refresh_fork_lineage():
+    records = json.loads(FORK_LINEAGE_INPUT.read_text(encoding="utf-8"))
+    if not isinstance(records, list):
+        raise ValueError("fork lineage input must be a repository array")
+    output = []
+    lookups = 0
+    for record in records:
+        if not isinstance(record, dict):
+            raise ValueError("fork lineage input contains a non-object")
+        lineage = None
+        if record.get("fork") is True:
+            lookups += 1
+            lineage = public_fork_lineage(f"{OWNER}/{record.get('repo', '')}")
+        output.append(record_with_lineage(record, lineage))
+    OUT.write_text(json.dumps(output, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
+    included = sum(1 for record in output if record.get("lineage"))
+    print(f"wrote {OUT} with {included} public fork lineages ({lookups} bounded lookups)")
+
+
 def build():
     # Public owner endpoint works with the built-in Actions token, so a fork can
     # build its first city without a PAT. A PAT is only needed for traffic data.
@@ -288,9 +326,10 @@ def build():
     for r in repos:
         if r.get("private"):
             continue
-        if r.get("fork") and not i_committed(r.get("full_name") or f"{OWNER}/{r['name']}"):
-            continue
         name = r["name"]
+        full = r.get("full_name") or f"{OWNER}/{name}"
+        if r.get("fork") and not i_committed(full):
+            continue
         views = sum_col(GTM_DIR / "logs" / f"{name}.csv", "views")
         visitors = sum_col(GTM_DIR / "logs" / f"{name}.csv", "uniques")
         clones = sum_col(GTM_DIR / "logs" / "clones" / f"{name}.csv", "clones")
@@ -299,7 +338,7 @@ def build():
                       or first_date(GTM_DIR / "logs" / "clones" / f"{name}.csv"))
         stars = r.get("stargazers_count", 0) or 0
         forks = r.get("forks_count", 0) or 0
-        full = r.get("full_name") or f"{OWNER}/{name}"
+        lineage = public_fork_lineage(full) if r.get("fork") else None
         lic = r.get("license") or {}
         lic_name = lic.get("spdx_id") or lic.get("name") or ""
         if lic_name in ("NOASSERTION", "NONE"):
@@ -316,36 +355,35 @@ def build():
             + math.log1p(forks) * 0.6
             + math.log1p(stars) * 0.5
         )
-        out.append(
-            {
-                "repo": name,
-                "desc": (r.get("description") or "").strip(),
-                "lang": r.get("language") or "Other",
-                "topics": r.get("topics") or [],
-                "url": r.get("html_url"),
-                "home": (r.get("homepage") or "").strip(),
-                "stars": stars,
-                "forks": forks,
-                "fork": bool(r.get("fork")),
-                "views": views,
-                "visitors": visitors,
-                "clones": clones,
-                "size": r.get("size", 0) or 0,
-                "open_issues": r.get("open_issues_count", 0) or 0,
-                "license": lic_name,
-                "archived": bool(r.get("archived")),
-                "default_branch": r.get("default_branch") or "main",
-                "release_tag": (rel or {}).get("tag", ""),
-                "release_date": (rel or {}).get("date", ""),
-                "created": (r.get("created_at") or "")[:10],
-                "pushed": (r.get("pushed_at") or "")[:10],
-                "tracked": tracked,
-                "first_seen": first_seen,
-                "social": (social.get(name) or {}).get("url", ""),
-                "social_custom": (social.get(name) or {}).get("custom", False),
-                "score": round(score, 3),
-            }
-        )
+        record = {
+            "repo": name,
+            "desc": (r.get("description") or "").strip(),
+            "lang": r.get("language") or "Other",
+            "topics": r.get("topics") or [],
+            "url": r.get("html_url"),
+            "home": (r.get("homepage") or "").strip(),
+            "stars": stars,
+            "forks": forks,
+            "fork": bool(r.get("fork")),
+            "views": views,
+            "visitors": visitors,
+            "clones": clones,
+            "size": r.get("size", 0) or 0,
+            "open_issues": r.get("open_issues_count", 0) or 0,
+            "license": lic_name,
+            "archived": bool(r.get("archived")),
+            "default_branch": r.get("default_branch") or "main",
+            "release_tag": (rel or {}).get("tag", ""),
+            "release_date": (rel or {}).get("date", ""),
+            "created": (r.get("created_at") or "")[:10],
+            "pushed": (r.get("pushed_at") or "")[:10],
+            "tracked": tracked,
+            "first_seen": first_seen,
+            "social": (social.get(name) or {}).get("url", ""),
+            "social_custom": (social.get(name) or {}).get("custom", False),
+            "score": round(score, 3),
+        }
+        out.append(record_with_lineage(record, lineage))
 
     out.sort(key=lambda x: x["score"], reverse=True)
     for i, o in enumerate(out):
@@ -379,4 +417,7 @@ def build():
 
 
 if __name__ == "__main__":
-    build()
+    if FORK_LINEAGE_ONLY:
+        refresh_fork_lineage()
+    else:
+        build()
