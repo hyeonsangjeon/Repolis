@@ -51,21 +51,22 @@
   #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
-  #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
+  #tourReplayBtn, #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
-  #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover, #repoRouteMenuBtn:hover, #questMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
-  #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active, #repoRouteMenuBtn:active, #questMenuBtn:active { transform: translateY(1px); }
-  #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon, #repoRouteMenuBtn .pmIcon, #questMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  #tourReplayBtn:hover, #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover, #repoRouteMenuBtn:hover, #questMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
+  #tourReplayBtn:active, #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active, #repoRouteMenuBtn:active, #questMenuBtn:active { transform: translateY(1px); }
+  #tourReplayBtn .pmIcon, #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon, #repoRouteMenuBtn .pmIcon, #questMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
     color: #fff8e7; background: linear-gradient(145deg,#365464,#173d55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); font-size: 17px; }
+  #tourReplayBtn .pmIcon { background: linear-gradient(145deg,#5d7447,#294a3b); }
   #twinMenuBtn .pmIcon { background: linear-gradient(145deg,#6a4f86,#2e5667); }
   #creatorMenuBtn .pmIcon { background: linear-gradient(145deg,#ba783d,#6a4327); }
   #growthMenuBtn .pmIcon { background: linear-gradient(145deg,#6c5ea8,#345d7c); }
   #repoRouteMenuBtn .pmIcon { background: linear-gradient(145deg,#e07b42,#7f3f57); }
   #questMenuBtn .pmIcon { background: linear-gradient(145deg,#2f766d,#244d63); }
-  #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy, #repoRouteMenuBtn .pmCopy, #questMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle, #repoRouteMenuBtn .pmTitle, #questMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
-  #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub, #repoRouteMenuBtn .pmSub, #questMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #tourReplayBtn .pmCopy, #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy, #repoRouteMenuBtn .pmCopy, #questMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #tourReplayBtn .pmTitle, #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle, #repoRouteMenuBtn .pmTitle, #questMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
+  #tourReplayBtn .pmSub, #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub, #repoRouteMenuBtn .pmSub, #questMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #repoRouteMenuCount { flex:0 0 auto; min-width:34px; padding:4px 7px; border-radius:999px; color:#fff; background:#8e4f5d;
     font-size:10px; font-weight:900; text-align:center; }
   #repoRouteMenuCount[hidden] { display:none; }
@@ -618,8 +619,11 @@
   #tourCap .tcTxt{ flex:1 1 auto; }
   #tourCap .tcTxt b{ color:#d7c4ff; }
   #tourCap .tcSkip{ flex:0 0 auto; background:#2b2440; color:#cdbff0; border:1px solid #6b4fb0; border-radius:11px;
-    padding:8px 11px; font-size:13px; cursor:pointer; min-height:40px; white-space:nowrap; }
+    padding:8px 11px; font-size:13px; cursor:pointer; min-height:44px; white-space:nowrap; }
+  body.tour-active #taxiBtn, body.tour-active #emoteBtn, body.tour-active #emoteBar,
+  body.tour-active #actBtn, body.tour-active #prompt, body.tour-active .hint { display:none !important; }
   @keyframes tourPop{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion:reduce){ #tourCap{ animation:none; } }
   #introTour{ margin-top:11px; background:rgba(255,255,255,.30); color:#7a3f12; border:2px solid rgba(255,255,255,.92);
     border-radius:12px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer;
     box-shadow:0 4px 14px rgba(60,30,10,.18); transition:background .15s,color .15s,border-color .15s; }
@@ -1363,6 +1367,10 @@
 
 <div id="panel" class="hidden">
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <button id="tourReplayBtn" type="button">
+    <span class="pmIcon" aria-hidden="true">🎬</span>
+    <span class="pmCopy"><span class="pmTitle" data-i18n="tourReplay">가이드 투어 다시 보기</span><span class="pmSub" data-i18n="tourReplaySub">세계수 · 주민 · 레포 집 · 기존 명소</span></span>
+  </button>
   <button id="questMenuBtn" type="button">
     <span class="pmIcon" aria-hidden="true">🧩</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="questMenu">오픈소스 퀘스트</span><span class="pmSub" data-i18n="questMenuSub">현재 공개 이슈를 실제 레포 집과 연결</span></span>
@@ -2268,11 +2276,13 @@ const I18N = {
     chronoTimeCap:'⏳ 시간의 저울 — 출처를 최신·생존순으로',
     chronoTimeOld:'오래됨', chronoTimeNew:'최신', chronoTimeWin:'시간이 가리킴',
     chronoRecap:'📋 시간의 판정 다시보기 (결정적)', chronoRecapHide:'🔼 판정 접기', chronoVerdictLbl:'시간의 판정', chronoConfLbl:'신뢰도', chronoRecapNoAns:'판정 보류 — 충분한 증언이 없습니다.',     chronoRecapHint:'이 예시는 결정적 판정입니다 — 라이브 토론과 달리 언제 봐도 같은 결론.', chronoRelated:'⏳ 관련 토론 보기',
-    tourStart:'🎬 가이드 투어로 둘러보기', tourSkip:'건너뛰기 ⏭', tourReplay:'🎬 가이드 투어',
-    tourCap1:'레포들의 도시에 오신 걸 환영해요! 광장의 현자 <b>POLARIS</b>가 인사를 건네네요. 🚕 그 옆은 깃버 정류장이에요.',
-    tourCap2:'🚕 깃버에게 주제를 말하면 그 레포 집까지 데려다줘요. 도착하면 집에 불이 켜지고 스탬프를 받아요.',
-    tourCap3:'⏳ <b>Chronopolis</b> — 세 현자가 토론하고, <b>시간</b>(가장 최신 출처)이 승부를 가려요.',
-    tourCap4:'🛂 여권에 방문 스탬프를 모으고, 주민부터 시작하는 <b>오늘의 마을 이야기</b>를 따라가 보세요!',
+    tourStart:'🎬 가이드 투어로 둘러보기', tourSkip:'건너뛰기 ⏭', tourReplay:'가이드 투어 다시 보기', tourReplaySub:'세계수 · 주민 · 레포 집 · 기존 명소',
+    tourWelcome:'광장에서 <b>POLARIS</b>가 인사해요. 🚕 깃버가 살아 있는 마을의 길을 엽니다.',
+    tourTree:'세계수는 대답하지 않아요. 뿌리 아래에는 날짜가 붙은 도시 기록만 남아 있습니다.',
+    tourResident:'주민은 레포 하나와 집 하나에 뿌리내려 살아요. 먼저 짧은 인사를 들어보세요.',
+    tourRepo:'그 주민의 레포 집이에요. 문 안쪽 <b>Repository Atelier</b>에서 작업의 흔적을 볼 수 있어요.',
+    tourChrono:'<b>Chronopolis</b>에서는 세 현자가 토론하고, 가장 최신 출처가 판정을 이끌어요.',
+    tourPassport:'여권에는 직접 발견한 곳만 남아요. 주민부터 이어지는 <b>오늘의 마을 이야기</b>도 여기서 시작합니다.',
     tourEnd:'투어 끝! 이제 자유롭게 마을을 누벼보세요. 🌟',
     obsName:'별빛 전망대', obsReached:' — 별빛 전망대. <span class="key">Enter</span> 또는 클릭으로 올라가기',
     obsTitle:'🔭 별빛 전망대', obsSub:'밤하늘 현자들의 별자리를 한자리에서.', obsHint:'밤에 오르면 현자들의 별자리가 가장 또렷하게 보여요. ☾',
@@ -2587,11 +2597,13 @@ const I18N = {
     chronoTimeCap:"⏳ Time's scale — sources by recency & liveness",
     chronoTimeOld:'older', chronoTimeNew:'newer', chronoTimeWin:'Time points here',
     chronoRecap:'📋 Replay the verdict (deterministic)', chronoRecapHide:'🔼 Hide verdict', chronoVerdictLbl:"Time's verdict", chronoConfLbl:'confidence', chronoRecapNoAns:'Verdict withheld — not enough testimony.',     chronoRecapHint:'This example is a deterministic verdict — unlike the live debate, it reads the same every time.', chronoRelated:'⏳ Related debate',
-    tourStart:'🎬 Take a guided tour', tourSkip:'Skip ⏭', tourReplay:'🎬 Guided tour',
-    tourCap1:'Welcome to the City of Repos! <b>POLARIS</b>, the scholar at the plaza, waves hello. 🚕 The Gitber taxi stand is right beside them.',
-    tourCap2:'🚕 Tell Gitber a topic and it drives you to that repo\u2019s house. On arrival the house lights up and you earn a stamp.',
-    tourCap3:'⏳ <b>Chronopolis</b> — three scholars debate, and <b>time</b> (the freshest source) decides who wins.',
-    tourCap4:'🛂 Collect visit stamps, then follow today\u2019s <b>Village Chronicle</b> from its resident onward!',
+    tourStart:'🎬 Take a guided tour', tourSkip:'Skip ⏭', tourReplay:'Replay the guided tour', tourReplaySub:'World Tree · resident · repo house · classic stops',
+    tourWelcome:'<b>POLARIS</b> waves from the plaza. 🚕 Gitber opens the road through this living town.',
+    tourTree:'The World Tree does not answer. Beneath its roots, only the town\u2019s dated record remains.',
+    tourResident:'Each resident is rooted in one repo and one home. Listen to a brief local greeting.',
+    tourRepo:'This is that resident\u2019s repo house. The <b>Repository Atelier</b> keeps its working traces inside.',
+    tourChrono:'At <b>Chronopolis</b>, three scholars debate and the freshest source guides the verdict.',
+    tourPassport:'The passport keeps only places you discover. Today\u2019s <b>Village Chronicle</b> starts here with a resident.',
     tourEnd:'Tour complete! Now roam the town freely. 🌟',
     obsName:'Stargazer\'s Observatory', obsReached:' — the Stargazer\'s Observatory. <span class="key">Enter</span> or click to climb up',
     obsTitle:'🔭 Stargazer\'s Observatory', obsSub:'The night-sky scholars\' constellations, all in one place.', obsHint:'Climb up at night to see the scholars\' constellations at their brightest. ☾',
@@ -9136,31 +9148,48 @@ function courseProximityTick(){ if(!course||!course.available||ride) return; con
   if(!courseMark(it.type,it.id)) return; popSparkle(d._pos.x,2.8,d._pos.z,it.type==='haunt'?0x9bd8a8:0xffd06a);
   if(it.type==='haunt'){ const L=_residentLive(it.id), f=L&&_resFavSpot(L); showWave(tf('chronicleHauntFound',{name,place:f?(LANG==='ko'?f.ko:f.en):''}),3200); }
   else showWave(tf('chronicleZoneFound',{name,zone:zoneNameById(it.id)}),3200); }
-/* ---- Guided onboarding tour: a ~30s self-driving showcase (welcome → repo house → Chronopolis → passport) ---- */
-let tour=null, _tourBoost=false;
+/* ---- Guided onboarding tour: one compact living-town journey through existing interactions ---- */
+let tour=null, _tourBoost=false, _tourEndTimer=null;
 function tourCap(dot,html){ const e=document.getElementById('tourCap'); if(!e) return;
   document.getElementById('tourDot').textContent=dot; document.getElementById('tourTxt').innerHTML=html; e.classList.remove('hidden'); }
 function hideTourCap(){ const e=document.getElementById('tourCap'); if(e) e.classList.add('hidden'); }
 function tourCloseModals(){ try{ if(modal.classList.contains('show')) closeCard(); }catch(e){}
-  try{ if(chronoModal.classList.contains('show')) closeChrono(); }catch(e){} try{ closeCreatorHall(); }catch(e){} try{ closePostcardStudio(); }catch(e){} try{ passportEl.classList.add('hidden'); }catch(e){} }
+  try{ if(chronoModal.classList.contains('show')) closeChrono(); }catch(e){} try{ if(WORLD_TREE_UI.open) closeWorldTreeChronicle(); }catch(e){}
+  try{ if(!chatEl.classList.contains('hidden')) closeChat(); }catch(e){} try{ closeCreatorHall(); }catch(e){} try{ closePostcardStudio(); }catch(e){} try{ passportEl.classList.add('hidden'); }catch(e){} }
+function tourTreeDestination(){ if(!MEMORIAL_TREE||!MEMORIAL_TREE.collider) return null; const c=MEMORIAL_TREE.collider;
+  return {label:t('worldTreeTitle'),_pos:new THREE.Vector3(c.x,0,c.z+c.r+3.2),_tourTree:true}; }
+function tourResidentPair(){ const live=RESIDENTS_LIVE.find(item=>item.res&&item.res.bound&&repoByKey(item.res.bound.repo)); if(!live) return null;
+  return {live,destination:{label:(live.res[LANG]||live.res.ko).name,_pos:live.group.position,_courseResident:live.res.id},repo:repoByKey(live.res.bound.repo)}; }
 function buildTourSteps(){ const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.stars||0));
-  const repo=pop[0]||REPOS[0]; const steps=[{kind:'welcome',dot:'👋',cap:'tourCap1',dwell:3.2}];
-  if(repo) steps.push({kind:'repo',repo,dot:'🏠',cap:'tourCap2',dwell:3.6});
-  if(typeof CHRONO!=='undefined'&&CHRONO) steps.push({kind:'chrono',dot:'⏳',cap:'tourCap3',dwell:4.4});
-  steps.push({kind:'passport',dot:'🛂',cap:'tourCap4',dwell:3.6}); return steps; }
+  const tree=tourTreeDestination(),pair=tourResidentPair(),repo=(pair&&pair.repo)||pop[0]||REPOS[0];
+  const steps=[{kind:'welcome',dot:'👋',cap:'tourWelcome',dwell:2.8}];
+  if(tree) steps.push({kind:'tree',destination:tree,dot:'🌳',cap:'tourTree',dwell:5.2});
+  if(pair) steps.push({kind:'resident',destination:pair.destination,dot:'🏡',cap:'tourResident',dwell:5.2});
+  if(repo) steps.push({kind:'repo',destination:repo,dot:'🏠',cap:'tourRepo',dwell:4.4});
+  if(typeof CHRONO!=='undefined'&&CHRONO) steps.push({kind:'chrono',destination:lmCourseDest('chrono'),dot:'⏳',cap:'tourChrono',dwell:4.4});
+  steps.push({kind:'passport',dot:'🛂',cap:'tourPassport',dwell:4.2}); return steps; }
 function startTour(){ if(!REPOS.length||(tour&&tour.active)) return; tourCloseModals();
+  if(_tourEndTimer){ clearTimeout(_tourEndTimer); _tourEndTimer=null; }
   try{ if(ride) endDrive(); if(sitting) standUp(); }catch(e){}
   player.position.set(2.6,0,-3.2); model.rotation.y=Math.PI; freeLook=false;
   const intro=document.getElementById('intro'); if(intro) intro.classList.add('hidden');
+  document.body.classList.add('tour-active');
   tour={steps:buildTourSteps(),i:0,active:true,waiting:false,_timer:null,_deadline:0}; _tourBoost=true; runTourStep(); }
+function tourTravel(destination,dwell){ if(!destination){ tourSchedule(dwell); return; } tour.waiting=true;
+  if(!destination._courseResident&&activeNpc&&activeNpc.resident) activeNpc=null;
+  try{ taxiTo(destination); if(REDUCED){ player.position.set(destination._pos.x,0,destination._pos.z); resolveColliders(player.position); arriveTaxi(destination); tourOnArrive(); } }
+  catch(e){ tour.waiting=false; tourSchedule(dwell); } }
+function tourShowPassport(step){ if(!tour||!tour.active) return; tour.waiting=true; if(tour._timer) clearTimeout(tour._timer);
+  const delay=1600; tour._deadline=performance.now()+delay;
+  tour._timer=setTimeout(()=>{ if(!tour||!tour.active) return; tour._timer=null; tour._deadline=0; tour.waiting=false; hideTourCap();
+    try{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.remove('hidden'); renderPassport(); }catch(e){} tourSchedule(step.dwell); },delay); }
 function runTourStep(){ if(!tour||!tour.active) return; const s=tour.steps[tour.i]; if(!s){ endTour(true); return; }
   tourCap(s.dot, t(s.cap));
   if(s.kind==='welcome'){ const n=NPCS.find(x=>x.kind==='taxi')||NPCS[0];
     if(n){ camYaw=Math.atan2(n.pos.x-player.position.x, n.pos.z-player.position.z); camPitch=0.20; camDist=18; n.group._bt=0.01; }
     tourSchedule(s.dwell);
-  } else if(s.kind==='repo'){ tour.waiting=true; try{ taxiTo(s.repo); }catch(e){ tour.waiting=false; tourSchedule(s.dwell); } }
-  else if(s.kind==='chrono'){ const d=lmCourseDest('chrono'); if(d){ tour.waiting=true; try{ taxiTo(d); }catch(e){ tour.waiting=false; tourSchedule(s.dwell); } } else tourSchedule(s.dwell); }
-  else if(s.kind==='passport'){ try{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.remove('hidden'); renderPassport(); }catch(e){} tourSchedule(s.dwell); } }
+  } else if(s.kind==='tree'||s.kind==='resident'||s.kind==='repo'||s.kind==='chrono') tourTravel(s.destination,s.dwell);
+  else if(s.kind==='passport') tourShowPassport(s); }
 function _armTourTimer(delay){ if(!tour||!tour.active) return; if(tour._timer) clearTimeout(tour._timer);
   delay=Math.max(0,delay); tour._deadline=performance.now()+delay;
   tour._timer=setTimeout(()=>{ if(!tour) return; tour._timer=null; tour._deadline=0; tourCloseModals(); tourNext(); },delay); }
@@ -9169,11 +9198,12 @@ function _pauseTourForAtelier(){ if(!tour||!tour.active||!tour._timer) return nu
   const remaining=Math.max(0,tour._deadline-performance.now()); clearTimeout(tour._timer); tour._timer=null; tour._deadline=0; return {remaining}; }
 function _resumeTourAfterAtelier(paused){ if(paused&&tour&&tour.active&&!tour._timer) _armTourTimer(paused.remaining); }
 function tourOnArrive(){ if(!tour||!tour.active||!tour.waiting) return; tour.waiting=false;
-  const s=tour.steps[tour.i]; tourSchedule(s?s.dwell:3.2); }
+  const s=tour.steps[tour.i]; if(s&&s.kind!=='passport') hideTourCap(); tourSchedule(s?s.dwell:3.2); }
 function tourNext(){ if(!tour||!tour.active) return; tour.i++; if(tour.i>=tour.steps.length) endTour(true); else runTourStep(); }
 function endTour(showEnd){ if(!tour) return; if(tour._timer) clearTimeout(tour._timer); tour._timer=null; tour._deadline=0; tour.active=false; _tourBoost=false;
   try{ endDrive(); taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; }catch(e){} tourCloseModals();
-  if(showEnd){ tourCap('✨', t('tourEnd')); setTimeout(hideTourCap,3400); } else hideTourCap(); tour=null; }
+  if(showEnd){ tourCap('✨', t('tourEnd')); _tourEndTimer=setTimeout(()=>{ hideTourCap(); document.body.classList.remove('tour-active'); _tourEndTimer=null; },3400); }
+  else { hideTourCap(); document.body.classList.remove('tour-active'); } tour=null; }
 function renderCourse(){ const box=document.getElementById('courseBox'); if(!box) return;
   if(!REPOS.length){ box.style.display='none'; return; }
   const c=getCourse(); if(!c.available||!c.items.length){ box.style.display='none'; return; }
@@ -10165,7 +10195,9 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
     location.href=url; }; renderPublicIntro(); })();
 (function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
     document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
+  const replay=document.getElementById('tourReplayBtn'); if(replay) replay.onclick=()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); startTour(); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
+document.addEventListener('keydown',event=>{ if(event.key==='Escape'&&tour&&tour.active){ event.preventDefault(); event.stopImmediatePropagation(); endTour(false); } },true);
 document.getElementById('loading').style.display='none';
 
 /* ====================== ↔ TWIN TOWNS (two-person referral bridge) ====================== */
@@ -11516,6 +11548,7 @@ function taxiTo(repo){ if(repositoryAtelierActive()) return false; standUp(); ri
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; ridePostActionUntil=0; driveBar.style.display='none'; model.visible=true; }
 function arriveTaxi(repo){ ride=null; ridePostActionUntil=0; driveBar.style.display='none'; model.visible=true; _settleClearSightArrival(repo);
+  if(repo._tourTree){ openWorldTreeChronicle('tour'); return; }
   if(repo._courseResident){ const L=_residentLive(repo._courseResident), res=L&&L.res; if(L&&res){ const met=courseMark('resident',res.id); openChat(L._npc);
       if(met) showWave(tf('chronicleMet',{name:(res[LANG]||res.ko).name}),2800); } else openChat(); return; }
   openChat();
