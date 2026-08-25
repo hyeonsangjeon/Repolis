@@ -1,14 +1,14 @@
 {
   "era": {
-    "as_of": "2026-08-24",
+    "as_of": "2026-08-25",
     "basis": "Oldest creation date among the public repositories included in repos.json.",
-    "city_age_days": 3500,
-    "city_age_years": 9.58,
+    "city_age_days": 3501,
+    "city_age_years": 9.59,
     "city_year": 10,
     "founded_on": "2017-01-23",
     "oldest_repository": "vertx-embedded-springboot"
   },
-  "last_sap_flow": "2026-08-24T00:00:00Z",
+  "last_sap_flow": "2026-08-25T00:00:00Z",
   "roots": [],
   "schema": "repolis.city-state",
   "season": {
@@ -32,7 +32,7 @@
       "recent_active_repositories": 21,
       "recent_to_historical_ratio": 15.75,
       "recent_window_days": 30,
-      "reference_date": "2026-08-24",
+      "reference_date": "2026-08-25",
       "repositories_with_push_date": 69
     },
     "reason": "Recent latest-push count is 15.75x the average of the prior 6 30-day buckets.",
@@ -44,12 +44,12 @@
       "at_least_365_days": 37,
       "at_least_730_days": 32,
       "longest": {
-        "elapsed_days": 2995,
+        "elapsed_days": 2996,
         "last_public_push": "2018-06-12",
         "repo": "jenkins-dind"
       }
     },
-    "reference_date": "2026-08-24",
+    "reference_date": "2026-08-25",
     "repositories": {
       "total": 69,
       "with_push_date": 69,
@@ -123,7 +123,7 @@
     },
     "repository_count": 69,
     "total_forks": 135,
-    "total_stars": 564
+    "total_stars": 566
   },
   "version": 1
 }
