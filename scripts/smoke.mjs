@@ -1679,7 +1679,60 @@ ok((HTML.match(/chronicleSub:\s*['"]/g) || []).length >= 2 && (HTML.match(/chron
 ok(/courseMark\('repo',repo\.repo\)/.test(HTML) && /courseMark\('resident',nearResident\.id\)/.test(HTML), 'opening the target repo or meeting the target resident advances the story');
 ok(/_courseHaunt[\s\S]*?courseMark\('haunt'/.test(HTML) && /_courseZone[\s\S]*?courseMark\('zone'/.test(HTML), 'Gitber arrival advances haunt and district scenes');
 ok(/window\.__chronicle=window\.__course/.test(HTML) && /window\.__chronicleStep=/.test(HTML), 'debug hooks expose and advance the Village Chronicle');
-// 10c — repo-card actions + suggested questions, wired into the existing chat flow
+// 10c — the optional first visit now discovers the living-town core without replacing classic stops
+group('first-visit World Tree + resident discovery tour');
+const tourBlock = (HTML.match(/Guided onboarding tour:[\s\S]*?function renderCourse/) || [''])[0];
+const tourOrder = ['welcome','tree','resident','repo','chrono','passport'].map(kind => tourBlock.indexOf(`kind:'${kind}'`));
+ok(tourBlock.length > 0, 'guided first-visit tour block is extractable');
+ok(tourOrder.every(index => index >= 0) && tourOrder.every((index, i) => i === 0 || index > tourOrder[i - 1]),
+  'tour order is welcome → World Tree → resident → linked repo house → Chronopolis → passport');
+ok(/if\(tree\) steps\.push\(\{kind:'tree'/.test(tourBlock)
+  && /if\(pair\) steps\.push\(\{kind:'resident'/.test(tourBlock)
+  && /if\(repo\) steps\.push\(\{kind:'repo'/.test(tourBlock)
+  && /if\(typeof CHRONO!=='undefined'&&CHRONO\) steps\.push\(\{kind:'chrono'/.test(tourBlock),
+  'missing Tree, resident, repo, or Chronopolis data omits only that optional stop');
+ok(/function tourResidentPair\(\)[\s\S]*?item\.res\.bound&&repoByKey\(item\.res\.bound\.repo\)/.test(tourBlock)
+  && /repo:\s*repoByKey\(live\.res\.bound\.repo\)/.test(tourBlock),
+  'resident greeting and repository card use the same generated bound-repo relationship');
+ok(/_tourTree:true/.test(tourBlock)
+  && /if\(repo\._tourTree\)\{ openWorldTreeChronicle\('tour'\); return; \}/.test(HTML),
+  'World Tree arrival opens the existing silent Chronicle without opening taxi chat');
+ok(/_courseResident:live\.res\.id/.test(tourBlock)
+  && /if\(repo\._courseResident\)[\s\S]*?openChat\(L\._npc\)/.test(HTML),
+  'resident arrival opens the existing local greeting interaction');
+ok(/tourRepo:/.test(HTML) && /Repository Atelier/.test(tourBlock + HTML)
+  && /setTimeout\(\(\)=>openCard\(repo\),500\)/.test(HTML),
+  'the linked repo arrival opens its existing card and exposes Repository Atelier');
+ok(/function tourTravel\(destination,dwell\)[\s\S]*?if\(REDUCED\)\{ player\.position\.set[\s\S]*?arriveTaxi\(destination\); tourOnArrive\(\)/.test(tourBlock),
+  'reduced motion keeps equivalent spatial stops and real interactions without animated taxi travel');
+ok(/if\(!destination\._courseResident&&activeNpc&&activeNpc\.resident\) activeNpc=null/.test(tourBlock),
+  'leaving the resident stop restores subsequent repo and Chronopolis arrivals to Gitber');
+ok(/function tourShowPassport\(step\)[\s\S]*?tour\.waiting=true[\s\S]*?hideTourCap\(\)[\s\S]*?passportEl\.classList\.remove\('hidden'\)[\s\S]*?tourSchedule\(step\.dwell\)/.test(tourBlock),
+  'the final caption hands off to the real passport instead of overlapping it on mobile');
+ok(/document\.body\.classList\.add\('tour-active'\)/.test(tourBlock)
+  && /document\.body\.classList\.remove\('tour-active'\)/.test(tourBlock)
+  && /body\.tour-active #taxiBtn[\s\S]*?body\.tour-active #prompt[\s\S]*?display:none !important/.test(HTML),
+  'tour-owned mobile chrome hides overlapping taxi, emote, action, prompt, and hint controls');
+ok(/let tour=null, _tourBoost=false, _tourEndTimer=null/.test(tourBlock)
+  && /if\(_tourEndTimer\)\{ clearTimeout\(_tourEndTimer\); _tourEndTimer=null; \}/.test(tourBlock),
+  'immediate replay cancels the prior completion timer before it can reveal overlapping mobile controls');
+ok(/#tourCap \.tcSkip\{[^}]*min-height:44px/.test(HTML)
+  && /id="tourReplayBtn"/.test(HTML)
+  && /replay\.onclick=\(\)=>\{ panel\.classList\.add\('hidden'\); menuBtn\.setAttribute\('aria-expanded','false'\); startTour\(\); \}/.test(HTML),
+  'Skip is touch-sized and the existing wayfinding panel replays the tour');
+ok(/document\.addEventListener\('keydown',event=>\{ if\(event\.key==='Escape'&&tour&&tour\.active\)/.test(HTML),
+  'Escape skips the tour even while an interaction panel owns keyboard focus');
+ok((HTML.match(/tourTree:\s*['"]/g) || []).length === 2
+  && (HTML.match(/tourResident:\s*['"]/g) || []).length === 2
+  && (HTML.match(/tourRepo:\s*['"]/g) || []).length === 2
+  && (HTML.match(/tourReplaySub:\s*['"]/g) || []).length === 2,
+  'World Tree, resident, linked house, and replay copy ship together in KO and EN');
+const normalEntryBlock = (HTML.match(/document\.getElementById\('startBtn'\)\.onclick=[\s\S]*?const introLaunch=/) || [''])[0];
+ok(normalEntryBlock.length > 0 && !/startTour\(\)/.test(normalEntryBlock),
+  'normal Enter town remains immediate and does not start the optional tour');
+ok(!/fetch\(|localStorage|sessionStorage|indexedDB|groundedAsk|webllmAsk|proxyAsk/.test(tourBlock),
+  'tour re-orchestration adds no request, persistence, or model path');
+// 10d — repo-card actions + suggested questions, wired into the existing chat flow
 ok(/id=["']cardAsk["']/.test(HTML), 'repo card #cardAsk section DOM present');
 ok(/function renderCardAsk\(repo\)/.test(HTML), 'renderCardAsk() builds the card actions');
 ok(/renderCardAsk\(repo\);/.test(HTML), 'openCard() populates the card-ask section');
