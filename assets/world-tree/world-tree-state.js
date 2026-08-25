@@ -15,6 +15,10 @@ export const SAP_FLOW_LIMITS = Object.freeze({
   travelSeconds: 5.6,
 });
 
+export const SILENCE_LEDGER_SCHEMA = 'repolis.silence-ledger';
+export const SILENCE_LEDGER_VERSION = 1;
+export const SILENCE_LEDGER_THRESHOLDS_DAYS = Object.freeze([365, 730]);
+
 function clamp(value, minimum = 0, maximum = 1) {
   return Math.min(maximum, Math.max(minimum, value));
 }
@@ -31,6 +35,14 @@ function finiteCount(value) {
 function boundedText(value, maximum = 180) {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   return text.slice(0, maximum);
+}
+
+function normalizedDate(value) {
+  const text = boundedText(value, 32);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null;
+  const timestamp = Date.parse(`${text}T00:00:00Z`);
+  return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === text
+    ? text : null;
 }
 
 function logarithmicSignal(value, saturation) {
@@ -127,12 +139,73 @@ export function resolveSapFlowMode(sapFlow, options = {}) {
   return 'travel';
 }
 
+export function projectSilenceLedger(value) {
+  const unavailable = () => Object.freeze({
+    available: false,
+    schema: SILENCE_LEDGER_SCHEMA,
+    version: SILENCE_LEDGER_VERSION,
+    referenceDate: null,
+    thresholdsDays: SILENCE_LEDGER_THRESHOLDS_DAYS,
+    repositories: Object.freeze({ total: 0, withPushDate: 0, withoutPushDate: 0 }),
+    quiet: Object.freeze({ atLeast365Days: 0, atLeast730Days: 0, longest: null }),
+  });
+  if (value?.schema !== SILENCE_LEDGER_SCHEMA
+      || value?.version !== SILENCE_LEDGER_VERSION
+      || value?.scope !== 'unarchived_public_repositories'
+      || value?.activity_signal !== 'latest_public_push'
+      || !Array.isArray(value?.thresholds_days)
+      || value.thresholds_days.length !== SILENCE_LEDGER_THRESHOLDS_DAYS.length
+      || value.thresholds_days.some((threshold, index) => (
+        threshold !== SILENCE_LEDGER_THRESHOLDS_DAYS[index]
+      ))) {
+    return unavailable();
+  }
+
+  const referenceDate = normalizedDate(value.reference_date);
+  const total = finiteCount(value.repositories?.total);
+  const withPushDate = finiteCount(value.repositories?.with_push_date);
+  const withoutPushDate = finiteCount(value.repositories?.without_push_date);
+  const atLeast365Days = finiteCount(value.quiet?.at_least_365_days);
+  const atLeast730Days = finiteCount(value.quiet?.at_least_730_days);
+  if (!referenceDate
+      || withPushDate + withoutPushDate !== total
+      || atLeast365Days > withPushDate
+      || atLeast730Days > atLeast365Days) {
+    return unavailable();
+  }
+
+  const sourceLongest = value.quiet?.longest;
+  const longestRepo = boundedText(sourceLongest?.repo, 160);
+  const longestPush = normalizedDate(sourceLongest?.last_public_push);
+  const longestDays = Number(sourceLongest?.elapsed_days);
+  const longest = sourceLongest && longestRepo && longestPush
+      && Number.isFinite(longestDays) && longestDays >= 0
+    ? Object.freeze({
+      repo: longestRepo,
+      lastPublicPush: longestPush,
+      elapsedDays: Math.floor(longestDays),
+    })
+    : null;
+  if ((withPushDate === 0) !== (longest === null)) return unavailable();
+
+  return Object.freeze({
+    available: true,
+    schema: SILENCE_LEDGER_SCHEMA,
+    version: SILENCE_LEDGER_VERSION,
+    referenceDate,
+    thresholdsDays: SILENCE_LEDGER_THRESHOLDS_DAYS,
+    repositories: Object.freeze({ total, withPushDate, withoutPushDate }),
+    quiet: Object.freeze({ atLeast365Days, atLeast730Days, longest }),
+  });
+}
+
 export function projectWorldTreeChronicle(cityState, options = {}) {
   if (!validCityState(cityState)) {
     return Object.freeze({
       available: false,
       era: null,
       season: null,
+      silence: projectSilenceLedger(null),
       stats: null,
       lastSapFlow: resolveSapFlowFreshness(null, options.now),
       roots: Object.freeze([]),
@@ -171,6 +244,7 @@ export function projectWorldTreeChronicle(cityState, options = {}) {
         ? Math.max(0, cityState.season.inputs.recent_to_historical_ratio) : null,
       fallbackUsed: cityState.season?.fallback?.used === true,
     }),
+    silence: projectSilenceLedger(cityState.silence),
     stats: Object.freeze({
       repositories: finiteCount(cityState.stats?.repository_count),
       activeRepositories: finiteCount(cityState.stats?.active_repository_count),

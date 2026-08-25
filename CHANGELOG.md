@@ -6,6 +6,18 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.91.0] — 2026-08-25
+
+### 📜 Silence Ledger — factual long-idle repository records
+
+- `data/city-state.json` now carries a bounded `repolis.silence-ledger` v1 record derived only from
+  unarchived public repositories' latest push dates and the explicit UTC city reference date. It reports
+  valid/missing dates, inclusive 365/730-day quiet counts, and one deterministically tied longest record.
+- The existing silent World Tree Chronicle gains a compact KO/EN section that says “last public push” and
+  “quiet.” Archived repositories remain separate in The Roots; missing or empty inputs fail soft.
+- The ledger adds no runtime request, scene object, draw call, storage, analytics event, backend, model call,
+  dependency, or composite score. Fork and clone metrics do not enter the contract.
+
 ## [1.90.0] — 2026-08-24
 
 ### 🌳 The Silence — elder fragments, newcomer houses, and a traveler taxi

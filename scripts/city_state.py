@@ -16,6 +16,9 @@ SCHEMA_VERSION = 1
 SEASONS = ("spring", "summer", "autumn", "winter")
 RECENT_WINDOW_DAYS = 30
 HISTORICAL_BUCKETS = 6
+SILENCE_SCHEMA_NAME = "repolis.silence-ledger"
+SILENCE_SCHEMA_VERSION = 1
+SILENCE_THRESHOLDS_DAYS = (365, 730)
 
 
 def _parse_datetime(value):
@@ -151,6 +154,43 @@ def _season(repositories, reference_day):
     }
 
 
+def _silence(repositories, reference_day):
+    unarchived = [repo for repo in repositories if not bool(repo.get("archived"))]
+    dated = []
+    for repo in unarchived:
+        pushed = _parse_datetime(repo.get("pushed") or repo.get("pushed_at"))
+        if not pushed:
+            continue
+        elapsed_days = max(0, (reference_day - pushed.date()).days)
+        dated.append({
+            "repo": _repo_name(repo),
+            "last_public_push": pushed.date().isoformat(),
+            "elapsed_days": elapsed_days,
+        })
+
+    dated.sort(key=lambda item: (-item["elapsed_days"], item["repo"].casefold(), item["repo"]))
+    quiet_365 = sum(item["elapsed_days"] >= SILENCE_THRESHOLDS_DAYS[0] for item in dated)
+    quiet_730 = sum(item["elapsed_days"] >= SILENCE_THRESHOLDS_DAYS[1] for item in dated)
+    return {
+        "schema": SILENCE_SCHEMA_NAME,
+        "version": SILENCE_SCHEMA_VERSION,
+        "reference_date": reference_day.isoformat(),
+        "scope": "unarchived_public_repositories",
+        "activity_signal": "latest_public_push",
+        "thresholds_days": list(SILENCE_THRESHOLDS_DAYS),
+        "repositories": {
+            "total": len(unarchived),
+            "with_push_date": len(dated),
+            "without_push_date": len(unarchived) - len(dated),
+        },
+        "quiet": {
+            "at_least_365_days": quiet_365,
+            "at_least_730_days": quiet_730,
+            "longest": dated[0] if dated else None,
+        },
+    }
+
+
 def _achievement(repo):
     text = re.sub(r"\s+", " ", str(repo.get("desc") or repo.get("description") or "")).strip()
     if not text:
@@ -209,6 +249,7 @@ def build_city_state(repositories, source_timestamps=None, *, as_of=None):
             "basis": "Oldest creation date among the public repositories included in repos.json.",
         },
         "season": _season(public, reference_day),
+        "silence": _silence(public, reference_day),
         "stats": {
             "repository_count": len(public),
             "active_repository_count": len(public) - len(archived),

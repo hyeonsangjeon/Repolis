@@ -24,6 +24,11 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 - **Newcomer and ruin visuals follow reproducible public dates.** A repository is new only while its generated
   city-reference age is under 90 days. The current snapshot has no archived repository, so warm ruin composition
   and unavailable dialogue are exercised with deterministic fixtures rather than fabricated production history.
+- **The Silence Ledger is a dated current snapshot, not a repository health judgment.** It uses only each
+  unarchived public repository's latest public push date and the generated UTC city reference date. Missing or
+  invalid push dates stay explicitly unavailable; 365- and 730-day counts include the boundary day, and only one
+  deterministically tied longest-quiet repository is retained. Archived repositories remain separate in The Roots.
+  Fork and clone counts have no bearing on quiet time, copies, recoverability, or preservation.
 - **Public repos only, by design.** Private repo names never appear. Untouched mirror forks are filtered
   out; only forks you've actually committed to are shown.
 - **Fork lineage is public origin metadata, not credit assignment.** The generated field exists only when

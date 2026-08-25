@@ -104,6 +104,124 @@
       },
       "type": "array"
     },
+    "silence": {
+      "additionalProperties": false,
+      "properties": {
+        "activity_signal": {
+          "const": "latest_public_push",
+          "type": "string"
+        },
+        "quiet": {
+          "additionalProperties": false,
+          "properties": {
+            "at_least_365_days": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "at_least_730_days": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "longest": {
+              "additionalProperties": false,
+              "properties": {
+                "elapsed_days": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "last_public_push": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "repo": {
+                  "maxLength": 160,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "repo",
+                "last_public_push",
+                "elapsed_days"
+              ],
+              "type": [
+                "object",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "at_least_365_days",
+            "at_least_730_days",
+            "longest"
+          ],
+          "type": "object"
+        },
+        "reference_date": {
+          "format": "date",
+          "type": "string"
+        },
+        "repositories": {
+          "additionalProperties": false,
+          "properties": {
+            "total": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "with_push_date": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "without_push_date": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "total",
+            "with_push_date",
+            "without_push_date"
+          ],
+          "type": "object"
+        },
+        "schema": {
+          "const": "repolis.silence-ledger",
+          "type": "string"
+        },
+        "scope": {
+          "const": "unarchived_public_repositories",
+          "type": "string"
+        },
+        "thresholds_days": {
+          "const": [
+            365,
+            730
+          ],
+          "items": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "version": {
+          "const": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema",
+        "version",
+        "reference_date",
+        "scope",
+        "activity_signal",
+        "thresholds_days",
+        "repositories",
+        "quiet"
+      ],
+      "type": "object"
+    },
     "schema": {
       "const": "repolis.city-state",
       "type": "string"
@@ -324,6 +442,7 @@
     "version",
     "era",
     "season",
+    "silence",
     "stats",
     "last_sap_flow",
     "roots"
