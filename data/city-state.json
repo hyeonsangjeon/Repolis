@@ -38,6 +38,31 @@
     "reason": "Recent latest-push count is 15.75x the average of the prior 6 30-day buckets.",
     "value": "spring"
   },
+  "silence": {
+    "activity_signal": "latest_public_push",
+    "quiet": {
+      "at_least_365_days": 37,
+      "at_least_730_days": 32,
+      "longest": {
+        "elapsed_days": 2995,
+        "last_public_push": "2018-06-12",
+        "repo": "jenkins-dind"
+      }
+    },
+    "reference_date": "2026-08-24",
+    "repositories": {
+      "total": 69,
+      "with_push_date": 69,
+      "without_push_date": 0
+    },
+    "schema": "repolis.silence-ledger",
+    "scope": "unarchived_public_repositories",
+    "thresholds_days": [
+      365,
+      730
+    ],
+    "version": 1
+  },
   "stats": {
     "active_repository_count": 69,
     "archived_repository_count": 0,

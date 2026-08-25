@@ -20,6 +20,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **Elder fragment** | hand-authored `data/lore/fragments.json` | A short bilingual recollection allocated only to the oldest eligible 20% of the nine-resident active roster and delivered rarely in local life contexts. |
 | **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, Town Gazette baselines, constellation completion, and the Maintainers' Night Watch stamp. |
 | **Session footprint** | current-tab memory + one instanced mesh | A short local-player walking trace; never persisted, synchronized, or derived from residents/peers. |
+| **Silence Ledger** | nested `data/city-state.json` projection | A bounded dated record of long-quiet unarchived public repos, separate from archived Roots. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
 | **Taxi** | the POLARIS scholar (`kind: taxi`) | The only all-district traveler; finds a repo, drives there, knows Shared city state, and redirects household memory to that home. |
 | **Grounding Worker** | `cloudflare-taxi/` (`repolis-taxi`) | Server brain: KB retrieval + in-persona chat. |
@@ -131,12 +132,25 @@ github-traffic-monitor (private, daily)        Repolis (public)
 - `season` compares repositories pushed in the latest 30-day window with six preceding 30-day
   buckets. Sparse histories use the recorded recent-active share fallback. The value is one of
   `spring`, `summer`, `autumn`, or `winter`, with its inputs and reason stored beside it.
+- `silence` is a nested `repolis.silence-ledger` v1 projection scoped only to unarchived public
+  repositories. It records the UTC city reference date, fixed `[365, 730]` day thresholds,
+  repositories with and without a valid latest public push date, inclusive counts at each threshold,
+  and at most one longest-quiet repository. Elapsed days compare UTC calendar dates and clamp future
+  signals to zero. Longest-quiet ties sort by elapsed days descending, then repository name
+  case-insensitively and finally exactly ascending. Invalid or missing dates count only as
+  `without_push_date`; an empty scope produces zero counts and `longest: null`.
 - `stats` contains only aggregates defensible from the current public catalog. Complete commit
   history is unavailable, so `commit_history.total` stays `null` rather than being estimated.
 - `last_sap_flow` is that explicit UTC batch day or, for local fallback builds, the latest reproducible
   source timestamp. It is never an implicit wall-clock read inside the generator.
 - `roots` contains archived public repositories only, with active years and a one-line achievement
   derived from public metadata. It is correctly empty when the catalog has no archived repos.
+
+Fork and clone values never enter the Silence Ledger and cannot affect its counts or longest record.
+The ledger is one current generated snapshot, not a commit timeline, abandonment claim, preservation
+score, or statement about copies. The pure World Tree projection accepts the nested contract without
+reading owner DOM, storage, the network, or the wall clock, so later public-town and daily-ledger work
+can reuse the same bounded shape.
 
 The owner town uses this state for a restrained static sky/fog/light palette. Other public towns use
 the neutral summer palette because no owner-specific city-state artifact is fetched for them.

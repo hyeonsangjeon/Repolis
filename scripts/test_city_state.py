@@ -52,6 +52,9 @@ class CityStateTests(unittest.TestCase):
         self.assertFalse(state["stats"]["commit_history"]["available"])
         self.assertEqual([root["repo"] for root in state["roots"]], ["memory"])
         self.assertEqual(state["roots"][0]["active_years"], {"from": 2018, "to": 2022, "count": 5})
+        self.assertEqual(state["silence"]["repositories"]["total"], 1)
+        self.assertEqual(state["silence"]["repositories"]["with_push_date"], 1)
+        self.assertEqual(state["silence"]["quiet"]["at_least_365_days"], 0)
         self.assertNotIn("secret", serialize_city_state(state))
 
     def test_identical_inputs_are_byte_stable_and_order_independent(self):
@@ -68,6 +71,72 @@ class CityStateTests(unittest.TestCase):
         ))
         self.assertEqual(first, second)
         self.assertEqual(first, serialize_city_state(json.loads(first)))
+
+    def test_silence_ledger_is_unarchived_inclusive_and_stably_tied(self):
+        repos = [
+            repo("beta-earliest", "2019-01-01", "2020-01-01", stars=40),
+            repo("alpha-earliest", "2019-01-01", "2020-01-01", stars=1),
+            repo("threshold-730", "2020-01-01", "2024-06-30"),
+            repo("threshold-365", "2020-01-01", "2025-06-30"),
+            repo("recent", "2020-01-01", "2026-06-29"),
+            repo("missing", "2020-01-01", ""),
+            repo("invalid", "2020-01-01", "not-a-date"),
+            repo("archived-older", "2010-01-01", "2010-01-01", archived=True),
+            repo("private-older", "2000-01-01", "2000-01-01", private=True),
+        ]
+        for index, item in enumerate(repos):
+            item["forks"] = 1000 - index
+            item["clones"] = 5000 + index
+
+        state = build_city_state(repos, as_of="2026-06-30T00:00:00Z")
+        ledger = state["silence"]
+        self.validate_state(state)
+        self.assertEqual(ledger["schema"], "repolis.silence-ledger")
+        self.assertEqual(ledger["version"], 1)
+        self.assertEqual(ledger["reference_date"], "2026-06-30")
+        self.assertEqual(ledger["scope"], "unarchived_public_repositories")
+        self.assertEqual(ledger["activity_signal"], "latest_public_push")
+        self.assertEqual(ledger["thresholds_days"], [365, 730])
+        self.assertEqual(
+            ledger["repositories"],
+            {"total": 7, "with_push_date": 5, "without_push_date": 2},
+        )
+        self.assertEqual(ledger["quiet"]["at_least_365_days"], 4)
+        self.assertEqual(ledger["quiet"]["at_least_730_days"], 3)
+        self.assertEqual([root["repo"] for root in state["roots"]], ["archived-older"])
+        self.assertEqual(
+            ledger["quiet"]["longest"],
+            {
+                "repo": "alpha-earliest",
+                "last_public_push": "2020-01-01",
+                "elapsed_days": 2372,
+            },
+        )
+
+        changed_metrics = [dict(item, forks=0, clones=0) for item in reversed(repos)]
+        changed = build_city_state(changed_metrics, as_of="2026-06-30T00:00:00Z")
+        self.assertEqual(ledger, changed["silence"])
+
+    def test_silence_ledger_fails_soft_for_empty_and_missing_push_dates(self):
+        empty = build_city_state([], as_of="2026-06-30T00:00:00Z")
+        missing = build_city_state(
+            [repo("missing", "2020-01-01", ""), repo("invalid", "2020-01-01", "invalid")],
+            as_of="2026-06-30T00:00:00Z",
+        )
+        self.validate_state(empty)
+        self.validate_state(missing)
+        self.assertEqual(
+            empty["silence"]["repositories"],
+            {"total": 0, "with_push_date": 0, "without_push_date": 0},
+        )
+        self.assertIsNone(empty["silence"]["quiet"]["longest"])
+        self.assertEqual(
+            missing["silence"]["repositories"],
+            {"total": 2, "with_push_date": 0, "without_push_date": 2},
+        )
+        self.assertEqual(missing["silence"]["quiet"]["at_least_365_days"], 0)
+        self.assertEqual(missing["silence"]["quiet"]["at_least_730_days"], 0)
+        self.assertIsNone(missing["silence"]["quiet"]["longest"])
 
     def test_explicit_as_of_advances_a_quiet_city(self):
         state = build_city_state(

@@ -78,7 +78,10 @@ import {
 } from '../assets/city-time.js';
 import {
   SAP_FLOW_LIMITS,
+  SILENCE_LEDGER_SCHEMA,
+  SILENCE_LEDGER_VERSION,
   WORLD_TREE_GROWTH_LIMITS,
+  projectSilenceLedger,
   projectWorldTreeChronicle,
   projectWorldTreeGrowth,
   resolveSapFlowFreshness,
@@ -287,7 +290,7 @@ ok(/Path\("data"\) \/ "towns" \/ OWNER/.test(REPO_BUILDER), 'manual non-upstream
 
 group('deterministic city state — generated time, wear, ruins, and season');
 ok(CITY_STATE.schema==='repolis.city-state' && CITY_STATE.version===1
-  &&['era','season','stats','last_sap_flow','roots'].every(key=>key in CITY_STATE),
+  &&['era','season','silence','stats','last_sap_flow','roots'].every(key=>key in CITY_STATE),
   'generated city state exposes the versioned minimum contract');
 ok(CITY_STATE_SCHEMA.$id==='https://hyeonsangjeon.github.io/Repolis/data/city-state.schema.json'
   &&CITY_STATE_SCHEMA.additionalProperties===false
@@ -308,6 +311,34 @@ ok(CITY_STATE.stats.commit_history.available===false
 ok(CITY_STATE.roots.length===archivedCityRepos.length
   &&CITY_STATE.roots.every(root=>archivedCityRepos.some(repo=>repo.repo===root.repo)),
   'roots contain every and only archived public repository');
+const silenceCityRepos=CITY_REPOS.filter(repo=>!repo.archived);
+const silenceReference=Date.parse(`${CITY_STATE.silence.reference_date}T00:00:00Z`);
+const silenceCityRows=silenceCityRepos.map(repo=>{
+  const day=String(repo.pushed||'').slice(0,10),pushed=Date.parse(`${day}T00:00:00Z`);
+  return {repo:repo.repo,lastPublicPush:day,elapsedDays:Number.isFinite(pushed)?Math.max(0,Math.floor((silenceReference-pushed)/86400000)):null};
+});
+const silenceDated=silenceCityRows.filter(row=>row.elapsedDays!==null)
+  .sort((left,right)=>right.elapsedDays-left.elapsedDays
+    ||left.repo.toLocaleLowerCase('en-US').localeCompare(right.repo.toLocaleLowerCase('en-US'),'en-US')
+    ||left.repo.localeCompare(right.repo,'en-US'));
+ok(CITY_STATE.silence.schema===SILENCE_LEDGER_SCHEMA&&CITY_STATE.silence.version===SILENCE_LEDGER_VERSION
+  &&CITY_STATE.silence.scope==='unarchived_public_repositories'
+  &&CITY_STATE.silence.activity_signal==='latest_public_push'
+  &&JSON.stringify(CITY_STATE.silence.thresholds_days)==='[365,730]',
+  'Silence Ledger is a nested versioned latest-public-push contract with fixed inclusive thresholds');
+ok(CITY_STATE.silence.repositories.total===silenceCityRepos.length
+  &&CITY_STATE.silence.repositories.with_push_date===silenceDated.length
+  &&CITY_STATE.silence.repositories.without_push_date===silenceCityRepos.length-silenceDated.length
+  &&CITY_STATE.silence.quiet.at_least_365_days===silenceDated.filter(row=>row.elapsedDays>=365).length
+  &&CITY_STATE.silence.quiet.at_least_730_days===silenceDated.filter(row=>row.elapsedDays>=730).length,
+  'Silence Ledger reconciles only unarchived public repositories and includes the 365/730-day boundaries');
+ok(!silenceDated.length||(
+  CITY_STATE.silence.quiet.longest.repo===silenceDated[0].repo
+  &&CITY_STATE.silence.quiet.longest.last_public_push===silenceDated[0].lastPublicPush
+  &&CITY_STATE.silence.quiet.longest.elapsed_days===silenceDated[0].elapsedDays
+), 'Silence Ledger keeps one deterministic longest-quiet repository with stable name tie-breaking');
+ok(!/\b(?:fork|clone)/i.test(JSON.stringify(CITY_STATE.silence)),
+  'fork and clone metrics cannot enter or influence the Silence Ledger contract');
 ok(/sort_keys=True/.test(CITY_STATE_BUILDER)
   &&/schema_path/.test(CITY_STATE_VALIDATOR)
   &&/CITY_STATE_AS_OF=\$\(date -u \+%FT00:00:00Z\)/.test(REFRESH_WORKFLOW)
@@ -360,15 +391,22 @@ ok(/citySeason/.test(HTML)&&/cityTimeFixtures/.test(HTML)&&/prefers-reduced-moti
   'debug fixtures and the existing reduced-motion contract cover static time treatments');
 
 group('World Tree Phase 2 — city-state projection, roots, growth, and sap freshness');
-const worldTreeFixture=(stars,repositories,roots=[],lastSapFlow='2026-08-23T00:00:00Z')=>({
+const worldTreeFixture=(stars,repositories,roots=[],lastSapFlow='2026-08-23T00:00:00Z')=>{
+  const unarchived=Math.max(0,repositories-roots.length);
+  return {
   schema:'repolis.city-state',version:1,last_sap_flow:lastSapFlow,
   era:{as_of:'2026-08-23',founded_on:'2017-01-23',oldest_repository:'first-repo',city_age_years:9.58,city_year:10,basis:'fixture'},
   season:{value:'spring',fallback:{used:false},inputs:{recent_active_repositories:4,repositories_with_push_date:repositories,recent_to_historical_ratio:1.5}},
+  silence:{schema:'repolis.silence-ledger',version:1,reference_date:'2026-08-23',scope:'unarchived_public_repositories',
+    activity_signal:'latest_public_push',thresholds_days:[365,730],
+    repositories:{total:unarchived,with_push_date:unarchived,without_push_date:0},
+    quiet:{at_least_365_days:0,at_least_730_days:0,longest:unarchived
+      ?{repo:'quiet-fixture',last_public_push:'2026-01-01',elapsed_days:234}:null}},
   stats:{repository_count:repositories,active_repository_count:Math.max(0,repositories-roots.length),archived_repository_count:roots.length,
     total_stars:stars,total_forks:7,language_distribution:[{language:'JavaScript',repositories:Math.max(1,repositories)}],
     commit_history:{available:false,total:null,limitation:'Complete commit history is unavailable.'}},
   roots
-});
+};};
 const growthMinimum=projectWorldTreeGrowth(worldTreeFixture(0,0));
 const growthMiddle=projectWorldTreeGrowth(worldTreeFixture(420,54));
 const growthMaximum=projectWorldTreeGrowth(worldTreeFixture(
@@ -395,6 +433,16 @@ ok(emptyChronicle.roots.length===0
   &&manyChronicle.roots[0].repo==='archived-01'
   &&manyChronicle.roots.at(-1).activeYears.count===3,
   'Chronicle keeps an honest empty Roots state and preserves every bounded root in a many-roots fixture');
+const generatedSilence=projectSilenceLedger(CITY_STATE.silence);
+ok(emptyChronicle.silence.available&&emptyChronicle.silence.repositories.total===0
+  &&manyChronicle.silence.repositories.total===6
+  &&generatedSilence.available
+  &&generatedSilence.quiet.atLeast365Days===CITY_STATE.silence.quiet.at_least_365_days
+  &&generatedSilence.quiet.longest.repo===CITY_STATE.silence.quiet.longest.repo,
+  'pure Chronicle projection exposes the bounded versioned Silence Ledger without owner-DOM coupling');
+ok(!projectSilenceLedger(null).available
+  &&!projectSilenceLedger({...CITY_STATE.silence,repositories:{total:1,with_push_date:1,without_push_date:1}}).available,
+  'missing or inconsistent Silence Ledger data fails soft to an unavailable projection');
 const recentSap=resolveSapFlowFreshness('2026-08-23T00:00:00Z',Date.parse('2026-08-23T12:00:00Z'));
 const staleSap=resolveSapFlowFreshness('2026-07-20T00:00:00Z',Date.parse('2026-08-23T12:00:00Z'));
 ok(recentSap.animate&&recentSap.freshness==='recent'
@@ -404,8 +452,9 @@ ok(recentSap.animate&&recentSap.freshness==='recent'
   &&resolveSapFlowMode(recentSap,{lowEnd:true})==='static'
   &&resolveSapFlowMode(staleSap)==='static',
   'sap travel is short-lived only for a recent record; stale, reduced-motion, and LOW_END fixtures stay static');
-ok(SAP_FLOW_LIMITS.travelSeconds<7&&!/\bfetch\s*\(|api\.github|workers\.dev|\/taxi\b/i.test(WORLD_TREE_STATE_SRC),
-  'World Tree projection is bounded, local-only, and adds no runtime GitHub, LLM, or service request');
+ok(SAP_FLOW_LIMITS.travelSeconds<7
+  &&!/\bfetch\s*\(|api\.github|workers\.dev|\/taxi\b|localStorage|sessionStorage|document\./i.test(WORLD_TREE_STATE_SRC),
+  'World Tree projections are bounded, DOM-free, local-only, and add no request or persistence');
 
 group('Repo Portal — one repository becomes the first shareable destination');
 const portalUser=parseRepoPortalInput('@Octo-Cat');
@@ -3149,7 +3198,7 @@ ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
   && (HTML.match(/if\(memorial\) makeMemorialTree\(cx,cz\)/g) || []).length === 1, 'exactly one memorial tree is requested, at the north rest park centre');
 ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
-ok(/world-tree-state\.js\?v=world-tree-phase2-v1/.test(HTML)
+ok(/world-tree-state\.js\?v=world-tree-phase2-v2/.test(HTML)
   &&/hero\.runtime\.nodes\['living-system'\]\.scale\.setScalar\(WORLD_TREE_GROWTH\.scale\)/.test(memorialTreeBlock)
   &&/const collider=\{x,z,r:11\.6,_memorialTree:true\}/.test(memorialTreeBlock)
   &&/growthScale:WORLD_TREE_GROWTH\.scale/.test(memorialTreeBlock),
@@ -3180,6 +3229,22 @@ ok(/worldTreeRootSearchWrap\.hidden=total<10/.test(worldTreeChronicleBlock)
   &&(worldTreeChronicleBlock.match(/empty\.setAttribute\('role','listitem'\)/g)||[]).length===2
   &&/role="status" aria-live="polite"/.test(HTML),
   'Roots stays quiet when empty and only exposes an accessible search when the generated list is large');
+const silenceLedgerCopy=[...HTML.matchAll(/worldTreeQuiet(?:Title|Basis|Summary|Longest|NoPush|Empty|Unavailable):'([^']*)'/g)]
+  .map(match=>match[1]).join(' ');
+ok(/class="worldTreeQuiet" aria-labelledby="worldTreeQuietTitle"/.test(HTML)
+  &&/id="worldTreeQuietBasis"/.test(HTML)&&/id="worldTreeQuietSummary"/.test(HTML)&&/id="worldTreeQuietLongest"/.test(HTML)
+  &&/const silence=record\.silence/.test(worldTreeChronicleBlock)
+  &&/repositories\.total\?/.test(worldTreeChronicleBlock)
+  &&/quiet\.longest/.test(worldTreeChronicleBlock),
+  'Silence Ledger stays a compact fail-soft section inside the existing World Tree Chronicle');
+ok((HTML.match(/worldTreeQuietTitle:/g)||[]).length===2
+  &&(HTML.match(/worldTreeQuietBasis:/g)||[]).length===2
+  &&(HTML.match(/worldTreeQuietSummary:/g)||[]).length===2
+  &&(HTML.match(/worldTreeQuietLongest:/g)||[]).length===2,
+  'Silence Ledger scope, counts, and longest-quiet wording have Korean and English parity');
+ok(/\blast public push\b/i.test(silenceLedgerCopy)&&/\bquiet\b/i.test(silenceLedgerCopy)
+  &&!/\b(?:dead|lost|asleep|irrecoverable)\b|unique copy|\bfork\b|\bclone\b/i.test(silenceLedgerCopy),
+  'Silence Ledger copy stays factual and never infers death, loss, copies, forks, or clones');
 ok((HTML.match(/worldTreeTitle:/g)||[]).length===2
   &&(HTML.match(/worldTreeRootsEmpty:/g)||[]).length===2
   &&(HTML.match(/worldTreeSapStale:/g)||[]).length===2,

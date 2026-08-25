@@ -1312,6 +1312,12 @@
   .worldTreeStat b { display:block; color:#3f2e1d; font:750 18px/1.1 Georgia,serif; overflow:hidden; text-overflow:ellipsis; }
   .worldTreeStat span { display:block; margin-top:4px; color:#8c714d; font-size:9px; line-height:1.25; text-transform:uppercase; }
   .worldTreeCommitNote { margin:7px 0 0; color:#968067; font-size:9.5px; line-height:1.45; }
+  .worldTreeQuiet { margin-top:18px; padding:14px 0; border-top:1px solid rgba(112,79,42,.2);
+    border-bottom:1px solid rgba(112,79,42,.2); }
+  .worldTreeQuiet h3 { margin:0; color:#3e2d1d; font:750 18px/1.15 Georgia,serif; }
+  .worldTreeQuietBasis { margin:4px 0 0; color:#90795e; font-size:10px; line-height:1.45; }
+  .worldTreeQuietSummary { margin:10px 0 0; color:#59432d; font:650 12px/1.55 Georgia,serif; }
+  .worldTreeQuietLongest { margin:5px 0 0; color:#80694f; font-size:10.5px; line-height:1.5; overflow-wrap:anywhere; }
   .worldTreeRootsHead { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-top:21px; }
   .worldTreeRootsHead h3 { margin:0; color:#3e2d1d; font:750 20px/1.15 Georgia,serif; }
   .worldTreeRootsHead p { margin:3px 0 0; color:#90795e; font-size:10.5px; line-height:1.45; }
@@ -1444,9 +1450,15 @@
         </dl>
         <div id="worldTreeStats" class="worldTreeStats" role="list" data-i18n-aria="worldTreeStatsAria" aria-label="도시 공개 집계"></div>
         <p id="worldTreeCommitNote" class="worldTreeCommitNote"></p>
+        <section class="worldTreeQuiet" aria-labelledby="worldTreeQuietTitle">
+          <h3 id="worldTreeQuietTitle" data-i18n="worldTreeQuietTitle">고요 장부</h3>
+          <p id="worldTreeQuietBasis" class="worldTreeQuietBasis"></p>
+          <p id="worldTreeQuietSummary" class="worldTreeQuietSummary"></p>
+          <p id="worldTreeQuietLongest" class="worldTreeQuietLongest"></p>
+        </section>
         <section aria-labelledby="worldTreeRootsTitle">
           <div class="worldTreeRootsHead">
-            <div><h3 id="worldTreeRootsTitle" data-i18n="worldTreeRootsTitle">The Roots</h3><p data-i18n="worldTreeRootsSub">이름 · 활동한 해 · 남은 한 줄</p></div>
+            <div><h3 id="worldTreeRootsTitle" data-i18n="worldTreeRootsTitle">The Roots</h3><p data-i18n="worldTreeRootsSub">이름 · 활동한 해 · 공개 설명</p></div>
             <label id="worldTreeRootSearchWrap" hidden><span class="srOnly" data-i18n="worldTreeRootSearch">뿌리 기록 찾기</span>
               <input id="worldTreeRootSearch" type="search" autocomplete="off" data-i18n-ph="worldTreeRootSearch" data-i18n-aria="worldTreeRootSearch" aria-label="뿌리 기록 찾기" />
             </label>
@@ -1899,7 +1911,7 @@ import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstr
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
 import { CITY_STATE_SCHEMA, CITY_STATE_VERSION, REPO_NEWCOMER_DAYS, cityReferenceTimestamp, constructionScaffoldPlan, projectCityTime, resolveCitySeason, seasonPalette } from './assets/city-time.js?v=world-tree-phase4-v1';
-import { SAP_FLOW_LIMITS, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=world-tree-phase2-v1';
+import { SAP_FLOW_LIMITS, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=world-tree-phase2-v2';
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
@@ -2241,9 +2253,13 @@ const I18N = {
     worldTreeOpen:'세계수 연대기 열기', worldTreeClose:'세계수 연대기 닫기', worldTreeKicker:'CITY CHRONICLE',
     worldTreeTitle:'세계수 연대기', worldTreeSilence:'말은 없다. 날짜가 붙은 기록 하나.', worldTreeUnavailable:'이 마을에는 생성된 도시 기록이 없습니다.',
     worldTreeEraLabel:'도시력', worldTreeSeasonLabel:'계절', worldTreeSapLabel:'마지막 수액', worldTreeRootsTitle:'The Roots',
-    worldTreeRootsSub:'이름 · 활동한 해 · 남은 한 줄', worldTreeRootSearch:'뿌리 기록 찾기', worldTreeRootsEmpty:'이 기록에는 아카이브된 공개 레포가 없습니다.',
+    worldTreeRootsSub:'이름 · 활동한 해 · 공개 설명', worldTreeRootSearch:'뿌리 기록 찾기', worldTreeRootsEmpty:'이 기록에는 아카이브된 공개 레포가 없습니다.',
     worldTreeRootsNoMatch:'일치하는 뿌리 기록이 없습니다.', worldTreeRootsCount:'기록 {shown}/{total}', worldTreeStatsAria:'도시 공개 집계',
     worldTreeStatRepos:'공개 레포', worldTreeStatStars:'스타', worldTreeStatForks:'포크', worldTreeStatArchived:'아카이브', worldTreeStatLanguages:'언어',
+    worldTreeQuietTitle:'고요 장부', worldTreeQuietBasis:'아카이브되지 않은 공개 레포 집 · 마지막 공개 push · UTC 기준일 {date} · 365/730일 경계 포함',
+    worldTreeQuietSummary:'유효 push 날짜가 있는 레포 {withDate}/{total} · 없는 레포 {withoutDate} · 365일 이상 고요 {quiet365} · 730일 이상 고요 {quiet730}',
+    worldTreeQuietLongest:'가장 오래 고요한 레포 · {repo} · 마지막 공개 push {date} · {days}일', worldTreeQuietNoPush:'사용 가능한 마지막 공개 push 날짜가 없습니다.',
+    worldTreeQuietEmpty:'아카이브되지 않은 공개 레포 집이 없습니다.', worldTreeQuietUnavailable:'고요 장부 기록을 사용할 수 없습니다.',
     worldTreeCityYear:'도시력 {year}년', worldTreeFounded:'{date} 시작 · 첫 기록 {repo}',
     worldTreeSeasonRatio:'최근 30일 latest-push {recent}개 · 앞선 6개 구간 평균의 {ratio}배',
     worldTreeSeasonFallback:'최근 30일 latest-push {recent}/{total}개 · 기록 부족 규칙',
@@ -2562,9 +2578,13 @@ const I18N = {
     worldTreeOpen:'Open the World Tree Chronicle', worldTreeClose:'Close the World Tree Chronicle', worldTreeKicker:'CITY CHRONICLE',
     worldTreeTitle:'World Tree Chronicle', worldTreeSilence:'No voice. One dated record.', worldTreeUnavailable:'No generated city record is available for this town.',
     worldTreeEraLabel:'City era', worldTreeSeasonLabel:'Season', worldTreeSapLabel:'Last sap flow', worldTreeRootsTitle:'The Roots',
-    worldTreeRootsSub:'Name · active years · one surviving line', worldTreeRootSearch:'Search root records', worldTreeRootsEmpty:'No archived public repository appears in this record.',
+    worldTreeRootsSub:'Name · active years · public description', worldTreeRootSearch:'Search root records', worldTreeRootsEmpty:'No archived public repository appears in this record.',
     worldTreeRootsNoMatch:'No root record matches.', worldTreeRootsCount:'Records {shown}/{total}', worldTreeStatsAria:'Public city aggregates',
     worldTreeStatRepos:'Public repos', worldTreeStatStars:'Stars', worldTreeStatForks:'Forks', worldTreeStatArchived:'Archived', worldTreeStatLanguages:'Languages',
+    worldTreeQuietTitle:'Silence Ledger', worldTreeQuietBasis:'Unarchived public repo homes · last public push · UTC reference {date} · 365/730-day thresholds inclusive',
+    worldTreeQuietSummary:'Repositories with a valid push date {withDate}/{total} · without one {withoutDate} · quiet ≥365 days {quiet365} · quiet ≥730 days {quiet730}',
+    worldTreeQuietLongest:'Longest quiet repository · {repo} · last public push {date} · quiet {days} days', worldTreeQuietNoPush:'No usable last public push date is available.',
+    worldTreeQuietEmpty:'No unarchived public repo home appears in this record.', worldTreeQuietUnavailable:'The Silence Ledger record is unavailable.',
     worldTreeCityYear:'City year {year}', worldTreeFounded:'Founded {date} · first record {repo}',
     worldTreeSeasonRatio:'{recent} latest-push signals in 30 days · {ratio}× the prior six-bucket average',
     worldTreeSeasonFallback:'{recent}/{total} latest-push signals in 30 days · limited-history rule',
@@ -9315,6 +9335,20 @@ function renderWorldTreeChronicle(){
   const statsEl=document.getElementById('worldTreeStats'); statsEl.replaceChildren(...rows.map(([value,key])=>{ const item=document.createElement('div'); item.className='worldTreeStat'; item.setAttribute('role','listitem');
     const number=document.createElement('b'),label=document.createElement('span'); number.textContent=_worldTreeNumber(value); label.textContent=t(key); item.append(number,label); return item; }));
   document.getElementById('worldTreeCommitNote').textContent=stats.commitTotal===null?t('worldTreeCommitUnavailable'):'';
+  const silence=record.silence,quietBasis=document.getElementById('worldTreeQuietBasis'),
+    quietSummary=document.getElementById('worldTreeQuietSummary'),quietLongest=document.getElementById('worldTreeQuietLongest');
+  if(!silence.available){ quietBasis.textContent=''; quietSummary.textContent=t('worldTreeQuietUnavailable'); quietLongest.textContent=''; }
+  else {
+    const repositories=silence.repositories,quiet=silence.quiet;
+    quietBasis.textContent=tf('worldTreeQuietBasis',{date:_worldTreeDate(silence.referenceDate)});
+    quietSummary.textContent=repositories.total
+      ?tf('worldTreeQuietSummary',{withDate:_worldTreeNumber(repositories.withPushDate),total:_worldTreeNumber(repositories.total),
+        withoutDate:_worldTreeNumber(repositories.withoutPushDate),quiet365:_worldTreeNumber(quiet.atLeast365Days),quiet730:_worldTreeNumber(quiet.atLeast730Days)})
+      :t('worldTreeQuietEmpty');
+    quietLongest.textContent=quiet.longest
+      ?tf('worldTreeQuietLongest',{repo:quiet.longest.repo,date:_worldTreeDate(quiet.longest.lastPublicPush),days:_worldTreeNumber(quiet.longest.elapsedDays)})
+      :(repositories.total?t('worldTreeQuietNoPush'):'');
+  }
   renderWorldTreeRoots(worldTreeRootSearch.value);
 }
 function _worldTreeFocusables(){ return [...worldTreePanel.querySelectorAll('button:not([disabled]),input:not([disabled])')]
@@ -13123,6 +13157,8 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     frameAllocations:RENDER_METRICS.frameAllocations,passTokenAllocations:RENDER_METRICS.passTokenAllocations,historyWrites:RENDER_METRICS.historyWrites,history:RENDER_METRICS.history.length,gpuSupported:GPU_TIMER.supported});
   window.__worldTreeChronicle=()=>{ const flow=MEMORIAL_TREE&&MEMORIAL_TREE.sapFlow; return {
     open:WORLD_TREE_UI.open,available:WORLD_TREE_RECORD.available,roots:WORLD_TREE_RECORD.roots.length,rootSearch:!worldTreeRootSearchWrap.hidden,
+    silence:{available:WORLD_TREE_RECORD.silence.available,referenceDate:WORLD_TREE_RECORD.silence.referenceDate,
+      repositories:{...WORLD_TREE_RECORD.silence.repositories},quiet:{...WORLD_TREE_RECORD.silence.quiet}},
     modal:{role:worldTreeModal.getAttribute('role'),hidden:worldTreeModal.getAttribute('aria-hidden'),active:document.activeElement&&document.activeElement.id},
     trigger:{hidden:worldTreeTrigger.hidden,label:worldTreeTrigger.getAttribute('aria-label')},growth:{...WORLD_TREE_GROWTH},
     sap:{available:WORLD_TREE_RECORD.lastSapFlow.available,freshness:WORLD_TREE_RECORD.lastSapFlow.freshness,mode:WORLD_TREE_SAP_MODE,

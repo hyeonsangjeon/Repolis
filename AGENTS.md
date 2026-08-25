@@ -39,7 +39,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`scripts/fork_lineage.py` + `assets/fork-lineage.js`** | Public-only fork source sanitizer plus deterministic six-color crest projection. | Changing generated fork source truth, lineage cards, or the shared crest batch. |
 | **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
-| **`assets/world-tree/world-tree-state.js`** | Pure Phase 2 projection for Chronicle, Roots, sap-flow freshness/mode, and bounded star/repo growth. | Changing how generated city state reaches the silent World Tree. |
+| **`assets/world-tree/world-tree-state.js`** | Pure projection for Chronicle, Silence Ledger, Roots, sap-flow freshness/mode, and bounded star/repo growth. | Changing how generated city state reaches the silent World Tree. |
 | **`assets/repo-portal.js`** | Pure username/repository parser, route precedence, public projection, canonical Portal URL, and owner-town expansion link. | Changing `?repo=`, accepted GitHub inputs, public traffic truth, or target share links. |
 | **`assets/repo-route.js`** | Pure 2–3 stop route validator, current-catalog resolver, conflict policy, and canonical Repo Route URL. | Changing visitor-curated multi-repo paths or `?route=` links. |
 | **`assets/contribution-quests.js`** | Pure current-owner/catalog issue projector and bounded quest ranker. | Changing Open Source Quest validation, tier priority, or result diversity. |
@@ -91,7 +91,8 @@ social, social_custom, score, rank`, plus `lineage{source,url}` only for a prove
 Full meaning: [`docs/domain-model.md`](docs/domain-model.md).
 
 `data/city-state.json` is a deterministic projection of that public catalog. It carries `schema`,
-`version`, `era`, `season`, honest aggregate `stats`, `last_sap_flow`, and archived-only `roots`.
+`version`, `era`, `season`, the nested versioned `silence` ledger, honest aggregate `stats`,
+`last_sap_flow`, and archived-only `roots`.
 The daily workflow injects its UTC run day; local builds without that input use the newest
 reproducible public source timestamp.
 
