@@ -21,6 +21,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, Town Gazette baselines, constellation completion, and the Maintainers' Night Watch stamp. |
 | **Session footprint** | current-tab memory + one instanced mesh | A short local-player walking trace; never persisted, synchronized, or derived from residents/peers. |
 | **Silence Ledger** | nested `data/city-state.json` projection | A bounded dated record of long-quiet unarchived public repos, separate from archived Roots. |
+| **Thirty-day Sap Ledger** | nested `data/city-state.json` projection | Up to 30 actual UTC daily owner-town aggregate entries; same-day generation replaces and missing dates stay absent. |
 | **Portable town projection** | pure runtime object from normalized public repos | The foreign town's deterministic era, season, Silence Ledger, Roots, public aggregates, unknown-value boundary, and local resident directory. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
 | **Taxi** | the POLARIS scholar (`kind: taxi`) | The only all-district traveler; finds a repo, drives there, knows Shared city state, and redirects household memory to that home. |
@@ -144,14 +145,29 @@ github-traffic-monitor (private, daily)        Repolis (public)
   history is unavailable, so `commit_history.total` stays `null` rather than being estimated.
 - `last_sap_flow` is that explicit UTC batch day or, for local fallback builds, the latest reproducible
   source timestamp. It is never an implicit wall-clock read inside the generator.
+- `sap_ledger` is a nested `repolis.sap-ledger` v1 sequence beginning with the first generation after
+  the feature ships. It retains at most 30 unique `reference_date` entries in ascending order and at most
+  32 KiB of compact UTF-8. A rerun for an existing UTC date replaces that entry; a later date appends; the
+  oldest actual entry is removed at the cap. An absent date stays absent, and the generator refuses to
+  insert an unrecorded date behind the latest retained date.
+- Each Sap Ledger entry records public repository and archived counts; public star/fork totals with
+  known/missing repository coverage; latest-public-push coverage; repositories whose latest public push
+  falls in the inclusive `[reference_date - 29 days, reference_date]` UTC window; the generated season
+  and fallback flag; and same-date Silence Ledger counts for unarchived homes at inclusive 365/730-day
+  thresholds. A star/fork total is `null`, never zero-filled, when any input value is missing or invalid.
 - `roots` contains archived public repositories only, with active years and a one-line achievement
   derived from public metadata. It is correctly empty when the catalog has no archived repos.
 
 Fork and clone values never enter the Silence Ledger and cannot affect its counts or longest record.
-The ledger is one current generated snapshot, not a commit timeline, abandonment claim, preservation
+That ledger is one current generated snapshot, not a commit timeline, abandonment claim, preservation
 score, or statement about copies. The pure World Tree projection accepts the nested contract without
 reading owner DOM, storage, the network, or the wall clock, so later public-town and daily-ledger work
 can reuse the same bounded shape.
+
+The Sap Ledger stores forks only as an allowed current public city aggregate. It never stores views,
+visitors, clones, private infrastructure, issue or pull-request titles, commit messages, resident
+dialogue, personal identifiers, or browser storage. Foreign public-town projections intentionally omit
+`sap_ledger`; the Chronicle reports history unavailable and never substitutes the canonical owner's entries.
 
 The owner town uses the generated artifact for a restrained static sky/fog/light palette. A foreign public
 town never fetches or substitutes that artifact. After its existing explicit public-repository load, the pure

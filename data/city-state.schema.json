@@ -104,6 +104,283 @@
       },
       "type": "array"
     },
+    "sap_ledger": {
+      "additionalProperties": false,
+      "description": "A bounded sequence of actual generated UTC daily public aggregate entries. Dates are unique and ascending; missing dates are never inserted or interpolated.",
+      "properties": {
+        "entries": {
+          "description": "Actual generated entries only, oldest to newest. A same-date generation replaces that date; a new date appends and removes the oldest actual entry when capped.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "forks": {
+                "additionalProperties": false,
+                "description": "Total public fork count. total is null when any repository value is missing, invalid, or outside the safe integer range.",
+                "properties": {
+                  "repositories_with_value": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "repositories_without_value": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "total": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "total",
+                  "repositories_with_value",
+                  "repositories_without_value"
+                ],
+                "type": "object"
+              },
+              "reference_date": {
+                "description": "UTC calendar date used for all recency and silence calculations in this entry.",
+                "format": "date",
+                "type": "string"
+              },
+              "repositories": {
+                "additionalProperties": false,
+                "properties": {
+                  "archived": {
+                    "description": "Public repositories whose current archived flag is true.",
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "latest_push_with_date": {
+                    "description": "Public repositories with a usable latest public push UTC date.",
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "latest_push_without_date": {
+                    "description": "Public repositories without a usable latest public push UTC date; these are not counted as inactive.",
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "public": {
+                    "description": "All public repositories included in the generated city catalog.",
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "recent_active_30d": {
+                    "description": "Repositories whose usable latest public push date falls from reference_date minus 29 UTC days through reference_date, inclusive.",
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "public",
+                  "archived",
+                  "latest_push_with_date",
+                  "latest_push_without_date",
+                  "recent_active_30d"
+                ],
+                "type": "object"
+              },
+              "season": {
+                "additionalProperties": false,
+                "description": "The generated city season for this reference date and whether its documented sparse-history fallback was used.",
+                "properties": {
+                  "fallback_used": {
+                    "type": "boolean"
+                  },
+                  "value": {
+                    "enum": [
+                      "spring",
+                      "summer",
+                      "autumn",
+                      "winter"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "value",
+                  "fallback_used"
+                ],
+                "type": "object"
+              },
+              "silence": {
+                "additionalProperties": false,
+                "description": "Counts from the same-date Silence Ledger over unarchived public repositories. Missing push dates remain explicit and are excluded from threshold counts.",
+                "properties": {
+                  "at_least_365_days": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "at_least_730_days": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "unarchived": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "with_push_date": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "without_push_date": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "unarchived",
+                  "with_push_date",
+                  "without_push_date",
+                  "at_least_365_days",
+                  "at_least_730_days"
+                ],
+                "type": "object"
+              },
+              "stars": {
+                "additionalProperties": false,
+                "description": "Total public star count. total is null when any repository value is missing, invalid, or outside the safe integer range.",
+                "properties": {
+                  "repositories_with_value": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "repositories_without_value": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "total": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "total",
+                  "repositories_with_value",
+                  "repositories_without_value"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "reference_date",
+              "repositories",
+              "stars",
+              "forks",
+              "season",
+              "silence"
+            ],
+            "type": "object"
+          },
+          "maxItems": 30,
+          "minItems": 1,
+          "type": "array"
+        },
+        "gap_policy": {
+          "const": "actual_entries_only",
+          "description": "Absent UTC dates stay absent and are never interpolated.",
+          "type": "string"
+        },
+        "maximum_bytes": {
+          "const": 32768,
+          "description": "Maximum compact UTF-8 bytes for this nested ledger.",
+          "type": "integer"
+        },
+        "maximum_entries": {
+          "const": 30,
+          "description": "Maximum retained actual UTC daily entries.",
+          "type": "integer"
+        },
+        "ordering": {
+          "const": "reference_date_ascending",
+          "type": "string"
+        },
+        "recent_activity": {
+          "additionalProperties": false,
+          "properties": {
+            "signal": {
+              "const": "latest_public_push",
+              "type": "string"
+            },
+            "window_days": {
+              "const": 30,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "signal",
+            "window_days"
+          ],
+          "type": "object"
+        },
+        "reference_basis": {
+          "const": "city_state_utc_reference_date",
+          "description": "The same reproducible UTC reference date used by era, season, Silence Ledger, and last sap flow; the daily workflow supplies it explicitly.",
+          "type": "string"
+        },
+        "schema": {
+          "const": "repolis.sap-ledger",
+          "type": "string"
+        },
+        "scope": {
+          "const": "public_repository_aggregates",
+          "description": "Public city-level aggregates only; no repository titles, traffic, dialogue, identity, or browser state.",
+          "type": "string"
+        },
+        "silence_thresholds_days": {
+          "const": [
+            365,
+            730
+          ],
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "version": {
+          "const": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema",
+        "version",
+        "scope",
+        "reference_basis",
+        "ordering",
+        "gap_policy",
+        "maximum_entries",
+        "maximum_bytes",
+        "recent_activity",
+        "silence_thresholds_days",
+        "entries"
+      ],
+      "type": "object"
+    },
     "silence": {
       "additionalProperties": false,
       "properties": {
@@ -443,6 +720,7 @@
     "era",
     "season",
     "silence",
+    "sap_ledger",
     "stats",
     "last_sap_flow",
     "roots"

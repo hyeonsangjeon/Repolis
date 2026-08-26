@@ -29,6 +29,12 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   invalid push dates stay explicitly unavailable; 365- and 730-day counts include the boundary day, and only one
   deterministically tied longest-quiet repository is retained. Archived repositories remain separate in The Roots.
   Fork and clone counts have no bearing on quiet time, copies, recoverability, or preservation.
+- **The Thirty-day Sap Ledger starts at deployment, not in the past.** It stores only actual generated UTC
+  dates from the feature's first run onward, replaces a same-day correction, retains at most 30 entries /
+  32 KiB, and never fills a missing date. Its public counts and latest-push-based activity/season/silence
+  facts are aggregate snapshots, not a reconstruction of deleted, private, or previously different repos.
+  Missing star or fork inputs make that entry's total explicitly `null`. Foreign public towns do not receive
+  or reuse the canonical owner's ledger because their one current public payload contains no historical run.
 - **Public repos only, by design.** Private repo names never appear. Untouched mirror forks are filtered
   out; only forks you've actually committed to are shown.
 - **Fork lineage is public origin metadata, not credit assignment.** The generated field exists only when

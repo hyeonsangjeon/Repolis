@@ -6,6 +6,23 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.94.0] — 2026-08-26
+
+### 🌱 Thirty-day Sap Ledger — bounded aggregate city history
+
+- Generated city state now carries `repolis.sap-ledger` v1: up to 30 unique, ascending UTC daily owner-town
+  entries and 32 KiB compact UTF-8. Same-day reruns replace, later runs append, missing dates remain absent,
+  and the generator refuses fabricated backfill behind the latest actual entry.
+- Each entry stores only public city aggregates: repository/archive counts, covered star/fork totals,
+  inclusive latest-public-push activity over 30 days, season, and same-date Silence Ledger counts. Missing
+  star/fork inputs produce `null` totals; traffic, private infrastructure, work titles, messages, dialogue,
+  identity, and browser state are excluded.
+- The existing World Tree Chronicle adds one compact KO/EN summary. One entry reports only its start date;
+  later entries compare the latest two actual dates and state overall gaps. Foreign public towns explicitly
+  report history unavailable and never reuse the canonical owner ledger.
+- The generated payload remains the only cold-load source: no runtime request, backend, Worker, analytics,
+  storage, model call, dependency, build step, scene object, or visual asset was added.
+
 ## [1.93.0] — 2026-08-26
 
 ### 🎛️ Adaptive Visual Governor — preserve detail within the frame budget

@@ -1312,6 +1312,17 @@
   .worldTreeStat b { display:block; color:#3f2e1d; font:750 18px/1.1 Georgia,serif; overflow:hidden; text-overflow:ellipsis; }
   .worldTreeStat span { display:block; margin-top:4px; color:#8c714d; font-size:9px; line-height:1.25; text-transform:uppercase; }
   .worldTreeCommitNote { margin:7px 0 0; color:#968067; font-size:9.5px; line-height:1.45; }
+  .worldTreeSapHistory { margin-top:18px; padding:14px 0; border-top:1px solid rgba(112,79,42,.2);
+    border-bottom:1px solid rgba(112,79,42,.2); }
+  .worldTreeSapHistory h3 { margin:0; color:#3e2d1d; font:750 18px/1.15 Georgia,serif; }
+  .worldTreeSapHistoryBasis { margin:4px 0 0; color:#90795e; font-size:10px; line-height:1.45; }
+  .worldTreeSapHistorySummary { margin:10px 0 0; color:#59432d; font:650 12px/1.55 Georgia,serif; }
+  .worldTreeSapHistoryCompare { margin:5px 0 0; color:#80694f; font-size:10.5px; line-height:1.5; }
+  .worldTreeSapHistoryChanges { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+  .worldTreeSapHistoryChanges:empty { display:none; }
+  .worldTreeSapHistoryChange { max-width:100%; padding:5px 8px; border:1px solid rgba(112,79,42,.16);
+    border-radius:999px; color:#5f482f; background:rgba(255,255,255,.38); font:650 10px/1.3 system-ui,sans-serif;
+    overflow-wrap:anywhere; }
   .worldTreeQuiet { margin-top:18px; padding:14px 0; border-top:1px solid rgba(112,79,42,.2);
     border-bottom:1px solid rgba(112,79,42,.2); }
   .worldTreeQuiet h3 { margin:0; color:#3e2d1d; font:750 18px/1.15 Georgia,serif; }
@@ -1450,6 +1461,13 @@
         </dl>
         <div id="worldTreeStats" class="worldTreeStats" role="list" data-i18n-aria="worldTreeStatsAria" aria-label="도시 공개 집계"></div>
         <p id="worldTreeCommitNote" class="worldTreeCommitNote"></p>
+        <section class="worldTreeSapHistory" aria-labelledby="worldTreeSapHistoryTitle">
+          <h3 id="worldTreeSapHistoryTitle" data-i18n="worldTreeSapHistoryTitle">30일 수액 장부</h3>
+          <p id="worldTreeSapHistoryBasis" class="worldTreeSapHistoryBasis"></p>
+          <p id="worldTreeSapHistorySummary" class="worldTreeSapHistorySummary"></p>
+          <p id="worldTreeSapHistoryCompare" class="worldTreeSapHistoryCompare"></p>
+          <div id="worldTreeSapHistoryChanges" class="worldTreeSapHistoryChanges" role="list"></div>
+        </section>
         <section class="worldTreeQuiet" aria-labelledby="worldTreeQuietTitle">
           <h3 id="worldTreeQuietTitle" data-i18n="worldTreeQuietTitle">고요 장부</h3>
           <p id="worldTreeQuietBasis" class="worldTreeQuietBasis"></p>
@@ -1911,7 +1929,7 @@ import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstr
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
 import { CITY_STATE_SCHEMA, CITY_STATE_VERSION, REPO_NEWCOMER_DAYS, cityReferenceTimestamp, constructionScaffoldPlan, projectCityTime, resolveCitySeason, seasonPalette } from './assets/city-time.js?v=world-tree-phase4-v1';
-import { PORTABLE_TOWN_LIMITS, SAP_FLOW_LIMITS, bindPortableResidentSlots, projectPortableTown, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=portable-living-towns-v1';
+import { PORTABLE_TOWN_LIMITS, SAP_FLOW_LIMITS, bindPortableResidentSlots, projectPortableTown, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=thirty-day-sap-ledger-v1';
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
@@ -2276,6 +2294,14 @@ const I18N = {
     worldTreeRootsSub:'이름 · 활동한 해 · 공개 설명', worldTreeRootSearch:'뿌리 기록 찾기', worldTreeRootsEmpty:'이 기록에는 아카이브된 공개 레포가 없습니다.',
     worldTreeRootsNoMatch:'일치하는 뿌리 기록이 없습니다.', worldTreeRootsCount:'기록 {shown}/{total}', worldTreeStatsAria:'도시 공개 집계',
     worldTreeStatRepos:'공개 레포', worldTreeStatStars:'스타', worldTreeStatForks:'포크', worldTreeStatArchived:'아카이브', worldTreeStatLanguages:'언어',
+    worldTreeSapHistoryTitle:'30일 수액 장부', worldTreeSapHistoryBasis:'공개 도시 집계 · UTC 기준일 · 최대 30개 실제 기록 · 누락 날짜 미보간',
+    worldTreeSapHistoryStarted:'첫 기록 · {date}에 기록 시작', worldTreeSapHistoryRange:'실제 기록 {count}개 · {first} → {latest} · 누락 UTC 날짜 · {missing}',
+    worldTreeSapHistoryCompare:'최근 두 실제 기록 {from} → {to}', worldTreeSapHistoryUnavailable:'30일 수액 장부 기록을 사용할 수 없습니다.',
+    worldTreeSapHistoryPortableUnavailable:'이 공개 마을에는 생성된 30일 기록이 없습니다. 주인 마을 기록은 재사용하지 않습니다.',
+    worldTreeSapHistoryRepos:'공개 레포 {delta}', worldTreeSapHistoryStars:'스타 {delta}', worldTreeSapHistoryForks:'포크 {delta}',
+    worldTreeSapHistoryActivity:'최근 활동 {delta}', worldTreeSapHistorySilence:'고요 365일 {days365} · 730일 {days730}',
+    worldTreeSapHistorySeason:'계절 {from} → {to}', worldTreeSapHistoryStarsUnknown:'스타 변화 알 수 없음',
+    worldTreeSapHistoryForksUnknown:'포크 변화 알 수 없음', worldTreeSapHistoryNoChange:'최근 두 실제 기록 사이 공개 집계 변화 없음',
     worldTreeQuietTitle:'고요 장부', worldTreeQuietBasis:'아카이브되지 않은 공개 레포 집 · 마지막 공개 push · UTC 기준일 {date} · 365/730일 경계 포함',
     worldTreeQuietSummary:'유효 push 날짜가 있는 레포 {withDate}/{total} · 없는 레포 {withoutDate} · 365일 이상 고요 {quiet365} · 730일 이상 고요 {quiet730}',
     worldTreeQuietLongest:'가장 오래 고요한 레포 · {repo} · 마지막 공개 push {date} · {days}일', worldTreeQuietNoPush:'사용 가능한 마지막 공개 push 날짜가 없습니다.',
@@ -2605,6 +2631,14 @@ const I18N = {
     worldTreeRootsSub:'Name · active years · public description', worldTreeRootSearch:'Search root records', worldTreeRootsEmpty:'No archived public repository appears in this record.',
     worldTreeRootsNoMatch:'No root record matches.', worldTreeRootsCount:'Records {shown}/{total}', worldTreeStatsAria:'Public city aggregates',
     worldTreeStatRepos:'Public repos', worldTreeStatStars:'Stars', worldTreeStatForks:'Forks', worldTreeStatArchived:'Archived', worldTreeStatLanguages:'Languages',
+    worldTreeSapHistoryTitle:'Thirty-day Sap Ledger', worldTreeSapHistoryBasis:'Public city aggregates · UTC reference dates · up to 30 actual entries · missing dates not interpolated',
+    worldTreeSapHistoryStarted:'First entry · record begins on {date}', worldTreeSapHistoryRange:'{count} actual entries · {first} → {latest} · missing UTC dates · {missing}',
+    worldTreeSapHistoryCompare:'Latest two actual entries · {from} → {to}', worldTreeSapHistoryUnavailable:'The Thirty-day Sap Ledger is unavailable.',
+    worldTreeSapHistoryPortableUnavailable:'No generated 30-day history is available for this public town. The owner town ledger is not reused.',
+    worldTreeSapHistoryRepos:'Public repos {delta}', worldTreeSapHistoryStars:'Stars {delta}', worldTreeSapHistoryForks:'Forks {delta}',
+    worldTreeSapHistoryActivity:'Recent activity {delta}', worldTreeSapHistorySilence:'Quiet 365d {days365} · 730d {days730}',
+    worldTreeSapHistorySeason:'Season {from} → {to}', worldTreeSapHistoryStarsUnknown:'Star change unavailable',
+    worldTreeSapHistoryForksUnknown:'Fork change unavailable', worldTreeSapHistoryNoChange:'No public aggregate changed between the latest two actual entries',
     worldTreeQuietTitle:'Silence Ledger', worldTreeQuietBasis:'Unarchived public repo homes · last public push · UTC reference {date} · 365/730-day thresholds inclusive',
     worldTreeQuietSummary:'Repositories with a valid push date {withDate}/{total} · without one {withoutDate} · quiet ≥365 days {quiet365} · quiet ≥730 days {quiet730}',
     worldTreeQuietLongest:'Longest quiet repository · {repo} · last public push {date} · quiet {days} days', worldTreeQuietNoPush:'No usable last public push date is available.',
@@ -9417,7 +9451,7 @@ function setNav(repo){ navTarget=repo; navHolder.visible=true;
 const worldTreeModal=document.getElementById('worldTreeModal'),worldTreePanel=worldTreeModal.querySelector('.worldTreeChronicle'),
   worldTreeClose=document.getElementById('worldTreeClose'),worldTreeTrigger=document.getElementById('worldTreeTrigger'),
   worldTreeRootSearch=document.getElementById('worldTreeRootSearch'),worldTreeRootSearchWrap=document.getElementById('worldTreeRootSearchWrap');
-const WORLD_TREE_UI={open:false,previousFocus:null,entry:null};
+const WORLD_TREE_UI={open:false,previousFocus:null,entry:null,recordOverride:null};
 const WORLD_TREE_TRIGGER_WORLD=new THREE.Vector3(),WORLD_TREE_TRIGGER_PROJECTED=new THREE.Vector3(),
   WORLD_TREE_TRIGGER_DIRECTION=new THREE.Vector3(),WORLD_TREE_TRIGGER_TOWARD=new THREE.Vector3();
 function _worldTreeNumber(value){ return new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US').format(Number(value)||0); }
@@ -9427,12 +9461,15 @@ function _worldTreeDate(value,withTime=false){ const parsed=Date.parse(String(va
     :{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'}).format(parsed); }
 function _worldTreeLedgerValue(element,primary,secondary=''){ element.replaceChildren(document.createTextNode(primary));
   if(secondary){ const small=document.createElement('small'); small.textContent=secondary; element.appendChild(small); } }
+function _worldTreeRecord(){ return WORLD_TREE_UI.recordOverride||WORLD_TREE_RECORD; }
+function _worldTreeDelta(value){ const number=Number(value)||0; return number===0?'±0':`${number>0?'+':'−'}${_worldTreeNumber(Math.abs(number))}`; }
+function _worldTreeSeasonName(value){ return t({spring:'seasonSpring',summer:'seasonSummer',autumn:'seasonAutumn',winter:'seasonWinter'}[value]||'seasonSummer'); }
 function _worldTreeYears(root){ const years=root.activeYears;
   if(years.from!==null&&years.to!==null&&years.count!==null) return tf('worldTreeYears',{from:years.from,to:years.to,count:years.count});
   if(years.from!==null&&years.to!==null) return tf('worldTreeYearsOpen',{from:years.from,to:years.to});
   return t('worldTreeYearsUnknown'); }
-function renderWorldTreeRoots(query=''){
-  const roots=WORLD_TREE_RECORD.roots,total=roots.length,normalized=String(query||'').trim().toLocaleLowerCase(LANG==='ko'?'ko-KR':'en-US');
+function renderWorldTreeRoots(query='',record=_worldTreeRecord()){
+  const roots=record.roots,total=roots.length,normalized=String(query||'').trim().toLocaleLowerCase(LANG==='ko'?'ko-KR':'en-US');
   const rootAchievement=root=>(LANG==='ko'?root.achievementKo:root.achievementEn)||root.achievement;
   const filtered=normalized?roots.filter(root=>(root.repo+' '+rootAchievement(root)+' '+root.achievementKo+' '+root.achievementEn+' '+_worldTreeYears(root)).toLocaleLowerCase(LANG==='ko'?'ko-KR':'en-US').includes(normalized)):roots;
   const list=document.getElementById('worldTreeRoots'),status=document.getElementById('worldTreeRootStatus'); list.replaceChildren();
@@ -9445,8 +9482,34 @@ function renderWorldTreeRoots(query=''){
     achievement.className='worldTreeRootAchievement'; achievement.textContent=rootAchievement(root); identity.append(name,years); item.append(identity,achievement); list.appendChild(item); });
   status.textContent=tf('worldTreeRootsCount',{shown:filtered.length,total});
 }
+function renderWorldTreeSapHistory(record){
+  const ledger=record.sapLedger,basis=document.getElementById('worldTreeSapHistoryBasis'),
+    summary=document.getElementById('worldTreeSapHistorySummary'),compare=document.getElementById('worldTreeSapHistoryCompare'),
+    changes=document.getElementById('worldTreeSapHistoryChanges');
+  basis.textContent=t('worldTreeSapHistoryBasis'); compare.textContent=''; changes.replaceChildren();
+  if(!ledger.available){ summary.textContent=t(record.portable?'worldTreeSapHistoryPortableUnavailable':'worldTreeSapHistoryUnavailable'); return; }
+  if(ledger.entries.length===1){ summary.textContent=tf('worldTreeSapHistoryStarted',{date:_worldTreeDate(ledger.first.referenceDate)}); return; }
+  summary.textContent=tf('worldTreeSapHistoryRange',{count:_worldTreeNumber(ledger.entries.length),
+    first:_worldTreeDate(ledger.first.referenceDate),latest:_worldTreeDate(ledger.latest.referenceDate),missing:_worldTreeNumber(ledger.missingDays)});
+  const comparison=ledger.comparison; compare.textContent=tf('worldTreeSapHistoryCompare',{
+    from:_worldTreeDate(comparison.from),to:_worldTreeDate(comparison.to)});
+  const items=[];
+  if(comparison.repositories) items.push(tf('worldTreeSapHistoryRepos',{delta:_worldTreeDelta(comparison.repositories)}));
+  if(comparison.stars===null) items.push(t('worldTreeSapHistoryStarsUnknown'));
+  else if(comparison.stars) items.push(tf('worldTreeSapHistoryStars',{delta:_worldTreeDelta(comparison.stars)}));
+  if(comparison.forks===null) items.push(t('worldTreeSapHistoryForksUnknown'));
+  else if(comparison.forks) items.push(tf('worldTreeSapHistoryForks',{delta:_worldTreeDelta(comparison.forks)}));
+  if(comparison.recentActive) items.push(tf('worldTreeSapHistoryActivity',{delta:_worldTreeDelta(comparison.recentActive)}));
+  if(comparison.silence365||comparison.silence730) items.push(tf('worldTreeSapHistorySilence',{
+    days365:_worldTreeDelta(comparison.silence365),days730:_worldTreeDelta(comparison.silence730)}));
+  if(comparison.season.from!==comparison.season.to) items.push(tf('worldTreeSapHistorySeason',{
+    from:_worldTreeSeasonName(comparison.season.from),to:_worldTreeSeasonName(comparison.season.to)}));
+  if(!items.length) items.push(t('worldTreeSapHistoryNoChange'));
+  changes.replaceChildren(...items.map(text=>{ const item=document.createElement('span'); item.className='worldTreeSapHistoryChange';
+    item.setAttribute('role','listitem'); item.textContent=text; return item; }));
+}
 function renderWorldTreeChronicle(){
-  const record=WORLD_TREE_RECORD,unavailable=document.getElementById('worldTreeUnavailable'),content=document.getElementById('worldTreeRecord');
+  const record=_worldTreeRecord(),unavailable=document.getElementById('worldTreeUnavailable'),content=document.getElementById('worldTreeRecord');
   unavailable.hidden=record.available; content.hidden=!record.available; if(!record.available) return;
   document.getElementById('worldTreeSilence').textContent=record.portable
     ?tf('worldTreePortableRecord',{user:record.portable.owner}):t('worldTreeSilence');
@@ -9469,6 +9532,7 @@ function renderWorldTreeChronicle(){
   document.getElementById('worldTreeCommitNote').textContent=record.portable
     ?t('worldTreePortableUnknown')+(record.portable.coverage.partial?' · '+tf('worldTreePortablePartial',{limit:record.portable.coverage.requestCap}):'')
     :(stats.commitTotal===null?t('worldTreeCommitUnavailable'):'');
+  renderWorldTreeSapHistory(record);
   const silence=record.silence,quietBasis=document.getElementById('worldTreeQuietBasis'),
     quietSummary=document.getElementById('worldTreeQuietSummary'),quietLongest=document.getElementById('worldTreeQuietLongest');
   if(!silence.available){ quietBasis.textContent=''; quietSummary.textContent=t('worldTreeQuietUnavailable'); quietLongest.textContent=''; }
@@ -9483,7 +9547,7 @@ function renderWorldTreeChronicle(){
       ?tf('worldTreeQuietLongest',{repo:quiet.longest.repo,date:_worldTreeDate(quiet.longest.lastPublicPush),days:_worldTreeNumber(quiet.longest.elapsedDays)})
       :(repositories.total?t('worldTreeQuietNoPush'):'');
   }
-  renderWorldTreeRoots(worldTreeRootSearch.value);
+  renderWorldTreeRoots(worldTreeRootSearch.value,record);
 }
 function _worldTreeFocusables(){ return [...worldTreePanel.querySelectorAll('button:not([disabled]),input:not([disabled])')]
   .filter(element=>!element.hidden&&!element.closest('[hidden]')); }
@@ -13375,15 +13439,22 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__perfDiagnostics=()=>({enabled:_DIAGNOSTICS,debug:_DBG,autoReset:renderer.info.autoReset,shadowWrapped:!!renderer.shadowMap.render.__repolisMetrics,
     frameAllocations:RENDER_METRICS.frameAllocations,passTokenAllocations:RENDER_METRICS.passTokenAllocations,historyWrites:RENDER_METRICS.historyWrites,history:RENDER_METRICS.history.length,gpuSupported:GPU_TIMER.supported});
   window.__visualGovernor=(command)=>_debugVisualGovernor(command);
-  window.__worldTreeChronicle=()=>{ const flow=MEMORIAL_TREE&&MEMORIAL_TREE.sapFlow; return {
-    open:WORLD_TREE_UI.open,available:WORLD_TREE_RECORD.available,portable:WORLD_TREE_RECORD.portable?JSON.parse(JSON.stringify(WORLD_TREE_RECORD.portable)):null,
-    roots:WORLD_TREE_RECORD.roots.length,rootSearch:!worldTreeRootSearchWrap.hidden,
-    silence:{available:WORLD_TREE_RECORD.silence.available,referenceDate:WORLD_TREE_RECORD.silence.referenceDate,
-      repositories:{...WORLD_TREE_RECORD.silence.repositories},quiet:{...WORLD_TREE_RECORD.silence.quiet}},
+  window.__worldTreeChronicle=()=>{ const flow=MEMORIAL_TREE&&MEMORIAL_TREE.sapFlow,record=_worldTreeRecord(); return {
+    open:WORLD_TREE_UI.open,available:record.available,portable:record.portable?JSON.parse(JSON.stringify(record.portable)):null,
+    roots:record.roots.length,rootSearch:!worldTreeRootSearchWrap.hidden,
+    history:{available:record.sapLedger.available,entries:record.sapLedger.entries.length,missingDays:record.sapLedger.missingDays,
+      first:record.sapLedger.first&&record.sapLedger.first.referenceDate,latest:record.sapLedger.latest&&record.sapLedger.latest.referenceDate,
+      comparison:record.sapLedger.comparison?JSON.parse(JSON.stringify(record.sapLedger.comparison)):null},
+    silence:{available:record.silence.available,referenceDate:record.silence.referenceDate,
+      repositories:{...record.silence.repositories},quiet:{...record.silence.quiet}},
     modal:{role:worldTreeModal.getAttribute('role'),hidden:worldTreeModal.getAttribute('aria-hidden'),active:document.activeElement&&document.activeElement.id},
     trigger:{hidden:worldTreeTrigger.hidden,label:worldTreeTrigger.getAttribute('aria-label')},growth:{...WORLD_TREE_GROWTH},
     sap:{available:WORLD_TREE_RECORD.lastSapFlow.available,freshness:WORLD_TREE_RECORD.lastSapFlow.freshness,mode:WORLD_TREE_SAP_MODE,
       points:flow?flow.count:0,moving:!!(flow&&flow.mode==='travel'&&!flow.finished),finished:!!(flow&&flow.finished),visible:!!(flow&&flow.points.visible&&flow.halo.visible),updates:flow?flow.updates:0,draws:flow?2:0}}; };
+  window.__worldTreeSapLedgerFixture=(entries=null)=>{ if(entries===null) WORLD_TREE_UI.recordOverride=null;
+    else if(!Array.isArray(entries)||!CITY_STATE?.sap_ledger) return false;
+    else WORLD_TREE_UI.recordOverride=projectWorldTreeChronicle({...CITY_STATE,sap_ledger:{...CITY_STATE.sap_ledger,entries}},{now:WORLD_TREE_NOW});
+    if(WORLD_TREE_UI.open) renderWorldTreeChronicle(); return window.__worldTreeChronicle(); };
   window.__worldTreeOpen=()=>{ _updateWorldTreeTrigger(); return {opened:openWorldTreeChronicle('debug',worldTreeTrigger),state:window.__worldTreeChronicle()}; };
   window.__worldTreeClose=()=>{ const closed=closeWorldTreeChronicle(); return {closed,state:window.__worldTreeChronicle()}; };
   window.__memorialTree=()=>{ if(!MEMORIAL_TREE) return null; const b=_memHeroBox(MEMORIAL_TREE.group),s=MEMORIAL_TREE.stats,c=MEMORIAL_TREE.collider,wt=MEMORIAL_TREE.group.userData.worldTree,adapter=MEMORIAL_TREE.group.userData.repolisAdapter;
