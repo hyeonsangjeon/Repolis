@@ -1911,7 +1911,7 @@ import { CAMERA_OBSTRUCTION_DEFAULTS, CAMERA_ARRIVAL_OFFSETS, resolveCameraObstr
 import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferry.js?v=petite-venise-ferry-v1';
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
 import { CITY_STATE_SCHEMA, CITY_STATE_VERSION, REPO_NEWCOMER_DAYS, cityReferenceTimestamp, constructionScaffoldPlan, projectCityTime, resolveCitySeason, seasonPalette } from './assets/city-time.js?v=world-tree-phase4-v1';
-import { SAP_FLOW_LIMITS, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=world-tree-phase2-v2';
+import { PORTABLE_TOWN_LIMITS, SAP_FLOW_LIMITS, bindPortableResidentSlots, projectPortableTown, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=portable-living-towns-v1';
 import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
@@ -1950,6 +1950,7 @@ const repoPortalStartedAt = typeof performance !== 'undefined' ? performance.now
 let repoPortalTarget = _repoRoute.target;
 let repoPortalResult = null;
 let repoPortalFallback = false;
+let PUBLIC_TOWN_COVERAGE = { partial:false, error:null };
 let currentUser = repoPortalTarget?.owner || (_repoRoute.mode === 'public' ? _reqUser : OWNER);
 let cityMode = _repoRoute.mode;     // 'owner' | 'public' | 'portal'
 let dataSource = cityMode === 'portal' ? 'repo-api' : (cityMode === 'public' ? 'github-public' : 'owner-ci');
@@ -2034,29 +2035,35 @@ function _repoPortalLang(){ try{ const value=localStorage.getItem('repolisLang')
 
 /* --- public town: normalize allowlisted GitHub REST fields without manufacturing traffic. --- */
 function _normPublicRepos(raw, user){
-  return projectPublicRepos(raw,user,Date.now());
+  return projectPublicRepos(raw,user);
 }
 function _publicCacheKey(u){ return 'repolis:public-user:'+u.toLowerCase()+':v1'; }
 async function _loadPublicCity(user){
   const key=_publicCacheKey(user), TTL=6*3600*1000;       // 6h fresh window
   let cached=null; try{ cached=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
   if(cached && Array.isArray(cached.repos) && (Date.now()-(cached.fetchedAt||0) < TTL))
-    return { repos:_normPublicRepos(cached.repos,user), source:'cache' };
+    return { repos:_normPublicRepos(cached.repos,user), source:'cache',
+      coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
   track('city_data_load_start', { targetUser:user });
   try{
     const res = await fetch('https://api.github.com/users/'+encodeURIComponent(user)+'/repos?per_page=100&sort=pushed',
       { headers:{ 'Accept':'application/vnd.github+json' } });
     if(!res.ok){
-      if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache' };
       const reason = res.status===404 ? 'not_found' : (res.status===403 ? 'rate_limit' : 'http');
-      return { repos:[], source:'github-public', error:{ status:res.status, reason } };
+      if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache',
+        coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:reason} };
+      return { repos:[], source:'github-public', error:{ status:res.status, reason },
+        coverage:{partial:false,error:reason} };
     }
     const raw = await res.json();
     try{ localStorage.setItem(key, JSON.stringify({ username:user, fetchedAt:Date.now(), repos:raw, source:'github-public' })); }catch(e){}
-    return { repos:_normPublicRepos(raw,user), source:'github-public' };
+    return { repos:_normPublicRepos(raw,user), source:'github-public',
+      coverage:{partial:raw.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
   }catch(e){
-    if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache' };
-    return { repos:[], source:'github-public', error:{ status:0, reason:'network' } };
+    if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache',
+      coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:'network'} };
+    return { repos:[], source:'github-public', error:{ status:0, reason:'network' },
+      coverage:{partial:false,error:'network'} };
   }
 }
 
@@ -2102,7 +2109,7 @@ function _repoPortalRaw(repo,target){
 function _repoPortalCacheLookup(target){
   const cache=_repoPortalCacheRead(),key=target.slug.toLowerCase(),entry=cache.entries[key];
   if(!entry||!entry.raw) return {fresh:null,stale:null};
-  const repo=projectPublicRepo(entry.raw,target.owner,Date.now()); if(!repo||repo.repo.toLowerCase()!==target.repo.toLowerCase()) return {fresh:null,stale:null};
+  const repo=projectPublicRepo(entry.raw,target.owner); if(!repo||repo.repo.toLowerCase()!==target.repo.toLowerCase()) return {fresh:null,stale:null};
   cache.order=[key,...cache.order.filter(item=>item!==key)]; try{ localStorage.setItem(REPO_PORTAL_CACHE_KEY,JSON.stringify(cache)); }catch(e){}
   const age=Date.now()-Number(entry.fetchedAt||0); return age<REPO_PORTAL_LIMITS.cacheTtlMs?{fresh:repo,stale:null}:{fresh:null,stale:repo};
 }
@@ -2129,7 +2136,7 @@ async function _loadRepoPortalTarget(target){
       if(cached.stale) return {repo:cached.stale,source:'repo-stale-cache',result:'stale'};
       return {repo:null,source:'repo-api',result:'error',error:{status:res.status,reason:res.status===404?'not_found':(res.status===403||res.status===429?'rate_limit':'http')}};
     }
-    const repo=projectPublicRepo(await res.json(),target.owner,Date.now());
+    const repo=projectPublicRepo(await res.json(),target.owner);
     if(!repo||repo.repo.toLowerCase()!==target.repo.toLowerCase()) return {repo:null,source:'repo-api',result:'error',error:{status:404,reason:'not_found'}};
     _repoPortalCacheStore(target,repo); return {repo,source:'repo-api',result:'api'};
   }catch(e){
@@ -2151,6 +2158,7 @@ if(cityMode === 'owner'){
     const le=document.getElementById('loading'); if(le) le.textContent = _l==='ko' ? (currentUser+' 님의 레포를 불러오는 중…') : ('Fetching '+currentUser+"'s repos…"); }catch(e){}
   const pub = await _loadPublicCity(currentUser);
   REPOS = pub.repos || []; dataSource = pub.source || 'github-public'; cityError = pub.error || null;
+  PUBLIC_TOWN_COVERAGE = pub.coverage || {partial:false,error:cityError?.reason||null};
   if(_reqFocus&&!REPOS.some(repo=>repo.repo.toLowerCase()===_reqFocus.repo.toLowerCase())){
     const focused=await _loadRepoPortalTarget(_reqFocus);
     if(focused.repo){ REPOS.push(focused.repo); REPOS.sort((a,b)=>(b.score-a.score)||(b.stars-a.stars)||a.repo.localeCompare(b.repo)); REPOS.forEach((repo,index)=>{ repo.rank=index; }); }
@@ -2167,11 +2175,23 @@ if(cityMode === 'owner'){
     try{ REPOS=_ownerRepos(await _ownerSnapshot()); cityMode='owner'; currentUser=OWNER; dataSource='portal-fallback'; }
     catch(e){ REPOS=[]; dataSource='portal-fallback'; }
   }
+  PUBLIC_TOWN_COVERAGE={partial:false,error:repoPortalResult.error?.reason||null};
   trackPortal('feature_started',{entry:'link',device:_repoPortalDevice(),lang:_repoPortalLang(),result:repoPortalResult.result,
     latency:repoPortalLatencyBucket((typeof performance!=='undefined'?performance.now():Date.now())-repoPortalStartedAt)});
 }
 if(!CITY_STATE&&currentUser.toLowerCase()===OWNER.toLowerCase()&&(cityMode==='owner'||dataSource==='owner-snapshot')){
   try{ CITY_STATE=await _cityStateSnapshot(); }catch(error){ console.warn('city-state.json load failed',error); }
+}
+const TOWN_PROJECTION=projectPortableTown({
+  townOwner:OWNER,
+  currentUser,
+  repositories:REPOS,
+  cityState:CITY_STATE,
+  coverage:PUBLIC_TOWN_COVERAGE,
+});
+if(TOWN_PROJECTION.kind==='portable'){
+  CITY_STATE=TOWN_PROJECTION.cityState;
+  RESIDENT_MANIFEST_STATE='portable';
 }
 if(cityMode==='owner'&&currentUser.toLowerCase()===OWNER.toLowerCase()){
   const [residentLoad,loreLoad]=await Promise.allSettled([
@@ -2266,6 +2286,9 @@ const I18N = {
     worldTreeSapRecent:'{date} · 최근 일일 기록', worldTreeSapStored:'{date} · 저장된 일일 기록', worldTreeSapStale:'{date} · 오래된 일일 기록',
     worldTreeSapUnavailable:'기록 없음', worldTreeYears:'{from}–{to} · {count}년', worldTreeYearsOpen:'{from}–{to}', worldTreeYearsUnknown:'활동 연도 기록 없음',
     worldTreeCommitUnavailable:'커밋 합계 없음 · 공개 입력에는 전체 커밋 이력이 없습니다.',
+    worldTreePortableRecord:'@{user}의 공개 레포 기록. 나무는 말하지 않는다.', worldTreePortableSapUnavailable:'일일 수액 기록 없음 · 공개 스냅샷',
+    worldTreePortableUnknown:'이 나무에는 공개 레포 기록만 있습니다 · 방문·조회·클론과 Shared·Bound 기억은 알 수 없음',
+    worldTreePortablePartial:'GitHub 공개 목록 상한 {limit}채까지 도착한 기록입니다.',
     worldTreeReached:' — 말 없는 도시 기록. <span class="key">Enter</span>/<span class="key">Space</span> 또는 클릭으로 열기',
     zbSub:'이 구역의 대표 레포와 나의 탐험 진행률', zbBoard:'구역 안내판',
     zbReps:'대표 레포', zbRide:'🚕 대표 레포로 이동', zbUnseen:'🧭 아직 안 본 레포 안내',
@@ -2462,6 +2485,7 @@ const I18N = {
     taxiTitle:'🚕 깃버',
     chatQueued:'이 질문은 현재 답변 다음에 이어서 물어볼게요.', chatQueueFull:'대기 중인 질문이 많아요. 현재 답변이 끝난 뒤 다시 시도해 주세요.',
     residentProfileLoading:'묶인 집의 공개 기록을 정리하는 중…', residentProfileReady:'🔗 {repo}에 묶인 공개 기억 · 대화할 때만 AI 사용',
+    residentProfilePortable:'🔗 {repo} · 공개 메타데이터만 · 로컬 대화(비용 0)',
     residentProfileLocal:'🔗 {repo} · 규칙 기반 로컬 기억(비용 0)', residentProfileOffline:'🔗 {repo} · 백엔드 없이 로컬 기억으로 대화 중',
     residentProfileError:'공개 주민 기록을 읽지 못했어요. 로컬 소개로 계속할게요.', residentProfileRetry:'다시 읽기',
     residentCostOff:'🔗 {repo} · AI 비용 사용 중지, 로컬 기억으로 대화 중', residentBudgetOff:'오늘의 주민 대화 한도에 닿아 로컬 기억으로 답해요.',
@@ -2591,6 +2615,9 @@ const I18N = {
     worldTreeSapRecent:'{date} · recent daily record', worldTreeSapStored:'{date} · stored daily record', worldTreeSapStale:'{date} · older daily record',
     worldTreeSapUnavailable:'No record', worldTreeYears:'{from}–{to} · {count} years', worldTreeYearsOpen:'{from}–{to}', worldTreeYearsUnknown:'Active years unrecorded',
     worldTreeCommitUnavailable:'No commit total · complete commit history is absent from the public input.',
+    worldTreePortableRecord:"@{user}'s public repository record. The tree does not speak.", worldTreePortableSapUnavailable:'No daily sap record · public snapshot',
+    worldTreePortableUnknown:'This tree holds public repository records only · visits, views, clones, and Shared/Bound memories are unknown',
+    worldTreePortablePartial:'This record contains up to GitHub’s public-list cap of {limit} houses.',
     worldTreeReached:' — a silent city record. Press <span class="key">Enter</span>/<span class="key">Space</span> or click to open',
     zbSub:'Representative repos and your exploration here', zbBoard:'district board',
     zbReps:'Representative repos', zbRide:'🚕 Ride to a top repo', zbUnseen:'🧭 Guide me to an unseen one',
@@ -2787,6 +2814,7 @@ const I18N = {
     taxiTitle:'🚕 Gitber',
     chatQueued:'Queued for the next turn.', chatQueueFull:'The question queue is full. Try again after the current answer.',
     residentProfileLoading:'Sorting this resident’s public home record…', residentProfileReady:'🔗 Bound to {repo} · AI only after you send',
+    residentProfilePortable:'🔗 {repo} · public metadata only · local dialogue ($0)',
     residentProfileLocal:'🔗 {repo} · rules-based local memory ($0)', residentProfileOffline:'🔗 {repo} · local memory, backend unavailable',
     residentProfileError:'The public resident record could not be read. Continuing with a local introduction.', residentProfileRetry:'Retry',
     residentCostOff:'🔗 {repo} · AI cost is off; using local memory', residentBudgetOff:'Today’s resident-dialogue limit is reached. Using local memory.',
@@ -3070,7 +3098,8 @@ const IS_MOBILE = _coarse && Math.min(innerWidth, innerHeight) <= 820;      // p
 const LOW_END = (navigator.hardwareConcurrency||8) <= 4 || (navigator.deviceMemory||8) <= 4 || (IS_MOBILE && innerWidth <= 430);
 const DETAIL = IS_MOBILE ? (LOW_END ? 0.5 : 0.72) : (LOW_END ? 0.82 : 1);   // scene-density multiplier (1=full desktop)
 const detail = n => Math.max(0, Math.round(n*DETAIL));                       // scale a per-instance count by the device tier
-const WORLD_TREE_RECORD=projectWorldTreeChronicle(CITY_STATE,{now:Date.now()});
+const WORLD_TREE_NOW=TOWN_PROJECTION.kind==='portable'?cityReferenceTimestamp(CITY_STATE,REPOS,Date.now()):Date.now();
+const WORLD_TREE_RECORD=projectWorldTreeChronicle(CITY_STATE,{now:WORLD_TREE_NOW});
 const WORLD_TREE_GROWTH=projectWorldTreeGrowth(CITY_STATE);
 const WORLD_TREE_SAP_MODE=resolveSapFlowMode(WORLD_TREE_RECORD.lastSapFlow,{reducedMotion:REDUCED,lowEnd:LOW_END});
 
@@ -7409,7 +7438,8 @@ const auraPulse=[];
    Default = deterministic SCRIPTED (zero network, zero cost). An optional Cloudflare Worker path (npc* actions)
    lights up real model turns ONLY when the operator enables it AND the daily budget allows. Everything degrades to
    scripted on: AI off · budget exhausted · worker error · hidden tab. No secret/model/endpoint ever ships in this file. */
-const MAX_RESIDENTS=10;
+const MAX_RESIDENTS=TOWN_PROJECTION.kind==='portable'
+  ?(LOW_END?PORTABLE_TOWN_LIMITS.lowEndResidents:PORTABLE_TOWN_LIMITS.desktopResidents):10;
 const NPC_CFG={ modeEnabled:true, visualEnabled:true,
   aiEnabled:false, ambientAiEnabled:false, playerChatAiEnabled:false,   // AI features: off until the worker's env says otherwise
   scriptedAmbient:true, scriptedPlayerChat:true,                        // the free fallback — always available, no cost
@@ -7490,8 +7520,12 @@ const RESIDENTS=[
     amb:{ko:['숫자는 기준 시각이 있어야 의미가 있어요.','주문은 안 받아요. 장부만 읽습니다.','주식 장부와 코인 장부의 시계가 서로 달라요.','가격보다 먼저 통화와 시장을 확인해요.','출처 없는 시세는 장부에 적지 않아요.'],
         en:['A number needs an as-of time to mean anything.','No orders here\u2014I only read the ledger.','Stock and crypto ledgers keep different clocks.','Check the market and currency before the price.','An unsourced quote never enters my book.']} }
 ];
-const RESIDENT_ROSTER=bindResidentSlots(RESIDENTS,RESIDENT_MANIFEST,REPOS);
+const RESIDENT_ROSTER=TOWN_PROJECTION.kind==='portable'
+  ?bindPortableResidentSlots(RESIDENTS,TOWN_PROJECTION,REPOS,{lowEnd:LOW_END})
+  :bindResidentSlots(RESIDENTS,RESIDENT_MANIFEST,REPOS);
 RESIDENTS.splice(0,RESIDENTS.length,...RESIDENT_ROSTER.residents);
+if(TOWN_PROJECTION.kind==='portable') RESIDENTS.forEach(res=>{ const zone=res.bound?.repoRecord?._zone; res.zone=zone&&zone!=='commons'?zone:'plaza'; });
+const RESIDENT_DIRECTORY=RESIDENT_ROSTER.directory||RESIDENT_MANIFEST;
 const ELDER_LORE_REPOSITORIES=_PHASE4_FIXTURES?REPOS.map(repo=>({
   ...repo,
   archived:!!repo._ruin,
@@ -7687,7 +7721,7 @@ function buildResidentQuarter(){
   RES_QUARTER={id:'homes',label:t('lmHomes'),pos:RES_QUARTER_POS,_pos:RES_QUARTER_POS.clone(),group:q,homes:RESIDENT_HOMES,arrival:RES_QUARTER_POS.clone(),landscape,homeDetails};
   _refreshResidentHomeLights(isNight); return RES_QUARTER;
 }
-if(NPC_CFG.modeEnabled&&NPC_CFG.visualEnabled) buildResidentQuarter();
+if(NPC_CFG.modeEnabled&&NPC_CFG.visualEnabled&&RESIDENTS.length) buildResidentQuarter();
 
 // ---- resident visuals (shared helpers; one bounded job prop is omitted on LOW_END) ----
 const RES_JOB_GEOS=Object.freeze({
@@ -7755,7 +7789,7 @@ const RES_REACT_R=(LOW_END?11:14), RES_REACT_CD=(LOW_END?22:15);   // when you f
 const RES_EMOTE_CD_MIN=(LOW_END?46:30), RES_EMOTE_CD_MAX=(LOW_END?90:64);
 const RES_COMFORT_CD_MIN=(LOW_END?42:26), RES_COMFORT_CD_MAX=(LOW_END?82:58);   // a resident resting a while lets slip a contented, at-home murmur (rare, cosy — never chatter)
 function _resGreetLine(res){ const nm=(res[LANG]||res.ko).name, ko=LANG==='ko';
-  if(VISITOR.returning && Math.random()<0.6){   // a familiar face → a warmer hello, with a note when they've been away a while
+  if(TOWN_PROJECTION.kind!=='portable'&&VISITOR.returning && Math.random()<0.6){   // portable residents never imply retained visitor memory
     const back = ko ? (VISITOR.longAway ? ['\uD83D\uDC4B \uc624\ub79c\ub9cc\uc774\uc5d0\uc694! \ud55c\ucc38 \uc548 \ubcf4\uc774\uc168\uc5b4\uc694.','\uD83D\uDC4B \ub2e4\uc2dc \uc624\uc168\ub124\uc694 \u2014 \uc624\ub79c\ub9cc\uc774\ub77c \ub354 \ubc18\uac00\uc6cc\uc694!','\uc624\ub798 \uae30\ub2e4\ub838\uc5b4\uc694, \ub610 \uc640\uc918\uc11c \uace0\ub9c8\uc6cc\uc694! \uD83D\uDC4B']
                                          : ['\uD83D\uDC4B \ub610 \uc624\uc168\ub124\uc694, \ubc18\uac00\uc6cc\uc694!','\ub2e4\uc2dc \ubd10\uc11c \uc88b\uc544\uc694! \uD83D\uDC4B','\uD83D\uDC4B \uc5b4\uc11c \uc640\uc694 \u2014 \uc5bc\uad74\uc774 \uc775\uc219\ud558\ub124\uc694!','\uc624\ub298\ub3c4 \ub4e4\ub7ec\uc918\uc11c \uace0\ub9c8\uc6cc\uc694! \uD83D\uDC4B'])
                     : (VISITOR.longAway ? ["\uD83D\uDC4B It's been a while \u2014 good to see you again!","\uD83D\uDC4B You're back! Long time no see.","We kept your spot warm \u2014 thanks for coming back! \uD83D\uDC4B"]
@@ -7811,7 +7845,10 @@ function _peerNoticeLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG===
 function _peerReplyLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko';
   const b= ko?[`${nm}도요 — 반가워요!`,`${nm}, 마침 보고 싶었어요.`,`고마워요 ${nm}, 힘이 나네요.`,`${nm}랑 마주치면 하루가 좋아져요.`]:[`You too, ${nm} — good to see you!`,`${nm}, I was just hoping to see you.`,`Thanks, ${nm} — that lifts me.`,`Running into you, ${nm}, makes my day.`]; return b[(Math.random()*b.length)|0]; }
 // 🫂 named friendships: each resident has a close friend they seek out and greet more warmly than a passing acquaintance — the town's bonds, not just its proximity
-const _RES_BONDS={ sol:['noa'], noa:['sol'], jun:['tae'], tae:['jun'], nari:['rin'], rin:['nari'], mira:['kai'], kai:['mira'] };
+const _OWNER_RES_BONDS={ sol:['noa'], noa:['sol'], jun:['tae'], tae:['jun'], nari:['rin'], rin:['nari'], mira:['kai'], kai:['mira'] };
+const _RES_BONDS=TOWN_PROJECTION.kind==='portable'
+  ?Object.fromEntries(RESIDENTS.map((res,index)=>{ const friend=RESIDENTS[index%2===0?index+1:index-1]; return [res.id,friend?[friend.id]:[]]; }))
+  :_OWNER_RES_BONDS;
 function _isFriend(a,b){ const f=_RES_BONDS[a.res.id]; return !!(f && b && f.indexOf(b.res.id)>=0); }
 function _bondNoticeLine(L,P){ const nm=(P.res[LANG]||P.res.ko).name, ko=LANG==='ko', m=_resMood(P);
   if(m==='dozy' && Math.random()<0.5) return ko?`${nm}, 피곤해 보여요. 옆에서 좀 쉬었다 가요.`:`${nm}, you look worn out — rest here beside me a while.`;
@@ -8347,7 +8384,7 @@ function residentPromptHtml(L){ const res=L.res, nm=res[LANG]||res.ko, z=_zoneBy
                      :`<b>${ic} ${esc(nm.name)}</b> \u00b7 ${esc(nm.role)} \u00b7 <span class="key">Enter</span>/click to <b>talk</b> \uD83D\uDCAC`); }
 function residentReply(res,q){ const ql=String(q||'').toLowerCase().trim(), ko=LANG==='ko', z=_resZone(res);
   const zn = z?(ko?z.ko:z.en):(ko?'마을 전체':'the whole town'); const L=res[LANG]||res.ko, reps=_resReps(res,3);
-  if(res.bound){ const local=residentLocalResponse({resident:res,profile:res._profile,question:q,lang:LANG,manifest:RESIDENT_MANIFEST});
+  if(res.bound){ const local=residentLocalResponse({resident:res,profile:res._profile,question:q,lang:LANG,manifest:RESIDENT_DIRECTORY});
     const target=local.targetRepo&&REPOS.find(repo=>repo.repo===local.targetRepo); return {html:esc(local.text),repo:target||null,intent:local.intent}; }
   const bye=/(잘\s*가|안녕히|또\s*(봐|만나|와)|bye|see\s*you|goodbye|cya|later|수고|들어가)/;
   const who=/(누구|누구세요|이름|정체|who\s*are\s*you|your\s*name|introduce)/;
@@ -8430,8 +8467,8 @@ function _maybeScholarHandoff(q){ const kind=scholarHandoffKind(q), sc=kind&&win
 async function residentSay(q){ const res=activeNpc&&activeNpc.res; if(!res) return; _guestCdUntil=clock.elapsedTime + NPC_CFG.guestCooldownSec;
   await ensureResidentProfile(res);
   if(await _maybeFarewell(q)){ if(res.oracle==='market'){ cancelMarketRequest(); _marketThread=false; } return; }   // farewell cancels AURI's request context
-  const boundPreview=res.bound&&residentLocalResponse({resident:res,profile:res._profile,question:q,lang:LANG,manifest:RESIDENT_MANIFEST});
-  const boundCue=!!(boundPreview&&['own_concern','own_bound_memory','home_direction','cross_resident_redirect'].includes(boundPreview.intent));
+  const boundPreview=res.bound&&residentLocalResponse({resident:res,profile:res._profile,question:q,lang:LANG,manifest:RESIDENT_DIRECTORY});
+  const boundCue=!!(boundPreview&&['own_concern','own_bound_memory','home_direction','cross_resident_redirect','portable_memory_unknown','portable_concerns_unknown'].includes(boundPreview.intent));
   const marketIntent=res.oracle==='market'&&!boundCue&&marketQuestion(q), handoff=scholarHandoffKind(q);
   if(marketIntent&&(!handoff||explicitMarketQuestion(q))){ await marketResidentAsk(res,q); return; }
   if(handoff){ if(res.oracle==='market'){ cancelMarketRequest(); _marketThread=false; } if(_maybeScholarHandoff(q)) return; }   // technical handoff invalidates AURI's pending response
@@ -9305,7 +9342,8 @@ function _worldTreeYears(root){ const years=root.activeYears;
   return t('worldTreeYearsUnknown'); }
 function renderWorldTreeRoots(query=''){
   const roots=WORLD_TREE_RECORD.roots,total=roots.length,normalized=String(query||'').trim().toLocaleLowerCase(LANG==='ko'?'ko-KR':'en-US');
-  const filtered=normalized?roots.filter(root=>(root.repo+' '+root.achievement+' '+_worldTreeYears(root)).toLocaleLowerCase(LANG==='ko'?'ko-KR':'en-US').includes(normalized)):roots;
+  const rootAchievement=root=>(LANG==='ko'?root.achievementKo:root.achievementEn)||root.achievement;
+  const filtered=normalized?roots.filter(root=>(root.repo+' '+rootAchievement(root)+' '+root.achievementKo+' '+root.achievementEn+' '+_worldTreeYears(root)).toLocaleLowerCase(LANG==='ko'?'ko-KR':'en-US').includes(normalized)):roots;
   const list=document.getElementById('worldTreeRoots'),status=document.getElementById('worldTreeRootStatus'); list.replaceChildren();
   worldTreeRootSearchWrap.hidden=total<10;
   if(!total){ const empty=document.createElement('p'); empty.className='worldTreeRootsEmpty'; empty.setAttribute('role','listitem'); empty.textContent=t('worldTreeRootsEmpty'); list.appendChild(empty); status.textContent=''; return; }
@@ -9313,12 +9351,14 @@ function renderWorldTreeRoots(query=''){
   else filtered.forEach(root=>{ const item=document.createElement('article'); item.className='worldTreeRoot'; item.setAttribute('role','listitem');
     const identity=document.createElement('div'),name=document.createElement('div'),years=document.createElement('span'),achievement=document.createElement('p');
     name.className='worldTreeRootName'; name.textContent=root.repo; years.className='worldTreeRootYears'; years.textContent=_worldTreeYears(root);
-    achievement.className='worldTreeRootAchievement'; achievement.textContent=root.achievement; identity.append(name,years); item.append(identity,achievement); list.appendChild(item); });
+    achievement.className='worldTreeRootAchievement'; achievement.textContent=rootAchievement(root); identity.append(name,years); item.append(identity,achievement); list.appendChild(item); });
   status.textContent=tf('worldTreeRootsCount',{shown:filtered.length,total});
 }
 function renderWorldTreeChronicle(){
   const record=WORLD_TREE_RECORD,unavailable=document.getElementById('worldTreeUnavailable'),content=document.getElementById('worldTreeRecord');
   unavailable.hidden=record.available; content.hidden=!record.available; if(!record.available) return;
+  document.getElementById('worldTreeSilence').textContent=record.portable
+    ?tf('worldTreePortableRecord',{user:record.portable.owner}):t('worldTreeSilence');
   const era=record.era,season=record.season,sap=record.lastSapFlow;
   _worldTreeLedgerValue(document.getElementById('worldTreeEra'),tf('worldTreeCityYear',{year:era.cityYear??'—'}),
     tf('worldTreeFounded',{date:_worldTreeDate(era.foundedOn),repo:era.oldestRepository||'—'}));
@@ -9328,13 +9368,16 @@ function renderWorldTreeChronicle(){
     :tf('worldTreeSeasonRatio',{recent:season.recentRepositories,ratio:season.ratio.toFixed(2)});
   _worldTreeLedgerValue(document.getElementById('worldTreeSeason'),t(seasonKey),seasonBasis);
   const sapKey={recent:'worldTreeSapRecent',stored:'worldTreeSapStored',stale:'worldTreeSapStale'}[sap.freshness]||'worldTreeSapUnavailable';
-  _worldTreeLedgerValue(document.getElementById('worldTreeSap'),sap.available?tf(sapKey,{date:_worldTreeDate(sap.timestamp,true)}):t(sapKey));
+  _worldTreeLedgerValue(document.getElementById('worldTreeSap'),sap.available?tf(sapKey,{date:_worldTreeDate(sap.timestamp,true)})
+    :(record.portable?t('worldTreePortableSapUnavailable'):t(sapKey)));
   const stats=record.stats,languageCount=stats.languages.length,rows=[
     [stats.repositories,'worldTreeStatRepos'],[stats.stars,'worldTreeStatStars'],[stats.forks,'worldTreeStatForks'],
     [stats.archivedRepositories,'worldTreeStatArchived'],[languageCount,'worldTreeStatLanguages']];
   const statsEl=document.getElementById('worldTreeStats'); statsEl.replaceChildren(...rows.map(([value,key])=>{ const item=document.createElement('div'); item.className='worldTreeStat'; item.setAttribute('role','listitem');
     const number=document.createElement('b'),label=document.createElement('span'); number.textContent=_worldTreeNumber(value); label.textContent=t(key); item.append(number,label); return item; }));
-  document.getElementById('worldTreeCommitNote').textContent=stats.commitTotal===null?t('worldTreeCommitUnavailable'):'';
+  document.getElementById('worldTreeCommitNote').textContent=record.portable
+    ?t('worldTreePortableUnknown')+(record.portable.coverage.partial?' · '+tf('worldTreePortablePartial',{limit:record.portable.coverage.requestCap}):'')
+    :(stats.commitTotal===null?t('worldTreeCommitUnavailable'):'');
   const silence=record.silence,quietBasis=document.getElementById('worldTreeQuietBasis'),
     quietSummary=document.getElementById('worldTreeQuietSummary'),quietLongest=document.getElementById('worldTreeQuietLongest');
   if(!silence.available){ quietBasis.textContent=''; quietSummary.textContent=t('worldTreeQuietUnavailable'); quietLongest.textContent=''; }
@@ -10463,7 +10506,8 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
     if(!errEl.classList.contains('hidden')) showCityError();
   };
   window.__station=()=>({ mode:cityMode, user:currentUser, source:dataSource, error:effErr, repoCount:REPOS.length, open:!stationEl.classList.contains('hidden') });
-  window.__city=()=>({ mode:cityMode, user:currentUser, source:dataSource, repoCount:REPOS.length, error:cityError });
+  window.__city=()=>({ mode:cityMode, user:currentUser, source:dataSource, projection:TOWN_PROJECTION.kind, repoCount:REPOS.length, error:cityError,
+    coverage:TOWN_PROJECTION.cityState?.portable?.coverage||null });
   window.__events=()=>recentAnalyticsEvents.slice();
   window.__repoPortal=()=>({requested:repoPortalRequested,mode:cityMode,target:repoPortalTarget&&repoPortalTarget.slug||null,
     source:dataSource,result:repoPortalResult&&repoPortalResult.result||null,fallback:repoPortalFallback,trafficKnown:REPOS[0]?.trafficKnown??null});
@@ -10963,11 +11007,11 @@ const taxiBtn=document.getElementById('taxiBtn'), modeSel=document.getElementByI
 const residentStatusEl=document.getElementById('residentStatus'),residentStatusText=residentStatusEl.querySelector('span'),residentRetry=document.getElementById('residentRetry');
 const chatCloseBtn=document.getElementById('chatClose'),chatSendBtn=document.getElementById('chatSend'); let chatPreviousFocus=null;
 const driveBar=document.getElementById('drivebar'), driveNameEl=document.getElementById('driveName');
-let llmMode=(cityMode==='public')?'local':(localStorage.getItem('taxiMode')||'local'), chatGreeted=false, busy=false; modeSel.value=llmMode;
+let llmMode=TOWN_PROJECTION.kind==='portable'?'local':(localStorage.getItem('taxiMode')||'local'), chatGreeted=false, busy=false; modeSel.value=llmMode;
 const CHAT_QUEUE_MAX=4,queuedChatQuestions=[]; let pendingChatNpc=null;
 function setResidentChatStatus(state,res){ if(!res||!activeNpc||!activeNpc.resident||activeNpc.res!==res) return;
   const repo=res.bound&&res.bound.repo||'', keys={loading:'residentProfileLoading',local:'residentProfileLocal',ready:'residentProfileReady',offline:'residentProfileOffline',
-    error:'residentProfileError',costOff:'residentCostOff',budget:'residentBudgetOff',rate:'residentRateLimited',archived:'residentArchived'};
+    portable:'residentProfilePortable',error:'residentProfileError',costOff:'residentCostOff',budget:'residentBudgetOff',rate:'residentRateLimited',archived:'residentArchived'};
   let effective=state; if(state==='ready'&&!NPC_CFG.worker) effective='offline'; else if(state==='ready'&&(!NPC_CFG.aiEnabled||!NPC_CFG.playerChatAiEnabled)) effective='costOff';
   residentStatusEl.hidden=false; residentStatusText.textContent=tf(keys[effective]||'residentProfileLocal',{repo}); residentRetry.hidden=effective!=='error';
   residentRetry.textContent=t('residentProfileRetry'); residentStatusEl.dataset.state=effective; }
@@ -11293,7 +11337,7 @@ function districtNav(q){ const z=zoneResolve(q); if(!z) return null;
 }
 function _coreIntent(q){
   const ql=q.toLowerCase();
-  const household=taxiHouseholdHandoff({question:q,lang:LANG,manifest:RESIDENT_MANIFEST,repositories:REPOS});
+  const household=taxiHouseholdHandoff({question:q,lang:LANG,manifest:RESIDENT_DIRECTORY,repositories:REPOS});
   if(household){ const home=household.targetRepo&&REPOS.find(repo=>repo.repo.toLowerCase()===household.targetRepo.toLowerCase());
     return {repo:home||null,message:esc(household.text),alts:[],_taxiBoundary:household.intent}; }
   const shared=taxiSharedResponse({question:q,lang:LANG,cityState:CITY_STATE});
@@ -11415,6 +11459,7 @@ async function proxyAsk(q){
 // an empty value and stay Local-default; a visitor can still set a personal backend.
 const GROUNDED_DEFAULT=window.REPOLIS_CONFIG?.services?.grounded||'';
 function groundedUrl(){
+  if(TOWN_PROJECTION.kind==='portable') return '';
   const saved=localStorage.getItem('taxiGroundedUrl');
   if(saved && /(localhost|127\.0\.0\.1)/.test(saved) && !/(localhost|127\.0\.0\.1)/.test(location.hostname)) return GROUNDED_DEFAULT;   // a saved dev URL is dead on the live site → use prod
   return saved||GROUNDED_DEFAULT;
@@ -12521,7 +12566,7 @@ _desktopFinePointer.addEventListener?.('change',_resizeViewportQuality);
    (PartyKit alt: npx partykit deploy -> wss://repolis.<you>.partykit.dev/parties/main/world)
    With RT_DEFAULT empty the world runs solo and just shows "🟢 1". */
 const RT_DEFAULT=window.REPOLIS_CONFIG?.services?.realtime||'';
-const RT_URL=(new URLSearchParams(location.search).get('rt'))||localStorage.getItem('repolisRT')||window.REPOLIS_RT||RT_DEFAULT;
+const RT_URL=TOWN_PROJECTION.kind==='portable'?'':((new URLSearchParams(location.search).get('rt'))||localStorage.getItem('repolisRT')||window.REPOLIS_RT||RT_DEFAULT);
 const liveCountEl=document.getElementById('liveCount'), allWrap=document.getElementById('allWrap'), allCountEl=document.getElementById('allCount'), entryWrap=document.getElementById('entryWrap'), entryCountEl=document.getElementById('entryCount'), entryTotalWrap=document.getElementById('entryTotalWrap'), entryTotalCountEl=document.getElementById('entryTotalCount');
 function guestId(){ let id=localStorage.getItem('repolisGuestId'); if(!id){ id='g'+Math.random().toString(36).slice(2,9); localStorage.setItem('repolisGuestId',id); } return id; }
 function guestName(){ let n=localStorage.getItem('repolisGuestName'); if(!n){ n='Guest-'+Math.floor(1000+Math.random()*9000); localStorage.setItem('repolisGuestName',n); } return n; }
@@ -12892,7 +12937,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__ask=(q)=>{ const r=localIntent(q); return r&&r.repo?r.repo.repo:null; };
   window.__taxi=(name)=>{ const r=repoByKey(name)||(name&&REPOS.find(x=>x.label===name)); if(r&&r._pos){ taxiTo(r); return true; } return false; };
   window.__repos=()=>REPOS.map(r=>({repo:r.repo,d:Math.round(Math.hypot(r._x,r._z)),rank:r.rank,custom:!!r.social_custom,wear:r._wearState,ruin:!!r._ruin}));
-  window.__cityTime=()=>({schema:CITY_STATE?.schema||null,version:CITY_STATE?.version||null,season:CITY_SEASON,reference:new Date(_now).toISOString(),
+  window.__cityTime=()=>({schema:CITY_STATE?.schema||null,version:CITY_STATE?.version||null,projection:TOWN_PROJECTION.kind,season:CITY_SEASON,reference:new Date(_now).toISOString(),
     fallback:!!CITY_STATE?.season?.fallback?.used,wear:REPOS.reduce((out,repo)=>{ out[repo._wearState]=(out[repo._wearState]||0)+1; return out; },{}),
     newcomers:REPOS.filter(repo=>repo._newcomer&&!repo._ruin).map(repo=>({repo:repo.repo,ageDays:repo._ageDays,details:repo._constructionDetails||null})),
     newcomerThresholdDays:REPO_NEWCOMER_DAYS,ruins:REPOS.filter(repo=>repo._ruin).map(repo=>({repo:repo.repo,details:repo._ruinDetails||null})),
@@ -13156,7 +13201,8 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__perfDiagnostics=()=>({enabled:_DIAGNOSTICS,debug:_DBG,autoReset:renderer.info.autoReset,shadowWrapped:!!renderer.shadowMap.render.__repolisMetrics,
     frameAllocations:RENDER_METRICS.frameAllocations,passTokenAllocations:RENDER_METRICS.passTokenAllocations,historyWrites:RENDER_METRICS.historyWrites,history:RENDER_METRICS.history.length,gpuSupported:GPU_TIMER.supported});
   window.__worldTreeChronicle=()=>{ const flow=MEMORIAL_TREE&&MEMORIAL_TREE.sapFlow; return {
-    open:WORLD_TREE_UI.open,available:WORLD_TREE_RECORD.available,roots:WORLD_TREE_RECORD.roots.length,rootSearch:!worldTreeRootSearchWrap.hidden,
+    open:WORLD_TREE_UI.open,available:WORLD_TREE_RECORD.available,portable:WORLD_TREE_RECORD.portable?JSON.parse(JSON.stringify(WORLD_TREE_RECORD.portable)):null,
+    roots:WORLD_TREE_RECORD.roots.length,rootSearch:!worldTreeRootSearchWrap.hidden,
     silence:{available:WORLD_TREE_RECORD.silence.available,referenceDate:WORLD_TREE_RECORD.silence.referenceDate,
       repositories:{...WORLD_TREE_RECORD.silence.repositories},quiet:{...WORLD_TREE_RECORD.silence.quiet}},
     modal:{role:worldTreeModal.getAttribute('role'),hidden:worldTreeModal.getAttribute('aria-hidden'),active:document.activeElement&&document.activeElement.id},
@@ -13206,7 +13252,8 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     return {x:+player.position.x.toFixed(2), z:+player.position.z.toFixed(2), d:+player.position.distanceTo(b._pos).toFixed(2), cw:+r.toFixed(2)}; };
   // 🧑‍🌾 resident NPC social layer probes
   window.__villagers=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, name:(L.res[LANG]||L.res.ko).name,
-    boundRepo:L.res.bound&&L.res.bound.repo||null,profileState:L.res._profileState||'lazy',
+    boundRepo:L.res.bound&&L.res.bound.repo||null,portable:!!L.res.bound?.portable,job:L.res.bound?.jobKey||null,
+    personality:L.res._profile?.personality?.key||null,greeting:L.res.greet?.[LANG]||null,profileState:L.res._profileState||'lazy',
     x:+L.group.position.x.toFixed(1), z:+L.group.position.z.toFixed(1), near:+player.position.distanceTo(L.group.position).toFixed(2)<=RES_REACH,
     pNear:!!L._pNear, greetIn:Math.max(0,+(L._greetCd-clock.elapsedTime).toFixed(1)) }));
   window.__npcRoutes=()=>RESIDENTS_LIVE.map(L=>({ id:L.res.id, zone:L.res.zone, pos:[+L.group.position.x.toFixed(1),+L.group.position.z.toFixed(1)],
@@ -13217,9 +13264,9 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
   window.__npcState=()=>({ mode:NPC_CFG.modeEnabled, visual:NPC_CFG.visualEnabled, ai:NPC_CFG.aiEnabled, ambientAi:NPC_CFG.ambientAiEnabled, playerAi:NPC_CFG.playerChatAiEnabled,
     scriptedAmbient:NPC_CFG.scriptedAmbient, lowEnd:LOW_END, mobile:IS_MOBILE, motionEnabled:NPC_CFG.motionEnabled, wanderSpd:+RES_MOVE.wanderSpd.toFixed(2), meetSpd:+RES_MOVE.meetSpd.toFixed(2), commuteSpd:+RES_MOVE.commuteSpd.toFixed(2), gapMin:NPC_CFG.gapMin, gapMax:NPC_CFG.gapMax, maxTurns:NPC_CFG.maxTurns,
     greetDist:RES_GREET_DIST, greetCd:[RES_GREET_CD_MIN,RES_GREET_CD_MAX], emoteCd:[RES_EMOTE_CD_MIN,RES_EMOTE_CD_MAX],
-    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, rosterGenerated:RESIDENT_ROSTER.generated,profileCount:RESIDENT_ROSTER.profileCount,manifestBytes:RESIDENT_MANIFEST?JSON.stringify(RESIDENT_MANIFEST).length:0,
+    live:RESIDENTS_LIVE.length, max:MAX_RESIDENTS, portable:RESIDENT_ROSTER.portable===true,rosterGenerated:RESIDENT_ROSTER.generated,profileCount:RESIDENT_ROSTER.profileCount,manifestBytes:RESIDENT_MANIFEST?JSON.stringify(RESIDENT_MANIFEST).length:0,
     maxGroup:NPC_CFG.maxGroup, groupR:RES_MOVE.groupR, joinR:RES_MOVE.joinR, groupChat:(activeGroupMembers?activeGroupMembers.map(m=>m.res.id):null), groupSize:(_ambConv?_ambConv.members.length:0), moved:+RESIDENTS_LIVE.reduce((s,L)=>s+(L._dist||0),0).toFixed(1), resting:RESIDENTS_LIVE.filter(L=>L._rest).length, joy:_sharedJoy?{type:_sharedJoy.type,phase:_sharedJoy.phase,members:_sharedJoy.members.map(m=>m.res.id)}:null, seats:SEATS.length, flora:GLOW_FLORA.length, active:!!_ambConv, hidden:document.hidden, worker:!!NPC_CFG.worker });
-  window.__residentProfiles=()=>({state:RESIDENT_MANIFEST_STATE,schema:RESIDENT_MANIFEST&&RESIDENT_MANIFEST.schema||null,version:RESIDENT_MANIFEST&&RESIDENT_MANIFEST.version||null,
+  window.__residentProfiles=()=>({state:RESIDENT_MANIFEST_STATE,portable:RESIDENT_ROSTER.portable===true,schema:RESIDENT_MANIFEST&&RESIDENT_MANIFEST.schema||null,version:RESIDENT_MANIFEST&&RESIDENT_MANIFEST.version||null,
     profiles:RESIDENT_ROSTER.profileCount,active:RESIDENT_ROSTER.activeCount,loaded:RESIDENTS.filter(res=>!!res._profile).map(res=>res.id),registryDigest:RESIDENT_MANIFEST&&RESIDENT_MANIFEST.registry_digest||null});
   window.__loreState=()=>({state:LORE_FRAGMENT_STATE,schema:LORE_FRAGMENTS&&LORE_FRAGMENTS.schema||null,version:LORE_FRAGMENTS&&LORE_FRAGMENTS.version||null,
     fragments:ELDER_LORE.fragmentCount,eligible:ELDER_LORE.eligibleCount,elders:ELDER_LORE.elders.map(elder=>({residentId:elder.residentId,repo:elder.repo,createdOn:elder.createdOn,fragmentCount:elder.fragmentCount,fragmentIds:[...elder.fragmentIds]})),
@@ -13227,7 +13274,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     delivery:LORE_DELIVERY.snapshot(),reason:ELDER_LORE.reason});
   window.__loreForce=(id,context='quiet')=>{ if(!_DBG) return {ok:false,reason:'debug_only'}; const L=RESIDENTS_LIVE.find(item=>item.res.id===id)||RESIDENTS_LIVE.find(item=>item.res.loreFragments&&item.res.loreFragments.length);
     if(!L) return {ok:false,reason:'no_elder'}; const result=_tryResidentLore(L,clock.elapsedTime,true,context); return result?{ok:true,residentId:L.res.id,...result}:{ok:false,reason:'no_fragment',state:LORE_DELIVERY.snapshot()}; };
-  window.__residentLocal=(id,q)=>{ const res=RESIDENTS.find(item=>item.id===id)||RESIDENTS[0]; if(!res) return null; return residentLocalResponse({resident:res,profile:res._profile,question:q||'',lang:LANG,manifest:RESIDENT_MANIFEST}); };
+  window.__residentLocal=(id,q)=>{ const res=RESIDENTS.find(item=>item.id===id)||RESIDENTS[0]; if(!res) return null; return residentLocalResponse({resident:res,profile:res._profile,question:q||'',lang:LANG,manifest:RESIDENT_DIRECTORY}); };
   window.__residentStatus=(state,id)=>{ const res=RESIDENTS.find(item=>item.id===id)||(activeNpc&&activeNpc.res)||RESIDENTS[0]; if(!res) return null; setResidentChatStatus(state||'local',res); return {state:residentStatusEl.dataset.state,text:residentStatusText.textContent}; };
   window.__seats=()=>SEATS.map((s,i)=>({ i, pos:[+s.x.toFixed(1),+s.z.toFixed(1)], hearth:!!s._hearth, home:s._residentHome||null, occupied:s._occ?s._occ.res.id:null }));
   window.__hearth=()=>({ placed:!!HEARTH, at:HEARTH?[+HEARTH.x.toFixed(1),+HEARTH.z.toFixed(1)]:null, seats:SEATS.filter(s=>s._hearth).length, sitting:SEATS.filter(s=>s._hearth&&s._occ).map(s=>s._occ.res.id), lightNow:HEARTH?+HEARTH.light.intensity.toFixed(2):null, night:isNight });   // 🔥 the campfire nook: placement, its stump-seats, who's warming up, live light level

@@ -77,10 +77,15 @@ import {
   seasonPalette
 } from '../assets/city-time.js';
 import {
+  PORTABLE_TOWN_LIMITS,
+  PORTABLE_TOWN_SCHEMA,
+  PORTABLE_TOWN_VERSION,
   SAP_FLOW_LIMITS,
   SILENCE_LEDGER_SCHEMA,
   SILENCE_LEDGER_VERSION,
   WORLD_TREE_GROWTH_LIMITS,
+  bindPortableResidentSlots,
+  projectPortableTown,
   projectSilenceLedger,
   projectWorldTreeChronicle,
   projectWorldTreeGrowth,
@@ -456,6 +461,59 @@ ok(SAP_FLOW_LIMITS.travelSeconds<7
   &&!/\bfetch\s*\(|api\.github|workers\.dev|\/taxi\b|localStorage|sessionStorage|document\./i.test(WORLD_TREE_STATE_SRC),
   'World Tree projections are bounded, DOM-free, local-only, and add no request or persistence');
 
+group('Portable Living Towns — one public projection for tree, roots, and residents');
+const portableFixture=[
+  {repo:'active',lang:'JavaScript',topics:['web'],stars:12,forks:2,open_issues:3,archived:false,
+    created:'2020-01-01T00:00:00Z',pushed:'2025-08-20T00:00:00Z',updated:'2026-08-20T00:00:00Z',rank:0},
+  {repo:'missing',lang:'Shell',topics:['automation'],stars:1,forks:0,open_issues:0,archived:false,
+    created:'2021-01-01T00:00:00Z',pushed:'',updated:'2026-08-19T00:00:00Z',rank:1},
+  {repo:'archive',lang:'Python',topics:['docs'],stars:4,forks:1,open_issues:0,archived:true,
+    created:'2018-01-01T00:00:00Z',pushed:'2020-01-01T00:00:00Z',updated:'2020-01-01T00:00:00Z',rank:2}
+];
+const portableProjection=projectPortableTown({townOwner:'owner',currentUser:'visitor',repositories:portableFixture});
+const portableReordered=projectPortableTown({townOwner:'owner',currentUser:'visitor',repositories:[...portableFixture].reverse()});
+const portableChronicle=projectWorldTreeChronicle(portableProjection.cityState,{now:Date.parse('2026-08-20T00:00:00Z')});
+ok(PORTABLE_TOWN_SCHEMA==='repolis.portable-town'&&PORTABLE_TOWN_VERSION===1
+  &&PORTABLE_TOWN_LIMITS.desktopResidents===6&&PORTABLE_TOWN_LIMITS.lowEndResidents===4,
+  'portable projection has a versioned contract and measured 6/4 desktop/LOW_END resident caps');
+ok(portableProjection.kind==='portable'&&portableProjection.cityState.era.founded_on==='2018-01-01'
+  &&portableProjection.cityState.season.fallback.used===true
+  &&portableProjection.cityState.silence.repositories.without_push_date===1
+  &&portableProjection.cityState.roots.length===1&&portableChronicle.portable.owner==='visitor',
+  'foreign metadata derives its own era, sparse-history season, Silence Ledger, and archived Roots');
+ok(JSON.stringify(portableProjection)===JSON.stringify(portableReordered),
+  'the same normalized foreign payload projects byte-identically regardless of input order');
+const ownerFixture={sentinel:'generated-owner-state'};
+const canonicalProjection=projectPortableTown({townOwner:'owner',currentUser:'OWNER',repositories:portableFixture,cityState:ownerFixture});
+ok(canonicalProjection.kind==='owner'&&canonicalProjection.cityState===ownerFixture&&canonicalProjection.residents===null,
+  'canonical owner projection preserves generated city state and resident authority by identity');
+const portableSlots=Array.from({length:9},(_,index)=>({id:`slot-${index}`}));
+const portableBound=bindPortableResidentSlots(portableSlots,portableProjection,portableFixture);
+ok(portableBound.portable&&portableBound.activeCount===2
+  &&portableBound.residents.every(res=>res.bound.portable&&res.bound.repo===res.bound.repoRecord.repo
+    &&res._profile.portable&&res._profile.availability.boundMemory===false),
+  'portable residents receive deterministic public jobs, local profiles, and truthful home bindings without Bound memory');
+ok(Object.values(portableProjection.cityState.portable.availability).every(value=>value===false)
+  &&portableProjection.residents.every(resident=>resident.profile.bound_memories.length===0
+    &&resident.profile.shared.available===false),
+  'foreign projection keeps traffic, Shared/Bound memory, owner residents, realtime, and grounded services unavailable');
+const portableProjectionBlock=(WORLD_TREE_STATE_SRC.match(/\/\*PORTABLE_TOWN_PROJECTION:START\*\/([\s\S]*?)\/\*PORTABLE_TOWN_PROJECTION:END\*\//)||[])[1]||'';
+ok(portableProjectionBlock.length>0
+  &&!/\bfetch\s*\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|document\.|Date\.now|Math\.random/.test(portableProjectionBlock),
+  'portable projection is pure and adds no request, storage, DOM, wall-clock, or random dependency');
+ok(/const TOWN_PROJECTION=projectPortableTown\(\{[\s\S]*?repositories:REPOS/.test(HTML)
+  &&/if\(TOWN_PROJECTION\.kind==='portable'\)\{[\s\S]*?CITY_STATE=TOWN_PROJECTION\.cityState/.test(HTML)
+  &&/bindPortableResidentSlots\(RESIDENTS,TOWN_PROJECTION,REPOS,\{lowEnd:LOW_END\}\)/.test(HTML),
+  'owner, ?user, Repo Portal, and Station destinations converge on one post-load portable contract');
+ok(/function groundedUrl\(\)\{[\s\S]*?if\(TOWN_PROJECTION\.kind==='portable'\) return ''/.test(HTML)
+  &&/const RT_URL=TOWN_PROJECTION\.kind==='portable'\?''/.test(HTML)
+  &&/let llmMode=TOWN_PROJECTION\.kind==='portable'\?'local'/.test(HTML),
+  'foreign towns stay local, solo, and no-cost without borrowing canonical grounded or realtime services');
+ok((HTML.match(/worldTreePortableRecord:/g)||[]).length===2
+  &&(HTML.match(/worldTreePortableUnknown:/g)||[]).length===2
+  &&(HTML.match(/residentProfilePortable:/g)||[]).length===2,
+  'portable World Tree truth and resident local-only status have Korean and English parity');
+
 group('Repo Portal — one repository becomes the first shareable destination');
 const portalUser=parseRepoPortalInput('@Octo-Cat');
 const portalSlug=parseRepoPortalInput('Octo-Cat/hello-world.git/');
@@ -510,6 +568,9 @@ ok(!('email' in portalProjection)&&!('subscribers_count' in portalProjection)&&!
   &&projectPublicRepo({...portalRaw,private:true},'Octo-Cat')===null
   &&projectPublicRepo({...portalRaw,owner:{login:'Other'}},'Octo-Cat')===null,
   'projection allowlists rendered fields and rejects private or owner-mismatched responses');
+const portalMissingPush=projectPublicRepo({...portalRaw,pushed_at:null},'Octo-Cat');
+ok(portalMissingPush.pushed===''&&portalMissingPush.updated==='2026-08-19T00:00:00Z',
+  'a missing public push stays missing instead of borrowing updated or created dates');
 const portalRanked=projectPublicRepos([
   {...portalRaw,name:'quiet',full_name:'Octo-Cat/quiet',stargazers_count:0,forks_count:0},
   portalRaw
@@ -546,7 +607,7 @@ ok(/if\(!repoPortalTarget\) repoPortalResult=\{repo:null/.test(HTML)
 ok(/if\(repoPortalResult\.repo\)\{ REPOS=\[repoPortalResult\.repo\]/.test(HTML)
   &&/repoPortalFallback=true;[\s\S]*?REPOS=_ownerRepos\(await _ownerSnapshot\(\)\); cityMode='owner'/.test(HTML),
   'success builds one target first while failure preserves the existing owner town');
-ok(/return projectPublicRepos\(raw,user,Date\.now\(\)\)/.test(HTML)
+ok(/return projectPublicRepos\(raw,user\)/.test(HTML)
   &&!/derived "liveliness"|derived → yard size|never a real clone count/.test(HTML)
   &&/if\(repo\.trafficKnown===false\)\{[\s\S]*?starSignal[\s\S]*?forkSignal/.test(HTML),
   'all public towns share truthful unknown traffic and map only stars, forks, and recency to architecture');
@@ -2036,8 +2097,9 @@ ok(/const ZONE_HUBS\s*=/.test(HTML) && /const LANDMARK_STOPS\s*=/.test(HTML), 'r
 group('resident NPC social layer + budget cap (Resident NPC Social Layer v1)');
 const npcBlock = (HTML.match(/RESIDENT NPC SOCIAL LAYER v1[\s\S]*?character \(chibi/) || [, ''])[0];
 ok(npcBlock.length > 0, 'resident NPC block extractable from index.html');
-// 12a — roster: 8 social residents + the solitary market easter egg AURI, hard cap 10
-ok(/const MAX_RESIDENTS=10/.test(npcBlock), 'MAX_RESIDENTS cap is 10');
+// 12a — owner roster stays 9/10 while portable towns use the measured 6/4 projection cap
+ok(/const MAX_RESIDENTS=TOWN_PROJECTION\.kind==='portable'[\s\S]*?PORTABLE_TOWN_LIMITS\.lowEndResidents:PORTABLE_TOWN_LIMITS\.desktopResidents\):10/.test(npcBlock),
+  'owner MAX_RESIDENTS stays 10 while portable towns use the 6/4 desktop/LOW_END cap');
 ok((npcBlock.match(/\{ id:'/g) || []).length === 9, 'RESIDENTS roster holds exactly 9 townspeople');
 ok(/\{ id:'noa', zone:'plaza'/.test(npcBlock), 'the plaza dreamer Noa is in the roster (strolls the square brainstorming ideas)');
 ok(/\{ id:'auri', zone:'data'[\s\S]*?oracle:'market', easterEgg:true/.test(npcBlock), 'AURI is a hidden market-oracle resident, not a plaza scholar');
@@ -2820,7 +2882,9 @@ group('the town remembers you — a warmer welcome for a returning visitor');
 ok(/let VISITOR = \(function\(\)\{ const KEY='repolisVisits'/.test(HTML) && /localStorage\.setItem\(KEY, ?JSON\.stringify\(v\)\)/.test(HTML), 'VISITOR is an anonymous, on-device visit tally kept only in localStorage (never sent anywhere)');
 ok(/const now=Date\.now\(\), ?prevLast=v\.last, ?fresh=!prevLast \|\| \(now-prevLast\)>1800000/.test(HTML), 'a reload within 30 min counts as the same visit; only a genuine return bumps the tally');
 ok(/returning:v\.n>1/.test(HTML) && /longAway:\(v\.n>1 && awayDays>=7\)/.test(HTML), 'the memory derives returning (2nd+ visit) and longAway (returning after a 7-day gap)');
-ok(/if\(VISITOR\.returning && Math\.random\(\)<0\.6\)\{/.test(npcBlock) && /VISITOR\.longAway \?/.test(npcBlock), 'a returning visitor gets a warmer resident hello ~60% of the time — with an extra-warm variant after a long absence');
+ok(/if\(TOWN_PROJECTION\.kind!=='portable'&&VISITOR\.returning && Math\.random\(\)<0\.6\)\{/.test(npcBlock)
+  && /VISITOR\.longAway \?/.test(npcBlock),
+  'owner residents give genuine returnees a warmer hello while portable residents never imply retained visitor memory');
 ok(/function _welcomeBackLine\(\)\{/.test(npcBlock) && /n>=5\?/.test(npcBlock) && /visit #\$\{n\}/.test(npcBlock), 'a one-time welcome-back toast greets a returning visitor (with a little milestone note from the 5th visit)');
 ok(/const rb=VISITOR\.returning, news=hasFreshness\(\)/.test(HTML)
   && /if\(rb&&cityMode!=='portal'&&!_reqFocus\)\{ setTimeout\(\(\)=>\{ try\{ showWave\(_welcomeBackLine\(\),3600\)/.test(HTML)
@@ -2876,7 +2940,9 @@ ok(/const NPC_PEER_R=\(LOW_END\?6\.0:6\.8\)/.test(npcBlock) && /_peerGlobalCd=tt
 ok(/window\.__moods=\(\)=>/.test(HTML) && /window\.__mood=\(id,key\)=>/.test(HTML) && /window\.__peerNotice=\(id\)=>/.test(HTML), '?dbg __moods/__mood/__peerNotice introspect moods + force a neighbourly hello');
 
 group('residents have named friendships (bonds) they seek out + greet more warmly');
-ok(/const _RES_BONDS=\{[\s\S]*?sol:\['noa'\][\s\S]*?jun:\['tae'\][\s\S]*?nari:\['rin'\][\s\S]*?mira:\['kai'\]/.test(npcBlock), 'four mutual friend pairs are defined (sol↔noa, jun↔tae, nari↔rin, mira↔kai)');
+ok(/const _OWNER_RES_BONDS=\{[\s\S]*?sol:\['noa'\][\s\S]*?jun:\['tae'\][\s\S]*?nari:\['rin'\][\s\S]*?mira:\['kai'\]/.test(npcBlock)
+  &&/const _RES_BONDS=TOWN_PROJECTION\.kind==='portable'[\s\S]*?Object\.fromEntries\(RESIDENTS\.map/.test(npcBlock),
+  'owner friendships stay intact while portable residents pair only within their derived local roster');
 ok(/function _isFriend\(a,b\)\{/.test(npcBlock) && /function _bondNoticeLine\(L,P\)\{/.test(npcBlock) && /function _bondReplyLine\(L,P\)\{/.test(npcBlock), 'friends get warmer, personal greeting + reply banks (distinct from the acquaintance lines)');
 ok(/L\.bub\.say\(_isFriend\(L,P\)\?_bondNoticeLine\(L,P\):_peerNoticeLine\(L,P\)/.test(npcBlock), 'a peer-notice uses the warm bond greeting when the neighbour is a close friend');
 ok(/L\.bub\.say\(_isFriend\(L,P\)\?_bondReplyLine\(L,P\):_peerReplyLine\(L,P\)/.test(npcBlock), 'the reply is warmer too when answering a close friend');
@@ -3198,7 +3264,7 @@ ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
   && (HTML.match(/if\(memorial\) makeMemorialTree\(cx,cz\)/g) || []).length === 1, 'exactly one memorial tree is requested, at the north rest park centre');
 ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
-ok(/world-tree-state\.js\?v=world-tree-phase2-v2/.test(HTML)
+ok(/world-tree-state\.js\?v=portable-living-towns-v1/.test(HTML)
   &&/hero\.runtime\.nodes\['living-system'\]\.scale\.setScalar\(WORLD_TREE_GROWTH\.scale\)/.test(memorialTreeBlock)
   &&/const collider=\{x,z,r:11\.6,_memorialTree:true\}/.test(memorialTreeBlock)
   &&/growthScale:WORLD_TREE_GROWTH\.scale/.test(memorialTreeBlock),

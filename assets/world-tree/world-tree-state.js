@@ -18,6 +18,13 @@ export const SAP_FLOW_LIMITS = Object.freeze({
 export const SILENCE_LEDGER_SCHEMA = 'repolis.silence-ledger';
 export const SILENCE_LEDGER_VERSION = 1;
 export const SILENCE_LEDGER_THRESHOLDS_DAYS = Object.freeze([365, 730]);
+export const PORTABLE_TOWN_SCHEMA = 'repolis.portable-town';
+export const PORTABLE_TOWN_VERSION = 1;
+export const PORTABLE_TOWN_LIMITS = Object.freeze({
+  desktopResidents: 6,
+  lowEndResidents: 4,
+  publicRepoRequestCap: 100,
+});
 
 function clamp(value, minimum = 0, maximum = 1) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -63,8 +70,582 @@ function normalizeRoot(root) {
     repo: boundedText(root?.repo, 160),
     activeYears: Object.freeze({ from, to, count }),
     achievement: boundedText(root?.achievement),
+    achievementKo: boundedText(root?.achievement_ko),
+    achievementEn: boundedText(root?.achievement_en),
   });
 }
+
+/*PORTABLE_TOWN_PROJECTION:START*/
+const PORTABLE_NAMES = Object.freeze([
+  Object.freeze({ ko: '\uc544\ub9ac', en: 'Ari' }),
+  Object.freeze({ ko: '\ubcf4\ub77c', en: 'Bora' }),
+  Object.freeze({ ko: '\ub2e4\ubbf8', en: 'Dami' }),
+  Object.freeze({ ko: '\uc774\ub85c', en: 'Iro' }),
+  Object.freeze({ ko: '\uc8fc\ub178', en: 'Juno' }),
+  Object.freeze({ ko: '\ub8e8\ubbf8', en: 'Lumi' }),
+  Object.freeze({ ko: '\ub098\ube44', en: 'Navi' }),
+  Object.freeze({ ko: '\uc18c\ub77c', en: 'Sora' }),
+]);
+
+const PORTABLE_JOBS = Object.freeze({
+  model: Object.freeze({
+    key: 'model_cartographer',
+    labels: Object.freeze({ ko: '\ubaa8\ub378 \uc9c0\ub3c4\uc0ac', en: 'model cartographer' }),
+    prop: 'orb',
+    color: '#8faef5',
+    accent: '#c4d4ff',
+  }),
+  systems: Object.freeze({
+    key: 'systems_keeper',
+    labels: Object.freeze({ ko: '\uc2dc\uc2a4\ud15c \uc9c0\uae30', en: 'systems keeper' }),
+    prop: 'toolbox',
+    color: '#4fbfae',
+    accent: '#9be8dc',
+  }),
+  interface: Object.freeze({
+    key: 'interface_gardener',
+    labels: Object.freeze({ ko: '\ud654\uba74 \uc815\uc6d0\uc0ac', en: 'interface gardener' }),
+    prop: 'sprout',
+    color: '#e2a657',
+    accent: '#ffdaa0',
+  }),
+  signals: Object.freeze({
+    key: 'signal_reader',
+    labels: Object.freeze({ ko: '\uc2e0\ud638 \uad00\uce21\uc790', en: 'signal reader' }),
+    prop: 'ledger',
+    color: '#aa91df',
+    accent: '#dacbff',
+  }),
+  records: Object.freeze({
+    key: 'record_curator',
+    labels: Object.freeze({ ko: '\uae30\ub85d \ud050\ub808\uc774\ud130', en: 'record curator' }),
+    prop: 'book',
+    color: '#62b979',
+    accent: '#a8e6b6',
+  }),
+  worlds: Object.freeze({
+    key: 'world_builder',
+    labels: Object.freeze({ ko: '\uc138\uacc4 \uc138\uacf5\uc0ac', en: 'world builder' }),
+    prop: 'badge',
+    color: '#c48e79',
+    accent: '#eccbbb',
+  }),
+  steward: Object.freeze({
+    key: 'repo_steward',
+    labels: Object.freeze({ ko: '\ub808\ud3ec \uc9c0\uae30', en: 'repo steward' }),
+    prop: 'badge',
+    color: '#d0a94e',
+    accent: '#f4d98e',
+  }),
+});
+
+const PORTABLE_PERSONALITIES = Object.freeze({
+  curious: Object.freeze({ key: 'curious', labels: Object.freeze({ ko: '\ud638\uae30\uc2ec \ub9ce\uc740', en: 'curious' }) }),
+  meticulous: Object.freeze({ key: 'meticulous', labels: Object.freeze({ ko: '\uaf3c\uaf3c\ud55c', en: 'meticulous' }) }),
+  welcoming: Object.freeze({ key: 'welcoming', labels: Object.freeze({ ko: '\ub2e4\uc815\ud55c', en: 'welcoming' }) }),
+  reflective: Object.freeze({ key: 'reflective', labels: Object.freeze({ ko: '\uc0ac\uc0c9\uc801\uc778', en: 'reflective' }) }),
+  steady: Object.freeze({ key: 'steady', labels: Object.freeze({ ko: '\ucc28\ubd84\ud55c', en: 'steady' }) }),
+});
+
+function timestamp(value) {
+  const text = boundedText(value, 40);
+  if (!text) return null;
+  const dateMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+  if (!dateMatch) return null;
+  const calendarProbe = new Date(Date.UTC(
+    Number(dateMatch[1]),
+    Number(dateMatch[2]) - 1,
+    Number(dateMatch[3]),
+  )).toISOString().slice(0, 10);
+  if (calendarProbe !== `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`) return null;
+  const parsed = Date.parse(text.length === 10 ? `${text}T00:00:00Z` : text);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function dayTimestamp(value) {
+  const parsed = typeof value === 'number' ? value : timestamp(value);
+  if (!Number.isFinite(parsed)) return null;
+  const date = new Date(parsed);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+function dayText(value) {
+  const parsed = dayTimestamp(value);
+  return parsed === null ? null : new Date(parsed).toISOString().slice(0, 10);
+}
+
+function compareText(left, right) {
+  const a = String(left || ''), b = String(right || '');
+  const lowerA = a.toLowerCase(), lowerB = b.toLowerCase();
+  if (lowerA !== lowerB) return lowerA < lowerB ? -1 : 1;
+  return a === b ? 0 : (a < b ? -1 : 1);
+}
+
+function stableHash(value) {
+  let hash = 0x811c9dc5;
+  for (const character of String(value || '')) {
+    hash ^= character.codePointAt(0);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash >>> 0;
+}
+
+function portableSlug(value) {
+  return boundedText(value, 100).toLowerCase().replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'repo';
+}
+
+function portableRepository(repo) {
+  if (!repo || typeof repo !== 'object' || repo.private === true) return null;
+  const name = boundedText(repo.repo || repo.name, 100);
+  if (!name) return null;
+  return {
+    repo: name,
+    desc: boundedText(repo.desc || repo.description, 500),
+    lang: boundedText(repo.lang || repo.language, 80) || 'Other',
+    topics: Object.freeze((Array.isArray(repo.topics) ? repo.topics : [])
+      .map(topic => boundedText(topic, 50)).filter(Boolean).slice(0, 24)),
+    stars: finiteCount(repo.stars),
+    forks: finiteCount(repo.forks),
+    openIssues: finiteCount(repo.open_issues),
+    archived: repo.archived === true,
+    created: boundedText(repo.created, 40),
+    pushed: boundedText(repo.pushed, 40),
+    updated: boundedText(repo.updated, 40),
+    rank: Number.isInteger(repo.rank) && repo.rank >= 0 ? repo.rank : null,
+  };
+}
+
+function portableReference(repositories) {
+  const candidates = [];
+  for (const repo of repositories) {
+    const value = timestamp(repo.updated) ?? timestamp(repo.pushed) ?? timestamp(repo.created);
+    if (value !== null) candidates.push(value);
+  }
+  return candidates.length ? Math.max(...candidates) : Date.UTC(1970, 0, 1);
+}
+
+function portableSeason(repositories, referenceTimestamp) {
+  const referenceDay = dayTimestamp(referenceTimestamp);
+  const pushedDays = repositories.map(repo => dayTimestamp(repo.pushed))
+    .filter(value => value !== null);
+  const windowDays = 30, bucketCount = 6;
+  const recentStart = referenceDay - (windowDays - 1) * DAY_MS;
+  const recentCount = pushedDays.filter(day => day >= recentStart && day <= referenceDay).length;
+  const historicalCounts = Array.from({ length: bucketCount }, (_, bucket) => {
+    const end = referenceDay - windowDays * (bucket + 1) * DAY_MS;
+    const start = end - (windowDays - 1) * DAY_MS;
+    return pushedDays.filter(day => day >= start && day <= end).length;
+  });
+  const historicalAverage = historicalCounts.reduce((sum, count) => sum + count, 0) / bucketCount;
+  const populatedBuckets = historicalCounts.filter(count => count > 0).length;
+  const historySufficient = historicalCounts.reduce((sum, count) => sum + count, 0) >= bucketCount
+    && populatedBuckets >= 3;
+  const ratio = historicalAverage > 0 ? recentCount / historicalAverage : null;
+  const activeShare = repositories.length ? recentCount / repositories.length : 0;
+  let value;
+  if (historySufficient) {
+    value = ratio >= 1.35 ? 'spring' : ratio >= 0.85 ? 'summer' : ratio >= 0.45 ? 'autumn' : 'winter';
+  } else {
+    value = recentCount === 0 ? 'winter'
+      : activeShare >= 0.35 ? 'spring'
+        : activeShare >= 0.12 ? 'summer' : 'autumn';
+  }
+  return Object.freeze({
+    value,
+    inputs: Object.freeze({
+      reference_date: dayText(referenceDay),
+      activity_signal: 'latest_push_per_repository',
+      recent_window_days: windowDays,
+      recent_active_repositories: recentCount,
+      historical_bucket_days: windowDays,
+      historical_bucket_counts: Object.freeze(historicalCounts),
+      historical_average: Number(historicalAverage.toFixed(3)),
+      recent_to_historical_ratio: ratio === null ? null : Number(ratio.toFixed(3)),
+      active_repository_share: activeShare,
+      repositories_with_push_date: pushedDays.length,
+    }),
+    reason: historySufficient
+      ? 'Recent latest-push signals are compared with six prior 30-day buckets.'
+      : 'Historical latest-push coverage is insufficient; the recent active share is used.',
+    fallback: Object.freeze({
+      used: !historySufficient,
+      rule: 'Sparse histories use recent active share: spring >= .35, summer >= .12, autumn > 0, otherwise winter.',
+    }),
+  });
+}
+
+function portableSilence(repositories, referenceTimestamp) {
+  const referenceDay = dayTimestamp(referenceTimestamp);
+  const unarchived = repositories.filter(repo => !repo.archived);
+  const dated = unarchived.map(repo => {
+    const pushed = dayTimestamp(repo.pushed);
+    if (pushed === null) return null;
+    return {
+      repo: repo.repo,
+      last_public_push: dayText(pushed),
+      elapsed_days: Math.max(0, Math.floor((referenceDay - pushed) / DAY_MS)),
+    };
+  }).filter(Boolean).sort((left, right) => (
+    right.elapsed_days - left.elapsed_days || compareText(left.repo, right.repo)
+  ));
+  return Object.freeze({
+    schema: SILENCE_LEDGER_SCHEMA,
+    version: SILENCE_LEDGER_VERSION,
+    reference_date: dayText(referenceDay),
+    scope: 'unarchived_public_repositories',
+    activity_signal: 'latest_public_push',
+    thresholds_days: SILENCE_LEDGER_THRESHOLDS_DAYS,
+    repositories: Object.freeze({
+      total: unarchived.length,
+      with_push_date: dated.length,
+      without_push_date: unarchived.length - dated.length,
+    }),
+    quiet: Object.freeze({
+      at_least_365_days: dated.filter(item => item.elapsed_days >= SILENCE_LEDGER_THRESHOLDS_DAYS[0]).length,
+      at_least_730_days: dated.filter(item => item.elapsed_days >= SILENCE_LEDGER_THRESHOLDS_DAYS[1]).length,
+      longest: dated.length ? Object.freeze(dated[0]) : null,
+    }),
+  });
+}
+
+function portableRoot(repo) {
+  const created = timestamp(repo.created), pushed = timestamp(repo.pushed);
+  const from = created === null ? null : new Date(created).getUTCFullYear();
+  const toSource = pushed ?? created;
+  const to = toSource === null ? null : new Date(toSource).getUTCFullYear();
+  const count = from !== null && to !== null ? Math.max(1, to - from + 1) : null;
+  const fallbackEn = `A public ${repo.lang === 'Other' ? '' : `${repo.lang} `}repository preserved in this town's record.`;
+  const fallbackKo = `\uc774 \ub9c8\uc744\uc758 \uae30\ub85d\uc5d0 \ub0a8\uc740 \uacf5\uac1c ${repo.lang === 'Other' ? '' : `${repo.lang} `}\ub808\ud3ec\uc785\ub2c8\ub2e4.`;
+  const achievement = boundedText(repo.desc, 180);
+  return Object.freeze({
+    repo: repo.repo,
+    active_years: Object.freeze({ from, to, count }),
+    achievement: achievement || fallbackEn,
+    achievement_ko: achievement || fallbackKo,
+    achievement_en: achievement || fallbackEn,
+  });
+}
+
+function portableJob(repo) {
+  const haystack = `${repo.lang} ${repo.topics.join(' ')}`.toLowerCase();
+  if (/(^|[\s-])(ai|ml|llm|rag|agent|model|machine-learning)([\s-]|$)/.test(haystack)) return PORTABLE_JOBS.model;
+  if (/(docker|shell|devops|infra|server|automation|kubernetes|terraform|go\b|rust\b)/.test(haystack)) return PORTABLE_JOBS.systems;
+  if (/(javascript|typescript|html|css|frontend|web|react|vue|svelte|ui\b)/.test(haystack)) return PORTABLE_JOBS.interface;
+  if (/(data|analytics|csv|database|jupyter|python|pipeline|scrap)/.test(haystack)) return PORTABLE_JOBS.signals;
+  if (/(docs|documentation|readme|tutorial|learn|book|knowledge)/.test(haystack)) return PORTABLE_JOBS.records;
+  if (/(three|game|graphics|world|visual|creative)/.test(haystack)) return PORTABLE_JOBS.worlds;
+  return PORTABLE_JOBS.steward;
+}
+
+function portablePersonality(repo, referenceTimestamp) {
+  const pushed = dayTimestamp(repo.pushed);
+  const ageDays = pushed === null ? null : Math.max(0, Math.floor((dayTimestamp(referenceTimestamp) - pushed) / DAY_MS));
+  if (repo.openIssues >= 8) return PORTABLE_PERSONALITIES.meticulous;
+  if (ageDays === null) return PORTABLE_PERSONALITIES.reflective;
+  if (ageDays <= 30) return PORTABLE_PERSONALITIES.curious;
+  if (repo.stars >= 20) return PORTABLE_PERSONALITIES.welcoming;
+  return stableHash(repo.repo) % 2 ? PORTABLE_PERSONALITIES.steady : PORTABLE_PERSONALITIES.reflective;
+}
+
+function portableResidents(owner, repositories, referenceTimestamp) {
+  const ranked = repositories.filter(repo => !repo.archived).slice().sort((left, right) => {
+    const leftRank = left.rank === null ? Number.MAX_SAFE_INTEGER : left.rank;
+    const rightRank = right.rank === null ? Number.MAX_SAFE_INTEGER : right.rank;
+    return leftRank - rightRank || right.stars - left.stars || right.forks - left.forks
+      || (timestamp(right.pushed) || 0) - (timestamp(left.pushed) || 0)
+      || compareText(left.repo, right.repo);
+  }).slice(0, PORTABLE_TOWN_LIMITS.desktopResidents);
+  const usedNames = new Set();
+  return Object.freeze(ranked.map((repo, index) => {
+    const job = portableJob(repo), personality = portablePersonality(repo, referenceTimestamp);
+    let nameIndex = stableHash(`${owner}|${repo.repo}|name`) % PORTABLE_NAMES.length;
+    while (usedNames.has(nameIndex)) nameIndex = (nameIndex + 1) % PORTABLE_NAMES.length;
+    usedNames.add(nameIndex);
+    const name = PORTABLE_NAMES[nameIndex], slug = portableSlug(repo.repo);
+    const created = dayTimestamp(repo.created);
+    const ageDays = created === null ? null
+      : Math.max(0, Math.floor((dayTimestamp(referenceTimestamp) - created) / DAY_MS));
+    const lastPush = dayText(repo.pushed);
+    const languageKo = repo.lang === 'Other' ? '\uc5b8\uc5b4 \ud45c\uc2dd\uc774 \uc5c6\ub294' : `${repo.lang} \ud45c\uc2dd\uc774 \ubd99\uc740`;
+    const languageEn = repo.lang === 'Other' ? 'a repo with no language label' : `a ${repo.lang} repo`;
+    const greeting = Object.freeze({
+      ko: `\uc800\ub294 ${name.ko}, ${repo.repo} \uc9d1\uc758 ${job.labels.ko}\uc608\uc694.`,
+      en: `I'm ${name.en}, the ${job.labels.en} at ${repo.repo}.`,
+    });
+    const ambient = Object.freeze({
+      ko: Object.freeze([
+        `${repo.repo}\ub294 ${languageKo} \uacf5\uac1c \uc9d1\uc774\uc5d0\uc694.`,
+        repo.openIssues
+          ? `\uacf5\uac1c \uc774\uc288 ${repo.openIssues}\uac1c\uac00 \ubcf4\uc5ec\uc11c \ud604\uad00 \uc7a5\ubd80\ub97c \uc0b4\ud3b4\ubcf4\ub294 \uc911\uc774\uc5d0\uc694.`
+          : '\uacf5\uac1c \uc774\uc288 \uc7a5\ubd80\ub294 \uc870\uc6a9\ud558\ub124\uc694.',
+        lastPush
+          ? `\ub9c8\uc9c0\ub9c9 \uacf5\uac1c push\ub294 ${lastPush}\ub85c \uc801\ud600 \uc788\uc5b4\uc694.`
+          : '\uc0ac\uc6a9\ud560 \uc218 \uc788\ub294 \ub9c8\uc9c0\ub9c9 \uacf5\uac1c push \ub0a0\uc9dc\ub294 \uc5c6\uc5b4\uc694.',
+      ]),
+      en: Object.freeze([
+        `${repo.repo} is ${languageEn} open to the public.`,
+        repo.openIssues
+          ? `${repo.openIssues} public open issues are listed, so I am checking the ledger by the door.`
+          : 'The public issue ledger is quiet.',
+        lastPush
+          ? `The last public push is dated ${lastPush}.`
+          : 'No usable last public push date is available.',
+      ]),
+    });
+    const profile = Object.freeze({
+      schema: 'repolis.portable-resident',
+      version: 1,
+      portable: true,
+      repo: Object.freeze({
+        slug,
+        name: repo.repo,
+        summary: repo.desc,
+        language: repo.lang,
+        topics: repo.topics,
+      }),
+      age: Object.freeze({ created_on: dayText(created), days: ageDays }),
+      job,
+      personality,
+      greeting,
+      blurb: Object.freeze({
+        ko: `${name.ko} \u00b7 ${repo.repo}\uc5d0 \ubb36\uc778 ${personality.labels.ko} ${job.labels.ko}\uc785\ub2c8\ub2e4.`,
+        en: `${name.en} is the ${personality.labels.en} ${job.labels.en} bound to ${repo.repo}.`,
+      }),
+      ambient,
+      publicSignals: Object.freeze({
+        stars: repo.stars,
+        forks: repo.forks,
+        openIssues: repo.openIssues,
+        lastPublicPush: lastPush,
+      }),
+      recent_concerns: Object.freeze([]),
+      bound_memories: Object.freeze([]),
+      shared: Object.freeze({ available: false, reason: 'not_loaded_for_public_town' }),
+      availability: Object.freeze({
+        concernTitles: false,
+        boundMemory: false,
+        sharedMemory: false,
+        dialogue: 'local',
+      }),
+    });
+    return Object.freeze({
+      id: `portable-${String(index + 1).padStart(2, '0')}`,
+      repo: repo.repo,
+      slug,
+      name,
+      job,
+      personality,
+      greeting,
+      profile,
+    });
+  }));
+}
+
+function portableDirectory(repositories, residents) {
+  const profiles = Object.freeze(repositories.map(repo => Object.freeze({
+    slug: portableSlug(repo.repo),
+    repo: repo.repo,
+    archived: repo.archived,
+    dialogue_available: !repo.archived,
+  })));
+  const activeRoster = Object.freeze(residents.map(resident => Object.freeze({
+    resident_id: resident.id,
+    slug: resident.slug,
+    repo: resident.repo,
+    name: resident.name,
+  })));
+  return Object.freeze({
+    profiles,
+    active_roster: activeRoster,
+  });
+}
+
+function portableCityState(owner, repositories, coverage) {
+  const referenceTimestamp = portableReference(repositories);
+  const referenceDay = dayTimestamp(referenceTimestamp);
+  const dated = repositories.map(repo => {
+    const created = dayTimestamp(repo.created);
+    return created === null ? null : { created, repo: repo.repo };
+  }).filter(Boolean).sort((left, right) => left.created - right.created || compareText(left.repo, right.repo));
+  const founded = dated.length ? dated[0].created : referenceDay;
+  const ageDays = Math.max(0, Math.floor((referenceDay - founded) / DAY_MS));
+  const archived = repositories.filter(repo => repo.archived);
+  const season = portableSeason(repositories, referenceTimestamp);
+  const languages = new Map();
+  for (const repo of repositories) languages.set(repo.lang, (languages.get(repo.lang) || 0) + 1);
+  const languageDistribution = Object.freeze([...languages.entries()]
+    .sort((left, right) => right[1] - left[1] || compareText(left[0], right[0]))
+    .map(([language, count]) => Object.freeze({ language, repositories: count })));
+  const partial = coverage?.partial === true;
+  const error = boundedText(coverage?.error, 32) || null;
+  return Object.freeze({
+    schema: CITY_STATE_SCHEMA,
+    version: CITY_STATE_VERSION,
+    era: Object.freeze({
+      founded_on: dayText(founded),
+      oldest_repository: dated[0]?.repo || '',
+      as_of: dayText(referenceDay),
+      city_age_days: ageDays,
+      city_age_years: Number((ageDays / 365.2425).toFixed(2)),
+      city_year: Math.floor(ageDays / 365.2425) + 1,
+      basis: 'Oldest creation date in the normalized public repository payload.',
+    }),
+    season,
+    silence: portableSilence(repositories, referenceTimestamp),
+    stats: Object.freeze({
+      repository_count: repositories.length,
+      active_repository_count: repositories.length - archived.length,
+      archived_repository_count: archived.length,
+      total_stars: repositories.reduce((sum, repo) => sum + repo.stars, 0),
+      total_forks: repositories.reduce((sum, repo) => sum + repo.forks, 0),
+      language_distribution: languageDistribution,
+      latest_push_signal: Object.freeze({
+        repositories_with_push_date: repositories.filter(repo => timestamp(repo.pushed) !== null).length,
+        recent_30d_repositories: season.inputs.recent_active_repositories,
+      }),
+      commit_history: Object.freeze({
+        available: false,
+        total: null,
+        limitation: 'The public repository payload exposes latest push timestamps, not complete commit history.',
+      }),
+    }),
+    last_sap_flow: null,
+    roots: Object.freeze(archived.map(portableRoot)),
+    portable: Object.freeze({
+      schema: PORTABLE_TOWN_SCHEMA,
+      version: PORTABLE_TOWN_VERSION,
+      owner,
+      reference_date: dayText(referenceDay),
+      reference_basis: 'newest_public_repository_timestamp',
+      coverage: Object.freeze({
+        partial,
+        error,
+        request_cap: PORTABLE_TOWN_LIMITS.publicRepoRequestCap,
+      }),
+      availability: Object.freeze({
+        visitors: false,
+        views: false,
+        clones: false,
+        sharedMemory: false,
+        boundMemory: false,
+        ownerResidents: false,
+        realtime: false,
+        groundedBackend: false,
+      }),
+    }),
+  });
+}
+
+export function projectPortableTown({
+  townOwner = '',
+  currentUser = '',
+  repositories = [],
+  cityState = null,
+  coverage = null,
+} = {}) {
+  const owner = boundedText(townOwner, 39);
+  const user = boundedText(currentUser, 39) || owner;
+  if (owner && user.toLowerCase() === owner.toLowerCase()) {
+    return Object.freeze({
+      kind: 'owner',
+      owner: user,
+      cityState,
+      residents: null,
+      directory: null,
+      limits: PORTABLE_TOWN_LIMITS,
+    });
+  }
+  const normalized = (Array.isArray(repositories) ? repositories : [])
+    .map(portableRepository).filter(Boolean)
+    .sort((left, right) => compareText(left.repo, right.repo));
+  const projectedState = portableCityState(user, normalized, coverage);
+  const residents = portableResidents(user, normalized, dayTimestamp(projectedState.era.as_of));
+  return Object.freeze({
+    kind: 'portable',
+    owner: user,
+    cityState: projectedState,
+    residents,
+    directory: portableDirectory(normalized, residents),
+    limits: PORTABLE_TOWN_LIMITS,
+  });
+}
+
+export function bindPortableResidentSlots(slots, projection, repositories, options = {}) {
+  if (projection?.kind !== 'portable') {
+    return Object.freeze({
+      residents: [],
+      generated: false,
+      portable: false,
+      activeCount: 0,
+      profileCount: 0,
+      directory: null,
+    });
+  }
+  const limit = options.lowEnd
+    ? PORTABLE_TOWN_LIMITS.lowEndResidents : PORTABLE_TOWN_LIMITS.desktopResidents;
+  const repoMap = new Map((Array.isArray(repositories) ? repositories : [])
+    .filter(repo => repo?.repo)
+    .map(repo => [String(repo.repo).toLowerCase(), repo]));
+  const residents = [];
+  for (let index = 0; index < Math.min(limit, slots?.length || 0, projection.residents.length); index += 1) {
+    const slot = slots[index], projected = projection.residents[index];
+    const repo = repoMap.get(projected.repo.toLowerCase());
+    if (!slot?.id || !repo || repo.archived) continue;
+    const color = Number.parseInt(projected.job.color.slice(1), 16);
+    const accent = Number.parseInt(projected.job.accent.slice(1), 16);
+    residents.push({
+      id: slot.id,
+      zone: 'plaza',
+      color,
+      accent,
+      tone: projected.personality.labels.en,
+      topics: projected.profile.repo.topics.slice(),
+      ko: { name: projected.name.ko, role: projected.job.labels.ko },
+      en: { name: projected.name.en, role: projected.job.labels.en },
+      greet: { ...projected.greeting },
+      blurb: { ...projected.profile.blurb },
+      amb: {
+        ko: projected.profile.ambient.ko.slice(),
+        en: projected.profile.ambient.en.slice(),
+      },
+      bound: {
+        residentId: slot.id,
+        repo: projected.repo,
+        slug: projected.slug,
+        path: null,
+        profileDigest: null,
+        authorityDigest: null,
+        jobKey: projected.job.key,
+        jobColor: projected.job.color,
+        jobProp: projected.job.prop,
+        generated: false,
+        portable: true,
+        repoRecord: repo,
+      },
+      _profile: projected.profile,
+      _profileState: 'portable',
+    });
+  }
+  const directory = Object.freeze({
+    profiles: projection.directory.profiles,
+    active_roster: Object.freeze(residents.map(resident => Object.freeze({
+      resident_id: resident.id,
+      slug: resident.bound.slug,
+      repo: resident.bound.repo,
+      name: Object.freeze({ ko: resident.ko.name, en: resident.en.name }),
+    }))),
+  });
+  return Object.freeze({
+    residents,
+    generated: false,
+    portable: true,
+    activeCount: residents.length,
+    profileCount: projection.directory.profiles.length,
+    directory,
+  });
+}
+/*PORTABLE_TOWN_PROJECTION:END*/
 
 export function projectWorldTreeGrowth(cityState) {
   if (!validCityState(cityState)) {
@@ -203,6 +784,7 @@ export function projectWorldTreeChronicle(cityState, options = {}) {
   if (!validCityState(cityState)) {
     return Object.freeze({
       available: false,
+      portable: null,
       era: null,
       season: null,
       silence: projectSilenceLedger(null),
@@ -221,9 +803,32 @@ export function projectWorldTreeChronicle(cityState, options = {}) {
       repositories: finiteCount(entry?.repositories),
     })).filter((entry) => entry.language && entry.repositories > 0)
     : [];
+  const portable = cityState.portable?.schema === PORTABLE_TOWN_SCHEMA
+      && cityState.portable?.version === PORTABLE_TOWN_VERSION
+    ? Object.freeze({
+      owner: boundedText(cityState.portable.owner, 39),
+      referenceDate: normalizedDate(cityState.portable.reference_date),
+      referenceBasis: boundedText(cityState.portable.reference_basis, 80),
+      coverage: Object.freeze({
+        partial: cityState.portable.coverage?.partial === true,
+        error: boundedText(cityState.portable.coverage?.error, 32) || null,
+        requestCap: finiteCount(cityState.portable.coverage?.request_cap),
+      }),
+      availability: Object.freeze({
+        visitors: cityState.portable.availability?.visitors === true,
+        views: cityState.portable.availability?.views === true,
+        clones: cityState.portable.availability?.clones === true,
+        sharedMemory: cityState.portable.availability?.sharedMemory === true,
+        boundMemory: cityState.portable.availability?.boundMemory === true,
+        ownerResidents: cityState.portable.availability?.ownerResidents === true,
+        realtime: cityState.portable.availability?.realtime === true,
+        groundedBackend: cityState.portable.availability?.groundedBackend === true,
+      }),
+    }) : null;
 
   return Object.freeze({
     available: true,
+    portable,
     era: Object.freeze({
       asOf: boundedText(cityState.era?.as_of, 32),
       foundedOn: boundedText(cityState.era?.founded_on, 32),

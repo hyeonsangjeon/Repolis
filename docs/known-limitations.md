@@ -39,6 +39,12 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   topics, and lifecycle dates from unauthenticated public endpoints. GitHub does not return visitors, views,
   or clones there, so Repolis keeps those fields unknown and uses stars, forks, and recency for architecture.
   An exact Portal match in the generated owner snapshot may reuse its known cumulative traffic.
+- **Portable town life is a current public projection, not the owner's generated memory.** The one normalized
+  public payload derives era, season, Silence Ledger, archived Roots, and at most six desktop/four LOW_END
+  residents. Missing dates use explicit empty states and a deterministic epoch reference only when every date
+  is absent. The 100-repository unauthenticated list cap is surfaced as partial coverage. Public residents have
+  deterministic local jobs and greetings, but no issue titles, owner resident records, Shared/Bound memory,
+  daily sap record, realtime identity, or grounded backend.
 - **Repo Portal is one unauthenticated request, not a proxy.** An arbitrary target uses one
   `GET /repos/{owner}/{repo}` request with no retry. A 15-minute LRU cache is limited to 30 entries and 512
   KiB; failed requests may use an explicitly labelled stale entry. Without one, the target error appears
@@ -66,6 +72,8 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   seasonal/district ride observation are deterministic local behavior. The taxi never receives resident Bound
   profiles; a forged household payload is rejected server-side before retrieval or model planning. Public/portal
   foreign towns do not borrow the generated owner Shared state or resident homes and stay on local navigation.
+  Their public ledger can answer derived season/count facts explicitly as a public record, while grounded and
+  realtime endpoints remain closed even when the canonical site hosts the visit.
 - **KB latency is real.** A cold/complex Knowledge Base + MCP round-trip can take **15–21 s**. Cloudflare
   Workers tolerate it (they bill CPU time, not awaited wall-clock); the optional **Vercel Hobby** path caps
   at ~10 s and silently falls back to Local — so the Vercel function is best-effort only.
@@ -122,6 +130,9 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   procedural scenery rather than a persistent gardening simulation; cottage styles are fixed to resident
   identity rather than user-customizable, and LOW_END intentionally uses fewer plants and omits canopy,
   chimney, and finial detail.
+- **Portable Starlight Row is smaller by design.** Foreign towns reuse the same truthful cottage signs,
+  silhouettes, porch/home and repo/work anchors, colliders, and interaction priority, but instantiate at most
+  six residents on desktop and four on mobile/LOW_END. Archive-only and empty projections create no cottages.
 
 ## Tooling
 
