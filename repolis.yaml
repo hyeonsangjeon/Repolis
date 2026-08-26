@@ -36,6 +36,12 @@ data:
     generate_cmd: GTM_DIR=data python3 scripts/build_repos.py
     note: Do not hand-edit; regenerate from data/logs/* plus gh api.
     optional_fork_lineage: "lineage{source,url}; included public forks only"
+  city_state:
+    file: data/city-state.json
+    generated: true
+    generator: scripts/city_state.py
+    schema: data/city-state.schema.json
+    sap_ledger: "repolis.sap-ledger@1; 30 actual UTC entries / 32768 compact bytes"
   contribution_library:
     file: assets/contribution-library.json
     generated: true
@@ -103,6 +109,11 @@ endpoints:
 features:
   - id: data-built-city
     summary: Repository traffic and metadata shape houses, gardens, ornaments, and night glow.
+  - id: thirty-day-sap-ledger
+    summary: The owner World Tree keeps up to 30 actual UTC daily public aggregate entries with same-day replacement, explicit gaps, and no foreign history reuse.
+    runtime_requests: 0
+    maximum_entries: 30
+    maximum_compact_bytes: 32768
   - id: topic-districts
     summary: Deterministic districts with hubs, boards, map navigation, and progress.
   - id: living-village

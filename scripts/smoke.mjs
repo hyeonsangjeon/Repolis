@@ -82,11 +82,15 @@ import {
   PORTABLE_TOWN_SCHEMA,
   PORTABLE_TOWN_VERSION,
   SAP_FLOW_LIMITS,
+  SAP_LEDGER_LIMITS,
+  SAP_LEDGER_SCHEMA,
+  SAP_LEDGER_VERSION,
   SILENCE_LEDGER_SCHEMA,
   SILENCE_LEDGER_VERSION,
   WORLD_TREE_GROWTH_LIMITS,
   bindPortableResidentSlots,
   projectPortableTown,
+  projectSapLedger,
   projectSilenceLedger,
   projectWorldTreeChronicle,
   projectWorldTreeGrowth,
@@ -296,7 +300,7 @@ ok(/Path\("data"\) \/ "towns" \/ OWNER/.test(REPO_BUILDER), 'manual non-upstream
 
 group('deterministic city state — generated time, wear, ruins, and season');
 ok(CITY_STATE.schema==='repolis.city-state' && CITY_STATE.version===1
-  &&['era','season','silence','stats','last_sap_flow','roots'].every(key=>key in CITY_STATE),
+  &&['era','season','silence','sap_ledger','stats','last_sap_flow','roots'].every(key=>key in CITY_STATE),
   'generated city state exposes the versioned minimum contract');
 ok(CITY_STATE_SCHEMA.$id==='https://hyeonsangjeon.github.io/Repolis/data/city-state.schema.json'
   &&CITY_STATE_SCHEMA.additionalProperties===false
@@ -345,13 +349,46 @@ ok(!silenceDated.length||(
 ), 'Silence Ledger keeps one deterministic longest-quiet repository with stable name tie-breaking');
 ok(!/\b(?:fork|clone)/i.test(JSON.stringify(CITY_STATE.silence)),
   'fork and clone metrics cannot enter or influence the Silence Ledger contract');
+const sapLedger=CITY_STATE.sap_ledger,sapEntries=sapLedger.entries,sapLatest=sapEntries.at(-1);
+ok(sapLedger.schema===SAP_LEDGER_SCHEMA&&sapLedger.version===SAP_LEDGER_VERSION
+  &&sapLedger.scope==='public_repository_aggregates'
+  &&sapLedger.reference_basis==='city_state_utc_reference_date'
+  &&sapLedger.ordering==='reference_date_ascending'&&sapLedger.gap_policy==='actual_entries_only'
+  &&sapLedger.maximum_entries===SAP_LEDGER_LIMITS.entries&&sapLedger.maximum_bytes===SAP_LEDGER_LIMITS.bytes
+  &&sapEntries.length>=1&&sapEntries.length<=SAP_LEDGER_LIMITS.entries,
+  'Thirty-day Sap Ledger is nested, versioned, bounded, UTC-based, and actual-entry-only');
+ok(sapEntries.every((entry,index)=>!index||sapEntries[index-1].reference_date<entry.reference_date)
+  &&new Set(sapEntries.map(entry=>entry.reference_date)).size===sapEntries.length
+  &&Buffer.byteLength(JSON.stringify(sapLedger))<=SAP_LEDGER_LIMITS.bytes,
+  'Sap Ledger dates are unique and ascending inside the strict byte and entry budgets');
+ok(sapLatest.reference_date===CITY_STATE.era.as_of
+  &&sapLatest.repositories.public===CITY_STATE.stats.repository_count
+  &&sapLatest.repositories.archived===CITY_STATE.stats.archived_repository_count
+  &&sapLatest.repositories.recent_active_30d===CITY_STATE.season.inputs.recent_active_repositories
+  &&sapLatest.stars.total===CITY_STATE.stats.total_stars
+  &&sapLatest.forks.total===CITY_STATE.stats.total_forks
+  &&sapLatest.season.value===CITY_STATE.season.value
+  &&sapLatest.silence.at_least_365_days===CITY_STATE.silence.quiet.at_least_365_days
+  &&sapLatest.silence.at_least_730_days===CITY_STATE.silence.quiet.at_least_730_days,
+  'latest Sap Ledger entry reconciles with the same-date public city state and Silence Ledger');
+const forbiddenSapKeys=/\b(?:views|visitors|clones|private|open_issues|issue_title|pull_request_title|commit_message|resident_dialogue|localStorage)\b/;
+ok(!forbiddenSapKeys.test(JSON.stringify(sapLedger)),
+  'Sap Ledger excludes traffic, private infrastructure, work titles, dialogue, identity, and browser state');
+ok(/`sap_ledger` is a nested `repolis\.sap-ledger` v1/.test(DOMAIN_MODEL)
+  &&/inclusive `\[reference_date - 29 days, reference_date\]` UTC window/.test(DOMAIN_MODEL)
+  &&/Thirty-day Sap Ledger starts at deployment, not in the past/.test(KNOWN_LIMITATIONS)
+  &&/Thirty-day Sap Ledger/.test(README_EN)&&/30일/.test(README_KO)
+  &&/thirty-day-sap-ledger/.test(MANIFEST)&&/Thirty-day Sap Ledger/.test(LLMS_INDEX),
+  'schema definitions, start boundary, missing-value policy, foreign boundary, and limits are documented');
 ok(/sort_keys=True/.test(CITY_STATE_BUILDER)
   &&/schema_path/.test(CITY_STATE_VALIDATOR)
   &&/CITY_STATE_AS_OF=\$\(date -u \+%FT00:00:00Z\)/.test(REFRESH_WORKFLOW)
+  &&/group: refresh-repolis/.test(REFRESH_WORKFLOW)&&/cancel-in-progress: false/.test(REFRESH_WORKFLOW)
+  &&/prior_ledger=load_sap_ledger\(CITY_STATE_OUT\)/.test(REPO_BUILDER)
   &&/scripts\/test_city_state\.py/.test(REFRESH_WORKFLOW)
   &&/scripts\/validate_city_state\.py/.test(REFRESH_WORKFLOW)
   &&/scripts\/test-city-time\.mjs/.test(REFRESH_WORKFLOW),
-  'stable serialization, schema validation, and fixture tests gate daily refresh');
+  'serialized refreshes share one concurrency group, reuse the prior ledger, and gate deterministic schema fixtures');
 const cityReference=cityReferenceTimestamp(CITY_STATE,CITY_REPOS);
 const cityReferenceDate=new Date(cityReference).toISOString().slice(0,10);
 const cityDateBefore=days=>new Date(cityReference-days*86400000).toISOString().slice(0,10);
@@ -413,6 +450,42 @@ const worldTreeFixture=(stars,repositories,roots=[],lastSapFlow='2026-08-23T00:0
     commit_history:{available:false,total:null,limitation:'Complete commit history is unavailable.'}},
   roots
 };};
+const sapEntryFixture=(referenceDate,overrides={})=>({
+  reference_date:referenceDate,
+  repositories:{public:10,archived:1,latest_push_with_date:9,latest_push_without_date:1,recent_active_30d:3,
+    ...(overrides.repositories||{})},
+  stars:{total:20,repositories_with_value:10,repositories_without_value:0,...(overrides.stars||{})},
+  forks:{total:5,repositories_with_value:10,repositories_without_value:0,...(overrides.forks||{})},
+  season:{value:'summer',fallback_used:false,...(overrides.season||{})},
+  silence:{unarchived:9,with_push_date:8,without_push_date:1,at_least_365_days:4,at_least_730_days:2,
+    ...(overrides.silence||{})}
+});
+const sapLedgerFixture=entries=>({
+  schema:SAP_LEDGER_SCHEMA,version:SAP_LEDGER_VERSION,scope:'public_repository_aggregates',
+  reference_basis:'city_state_utc_reference_date',ordering:'reference_date_ascending',gap_policy:'actual_entries_only',
+  maximum_entries:SAP_LEDGER_LIMITS.entries,maximum_bytes:SAP_LEDGER_LIMITS.bytes,
+  recent_activity:{signal:'latest_public_push',window_days:30},silence_thresholds_days:[365,730],entries
+});
+const firstSapProjection=projectSapLedger(sapLedgerFixture([sapEntryFixture('2026-08-23')]));
+const multiSapProjection=projectSapLedger(sapLedgerFixture([
+  sapEntryFixture('2026-08-23'),
+  sapEntryFixture('2026-08-25',{repositories:{recent_active_30d:5},stars:{total:23},season:{value:'spring'},
+    silence:{at_least_365_days:5}}),
+]));
+ok(firstSapProjection.available&&firstSapProjection.entries.length===1&&firstSapProjection.comparison===null,
+  'first Sap Ledger entry exposes only its factual start date and no invented trend');
+ok(multiSapProjection.available&&multiSapProjection.entries.length===2&&multiSapProjection.missingDays===1
+  &&multiSapProjection.comparison.from==='2026-08-23'&&multiSapProjection.comparison.to==='2026-08-25'
+  &&multiSapProjection.comparison.stars===3&&multiSapProjection.comparison.recentActive===2
+  &&multiSapProjection.comparison.season.from==='summer'&&multiSapProjection.comparison.season.to==='spring'
+  &&multiSapProjection.comparison.silence365===1,
+  'multi-entry Sap Ledger compares only the latest actual entries and preserves an explicit missing UTC day');
+ok(!projectSapLedger(null).available
+  &&!projectSapLedger(sapLedgerFixture([{...sapEntryFixture('2026-08-23'),views:99}])).available
+  &&!projectSapLedger(sapLedgerFixture([
+    sapEntryFixture('2026-08-25'),sapEntryFixture('2026-08-23'),
+  ])).available,
+  'missing, privacy-expanded, or unstably ordered Sap Ledgers fail soft instead of normalizing bad history');
 const growthMinimum=projectWorldTreeGrowth(worldTreeFixture(0,0));
 const growthMiddle=projectWorldTreeGrowth(worldTreeFixture(420,54));
 const growthMaximum=projectWorldTreeGrowth(worldTreeFixture(
@@ -449,6 +522,18 @@ ok(emptyChronicle.silence.available&&emptyChronicle.silence.repositories.total==
 ok(!projectSilenceLedger(null).available
   &&!projectSilenceLedger({...CITY_STATE.silence,repositories:{total:1,with_push_date:1,without_push_date:1}}).available,
   'missing or inconsistent Silence Ledger data fails soft to an unavailable projection');
+const generatedSap=projectSapLedger(CITY_STATE.sap_ledger);
+const multiChronicle=projectWorldTreeChronicle({
+  ...worldTreeFixture(23,10),
+  sap_ledger:sapLedgerFixture([
+    sapEntryFixture('2026-08-23'),
+    sapEntryFixture('2026-08-25',{repositories:{recent_active_30d:5},stars:{total:23}}),
+  ])
+},{now:Date.parse('2026-08-25T12:00:00Z')});
+ok(generatedSap.available&&generatedSap.entries.length===CITY_STATE.sap_ledger.entries.length
+  &&multiChronicle.sapLedger.available&&multiChronicle.sapLedger.comparison.missingDays===1
+  &&!emptyChronicle.sapLedger.available,
+  'Chronicle projects generated first-entry and multi-entry history while absent history remains unavailable');
 const recentSap=resolveSapFlowFreshness('2026-08-23T00:00:00Z',Date.parse('2026-08-23T12:00:00Z'));
 const staleSap=resolveSapFlowFreshness('2026-07-20T00:00:00Z',Date.parse('2026-08-23T12:00:00Z'));
 ok(recentSap.animate&&recentSap.freshness==='recent'
@@ -480,8 +565,9 @@ ok(PORTABLE_TOWN_SCHEMA==='repolis.portable-town'&&PORTABLE_TOWN_VERSION===1
 ok(portableProjection.kind==='portable'&&portableProjection.cityState.era.founded_on==='2018-01-01'
   &&portableProjection.cityState.season.fallback.used===true
   &&portableProjection.cityState.silence.repositories.without_push_date===1
-  &&portableProjection.cityState.roots.length===1&&portableChronicle.portable.owner==='visitor',
-  'foreign metadata derives its own era, sparse-history season, Silence Ledger, and archived Roots');
+  &&portableProjection.cityState.roots.length===1&&portableChronicle.portable.owner==='visitor'
+  &&!('sap_ledger' in portableProjection.cityState)&&!portableChronicle.sapLedger.available,
+  'foreign metadata derives current records but never inherits or fabricates canonical 30-day history');
 ok(JSON.stringify(portableProjection)===JSON.stringify(portableReordered),
   'the same normalized foreign payload projects byte-identically regardless of input order');
 const ownerFixture={sentinel:'generated-owner-state'};
@@ -3316,7 +3402,7 @@ ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
   && (HTML.match(/if\(memorial\) makeMemorialTree\(cx,cz\)/g) || []).length === 1, 'exactly one memorial tree is requested, at the north rest park centre');
 ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
-ok(/world-tree-state\.js\?v=portable-living-towns-v1/.test(HTML)
+ok(/world-tree-state\.js\?v=thirty-day-sap-ledger-v1/.test(HTML)
   &&/hero\.runtime\.nodes\['living-system'\]\.scale\.setScalar\(WORLD_TREE_GROWTH\.scale\)/.test(memorialTreeBlock)
   &&/const collider=\{x,z,r:11\.6,_memorialTree:true\}/.test(memorialTreeBlock)
   &&/growthScale:WORLD_TREE_GROWTH\.scale/.test(memorialTreeBlock),
@@ -3347,6 +3433,24 @@ ok(/worldTreeRootSearchWrap\.hidden=total<10/.test(worldTreeChronicleBlock)
   &&(worldTreeChronicleBlock.match(/empty\.setAttribute\('role','listitem'\)/g)||[]).length===2
   &&/role="status" aria-live="polite"/.test(HTML),
   'Roots stays quiet when empty and only exposes an accessible search when the generated list is large');
+ok(/class="worldTreeSapHistory" aria-labelledby="worldTreeSapHistoryTitle"/.test(HTML)
+  &&/id="worldTreeSapHistoryBasis"/.test(HTML)&&/id="worldTreeSapHistorySummary"/.test(HTML)
+  &&/id="worldTreeSapHistoryCompare"/.test(HTML)&&/id="worldTreeSapHistoryChanges"/.test(HTML)
+  &&/function renderWorldTreeSapHistory\(record\)/.test(worldTreeChronicleBlock)
+  &&/ledger\.entries\.length===1/.test(worldTreeChronicleBlock)
+  &&/ledger\.comparison/.test(worldTreeChronicleBlock),
+  'one compact Chronicle section renders factual first-entry and latest-actual-entry Sap Ledger states');
+[
+  'worldTreeSapHistoryTitle','worldTreeSapHistoryBasis','worldTreeSapHistoryStarted','worldTreeSapHistoryRange',
+  'worldTreeSapHistoryCompare','worldTreeSapHistoryUnavailable','worldTreeSapHistoryPortableUnavailable',
+  'worldTreeSapHistoryRepos','worldTreeSapHistoryStars','worldTreeSapHistoryForks','worldTreeSapHistoryActivity',
+  'worldTreeSapHistorySilence','worldTreeSapHistorySeason','worldTreeSapHistoryStarsUnknown',
+  'worldTreeSapHistoryForksUnknown','worldTreeSapHistoryNoChange'
+].forEach(key=>ok((HTML.match(new RegExp(key+':','g'))||[]).length===2,`Sap Ledger copy ${key} is bilingual`));
+ok(/No generated 30-day history is available for this public town\. The owner town ledger is not reused\./.test(HTML)
+  &&/주인 마을 기록은 재사용하지 않습니다/.test(HTML)
+  &&/window\.__worldTreeSapLedgerFixture=/.test(HTML),
+  'foreign history is explicitly unavailable and debug QA can exercise first/multi fixtures without persistence');
 const silenceLedgerCopy=[...HTML.matchAll(/worldTreeQuiet(?:Title|Basis|Summary|Longest|NoPush|Empty|Unavailable):'([^']*)'/g)]
   .map(match=>match[1]).join(' ');
 ok(/class="worldTreeQuiet" aria-labelledby="worldTreeQuietTitle"/.test(HTML)

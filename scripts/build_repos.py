@@ -31,7 +31,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from city_state import build_city_state, write_city_state
+from city_state import build_city_state, load_sap_ledger, write_city_state
 from fork_lineage import public_fork_lineage
 from resident_profiles import write_resident_artifacts
 
@@ -390,7 +390,12 @@ def build():
         o["rank"] = i
 
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
-    city_state = build_city_state(out, source_timestamps, as_of=CITY_STATE_AS_OF)
+    city_state = build_city_state(
+        out,
+        source_timestamps,
+        as_of=CITY_STATE_AS_OF,
+        prior_ledger=load_sap_ledger(CITY_STATE_OUT),
+    )
     write_city_state(CITY_STATE_OUT, city_state)
     resident_summary = write_resident_artifacts(
         out,
@@ -407,7 +412,8 @@ def build():
     print(f"wrote {OUT} with {len(out)} public repos ({forks_n} forks I committed to)")
     print(
         f"wrote {CITY_STATE_OUT} schema={city_state['version']} "
-        f"season={city_state['season']['value']} roots={len(city_state['roots'])}"
+        f"season={city_state['season']['value']} roots={len(city_state['roots'])} "
+        f"sap_entries={len(city_state['sap_ledger']['entries'])}"
     )
     print(
         f"wrote {RESIDENTS_OUT} profiles={resident_summary['profiles']} "

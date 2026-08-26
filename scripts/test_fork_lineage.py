@@ -117,15 +117,30 @@ class ForkLineageTests(unittest.TestCase):
                     mock.patch.object(build_repos, "public_fork_lineage", side_effect=lineage):
                 build_repos.build()
                 first = settings["OUT"].read_bytes()
+                first_city = settings["CITY_STATE_OUT"].read_bytes()
                 build_repos.build()
                 second = settings["OUT"].read_bytes()
+                second_city = settings["CITY_STATE_OUT"].read_bytes()
+                build_repos.CITY_STATE_AS_OF = "2026-08-25T00:00:00Z"
+                build_repos.build()
+                third_city = json.loads(settings["CITY_STATE_OUT"].read_text(encoding="utf-8"))
 
             output = json.loads(first)
             self.assertEqual(first, second)
+            self.assertEqual(first_city, second_city)
+            self.assertEqual(len(json.loads(first_city)["sap_ledger"]["entries"]), 1)
+            self.assertEqual(len(third_city["sap_ledger"]["entries"]), 2)
+            self.assertEqual(
+                [entry["reference_date"] for entry in third_city["sap_ledger"]["entries"]],
+                ["2026-08-24", "2026-08-25"],
+            )
             self.assertEqual([repo["repo"] for repo in output], ["original", "worked-fork"])
             self.assertNotIn("lineage", output[0])
             self.assertEqual(output[1]["lineage"]["source"], "source-owner/source-repo")
-            self.assertEqual(lineage_calls, ["fixture-owner/worked-fork", "fixture-owner/worked-fork"])
+            self.assertEqual(
+                lineage_calls,
+                ["fixture-owner/worked-fork", "fixture-owner/worked-fork", "fixture-owner/worked-fork"],
+            )
 
     def test_lineage_only_refresh_preserves_unrelated_generated_fields(self):
         records = [

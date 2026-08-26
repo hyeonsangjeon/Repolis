@@ -1,6 +1,7 @@
 import { CITY_STATE_SCHEMA, CITY_STATE_VERSION } from '../city-time.js';
 
 const DAY_MS = 86400000;
+const CITY_SEASONS = Object.freeze(['spring', 'summer', 'autumn', 'winter']);
 
 export const WORLD_TREE_GROWTH_LIMITS = Object.freeze({
   minimumScale: 0.96,
@@ -18,6 +19,9 @@ export const SAP_FLOW_LIMITS = Object.freeze({
 export const SILENCE_LEDGER_SCHEMA = 'repolis.silence-ledger';
 export const SILENCE_LEDGER_VERSION = 1;
 export const SILENCE_LEDGER_THRESHOLDS_DAYS = Object.freeze([365, 730]);
+export const SAP_LEDGER_SCHEMA = 'repolis.sap-ledger';
+export const SAP_LEDGER_VERSION = 1;
+export const SAP_LEDGER_LIMITS = Object.freeze({ entries: 30, bytes: 32768 });
 export const PORTABLE_TOWN_SCHEMA = 'repolis.portable-town';
 export const PORTABLE_TOWN_VERSION = 1;
 export const PORTABLE_TOWN_LIMITS = Object.freeze({
@@ -720,6 +724,157 @@ export function resolveSapFlowMode(sapFlow, options = {}) {
   return 'travel';
 }
 
+function strictCount(value) {
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+function exactKeys(value, keys) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+}
+
+function projectSapMetric(value, repositoryCount) {
+  if (!exactKeys(value, ['total', 'repositories_with_value', 'repositories_without_value'])) return null;
+  const known = strictCount(value.repositories_with_value);
+  const unknown = strictCount(value.repositories_without_value);
+  const total = value.total === null ? null : strictCount(value.total);
+  if (known === null || unknown === null || known + unknown !== repositoryCount
+      || (value.total !== null && total === null) || (unknown > 0 && total !== null)) return null;
+  return Object.freeze({ total, knownRepositories: known, unknownRepositories: unknown });
+}
+
+function projectSapEntry(value) {
+  if (!exactKeys(value, ['reference_date', 'repositories', 'stars', 'forks', 'season', 'silence'])) return null;
+  const referenceDate = normalizedDate(value.reference_date);
+  const repositories = value.repositories;
+  if (!referenceDate || !exactKeys(repositories, [
+    'public', 'archived', 'latest_push_with_date', 'latest_push_without_date', 'recent_active_30d',
+  ])) return null;
+  const publicCount = strictCount(repositories.public);
+  const archived = strictCount(repositories.archived);
+  const withPushDate = strictCount(repositories.latest_push_with_date);
+  const withoutPushDate = strictCount(repositories.latest_push_without_date);
+  const recentActive = strictCount(repositories.recent_active_30d);
+  if ([publicCount, archived, withPushDate, withoutPushDate, recentActive].includes(null)
+      || archived > publicCount || withPushDate + withoutPushDate !== publicCount
+      || recentActive > withPushDate) return null;
+  const stars = projectSapMetric(value.stars, publicCount);
+  const forks = projectSapMetric(value.forks, publicCount);
+  const season = value.season;
+  if (!stars || !forks || !exactKeys(season, ['value', 'fallback_used'])
+      || !CITY_SEASONS.includes(season.value) || typeof season.fallback_used !== 'boolean') return null;
+  const silence = value.silence;
+  if (!exactKeys(silence, [
+    'unarchived', 'with_push_date', 'without_push_date', 'at_least_365_days', 'at_least_730_days',
+  ])) return null;
+  const silenceValues = {
+    unarchived: strictCount(silence.unarchived),
+    withPushDate: strictCount(silence.with_push_date),
+    withoutPushDate: strictCount(silence.without_push_date),
+    atLeast365Days: strictCount(silence.at_least_365_days),
+    atLeast730Days: strictCount(silence.at_least_730_days),
+  };
+  if (Object.values(silenceValues).includes(null)
+      || silenceValues.unarchived !== publicCount - archived
+      || silenceValues.withPushDate + silenceValues.withoutPushDate !== silenceValues.unarchived
+      || silenceValues.atLeast730Days > silenceValues.atLeast365Days
+      || silenceValues.atLeast365Days > silenceValues.withPushDate) return null;
+  return Object.freeze({
+    referenceDate,
+    repositories: Object.freeze({
+      public: publicCount,
+      archived,
+      withPushDate,
+      withoutPushDate,
+      recentActive,
+    }),
+    stars,
+    forks,
+    season: Object.freeze({ value: season.value, fallbackUsed: season.fallback_used }),
+    silence: Object.freeze(silenceValues),
+  });
+}
+
+export function projectSapLedger(value) {
+  const unavailable = () => Object.freeze({
+    available: false,
+    schema: SAP_LEDGER_SCHEMA,
+    version: SAP_LEDGER_VERSION,
+    maximumEntries: SAP_LEDGER_LIMITS.entries,
+    maximumBytes: SAP_LEDGER_LIMITS.bytes,
+    entries: Object.freeze([]),
+    first: null,
+    latest: null,
+    missingDays: 0,
+    comparison: null,
+  });
+  if (!exactKeys(value, [
+    'schema', 'version', 'scope', 'reference_basis', 'ordering', 'gap_policy',
+    'maximum_entries', 'maximum_bytes', 'recent_activity', 'silence_thresholds_days', 'entries',
+  ]) || value.schema !== SAP_LEDGER_SCHEMA || value.version !== SAP_LEDGER_VERSION
+      || value.scope !== 'public_repository_aggregates'
+      || value.reference_basis !== 'city_state_utc_reference_date'
+      || value.ordering !== 'reference_date_ascending'
+      || value.gap_policy !== 'actual_entries_only'
+      || value.maximum_entries !== SAP_LEDGER_LIMITS.entries
+      || value.maximum_bytes !== SAP_LEDGER_LIMITS.bytes
+      || !exactKeys(value.recent_activity, ['signal', 'window_days'])
+      || value.recent_activity.signal !== 'latest_public_push'
+      || value.recent_activity.window_days !== 30
+      || !Array.isArray(value.silence_thresholds_days)
+      || value.silence_thresholds_days.length !== SILENCE_LEDGER_THRESHOLDS_DAYS.length
+      || value.silence_thresholds_days.some((threshold, index) => (
+        threshold !== SILENCE_LEDGER_THRESHOLDS_DAYS[index]
+      ))
+      || !Array.isArray(value.entries)
+      || value.entries.length < 1
+      || value.entries.length > SAP_LEDGER_LIMITS.entries) return unavailable();
+  const entries = value.entries.map(projectSapEntry);
+  if (entries.some(entry => !entry)) return unavailable();
+  for (let index = 1; index < entries.length; index++) {
+    if (entries[index - 1].referenceDate >= entries[index].referenceDate) return unavailable();
+  }
+  const first = entries[0], latest = entries.at(-1);
+  const spanDays = Math.floor((dayTimestamp(latest.referenceDate) - dayTimestamp(first.referenceDate)) / DAY_MS);
+  const missingDays = Math.max(0, spanDays + 1 - entries.length);
+  let comparison = null;
+  if (entries.length > 1) {
+    const previous = entries.at(-2);
+    const elapsedDays = Math.floor((
+      dayTimestamp(latest.referenceDate) - dayTimestamp(previous.referenceDate)
+    ) / DAY_MS);
+    comparison = Object.freeze({
+      from: previous.referenceDate,
+      to: latest.referenceDate,
+      elapsedDays,
+      missingDays: Math.max(0, elapsedDays - 1),
+      repositories: latest.repositories.public - previous.repositories.public,
+      stars: latest.stars.total === null || previous.stars.total === null
+        ? null : latest.stars.total - previous.stars.total,
+      forks: latest.forks.total === null || previous.forks.total === null
+        ? null : latest.forks.total - previous.forks.total,
+      recentActive: latest.repositories.recentActive - previous.repositories.recentActive,
+      season: Object.freeze({ from: previous.season.value, to: latest.season.value }),
+      silence365: latest.silence.atLeast365Days - previous.silence.atLeast365Days,
+      silence730: latest.silence.atLeast730Days - previous.silence.atLeast730Days,
+    });
+  }
+  return Object.freeze({
+    available: true,
+    schema: SAP_LEDGER_SCHEMA,
+    version: SAP_LEDGER_VERSION,
+    maximumEntries: SAP_LEDGER_LIMITS.entries,
+    maximumBytes: SAP_LEDGER_LIMITS.bytes,
+    entries: Object.freeze(entries),
+    first,
+    latest,
+    missingDays,
+    comparison,
+  });
+}
+
 export function projectSilenceLedger(value) {
   const unavailable = () => Object.freeze({
     available: false,
@@ -787,6 +942,7 @@ export function projectWorldTreeChronicle(cityState, options = {}) {
       portable: null,
       era: null,
       season: null,
+      sapLedger: projectSapLedger(null),
       silence: projectSilenceLedger(null),
       stats: null,
       lastSapFlow: resolveSapFlowFreshness(null, options.now),
@@ -849,6 +1005,7 @@ export function projectWorldTreeChronicle(cityState, options = {}) {
         ? Math.max(0, cityState.season.inputs.recent_to_historical_ratio) : null,
       fallbackUsed: cityState.season?.fallback?.used === true,
     }),
+    sapLedger: projectSapLedger(cityState.sap_ledger),
     silence: projectSilenceLedger(cityState.silence),
     stats: Object.freeze({
       repositories: finiteCount(cityState.stats?.repository_count),

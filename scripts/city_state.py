@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import re
@@ -19,6 +20,11 @@ HISTORICAL_BUCKETS = 6
 SILENCE_SCHEMA_NAME = "repolis.silence-ledger"
 SILENCE_SCHEMA_VERSION = 1
 SILENCE_THRESHOLDS_DAYS = (365, 730)
+SAP_LEDGER_SCHEMA_NAME = "repolis.sap-ledger"
+SAP_LEDGER_SCHEMA_VERSION = 1
+SAP_LEDGER_MAX_ENTRIES = 30
+SAP_LEDGER_MAX_BYTES = 32768
+MAX_SAFE_INTEGER = 9_007_199_254_740_991
 
 
 def _parse_datetime(value):
@@ -216,7 +222,233 @@ def _root(repo):
     }
 
 
-def build_city_state(repositories, source_timestamps=None, *, as_of=None):
+def _metric_aggregate(repositories, key):
+    values = []
+    unknown = 0
+    for repo in repositories:
+        value = repo.get(key)
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= MAX_SAFE_INTEGER:
+            unknown += 1
+            continue
+        values.append(value)
+    total = sum(values)
+    return {
+        "total": total if unknown == 0 and total <= MAX_SAFE_INTEGER else None,
+        "repositories_with_value": len(values),
+        "repositories_without_value": unknown,
+    }
+
+
+def _sap_ledger_entry(repositories, reference_day, season, silence):
+    with_push_date = season["inputs"]["repositories_with_push_date"]
+    return {
+        "reference_date": reference_day.isoformat(),
+        "repositories": {
+            "public": len(repositories),
+            "archived": sum(bool(repo.get("archived")) for repo in repositories),
+            "latest_push_with_date": with_push_date,
+            "latest_push_without_date": len(repositories) - with_push_date,
+            "recent_active_30d": season["inputs"]["recent_active_repositories"],
+        },
+        "stars": _metric_aggregate(repositories, "stars"),
+        "forks": _metric_aggregate(repositories, "forks"),
+        "season": {
+            "value": season["value"],
+            "fallback_used": season["fallback"]["used"],
+        },
+        "silence": {
+            "unarchived": silence["repositories"]["total"],
+            "with_push_date": silence["repositories"]["with_push_date"],
+            "without_push_date": silence["repositories"]["without_push_date"],
+            "at_least_365_days": silence["quiet"]["at_least_365_days"],
+            "at_least_730_days": silence["quiet"]["at_least_730_days"],
+        },
+    }
+
+
+def _sap_ledger(entries):
+    return {
+        "schema": SAP_LEDGER_SCHEMA_NAME,
+        "version": SAP_LEDGER_SCHEMA_VERSION,
+        "scope": "public_repository_aggregates",
+        "reference_basis": "city_state_utc_reference_date",
+        "ordering": "reference_date_ascending",
+        "gap_policy": "actual_entries_only",
+        "maximum_entries": SAP_LEDGER_MAX_ENTRIES,
+        "maximum_bytes": SAP_LEDGER_MAX_BYTES,
+        "recent_activity": {
+            "signal": "latest_public_push",
+            "window_days": RECENT_WINDOW_DAYS,
+        },
+        "silence_thresholds_days": list(SILENCE_THRESHOLDS_DAYS),
+        "entries": entries,
+    }
+
+
+def _sap_ledger_bytes(value):
+    return len(json.dumps(
+        value,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8"))
+
+
+def _valid_count(value):
+    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= MAX_SAFE_INTEGER
+
+
+def _valid_metric_aggregate(value, repository_count):
+    if not isinstance(value, dict) or set(value) != {
+        "total",
+        "repositories_with_value",
+        "repositories_without_value",
+    }:
+        return False
+    known = value["repositories_with_value"]
+    unknown = value["repositories_without_value"]
+    total = value["total"]
+    return (
+        _valid_count(known)
+        and _valid_count(unknown)
+        and known + unknown == repository_count
+        and (total is None or _valid_count(total))
+        and (unknown == 0 or total is None)
+    )
+
+
+def _valid_sap_ledger_entry(value):
+    if not isinstance(value, dict) or set(value) != {
+        "reference_date",
+        "repositories",
+        "stars",
+        "forks",
+        "season",
+        "silence",
+    }:
+        return False
+    try:
+        parsed_date = date.fromisoformat(value["reference_date"])
+    except (TypeError, ValueError):
+        return False
+    if parsed_date.isoformat() != value["reference_date"]:
+        return False
+
+    repositories = value["repositories"]
+    if not isinstance(repositories, dict) or set(repositories) != {
+        "public",
+        "archived",
+        "latest_push_with_date",
+        "latest_push_without_date",
+        "recent_active_30d",
+    }:
+        return False
+    if not all(_valid_count(item) for item in repositories.values()):
+        return False
+    public = repositories["public"]
+    with_push = repositories["latest_push_with_date"]
+    if (
+        repositories["archived"] > public
+        or with_push + repositories["latest_push_without_date"] != public
+        or repositories["recent_active_30d"] > with_push
+    ):
+        return False
+    if not _valid_metric_aggregate(value["stars"], public):
+        return False
+    if not _valid_metric_aggregate(value["forks"], public):
+        return False
+
+    season = value["season"]
+    if (
+        not isinstance(season, dict)
+        or set(season) != {"value", "fallback_used"}
+        or season["value"] not in SEASONS
+        or not isinstance(season["fallback_used"], bool)
+    ):
+        return False
+
+    silence = value["silence"]
+    if not isinstance(silence, dict) or set(silence) != {
+        "unarchived",
+        "with_push_date",
+        "without_push_date",
+        "at_least_365_days",
+        "at_least_730_days",
+    }:
+        return False
+    if not all(_valid_count(item) for item in silence.values()):
+        return False
+    return (
+        silence["unarchived"] == public - repositories["archived"]
+        and silence["with_push_date"] + silence["without_push_date"] == silence["unarchived"]
+        and silence["at_least_730_days"] <= silence["at_least_365_days"] <= silence["with_push_date"]
+    )
+
+
+def _normalize_sap_ledger(value):
+    if not isinstance(value, dict) or set(value) != set(_sap_ledger([])):
+        return None
+    if (
+        value.get("schema") != SAP_LEDGER_SCHEMA_NAME
+        or value.get("version") != SAP_LEDGER_SCHEMA_VERSION
+        or value.get("scope") != "public_repository_aggregates"
+        or value.get("reference_basis") != "city_state_utc_reference_date"
+        or value.get("ordering") != "reference_date_ascending"
+        or value.get("gap_policy") != "actual_entries_only"
+        or value.get("maximum_entries") != SAP_LEDGER_MAX_ENTRIES
+        or value.get("maximum_bytes") != SAP_LEDGER_MAX_BYTES
+        or value.get("recent_activity") != {
+            "signal": "latest_public_push",
+            "window_days": RECENT_WINDOW_DAYS,
+        }
+        or value.get("silence_thresholds_days") != list(SILENCE_THRESHOLDS_DAYS)
+    ):
+        return None
+    entries = value.get("entries")
+    if (
+        not isinstance(entries, list)
+        or not 1 <= len(entries) <= SAP_LEDGER_MAX_ENTRIES
+        or not all(_valid_sap_ledger_entry(entry) for entry in entries)
+    ):
+        return None
+    dates = [entry["reference_date"] for entry in entries]
+    if dates != sorted(dates) or len(dates) != len(set(dates)):
+        return None
+    normalized = json.loads(json.dumps(value, allow_nan=False, ensure_ascii=False))
+    return normalized if _sap_ledger_bytes(normalized) <= SAP_LEDGER_MAX_BYTES else None
+
+
+def load_sap_ledger(path):
+    try:
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+        return None
+    return _normalize_sap_ledger(payload.get("sap_ledger") if isinstance(payload, dict) else None)
+
+
+def _merge_sap_ledger(prior_ledger, entry):
+    prior = _normalize_sap_ledger(prior_ledger)
+    entries = list(prior["entries"]) if prior else []
+    reference_date = entry["reference_date"]
+    known_dates = {item["reference_date"] for item in entries}
+    if entries and reference_date < entries[-1]["reference_date"] and reference_date not in known_dates:
+        raise ValueError("sap ledger refuses to backfill an unrecorded past UTC date")
+
+    entries = [item for item in entries if item["reference_date"] != reference_date]
+    entries.append(entry)
+    entries.sort(key=lambda item: item["reference_date"])
+    entries = entries[-SAP_LEDGER_MAX_ENTRIES:]
+    ledger = _sap_ledger(entries)
+    while len(entries) > 1 and _sap_ledger_bytes(ledger) > SAP_LEDGER_MAX_BYTES:
+        entries.pop(0)
+        ledger = _sap_ledger(entries)
+    if _sap_ledger_bytes(ledger) > SAP_LEDGER_MAX_BYTES:
+        raise ValueError("sap ledger entry exceeds the byte budget")
+    return ledger
+
+
+def build_city_state(repositories, source_timestamps=None, *, as_of=None, prior_ledger=None):
     public = _public_repositories(repositories)
     reference_time = _reference_time(public, source_timestamps, as_of)
     reference_day = reference_time.date()
@@ -235,6 +467,8 @@ def build_city_state(repositories, source_timestamps=None, *, as_of=None):
     ]
     archived = [repo for repo in public if bool(repo.get("archived"))]
     push_count = sum(bool(_parse_datetime(repo.get("pushed") or repo.get("pushed_at"))) for repo in public)
+    season = _season(public, reference_day)
+    silence = _silence(public, reference_day)
 
     state = {
         "schema": SCHEMA_NAME,
@@ -248,8 +482,12 @@ def build_city_state(repositories, source_timestamps=None, *, as_of=None):
             "city_year": math.floor(age_days / 365.2425) + 1,
             "basis": "Oldest creation date among the public repositories included in repos.json.",
         },
-        "season": _season(public, reference_day),
-        "silence": _silence(public, reference_day),
+        "season": season,
+        "silence": silence,
+        "sap_ledger": _merge_sap_ledger(
+            prior_ledger,
+            _sap_ledger_entry(public, reference_day, season, silence),
+        ),
         "stats": {
             "repository_count": len(public),
             "active_repository_count": len(public) - len(archived),
@@ -287,3 +525,27 @@ def write_city_state(path, state):
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(serialize_city_state(state), encoding="utf-8")
+
+
+def main():
+    root = Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser(description="Generate deterministic Repolis city state.")
+    parser.add_argument("--repos", default=root / "repos.json", type=Path)
+    parser.add_argument("--output", default=root / "data" / "city-state.json", type=Path)
+    parser.add_argument("--as-of", help="Explicit ISO-8601 UTC reference date or timestamp.")
+    args = parser.parse_args()
+    repositories = json.loads(args.repos.read_text(encoding="utf-8"))
+    state = build_city_state(
+        repositories,
+        as_of=args.as_of,
+        prior_ledger=load_sap_ledger(args.output),
+    )
+    write_city_state(args.output, state)
+    print(
+        f"wrote {args.output} schema={state['version']} "
+        f"sap_entries={len(state['sap_ledger']['entries'])}"
+    )
+
+
+if __name__ == "__main__":
+    main()
