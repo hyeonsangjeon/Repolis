@@ -49,6 +49,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`scripts/build_repos.py`** | Rebuilds `repos.json` and `data/city-state.json` from `data/logs/*` traffic + `gh api`. | Refreshing the city data locally. |
 | **`scripts/resident_profiles.py` + `data/residents/`** | Generates sanitized public resident profiles, the boot manifest, and the Worker authority registry. Profile JSON is generated — do not hand-edit. | Changing repository-bound resident identity or Shared/Bound inputs. |
 | **`scripts/smoke.mjs`** | Hermetic static and behavioral regression guards for the city runtime. | Any client feature, navigation, or generated-module integration change. |
+| **`scripts/test-visual-governor.mjs`** | Extracts and deterministically replays the inline adaptive visual-governor core. | Changing warm-up, thresholds, hysteresis, dwell, LOW_END/reduced-motion bounds, or recovery. |
 | **`scripts/test-portable-town.mjs`** | Deterministic fixtures for canonical, foreign, empty/archive-only, partial, missing-date, leakage, resident-cap, and zero-request portable towns. | Changing public-town projection or local resident derivation. |
 | **`.github/workflows/refresh.yml`** | "Refresh Repolis data" — daily Action that regenerates `repos.json` and pushes `chore: refresh`. | CI / data-refresh changes. |
 | **`scripts/build-contribution-library.mjs` + `assets/contribution-library.json`** | Generates the in-app **Contribution Library** JSON from the sibling `Hyeonsang-AI-Contributions` README (KO/EN); `index.html` fetches it at runtime. JSON is **generated — do not hand-edit.** Daily via `.github/workflows/update-contribution-library.yml`. | Changing the library landmark's data/source. |
@@ -127,6 +128,7 @@ zero LLM, zero cost — so run them freely:
 node council/test.mjs        # deterministic Council crosscheck
 node council/test-live.mjs   # live guards + state machine
 node scripts/smoke.mjs       # city/runtime static + behavioral regression guards
+node scripts/test-visual-governor.mjs
 node scripts/test-portable-town.mjs
 python3 scripts/test_city_state.py
 python3 scripts/validate_city_state.py
@@ -181,6 +183,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | Change Creator Hall profile facts, caching, or upstream Star handoff | `assets/town-creator.js` + the Creator Hall landmark/panel blocks in `index.html` + `scripts/smoke.mjs`; keep profile loading explicit-read and allowlisted. |
 | Change Town Growth Replay years, camera, reveal, share links, or era postcards | `assets/town-growth.js` + `/*TOWN_GROWTH_REPLAY*/` in `index.html` + the Growth Replay group in `scripts/smoke.mjs`; creation dates are historical, building metrics are current, and replay must restore camera/fog/sky/LOD exactly. |
 | Change Repository Atelier room, avatar, data walls, or action terminals | `/*REPOSITORY_ATELIER*/` in `index.html` + the Atelier group in `scripts/smoke.mjs`; preserve one lazy reusable room, three bounded canvas atlases, exact exterior restore, zero exterior renders inside, in-room Ask/Why ownership, and explicit-only exit/GitHub navigation. |
+| Change adaptive frame thresholds or visual tiers | `/*VISUAL_GOVERNOR_CORE*/` + `/*VISUAL_GOVERNOR_RUNTIME*/` in `index.html`, `scripts/test-visual-governor.mjs`, and the matching smoke group; preserve 6 s eligible warm-up, separated hysteresis/dwell, balanced-before-lean ambient ordering, LOW_END/reduced-motion authority, state continuity, and zero storage/network/telemetry. |
 | Change Twin Towns matching or two-person share links | `assets/twin-towns.js` + the Twin Towns block in `index.html` + `scripts/smoke.mjs`. |
 | Change Town Gazette / return-visit freshness | `/*FRESHNESS*/` + Passport render/start flow in `index.html`; keep snapshots local, bounded, per-town, and explicit-read only. |
 | Change resident homes, styles, gardens, routines, moods, friendships, haunts, or Shared Joy | The resident social layer + Starlight Row blocks in `index.html`; preserve the resident style map, 3 roof batches, 10/6 desktop/LOW_END detail-batch cap, 42-unit reserve, entrance gap, quarter colliders, home/work truth, owned porch seats, and social ownership guards. |

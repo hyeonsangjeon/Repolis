@@ -101,6 +101,12 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 - **No full browser automation suite.** `scripts/smoke.mjs` guards many static and extracted behavioral
   contracts, but visual and interaction changes still require serving locally and driving the page in
   Chrome DevTools with 0 console errors on mobile + desktop.
+- **Adaptive quality is an in-memory safety rail, not a benchmark or device profile.** The governor observes
+  visible, active exterior render intervals only after 6 seconds of eligible warm-up, uses three coarse reversible
+  tiers, and forgets everything on reload. Hidden tabs, the intentional idle cap, intro/modals, Atelier, and Growth
+  Replay do not influence it. LOW_END remains the maximum quality bound and reduced motion keeps decorative
+  updates stopped; there is no user dashboard, telemetry, persistence, fingerprint, backend report, or attempt to
+  predict hardware. `?dbg` fixtures are local deterministic replays rather than real-device speed claims.
 - **Owner-town size is a snapshot, not a contract.** Its repository count changes whenever the daily
   public data refresh adds, removes, or filters a repository.
 - **Town Gazette is browser-local.** It compares public repo fields against the last snapshot marked read
