@@ -6,6 +6,29 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.93.0] — 2026-08-26
+
+### 🎛️ Adaptive Visual Governor — preserve detail within the frame budget
+
+- A three-tier `full` / `balanced` / `lean` governor now observes eligible active render intervals only after
+  6,000 ms of warm-up. Full steps down after a 22.5 ms EMA holds for 3,000 ms; balanced steps down after
+  28.5 ms holds for 5,000 ms. Recovery uses separate 18.5/17.5 ms thresholds, 18,000/14,000 ms evidence,
+  and 14,000/10,000 ms tier dwell so quality returns one step at a time without flicker.
+- Balanced cuts distant building-shadow proxies, particle draw ranges, decorative update cadence, and World Tree
+  bloom cadence first. Lean tightens those bounds and only then biases existing far-building LOD. Repository
+  signs, silhouettes, colliders, functional roots, nearby full detail, and camera/control ownership remain intact.
+- Hidden, idle-capped, intro, modal, Atelier, and Growth Replay frames do not enter evidence. Existing LOW_END
+  clamps the quality ceiling to balanced, and reduced motion keeps decorative cadence at zero through debug force
+  and recovery. Residents, social routines, tours, taxi rides, Atelier, Growth Replay, and Chronicle state are
+  observed but never reset.
+- `?dbg` exposes `window.__visualGovernor()` with force/auto, deterministic low/recover/hidden/transient fixtures,
+  replay, work counts, and continuity state. The helper is in-memory only: no telemetry, persistence, request,
+  backend, model call, dependency, build step, or asset was added.
+- Controlled owner-night diagnostics measured full/balanced/lean shadow proxies at 69/46/23, particles at
+  3,473/2,363/1,459, bloom ceilings at 30/20/12 Hz, and draw calls at 2,481.67/2,465.83/2,417.33. Cold-load requests
+  remain owner 31→31 and foreign 27→27 (the existing foreign GitHub read stays one); decoded same-origin bytes
+  rise by 13,825 (owner 1,726,282→1,740,107; foreign 1,629,433→1,643,258).
+
 ## [1.92.0] — 2026-08-26
 
 ### 🌳 Portable Living Towns — public records grow their own local life

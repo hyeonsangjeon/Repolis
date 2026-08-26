@@ -16,6 +16,7 @@ import { createRequire } from 'module';
 import { createHash } from 'crypto';
 import { runInNewContext } from 'vm';
 import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
+import { runVisualGovernorTests } from './test-visual-governor.mjs';
 import { runLoreTests } from './test-lore.mjs';
 import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
@@ -3209,6 +3210,57 @@ ok(/window\.__lanternWatchPlan=/.test(HTML) && /window\.__lanternWatchStart=/.te
   && /window\.__lanternWatchNext=/.test(HTML) && /window\.__lanternWatchEnd=/.test(HTML), '?dbg watch plan/start/advance/end hooks are present');
 ok(/updateLanternWatch\(clock\.elapsedTime\)/.test(HTML), 'the main world loop updates active night-watch lanterns');
 
+group('Adaptive Visual Governor - sustained frame budget without gameplay resets');
+const visualGovernorCoreBlock = (HTML.match(/\/\*VISUAL_GOVERNOR_CORE:START\*\/([\s\S]*?)\/\*VISUAL_GOVERNOR_CORE:END\*\//) || [, ''])[1];
+const visualGovernorRuntimeBlock = (HTML.match(/\/\*VISUAL_GOVERNOR_RUNTIME:START\*\/([\s\S]*?)\/\*VISUAL_GOVERNOR_RUNTIME:END\*\//) || [, ''])[1];
+ok(visualGovernorCoreBlock.length > 0 && visualGovernorRuntimeBlock.length > 0,
+  'governor pure transition and runtime adapter blocks remain independently extractable');
+await runVisualGovernorTests(ok);
+ok(/warmupMs:6000,emaAlpha:0\.08,minFrameMs:4,maxFrameMs:120/.test(visualGovernorCoreBlock)
+  && /downFrameMs:22\.5,downHoldMs:3000/.test(visualGovernorCoreBlock)
+  && /downFrameMs:28\.5,downHoldMs:5000,upFrameMs:17\.5,upHoldMs:14000/.test(visualGovernorCoreBlock)
+  && /upFrameMs:18\.5,upHoldMs:18000/.test(visualGovernorCoreBlock),
+  'warm-up, separate down/up thresholds, hysteresis, and slow recovery are explicit bounded policy');
+ok(/floor=options\.lowEnd\?1:0/.test(visualGovernorCoreBlock)
+  && /return state\.reducedMotion\?0:state\.config\.policies\[state\.tier\]\.decorativeStride/.test(visualGovernorCoreBlock)
+  && /state\.manualTier=Math\.max\(state\.floor,requested\)/.test(visualGovernorCoreBlock),
+  'LOW_END clamps maximum quality while reduced motion and debug force cannot re-enable decorative motion');
+ok(/shadowRadius:150,particleScale:0\.68,decorativeStride:2,lodBias:1,bloomHzScale:0\.66/.test(visualGovernorCoreBlock)
+  && /shadowRadius:95,particleScale:0\.42,decorativeStride:4,lodBias:1\.38,bloomHzScale:0\.4/.test(visualGovernorCoreBlock),
+  'balanced removes distant ambient cost first and lean alone biases far-building detail');
+ok(/if\(document\.hidden\) return 'hidden'/.test(visualGovernorRuntimeBlock)
+  && /if\(idle\) return 'idle-cap'/.test(visualGovernorRuntimeBlock)
+  && /VISUAL_GOVERNOR_INTRO&&!VISUAL_GOVERNOR_INTRO\.classList\.contains\('hidden'\)/.test(visualGovernorRuntimeBlock)
+  && /if\(repositoryAtelierActive\(\)\) return 'atelier'/.test(visualGovernorRuntimeBlock)
+  && /if\(GROWTH_REPLAY\.active\) return 'growth-replay'/.test(visualGovernorRuntimeBlock)
+  && /if\(modalOpen\) return 'modal'/.test(visualGovernorRuntimeBlock),
+  'hidden, idle-capped, initial, Atelier, Growth Replay, and modal frames cannot contaminate sustained evidence');
+ok(/const _idleCapped=_idle && !repositoryAtelierActive\(\)[\s\S]*?if\(_idleCapped && _now-lastFrame<33\) return/.test(HTML)
+  && /_visualGovernorTick\(_now,_idleCapped\);\s*if\(_repositoryAtelierFrame\(dt\)\) return/.test(HTML)
+  && /const ambientDue=_visualGovernorAmbientDue\(dt\)/.test(HTML)
+  && /updateResidents\(dt\)/.test(HTML)
+  && /updateFireworks\(dt\)/.test(HTML)
+  && /updateStarTrail\(clock\.elapsedTime\)/.test(HTML)
+  && /updateLanternWatch\(clock\.elapsedTime\)/.test(HTML),
+  'governor samples every rendered exterior frame while resident, ride, route, and triggered effects keep their own cadence');
+ok(/SKY_POINT_LAYERS/.test(visualGovernorRuntimeBlock)
+  && /fountain\.geom\.setDrawRange/.test(visualGovernorRuntimeBlock)
+  && /fireflies\[i\]\.visible=i<runtime\.fireflyCount/.test(visualGovernorRuntimeBlock)
+  && /entry\.shadowProxy\.castShadow=active/.test(visualGovernorRuntimeBlock)
+  && /VISUAL_GOVERNOR_RUNTIME\.policy\.lodBias/.test(HTML),
+  'each tier reversibly reduces distant shadow proxies, particle draw ranges, decorative updates, and far LOD');
+ok(!/(?:fetch|XMLHttpRequest|WebSocket|sendBeacon|localStorage|sessionStorage|indexedDB|track)\s*\(/.test(visualGovernorCoreBlock + visualGovernorRuntimeBlock)
+  && !/visual-governor\.js/.test(HTML),
+  'governor adds no request, telemetry, analytics, persistence, backend, or runtime module load');
+ok(!/(?:endTour|endDrive|_endSharedJoy|exitRepositoryAtelier|_restoreRepositoryAtelier|closeWorldTreeChronicle)\s*\(/.test(visualGovernorRuntimeBlock)
+  && /continuity:\{residents:RESIDENTS_LIVE\.length,tour:!!\(tour&&tour\.active\),taxi:ride&&ride\.phase/.test(visualGovernorRuntimeBlock)
+  && /worldTreeChronicle:WORLD_TREE_UI\.open,modal:modalOpen,cameraOwner:_cameraOwnerAtFrameStart\(\)/.test(visualGovernorRuntimeBlock),
+  'tier application observes but never restarts residents, tours, taxi, Atelier, Growth Replay, Chronicle, modal, or camera ownership');
+ok(/window\.__visualGovernor=\(command\)=>_debugVisualGovernor\(command\)/.test(HTML)
+  && /Array\.isArray\(command\.sequence\)/.test(visualGovernorRuntimeBlock)
+  && /command\.fixture/.test(visualGovernorRuntimeBlock),
+  '?dbg exposes local force, deterministic fixture, replay, work-count, and continuity evidence');
+
 group('one colossal deterministic World Tree Pillar supports the village');
 const memorialTreeBlock = (HTML.match(/\/\*MEMORIAL_TREE:START\*\/([\s\S]*?)\/\*MEMORIAL_TREE:END\*\//) || [, ''])[1];
 const worldTreeChronicleBlock = (HTML.match(/\/\*WORLD_TREE_CHRONICLE:START\*\/([\s\S]*?)\/\*WORLD_TREE_CHRONICLE:END\*\//) || [, ''])[1];
@@ -3539,7 +3591,8 @@ ok(/function _withBuildingLodPrivateRandom\(fn\)/.test(buildingLodPrototypeBlock
   && /proxy-memory-budget-exceeded/.test(buildingLodPrototypeBlock), '2C-A constructors consume private RNG and enforce a five-megabyte proxy budget for full 100-repository towns');
 ok(/fullEnter:280,fullLeave:240,midEnter:\(LOW_END\|\|IS_MOBILE\)\?60:48,midLeave:\(LOW_END\|\|IS_MOBILE\)\?48:36,settle:3,cadence:8,minDwellFrames:24/.test(buildingLodPrototypeBlock)
   && /detailScale:\(LOW_END\|\|IS_MOBILE\)\?1:\(repo\._lodSpec\.tier>=4\?\.82:repo\._lodSpec\.tier===3\?\.92:1\)/.test(buildingLodPrototypeBlock)
-  && /const fullEnter=th\.fullEnter\*entry\.detailScale,fullLeave=th\.fullLeave\*entry\.detailScale/.test(buildingLodPrototypeBlock)
+  && /const bias=VISUAL_GOVERNOR_RUNTIME\.policy\.lodBias,fullEnter=th\.fullEnter\*entry\.detailScale\*bias,fullLeave=th\.fullLeave\*entry\.detailScale\*bias/.test(buildingLodPrototypeBlock)
+  && /midEnter=th\.midEnter\*bias,midLeave=th\.midLeave\*bias/.test(buildingLodPrototypeBlock)
   && /entry\.pendingCount>=BUILDING_LOD_PROTO\.thresholds\.settle/.test(buildingLodUpdateBlock)
   && !/(?:traverse|Box3|new THREE|sort\()/.test(buildingLodUpdateBlock), 'desktop grand homes retain detail longer while LOW_END and the allocation-free hysteresis path stay bounded');
 ok(/const functional=new THREE\.Group\(\),full=new THREE\.Group\(\),mid=new THREE\.Group\(\),far=new THREE\.Group\(\),active=new THREE\.Group\(\)/.test(buildingLodPrototypeBlock)
@@ -3694,11 +3747,12 @@ ok(/const distance=camera\.position\.distanceTo\(MEMORIAL_TREE\.glowWorld\),far=
   'distance is diagnostic only; branch/leaf/glyph bloom luminance stays constant near and far');
 ok(/MEM_TREE_BLOOM_HZ=LOW_END\?20:30, MEM_TREE_DESKTOP_BLOOM_MIN_FRAME_GAP=3/.test(HTML)
   && /const _treeBloomMinFrameGap=\(\)=>_desktopFrameDropGuard\(\)\?MEM_TREE_DESKTOP_BLOOM_MIN_FRAME_GAP:0/.test(HTML)
+  && /const _treeBloomHz=\(\)=>Math\.max\(1,Math\.min\(MEM_TREE_BLOOM_HZ,Math\.round\(MEM_TREE_BLOOM_HZ\*VISUAL_GOVERNOR_RUNTIME\.policy\.bloomHzScale\)\)\)/.test(HTML)
   && /bloomFrameGap=_treeBloomMinFrameGap\(\)/.test(HTML)
-  && /\(!bloomFrameGap\|\|renderedFrame-MEMORIAL_TREE\.lastBloomFrame>=bloomFrameGap\)&&now-MEMORIAL_TREE\.lastBloomAt>=1000\/MEM_TREE_BLOOM_HZ/.test(HTML)
+  && /\(!bloomFrameGap\|\|renderedFrame-MEMORIAL_TREE\.lastBloomFrame>=bloomFrameGap\)&&now-MEMORIAL_TREE\.lastBloomAt>=1000\/_treeBloomHz\(\)/.test(HTML)
   && /lastBloomAt:-Infinity,lastBloomFrame:-Infinity,bloomDirty:true/.test(memorialTreeBlock)
   && /MEMORIAL_TREE\.lastBloomFrame=renderedFrame/.test(HTML),
-  'the glow cache keeps its 20–30Hz ceiling, adds a slow-frame guard only on fine-pointer desktop, and keeps mobile time-driven');
+  'the glow cache keeps its 20–30Hz ceiling and follows the reversible decorative cadence without changing emission');
 ok(/pulse=REDUCED\?1:\(0\.93\+Math\.sin\(elapsed\*1\.5\)\*0\.07\)/.test(memorialTreeBlock),
   'reduced-motion keeps the additive world-tree halos steady');
 ok(/geometry\.translate\(0, -REPOLIS_LEAF_ATTACHMENT\.rootLocalY, 0\)/.test(WORLD_TREE_FACTORY)
@@ -3777,8 +3831,8 @@ ok(/function disableDynamicShadowCasters\(root\)\{ root\.traverse\(o=>\{ if\(o\.
   && /disableDynamicShadowCasters\(taxi\)/.test(HTML) && /disableDynamicShadowCasters\(model\)/.test(HTML)
   && /disableDynamicShadowCasters\(g\); scene\.add\(g\)/.test(HTML)
   && /return disableDynamicShadowCasters\(g\)/.test(HTML), 'moving avatars, NPCs, pets, and rides use blob/contact shadows while gently swaying town trees retain their frozen static shadows');
-ok(/AURORA_OP\.value=Math\.min\(0\.55\+\(_auroraBoost>0\?0\.45:0\), AURORA_OP\.value\+dt\*0\.5\)/.test(HTML),
-  'Aurora keeps the 1.77.2 night intensity; performance work does not dim the global night art');
+ok(/AURORA_OP\.value=Math\.min\(0\.55\+\(_auroraBoost>0\?0\.45:0\), AURORA_OP\.value\+ambientDt\*0\.5\)/.test(HTML),
+  'Aurora keeps the 1.77.2 night intensity while only its update frequency changes');
 ok(/pointLightRole:'runtime-topology-only'/.test(memorialTreeBlock)
   && /haloMode:'world-space-constant-emission'/.test(memorialTreeBlock)
   && /branchGlow:'base-emissive-only'/.test(memorialTreeBlock)
