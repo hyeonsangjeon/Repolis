@@ -19,6 +19,7 @@
 - [scripts/build_repos.py](scripts/build_repos.py): rebuilds `repos.json` from committed traffic logs plus `gh api`.
 - [scholars.js](scholars.js): POLARIS, VEGA, RIGEL, MIRA, and LYRA scholar roster.
 - [assets/world-tree/createRepolisHero.js](assets/world-tree/createRepolisHero.js): procedural World Tree factory.
+- [assets/world-tree/world-tree-state.js](assets/world-tree/world-tree-state.js): owner Chronicle projection plus deterministic portable public-town state and residents.
 - [data/lore/fragments.json](data/lore/fragments.json): hand-authored bilingual elder recollections; never generated.
 - [assets/lore-fragments.js](assets/lore-fragments.js): strict lore validation, elder allocation, and session-bounded delivery.
 - [assets/taxi-voice.js](assets/taxi-voice.js): local Shared-state taxi replies, home redirects, and ride observations.
@@ -34,6 +35,7 @@
 - Explorer Passport, district progress, the daily resident→haunt→repo/district Village Chronicle, Repository Constellation Trail, and Maintainers' Night Watch for recently tended low-star repos.
 - Town Growth Replay: repo houses rise through truthful public creation years, with a reversible year link and era postcard; building metrics remain explicitly current.
 - Repo Portal: `?repo=owner/repo&ref=repo-portal` loads one public target before the owner catalog, opens its Atelier, and never invents traffic.
+- Portable living towns: the one normalized public load deterministically supplies that user's era, season, Silence Ledger, Roots, and a 6/4-capped local resident roster with no owner memory or service borrowing.
 - Repo Route: after opening repo houses, visitors can share an ordered 2–3 stop path that recipients follow through the same real cards and compass.
 - Open Source Quests: one explicit anonymous search turns up to three current public issues into taxi rides to their real repo houses and exact GitHub handoffs.
 - Repository Atelier: one walkable room rebinds current repo history, impact signals, metric artifacts, current chibi avatar, and in-room Gitber/Why actions without rendering the exterior.

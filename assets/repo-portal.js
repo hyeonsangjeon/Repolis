@@ -144,7 +144,34 @@ function safeHomepage(value) {
   } catch (_) { return ''; }
 }
 
-export function projectPublicRepo(raw, expectedOwner, nowMs = Date.now()) {
+function publicTimestamp(value) {
+  const text = String(value || '').trim();
+  const dateMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+  if (!dateMatch) return null;
+  const calendarProbe = new Date(Date.UTC(
+    Number(dateMatch[1]),
+    Number(dateMatch[2]) - 1,
+    Number(dateMatch[3]),
+  )).toISOString().slice(0, 10);
+  if (calendarProbe !== `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`) return null;
+  const parsed = Date.parse(text);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function publicProjectionReference(raw) {
+  const rows = Array.isArray(raw) ? raw : [raw];
+  const candidates = [];
+  for (const repo of rows) {
+    if (!repo || typeof repo !== 'object') continue;
+    for (const value of [repo.updated_at, repo.pushed_at, repo.created_at]) {
+      const parsed = publicTimestamp(value);
+      if (parsed !== null) candidates.push(parsed);
+    }
+  }
+  return candidates.length ? Math.max(...candidates) : Date.UTC(1970, 0, 1);
+}
+
+export function projectPublicRepo(raw, expectedOwner, nowMs) {
   if (!raw || typeof raw !== 'object' || raw.private === true || raw.disabled === true) return null;
   const apiOwner = cleanText(raw.owner && raw.owner.login, 39);
   const owner = cleanText(expectedOwner || apiOwner, 39);
@@ -153,9 +180,12 @@ export function projectPublicRepo(raw, expectedOwner, nowMs = Date.now()) {
   if (apiOwner && apiOwner.toLowerCase() !== owner.toLowerCase()) return null;
   if (raw.full_name && String(raw.full_name).toLowerCase() !== `${owner}/${repo}`.toLowerCase()) return null;
 
-  const pushed = cleanText(raw.pushed_at || raw.updated_at || raw.created_at, 40);
-  const pushedMs = Date.parse(pushed);
-  const ageDays = Number.isFinite(pushedMs) ? Math.max(0, (nowMs - pushedMs) / 86400000) : 3650;
+  const created = cleanText(raw.created_at, 40);
+  const pushed = cleanText(raw.pushed_at, 40);
+  const updated = cleanText(raw.updated_at, 40);
+  const activityMs = publicTimestamp(pushed) ?? publicTimestamp(updated) ?? publicTimestamp(created);
+  const referenceMs = Number.isFinite(Number(nowMs)) ? Number(nowMs) : publicProjectionReference(raw);
+  const ageDays = activityMs !== null ? Math.max(0, (referenceMs - activityMs) / 86400000) : 3650;
   const recency = Math.max(0, 1 - Math.min(ageDays, 365) / 365);
   const license = raw.license && raw.license.spdx_id !== 'NOASSERTION'
     ? cleanText(raw.license.spdx_id, 40) : '';
@@ -183,9 +213,9 @@ export function projectPublicRepo(raw, expectedOwner, nowMs = Date.now()) {
     default_branch: cleanText(raw.default_branch, 100) || 'main',
     release_tag: '',
     release_date: null,
-    created: cleanText(raw.created_at, 40),
+    created,
     pushed,
-    updated: cleanText(raw.updated_at, 40),
+    updated,
     tracked: false,
     first_seen: '',
     social: '',
@@ -198,8 +228,10 @@ export function projectPublicRepo(raw, expectedOwner, nowMs = Date.now()) {
   };
 }
 
-export function projectPublicRepos(raw, owner, nowMs = Date.now()) {
-  const repos = (Array.isArray(raw) ? raw : []).map(repo => projectPublicRepo(repo, owner, nowMs)).filter(Boolean);
+export function projectPublicRepos(raw, owner, nowMs) {
+  const rows = Array.isArray(raw) ? raw : [];
+  const referenceMs = Number.isFinite(Number(nowMs)) ? Number(nowMs) : publicProjectionReference(rows);
+  const repos = rows.map(repo => projectPublicRepo(repo, owner, referenceMs)).filter(Boolean);
   repos.sort((a, b) => (b.score - a.score) || (b.stars - a.stars) || a.repo.localeCompare(b.repo));
   repos.forEach((repo, index) => { repo.rank = index; });
   return repos;

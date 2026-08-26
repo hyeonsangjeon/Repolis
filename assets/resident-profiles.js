@@ -309,15 +309,36 @@ export function residentLocalResponse({
     };
   }
   const q = String(question || '').toLowerCase();
+  const portable = profile?.portable === true || bound?.portable === true;
+  const memoryCue = /(commit|release|history|memory|shared|bound|\ucee4\ubc0b|\ub9b4\ub9ac\uc2a4|\uc5ed\uc0ac|\uae30\uc5b5|\uacf5\uc720|\ubb36\uc778)/i.test(q);
+  const concernCue = /(issue|pull request|pr\b|concern|worry|\uc774\uc288|\ud480\s*\ub9ac\ud018\uc2a4\ud2b8|\uace0\ubbfc)/i.test(q);
+  if (portable && memoryCue) {
+    const lastPush = profile?.publicSignals?.lastPublicPush;
+    return {
+      intent: 'portable_memory_unknown',
+      text: ko
+        ? `${bound.repo} \uc9d1\uc5d0\ub294 \uacf5\uac1c \ud45c\uc9c0\ub9cc \ub3c4\ucc29\ud588\uc5b4\uc694. Shared\u00b7Bound \uae30\uc5b5\uc740 \uc624\uc9c0 \uc54a\uc558\uc5b4\uc694.${lastPush ? ` \ub9c8\uc9c0\ub9c9 \uacf5\uac1c push\ub294 ${lastPush}\uc608\uc694.` : ''}`
+        : `Only the public sign reached ${bound.repo}. Shared and Bound memories did not.${lastPush ? ` The last public push is dated ${lastPush}.` : ''}`,
+    };
+  }
+  if (portable && concernCue) {
+    const openIssues = Number(profile?.publicSignals?.openIssues) || 0;
+    return {
+      intent: 'portable_concerns_unknown',
+      text: ko
+        ? `\uacf5\uac1c \uc7a5\ubd80\uc5d0\ub294 ${bound.repo}\uc758 \uc5f4\ub9b0 \uc774\uc288\uac00 ${openIssues}\uac1c\ub77c\uace0\ub9cc \uc801\ud600 \uc788\uc5b4\uc694. \uc81c\ubaa9\uc740 \ubd88\ub7ec\uc624\uc9c0 \uc54a\uc558\uc5b4\uc694.`
+        : `The public ledger only reports ${openIssues} open issues for ${bound.repo}; their titles were not loaded.`,
+    };
+  }
   const name = (resident?.[ko ? 'ko' : 'en'] || resident?.en || resident?.ko || {}).name || resident?.id;
   const job = profile?.job?.labels?.[ko ? 'ko' : 'en'];
   const summary = profile?.repo?.summary || repo.desc || '';
   const concern = profile?.recent_concerns?.[0];
   const memory = profile?.bound_memories?.[0];
-  if (/(issue|pull request|pr\b|concern|worry|\uc774\uc288|\ud480\s*\ub9ac\ud018\uc2a4\ud2b8|\uace0\ubbfc)/i.test(q) && concern) {
+  if (concernCue && concern) {
     return { intent: 'own_concern', text: cap(ko ? `\uc694\uc998 ${bound.repo} \uc9d1\uc5d0\uc11c\ub294 \u201c${concern.title}\u201d\uc744 \uc0b4\ud3b4\ubcf4\uace0 \uc788\uc5b4\uc694.` : `Around ${bound.repo}, I have been watching \u201c${concern.title}.\u201d`) };
   }
-  if (/(commit|release|history|memory|\ucee4\ubc0b|\ub9b4\ub9ac\uc2a4|\uc5ed\uc0ac|\uae30\uc5b5)/i.test(q) && memory) {
+  if (memoryCue && memory) {
     return { intent: 'own_bound_memory', text: cap(ko ? `${bound.repo}\uc5d0 \ubb36\uc778 \uae30\uc5b5 \ud558\ub098\ub294 \u201c${memory.title}\u201d\uc774\uc5d0\uc694.` : `One Bound memory from ${bound.repo} is \u201c${memory.title}.\u201d`) };
   }
   if (/(where|home|house|direction|\uc5b4\ub514|\uc9d1|\uac74\ubb3c|\uae38)/i.test(q)) {
@@ -335,6 +356,13 @@ export function residentLocalResponse({
   });
   if (newcomer) {
     return { intent: 'newcomer_introduction', targetRepo: bound.repo, text: newcomer };
+  }
+  if (portable && profile?.greeting?.[ko ? 'ko' : 'en']) {
+    return {
+      intent: 'portable_introduction',
+      targetRepo: bound.repo,
+      text: cap(profile.greeting[ko ? 'ko' : 'en']),
+    };
   }
   return {
     intent: 'introduction',

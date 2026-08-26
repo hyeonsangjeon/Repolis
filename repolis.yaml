@@ -49,6 +49,7 @@ entrypoints:
   app: index.html
   scholars: scholars.js
   world_tree: assets/world-tree/createRepolisHero.js
+  portable_town_projection: assets/world-tree/world-tree-state.js
   town_growth: assets/town-growth.js
   repo_portal: assets/repo-portal.js
   repo_route: assets/repo-route.js
@@ -131,6 +132,13 @@ features:
     url: "?repo=<owner>/<repo>&ref=repo-portal"
     cache: "15 minutes, 30 entries, 512 KiB LRU"
     cold_github_requests_before_aha: 1
+  - id: portable-living-towns
+    summary: One normalized public payload deterministically derives the foreign owner's World Tree record and local repo-bound residents without owner state or another request.
+    schema: repolis.portable-town@1
+    desktop_resident_cap: 6
+    low_end_resident_cap: 4
+    feature_owned_api_requests: 0
+    foreign_services: local-dialogue-only; realtime and grounded disabled
   - id: repo-route
     summary: Visitors hand off an ordered 2–3 house path they actually explored; recipients follow current public repo cards before the earned Star invitation.
     url: "?user=<login>&route=<repo1>,<repo2>,<repo3>&ref=repo-route"
@@ -177,6 +185,7 @@ verify:
     - node council/test.mjs
     - node council/test-live.mjs
     - node scripts/smoke.mjs
+    - node scripts/test-portable-town.mjs
     - node scripts/test-session-footprints.mjs
     - python3 scripts/test_fork_lineage.py
     - node scripts/test-fork-lineage.mjs

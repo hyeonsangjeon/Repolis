@@ -6,6 +6,27 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.92.0] — 2026-08-26
+
+### 🌳 Portable Living Towns — public records grow their own local life
+
+- One pure `repolis.portable-town` v1 projection now runs after the existing `?user=`, Repo Portal, or Station
+  destination load. It derives a reproducible era, sparse-history season fallback, #93-compatible Silence
+  Ledger, archived Roots, public aggregates, and a local resident directory from the normalized payload only.
+- Foreign towns receive deterministic names, jobs, personalities, greetings, and real repo-home bindings.
+  Active residents are capped at six on desktop and four on mobile/LOW_END; archived and empty towns create no
+  false resident. Houses keep their labels, silhouettes, colliders, cards, and interactions at every tier.
+- Visitors/views/clones, owner residents, Shared/Bound memory, daily sap, realtime, and grounded knowledge stay
+  explicitly unavailable. Foreign dialogue is rules-based Local by default, and canonical Worker/WebSocket
+  services are closed for the whole portable visit.
+- The existing public repository request remains the only feature-owned API read. No generated JSON, storage
+  key, persistent identity, analytics event, model call, backend, dependency, build step, or binary asset was
+  added.
+- Controlled cold loads keep same-origin requests unchanged (owner 31→31; foreign 27→27) and the foreign GitHub
+  read unchanged at one. Decoded same-origin bytes rise by 32,975 (owner 1,693,307→1,726,282; foreign
+  1,596,458→1,629,433). Portable sap adds zero draws; resident homes stay within the existing 10/6
+  desktop/LOW_END batch ceilings.
+
 ## [1.91.0] — 2026-08-25
 
 ### 📜 Silence Ledger — factual long-idle repository records

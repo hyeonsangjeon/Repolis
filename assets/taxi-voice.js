@@ -145,23 +145,32 @@ const SEASON_NAMES = Object.freeze({
 export function taxiSharedResponse({ question, lang = 'ko', cityState } = {}) {
   const source = clean(question, 2000), ko = lang !== 'en';
   if (!source || cityState?.schema !== 'repolis.city-state' || cityState?.version !== 1) return null;
+  const portable = cityState?.portable?.schema === 'repolis.portable-town';
   const season = cityState?.season?.value, seasonName = SEASON_NAMES[season]?.[ko ? 'ko' : 'en'];
   if (seasonName && /도시.{0,8}계절|지금.{0,8}계절|요즘.{0,8}계절|what season|current season|season in (?:town|the city)/i.test(source)) {
     return Object.freeze({
-      intent: 'shared_season',
-      text: ko
-        ? `지금 도시는 ${seasonName}이에요. 길마다 볕과 바람이 조금씩 달라서 천천히 돌아보는 편이 좋아요.`
-        : `The town is in ${seasonName} now. Light and wind change from road to road, so it is worth taking the long way.`,
+      intent: portable ? 'portable_season' : 'shared_season',
+      text: portable
+        ? (ko
+          ? `이 마을의 공개 push 장부는 ${seasonName}으로 읽혀요. Shared 기억이 아니라, 지금 도착한 공개 기록만 본 결과예요.`
+          : `This town's public push ledger reads as ${seasonName}. That comes from the public record that arrived, not Shared memory.`)
+        : (ko
+          ? `지금 도시는 ${seasonName}이에요. 길마다 볕과 바람이 조금씩 달라서 천천히 돌아보는 편이 좋아요.`
+          : `The town is in ${seasonName} now. Light and wind change from road to road, so it is worth taking the long way.`),
     });
   }
   const stats = cityState.stats || {};
   if (/도시.{0,10}(몇|통계)|레포.{0,8}(몇|개수)|how many (?:repos|repositories|houses)|town (?:count|totals|stats)/i.test(source)
     && Number.isInteger(stats.repository_count)) {
     return Object.freeze({
-      intent: 'shared_aggregate',
-      text: ko
-        ? `오늘 장부에는 레포 집 ${stats.repository_count}채, 별 ${Number(stats.total_stars) || 0}개가 보여요. 어느 구역부터 돌까요?`
-        : `Today's town ledger shows ${stats.repository_count} repo houses and ${Number(stats.total_stars) || 0} stars. Which district first?`,
+      intent: portable ? 'portable_aggregate' : 'shared_aggregate',
+      text: portable
+        ? (ko
+          ? `도착한 공개 장부에는 레포 집 ${stats.repository_count}채와 별 ${Number(stats.total_stars) || 0}개가 보여요. 방문·조회·클론 수는 알 수 없어요.`
+          : `The public ledger that arrived shows ${stats.repository_count} repo houses and ${Number(stats.total_stars) || 0} stars. Visits, views, and clones are unknown.`)
+        : (ko
+          ? `오늘 장부에는 레포 집 ${stats.repository_count}채, 별 ${Number(stats.total_stars) || 0}개가 보여요. 어느 구역부터 돌까요?`
+          : `Today's town ledger shows ${stats.repository_count} repo houses and ${Number(stats.total_stars) || 0} stars. Which district first?`),
     });
   }
   if (/마지막.{0,8}수액|수액.{0,8}(언제|기록)|last sap|sap record/i.test(source) && cityState.last_sap_flow) {

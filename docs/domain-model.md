@@ -21,6 +21,7 @@ see [`AGENTS.md`](../AGENTS.md); for narrative see [`README.md`](../README.md).
 | **Exploration state** | browser `localStorage` | Passport visits, district progress, daily Village Chronicle, Town Gazette baselines, constellation completion, and the Maintainers' Night Watch stamp. |
 | **Session footprint** | current-tab memory + one instanced mesh | A short local-player walking trace; never persisted, synchronized, or derived from residents/peers. |
 | **Silence Ledger** | nested `data/city-state.json` projection | A bounded dated record of long-quiet unarchived public repos, separate from archived Roots. |
+| **Portable town projection** | pure runtime object from normalized public repos | The foreign town's deterministic era, season, Silence Ledger, Roots, public aggregates, unknown-value boundary, and local resident directory. |
 | **Scholar (NPC)** | `scholars.js` (`window.SCHOLARS`) | A named star + myth + exactly one MCP knowledge source. |
 | **Taxi** | the POLARIS scholar (`kind: taxi`) | The only all-district traveler; finds a repo, drives there, knows Shared city state, and redirects household memory to that home. |
 | **Grounding Worker** | `cloudflare-taxi/` (`repolis-taxi`) | Server brain: KB retrieval + in-persona chat. |
@@ -152,10 +153,20 @@ score, or statement about copies. The pure World Tree projection accepts the nes
 reading owner DOM, storage, the network, or the wall clock, so later public-town and daily-ledger work
 can reuse the same bounded shape.
 
-The owner town uses this state for a restrained static sky/fog/light palette. Other public towns use
-the neutral summer palette because no owner-specific city-state artifact is fetched for them.
-Buildings derive wear from the same reference date, while archived buildings preserve their footprint,
-silhouette, nameplate, collision, and card identity. These effects require no runtime GitHub or LLM call.
+The owner town uses the generated artifact for a restrained static sky/fog/light palette. A foreign public
+town never fetches or substitutes that artifact. After its existing explicit public-repository load, the pure
+`repolis.portable-town` v1 projection builds the compatible runtime shape from the normalized payload:
+
+- the newest valid public repository timestamp is the deterministic reference date (epoch fallback when none);
+- era, season fallback, the nested Silence Ledger, public aggregates, and archived Roots follow the same
+  date and tie semantics as the generated owner contract;
+- daily sap flow, complete commit history, visitors, views, clones, Shared/Bound memory, owner residents,
+  realtime, and grounded services remain unavailable rather than estimated;
+- `?user=`, Repo Portal, and Station destinations all pass through this one post-load projection without a
+  second GitHub request.
+
+Buildings derive wear from that town's own reference date, while archived buildings preserve their footprint,
+silhouette, nameplate, collision, and card identity. These effects require no additional runtime GitHub or LLM call.
 
 ### 4.2 Repository-bound resident profiles
 
@@ -177,6 +188,13 @@ the nine highest-ranked non-archived repo buildings. It does **not** create one 
 Residents still own their Starlight cottage and porch seat, return there at night, and keep the existing social
 simulation; their day/work anchor is the entrance of the bound repo building. Job color plus at most one tiny
 desktop prop adds identity without changing labels, colliders, cottage batches, or LOW_END geometry.
+
+Foreign towns do not load or copy that generated owner roster. The portable projection ranks only non-archived
+houses from the normalized public payload and derives deterministic local names, jobs, personalities, greetings,
+colors, props, and home bindings. Six visual slots are available on desktop and four on mobile/LOW_END. Their
+profile shape contains public repository facts plus explicit `false` availability for concern titles,
+Shared memory, and Bound memory; local dialogue can report open-issue counts and latest push dates but never
+invent titles or household history. Realtime and the canonical grounding Worker remain closed for the visit.
 
 The Worker imports a generated registry. The client sends only a resident id, a stable authority digest,
 the bounded question, and at most six short history items. It never sends a repo name, profile JSON, Bound
