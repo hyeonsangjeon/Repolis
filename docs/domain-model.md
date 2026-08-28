@@ -158,6 +158,14 @@ github-traffic-monitor (private, daily)        Repolis (public)
 - `roots` contains archived public repositories only, with active years and a one-line achievement
   derived from public metadata. It is correctly empty when the catalog has no archived repos.
 
+The Undercroft joins those projected roots back to the current town's normalized archived repository
+catalog. A spatial record exists only when town owner and repository name match and the current catalog
+still marks the repository archived. It exposes the existing root text and years, current public
+`created`/`pushed` dates when valid, and a canonical public GitHub URL. It does not reconstruct deleted
+repositories, commit history, maintainers, or prior states, and fork count is not preservation evidence.
+At most 64 records become instanced shelf/plaque/scroll sets in the walkable room; the complete Roots DOM
+list remains the accessible and overflow fallback.
+
 Fork and clone values never enter the Silence Ledger and cannot affect its counts or longest record.
 That ledger is one current generated snapshot, not a commit timeline, abandonment claim, preservation
 score, or statement about copies. The pure World Tree projection accepts the nested contract without
