@@ -6,6 +6,25 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [1.95.0] — 2026-08-29
+
+### 🌳 The Undercroft — a walkable archive beneath the World Tree
+
+- The World Tree roots now lead to one isolated, walkable archive scene. Current archived public repositories
+  become deterministic paired shelf, plaque, and scroll instances; approaching one shows its existing Roots
+  text, active years, available last-public-push date, and a safe GitHub link that opens without losing the room.
+- The existing World Tree Chronicle and Roots list remain the accessible summary and overflow fallback.
+  Canonical and portable towns join roots only against their own current archived repository catalog; missing,
+  mismatched-owner, private, deleted, and inferred history stays absent, and fork count is never treated as
+  preservation evidence.
+- Entry and exit snapshot and restore the exact exterior player, camera, navigation, tour, and focus state.
+  WASD, touch movement, Enter, the mobile action button, Escape, and a 48 px back control share one room owner;
+  a truthful empty archive still renders and always keeps its exit.
+- Repeated records use three instanced batches under a 64-record spatial cap. Ambient detail is bounded at
+  72/28 desktop/LOW_END dust points, 14/8 root ribs, and two point lights; reduced motion freezes dust and the
+  Adaptive Visual Governor scales its draw range. The room adds no texture, runtime request, analytics,
+  persistence, backend, model call, dependency, build step, or asset pipeline.
+
 ## [1.94.0] — 2026-08-26
 
 ### 🌱 Thirty-day Sap Ledger — bounded aggregate city history

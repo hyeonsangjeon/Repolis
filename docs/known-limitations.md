@@ -35,6 +35,11 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   facts are aggregate snapshots, not a reconstruction of deleted, private, or previously different repos.
   Missing star or fork inputs make that entry's total explicitly `null`. Foreign public towns do not receive
   or reuse the canonical owner's ledger because their one current public payload contains no historical run.
+- **The Undercroft is a current archived-catalog view, not recovered repository history.** It cross-checks
+  Roots against the active town's current normalized public payload, shows at most 64 spatial records, and
+  leaves the full accessible Roots list above ground. It cannot show deleted, private, renamed-away, or past
+  archive states, and it does not infer preservation from forks. A town with no matching archived record keeps
+  a truthful empty room and exit.
 - **Public repos only, by design.** Private repo names never appear. Untouched mirror forks are filtered
   out; only forks you've actually committed to are shown.
 - **Fork lineage is public origin metadata, not credit assignment.** The generated field exists only when

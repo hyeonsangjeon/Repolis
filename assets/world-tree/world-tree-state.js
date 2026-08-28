@@ -29,6 +29,14 @@ export const PORTABLE_TOWN_LIMITS = Object.freeze({
   lowEndResidents: 4,
   publicRepoRequestCap: 100,
 });
+export const UNDERCROFT_LIMITS = Object.freeze({
+  maxRecords: 64,
+  desktopDust: 72,
+  lowEndDust: 28,
+  desktopRootRibs: 14,
+  lowEndRootRibs: 8,
+  pointLights: 2,
+});
 
 function clamp(value, minimum = 0, maximum = 1) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -66,7 +74,7 @@ function smoothstep(value) {
 }
 
 function normalizeRoot(root) {
-  const years = root?.active_years ?? {};
+  const years = root?.active_years ?? root?.activeYears ?? {};
   const from = Number.isInteger(years.from) ? years.from : null;
   const to = Number.isInteger(years.to) ? years.to : null;
   const count = Number.isInteger(years.count) && years.count > 0 ? years.count : null;
@@ -650,6 +658,56 @@ export function bindPortableResidentSlots(slots, projection, repositories, optio
   });
 }
 /*PORTABLE_TOWN_PROJECTION:END*/
+
+/*UNDERCROFT_PROJECTION:START*/
+export function projectUndercroftArchive({
+  owner = '',
+  roots = [],
+  repositories = [],
+} = {}) {
+  const townOwner = boundedText(owner, 39);
+  const ownerKey = townOwner.toLowerCase();
+  const archivedByName = new Map();
+  for (const repo of Array.isArray(repositories) ? repositories : []) {
+    if (!repo || typeof repo !== 'object' || repo.private === true || repo.archived !== true) continue;
+    const name = boundedText(repo.repo, 100);
+    const repoOwner = boundedText(repo._owner || townOwner, 39);
+    if (!name || !repoOwner || repoOwner.toLowerCase() !== ownerKey) continue;
+    archivedByName.set(name.toLowerCase(), Object.freeze({
+      repo: name,
+      owner: repoOwner,
+      url: `https://github.com/${encodeURIComponent(repoOwner)}/${encodeURIComponent(name)}`,
+      createdOn: dayText(repo.created),
+      lastPublicActivity: dayText(repo.pushed),
+    }));
+  }
+
+  const records = [], seen = new Set();
+  for (const source of Array.isArray(roots) ? roots : []) {
+    const root = normalizeRoot(source), key = root.repo.toLowerCase();
+    const repo = archivedByName.get(key);
+    if (!root.repo || seen.has(key) || !repo) continue;
+    seen.add(key);
+    records.push(Object.freeze({
+      ...repo,
+      activeYears: root.activeYears,
+      achievement: root.achievement,
+      achievementKo: root.achievementKo,
+      achievementEn: root.achievementEn,
+    }));
+  }
+  const totalRecords = records.length;
+  const spatialRecords = records.slice(0, UNDERCROFT_LIMITS.maxRecords);
+  return Object.freeze({
+    available: true,
+    owner: townOwner,
+    totalRecords,
+    overflow: Math.max(0, totalRecords - spatialRecords.length),
+    records: Object.freeze(spatialRecords),
+    limits: UNDERCROFT_LIMITS,
+  });
+}
+/*UNDERCROFT_PROJECTION:END*/
 
 export function projectWorldTreeGrowth(cityState) {
   if (!validCityState(cityState)) {

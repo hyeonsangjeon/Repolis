@@ -37,6 +37,7 @@
 - Repo Portal: `?repo=owner/repo&ref=repo-portal` loads one public target before the owner catalog, opens its Atelier, and never invents traffic.
 - Portable living towns: the one normalized public load deterministically supplies that user's era, season, Silence Ledger, Roots, and a 6/4-capped local resident roster with no owner memory or service borrowing.
 - Thirty-day Sap Ledger: the owner city-state retains up to 30 actual UTC daily public aggregate entries with same-day replacement, explicit gaps, strict privacy/byte bounds, and no foreign-town reuse.
+- The Undercroft: World Tree Roots open into a bounded walkable archive of the current town's matching archived public repositories; the Chronicle remains the accessible summary and overflow fallback.
 - Repo Route: after opening repo houses, visitors can share an ordered 2–3 stop path that recipients follow through the same real cards and compass.
 - Open Source Quests: one explicit anonymous search turns up to three current public issues into taxi rides to their real repo houses and exact GitHub handoffs.
 - Repository Atelier: one walkable room rebinds current repo history, impact signals, metric artifacts, current chibi avatar, and in-room Gitber/Why actions without rendering the exterior.

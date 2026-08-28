@@ -114,6 +114,16 @@ features:
     runtime_requests: 0
     maximum_entries: 30
     maximum_compact_bytes: 32768
+  - id: world-tree-undercroft
+    summary: Current archived public Roots become one isolated walkable archive with exact exterior restoration and an accessible Chronicle fallback.
+    spatial_record_cap: 64
+    desktop_dust_cap: 72
+    low_end_dust_cap: 28
+    desktop_root_rib_cap: 14
+    low_end_root_rib_cap: 8
+    point_light_cap: 2
+    added_textures: 0
+    added_runtime_requests: 0
   - id: topic-districts
     summary: Deterministic districts with hubs, boards, map navigation, and progress.
   - id: living-village

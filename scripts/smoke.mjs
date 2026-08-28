@@ -87,11 +87,13 @@ import {
   SAP_LEDGER_VERSION,
   SILENCE_LEDGER_SCHEMA,
   SILENCE_LEDGER_VERSION,
+  UNDERCROFT_LIMITS,
   WORLD_TREE_GROWTH_LIMITS,
   bindPortableResidentSlots,
   projectPortableTown,
   projectSapLedger,
   projectSilenceLedger,
+  projectUndercroftArchive,
   projectWorldTreeChronicle,
   projectWorldTreeGrowth,
   resolveSapFlowFreshness,
@@ -600,6 +602,61 @@ ok((HTML.match(/worldTreePortableRecord:/g)||[]).length===2
   &&(HTML.match(/worldTreePortableUnknown:/g)||[]).length===2
   &&(HTML.match(/residentProfilePortable:/g)||[]).length===2,
   'portable World Tree truth and resident local-only status have Korean and English parity');
+
+group('The Undercroft — bounded current-town archive projection');
+const undercroftRoots=Array.from({length:18},(_,index)=>({
+  repo:`kept-${String(index+1).padStart(2,'0')}`,
+  activeYears:{from:2001+index,to:2004+index,count:4},
+  achievement:`Public record ${index+1}.`,
+  achievementKo:`공개 기록 ${index+1}.`,
+  achievementEn:`Public record ${index+1}.`
+}));
+const undercroftRepos=undercroftRoots.map((root,index)=>({
+  repo:root.repo,_owner:'owner',archived:true,private:false,
+  created:`${2001+index}-01-01T00:00:00Z`,pushed:`${2004+index}-06-01T00:00:00Z`,
+  forks:9000+index
+}));
+const canonicalUndercroft=projectUndercroftArchive({owner:'owner',roots:undercroftRoots,repositories:undercroftRepos});
+const foreignUndercroft=projectUndercroftArchive({
+  owner:'visitor',roots:portableChronicle.roots,
+  repositories:portableFixture.map(repo=>({...repo,_owner:'visitor'}))
+});
+const emptyUndercroft=projectUndercroftArchive({owner:'owner',roots:[],repositories:undercroftRepos});
+ok(canonicalUndercroft.records.length===undercroftRoots.length
+  &&canonicalUndercroft.records[0].repo==='kept-01'
+  &&canonicalUndercroft.records[0].url==='https://github.com/owner/kept-01'
+  &&canonicalUndercroft.records[0].activeYears.count===4
+  &&canonicalUndercroft.records[0].lastPublicActivity==='2004-06-01'
+  &&!JSON.stringify(canonicalUndercroft.records[0]).includes('forks'),
+  'canonical archive joins every current archived root to factual public fields without treating forks as preservation');
+ok(foreignUndercroft.owner==='visitor'&&foreignUndercroft.records.length===1
+  &&foreignUndercroft.records[0].repo==='archive'
+  &&!foreignUndercroft.records.some(record=>canonicalUndercroft.records.some(ownerRecord=>ownerRecord.repo===record.repo)),
+  'foreign archive contains only that town projection and never borrows canonical roots');
+ok(emptyUndercroft.totalRecords===0&&emptyUndercroft.records.length===0&&emptyUndercroft.overflow===0,
+  'an empty-archive town projects one truthful soft-empty state');
+const mismatchedUndercroft=projectUndercroftArchive({
+  owner:'visitor',roots:undercroftRoots.slice(0,1),repositories:[{...undercroftRepos[0],_owner:'owner'}]
+});
+const cappedUndercroft=projectUndercroftArchive({
+  owner:'owner',
+  roots:Array.from({length:UNDERCROFT_LIMITS.maxRecords+2},(_,index)=>({
+    repo:`bounded-${index}`,active_years:{from:2020,to:2021,count:2},achievement:'Public record.'
+  })),
+  repositories:Array.from({length:UNDERCROFT_LIMITS.maxRecords+2},(_,index)=>({
+    repo:`bounded-${index}`,_owner:'owner',archived:true,created:'2020-01-01',pushed:'2021-01-01'
+  }))
+});
+ok(mismatchedUndercroft.records.length===0
+  &&cappedUndercroft.records.length===UNDERCROFT_LIMITS.maxRecords&&cappedUndercroft.overflow===2
+  &&UNDERCROFT_LIMITS.desktopDust===72&&UNDERCROFT_LIMITS.lowEndDust===28
+  &&UNDERCROFT_LIMITS.desktopRootRibs===14&&UNDERCROFT_LIMITS.lowEndRootRibs===8
+  &&UNDERCROFT_LIMITS.pointLights===2,
+  'town ownership and explicit record, dust, root-rib, and light budgets bound the spatial archive');
+const undercroftProjectionBlock=(WORLD_TREE_STATE_SRC.match(/\/\*UNDERCROFT_PROJECTION:START\*\/([\s\S]*?)\/\*UNDERCROFT_PROJECTION:END\*\//)||[])[1]||'';
+ok(undercroftProjectionBlock.length>0
+  &&!/fetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|localStorage|sessionStorage|indexedDB|document\.|Date\.now|Math\.random/.test(undercroftProjectionBlock),
+  'Undercroft projection is pure and adds no request, analytics, persistence, DOM, wall-clock, or random dependency');
 
 group('Repo Portal — one repository becomes the first shareable destination');
 const portalUser=parseRepoPortalInput('@Octo-Cat');
@@ -1938,6 +1995,58 @@ ok(/function cardWhyZone\(repo\)/.test(HTML) && /function cardSimilar\(repo\)/.t
 ok(/function repoSuggestedQs\(repo\)/.test(HTML), 'repoSuggestedQs() builds contextual questions');
 ok(/function similarRepos\(repo,n\)/.test(HTML), 'similarRepos() finds same-district matches');
 ok((HTML.match(/cardAskRepo:\s*['"]/g) || []).length >= 2 && (HTML.match(/cardAskWhy:\s*['"]/g) || []).length >= 2 && (HTML.match(/cardSimilar:\s*['"]/g) || []).length >= 2, 'card-ask i18n keys present in ko + en');
+
+group('The Undercroft — one bounded walkable archive beneath the roots');
+const undercroftSrc=(HTML.match(/\/\*UNDERCROFT:START\*\/([\s\S]*?)\/\*UNDERCROFT:END\*\//)||[,''])[1];
+const undercroftCreateSrc=(undercroftSrc.match(/function _createUndercroft\(\)\{[\s\S]*?(?=\nfunction _snapshotUndercroft)/)||[''])[0];
+ok(undercroftSrc.length>0&&undercroftCreateSrc.length>0, 'Undercroft runtime and room construction remain extractable');
+ok(/id="undercroftHud" class="hidden" tabindex="-1"/.test(HTML)
+  &&/id="undercroftExit"[\s\S]*?data-i18n-aria="undercroftExit"/.test(HTML)
+  &&/id="undercroftGithub" target="_blank" rel="noopener"/.test(HTML)
+  &&/id="worldTreeUndercroft"[\s\S]*?data-i18n="worldTreeUndercroft"/.test(HTML),
+  'touch-sized back, live record card, safe repository link, and Chronicle entry are present');
+ok((HTML.match(/undercroftTitle:\s*['"]/g)||[]).length===2
+  &&(HTML.match(/undercroftEmpty:\s*['"]/g)||[]).length===2
+  &&(HTML.match(/undercroftOpenGithub:\s*['"]/g)||[]).length===2
+  &&(HTML.match(/undercroftExitDoor:\s*['"]/g)||[]).length===2,
+  'entry, browse, empty, repository-open, and return copy has KO/EN parity');
+ok(/projectUndercroftArchive\(\{owner:currentUser,roots:WORLD_TREE_RECORD\.roots,repositories:REPOS\}\)/.test(HTML)
+  &&/else if\(nearWorldTree\) enterUndercroft\(\)/.test(HTML)
+  &&/worldTreeTrigger\.onclick=\(\)=>openWorldTreeChronicle/.test(HTML)
+  &&/worldTreeUndercroft\.onclick=\(\)=>\{ closeWorldTreeChronicle\(false\); enterUndercroft\(\); \}/.test(HTML),
+  'the current-town projection powers the room while the existing Chronicle and Roots panel remain accessible');
+ok(/const UNDERCROFT_LAYER=7,UNDERCROFT_FADE=REDUCED\?\.08:\.18/.test(undercroftSrc)
+  &&/A\.scene=new THREE\.Scene\(\)/.test(undercroftCreateSrc)
+  &&/camera\.layers\.set\(UNDERCROFT_LAYER\)/.test(undercroftSrc)
+  &&/_undercroftFrame\(dt\)\) return;[\s\S]*?_repositoryAtelierFrame\(dt\)\) return/.test(HTML),
+  'the archive owns one isolated scene, camera layer, transition gate, and paused exterior simulation');
+ok(/_snapshotUndercroft\(\)[\s\S]*?playerPosition:player\.position\.clone\(\)/.test(undercroftSrc)
+  &&/_restoreUndercroft\(\)[\s\S]*?player\.position\.copy\(s\.playerPosition\)/.test(undercroftSrc)
+  &&/if\(e\.code==='Escape'&&undercroftActive\(\)\)/.test(HTML)
+  &&/undercroftExit\.addEventListener\('click'/.test(undercroftSrc)
+  &&/if\(e\.code==='Enter'&&undercroftActive\(\)\)/.test(HTML),
+  'desktop Escape/Enter, mobile back/action controls, and exact above-ground pose restoration share one ownership path');
+ok(/new THREE\.InstancedMesh\([^;]*A\.materials\.frame,count\)/.test(undercroftCreateSrc)
+  &&/new THREE\.InstancedMesh\([^;]*A\.materials\.plaque,count\)/.test(undercroftCreateSrc)
+  &&/new THREE\.InstancedMesh\([^;]*A\.materials\.scroll,count\)/.test(undercroftCreateSrc)
+  &&/LOW_END\?UNDERCROFT_LIMITS\.lowEndRootRibs:UNDERCROFT_LIMITS\.desktopRootRibs/.test(undercroftCreateSrc)
+  &&/LOW_END\?UNDERCROFT_LIMITS\.lowEndDust:UNDERCROFT_LIMITS\.desktopDust/.test(undercroftCreateSrc)
+  &&(undercroftCreateSrc.match(/new THREE\.PointLight/g)||[]).length===UNDERCROFT_LIMITS.pointLights,
+  'archive shelves use three instanced batches under explicit record, root-rib, dust, and two-light budgets');
+ok(/if\(REDUCED\|\|!A\.dustActive\|\|!VISUAL_GOVERNOR_RUNTIME\.decorativeStride/.test(undercroftSrc)
+  &&/VISUAL_GOVERNOR_RUNTIME\?\.policy\?\.particleScale/.test(undercroftSrc)
+  &&/_syncUndercroftLighting\(isNight\)/.test(undercroftSrc)
+  &&/if\(undercroftActive\(\)\) return 'undercroft'/.test(HTML)
+  &&/body\.undercroft-active #prompt/.test(HTML)
+  &&/@media \(max-width:520px\) \{[\s\S]*?#undercroftRecord/.test(HTML),
+  'LOW_END, reduced motion, Adaptive Visual Governor, day/night, and 390px mobile chrome remain effective');
+ok(!/(?:fetch|XMLHttpRequest|WebSocket|sendBeacon|localStorage|sessionStorage|indexedDB|track)\s*\(/.test(undercroftSrc)
+  &&!/groundedAsk|webllmAsk|proxyAsk|forks/.test(undercroftSrc),
+  'Undercroft adds no request, model call, analytics, persistence, backend, or fork-preservation inference');
+ok(/window\.__undercroft=\(\)=>_undercroftDebug\(\)/.test(HTML)
+  &&/window\.__undercroftFixture=/.test(HTML)
+  &&/window\.__undercroftSelect=/.test(HTML),
+  '?dbg exposes bounded canonical-style/empty visual fixtures and deterministic item selection without production data changes');
 
 group('Repository Atelier — one reusable walkable room for every repo');
 const atelierSrc=(HTML.match(/\/\*REPOSITORY_ATELIER:START\*\/([\s\S]*?)\/\*REPOSITORY_ATELIER:END\*\//)||[,''])[1];
@@ -3321,8 +3430,8 @@ ok(/if\(document\.hidden\) return 'hidden'/.test(visualGovernorRuntimeBlock)
   && /if\(GROWTH_REPLAY\.active\) return 'growth-replay'/.test(visualGovernorRuntimeBlock)
   && /if\(modalOpen\) return 'modal'/.test(visualGovernorRuntimeBlock),
   'hidden, idle-capped, initial, Atelier, Growth Replay, and modal frames cannot contaminate sustained evidence');
-ok(/const _idleCapped=_idle && !repositoryAtelierActive\(\)[\s\S]*?if\(_idleCapped && _now-lastFrame<33\) return/.test(HTML)
-  && /_visualGovernorTick\(_now,_idleCapped\);\s*if\(_repositoryAtelierFrame\(dt\)\) return/.test(HTML)
+ok(/const _idleCapped=_idle && !undercroftActive\(\) && !repositoryAtelierActive\(\)[\s\S]*?if\(_idleCapped && _now-lastFrame<33\) return/.test(HTML)
+  && /_visualGovernorTick\(_now,_idleCapped\);\s*if\(_undercroftFrame\(dt\)\) return;\s*if\(_repositoryAtelierFrame\(dt\)\) return/.test(HTML)
   && /const ambientDue=_visualGovernorAmbientDue\(dt\)/.test(HTML)
   && /updateResidents\(dt\)/.test(HTML)
   && /updateFireworks\(dt\)/.test(HTML)
@@ -3402,7 +3511,7 @@ ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
   && (HTML.match(/if\(memorial\) makeMemorialTree\(cx,cz\)/g) || []).length === 1, 'exactly one memorial tree is requested, at the north rest park centre');
 ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
-ok(/world-tree-state\.js\?v=thirty-day-sap-ledger-v1/.test(HTML)
+ok(/world-tree-state\.js\?v=undercroft-v1/.test(HTML)
   &&/hero\.runtime\.nodes\['living-system'\]\.scale\.setScalar\(WORLD_TREE_GROWTH\.scale\)/.test(memorialTreeBlock)
   &&/const collider=\{x,z,r:11\.6,_memorialTree:true\}/.test(memorialTreeBlock)
   &&/growthScale:WORLD_TREE_GROWTH\.scale/.test(memorialTreeBlock),
