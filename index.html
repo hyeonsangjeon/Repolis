@@ -589,10 +589,15 @@
   #chat.atelierChat .msg.bot b { color:#f1cb7f; }
   #chat.atelierChat .msg.bot span[style*="#ab8a66"] { color:#dbcba8 !important; }
   #chat.atelierChat .msg .alt { color:#244d7b; background:#edf4ff; }
-  #chat.atelierChat .chatIn { border-color:#2f4b50; background:#13262b; }
+  #chat.atelierChat .chatIn { flex-wrap:wrap; border-color:#2f4b50; background:#13262b; }
+  #atelierChatCount { display:none; }
+  #chat.atelierChat #atelierChatCount { display:block; flex:1 0 100%; color:#9fc1c2; font-size:10px;
+    font-weight:800; line-height:1; text-align:right; letter-spacing:.02em; }
   #chat.atelierChat .chatIn input { color:#eaf4f3; border-color:#3d5c61; background:#0f2024; }
   #chat.atelierChat .chatIn input:focus { border-color:#86cbd0; }
+  #chat.atelierChat .chatIn input:disabled { color:#91a6a7; background:#17282c; cursor:not-allowed; }
   #chat.atelierChat .chatIn button { color:#102629; background:#8bd2ca; }
+  #chat.atelierChat .chatIn button:disabled { opacity:.48; cursor:not-allowed; }
   @media (max-width: 520px) {
     #atelierIdentity { top: calc(10px + env(safe-area-inset-top,0px)); width: calc(100vw - 132px); padding: 7px 10px 8px; }
     #atelierIdentity .repo { font-size: 13px; }
@@ -1968,6 +1973,7 @@
   <div id="residentStatus" role="status" aria-live="polite" hidden><span></span><button id="residentRetry" type="button" hidden>Retry</button></div>
   <div id="chatLog" role="log" aria-live="polite" aria-relevant="additions"></div>
   <div class="chatIn">
+    <span id="atelierChatCount" role="status" aria-live="polite"></span>
     <input id="chatText" type="text" placeholder="어떤 레포를 찾으세요? 예: 제일 인기있는 레포" data-i18n-ph="chatPh" autocomplete="off" />
     <button id="chatSend" type="button" aria-label="Send">▶</button>
   </div>
@@ -2011,6 +2017,7 @@ import { allocateElderFragments, createLoreDeliveryState, loadLoreFragments } fr
 import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from './assets/taxi-voice.js?v=world-tree-phase4-v1';
 import { clearSessionFootprints, createSessionFootprintState, sessionFootprintScale, sessionFootprintSnapshot, stepSessionFootprints, teardownSessionFootprints } from './assets/session-footprints.js?v=world-tree-phase5-footprints-v1';
 import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
+import { REPOSITORY_ATELIER_CHAT_LIMIT, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -2601,7 +2608,12 @@ const I18N = {
     atelierTitle:'REPOSITORY ATELIER', atelierEnter:'🏛️ 3D 전시실 입장', atelierInside:'전시실 관람 중',
     atelierExit:'마을로 나가기', atelierCore:'REPOSITORY CORE', atelierHistory:'HISTORY / DATA WALL', atelierSignals:'IMPACT / SIGNALS WALL', atelierActions:'ACTION TERMINALS',
     atelierGithub:'GitHub 열기', atelierAsk:'깃버에게 이 레포 질문', atelierWhy:'왜 이 구역인가',
-    atelierRoomHint:'데이터 전시 · 실내 깃버 · 구역 해설', atelierChatTitle:'전시실 깃버', atelierChatPh:'이 전시 레포에 이어서 질문…', atelierSignalsNow:'현재 공개 메타데이터 기준',
+    atelierRoomHint:'데이터 전시 · 실내 깃버 · 구역 해설', atelierChatTitle:'전시실 깃버', atelierChatPh:'이 전시 레포에 이어서 질문…', atelierChatCount:'대화 {n}/5', atelierSignalsNow:'현재 공개 메타데이터 기준',
+    atelierChatAuto:'이 레포를 설명해 주세요.', atelierChatSearching:'{repo} 공개 정보를 GitHub MCP에서 찾고 있어요 🔍',
+    atelierChatLimit:'이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요.',
+    atelierChatUnavailable:'{repo}의 공개 정보를 지금 불러오지 못했어요. 다른 레포로 대신 답하지 않을게요.',
+    atelierChatNoBackend:'이 마을에서는 Repository Atelier GitHub MCP가 비활성화되어 있어요. 다른 레포로 대신 답하지 않을게요.',
+    atelierChatWait:'진행 중인 대화가 끝난 뒤 전시실에 입장해 주세요.',
     atelierDoor:'출구 · 마을로 돌아가기', atelierWalk:'WASD / 터치로 전시실을 걸어 보세요',
     atelierUse:'Enter / 버튼으로 {action}', atelierCoreHint:'★ 크기 · 활동 빛 · score 구조',
     portalActionsAria:'Repo Portal 작업', portalCopy:'🔗 Repo Portal 복사', portalCopied:'Repo Portal 주소를 복사했어요.',
@@ -2944,7 +2956,12 @@ const I18N = {
     atelierTitle:'REPOSITORY ATELIER', atelierEnter:'🏛️ Enter 3D exhibition', atelierInside:'Inside the exhibition',
     atelierExit:'Return to town', atelierCore:'REPOSITORY CORE', atelierHistory:'HISTORY / DATA WALL', atelierSignals:'IMPACT / SIGNALS WALL', atelierActions:'ACTION TERMINALS',
     atelierGithub:'Open GitHub', atelierAsk:'Ask Gitber about this repo', atelierWhy:'Why this district?',
-    atelierRoomHint:'Data exhibits · in-room Gitber · district context', atelierChatTitle:'Atelier Gitber', atelierChatPh:'Ask a follow-up about this exhibit…', atelierSignalsNow:"Using today's public metadata",
+    atelierRoomHint:'Data exhibits · in-room Gitber · district context', atelierChatTitle:'Atelier Gitber', atelierChatPh:'Ask a follow-up about this exhibit…', atelierChatCount:'Chat {n}/5', atelierSignalsNow:"Using today's public metadata",
+    atelierChatAuto:'Explain this repository.', atelierChatSearching:'Searching GitHub MCP for public information about {repo} 🔍',
+    atelierChatLimit:'You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation.',
+    atelierChatUnavailable:'Public information for {repo} is unavailable right now. I will not substitute another repository.',
+    atelierChatNoBackend:'The Repository Atelier GitHub MCP is disabled in this town. I will not substitute another repository.',
+    atelierChatWait:'Wait for the current conversation to finish before entering the Atelier.',
     atelierDoor:'Exit · return to town', atelierWalk:'Walk the exhibition with WASD / touch',
     atelierUse:'Enter / button to {action}', atelierCoreHint:'★ size · activity light · score structure',
     portalActionsAria:'Repo Portal actions', portalCopy:'🔗 Copy Repo Portal', portalCopied:'Repo Portal address copied.',
@@ -10188,7 +10205,7 @@ function zoneWhy(repo){ const z=zoneCatById(repo._zone); const name=z?(LANG==='k
   return LANG==='ko'
     ? `${z?z.icon:'🧭'} <b>${esc(repo.label)}</b>는 <b>${esc(name)}</b>에 있어요 — ${reason}가 이 구역과 맞았거든요. (LLM 없이 분류기가 판단해요)`
     : `${z?z.icon:'🧭'} <b>${esc(repo.label)}</b> lives in the <b>${esc(name)}</b> — ${reason} matched this district. (Classified deterministically, no LLM.)`; }
-function _showCardWhyZone(repo){ openChat(_taxiNpc());
+function _showCardWhyZone(repo){ if(repositoryAtelierActive()) _showRepositoryAtelierChat(); else openChat(_taxiNpc());
   const q=LANG==='ko'?`${repo.label}는 왜 이 구역에 있나요?`:`Why is ${repo.label} in this district?`;
   addMsg('me',esc(q),{noHist:true}); addMsg('bot',zoneWhy(repo),{noHist:true}); }
 function cardWhyZone(repo){ closeCard(); if(busy){ _queueChatAction({kind:'why',repoKey:repo.repo,npc:_taxiNpc()}); return; } _showCardWhyZone(repo); }
@@ -11249,7 +11266,8 @@ window.__growthClose=()=>{ closeTownGrowthReplay(); return window.__townGrowth()
 const chatEl=document.getElementById('chat'), chatLog=document.getElementById('chatLog'), chatText=document.getElementById('chatText');
 const taxiBtn=document.getElementById('taxiBtn'), modeSel=document.getElementById('modeSel');
 const residentStatusEl=document.getElementById('residentStatus'),residentStatusText=residentStatusEl.querySelector('span'),residentRetry=document.getElementById('residentRetry');
-const chatCloseBtn=document.getElementById('chatClose'),chatSendBtn=document.getElementById('chatSend'); let chatPreviousFocus=null;
+const chatCloseBtn=document.getElementById('chatClose'),chatSendBtn=document.getElementById('chatSend'),
+  atelierChatCount=document.getElementById('atelierChatCount'); let chatPreviousFocus=null;
 const driveBar=document.getElementById('drivebar'), driveNameEl=document.getElementById('driveName');
 let llmMode=TOWN_PROJECTION.kind==='portable'?'local':(localStorage.getItem('taxiMode')||'local'), chatGreeted=false, busy=false; modeSel.value=llmMode;
 const CHAT_QUEUE_MAX=4,queuedChatQuestions=[]; let pendingChatNpc=null;
@@ -11280,12 +11298,14 @@ function elapsedMs(start){ return Math.max(0, Math.round(nowMs()-start)); }
 function qLenBucket(q){ const n=String(q||'').trim().length; return n<=0?'empty':n<=24?'short':n<=80?'medium':n<=180?'long':'very_long'; }
 function errName(e){ return (e&&e.name) || (e&&e.message ? String(e.message).slice(0,32) : 'error'); }
 function npcKindOf(npc){ return typeof npc==='string' ? npc : ((npc&&npc.kind) || (activeNpc&&activeNpc.kind) || 'taxi'); }
+function activeChatHistory(){ const visit=repositoryAtelierActive()&&REPOSITORY_ATELIER.chat; return visit?visit.history:chatHistory; }
 function chatMeta(extra){ const npc=npcKindOf(extra&&extra.npc); return Object.assign({
-  npc, mode:(npc==='taxi'?llmMode:'scholar'), historyTurns:Math.floor(chatHistory.length/2)
+  npc, mode:(npc==='taxi'?llmMode:'scholar'), historyTurns:Math.floor(activeChatHistory().length/2)
 }, extra||{}); }
 function traceRefCount(tr){ return tr&&Array.isArray(tr.refs) ? tr.refs.length : 0; }
 function trackChatEvent(name, extra){ track(name, chatMeta(extra)); }
 function canonicalAiRoute(route,npc){ const who=npcKindOf(npc);
+  if(route==='repository_atelier') return 'grounded_kb_repository_atelier';
   if(route==='grounded') return 'grounded_kb_taxi';
   if(route==='market_grounded') return 'grounded_kb_market';
   if(route==='scholar_grounded') return who==='msdocs'?'grounded_mcp_mslearn':who==='deepwiki'?'grounded_mcp_deepwiki':who==='context7'?'grounded_mcp_context7':who==='huggingface'?'grounded_mcp_huggingface':'persona_visitor';
@@ -11297,8 +11317,11 @@ function trackAiTurn(route, npc, q, start, outcome){ const canonical=canonicalAi
   npc:npcKindOf(npc), qLen:qLenBucket(q), ms:elapsedMs(start)
 }, outcome||{})); }
 function stripHtml(h){ const d=document.createElement('div'); d.innerHTML=String(h||''); return (d.textContent||d.innerText||'').replace(/\s+/g,' ').trim().slice(0,600); }
-function pushHist(role,text){ const s=stripHtml(text); if(!s) return; chatHistory.push({role,text:s}); if(chatHistory.length>12) chatHistory=chatHistory.slice(-12); }
-function recentHist(){ return chatHistory.slice(-8); }
+function pushHist(role,text){ const s=stripHtml(text); if(!s) return;
+  const visit=repositoryAtelierActive()&&REPOSITORY_ATELIER.chat;
+  if(visit){ appendRepositoryAtelierChatTurn(visit,role,s); return; }
+  chatHistory.push({role,text:s}); if(chatHistory.length>12) chatHistory=chatHistory.slice(-12); }
+function recentHist(){ return activeChatHistory().slice(-8); }
 function priorHist(){ const h=recentHist(); return (h.length&&h[h.length-1].role==='user')? h.slice(0,-1):h; }   // history minus the current question (the worker appends it)
 function addMsg(who,html,opts){
   const m=document.createElement('div'); m.className='msg '+who; m.innerHTML=html;
@@ -11392,7 +11415,8 @@ function applyNpcChrome(n){ const resident=!!(n&&n.resident); chatEl.classList.t
   if(resident){ if(chatHeadTtl) chatHeadTtl.innerHTML=residentTitle(n.res); modeSel.style.display='none'; chatText.placeholder=residentPh(n.res); setResidentChatStatus(n.res&&n.res._profileState||'loading',n.res); return; }
   const scholar = n && n.kind!=='taxi';
   if(chatHeadTtl) chatHeadTtl.innerHTML = scholar ? (scholarPersona(n.kind,'title')||t('engTitle')) : t('taxiTitle');
-  modeSel.style.display = scholar?'none':''; chatText.placeholder = scholar ? (scholarPersona(n.kind,'ph')||t('engPh')) : t('chatPh'); }
+  modeSel.style.display = scholar?'none':''; chatText.placeholder = scholar ? (scholarPersona(n.kind,'ph')||t('engPh')) : t('chatPh');
+  if(!repositoryAtelierActive()){ chatText.disabled=false; chatSendBtn.disabled=false; atelierChatCount.textContent=''; } }
 function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi');
   if(busy&&activeNpc&&npc!==activeNpc){ pendingChatNpc=npc; showWave(t('chatQueued'),1800); return false; }
   if(chatEl.classList.contains('hidden')) chatPreviousFocus=document.activeElement; if(activeGroupMembers && !_isGroupChat(npc)) _releaseGroup(); chatEl.classList.remove('hidden'); chatEl.setAttribute('aria-hidden','false');
@@ -11405,7 +11429,8 @@ function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi');
   setTimeout(()=>{ if((!repositoryAtelierActive()||repositoryAtelierChatActive())&&!chatEl.classList.contains('hidden')) chatText.focus(); },60); return true; }
 function closeChat(){ cancelMarketRequest(); queuedChatQuestions.length=0; pendingChatNpc=null; chatEl.classList.add('hidden'); chatEl.classList.remove('atelierChat');
   chatEl.classList.remove('residentChat'); document.body.classList.remove('resident-chat-open'); chatEl.setAttribute('aria-hidden','true'); chatEl.setAttribute('aria-modal','false'); residentStatusEl.hidden=true;
-  document.body.classList.remove('atelier-chat-open'); if(REPOSITORY_ATELIER) REPOSITORY_ATELIER.inRoomChat=false; _releaseGroup(); trackChatEvent('chat_close');
+  document.body.classList.remove('atelier-chat-open'); if(REPOSITORY_ATELIER){ REPOSITORY_ATELIER.inRoomChat=false; setRepositoryAtelierChatPanel(REPOSITORY_ATELIER.chat,false); }
+  if(!repositoryAtelierActive()) _releaseGroup(); trackChatEvent('chat_close');
   const previous=chatPreviousFocus; chatPreviousFocus=null; if(chatEl.contains(document.activeElement)) document.activeElement.blur();
   setTimeout(()=>{ if(!chatEl.classList.contains('hidden')) return; const visible=element=>element&&element.isConnected&&element!==document.body&&getComputedStyle(element).display!=='none'&&getComputedStyle(element).visibility!=='hidden';
     const target=visible(previous)?previous:(visible(actBtn)&&actBtn.classList.contains('avail')?actBtn:taxiBtn); try{ target.focus(); }catch(e){} },80); }
@@ -11708,6 +11733,10 @@ function groundedUrl(){
   if(saved && /(localhost|127\.0\.0\.1)/.test(saved) && !/(localhost|127\.0\.0\.1)/.test(location.hostname)) return GROUNDED_DEFAULT;   // a saved dev URL is dead on the live site → use prod
   return saved||GROUNDED_DEFAULT;
 }
+function repositoryAtelierGroundedUrl(){
+  if(TOWN_PROJECTION.kind==='portable') return '';
+  return GROUNDED_DEFAULT;
+}
 // Worker general-persona chat — no KB, no repo push. POLARIS *and* every scholar use this so
 // smalltalk / general questions get a real in-character LLM answer in ANY search mode (not just grounded).
 async function generalChat(q, npc){
@@ -11843,7 +11872,9 @@ async function askDriver(q){
     const route=r._route || (llmMode==='local'?'local_search':llmMode);
     trackChatEvent('chat_response', { route, npc:'taxi', qLen:qLenBucket(q), ok:true, ai:(route==='webllm'||route==='proxy'), repo:!!r.repo }); }
 }
-async function sendChat(){ const q=chatText.value.trim(); if(!q||busy) return; busy=true; chatText.value='';
+async function sendChat(){ const q=chatText.value.trim(); if(!q) return;
+  if(repositoryAtelierChatActive()) return _sendRepositoryAtelierChat(q);
+  if(busy) return; busy=true; chatText.value='';
   const npc=npcKindOf(activeNpc), started=nowMs(), qLen=qLenBucket(q);
   trackChatEvent('chat_submit', { npc, qLen });
   let ok=false;
@@ -12593,20 +12624,80 @@ async function _copyRepositoryPortal(){
   if(ok) maybeStarNudge('repo_portal_share'); return ok;
 }
 function _syncRepositoryAtelierChatChrome(){
-  const A=REPOSITORY_ATELIER;if(!A||!A.repo||!A.inRoomChat) return;
+  const A=REPOSITORY_ATELIER,visit=A&&A.chat;if(!A||!A.repo||!visit||!A.inRoomChat) return;
   document.body.classList.add('atelier-chat-open'); chatEl.classList.add('atelierChat');
   if(chatHeadTtl) chatHeadTtl.textContent=`🚕 ${t('atelierChatTitle')} · ${A.repo.label}`;
-  chatText.placeholder=t('atelierChatPh');
+  modeSel.style.display='none'; residentStatusEl.hidden=true;
+  atelierChatCount.textContent=tf('atelierChatCount',{n:visit.calls});
+  const exhausted=visit.calls>=REPOSITORY_ATELIER_CHAT_LIMIT;
+  chatText.disabled=exhausted; chatSendBtn.disabled=exhausted;
+  chatText.placeholder=exhausted?t('atelierChatLimit'):t('atelierChatPh');
+}
+function _captureRepositoryAtelierChatThread(){
+  const A=REPOSITORY_ATELIER;if(!A||A.outsideChat) return;
+  A.outsideChat={nodes:[...chatLog.childNodes],activeNpc,chatGreeted,resHist:_resHist,marketThread:_marketThread,
+    previousFocus:chatPreviousFocus,text:chatText.value,textDisabled:chatText.disabled,sendDisabled:chatSendBtn.disabled};
+  chatLog.replaceChildren(); activeNpc=_taxiNpc(); chatGreeted=true; _resHist=[]; _marketThread=false; chatText.value='';
+}
+function _restoreRepositoryAtelierChatThread(){
+  const A=REPOSITORY_ATELIER,s=A&&A.outsideChat;if(!s) return;
+  chatLog.replaceChildren(...s.nodes); activeNpc=s.activeNpc; chatGreeted=s.chatGreeted; _resHist=s.resHist; _marketThread=s.marketThread;
+  chatPreviousFocus=s.previousFocus; applyNpcChrome(activeNpc); chatText.value=s.text; chatText.disabled=s.textDisabled; chatSendBtn.disabled=s.sendDisabled;
+  A.outsideChat=null;
+}
+function _showRepositoryAtelierChat(){
+  const A=REPOSITORY_ATELIER;if(!A||A.state!=='inside'||!A.chat) return false;
+  if(chatEl.classList.contains('hidden')) chatPreviousFocus=document.activeElement;
+  A.inRoomChat=true; setRepositoryAtelierChatPanel(A.chat,true); activeNpc=_taxiNpc(); chatGreeted=true; applyNpcChrome(activeNpc);
+  chatEl.classList.remove('hidden'); chatEl.setAttribute('aria-hidden','false'); _syncRepositoryAtelierChatChrome();
+  setTimeout(()=>{ if(repositoryAtelierChatActive()&&!chatText.disabled) chatText.focus(); },60); return true;
+}
+function _showRepositoryAtelierLimit(visit){
+  if(!visit||visit.limitShown) return; visit.limitShown=true; addMsg('bot',t('atelierChatLimit'),{noHist:true});
+}
+async function _askRepositoryAtelier(visit,question,call,url){
+  const aiStarted=nowMs(),payload=aiRequestPayload(repositoryAtelierChatPayload(visit,question,LANG));
+  const sb=showTyping(addMsg('bot',tf('atelierChatSearching',{repo:visit.repoName}),{noHist:true}));
+  const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),9500); visit.controller=ctrl;
+  try{
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal});
+    clearTimeout(to); const data=await res.json().catch(()=>({}));
+    if(visit.cancelled||visit.sequence!==call.sequence){ sb.remove(); return; }
+    sb.remove();
+    if(!res.ok){ trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:data.error||'http_error'});
+      addMsg('bot',esc(data.message||tf('atelierChatUnavailable',{repo:visit.repoName})),{noHist:true}); return; }
+    if(String(data.repoName||'').toLowerCase()!==visit.repoName.toLowerCase()){
+      trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'scope_mismatch'});
+      addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true}); return; }
+    if(data.message){ const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
+      trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:!data.fallback&&!data.notFound,refs:traceRefCount(data.trace),fallback:data.fallback?'worker_fallback':data.notFound?'not_found':undefined});
+      addMsg('bot',msg,{trace:data.trace}); return; }
+    trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'empty_result'});
+    addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true});
+  }catch(e){ clearTimeout(to); sb.remove(); if(visit.cancelled) return;
+    trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'fetch_fail',err:errName(e)});
+    addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true});
+  }finally{ if(visit.controller===ctrl) visit.controller=null; }
+}
+async function _sendRepositoryAtelierChat(question,automatic=false){
+  const A=REPOSITORY_ATELIER,visit=A&&A.chat,q=String(question||'').trim(); if(!visit||visit.cancelled||!q||busy) return false;
+  const url=repositoryAtelierGroundedUrl();
+  if(!url){ if(!automatic) addMsg('me',esc(q)); addMsg('bot',t('atelierChatNoBackend'),{noHist:true}); return false; }
+  const call=beginRepositoryAtelierChatCall(visit); if(!call){ _showRepositoryAtelierLimit(visit); _syncRepositoryAtelierChatChrome(); return false; }
+  busy=true; chatText.value=''; addMsg('me',esc(q)); _syncRepositoryAtelierChatChrome();
+  trackChatEvent('chat_submit',{npc:'taxi',qLen:qLenBucket(q),surface:'repository_atelier',repo:visit.repoName,call:call.call});
+  try{ await _askRepositoryAtelier(visit,q,call,url); }
+  finally{ busy=false; if(!visit.cancelled&&visit.calls>=REPOSITORY_ATELIER_CHAT_LIMIT) _showRepositoryAtelierLimit(visit);
+    if(!visit.cancelled){ _syncRepositoryAtelierChatChrome(); if(visit.panelOpen&&!chatText.disabled) chatText.focus(); } }
+  return true;
+}
+function _startRepositoryAtelierChatVisit(){
+  const A=REPOSITORY_ATELIER,visit=A&&A.chat;if(!visit||visit.autoStarted) return false;
+  visit.autoStarted=true; _showRepositoryAtelierChat(); _sendRepositoryAtelierChat(t('atelierChatAuto'),true); return true;
 }
 function _openRepositoryAtelierChat(kind,repo){
   const A=REPOSITORY_ATELIER;if(!A||A.state!=='inside'||!repo||(kind!=='ask'&&kind!=='why')) return false;
-  A.inRoomChat=true; A.roomPanel=kind; chatEl.classList.remove('hidden');
-  const npc=_taxiNpc(),question=repoSuggestedQs(repo)[0]||(LANG==='ko'?`${repo.label}는 무엇을 하는 레포예요?`:`What does ${repo.label} do?`);
-  if(kind==='why'){
-    if(busy) _queueChatAction({kind:'why',repoKey:repo.repo,npc}); else _showCardWhyZone(repo);
-  } else if(busy) _queueChatQuestion(question,npc);
-  else { openChat(npc); chatText.value=question; sendChat(); }
-  _syncRepositoryAtelierChatChrome(); setTimeout(()=>{ if(repositoryAtelierChatActive()) chatText.focus(); },60); return true;
+  A.roomPanel=kind; _showRepositoryAtelierChat(); if(kind==='why') _showCardWhyZone(repo); return true;
 }
 
 function _repositoryAtelierPose(){
@@ -12634,13 +12725,17 @@ function _resetRepositoryAtelierInput(){
 }
 function enterRepositoryAtelier(repo){
   if(!repo||repo._isLibrary||repositoryAtelierActive()) return false;
+  if(busy){ showWave(t('atelierChatWait'),2600); return false; }
+  const target=_repositoryPortalTarget(repo); if(!target) return false;
   const A=REPOSITORY_ATELIER||{state:'outside',created:false,resources:{geometries:new Set(),materials:new Set(),textures:new Set()},dummy:new THREE.Object3D()};
-  REPOSITORY_ATELIER=A; _snapshotRepositoryAtelier(repo); A.repo=repo; A.pendingExit=false; A.pendingHash=false; A.afterExit=null; A.state='entering'; A.phase='cover'; A.t=0; A.renderInterior=false;
+  REPOSITORY_ATELIER=A; _snapshotRepositoryAtelier(repo); A.repo=repo; A.chat=createRepositoryAtelierChatVisit(target.slug); A.outsideChat=null;
+  A.pendingExit=false; A.pendingHash=false; A.afterExit=null; A.state='entering'; A.phase='cover'; A.t=0; A.renderInterior=false;
   _resetRepositoryAtelierInput(); atelierFade.classList.add('blocking'); atelierFade.style.opacity='0';
   return true;
 }
 function _activateRepositoryAtelier(){
   const A=_createRepositoryAtelier(),snapshot=A.snapshot; _bindRepositoryAtelier(A.repo);
+  _captureRepositoryAtelierChatThread();
   modal.classList.remove('show'); modalOpen=false; chatEl.classList.add('hidden'); chatEl.classList.remove('atelierChat');
   document.body.classList.remove('atelier-chat-open'); A.inRoomChat=false; A.roomPanel=null;
   document.getElementById('intro').inert=true;
@@ -12657,6 +12752,7 @@ function exitRepositoryAtelier(action=null){
   if(action) A.afterExit=action;
   if(A.state==='entering'){ A.pendingExit=true; return true; }
   if(A.state==='exiting') return true;
+  if(A.chat){ A.chat.cancelled=true; if(A.chat.controller) A.chat.controller.abort(); }
   A.state='exiting'; A.phase='cover'; A.t=0; _resetRepositoryAtelierInput();
   modal.classList.remove('show'); modalOpen=false; atelierFade.classList.add('blocking'); return true;
 }
@@ -12668,6 +12764,7 @@ function _restoreRepositoryAtelier(){
   camYaw=s.camYaw; camPitch=s.camPitch; camDist=s.camDist; freeLook=s.freeLook; dragging=false; dragBtn=s.dragBtn; walk=s.walk;
   navTarget=s.navTarget; navHolder.visible=s.navVisible; document.getElementById('navBadge').style.display=s.navBadgeDisplay;
   document.body.classList.remove('atelier-active','atelier-chat-open'); chatEl.classList.remove('atelierChat'); A.inRoomChat=false; A.roomPanel=null;
+  setRepositoryAtelierChatPanel(A.chat,false); _restoreRepositoryAtelierChatThread();
   document.getElementById('intro').inert=s.introInert;
   atelierHud.classList.add('hidden'); promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪';
   if(!A.afterExit&&!A.pendingHash){ modalOpen=s.modalOpen; modal.classList.toggle('show',s.modalShown); modal._repoKey=s.modalKey;
@@ -12691,6 +12788,7 @@ function _repositoryAtelierTransition(dt){
       if(A.t>=REPOSITORY_ATELIER_FADE){ _activateRepositoryAtelier(); A.phase='reveal'; A.t=0; atelierFade.style.opacity='1'; } return A.renderInterior?'interior':'exterior'; }
     atelierFade.style.opacity=String(Math.max(0,1-A.t/REPOSITORY_ATELIER_FADE));
     if(A.t>=REPOSITORY_ATELIER_FADE){ A.state='inside'; A.phase=null; A.t=0; atelierFade.style.opacity='0'; atelierFade.classList.remove('blocking');
+      if(!A.pendingExit) _startRepositoryAtelierChatVisit();
       if(repoPortalRequested&&!A.ahaTracked){ A.ahaTracked=true;
         trackPortal('aha_completed',{entry:'link',device:_repoPortalDevice(),lang:LANG,result:repoPortalResult?.result||'local',
           latency:repoPortalLatencyBucket((typeof performance!=='undefined'?performance.now():Date.now())-repoPortalStartedAt)});
@@ -12700,7 +12798,7 @@ function _repositoryAtelierTransition(dt){
   if(A.phase==='cover'){ atelierFade.style.opacity=String(Math.min(1,A.t/REPOSITORY_ATELIER_FADE));
     if(A.t>=REPOSITORY_ATELIER_FADE){ _restoreRepositoryAtelier(); A.phase='reveal'; A.t=0; atelierFade.style.opacity='1'; } return A.renderInterior?'interior':'exterior'; }
   atelierFade.style.opacity=String(Math.max(0,1-A.t/REPOSITORY_ATELIER_FADE));
-  if(A.t>=REPOSITORY_ATELIER_FADE){ A.state='outside'; A.phase=null; A.t=0; A.repo=null; A.snapshot=null; atelierFade.style.opacity='0'; atelierFade.classList.remove('blocking');
+  if(A.t>=REPOSITORY_ATELIER_FADE){ A.state='outside'; A.phase=null; A.t=0; A.repo=null; A.snapshot=null; A.chat=null; atelierFade.style.opacity='0'; atelierFade.classList.remove('blocking');
     const pausedTour=A.resumeTour,pendingHash=A.pendingHash; A.resumeTour=null; A.pendingHash=false;
     if(pendingHash&&tour&&tour.active) endTour(false); else _resumeTourAfterAtelier(pausedTour);
     if(pendingHash){ A.afterExit=null; const key=repoHashKey(),repo=repoByKey(key); if(repo) openCard(repo); else { modalOpen=false; modal.classList.remove('show'); modal._repoKey=null; } }
@@ -12792,6 +12890,7 @@ function _repositoryAtelierDebug(){
     render:{calls:interior.calls,triangles:interior.triangles,peakCalls:peak.calls,peakTriangles:peak.triangles,exteriorCalls:A.renderInterior?0:null},
     style:A.created?{roomId:A.group.uuid.slice(0,8),seed:A.hash,shape:A.hash%3,language:A.materials.core.color.getHexString(),district:A.materials.ring.color.getHexString()}:null,
     bindings:A.bindings||null,portal:A.portal||null,near:A.near&&A.near.kind||null,lastAction:A.lastAction,inRoomChat:!!A.inRoomChat,roomPanel:A.roomPanel,
+    chat:repositoryAtelierChatSnapshot(A.chat),
     exhibits:A.created?{architecture:A.architecture.count,path:A.pathTiles.count,signals:A.metricSignals||[],signalCards:A.textLayout?.signalCards||0}:null,
     saved:A.lastSaved,restored:A.lastRestored,
     text:A.textLayout||null,paused:{exterior:repositoryAtelierActive(),realtimeSocket:rtSock?rtSock.readyState:-1},contextRestores:A.contextRestores};

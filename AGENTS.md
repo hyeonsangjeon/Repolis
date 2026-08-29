@@ -41,6 +41,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
 | **`assets/world-tree/world-tree-state.js`** | Pure projection for Chronicle, Silence Ledger, 30-day Sap Ledger, Roots, sap-flow freshness/mode, bounded star/repo growth, and portable public-town residents. | Changing how owner or normalized public-town state reaches the silent World Tree and local resident roster. |
 | **`assets/repo-portal.js`** | Pure username/repository parser, route precedence, public projection, canonical Portal URL, and owner-town expansion link. | Changing `?repo=`, accepted GitHub inputs, public traffic truth, or target share links. |
+| **`assets/repository-atelier-chat.js` + `cloudflare-taxi/src/repository-atelier.js`** | Pure visit-scoped five-call chat state plus strict exact-`owner/repo` GitHub MCP request and reference boundaries. | Changing Repository Atelier chat lifecycle, limits, payloads, or grounding scope. |
 | **`assets/repo-route.js`** | Pure 2–3 stop route validator, current-catalog resolver, conflict policy, and canonical Repo Route URL. | Changing visitor-curated multi-repo paths or `?route=` links. |
 | **`assets/contribution-quests.js`** | Pure current-owner/catalog issue projector and bounded quest ranker. | Changing Open Source Quest validation, tier priority, or result diversity. |
 | **`assets/town-growth.js`** | Pure repo-creation timeline, year snapshot, and Growth Replay share-link logic. | Changing historical cutoffs, unknown-date policy, or `?growth=` links. |
@@ -136,6 +137,7 @@ python3 scripts/test_fork_lineage.py
 node scripts/test-city-time.mjs
 node scripts/test-session-footprints.mjs
 node scripts/test-fork-lineage.mjs
+node scripts/test-repository-atelier-chat.mjs
 node scripts/validate-lore-fragments.mjs
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js
@@ -182,7 +184,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | Change districts, Village Chronicle, passport, or exploration loops | `index.html` + the matching behavioral groups in `scripts/smoke.mjs`. |
 | Change Creator Hall profile facts, caching, or upstream Star handoff | `assets/town-creator.js` + the Creator Hall landmark/panel blocks in `index.html` + `scripts/smoke.mjs`; keep profile loading explicit-read and allowlisted. |
 | Change Town Growth Replay years, camera, reveal, share links, or era postcards | `assets/town-growth.js` + `/*TOWN_GROWTH_REPLAY*/` in `index.html` + the Growth Replay group in `scripts/smoke.mjs`; creation dates are historical, building metrics are current, and replay must restore camera/fog/sky/LOD exactly. |
-| Change Repository Atelier room, avatar, data walls, or action terminals | `/*REPOSITORY_ATELIER*/` in `index.html` + the Atelier group in `scripts/smoke.mjs`; preserve one lazy reusable room, three bounded canvas atlases, exact exterior restore, zero exterior renders inside, in-room Ask/Why ownership, and explicit-only exit/GitHub navigation. |
+| Change Repository Atelier room, avatar, data walls, action terminals, or scoped chat | `assets/repository-atelier-chat.js` + `cloudflare-taxi/src/repository-atelier.js` + `/*REPOSITORY_ATELIER*/` in `index.html` + the Atelier group in `scripts/smoke.mjs`; preserve one lazy reusable room, three bounded canvas atlases, exact exterior restore, zero exterior renders inside, exact public `owner/repo` grounding, isolated in-memory visit history, five started calls, panel-reopen continuity, room-reentry reset, and explicit-only exit/GitHub navigation. |
 | Change adaptive frame thresholds or visual tiers | `/*VISUAL_GOVERNOR_CORE*/` + `/*VISUAL_GOVERNOR_RUNTIME*/` in `index.html`, `scripts/test-visual-governor.mjs`, and the matching smoke group; preserve 6 s eligible warm-up, separated hysteresis/dwell, balanced-before-lean ambient ordering, LOW_END/reduced-motion authority, state continuity, and zero storage/network/telemetry. |
 | Change the 30-day Sap Ledger fields, retention, or Chronicle summary | `scripts/city_state.py` + `data/city-state.schema.json` + `assets/world-tree/world-tree-state.js` + `/*WORLD_TREE_CHRONICLE*/` in `index.html`; preserve actual UTC entries only, same-day replacement, 30-entry/32 KiB caps, public aggregate privacy, and unavailable foreign history. |
 | Change Twin Towns matching or two-person share links | `assets/twin-towns.js` + the Twin Towns block in `index.html` + `scripts/smoke.mjs`. |

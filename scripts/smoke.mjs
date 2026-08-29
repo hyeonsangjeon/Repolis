@@ -20,6 +20,7 @@ import { runVisualGovernorTests } from './test-visual-governor.mjs';
 import { runLoreTests } from './test-lore.mjs';
 import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
+import { runRepositoryAtelierChatTests } from './test-repository-atelier-chat.mjs';
 import { runTaxiBoundaryTests } from './test-taxi-boundary.mjs';
 import { runTaxiVoiceTests } from './test-taxi-voice.mjs';
 import {
@@ -2052,13 +2053,16 @@ group('Repository Atelier — one reusable walkable room for every repo');
 const atelierSrc=(HTML.match(/\/\*REPOSITORY_ATELIER:START\*\/([\s\S]*?)\/\*REPOSITORY_ATELIER:END\*\//)||[,''])[1];
 const atelierCreateSrc=(atelierSrc.match(/function _createRepositoryAtelier\(\)\{[\s\S]*?(?=\nfunction _drawRepositoryAtelierHistory)/)||[''])[0];
 const atelierBindSrc=(atelierSrc.match(/function _bindRepositoryAtelier\(repo\)\{[\s\S]*?(?=\nfunction _refreshRepositoryAtelierLanguage)/)||[''])[0];
+await runRepositoryAtelierChatTests(ok);
 ok(atelierSrc.length>0, 'atelier runtime is a bounded, extractable integration block');
 ok(/id="atelierBtn"/.test(HTML) && /class="btn atelier"/.test(HTML)
   && /class="btn gh"[\s\S]*?target="_blank" rel="noopener"/.test(HTML), 'repo card adds a clear room entry command without removing quick GitHub access');
 ok((HTML.match(/atelierEnter:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierExit:\s*['"]/g)||[]).length===2
   && (HTML.match(/atelierAsk:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierWhy:\s*['"]/g)||[]).length===2
   && (HTML.match(/atelierSignals:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierRoomHint:\s*['"]/g)||[]).length===2
-  && (HTML.match(/atelierChatTitle:\s*['"]/g)||[]).length===2, 'atelier card, exhibits, chat, exit, and terminal copy is bilingual');
+  && (HTML.match(/atelierChatTitle:\s*['"]/g)||[]).length===2 && (HTML.match(/atelierChatCount:\s*['"]/g)||[]).length===2
+  && /atelierChatCount:'대화 \{n\}\/5'/.test(HTML) && /atelierChatCount:'Chat \{n\}\/5'/.test(HTML),
+  'atelier card, exhibits, scoped chat counter, exit, and terminal copy is bilingual');
 ok(/const REPOSITORY_ATELIER_LAYER=6/.test(atelierSrc) && /new THREE\.Scene\(\)/.test(atelierCreateSrc)
   && /renderer\.render\(A\.scene,camera\)/.test(atelierSrc), 'interior uses a dedicated scene plus camera layer instead of drawing the town behind it');
 ok(/if\(REPOSITORY_ATELIER&&REPOSITORY_ATELIER\.created\) return REPOSITORY_ATELIER/.test(atelierCreateSrc)
@@ -2103,12 +2107,15 @@ ok(/A\.terminalKinds=\['github','ask','why'\]/.test(atelierCreateSrc)
   'GitHub remains external while Ask and Why open their exact flows without leaving the room');
 ok(/function _openRepositoryAtelierChat\(kind,repo\)/.test(atelierSrc)
   && /kind==='why'[\s\S]*?_showCardWhyZone\(repo\)/.test(atelierSrc)
-  && /chatText\.value=question; sendChat\(\)/.test(atelierSrc)
-  && /A\.inRoomChat=true; A\.roomPanel=kind/.test(atelierSrc),
-  'in-room Gitber sends a real repo question and renders deterministic district context under Atelier ownership');
+  && /_showRepositoryAtelierChat\(\)/.test(atelierSrc)
+  && !/chatText\.value=question; sendChat\(\)/.test(atelierSrc)
+  && /A\.inRoomChat=true/.test(atelierSrc) && /A\.roomPanel=kind/.test(atelierSrc),
+  'in-room Gitber reopens the visit thread without spending another call and keeps deterministic district context local');
 ok(/#chat\.atelierChat/.test(HTML)&&/body\.atelier-chat-open #prompt/.test(HTML)
+  &&/id="atelierChatCount" role="status" aria-live="polite"/.test(HTML)
+  &&/#chat\.atelierChat #atelierChatCount \{[\s\S]*?flex:1 0 100%/.test(HTML)
   &&/atelierRoomHint/.test(HTML)&&/atelierChatTitle/.test(HTML)&&/atelierChatPh/.test(HTML),
-  'the room owns a dark responsive chat surface, hides conflicting prompts, and explains its completed interaction model');
+  'the room owns a dark responsive chat surface with a non-overlapping live counter and hidden conflicting prompts');
 ok(/#chat\.atelierChat \.msg\.bot span\[style\*="#ab8a66"\] \{ color:#dbcba8 !important; \}/.test(HTML)
   && /#chat\.atelierChat \.msg \.alt \{ color:#244d7b; background:#edf4ff; \}/.test(HTML),
   'in-room metric text and alternative repo chips retain AA contrast on the dark chat surface');
@@ -2120,7 +2127,23 @@ ok(/opts&&opts\.repo&&!repositoryAtelierActive\(\)/.test(HTML)
   &&/function taxiTo\(repo\)\{ if\(repositoryAtelierActive\(\)\) return false/.test(HTML)
   &&/function startScholarHandoff\(kind\)\{ if\(repositoryAtelierActive\(\)\) return false/.test(HTML),
   'chat replies cannot start an exterior taxi ride or scholar handoff while the room owns interaction');
-ok(!/fetch\(|new WebSocket|groundedAsk|webllmAsk|proxyAsk|import\(/.test(atelierCreateSrc+atelierBindSrc), 'entering and rebinding the room has no network, model, CDN, or dynamic-import work');
+ok(!/fetch\(|new WebSocket|groundedAsk|webllmAsk|proxyAsk|import\(/.test(atelierCreateSrc+atelierBindSrc), 'creating and rebinding the reusable room adds no model, CDN, or dynamic-import work');
+ok(/A\.chat=createRepositoryAtelierChatVisit\(target\.slug\)/.test(atelierSrc)
+  && /_startRepositoryAtelierChatVisit\(\)/.test(atelierSrc)
+  && /_sendRepositoryAtelierChat\(t\('atelierChatAuto'\),true\)/.test(atelierSrc)
+  && /beginRepositoryAtelierChatCall\(visit\)/.test(atelierSrc)
+  && /repositoryAtelierChatPayload\(visit,question,LANG\)/.test(atelierSrc),
+  'entry pins exact owner/repo memory, auto-explains at 1/5, and every started request uses the scoped payload');
+ok(/function _captureRepositoryAtelierChatThread\(\)/.test(atelierSrc)
+  && /nodes:\[\.\.\.chatLog\.childNodes\]/.test(atelierSrc)
+  && /function _restoreRepositoryAtelierChatThread\(\)/.test(atelierSrc)
+  && /setRepositoryAtelierChatPanel\(REPOSITORY_ATELIER\.chat,false\)/.test(HTML)
+  && /A\.chat=null/.test(atelierSrc),
+  'Atelier detaches the outside transcript, preserves panel-close memory, and resets only after room exit');
+ok(/function repositoryAtelierGroundedUrl\(\)\{[\s\S]*?return GROUNDED_DEFAULT;\s*\}/.test(HTML)
+  && !/localStorage/.test(atelierSrc)
+  && /TOWN_PROJECTION\.kind==='portable'/.test(HTML),
+  'Atelier uses only the canonical existing backend, keeps visit state out of storage, and leaves portable towns closed');
 ok(!/track\('atelier_(?:enter|exit)'/.test(atelierSrc) && /track\('atelier_terminal'/.test(atelierSrc),
   'enter and exit emit no remote analytics; only an explicit terminal action may record an event');
 ok(/if\(kind==='exit'\) return exitRepositoryAtelier\(\);[\s\S]*?if\(kind!=='github'&&kind!=='ask'&&kind!=='why'\) return false;[\s\S]*?track\('atelier_terminal'/.test(atelierSrc),
@@ -2192,9 +2215,10 @@ ok(/window\.__repositoryAtelier=/.test(atelierSrc) && /window\.__atelierEnter=/.
   && /sharedAvatarDraws:A\.avatarDraws/.test(atelierSrc),
   'short diagnostics expose active repo, room chat ownership, current avatar, exhibits, resources, render cost, bindings, and poses');
 ok(/one finished exhibition/.test(README_EN)&&/완성된 전시실/.test(README_KO)
-  &&/Ask Gitber[\s\S]*?without ejecting the visitor/.test(README_EN)
-  &&/깃버에게 이 레포 질문[\s\S]*?밖으로 내보내지 않고/.test(README_KO),
-  'both READMEs describe the completed room and in-room action ownership');
+  &&/Ask Gitber[\s\S]*?five backend calls per visit/.test(README_EN)
+  &&/깃버에게 이 레포 질문[\s\S]*?방문당 최대 다섯 번/.test(README_KO)
+  &&/no other repository is substituted/.test(README_EN)&&/다른 레포로 대신 답하지/.test(README_KO),
+  'both READMEs describe exact-repo grounding, five-call visits, and no-substitution behavior');
 const atelierHashSrc=(atelierSrc.match(/function _atelierHash\(value\)\{[^\n]+\}/)||[''])[0];
 if(atelierHashSrc){ const hash=new Function(`${atelierHashSrc}; return _atelierHash;`)();
   ok(hash('Repolis')===hash('Repolis') && hash('Repolis')!==hash('jenkins-dind'), 'repo style seed is stable across re-entry and differs across repos');
@@ -2358,6 +2382,21 @@ ok(NPC_GOVERNOR.length > 0, 'Durable NPC budget governor source loaded');
 ok(/if \(body && body\.npc_action\) return npcHandler\(body, request, env, ctx\)/.test(WORKER), 'fetch router dispatches body.npc_action to npcHandler with execution context');
 ok(/async function npcHandler\(/.test(WORKER), 'npcHandler() exists');
 ok(/grounded_mcp_mslearn/.test(WORKER) && /grounded_mcp_deepwiki/.test(WORKER) && /grounded_kb_taxi/.test(WORKER), 'grounded AI routes use the report taxonomy');
+const atelierWorkerSrc=(WORKER.match(/async function repositoryAtelierHandler\([\s\S]*?(?=\nexport default)/)||[''])[0];
+ok(/body\.surface === REPOSITORY_ATELIER_SURFACE[\s\S]*?repositoryAtelierHandler\(body, request, env, ctx\)[\s\S]*?if \(!question\)/.test(WORKER),
+  'the Worker dispatches Repository Atelier requests before the general taxi boundary');
+ok(/authorizeRepositoryAtelierRequest\(body\)/.test(atelierWorkerSrc)
+  && /buildRepositoryAtelierMessages\(/.test(atelierWorkerSrc)
+  && /repositoryAtelierKnowledgeSource\(base\.ks\)/.test(atelierWorkerSrc)
+  && /failOnError: true/.test(atelierWorkerSrc)
+  && /projectRepositoryAtelierReferences\(out\.data\?\.references, authorized\.repoName\)/.test(atelierWorkerSrc),
+  'the Atelier Worker path validates owner/repo, queries one required GitHub MCP source, and rejects non-exact references');
+ok(/if \(out\.fallback\)/.test(atelierWorkerSrc)
+  && /repositoryAtelierMessage\("unavailable"/.test(atelierWorkerSrc)
+  && /if \(!scoped\.exact \|\| !out\.answer \|\| isNotFound\(out\.answer\)\)/.test(atelierWorkerSrc)
+  && /repositoryAtelierMessage\("not_found"/.test(atelierWorkerSrc)
+  && !/chatLLM\(|mcpAsk\(|pickRepo\(/.test(atelierWorkerSrc),
+  'Atelier failures and empty evidence return factual current-repo responses without general search, recommendations, or another MCP fallback');
 ok(/tokensIn: u\.prompt_tokens/.test(WORKER) && /cachedTokens: u\.cached_tokens/.test(WORKER) && /tokensOut: u\.completion_tokens/.test(WORKER), 'provider usage emits input, cached-input, and output tokens');
 ok(/headers\["X-Repolis-Metrics-Key"\] = ingestToken/.test(WORKER)
   && /env\.METRICS_INGEST_TOKEN/.test(WORKER),
