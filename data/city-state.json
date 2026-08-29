@@ -102,7 +102,7 @@
         "stars": {
           "repositories_with_value": 69,
           "repositories_without_value": 0,
-          "total": 569
+          "total": 570
         }
       }
     ],
@@ -236,7 +236,7 @@
     },
     "repository_count": 69,
     "total_forks": 135,
-    "total_stars": 569
+    "total_stars": 570
   },
   "version": 1
 }
