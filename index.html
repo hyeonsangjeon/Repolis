@@ -567,6 +567,40 @@
   #atelierPortalStatus { flex:1 0 100%; min-height:14px; color:#b8d5d5; font-size:10px; text-align:right; }
   #atelierPortalStatus[data-tone="success"] { color:#9fe0bf; }
   #atelierPortalStatus[data-tone="error"] { color:#ffc0ae; }
+  #atelierBlueprintPanel { position:absolute; top:calc(84px + env(safe-area-inset-top,0px)); right:14px; bottom:14px;
+    display:flex; width:min(430px,calc(100vw - 28px)); flex-direction:column; overflow:hidden; border:1px solid rgba(143,214,221,.4);
+    border-radius:18px; color:#e8f4f3; background:rgba(11,24,28,.97); box-shadow:0 18px 56px rgba(0,0,0,.48);
+    backdrop-filter:blur(10px); pointer-events:auto; }
+  #atelierBlueprintPanel[hidden] { display:none; }
+  .atelierBlueprintHead { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:14px 14px 10px;
+    border-bottom:1px solid rgba(143,214,221,.2); }
+  .atelierBlueprintHead h2 { margin:0; color:#f6efe2; font:800 18px/1.2 Georgia,serif; }
+  .atelierBlueprintHead p { margin:5px 0 0; color:#a9c7c9; font-size:10.5px; line-height:1.42; }
+  #atelierBlueprintClose { flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(143,214,221,.3); border-radius:50%;
+    color:#dceced; background:#1b3338; font:800 21px/1 inherit; cursor:pointer; }
+  .atelierBlueprintControls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:10px 14px; }
+  #atelierBlueprintScan, #atelierBlueprintPath { display:flex; min-height:42px; align-items:center; justify-content:center; border:1px solid rgba(143,214,221,.34);
+    border-radius:11px; padding:8px 11px; color:#10272b; background:#8fd6dd; font:850 11px/1.3 system-ui,sans-serif; text-align:center; text-decoration:none; cursor:pointer; }
+  #atelierBlueprintScan:disabled { cursor:wait; opacity:.58; }
+  #atelierBlueprintScan[hidden] { display:none; }
+  #atelierBlueprintPath { color:#f4e8cf; background:#29484e; }
+  #atelierBlueprintPath[hidden] { display:none; }
+  #atelierBlueprintStatus { min-height:34px; margin:0; padding:0 14px 9px; color:#bad2d2; font-size:11px; line-height:1.45; }
+  #atelierBlueprintStatus[data-tone="error"] { color:#ffc0ae; }
+  #atelierBlueprintStatus[data-tone="limited"] { color:#f1cd85; }
+  #atelierBlueprintSelected { min-height:42px; margin:0 14px 9px; padding:9px 10px; border:1px solid rgba(255,255,255,.1);
+    border-radius:11px; color:#dce9e7; background:rgba(255,255,255,.045); font:650 10.5px/1.42 ui-monospace,SFMono-Regular,Menlo,monospace;
+    overflow-wrap:anywhere; }
+  #atelierBlueprintOutline { flex:1; min-height:0; margin:0; padding:0 10px 12px 14px; overflow:auto; list-style:none; }
+  #atelierBlueprintOutline li { margin:0; padding:0; }
+  #atelierBlueprintOutline button { display:flex; width:100%; min-height:38px; align-items:center; gap:8px; margin:2px 0; padding:7px 9px;
+    padding-left:calc(9px + (var(--depth,1) - 1) * 12px); border:1px solid transparent; border-radius:9px; color:#d7e7e5;
+    background:transparent; font:650 10.5px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace; text-align:left; cursor:pointer; overflow-wrap:anywhere; }
+  #atelierBlueprintOutline button:hover, #atelierBlueprintOutline button:focus-visible { border-color:rgba(143,214,221,.4); background:rgba(143,214,221,.1); outline:none; }
+  #atelierBlueprintOutline button[aria-current="true"] { border-color:#e4bd68; color:#fff2ce; background:rgba(228,189,104,.13); }
+  .atelierBlueprintType { flex:0 0 18px; color:#8fd6dd; text-align:center; }
+  .atelierBlueprintBudget { margin:0; padding:8px 14px calc(10px + env(safe-area-inset-bottom,0px)); border-top:1px solid rgba(143,214,221,.16);
+    color:#829fa1; font-size:9.5px; line-height:1.4; }
   body.atelier-active #topbar, body.atelier-active #menuBtn, body.atelier-active #panel,
   body.atelier-active #passport, body.atelier-active #mapWrap, body.atelier-active #station,
   body.atelier-active #taxiBtn, body.atelier-active #emoteBtn, body.atelier-active #emoteBar,
@@ -576,6 +610,7 @@
     white-space: normal; text-align: center; justify-content: center; line-height: 1.38; }
   body.atelier-active #actBtn { background: #eef5f4; color: #29484e; }
   body.atelier-chat-open #prompt, body.atelier-chat-open #actBtn, body.atelier-chat-open #atelierPortalActions { display:none !important; }
+  body.atelier-blueprint-open #prompt, body.atelier-blueprint-open #actBtn, body.atelier-blueprint-open #atelierPortalActions { display:none !important; }
   body.resident-chat-open #prompt, body.resident-chat-open #actBtn { display:none !important; }
   #chat.atelierChat { z-index:82; right:18px; bottom:18px; width:min(390px,calc(100vw - 36px));
     border:1px solid rgba(132,199,205,.45); background:rgba(11,22,27,.97); box-shadow:0 18px 56px rgba(0,0,0,.52); }
@@ -605,6 +640,13 @@
     #atelierPortalActions { top:calc(90px + env(safe-area-inset-top,0px)); left:10px; right:10px; width:auto; justify-content:stretch; }
     #atelierPortalActions button, #atelierPortalActions a { flex:1 1 105px; min-height:44px; padding:7px 8px; font-size:10.5px; }
     #atelierPortalStatus { text-align:center; }
+    #atelierBlueprintPanel { top:auto; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom,0px)); width:auto; max-height:58dvh; }
+    .atelierBlueprintHead { padding:12px 12px 9px; }
+    .atelierBlueprintControls { grid-template-columns:1fr; padding:9px 12px; }
+    #atelierBlueprintScan, #atelierBlueprintPath { min-height:44px; }
+    #atelierBlueprintStatus { padding:0 12px 8px; }
+    #atelierBlueprintSelected { margin:0 12px 8px; }
+    #atelierBlueprintOutline button { min-height:44px; }
     body.atelier-active #prompt { left: 12px; right: 94px; bottom: calc(18px + env(safe-area-inset-bottom,0px));
       max-width: none; transform: translateY(20px); font-size: 12.5px; padding: 10px 12px; }
     body.atelier-active #prompt.show { transform: translateY(0); }
@@ -612,6 +654,9 @@
       bottom: calc(16px + env(safe-area-inset-bottom,0px)); width: 64px; height: 64px; }
     #chat.atelierChat { right:10px; bottom:calc(10px + env(safe-area-inset-bottom,0px)); width:calc(100vw - 20px); max-height:calc(100dvh - 82px); }
     #chat.atelierChat #chatLog { height:min(46vh,330px); }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    #atelierBlueprintPanel, #atelierBlueprintOutline button { scroll-behavior:auto; transition:none !important; }
   }
   /* The Undercroft — a bounded, quiet archive below the World Tree roots */
   #undercroftFade { position:fixed; inset:0; z-index:91; pointer-events:none; opacity:0; background:#101719; will-change:opacity; }
@@ -1712,8 +1757,26 @@
     <button id="atelierPortalCopy" type="button" data-i18n="portalCopy">🔗 Repo Portal 복사</button>
     <a id="atelierPortalGithub" target="_blank" rel="noopener" data-i18n="atelierGithub">GitHub 열기</a>
     <button id="atelierPortalExplore" type="button"></button>
+    <button id="atelierBlueprintToggle" type="button" aria-expanded="false" aria-controls="atelierBlueprintPanel" data-i18n="atelierBlueprintToggle">🗺 Repository Blueprint</button>
     <span id="atelierPortalStatus" role="status" aria-live="polite" aria-atomic="true"></span>
   </div>
+  <section id="atelierBlueprintPanel" hidden aria-labelledby="atelierBlueprintTitle">
+    <div class="atelierBlueprintHead">
+      <div>
+        <h2 id="atelierBlueprintTitle" data-i18n="atelierBlueprintTitle">Repository Blueprint</h2>
+        <p data-i18n="atelierBlueprintBoundary">Current public source tree — not a call graph or runtime architecture.</p>
+      </div>
+      <button id="atelierBlueprintClose" type="button" data-i18n-aria="atelierBlueprintClose" aria-label="Close Repository Blueprint">×</button>
+    </div>
+    <div class="atelierBlueprintControls">
+      <button id="atelierBlueprintScan" type="button" data-i18n="atelierBlueprintScan">Scan public source map</button>
+      <a id="atelierBlueprintPath" target="_blank" rel="noopener" hidden data-i18n="atelierBlueprintOpenPath">Open exact path on GitHub</a>
+    </div>
+    <p id="atelierBlueprintStatus" role="status" aria-live="polite" aria-atomic="true"></p>
+    <p id="atelierBlueprintSelected" aria-live="polite"></p>
+    <ol id="atelierBlueprintOutline" role="tree" data-i18n-aria="atelierBlueprintOutlineAria" aria-label="Projected public source tree"></ol>
+    <p id="atelierBlueprintBudget" class="atelierBlueprintBudget"></p>
+  </section>
 </div>
 <div id="undercroftFade" aria-hidden="true"></div>
 <div id="undercroftHud" class="hidden" tabindex="-1" aria-live="polite">
@@ -2018,6 +2081,7 @@ import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from '.
 import { clearSessionFootprints, createSessionFootprintState, sessionFootprintScale, sessionFootprintSnapshot, stepSessionFootprints, teardownSessionFootprints } from './assets/session-footprints.js?v=world-tree-phase5-footprints-v1';
 import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
 import { REPOSITORY_ATELIER_CHAT_LIMIT, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v1';
+import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -2616,6 +2680,25 @@ const I18N = {
     atelierChatWait:'진행 중인 대화가 끝난 뒤 전시실에 입장해 주세요.',
     atelierDoor:'출구 · 마을로 돌아가기', atelierWalk:'WASD / 터치로 전시실을 걸어 보세요',
     atelierUse:'Enter / 버튼으로 {action}', atelierCoreHint:'★ 크기 · 활동 빛 · score 구조',
+    atelierBlueprintToggle:'🗺 Repository Blueprint', atelierBlueprintTitle:'Repository Blueprint',
+    atelierBlueprintBoundary:'현재 공개 소스 트리 · 호출 그래프나 런타임 아키텍처가 아닙니다.',
+    atelierBlueprintClose:'Repository Blueprint 닫기', atelierBlueprintScan:'공개 소스 지도 스캔',
+    atelierBlueprintOpenPath:'GitHub에서 정확한 경로 열기', atelierBlueprintOutlineAria:'투영된 공개 소스 트리',
+    atelierBlueprintIdle:'요청하지 않았습니다. 이 버튼을 눌러 현재 레포의 공개 트리만 한 번 읽습니다.',
+    atelierBlueprintScanning:'현재 레포의 공개 트리를 읽는 중…', atelierBlueprintReady:'공개 소스 지도를 불러왔습니다.',
+    atelierBlueprintTruncated:'GitHub가 잘린 트리를 반환했습니다. 추가 요청 없이 받은 범위만 표시합니다.',
+    atelierBlueprintPartial:'GitHub가 부분 응답을 반환했습니다. 추가 요청 없이 받은 범위만 표시합니다.',
+    atelierBlueprintForbidden:'GitHub가 이 공개 트리 요청을 허용하지 않았습니다.',
+    atelierBlueprintRateLimited:'GitHub 공개 API 요청 한도에 도달했습니다. 추가 요청은 보내지 않았습니다.',
+    atelierBlueprintNotFound:'공개 레포를 찾지 못했습니다. 비공개·삭제 여부를 추정하지 않습니다.',
+    atelierBlueprintTimeout:'8초 안에 응답하지 않아 스캔을 중단했습니다. 자동 재시도하지 않습니다.',
+    atelierBlueprintOversized:'디코딩된 응답이 2 MiB 한도를 넘어 표시하지 않습니다.',
+    atelierBlueprintMalformed:'응답의 범위나 경로를 검증할 수 없어 표시하지 않습니다.',
+    atelierBlueprintUnavailable:'공개 소스 트리를 불러오지 못했습니다. 자동 재시도하지 않습니다.',
+    atelierBlueprintEmpty:'표시할 수 있는 폴더나 소스·문서 랜드마크가 없습니다.',
+    atelierBlueprintFolder:'폴더', atelierBlueprintFile:'파일',
+    atelierBlueprintSelected:'{type} · {path}', atelierBlueprintCounts:'노드 {nodes}/{nodeCap} · 엣지 {edges}/{edgeCap} · 깊이 {depth}/4 · {bytes}',
+    atelierBlueprintOmitted:' · 한도 밖 노드 {count}개', atelierBlueprintTable:'Blueprint Table · 공개 소스 지도',
     portalActionsAria:'Repo Portal 작업', portalCopy:'🔗 Repo Portal 복사', portalCopied:'Repo Portal 주소를 복사했어요.',
     portalCopyFailed:'주소를 복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.', portalExplore:'@{user}의 마을 전체 보기',
     atelierTrafficUnavailable:'트래픽 비공개 · 공개 stars, forks, 최근 업데이트로 건축',
@@ -2964,6 +3047,25 @@ const I18N = {
     atelierChatWait:'Wait for the current conversation to finish before entering the Atelier.',
     atelierDoor:'Exit · return to town', atelierWalk:'Walk the exhibition with WASD / touch',
     atelierUse:'Enter / button to {action}', atelierCoreHint:'★ size · activity light · score structure',
+    atelierBlueprintToggle:'🗺 Repository Blueprint', atelierBlueprintTitle:'Repository Blueprint',
+    atelierBlueprintBoundary:'Current public source tree — not a call graph or runtime architecture.',
+    atelierBlueprintClose:'Close Repository Blueprint', atelierBlueprintScan:'Scan public source map',
+    atelierBlueprintOpenPath:'Open exact path on GitHub', atelierBlueprintOutlineAria:'Projected public source tree',
+    atelierBlueprintIdle:'No request yet. Use this button to read this repository’s public tree once.',
+    atelierBlueprintScanning:'Reading this repository’s public tree…', atelierBlueprintReady:'Public source map loaded.',
+    atelierBlueprintTruncated:'GitHub returned a truncated tree. Showing only that bounded response with no follow-up request.',
+    atelierBlueprintPartial:'GitHub returned a partial response. Showing only that bounded response with no follow-up request.',
+    atelierBlueprintForbidden:'GitHub did not allow this public tree request.',
+    atelierBlueprintRateLimited:'The public GitHub API rate limit was reached. No follow-up request was made.',
+    atelierBlueprintNotFound:'The public repository was not found. Private or deleted status is not inferred.',
+    atelierBlueprintTimeout:'The scan stopped after 8 seconds. It was not retried automatically.',
+    atelierBlueprintOversized:'The decoded response exceeded the 2 MiB limit and was not displayed.',
+    atelierBlueprintMalformed:'The response scope or paths could not be verified, so nothing was displayed.',
+    atelierBlueprintUnavailable:'The public source tree could not be loaded. It was not retried automatically.',
+    atelierBlueprintEmpty:'No eligible folders or source/document landmarks were found.',
+    atelierBlueprintFolder:'Folder', atelierBlueprintFile:'File',
+    atelierBlueprintSelected:'{type} · {path}', atelierBlueprintCounts:'Nodes {nodes}/{nodeCap} · edges {edges}/{edgeCap} · depth {depth}/4 · {bytes}',
+    atelierBlueprintOmitted:' · {count} nodes outside the cap', atelierBlueprintTable:'Blueprint Table · public source map',
     portalActionsAria:'Repo Portal actions', portalCopy:'🔗 Copy Repo Portal', portalCopied:'Repo Portal address copied.',
     portalCopyFailed:"Couldn't copy the address. Check this browser's clipboard permission.", portalExplore:"Explore @{user}'s full town",
     atelierTrafficUnavailable:'Traffic unavailable · architecture uses public stars, forks, and recent updates',
@@ -8957,6 +9059,7 @@ addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)) return;
   if(e.code==='Escape'&&undercroftActive()){ e.preventDefault(); exitUndercroft(); return; }
   if(undercroftTransitioning()){ if(MOVE.has(e.code)) e.preventDefault(); clearKeys(); return; }
   if(e.code==='Enter'&&undercroftActive()){ e.preventDefault(); if(!e.repeat) undercroftAct(); return; }
+  if(e.code==='Escape'&&repositoryBlueprintOpen()){ e.preventDefault(); _closeRepositoryBlueprint(); return; }
   if(e.code==='Escape'&&repositoryAtelierActive()){ e.preventDefault(); exitRepositoryAtelier(); return; }
   if(repositoryAtelierTransitioning()){ if(MOVE.has(e.code)) e.preventDefault(); clearKeys(); return; }
   if((e.code==='Enter'||e.code==='Space')&&nearWorldTree&&!nearNpc&&!modalOpen){ e.preventDefault(); if(!e.repeat) enterUndercroft(); return; }
@@ -12319,7 +12422,11 @@ const atelierFade=document.getElementById('atelierFade'),atelierHud=document.get
   atelierExit=document.getElementById('atelierExit'),atelierRepoName=document.getElementById('atelierRepoName'),
   atelierPortalActions=document.getElementById('atelierPortalActions'),atelierPortalCopy=document.getElementById('atelierPortalCopy'),
   atelierPortalGithub=document.getElementById('atelierPortalGithub'),atelierPortalExplore=document.getElementById('atelierPortalExplore'),
-  atelierPortalStatus=document.getElementById('atelierPortalStatus');
+  atelierPortalStatus=document.getElementById('atelierPortalStatus'),atelierBlueprintToggle=document.getElementById('atelierBlueprintToggle'),
+  atelierBlueprintPanel=document.getElementById('atelierBlueprintPanel'),atelierBlueprintClose=document.getElementById('atelierBlueprintClose'),
+  atelierBlueprintScan=document.getElementById('atelierBlueprintScan'),atelierBlueprintPath=document.getElementById('atelierBlueprintPath'),
+  atelierBlueprintStatus=document.getElementById('atelierBlueprintStatus'),atelierBlueprintSelected=document.getElementById('atelierBlueprintSelected'),
+  atelierBlueprintOutline=document.getElementById('atelierBlueprintOutline'),atelierBlueprintBudget=document.getElementById('atelierBlueprintBudget');
 
 function repositoryAtelierActive(){ return !!REPOSITORY_ATELIER&&REPOSITORY_ATELIER.state!=='outside'; }
 function repositoryAtelierTransitioning(){ return !!REPOSITORY_ATELIER&&(REPOSITORY_ATELIER.state==='entering'||REPOSITORY_ATELIER.state==='exiting'); }
@@ -12353,6 +12460,10 @@ function _atelierSetInstance(mesh,index,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0){
 function _atelierTrackGeometry(geometry){ REPOSITORY_ATELIER.resources.geometries.add(geometry); return geometry; }
 function _atelierTrackMaterial(material){ REPOSITORY_ATELIER.resources.materials.add(material); return material; }
 function _atelierMesh(geometry,material){ return new THREE.Mesh(_atelierTrackGeometry(geometry),_atelierTrackMaterial(material)); }
+function _repositoryBlueprintState(){
+  return {cache:createRepositoryBlueprintMemoryCache(),target:null,status:'idle',projection:null,selected:-1,panelOpen:false,
+    previousFocus:null,controller:null,scanId:0,requestsStarted:0,decodedBytes:0,lastResult:null,cameraOnOpen:null,cameraUnchanged:null};
+}
 function _atelierCanvas(width,height,name){
   const canvas=document.createElement('canvas'); canvas.width=width; canvas.height=height; canvas.dataset.atelier=name;
   const texture=new THREE.CanvasTexture(canvas); texture.colorSpace=THREE.SRGBColorSpace; texture.anisotropy=Math.min(4,MAXANISO);
@@ -12370,6 +12481,7 @@ function _createRepositoryAtelier(){
   if(A.lastSaved===undefined) A.lastSaved=null; if(A.lastRestored===undefined) A.lastRestored=null; if(A.pendingExit==null) A.pendingExit=false;
   if(A.afterExit===undefined) A.afterExit=null; if(A.near===undefined) A.near=null; if(A.walk==null) A.walk=0; if(A.lastAction===undefined) A.lastAction=null;
   if(A.inRoomChat==null) A.inRoomChat=false; if(A.roomPanel===undefined) A.roomPanel=null;
+  A.blueprint=A.blueprint||_repositoryBlueprintState();
   A.lastInterior=A.lastInterior||{calls:0,triangles:0}; A.peakInterior=A.peakInterior||{calls:0,triangles:0};
   A.resources=A.resources||{geometries:new Set(),materials:new Set(),textures:new Set()};
   A.dummy=A.dummy||new THREE.Object3D(); A.color=A.color||new THREE.Color(); A.moveForward=A.moveForward||new THREE.Vector3(); A.moveRight=A.moveRight||new THREE.Vector3();
@@ -12408,7 +12520,8 @@ function _createRepositoryAtelier(){
   [-8,-4,0,4,8].forEach(z=>architectureParts.push([0,7.46,z,15.1,.09,.11]));
   architectureParts.push([7.58,4,-4.38,.1,5.85,.12],[7.58,4,4.38,.1,5.85,.12],
     [7.58,6.94,0,.1,.12,8.88],[7.58,1.06,0,.1,.12,8.88],
-    [-6.95,.08,0,.11,.08,19.4],[6.95,.08,0,.11,.08,19.4]);
+    [-6.95,.08,0,.11,.08,19.4],[6.95,.08,0,.11,.08,19.4],
+    [-4.75,.68,1.45,3.6,.18,6.2],[-6.22,.34,1.45,.18,.68,5.75],[-3.28,.34,1.45,.18,.68,5.75]);
   const architecture=new THREE.InstancedMesh(_atelierTrackGeometry(new THREE.BoxGeometry(1,1,1)),A.materials.exhibit,architectureParts.length);
   architectureParts.forEach((part,index)=>_atelierSetInstance(architecture,index,...part));
   architecture.instanceMatrix.needsUpdate=true; architecture.name='AtelierArchitecture'; A.group.add(architecture); A.architecture=architecture;
@@ -12463,6 +12576,25 @@ function _createRepositoryAtelier(){
   const rodGeo=_atelierTrackGeometry(new THREE.CylinderGeometry(.045,.045,2.7,LOW_END?5:8)),rods=new THREE.InstancedMesh(rodGeo,A.materials.ring,10);
   rods.instanceMatrix.setUsage(THREE.DynamicDrawUsage); A.core.add(rods); A.rods=rods;
   A.coreLight=new THREE.PointLight(0x8fdde4,12,12,1.8); A.coreLight.position.set(0,.5,0); A.core.add(A.coreLight);
+
+  const blueprintCapacityCompact=LOW_END||IS_MOBILE,
+    blueprintNodeCapacity=blueprintCapacityCompact?REPOSITORY_BLUEPRINT_LIMITS.compactNodes:REPOSITORY_BLUEPRINT_LIMITS.desktopNodes,
+    blueprintEdgeCapacity=blueprintCapacityCompact?REPOSITORY_BLUEPRINT_LIMITS.compactEdges:REPOSITORY_BLUEPRINT_LIMITS.desktopEdges;
+  A.blueprintGroup=new THREE.Group(); A.blueprintGroup.name='RepositoryBlueprintTable'; A.group.add(A.blueprintGroup);
+  A.blueprintFolders=new THREE.InstancedMesh(_atelierTrackGeometry(new THREE.BoxGeometry(1,1,1)),A.materials.exhibit,blueprintNodeCapacity);
+  A.blueprintFiles=new THREE.InstancedMesh(_atelierTrackGeometry(new THREE.OctahedronGeometry(1,0)),A.materials.terminal,blueprintNodeCapacity);
+  A.blueprintFolders.instanceMatrix.setUsage(THREE.DynamicDrawUsage); A.blueprintFiles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  A.blueprintFolders.count=0; A.blueprintFiles.count=0; A.blueprintFolders.name='RepositoryBlueprintFolders'; A.blueprintFiles.name='RepositoryBlueprintFiles';
+  const blueprintEdgeGeometry=_atelierTrackGeometry(new THREE.BufferGeometry()),
+    blueprintEdgePositions=new Float32Array(blueprintEdgeCapacity*6);
+  blueprintEdgeGeometry.setAttribute('position',new THREE.BufferAttribute(blueprintEdgePositions,3)); blueprintEdgeGeometry.setDrawRange(0,0);
+  A.blueprintEdges=new THREE.LineSegments(blueprintEdgeGeometry,_atelierTrackMaterial(new THREE.LineBasicMaterial({color:0x8fb7bc,transparent:true,opacity:.5})));
+  A.blueprintEdges.name='RepositoryBlueprintEdges'; A.blueprintGroup.add(A.blueprintFolders,A.blueprintFiles,A.blueprintEdges);
+  A.blueprintGroup.visible=false; A.blueprintEdgePositions=blueprintEdgePositions;
+  A.blueprintTablePosition=new THREE.Vector3(-2.65,0,3.25);
+  A.blueprintTableBounds={minX:-6.72,maxX:-2.78,minZ:-1.85,maxZ:4.75};
+  A.blueprint.capacityCompact=blueprintCapacityCompact; A.blueprint.nodeCapacity=blueprintNodeCapacity; A.blueprint.edgeCapacity=blueprintEdgeCapacity;
+  A.blueprint.compact=blueprintCapacityCompact; A.blueprint.nodeCap=blueprintNodeCapacity; A.blueprint.edgeCap=blueprintEdgeCapacity;
 
   A.avatar=model.clone(true); A.avatar.name='AtelierVisitor_CurrentChibi'; A.avatar.position.set(0,0,3.65); A.avatar.rotation.set(0,Math.PI,0); A.avatar.scale.setScalar(.82);
   A.avatar.traverse(object=>{ if(object.isSprite) object.visible=false; if(object.isLight){ object.castShadow=false; object.intensity=Math.min(object.intensity,7); } });
@@ -12552,6 +12684,192 @@ function _drawRepositoryAtelierActions(repo){
     ctx.fillStyle='#91a7aa'; ctx.font='650 18px system-ui,sans-serif'; ctx.fillText('ENTER',cx,405); }
   A.textLayout=A.textLayout||{}; A.textLayout.actionWithinCanvas=true; s.texture.needsUpdate=true;
 }
+function _repositoryBlueprintTarget(repo){
+  const parsed=_repositoryPortalTarget(repo);
+  return validateRepositoryBlueprintTarget({
+    repoName:parsed&&parsed.slug||'',
+    defaultBranch:repo&&repo.default_branch||'',
+    private:repo&&repo.private===true,
+    deleted:repo&&repo.deleted===true
+  });
+}
+function _repositoryBlueprintByteLabel(value){
+  const bytes=Math.max(0,Number(value)||0);
+  if(bytes<1024) return `${Math.round(bytes)} B`;
+  return bytes<1048576?`${(bytes/1024).toFixed(1)} KiB`:`${(bytes/1048576).toFixed(2)} MiB`;
+}
+function _repositoryBlueprintStatusKey(status){
+  return {
+    idle:'atelierBlueprintIdle',scanning:'atelierBlueprintScanning',ready:'atelierBlueprintReady',
+    truncated:'atelierBlueprintTruncated',partial:'atelierBlueprintPartial',forbidden:'atelierBlueprintForbidden',
+    rate_limited:'atelierBlueprintRateLimited',not_found:'atelierBlueprintNotFound',private:'atelierBlueprintNotFound',
+    deleted:'atelierBlueprintNotFound',timeout:'atelierBlueprintTimeout',oversized:'atelierBlueprintOversized',
+    malformed:'atelierBlueprintMalformed',malformed_path:'atelierBlueprintMalformed',malformed_type:'atelierBlueprintMalformed',
+    duplicate_path:'atelierBlueprintMalformed',scope_mismatch:'atelierBlueprintMalformed',repository:'atelierBlueprintMalformed',
+    branch:'atelierBlueprintMalformed',target:'atelierBlueprintMalformed',network:'atelierBlueprintUnavailable',
+    unavailable:'atelierBlueprintUnavailable',cancelled:'atelierBlueprintIdle'
+  }[status]||'atelierBlueprintUnavailable';
+}
+function _repositoryBlueprintRenderOutline(){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint,projection=B&&B.projection;
+  atelierBlueprintOutline.replaceChildren();
+  if(!projection) return;
+  const fragment=document.createDocumentFragment();
+  projection.nodes.forEach((node,index)=>{
+    const item=document.createElement('li'); item.setAttribute('role','none');
+    const button=document.createElement('button'); button.type='button'; button.dataset.blueprintIndex=String(index);
+    button.setAttribute('role','treeitem'); button.setAttribute('aria-level',String(node.depth)); button.style.setProperty('--depth',String(node.depth));
+    button.setAttribute('aria-label',tf('atelierBlueprintSelected',{type:t(node.type==='folder'?'atelierBlueprintFolder':'atelierBlueprintFile'),path:node.path}));
+    const type=document.createElement('span'); type.className='atelierBlueprintType'; type.setAttribute('aria-hidden','true'); type.textContent=node.type==='folder'?'▰':'◆';
+    const path=document.createElement('span'); path.textContent=node.path; button.append(type,path); item.appendChild(button); fragment.appendChild(item);
+  });
+  atelierBlueprintOutline.appendChild(fragment);
+}
+function _repositoryBlueprintPaintNode(index,selected){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint,visual=B&&B.visuals&&B.visuals[index]; if(!visual) return;
+  const scale=selected?1.42:1,mesh=visual.kind==='folder'?A.blueprintFolders:A.blueprintFiles;
+  _atelierSetInstance(mesh,visual.instance,visual.x,visual.y,visual.z,visual.sx*scale,visual.sy*(selected?1.3:1),visual.sz*scale);
+  A.color.set(selected?0xffedb0:(visual.kind==='folder'?(visual.depth===1?0x75cbd0:0x4f9299):0xe4bd68));
+  mesh.setColorAt(visual.instance,A.color); mesh.instanceMatrix.needsUpdate=true; mesh.instanceColor.needsUpdate=true;
+}
+function _syncRepositoryBlueprintSelection(focusDom=false){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint,projection=B&&B.projection;
+  if(!projection||!projection.nodes.length){ atelierBlueprintSelected.hidden=true; atelierBlueprintPath.hidden=true; return; }
+  const index=Math.max(0,Math.min(projection.nodes.length-1,B.selected)),node=projection.nodes[index];
+  B.selected=index; atelierBlueprintSelected.hidden=false; atelierBlueprintSelected.textContent=tf('atelierBlueprintSelected',{
+    type:t(node.type==='folder'?'atelierBlueprintFolder':'atelierBlueprintFile'),path:node.path
+  });
+  atelierBlueprintPath.href=createRepositoryBlueprintPathUrl(B.target,node); atelierBlueprintPath.hidden=false;
+  atelierBlueprintOutline.querySelectorAll('[data-blueprint-index]').forEach(button=>{
+    button.setAttribute('aria-current',button.dataset.blueprintIndex===String(index)?'true':'false');
+  });
+  if(focusDom){ requestAnimationFrame(()=>{ const button=atelierBlueprintOutline.querySelector(`[data-blueprint-index="${index}"]`);
+    if(button){ button.focus({preventScroll:true}); button.scrollIntoView({block:'nearest'}); } }); }
+}
+function _focusRepositoryBlueprintNode(index,focusDom=false){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint,projection=B&&B.projection;
+  if(!projection||!Number.isInteger(index)||index<0||index>=projection.nodes.length) return false;
+  if(B.selected>=0) _repositoryBlueprintPaintNode(B.selected,false);
+  B.selected=index; _repositoryBlueprintPaintNode(index,true); _syncRepositoryBlueprintSelection(focusDom); return true;
+}
+function _renderRepositoryBlueprintChrome(rebuildOutline=false){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!B) return;
+  const projection=B.projection,status=projection&&projection.nodes.length===0?'empty':B.status;
+  atelierBlueprintPanel.setAttribute('aria-busy',String(status==='scanning'));
+  atelierBlueprintScan.disabled=status==='scanning'; atelierBlueprintScan.hidden=!!projection;
+  atelierBlueprintStatus.textContent=t(status==='empty'?'atelierBlueprintEmpty':_repositoryBlueprintStatusKey(status));
+  atelierBlueprintStatus.dataset.tone=['truncated','partial'].includes(status)?'limited':
+    (!['idle','scanning','ready','empty'].includes(status)?'error':'');
+  if(rebuildOutline) _repositoryBlueprintRenderOutline();
+  atelierBlueprintOutline.hidden=!projection; atelierBlueprintBudget.hidden=!projection;
+  if(projection){
+    const counts=projection.counts,limits=projection.limits;
+    atelierBlueprintBudget.textContent=tf('atelierBlueprintCounts',{
+      nodes:counts.nodes,nodeCap:limits.nodes,edges:counts.edges,edgeCap:limits.edges,depth:counts.maxDepth,bytes:_repositoryBlueprintByteLabel(counts.decodedBytes)
+    })+(counts.omittedNodes?tf('atelierBlueprintOmitted',{count:counts.omittedNodes}):'');
+    _syncRepositoryBlueprintSelection(false);
+  } else {
+    atelierBlueprintBudget.textContent=''; atelierBlueprintSelected.hidden=true; atelierBlueprintPath.hidden=true;
+  }
+}
+function _repositoryBlueprintWorldPosition(node){
+  return {x:-4.75+node.layout.x*1.55,y:.83+(4-node.depth)*.018,z:1.45+node.layout.z*2.72};
+}
+function _applyRepositoryBlueprintProjection(projection){
+  const A=REPOSITORY_ATELIER,B=A.blueprint,folderIndexes=[],fileIndexes=[],visuals=new Array(projection.nodes.length),positions=new Map();
+  let folderCount=0,fileCount=0;
+  projection.nodes.forEach((node,index)=>{
+    const position=_repositoryBlueprintWorldPosition(node),size=Math.max(.035,node.layout.size*1.8),folder=node.type==='folder',
+      instance=folder?folderCount++:fileCount++,sx=folder?size*1.35:size*.56,sy=folder?.07+Math.max(0,4-node.depth)*.015:size*.56,sz=folder?size:size*.56,
+      mesh=folder?A.blueprintFolders:A.blueprintFiles;
+    _atelierSetInstance(mesh,instance,position.x,position.y,position.z,sx,sy,sz);
+    A.color.set(folder?(node.depth===1?0x75cbd0:0x4f9299):0xe4bd68); mesh.setColorAt(instance,A.color);
+    (folder?folderIndexes:fileIndexes).push(index); visuals[index]={kind:folder?'folder':'file',instance,depth:node.depth,...position,sx,sy,sz}; positions.set(node.path,position);
+  });
+  A.blueprintFolders.count=folderCount; A.blueprintFiles.count=fileCount;
+  A.blueprintFolders.instanceMatrix.needsUpdate=true; A.blueprintFiles.instanceMatrix.needsUpdate=true;
+  if(A.blueprintFolders.instanceColor) A.blueprintFolders.instanceColor.needsUpdate=true;
+  if(A.blueprintFiles.instanceColor) A.blueprintFiles.instanceColor.needsUpdate=true;
+  A.blueprintFolders.computeBoundingSphere(); A.blueprintFiles.computeBoundingSphere();
+  let edgeCount=0,offset=0;
+  for(const edge of projection.edges){ const from=positions.get(edge.from),to=positions.get(edge.to); if(!from||!to||edgeCount>=B.edgeCap) continue;
+    A.blueprintEdgePositions[offset++]=from.x; A.blueprintEdgePositions[offset++]=from.y+.035; A.blueprintEdgePositions[offset++]=from.z;
+    A.blueprintEdgePositions[offset++]=to.x; A.blueprintEdgePositions[offset++]=to.y+.035; A.blueprintEdgePositions[offset++]=to.z; edgeCount++; }
+  A.blueprintEdges.geometry.setDrawRange(0,edgeCount*2); A.blueprintEdges.geometry.attributes.position.needsUpdate=true;
+  A.blueprintEdges.geometry.computeBoundingSphere();
+  B.projection=projection; B.folderNodeIndexes=folderIndexes; B.fileNodeIndexes=fileIndexes; B.visuals=visuals; B.selected=projection.nodes.length?0:-1;
+  B.render={nodes:projection.nodes.length,edges:edgeCount,instancedBatches:(folderCount?1:0)+(fileCount?1:0),
+    lineSegments:edgeCount?1:0,drawCalls:(folderCount?1:0)+(fileCount?1:0)+(edgeCount?1:0),atlases:0};
+  A.blueprintGroup.visible=true; if(B.selected>=0) _repositoryBlueprintPaintNode(B.selected,true);
+}
+function _clearRepositoryBlueprintVisuals(){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!A||!B||!A.blueprintGroup) return;
+  A.blueprintFolders.count=0; A.blueprintFiles.count=0; A.blueprintEdges.geometry.setDrawRange(0,0); A.blueprintGroup.visible=false;
+  B.projection=null; B.selected=-1; B.visuals=[]; B.folderNodeIndexes=[]; B.fileNodeIndexes=[];
+  B.render={nodes:0,edges:0,instancedBatches:0,lineSegments:0,drawCalls:0,atlases:0};
+}
+function _repositoryBlueprintCameraSnapshot(){
+  return {position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),yaw:camYaw,pitch:camPitch,distance:camDist};
+}
+function repositoryBlueprintOpen(){ return !!REPOSITORY_ATELIER?.blueprint?.panelOpen; }
+function _openRepositoryBlueprint(focusSelected=false){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!A||A.state!=='inside'||!B||repositoryAtelierChatActive()) return false;
+  if(!B.panelOpen){ B.panelOpen=true; B.previousFocus=document.activeElement; B.cameraOnOpen=_repositoryBlueprintCameraSnapshot();
+    document.body.classList.add('atelier-blueprint-open'); atelierBlueprintPanel.hidden=false; atelierBlueprintToggle.setAttribute('aria-expanded','true'); clearKeys(); }
+  _renderRepositoryBlueprintChrome(true);
+  requestAnimationFrame(()=>{ if(focusSelected&&B.selected>=0) _syncRepositoryBlueprintSelection(true); else atelierBlueprintScan.focus(); });
+  return true;
+}
+function _closeRepositoryBlueprint(restoreFocus=true){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!B||!B.panelOpen) return false;
+  B.panelOpen=false; B.cameraUnchanged=JSON.stringify(B.cameraOnOpen)===JSON.stringify(_repositoryBlueprintCameraSnapshot());
+  document.body.classList.remove('atelier-blueprint-open'); atelierBlueprintPanel.hidden=true; atelierBlueprintToggle.setAttribute('aria-expanded','false'); clearKeys();
+  const previous=B.previousFocus; B.previousFocus=null;
+  if(restoreFocus) requestAnimationFrame(()=>{ const target=previous&&previous.isConnected?previous:atelierBlueprintToggle; try{ target.focus(); }catch(_){} });
+  return true;
+}
+function _bindRepositoryBlueprint(repo){
+  const A=REPOSITORY_ATELIER,B=A.blueprint,target=_repositoryBlueprintTarget(repo);
+  if(B.controller){ B.controller.abort(); B.controller=null; }
+  _closeRepositoryBlueprint(false); B.cache.clear(); _clearRepositoryBlueprintVisuals();
+  B.compact=B.capacityCompact||VISUAL_GOVERNOR_STATE.tier===2;
+  B.nodeCap=B.compact?REPOSITORY_BLUEPRINT_LIMITS.compactNodes:REPOSITORY_BLUEPRINT_LIMITS.desktopNodes;
+  B.edgeCap=B.compact?REPOSITORY_BLUEPRINT_LIMITS.compactEdges:REPOSITORY_BLUEPRINT_LIMITS.desktopEdges;
+  B.target=target.ok?target:null; B.status=target.ok?'idle':target.reason; B.requestsStarted=0; B.decodedBytes=0; B.lastResult=null; B.scanId++;
+  atelierBlueprintToggle.disabled=!target.ok; _renderRepositoryBlueprintChrome(true);
+}
+async function _scanRepositoryBlueprint(){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!A||A.state!=='inside'||!B||!B.target||B.controller) return false;
+  if(!B.panelOpen&&!_openRepositoryBlueprint()) return false;
+  const cached=B.cache.get(B.target);
+  if(cached){ B.lastResult=cached; B.status=cached.status; B.decodedBytes=cached.decodedBytes||0; _applyRepositoryBlueprintProjection(cached.projection);
+    _renderRepositoryBlueprintChrome(true); return true; }
+  const scanId=++B.scanId,controller=new AbortController(); B.controller=controller; B.status='scanning'; _renderRepositoryBlueprintChrome(false);
+  const result=await scanRepositoryBlueprint(B.target,{compact:B.compact,signal:controller.signal});
+  if(!REPOSITORY_ATELIER||REPOSITORY_ATELIER!==A||B.scanId!==scanId) return false;
+  B.controller=null; B.requestsStarted+=result.requestsStarted; B.lastResult=result; B.status=result.status; B.decodedBytes=result.decodedBytes||0;
+  if(result.ok&&result.projection){ B.cache.set(B.target,result); _applyRepositoryBlueprintProjection(result.projection); }
+  else _clearRepositoryBlueprintVisuals();
+  _renderRepositoryBlueprintChrome(true); return result.ok;
+}
+function _resetRepositoryBlueprintVisit(){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!B) return;
+  if(B.controller) B.controller.abort(); B.controller=null; B.scanId++; _closeRepositoryBlueprint(false); B.cache.clear(); _clearRepositoryBlueprintVisuals();
+  B.target=null; B.status='idle'; B.requestsStarted=0; B.decodedBytes=0; B.lastResult=null; _renderRepositoryBlueprintChrome(true);
+}
+function _resolveRepositoryBlueprintTableCollision(position){
+  const A=REPOSITORY_ATELIER,bounds=A&&A.blueprintTableBounds;if(!bounds||position.x<=bounds.minX||position.x>=bounds.maxX||position.z<=bounds.minZ||position.z>=bounds.maxZ) return;
+  const distances=[position.x-bounds.minX,bounds.maxX-position.x,position.z-bounds.minZ,bounds.maxZ-position.z],edge=distances.indexOf(Math.min(...distances));
+  if(edge===0) position.x=bounds.minX; else if(edge===1) position.x=bounds.maxX; else if(edge===2) position.z=bounds.minZ; else position.z=bounds.maxZ;
+}
+function _repositoryBlueprintAtScreen(cx,cy){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!A||A.state!=='inside'||!B?.projection||!A.blueprintGroup.visible) return false;
+  const rect=dom.getBoundingClientRect(),layerMask=_ray.layers.mask; _ndc.x=((cx-rect.left)/rect.width)*2-1; _ndc.y=-((cy-rect.top)/rect.height)*2+1;
+  _ray.layers.set(REPOSITORY_ATELIER_LAYER); _ray.setFromCamera(_ndc,camera);
+  const hit=_ray.intersectObjects([A.blueprintFolders,A.blueprintFiles],false)[0]; _ray.layers.mask=layerMask; if(!hit||hit.instanceId==null) return false;
+  const indexes=hit.object===A.blueprintFolders?B.folderNodeIndexes:B.fileNodeIndexes,index=indexes[hit.instanceId];
+  if(!Number.isInteger(index)) return false; _openRepositoryBlueprint(false); _focusRepositoryBlueprintNode(index,true); return true;
+}
 function _bindRepositoryAtelier(repo){
   const A=_createRepositoryAtelier(),canonical=repoByKey(repo.repo)||repo,zone=zoneCatById(canonical._zone),
     langPalette=pal(canonical.lang),langColor=langPalette.accent,zoneColor=zone?zone.tone:0x6e8b8f,
@@ -12594,11 +12912,13 @@ function _bindRepositoryAtelier(repo){
   A.bindings={github:canonical.repo,ask:canonical.repo,why:canonical.repo};
   atelierRepoName.textContent=canonical.repo;
   _bindRepositoryPortalActions(canonical);
+  _bindRepositoryBlueprint(canonical);
 }
 function _refreshRepositoryAtelierLanguage(){
   if(!REPOSITORY_ATELIER||!REPOSITORY_ATELIER.created||!REPOSITORY_ATELIER.repo) return;
   _drawRepositoryAtelierHistory(REPOSITORY_ATELIER.repo); _drawRepositoryAtelierSignals(REPOSITORY_ATELIER.repo); _drawRepositoryAtelierActions(REPOSITORY_ATELIER.repo);
   _bindRepositoryPortalActions(REPOSITORY_ATELIER.repo,true);
+  _renderRepositoryBlueprintChrome(true);
   if(repositoryAtelierChatActive()) _syncRepositoryAtelierChatChrome();
 }
 function _repositoryPortalTarget(repo){
@@ -12647,6 +12967,7 @@ function _restoreRepositoryAtelierChatThread(){
 }
 function _showRepositoryAtelierChat(){
   const A=REPOSITORY_ATELIER;if(!A||A.state!=='inside'||!A.chat) return false;
+  if(repositoryBlueprintOpen()) _closeRepositoryBlueprint(false);
   if(chatEl.classList.contains('hidden')) chatPreviousFocus=document.activeElement;
   A.inRoomChat=true; setRepositoryAtelierChatPanel(A.chat,true); activeNpc=_taxiNpc(); chatGreeted=true; applyNpcChrome(activeNpc);
   chatEl.classList.remove('hidden'); chatEl.setAttribute('aria-hidden','false'); _syncRepositoryAtelierChatChrome();
@@ -12752,6 +13073,7 @@ function exitRepositoryAtelier(action=null){
   if(action) A.afterExit=action;
   if(A.state==='entering'){ A.pendingExit=true; return true; }
   if(A.state==='exiting') return true;
+  _resetRepositoryBlueprintVisit();
   if(A.chat){ A.chat.cancelled=true; if(A.chat.controller) A.chat.controller.abort(); }
   A.state='exiting'; A.phase='cover'; A.t=0; _resetRepositoryAtelierInput();
   modal.classList.remove('show'); modalOpen=false; atelierFade.classList.add('blocking'); return true;
@@ -12763,7 +13085,7 @@ function _restoreRepositoryAtelier(){
   camera.position.copy(s.cameraPosition); camera.quaternion.copy(s.cameraQuaternion); camera.layers.mask=s.cameraLayerMask;
   camYaw=s.camYaw; camPitch=s.camPitch; camDist=s.camDist; freeLook=s.freeLook; dragging=false; dragBtn=s.dragBtn; walk=s.walk;
   navTarget=s.navTarget; navHolder.visible=s.navVisible; document.getElementById('navBadge').style.display=s.navBadgeDisplay;
-  document.body.classList.remove('atelier-active','atelier-chat-open'); chatEl.classList.remove('atelierChat'); A.inRoomChat=false; A.roomPanel=null;
+  document.body.classList.remove('atelier-active','atelier-chat-open','atelier-blueprint-open'); chatEl.classList.remove('atelierChat'); A.inRoomChat=false; A.roomPanel=null;
   setRepositoryAtelierChatPanel(A.chat,false); _restoreRepositoryAtelierChatThread();
   document.getElementById('intro').inert=s.introInert;
   atelierHud.classList.add('hidden'); promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪';
@@ -12821,7 +13143,7 @@ function _updateRepositoryAtelierTerminalHighlight(index){
   A.terminalScreens.instanceMatrix.needsUpdate=true;
 }
 function _updateRepositoryAtelier(dt){
-  const A=REPOSITORY_ATELIER; A.moveForward.subVectors(player.position,camera.position); A.moveForward.y=0;
+  const A=REPOSITORY_ATELIER;if(repositoryBlueprintOpen()) return; A.moveForward.subVectors(player.position,camera.position); A.moveForward.y=0;
   if(A.moveForward.lengthSq()<.001) A.moveForward.set(0,0,-1); else A.moveForward.normalize();
   A.moveRight.crossVectors(A.moveForward,A.up).normalize(); A.moveDelta.set(0,0,0);
   if(keys['KeyW']||keys['ArrowUp']) A.moveDelta.add(A.moveForward);
@@ -12832,6 +13154,7 @@ function _updateRepositoryAtelier(dt){
   const moving=A.moveDelta.lengthSq()>.0001;
   if(moving){ A.moveDelta.normalize(); player.position.addScaledVector(A.moveDelta,7.2*dt); player.position.x=THREE.MathUtils.clamp(player.position.x,-7.15,7.15); player.position.z=THREE.MathUtils.clamp(player.position.z,-9.75,9.75);
     const coreDistance=Math.hypot(player.position.x,player.position.z),coreRadius=2.35; if(coreDistance<coreRadius){ const inv=coreRadius/Math.max(.001,coreDistance); player.position.x*=inv; player.position.z*=inv; }
+    _resolveRepositoryBlueprintTableCollision(player.position);
     model.rotation.y=lerpA(model.rotation.y,Math.atan2(A.moveDelta.x,A.moveDelta.z),.22); if(!dragging&&!freeLook) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,.055); }
   _updateRepositoryAtelierAvatar(dt,moving);
   const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist,oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist,oy=Math.sin(camPitch)*camDist;
@@ -12841,6 +13164,8 @@ function _updateRepositoryAtelier(dt){
   A.core.rotation.y+=dt*(.22+A.activity*.38); A.coreLight.intensity=(7+A.activity*12+A.score*5)*(1+Math.sin(performance.now()*.0025)*.08);
   let near=null,distance=2.15; const exitDistance=player.position.distanceTo(A.exitPosition); if(exitDistance<distance){ near={kind:'exit',label:t('atelierDoor'),icon:'↩'}; distance=exitDistance; }
   A.terminalPositions.forEach((position,index)=>{ const d=player.position.distanceTo(position); if(d<distance){ const kind=A.terminalKinds[index]; near={kind,label:t(kind==='github'?'atelierGithub':kind==='ask'?'atelierAsk':'atelierWhy'),icon:kind==='github'?'〈/〉':kind==='ask'?'?':'⌖',index}; distance=d; } });
+  const blueprintDistance=player.position.distanceTo(A.blueprintTablePosition); if(blueprintDistance<2.4&&blueprintDistance<distance){
+    near={kind:'blueprint',label:t('atelierBlueprintTable'),icon:'▦'}; distance=blueprintDistance; }
   if(!near&&Math.hypot(player.position.x,player.position.z)<3.85) near={kind:'core',label:`${t('atelierCore')} · ${t('atelierCoreHint')}`,passive:true};
   A.near=near; _updateRepositoryAtelierTerminalHighlight(near&&near.index!=null?near.index:-1);
   if(near&&!near.passive){ promptEl.innerHTML=tf('atelierUse',{action:`<b>${near.label}</b>`}); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent=near.icon; }
@@ -12865,6 +13190,7 @@ function _repositoryAtelierFrame(dt){
 function _performRepositoryAtelierAction(kind){
   const A=REPOSITORY_ATELIER,repo=A&&A.repo;if(!A||A.state!=='inside'||!repo) return false;
   if(kind==='exit') return exitRepositoryAtelier();
+  if(kind==='blueprint') return _openRepositoryBlueprint();
   if(kind!=='github'&&kind!=='ask'&&kind!=='why') return false;
   A.lastAction={kind,repo:repo.repo}; track('atelier_terminal',{repo:repo.repo,kind});
   if(kind==='github'){ trackPortal('github_repo_opened',{entry:'terminal',device:_repoPortalDevice(),lang:LANG,channel:'github'});
@@ -12879,6 +13205,21 @@ atelierPortalCopy.addEventListener('click',event=>{ event.stopPropagation(); _co
 atelierPortalGithub.addEventListener('click',()=>trackPortal('github_repo_opened',{entry:'atelier',device:_repoPortalDevice(),lang:LANG,channel:'github'}));
 atelierPortalExplore.addEventListener('click',event=>{ event.stopPropagation(); const A=REPOSITORY_ATELIER,target=A&&A.repo&&_repositoryPortalTarget(A.repo);
   if(target) location.href=createRepoOwnerTownUrl(target,location.href,OWNER); });
+atelierBlueprintToggle.addEventListener('click',event=>{ event.stopPropagation(); _openRepositoryBlueprint(); });
+atelierBlueprintClose.addEventListener('click',event=>{ event.stopPropagation(); _closeRepositoryBlueprint(); });
+atelierBlueprintScan.addEventListener('click',event=>{ event.stopPropagation(); _scanRepositoryBlueprint(); });
+atelierBlueprintOutline.addEventListener('focusin',event=>{ const button=event.target.closest?.('[data-blueprint-index]');
+  if(button) _focusRepositoryBlueprintNode(Number(button.dataset.blueprintIndex),false); });
+atelierBlueprintOutline.addEventListener('click',event=>{ const button=event.target.closest?.('[data-blueprint-index]');
+  if(button) _focusRepositoryBlueprintNode(Number(button.dataset.blueprintIndex),false); });
+atelierBlueprintPanel.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); _closeRepositoryBlueprint(); return; }
+  if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key)||!atelierBlueprintOutline.contains(event.target)) return;
+  const buttons=[...atelierBlueprintOutline.querySelectorAll('[data-blueprint-index]')]; if(!buttons.length) return;
+  const current=Math.max(0,buttons.indexOf(document.activeElement)),next=event.key==='Home'?0:event.key==='End'?buttons.length-1:
+    event.key==='ArrowDown'?Math.min(buttons.length-1,current+1):Math.max(0,current-1);
+  event.preventDefault(); buttons[next].focus();
+});
 
 function _repositoryAtelierDebug(){
   const A=REPOSITORY_ATELIER;if(!A) return {state:'outside',created:false};
@@ -12890,6 +13231,13 @@ function _repositoryAtelierDebug(){
     render:{calls:interior.calls,triangles:interior.triangles,peakCalls:peak.calls,peakTriangles:peak.triangles,exteriorCalls:A.renderInterior?0:null},
     style:A.created?{roomId:A.group.uuid.slice(0,8),seed:A.hash,shape:A.hash%3,language:A.materials.core.color.getHexString(),district:A.materials.ring.color.getHexString()}:null,
     bindings:A.bindings||null,portal:A.portal||null,near:A.near&&A.near.kind||null,lastAction:A.lastAction,inRoomChat:!!A.inRoomChat,roomPanel:A.roomPanel,
+    blueprint:{status:A.blueprint.status,panelOpen:A.blueprint.panelOpen,target:A.blueprint.target&&A.blueprint.target.repoName||null,
+      requestsStarted:A.blueprint.requestsStarted,retries:A.blueprint.lastResult?.retries||0,decodedBytes:A.blueprint.decodedBytes,
+      nodes:A.blueprint.projection?.counts.nodes||0,edges:A.blueprint.projection?.counts.edges||0,maxDepth:A.blueprint.projection?.counts.maxDepth||0,
+      omittedNodes:A.blueprint.projection?.counts.omittedNodes||0,selectedPath:A.blueprint.projection?.nodes[A.blueprint.selected]?.path||null,
+      cache:A.blueprint.cache.snapshot(),render:A.blueprint.render||null,cameraUnchanged:A.blueprint.cameraUnchanged,
+      limits:{nodeCap:A.blueprint.nodeCap,edgeCap:A.blueprint.edgeCap,decodedBytes:REPOSITORY_BLUEPRINT_LIMITS.maxDecodedBytes,
+        timeoutMs:REPOSITORY_BLUEPRINT_LIMITS.timeoutMs,drawCalls:REPOSITORY_BLUEPRINT_LIMITS.additionalDrawCalls,atlases:REPOSITORY_BLUEPRINT_LIMITS.canvasAtlases}},
     chat:repositoryAtelierChatSnapshot(A.chat),
     exhibits:A.created?{architecture:A.architecture.count,path:A.pathTiles.count,signals:A.metricSignals||[],signalCards:A.textLayout?.signalCards||0}:null,
     saved:A.lastSaved,restored:A.lastRestored,
@@ -12900,8 +13248,33 @@ if(_DIAGNOSTICS){
   window.__atelierEnter=name=>{ const repo=repoByKey(name); return repo?{ok:enterRepositoryAtelier(repo),repo:repo.repo}:null; };
   window.__atelierExit=()=>{ const ok=exitRepositoryAtelier(); return {ok,state:REPOSITORY_ATELIER&&REPOSITORY_ATELIER.state}; };
   window.__atelierMove=(x=0,z=0)=>{ if(!REPOSITORY_ATELIER||!REPOSITORY_ATELIER.renderInterior) return null; player.position.set(THREE.MathUtils.clamp(x,-7.1,7.1),0,THREE.MathUtils.clamp(z,-9.7,9.7)); return _repositoryAtelierDebug(); };
-  window.__atelierSelect=kind=>{ const A=REPOSITORY_ATELIER;if(!A||!A.renderInterior) return null; if(kind==='exit') player.position.copy(A.exitPosition); else { const i=A.terminalKinds.indexOf(kind); if(i<0) return null; player.position.copy(A.terminalPositions[i]); } _updateRepositoryAtelier(0); return _repositoryAtelierDebug(); };
+  window.__atelierSelect=kind=>{ const A=REPOSITORY_ATELIER;if(!A||!A.renderInterior) return null; if(kind==='exit') player.position.copy(A.exitPosition);
+    else if(kind==='blueprint') player.position.copy(A.blueprintTablePosition);
+    else { const i=A.terminalKinds.indexOf(kind); if(i<0) return null; player.position.copy(A.terminalPositions[i]); } _updateRepositoryAtelier(0); return _repositoryAtelierDebug(); };
   window.__atelierAction=kind=>_performRepositoryAtelierAction(kind);
+  window.__atelierBlueprint=()=>_repositoryAtelierDebug().blueprint;
+  window.__atelierBlueprintOpen=()=>_openRepositoryBlueprint();
+  window.__atelierBlueprintScan=()=>_scanRepositoryBlueprint();
+  window.__atelierBlueprintFocus=index=>_focusRepositoryBlueprintNode(Number(index),true);
+  window.__atelierBlueprintPoint=index=>{ const A=REPOSITORY_ATELIER,visual=A&&A.blueprint?.visuals?.[Number(index)]; if(!visual) return null;
+    const point=new THREE.Vector3(visual.x,visual.y,visual.z).project(camera),rect=dom.getBoundingClientRect();
+    return {x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2,path:A.blueprint.projection.nodes[Number(index)].path}; };
+  window.__atelierBlueprintFixture=(kind='ready')=>{
+    const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!A||A.state!=='inside'||!B?.target) return null;
+    _openRepositoryBlueprint(false); _clearRepositoryBlueprintVisuals();
+    if(kind==='error'){ B.cache.clear(); B.status='rate_limited'; B.decodedBytes=0; B.lastResult={ok:false,status:'rate_limited',requestsStarted:1,retries:0}; B.requestsStarted=1; _renderRepositoryBlueprintChrome(true); return _repositoryAtelierDebug().blueprint; }
+    const sha='0123456789abcdef0123456789abcdef01234567',base=`https://api.github.com/repos/${B.target.owner}/${B.target.repo}`,
+      entry=(path,type='blob')=>({path,type,mode:type==='tree'?'040000':'100644',sha,url:`${base}/git/${type==='tree'?'trees':'blobs'}/${sha}`}),
+      raw={sha,url:`${base}/git/trees/${sha}`,truncated:kind==='truncated',tree:[
+        entry('.github','tree'),entry('.github/workflows','tree'),entry('.github/workflows/verify.yml'),
+        entry('src','tree'),entry('src/main.py'),entry('tests','tree'),entry('tests/test_main.py'),
+        entry('docs','tree'),entry('docs/guide.md'),entry('README.md'),entry('LICENSE'),entry('AGENTS.md'),entry('pyproject.toml')
+      ]};
+    const projection=projectRepositoryBlueprint(raw,B.target,{compact:B.compact,decodedBytes:4096,partial:kind==='partial'});
+    B.status=projection.status; B.decodedBytes=4096; B.lastResult={ok:true,status:projection.status,requestsStarted:1,retries:0,decodedBytes:4096,projection};
+    B.requestsStarted=1; B.cache.set(B.target,B.lastResult); _applyRepositoryBlueprintProjection(projection); _renderRepositoryBlueprintChrome(true);
+    return _repositoryAtelierDebug().blueprint;
+  };
 }
 /*REPOSITORY_ATELIER:END*/
 
@@ -13324,7 +13697,7 @@ function worldTreeAtScreen(cx,cy){ if(!MEMORIAL_TREE||!MEMORIAL_TREE.group.visib
   _ndc.x=((cx-r.left)/r.width)*2-1; _ndc.y=-((cy-r.top)/r.height)*2+1; _ray.setFromCamera(_ndc,camera);
   return _ray.intersectObject(MEMORIAL_TREE.group,true).length>0; }
 function greetPeer(id,p){ emoteT=EMOTES.wave.dur; emoteKind='wave'; if(p) emoteBubble(p.group,'wave'); rtSend({t:'wave',id:guestId(),to:id}); showWave(LANG==='ko'?`${(p&&p.name)||'방문자'}에게 인사했어요 👋`:`Waved at ${(p&&p.name)||'visitor'} 👋`); }
-function tapAt(cx,cy){ if(undercroftActive()){ undercroftAct(); return; } if(repositoryAtelierActive()){ repositoryAtelierAct(); return; } const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return; }
+function tapAt(cx,cy){ if(undercroftActive()){ undercroftAct(); return; } if(repositoryAtelierActive()){ if(_repositoryBlueprintAtScreen(cx,cy)) return; repositoryAtelierAct(); return; } const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return; }
   if(worldTreeAtScreen(cx,cy)){ openWorldTreeChronicle('pointer',worldTreeTrigger); return; } doAct(); }
 const greetToast=document.createElement('div'); greetToast.id='greetToast'; greetToast.style.cssText='position:fixed;left:50%;top:13%;transform:translateX(-50%);background:rgba(38,28,18,.86);color:#fff7ec;padding:9px 16px;border-radius:14px;font:600 14px system-ui,sans-serif;z-index:30;pointer-events:none;opacity:0;transition:opacity .25s;max-width:80vw;text-align:center'; document.body.appendChild(greetToast); let greetTid=0;
 function showWave(msg,dur){ greetToast.textContent=msg; greetToast.style.opacity='1'; clearTimeout(greetTid); greetTid=setTimeout(()=>{ greetToast.style.opacity='0'; },dur||1900); }

@@ -21,6 +21,7 @@ import { runLoreTests } from './test-lore.mjs';
 import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
 import { runRepositoryAtelierChatTests } from './test-repository-atelier-chat.mjs';
+import { runRepositoryBlueprintTests } from './test-repository-blueprint.mjs';
 import { runTaxiBoundaryTests } from './test-taxi-boundary.mjs';
 import { runTaxiVoiceTests } from './test-taxi-voice.mjs';
 import {
@@ -2053,7 +2054,12 @@ group('Repository Atelier — one reusable walkable room for every repo');
 const atelierSrc=(HTML.match(/\/\*REPOSITORY_ATELIER:START\*\/([\s\S]*?)\/\*REPOSITORY_ATELIER:END\*\//)||[,''])[1];
 const atelierCreateSrc=(atelierSrc.match(/function _createRepositoryAtelier\(\)\{[\s\S]*?(?=\nfunction _drawRepositoryAtelierHistory)/)||[''])[0];
 const atelierBindSrc=(atelierSrc.match(/function _bindRepositoryAtelier\(repo\)\{[\s\S]*?(?=\nfunction _refreshRepositoryAtelierLanguage)/)||[''])[0];
+const blueprintSrc=(atelierSrc.match(/function _repositoryBlueprintTarget\(repo\)\{[\s\S]*?(?=\nfunction _bindRepositoryAtelier)/)||[''])[0];
+const blueprintCreateSrc=(atelierCreateSrc.match(/const blueprintCapacityCompact=[\s\S]*?(?=\n  A\.avatar=model\.clone)/)||[''])[0];
+const blueprintOpenSrc=(blueprintSrc.match(/function _openRepositoryBlueprint\(focusSelected=false\)\{[\s\S]*?(?=\nfunction _closeRepositoryBlueprint)/)||[''])[0];
+const blueprintScanSrc=(blueprintSrc.match(/async function _scanRepositoryBlueprint\(\)\{[\s\S]*?(?=\nfunction _resetRepositoryBlueprintVisit)/)||[''])[0];
 await runRepositoryAtelierChatTests(ok);
+await runRepositoryBlueprintTests(ok);
 ok(atelierSrc.length>0, 'atelier runtime is a bounded, extractable integration block');
 ok(/id="atelierBtn"/.test(HTML) && /class="btn atelier"/.test(HTML)
   && /class="btn gh"[\s\S]*?target="_blank" rel="noopener"/.test(HTML), 'repo card adds a clear room entry command without removing quick GitHub access');
@@ -2105,6 +2111,54 @@ ok(/A\.terminalKinds=\['github','ask','why'\]/.test(atelierCreateSrc)
   && /_openRepositoryAtelierChat\(kind,repo\)/.test(atelierSrc)
   && !/exitRepositoryAtelier\(\{kind,repoKey:repo\.repo\}\)/.test(atelierSrc),
   'GitHub remains external while Ask and Why open their exact flows without leaving the room');
+ok(/id="atelierBlueprintToggle"[^>]*aria-expanded="false"[^>]*aria-controls="atelierBlueprintPanel"/.test(HTML)
+  &&/id="atelierBlueprintPanel" hidden aria-labelledby="atelierBlueprintTitle"/.test(HTML)
+  &&/id="atelierBlueprintStatus" role="status" aria-live="polite" aria-atomic="true"/.test(HTML)
+  &&/id="atelierBlueprintOutline" role="tree"[^>]*aria-label=/.test(HTML)
+  &&/id="atelierBlueprintPath" target="_blank" rel="noopener" hidden/.test(HTML),
+  'Blueprint exposes an explicit scan, live status, exact-path action, and accessible tree outline');
+ok((HTML.match(/atelierBlueprintBoundary:\s*['"]/g)||[]).length===2
+  &&/Current public source tree — not a call graph or runtime architecture\./.test(HTML)
+  &&/현재 공개 소스 트리 · 호출 그래프나 런타임 아키텍처가 아닙니다\./.test(HTML),
+  'the factual public-tree boundary remains visible in both languages');
+ok(/validateRepositoryBlueprintTarget\(\{[\s\S]*?repoName:parsed&&parsed\.slug[\s\S]*?defaultBranch:repo&&repo\.default_branch/.test(blueprintSrc)
+  &&/createRepositoryBlueprintPathUrl\(B\.target,node\)/.test(blueprintSrc),
+  'Blueprint pins the current exact owner/repo, known default branch, and exact GitHub path');
+ok(/atelierBlueprintScan\.addEventListener\('click'[\s\S]*?_scanRepositoryBlueprint\(\)/.test(atelierSrc)
+  &&!/scanRepositoryBlueprint\(/.test(blueprintOpenSrc)
+  &&!/scanRepositoryBlueprint\(/.test((atelierSrc.match(/function enterRepositoryAtelier\(repo\)\{[\s\S]*?(?=\nfunction _activateRepositoryAtelier)/)||[''])[0])
+  &&/await scanRepositoryBlueprint\(B\.target,\{compact:B\.compact,signal:controller\.signal\}\)/.test(blueprintScanSrc)
+  &&!/fetch\(/.test(blueprintSrc),
+  'only the explicit Blueprint scan starts its single pure-module request; entry and panel reopen stay silent');
+ok((blueprintCreateSrc.match(/new THREE\.InstancedMesh/g)||[]).length===2
+  &&(blueprintCreateSrc.match(/new THREE\.LineSegments/g)||[]).length===1
+  &&!/CanvasTexture|new THREE\.(?:PointLight|HemisphereLight|DirectionalLight|SpotLight)/.test(blueprintCreateSrc)
+  &&/A\.group\.add\(A\.blueprintGroup\)/.test(blueprintCreateSrc)
+  &&/A\.blueprintGroup\.visible=false/.test(blueprintCreateSrc),
+  'Blueprint adds only two instanced node batches and one line batch inside the isolated Atelier scene');
+ok(/A\.blueprintTableBounds=\{minX:/.test(atelierCreateSrc)
+  &&/_resolveRepositoryBlueprintTableCollision\(player\.position\)/.test(atelierSrc)
+  &&/near=\{kind:'blueprint',label:t\('atelierBlueprintTable'\),icon:'▦'\}/.test(atelierSrc),
+  'the Blueprint Table is a walk-up interior surface beside the Repository Core');
+ok(/const blueprintCapacityCompact=LOW_END\|\|IS_MOBILE/.test(blueprintCreateSrc)
+  &&/B\.compact=B\.capacityCompact\|\|VISUAL_GOVERNOR_STATE\.tier===2/.test(blueprintSrc)
+  &&/if\(repositoryBlueprintOpen\(\)\) return/.test(atelierSrc)
+  &&/cameraUnchanged=JSON\.stringify\(B\.cameraOnOpen\)===JSON\.stringify\(_repositoryBlueprintCameraSnapshot\(\)\)/.test(blueprintSrc)
+  &&/@media \(prefers-reduced-motion:reduce\)[\s\S]*?#atelierBlueprintPanel/.test(HTML),
+  'LOW_END, mobile, adaptive lean, reduced motion, and exact camera restoration remain authoritative');
+ok(/_repositoryBlueprintAtScreen\(cx,cy\)/.test(HTML)
+  &&/atelierBlueprintOutline\.addEventListener\('focusin'/.test(atelierSrc)
+  &&/\['ArrowDown','ArrowUp','Home','End'\]/.test(atelierSrc)
+  &&/_focusRepositoryBlueprintNode\(Number\(index\),true\)/.test(atelierSrc),
+  'pointer, touch, keyboard, and diagnostic focus all synchronize the same DOM and 3D nodes');
+ok(/cache:createRepositoryBlueprintMemoryCache\(\)/.test(atelierSrc)
+  &&/B\.cache\.clear\(\)/.test(blueprintSrc)
+  &&!/localStorage|sessionStorage|indexedDB|track\(/.test(blueprintSrc),
+  'Blueprint retains only one current-repository memory entry and emits no path or identity analytics');
+ok(/B\.render=\{nodes:0,edges:0,instancedBatches:0,lineSegments:0,drawCalls:0,atlases:0\}/.test(blueprintSrc)
+  &&/drawCalls:\(folderCount\?1:0\)\+\(fileCount\?1:0\)\+\(edgeCount\?1:0\),atlases:0/.test(blueprintSrc)
+  &&/decodedBytes:REPOSITORY_BLUEPRINT_LIMITS\.maxDecodedBytes/.test(atelierSrc),
+  'Blueprint diagnostics expose request, decoded-byte, node, edge, depth, draw, and atlas budgets');
 ok(/function _openRepositoryAtelierChat\(kind,repo\)/.test(atelierSrc)
   && /kind==='why'[\s\S]*?_showCardWhyZone\(repo\)/.test(atelierSrc)
   && /_showRepositoryAtelierChat\(\)/.test(atelierSrc)
