@@ -129,10 +129,13 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   past Star, fork, traffic, topic, or language snapshots, so a visible house keeps its current architecture
   and language label and the UI says so explicitly. Repos without a valid creation date appear only in the
   present step. Replay state lives in the URL and is not persisted.
-- **Repository Atelier is a metadata exhibition, not a source-code IDE.** One reusable room redraws the
-  current repo description, topics, public metrics, lifecycle dates, and available traffic. It does not clone
-  source files, reconstruct old metrics, or simulate build/runtime behavior. Explicit Gitber questions use
-  the currently selected chat mode and its existing Local or backend fallback.
+- **Repository Atelier is an exhibition, not a source-code IDE.** One reusable room redraws the current repo
+  description, topics, public metrics, lifecycle dates, and available traffic. Its Repository Blueprint makes
+  one explicit anonymous GitHub Tree request only after the visitor chooses Scan, stops after 8 seconds or
+  2 MiB decoded, and projects at most 220 desktop / 96 mobile-or-LOW_END nodes, depth 4, and 160 / 64 edges.
+  Truncated or partial responses remain labeled and never trigger subtree follow-ups. The view shows current
+  public file/folder topology only: it does not clone or parse file bodies, reconstruct call graphs or runtime
+  architecture, infer private/deleted content, reconstruct old metrics, or simulate build behavior.
 - **Session footprints are deliberately forgetful.** Only post-collision movement by the local exterior avatar
   can create them. A fixed 36/18/8-slot desktop/LOW_END/reduced-motion pool fades or expires in memory; taxi,
   rides, teleports, hidden tabs, Growth Replay, Atelier movement, reloads, and navigation do not become a trail.
