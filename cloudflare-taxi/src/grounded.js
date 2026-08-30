@@ -61,6 +61,14 @@ import {
   authorizeTaxiRequest,
   taxiSystemPrompt,
 } from "./taxi-boundary.js";
+import {
+  REPOSITORY_ATELIER_SURFACE,
+  authorizeRepositoryAtelierRequest,
+  buildRepositoryAtelierMessages,
+  projectRepositoryAtelierReferences,
+  repositoryAtelierKnowledgeSource,
+  repositoryAtelierMessage,
+} from "./repository-atelier.js";
 
 export { NpcBudgetGovernor };
 
@@ -1012,6 +1020,7 @@ async function groundedRetrieve(cfg, messages, env) {
     includeActivity: true,
     knowledgeSourceParams: ksList.map((name) => ({
       kind: "mcpServer", knowledgeSourceName: name, includeReferences: true, includeReferenceSourceData: true,
+      ...(cfg.failOnError ? { failOnError: true } : {}),
     })),
     outputMode: "answerSynthesis",
     maxRuntimeInSeconds: maxRuntime,
@@ -1865,6 +1874,117 @@ async function npcHandler(body, request, env, ctx) {
   return json({ error: "unknown npc_action" }, 400, env);
 }
 
+async function repositoryAtelierHandler(body, request, env, ctx) {
+  const authorized = authorizeRepositoryAtelierRequest(body);
+  const lang = String(body?.lang || "").toLowerCase().startsWith("en") ? "en" : "ko";
+  if (!authorized.ok) {
+    return json({
+      error: authorized.reason,
+      message: repositoryAtelierMessage("invalid", "", lang),
+    }, 400, env);
+  }
+
+  const base = scholarConfig("taxi", env);
+  const cfg = {
+    kb: base.kb,
+    ks: repositoryAtelierKnowledgeSource(base.ks),
+    ride: false,
+    failOnError: true,
+  };
+  const messages = buildRepositoryAtelierMessages(
+    authorized.history,
+    authorized.question,
+    authorized.repoName,
+  );
+  const requestMeta = metricContext(body, request);
+  const route = "grounded_kb_repository_atelier";
+  const out = await groundedRetrieve(cfg, messages, env);
+  emitKbQuery(env, ctx, route, cfg, "taxi", out, requestMeta);
+  for (const activity of out.modelActivities || []) {
+    emitProviderUsage(env, ctx, route, cfg.ks, "taxi", activity, {
+      refs: Array.isArray(out.data?.references) ? out.data.references.length : 0,
+      ...requestMeta,
+    });
+  }
+
+  if (out.fallback) {
+    if (out.attempted) {
+      emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
+        groundingPath: "grounded_via_kb",
+        pathRole: "primary",
+        ok: false,
+        ms: out.totalMs,
+        refs: 0,
+      }, requestMeta);
+    }
+    return json({
+      fallback: true,
+      repoName: authorized.repoName,
+      reason: out.reason || "repository grounding unavailable",
+      message: repositoryAtelierMessage("unavailable", authorized.repoName, authorized.lang),
+    }, 200, env);
+  }
+
+  const scoped = projectRepositoryAtelierReferences(out.data?.references, authorized.repoName);
+  if (!scoped.exact || !out.answer || isNotFound(out.answer)) {
+    emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
+      groundingPath: "grounded_via_kb",
+      pathRole: "primary",
+      ok: false,
+      ms: out.totalMs,
+      refs: 0,
+    }, requestMeta);
+    return json({
+      notFound: true,
+      repoName: authorized.repoName,
+      message: repositoryAtelierMessage("not_found", authorized.repoName, authorized.lang),
+      trace: {
+        ks: cfg.ks,
+        tools: out.tools,
+        refs: [],
+        mcpMs: out.mcpMs,
+        totalMs: out.totalMs,
+        scoped: true,
+      },
+    }, 200, env);
+  }
+
+  const usage = (out.modelActivities || []).reduce((sum, activity) => {
+    const normalized = normalizeModelUsage(activity.usage);
+    sum.prompt_tokens += normalized.prompt_tokens;
+    sum.cached_tokens += normalized.cached_tokens;
+    sum.completion_tokens += normalized.completion_tokens;
+    return sum;
+  }, { prompt_tokens: 0, cached_tokens: 0, completion_tokens: 0 });
+  emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
+    groundingPath: "grounded_via_kb",
+    pathRole: "primary",
+    ok: true,
+    ms: out.totalMs,
+    refs: scoped.refs.length,
+  }, requestMeta);
+  emitDeliveredAnswer(env, ctx, route, cfg.ks, "taxi", {
+    model: (out.modelActivities || []).at(-1)?.model || "unknown",
+    ms: out.totalMs,
+    refs: scoped.refs.length,
+    ...requestMeta,
+  });
+  return json({
+    repoName: authorized.repoName,
+    message: out.answer,
+    usage,
+    trace: {
+      ks: cfg.ks,
+      tools: out.tools,
+      refs: scoped.refs,
+      mcpMs: out.mcpMs,
+      totalMs: out.totalMs,
+      partial: out.status === 206,
+      scoped: true,
+    },
+  }, 200, env);
+}
+
 export default {
   async fetch(request, env, ctx) {
     const headers = corsHeaders(env);
@@ -1890,6 +2010,9 @@ export default {
     // 🧑‍🌾 Resident NPC social layer — townspeople config/budget/ambient/player-chat (no `question`).
     if (body && body.npc_action) return npcHandler(body, request, env, ctx);
 
+    if (body && body.surface === REPOSITORY_ATELIER_SURFACE) {
+      return repositoryAtelierHandler(body, request, env, ctx);
+    }
     if (!question) return json({ error: "question required" }, 400, env);
 
     // Route to a scholar config (taxi by default). Every scholar shares the KB pipeline;
