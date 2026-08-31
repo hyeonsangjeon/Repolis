@@ -51,6 +51,17 @@
   #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
+  #intentLens { margin: 0 0 10px; padding: 8px; border: 1px solid #e7d5b7; border-radius: 13px;
+    background: linear-gradient(145deg,rgba(255,253,247,.96),rgba(246,235,216,.9)); }
+  #intentLensTitle { padding: 0 2px 7px; color: #876845; font-size: 10.5px; font-weight: 800; letter-spacing: .02em; }
+  .intentLensChoices { display: flex; flex-direction: column; gap: 5px; }
+  .intentLensChoice { width: 100%; min-height: 40px; display: flex; align-items: center; gap: 9px; padding: 7px 10px;
+    border: 1px solid #e1cfb2; border-radius: 10px; background: #fffdf8; color: #4a3522;
+    font: 800 11.5px/1.25 inherit; text-align: left; cursor: pointer; }
+  .intentLensChoice:hover { border-color: #c99d66; background: #fff8eb; }
+  .intentLensChoice:focus-visible { outline: 3px solid rgba(217,143,46,.34); outline-offset: 1px; }
+  .intentLensChoice:active { transform: translateY(1px); }
+  .intentLensIcon { flex: 0 0 23px; font-size: 16px; line-height: 1; text-align: center; }
   #tourReplayBtn, #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
@@ -1285,6 +1296,7 @@
   /* ---- mobile tap-target a11y (Phase 36) — placed last so it overrides base rules ---- */
   @media (hover: none) and (pointer: coarse) {
     #langBtn, #dayBtn, #passBtn { min-height: 44px; display: inline-flex; align-items: center; }
+    .intentLensChoice { min-height: 44px; }
     .chatHead .x { width: 44px; height: 44px; font-size: 24px; margin-right: -6px; }
     .chatIn input, #repoSearch { font-size: 16px; }
     #station #stationInput { font-size: 16px; }
@@ -1485,6 +1497,14 @@
 
 <div id="panel" class="hidden">
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <section id="intentLens" aria-labelledby="intentLensTitle">
+    <div id="intentLensTitle" data-i18n="intentLensTitle">무엇을 하러 왔나요?</div>
+    <div class="intentLensChoices">
+      <button class="intentLensChoice" type="button" data-intent="understand"><span class="intentLensIcon" aria-hidden="true">⌕</span><span data-i18n="intentUnderstand">레포 하나 이해하기</span></button>
+      <button class="intentLensChoice" type="button" data-intent="explore"><span class="intentLensIcon" aria-hidden="true">🗺️</span><span data-i18n="intentExplore">이 개발자의 도시 둘러보기</span></button>
+      <button class="intentLensChoice" type="button" data-intent="contribute"><span class="intentLensIcon" aria-hidden="true">🧩</span><span data-i18n="intentContribute">기여할 일 찾기</span></button>
+    </div>
+  </section>
   <button id="tourReplayBtn" type="button">
     <span class="pmIcon" aria-hidden="true">🎬</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="tourReplay">가이드 투어 다시 보기</span><span class="pmSub" data-i18n="tourReplaySub">세계수 · 주민 · 레포 집 · 기존 명소</span></span>
@@ -2548,6 +2568,8 @@ const I18N = {
     modeOwnerLabel:'풀 트래픽 시티', modePublicLabel:'공개 GitHub 마을', modePortalLabel:'레포 포털',
     townOf:'{user} 님의 마을', repoPortalOf:'{repo} 포털', myCity:'내 도시',
     stationBtn:'🚉 역', stationLm:'GitHub 역',
+    intentLensTitle:'무엇을 하러 왔나요?', intentUnderstand:'레포 하나 이해하기',
+    intentExplore:'이 개발자의 도시 둘러보기', intentContribute:'기여할 일 찾기',
     stationTitle:'Repolis 역 · 어디로 갈까요?', stationSub:'username은 공개 레포 마을로, owner/repo나 GitHub URL은 그 레포 전시실로 곧장 연결해요.',
     stationDistrictsH:'🚉 명소로 바로 이동', stationExternalH:'🌍 GitHub 사용자 또는 레포',
     stationCurrent:'현재 마을', stationUserPh:'username · owner/repo · GitHub URL', stationGo:'🚆 이동',
@@ -2915,6 +2937,8 @@ const I18N = {
     modeOwnerLabel:'Full Traffic City', modePublicLabel:'Public GitHub Town', modePortalLabel:'Repo Portal',
     townOf:"{user}'s town", repoPortalOf:'{repo} portal', myCity:'My city',
     stationBtn:'🚉 Station', stationLm:'GitHub Station',
+    intentLensTitle:'What brings you here?', intentUnderstand:'Understand a repository',
+    intentExplore:"Explore this developer's town", intentContribute:'Find something to contribute',
     stationTitle:'Repolis Station · Where to?', stationSub:"A username opens that developer's public town. owner/repo or a GitHub URL goes straight to the repo exhibition.",
     stationDistrictsH:'🚉 Landmark stops', stationExternalH:'🌍 GitHub user or repository',
     stationCurrent:'Current town', stationUserPh:'username · owner/repo · GitHub URL', stationGo:'🚆 Go',
@@ -12103,6 +12127,28 @@ if(mapCanvas) mapCanvas.onclick=(e)=>{ const r=mapCanvas.getBoundingClientRect()
   if(hit) gotoZone(hit.id); };
 _mapReady=true; syncMapChrome();                                     // initialise the map-button label now that the DOM refs exist
 
+/*INTENT_LENS:START*/
+function intentLensTargetRepo(){
+  if(cityMode!=='portal'||!repoPortalTarget) return null;
+  const repo=repoByKey(repoPortalTarget.repo),target=repo&&_repositoryPortalTarget(repo);
+  return target&&target.slug.toLowerCase()===repoPortalTarget.slug.toLowerCase()?repo:null;
+}
+function closeIntentLensWayfinding(){ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); }
+function dispatchIntentLens(intent){
+  if(intent==='understand'){
+    const repo=intentLensTargetRepo();
+    if(!repo){ openStationModal(); return true; }
+    const entered=enterRepositoryAtelier(repo,{autoChat:false}); if(entered) closeIntentLensWayfinding(); return entered;
+  }
+  if(intent==='explore'){ closeIntentLensWayfinding(); openMap(); return true; }
+  if(intent==='contribute') return openContributionQuestBoard('menu');
+  return false;
+}
+document.querySelectorAll('#intentLens [data-intent]').forEach(button=>{
+  button.addEventListener('click',()=>dispatchIntentLens(button.dataset.intent));
+});
+/*INTENT_LENS:END*/
+
 /* ---- 🎡 Ferris wheel ride: board the gondola at the bottom, rise for one slow free-look turn, then step back onto the ground ---- */
 function updateFerris(dt){ if(!FERRIS) return;
   const spin = ferris ? 0.42 : 0.16;                                      // a touch livelier while you're aboard
@@ -13044,12 +13090,14 @@ function _resetRepositoryAtelierInput(){
   dragging=false; dragMoved=false; dom.style.cursor=''; document.body.style.cursor='';
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
 }
-function enterRepositoryAtelier(repo){
+function enterRepositoryAtelier(repo,options={}){
   if(!repo||repo._isLibrary||repositoryAtelierActive()) return false;
   if(busy){ showWave(t('atelierChatWait'),2600); return false; }
   const target=_repositoryPortalTarget(repo); if(!target) return false;
   const A=REPOSITORY_ATELIER||{state:'outside',created:false,resources:{geometries:new Set(),materials:new Set(),textures:new Set()},dummy:new THREE.Object3D()};
-  REPOSITORY_ATELIER=A; _snapshotRepositoryAtelier(repo); A.repo=repo; A.chat=createRepositoryAtelierChatVisit(target.slug); A.outsideChat=null;
+  REPOSITORY_ATELIER=A; _snapshotRepositoryAtelier(repo); A.repo=repo; A.chat=createRepositoryAtelierChatVisit(target.slug);
+  if(options.autoChat===false) A.chat.autoStarted=true;
+  A.outsideChat=null;
   A.pendingExit=false; A.pendingHash=false; A.afterExit=null; A.state='entering'; A.phase='cover'; A.t=0; A.renderInterior=false;
   _resetRepositoryAtelierInput(); atelierFade.classList.add('blocking'); atelierFade.style.opacity='0';
   return true;
