@@ -135,7 +135,9 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   2 MiB decoded, and projects at most 220 desktop / 96 mobile-or-LOW_END nodes, depth 4, and 160 / 64 edges.
   Truncated or partial responses remain labeled and never trigger subtree follow-ups. The view shows current
   public file/folder topology only: it does not clone or parse file bodies, reconstruct call graphs or runtime
-  architecture, infer private/deleted content, reconstruct old metrics, or simulate build behavior.
+  architecture, infer private/deleted content, reconstruct old metrics, or simulate build behavior. A shared
+  Blueprint path is capped at 512 decoded bytes and can restore only an exact node present in that bounded
+  projection; missing paths remain unselected.
 - **Session footprints are deliberately forgetful.** Only post-collision movement by the local exterior avatar
   can create them. A fixed 36/18/8-slot desktop/LOW_END/reduced-motion pool fades or expires in memory; taxi,
   rides, teleports, hidden tabs, Growth Replay, Atelier movement, reloads, and navigation do not become a trail.

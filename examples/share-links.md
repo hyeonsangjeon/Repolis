@@ -10,6 +10,7 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 | `https://hyeonsangjeon.github.io/Repolis/?launch=1` | The username launchpad, focused and ready to build a personal preview. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob` | A town built live from `mrdoob`'s public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?repo=mrdoob/three.js&ref=repo-portal` | The `three.js` building and Repository Atelier before the owner catalog. |
+| `https://hyeonsangjeon.github.io/Repolis/?repo=owner/repo&view=blueprint&path=src%2Fagents&ref=blueprint` | A confirmation for one exact public Blueprint path; no Tree request starts until Load. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=torvalds` | A town built from `torvalds`' public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob&route=three.js,stats.js&ref=repo-route` | An ordered two-house Repo Route in `mrdoob`'s town. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob&twin=torvalds&ref=twin-town` | Twin Towns for two users, including shared languages/topics and a reversible visit link. |
@@ -40,6 +41,17 @@ Arbitrary public repositories expose stars, forks, language, topics, dates, and 
 publish their visitor, view, or clone traffic, so Repolis leaves those fields unknown rather than showing
 synthetic values. One exact `GET /repos/{owner}/{repo}` request is cached locally for 15 minutes, with a
 bounded stale fallback.
+
+## Share a Blueprint landmark
+
+After explicitly loading Repository Blueprint, focus a projected file or folder and choose **Copy Blueprint
+Link**. The canonical link contains only the exact public `owner/repo`, fixed `view=blueprint`, one encoded
+relative `path`, and fixed `ref=blueprint`.
+
+A recipient confirms the repository and path before **Load public Blueprint** starts the same single bounded
+GitHub Tree request. Repolis restores focus only when that exact node exists in the fetched projection. Missing
+paths remain unselected; no nearby path, other repository, source content, chat, account, or visitor identity is
+substituted into the URL.
 
 ## Share a Repo Route
 

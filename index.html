@@ -593,13 +593,23 @@
   .atelierBlueprintHead p { margin:5px 0 0; color:#a9c7c9; font-size:10.5px; line-height:1.42; }
   #atelierBlueprintClose { flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(143,214,221,.3); border-radius:50%;
     color:#dceced; background:#1b3338; font:800 21px/1 inherit; cursor:pointer; }
-  .atelierBlueprintControls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:10px 14px; }
-  #atelierBlueprintScan, #atelierBlueprintPath { display:flex; min-height:42px; align-items:center; justify-content:center; border:1px solid rgba(143,214,221,.34);
+  .atelierBlueprintControls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; align-items:center; padding:10px 14px; }
+  #atelierBlueprintScan, #atelierBlueprintCopy, #atelierBlueprintPath { display:flex; min-height:42px; align-items:center; justify-content:center; border:1px solid rgba(143,214,221,.34);
     border-radius:11px; padding:8px 11px; color:#10272b; background:#8fd6dd; font:850 11px/1.3 system-ui,sans-serif; text-align:center; text-decoration:none; cursor:pointer; }
+  #atelierBlueprintScan { grid-column:1 / -1; }
   #atelierBlueprintScan:disabled { cursor:wait; opacity:.58; }
   #atelierBlueprintScan[hidden] { display:none; }
+  #atelierBlueprintCopy { color:#10272b; background:#8fc9aa; }
+  #atelierBlueprintCopy[hidden] { display:none; }
   #atelierBlueprintPath { color:#f4e8cf; background:#29484e; }
   #atelierBlueprintPath[hidden] { display:none; }
+  #atelierBlueprintLinkFallback { grid-column:1 / -1; width:100%; min-width:0; border:1px solid rgba(228,189,104,.55);
+    border-radius:9px; padding:9px 10px; color:#fff2ce; background:#14282d; font:600 10px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace; }
+  #atelierBlueprintLinkFallback[hidden] { display:none; }
+  #atelierBlueprintShareStatus { grid-column:1 / -1; min-height:0; color:#bad2d2; font-size:10px; line-height:1.35; }
+  #atelierBlueprintShareStatus:empty { display:none; }
+  #atelierBlueprintShareStatus[data-tone="success"] { color:#9fe0bf; }
+  #atelierBlueprintShareStatus[data-tone="error"] { color:#ffc0ae; }
   #atelierBlueprintStatus { min-height:34px; margin:0; padding:0 14px 9px; color:#bad2d2; font-size:11px; line-height:1.45; }
   #atelierBlueprintStatus[data-tone="error"] { color:#ffc0ae; }
   #atelierBlueprintStatus[data-tone="limited"] { color:#f1cd85; }
@@ -658,7 +668,7 @@
     #atelierBlueprintPanel { top:auto; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom,0px)); width:auto; max-height:58dvh; }
     .atelierBlueprintHead { padding:12px 12px 9px; }
     .atelierBlueprintControls { grid-template-columns:1fr; padding:9px 12px; }
-    #atelierBlueprintScan, #atelierBlueprintPath { min-height:44px; }
+    #atelierBlueprintScan, #atelierBlueprintCopy, #atelierBlueprintPath { min-height:44px; }
     #atelierBlueprintStatus { padding:0 12px 8px; }
     #atelierBlueprintSelected { margin:0 12px 8px; }
     #atelierBlueprintOutline button { min-height:44px; }
@@ -1115,19 +1125,24 @@
     line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
   .introProofActions { display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; }
   .introProofActions[hidden] { display: none; }
-  .introProofActions button { flex: 1 1 150px; min-height: 44px; border-radius: 10px; padding: 7px 10px;
-    color: #fff; font: inherit; font-size: 11.5px; line-height: 1.25; font-weight: 800; cursor: pointer; }
+  .introProofActions button, .introProofActions a { flex: 1 1 150px; min-height: 44px; display:flex; align-items:center;
+    justify-content:center; border-radius: 10px; padding: 7px 10px; color: #fff; font: inherit; font-size: 11.5px;
+    line-height: 1.25; font-weight: 800; text-decoration:none; cursor: pointer; }
   #introPinProfile { border: 1px solid rgba(255,255,255,.7); background: #24292f; }
   #introPinProfile:disabled { cursor: wait; opacity: .58; }
   #introGrowth { border: 1px solid rgba(255,230,164,.82); background: #66518d; }
   #introCompare { border: 1px solid rgba(255,255,255,.72); background: #345e6b; }
   #introTryAnother { border: 1px solid rgba(255,255,255,.48); background: rgba(255,255,255,.14); }
+  #introBlueprintGithub { border: 1px solid rgba(255,255,255,.72); background:#24292f; }
+  #introBlueprintTown { border: 1px solid rgba(255,255,255,.56); background:rgba(255,255,255,.14); }
+  #introBlueprintLoad { border:1px solid #fff; color:#7a3f12; background:#fff; }
   #introProfileStatus { min-height: 0; color: rgba(255,255,255,.86); font-size: 10.5px; line-height: 1.35; }
   #introProfileStatus:empty { display: none; }
   #introProfileStatus[data-tone="success"] { color: #e5ffe9; }
   #introProfileStatus[data-tone="error"] { color: #fff2ce; }
   #introLaunchErr { min-height: 0; margin-top: 6px; color: #fff2ce; font-size: 11px; font-weight: 700; }
   #introLaunchErr:empty { display: none; }
+  #intro.blueprint-link .ctrls, #intro.blueprint-link #startBtn { display:none; }
   #startBtn { background: #fff; color: #7a3f12; border: none; border-radius: 14px; padding: 14px 40px;
     font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(60,30,10,.25); }
   #intro.hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s, visibility 0s .4s; }
@@ -1794,7 +1809,10 @@
     </div>
     <div class="atelierBlueprintControls">
       <button id="atelierBlueprintScan" type="button" data-i18n="atelierBlueprintScan">Scan public source map</button>
+      <button id="atelierBlueprintCopy" type="button" hidden data-i18n="blueprintLinkCopy">Copy Blueprint Link</button>
       <a id="atelierBlueprintPath" target="_blank" rel="noopener" hidden data-i18n="atelierBlueprintOpenPath">Open exact path on GitHub</a>
+      <input id="atelierBlueprintLinkFallback" type="text" readonly hidden data-i18n-aria="blueprintLinkFallbackAria" aria-label="Selectable Blueprint link" />
+      <span id="atelierBlueprintShareStatus" role="status" aria-live="polite" aria-atomic="true"></span>
     </div>
     <p id="atelierBlueprintStatus" role="status" aria-live="polite" aria-atomic="true"></p>
     <p id="atelierBlueprintSelected" aria-live="polite"></p>
@@ -2008,6 +2026,9 @@
           <button id="introGrowth" type="button" data-i18n="introGrowth">⏳ 내 도시가 자라는 장면 보기</button>
           <button id="introCompare" type="button" data-i18n="introCompare">↔ 친구 마을과 연결하기</button>
           <button id="introTryAnother" type="button" data-i18n="introTryAnother">↻ 다른 GitHub 계정 보기</button>
+          <button id="introBlueprintLoad" type="button" hidden data-i18n="blueprintLinkLoad">공개 Blueprint 불러오기</button>
+          <a id="introBlueprintGithub" target="_blank" rel="noopener" hidden data-i18n="blueprintLinkOpenGithub">GitHub에서 열기</a>
+          <button id="introBlueprintTown" type="button" hidden data-i18n="blueprintLinkEnterTown">대신 마을 입장</button>
         </div>
         <div id="introProfileStatus"></div>
       </div>
@@ -2096,7 +2117,7 @@ import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-re
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
 import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
-import { REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolveRepoPortalRequest } from './assets/repo-portal.js?v=repo-portal-v1';
+import { REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolveRepoPortalRequest, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v2';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
 import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse, residentNewcomerLine } from './assets/resident-profiles.js?v=world-tree-phase4-v1';
@@ -2105,7 +2126,7 @@ import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from '.
 import { clearSessionFootprints, createSessionFootprintState, sessionFootprintScale, sessionFootprintSnapshot, stepSessionFootprints, teardownSessionFootprints } from './assets/session-footprints.js?v=world-tree-phase5-footprints-v1';
 import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
 import { REPOSITORY_ATELIER_CHAT_LIMIT, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v1';
-import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v1';
+import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, resolveRepositoryBlueprintFocus, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v2';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -2122,6 +2143,7 @@ let REPOS = [], CITY_STATE = null, RESIDENT_MANIFEST = null, RESIDENT_MANIFEST_S
 const GH_LOGIN_RE = GITHUB_LOGIN_RE;
 const _QUERY = new URLSearchParams(location.search);
 const _repoRoute = resolveRepoPortalRequest(location.search, OWNER);
+const BLUEPRINT_DEEP_LINK = resolveRepositoryBlueprintDeepLink(location.search,location.hash);
 const _reqUser = (_QUERY.get('user') || '').trim().replace(/^@+/,'');
 const _reqTwin = (_QUERY.get('twin') || '').trim();
 const _reqGrowth = (_QUERY.get('growth') || '').trim();
@@ -2136,7 +2158,9 @@ let currentUser = repoPortalTarget?.owner || (_repoRoute.mode === 'public' ? _re
 let cityMode = _repoRoute.mode;     // 'owner' | 'public' | 'portal'
 let dataSource = cityMode === 'portal' ? 'repo-api' : (cityMode === 'public' ? 'github-public' : 'owner-ci');
 let cityError = null;              // { status, reason } when a public town can't load
-if(repoPortalTarget) document.title=`${repoPortalTarget.slug} · Repolis Repo Portal`;
+let blueprintDeepLinkBypass = false;
+if(BLUEPRINT_DEEP_LINK.ok) document.title=`${BLUEPRINT_DEEP_LINK.target.slug} · Repository Blueprint`;
+else if(repoPortalTarget) document.title=`${repoPortalTarget.slug} · Repolis Repo Portal`;
 
 /* --- lightweight, non-blocking analytics. Default sink = in-memory (+ console under ?dbg).
    No network unless ANALYTICS_ENDPOINT is set. No tokens, no raw taxi queries. --- */
@@ -2722,6 +2746,13 @@ const I18N = {
     atelierBlueprintMalformed:'응답의 범위나 경로를 검증할 수 없어 표시하지 않습니다.',
     atelierBlueprintUnavailable:'공개 소스 트리를 불러오지 못했습니다. 자동 재시도하지 않습니다.',
     atelierBlueprintEmpty:'표시할 수 있는 폴더나 소스·문서 랜드마크가 없습니다.',
+    blueprintLinkTitle:'Repository Blueprint', blueprintLinkFocus:'초점 · {path}',
+    blueprintLinkPublic:'이 링크에는 공개 저장소 경로만 들어 있습니다.',
+    blueprintLinkLoad:'공개 Blueprint 불러오기', blueprintLinkOpenGithub:'GitHub에서 열기', blueprintLinkEnterTown:'대신 마을 입장',
+    blueprintLinkInvalid:'Blueprint 링크의 경로나 형식이 올바르지 않습니다. 일반 레포 전시실로 계속할 수 있습니다.',
+    blueprintLinkMissing:'공유된 경로를 제한된 공개 Blueprint에서 찾지 못했습니다. 다른 경로를 선택하지 않았습니다.',
+    blueprintLinkCopy:'Blueprint 링크 복사', blueprintLinkCopied:'Blueprint 링크를 복사했습니다.',
+    blueprintLinkCopyFailed:'복사하지 못했습니다. 아래 URL을 선택해 직접 복사하세요.', blueprintLinkFallbackAria:'선택 가능한 Blueprint 링크',
     atelierBlueprintFolder:'폴더', atelierBlueprintFile:'파일',
     atelierBlueprintSelected:'{type} · {path}', atelierBlueprintCounts:'노드 {nodes}/{nodeCap} · 엣지 {edges}/{edgeCap} · 깊이 {depth}/4 · {bytes}',
     atelierBlueprintOmitted:' · 한도 밖 노드 {count}개', atelierBlueprintTable:'Blueprint Table · 공개 소스 지도',
@@ -3091,6 +3122,13 @@ const I18N = {
     atelierBlueprintMalformed:'The response scope or paths could not be verified, so nothing was displayed.',
     atelierBlueprintUnavailable:'The public source tree could not be loaded. It was not retried automatically.',
     atelierBlueprintEmpty:'No eligible folders or source/document landmarks were found.',
+    blueprintLinkTitle:'Repository Blueprint', blueprintLinkFocus:'Focus: {path}',
+    blueprintLinkPublic:'This link contains a public repository path.',
+    blueprintLinkLoad:'Load public Blueprint', blueprintLinkOpenGithub:'Open on GitHub', blueprintLinkEnterTown:'Enter town instead',
+    blueprintLinkInvalid:'The Blueprint link path or format is invalid. You can continue to the ordinary repository exhibition.',
+    blueprintLinkMissing:'The shared path was not found in the bounded public Blueprint. No nearby path was selected.',
+    blueprintLinkCopy:'Copy Blueprint Link', blueprintLinkCopied:'Blueprint link copied.',
+    blueprintLinkCopyFailed:'Copy failed. Select the URL below and copy it directly.', blueprintLinkFallbackAria:'Selectable Blueprint link',
     atelierBlueprintFolder:'Folder', atelierBlueprintFile:'File',
     atelierBlueprintSelected:'{type} · {path}', atelierBlueprintCounts:'Nodes {nodes}/{nodeCap} · edges {edges}/{edgeCap} · depth {depth}/4 · {bytes}',
     atelierBlueprintOmitted:' · {count} nodes outside the cap', atelierBlueprintTable:'Blueprint Table · public source map',
@@ -10580,9 +10618,15 @@ function flushStarNudge(){ if(!_starNudgePending) return; const reason=_starNudg
   if(x) x.onclick=()=>{ track('star_nudge_dismiss'); _starNudgeClose('dismissed'); };
   if(go) go.onclick=()=>{ if(repoPortalRequested) trackPortal('project_star_click',{entry:'earned',device:_repoPortalDevice(),lang:LANG,channel:'github'});
     else track('project_star_click'); _starNudgeClose('clicked'); }; })();
+function blueprintDeepLinkRepo(){
+  if(!BLUEPRINT_DEEP_LINK.ok||cityMode!=='portal'||!repoPortalTarget
+    ||BLUEPRINT_DEEP_LINK.target.slug.toLowerCase()!==repoPortalTarget.slug.toLowerCase()) return null;
+  const repo=repoByKey(repoPortalTarget.repo),target=repo&&_repositoryPortalTarget(repo);
+  return target&&target.slug.toLowerCase()===BLUEPRINT_DEEP_LINK.target.slug.toLowerCase()?repo:null;
+}
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
   track('town_enter', { returning: !!VISITOR.returning });
-  const rb=VISITOR.returning, news=hasFreshness();
+  const rb=VISITOR.returning, news=hasFreshness(),blueprintPath=!blueprintDeepLinkBypass&&blueprintDeepLinkRepo()?BLUEPRINT_DEEP_LINK.path:null;
   if(cityMode==='public'){
     if(!rb&&!_reqFocus) setTimeout(()=>{ try{ showWave(tf('arrived',{user:currentUser}),3600); }catch(e){} },850);
     if(!REPO_ROUTE_REQUEST.valid) setTimeout(()=>{ try{ maybeStarNudge('personal_town'); }catch(e){} },14000); }   // a shared route earns this invitation only after completion
@@ -10591,7 +10635,8 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
   setTimeout(()=>{ try{
-    if(cityMode==='portal'&&repoPortalTarget){ const repo=repoByKey(repoPortalTarget.repo); if(repo) enterRepositoryAtelier(repo); }
+    if(cityMode==='portal'&&repoPortalTarget){ const repo=repoByKey(repoPortalTarget.repo);
+      if(repo) enterRepositoryAtelier(repo,blueprintPath?{autoChat:false,blueprintPath}:{}); }
     else if(_reqFocus){ const repo=repoByKey(_reqFocus.repo); if(repo) enterRepositoryAtelier(repo); else openRepoFromHash(); }
     else openRepoFromHash();
   }catch(e){} }, 480);
@@ -10602,7 +10647,9 @@ const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introL
   introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
   introProofTop=document.getElementById('introProofTop'),introPinProfile=document.getElementById('introPinProfile'),introGrowth=document.getElementById('introGrowth'),
   introCompare=document.getElementById('introCompare'),introTryAnother=document.getElementById('introTryAnother'),introProfileStatus=document.getElementById('introProfileStatus'),
-  introProofActions=document.getElementById('introProofActions'),introStartBtn=document.getElementById('startBtn'),introTourBtn=document.getElementById('introTour');
+  introProofActions=document.getElementById('introProofActions'),introStartBtn=document.getElementById('startBtn'),introTourBtn=document.getElementById('introTour'),
+  introBlueprintLoad=document.getElementById('introBlueprintLoad'),introBlueprintGithub=document.getElementById('introBlueprintGithub'),
+  introBlueprintTown=document.getElementById('introBlueprintTown');
 let introChoosingAnother=false,introProfileResult=null;
 function publicIntroSummary(){ return summarizePublicTown(currentUser,REPOS); }
 function introProofNumber(value){ try{ return new Intl.NumberFormat(LANG==='ko'?'ko-KR':'en-US').format(value); }catch(e){ return String(value); } }
@@ -10613,16 +10660,28 @@ function renderIntroProfileStatus(){
 function renderPublicIntro(){
   const summary=publicIntroSummary(),publicReady=cityMode==='public'&&!cityError&&summary.count>0&&!introChoosingAnother;
   const portalRepo=cityMode==='portal'&&!cityError&&repoPortalTarget?repoByKey(repoPortalTarget.repo):null;
-  const portalReady=!!portalRepo&&!introChoosingAnother;
+  const portalReady=!!portalRepo&&!introChoosingAnother,blueprintRepo=blueprintDeepLinkRepo();
+  const blueprintReady=!!blueprintRepo&&!introChoosingAnother;
   const routeReady=REPO_ROUTE_REQUEST.valid&&cityMode!=='portal'&&!cityError&&!introChoosingAnother,ready=publicReady||portalReady||routeReady;
+  document.getElementById('intro').classList.toggle('blueprint-link',blueprintReady);
   introLaunch.classList.toggle('ready',ready); introPublicProof.hidden=!ready; introLaunchForm.hidden=ready; introLaunchHint.hidden=ready;
-  introProofActions.hidden=portalReady||routeReady; introTourBtn.hidden=portalReady||routeReady;
-  if(portalReady){
+  introPinProfile.hidden=!publicReady; introGrowth.hidden=!publicReady||!TOWN_GROWTH.available;
+  introCompare.hidden=!publicReady; introTryAnother.hidden=!publicReady;
+  introBlueprintLoad.hidden=!blueprintReady; introBlueprintGithub.hidden=!blueprintReady; introBlueprintTown.hidden=!blueprintReady;
+  introProofActions.hidden=!publicReady&&!blueprintReady; introTourBtn.hidden=portalReady||routeReady;
+  if(blueprintReady){
+    introLaunchLabel.textContent=t('blueprintLinkTitle'); introProofStats.textContent=BLUEPRINT_DEEP_LINK.target.slug;
+    introProofTop.textContent=tf('blueprintLinkFocus',{path:BLUEPRINT_DEEP_LINK.path}); introProofTop.title=BLUEPRINT_DEEP_LINK.path;
+    introProfileResult={key:'blueprintLinkPublic',tone:''}; introStartBtn.textContent=t('blueprintLinkLoad');
+    introBlueprintGithub.href=blueprintRepo.url;
+  }else if(portalReady){
     introLaunchLabel.textContent=tf('introPortalReady',{repo:repoPortalTarget.slug});
     introProofStats.textContent=tf('introPortalStats',{stars:introProofNumber(portalRepo.stars),forks:introProofNumber(portalRepo.forks),language:portalRepo.lang||'Other'});
     introProofTop.textContent=portalRepo.desc||t('noDesc'); introProofTop.title=portalRepo.desc||'';
     const sourceKey=dataSource==='owner-snapshot'?'portalSourceLocal':(dataSource==='repo-cache'?'portalSourceCache':(dataSource==='repo-stale-cache'?'portalSourceStale':'portalSourceApi'));
-    introProfileResult={key:sourceKey,tone:dataSource==='repo-stale-cache'?'':'success'}; introStartBtn.textContent=t('enterRepoPortal');
+    introProfileResult=BLUEPRINT_DEEP_LINK.requested&&!BLUEPRINT_DEEP_LINK.ok?{key:'blueprintLinkInvalid',tone:'error'}:
+      {key:sourceKey,tone:dataSource==='repo-stale-cache'?'':'success'};
+    introStartBtn.textContent=t('enterRepoPortal');
   }else if(routeReady){
     introProfileResult=null; introLaunchLabel.textContent=t('introRouteReady');
     introProofStats.textContent=tf('introRouteStats',{count:REPO_ROUTE_REQUEST.repos.length,user:currentUser});
@@ -10638,7 +10697,7 @@ function renderPublicIntro(){
     introProfileResult=null; introProofActions.hidden=false; introTourBtn.hidden=false; introLaunchLabel.textContent=t('introLaunchLabel'); introStartBtn.textContent=t('enterTown');
   }
   renderIntroProfileStatus();
-  return {ready,publicReady,portalReady,routeReady,choosingAnother:introChoosingAnother,summary};
+  return {ready,publicReady,portalReady,blueprintReady,routeReady,choosingAnother:introChoosingAnother,summary};
 }
 async function copyIntroProfileReadme(){
   introPinProfile.disabled=true; let ok=false;
@@ -10650,6 +10709,8 @@ window.__publicIntroRefresh=renderPublicIntro;
 introPinProfile.onclick=copyIntroProfileReadme;
 introGrowth.onclick=()=>{ introStartBtn.click(); setTimeout(()=>startTownGrowthReplay({entry:'intro',autoplay:true}),620); };
 introCompare.onclick=()=>openTwinTowns('intro');
+introBlueprintLoad.onclick=()=>introStartBtn.click();
+introBlueprintTown.onclick=()=>{ blueprintDeepLinkBypass=true; introStartBtn.click(); };
 introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null; renderPublicIntro(); const input=document.getElementById('introUser'); input.value=''; setTimeout(()=>input.focus(),0); };
 (function(){ const form=introLaunchForm, input=document.getElementById('introUser'), err=document.getElementById('introLaunchErr');
   if(!form||!input) return; if(cityMode==='public') input.value=currentUser; else if(cityMode==='portal'&&repoPortalTarget) input.value=repoPortalTarget.slug;
@@ -12474,7 +12535,9 @@ const atelierFade=document.getElementById('atelierFade'),atelierHud=document.get
   atelierPortalGithub=document.getElementById('atelierPortalGithub'),atelierPortalExplore=document.getElementById('atelierPortalExplore'),
   atelierPortalStatus=document.getElementById('atelierPortalStatus'),atelierBlueprintToggle=document.getElementById('atelierBlueprintToggle'),
   atelierBlueprintPanel=document.getElementById('atelierBlueprintPanel'),atelierBlueprintClose=document.getElementById('atelierBlueprintClose'),
-  atelierBlueprintScan=document.getElementById('atelierBlueprintScan'),atelierBlueprintPath=document.getElementById('atelierBlueprintPath'),
+  atelierBlueprintScan=document.getElementById('atelierBlueprintScan'),atelierBlueprintCopy=document.getElementById('atelierBlueprintCopy'),
+  atelierBlueprintPath=document.getElementById('atelierBlueprintPath'),atelierBlueprintLinkFallback=document.getElementById('atelierBlueprintLinkFallback'),
+  atelierBlueprintShareStatus=document.getElementById('atelierBlueprintShareStatus'),
   atelierBlueprintStatus=document.getElementById('atelierBlueprintStatus'),atelierBlueprintSelected=document.getElementById('atelierBlueprintSelected'),
   atelierBlueprintOutline=document.getElementById('atelierBlueprintOutline'),atelierBlueprintBudget=document.getElementById('atelierBlueprintBudget');
 
@@ -12512,7 +12575,8 @@ function _atelierTrackMaterial(material){ REPOSITORY_ATELIER.resources.materials
 function _atelierMesh(geometry,material){ return new THREE.Mesh(_atelierTrackGeometry(geometry),_atelierTrackMaterial(material)); }
 function _repositoryBlueprintState(){
   return {cache:createRepositoryBlueprintMemoryCache(),target:null,status:'idle',projection:null,selected:-1,panelOpen:false,
-    previousFocus:null,controller:null,scanId:0,requestsStarted:0,decodedBytes:0,lastResult:null,cameraOnOpen:null,cameraUnchanged:null};
+    previousFocus:null,controller:null,scanId:0,requestsStarted:0,decodedBytes:0,lastResult:null,cameraOnOpen:null,cameraUnchanged:null,
+    deepLink:null,shareUrl:'',shareStatus:null};
 }
 function _atelierCanvas(width,height,name){
   const canvas=document.createElement('canvas'); canvas.width=width; canvas.height=height; canvas.dataset.atelier=name;
@@ -12757,7 +12821,7 @@ function _repositoryBlueprintStatusKey(status){
     malformed:'atelierBlueprintMalformed',malformed_path:'atelierBlueprintMalformed',malformed_type:'atelierBlueprintMalformed',
     duplicate_path:'atelierBlueprintMalformed',scope_mismatch:'atelierBlueprintMalformed',repository:'atelierBlueprintMalformed',
     branch:'atelierBlueprintMalformed',target:'atelierBlueprintMalformed',network:'atelierBlueprintUnavailable',
-    unavailable:'atelierBlueprintUnavailable',cancelled:'atelierBlueprintIdle'
+    unavailable:'atelierBlueprintUnavailable',cancelled:'atelierBlueprintIdle',path_missing:'blueprintLinkMissing'
   }[status]||'atelierBlueprintUnavailable';
 }
 function _repositoryBlueprintRenderOutline(){
@@ -12782,14 +12846,31 @@ function _repositoryBlueprintPaintNode(index,selected){
   A.color.set(selected?0xffedb0:(visual.kind==='folder'?(visual.depth===1?0x75cbd0:0x4f9299):0xe4bd68));
   mesh.setColorAt(visual.instance,A.color); mesh.instanceMatrix.needsUpdate=true; mesh.instanceColor.needsUpdate=true;
 }
+function _resetRepositoryBlueprintShare(clearUrl=true){
+  const B=REPOSITORY_ATELIER&&REPOSITORY_ATELIER.blueprint;if(!B) return;
+  if(clearUrl) B.shareUrl=''; B.shareStatus=null; atelierBlueprintCopy.hidden=true;
+  atelierBlueprintLinkFallback.hidden=true; atelierBlueprintLinkFallback.value='';
+  atelierBlueprintShareStatus.textContent=''; atelierBlueprintShareStatus.dataset.tone='';
+}
+function _setRepositoryBlueprintShareStatus(key='',tone=''){
+  const B=REPOSITORY_ATELIER&&REPOSITORY_ATELIER.blueprint;if(B) B.shareStatus=key?{key,tone}:null;
+  atelierBlueprintShareStatus.textContent=key?t(key):''; atelierBlueprintShareStatus.dataset.tone=tone;
+}
 function _syncRepositoryBlueprintSelection(focusDom=false){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint,projection=B&&B.projection;
-  if(!projection||!projection.nodes.length){ atelierBlueprintSelected.hidden=true; atelierBlueprintPath.hidden=true; return; }
+  if(!projection||!projection.nodes.length||B.selected<0){
+    atelierBlueprintSelected.hidden=true; atelierBlueprintPath.hidden=true; _resetRepositoryBlueprintShare();
+    atelierBlueprintOutline.querySelectorAll('[data-blueprint-index]').forEach(button=>button.setAttribute('aria-current','false')); return;
+  }
   const index=Math.max(0,Math.min(projection.nodes.length-1,B.selected)),node=projection.nodes[index];
   B.selected=index; atelierBlueprintSelected.hidden=false; atelierBlueprintSelected.textContent=tf('atelierBlueprintSelected',{
     type:t(node.type==='folder'?'atelierBlueprintFolder':'atelierBlueprintFile'),path:node.path
   });
   atelierBlueprintPath.href=createRepositoryBlueprintPathUrl(B.target,node); atelierBlueprintPath.hidden=false;
+  const portalTarget=_repositoryPortalTarget(A.repo),shareUrl=portalTarget&&portalTarget.slug.toLowerCase()===B.target.repoName.toLowerCase()
+    ?createRepositoryBlueprintDeepLink(portalTarget,node.path,_postcardPublishedBase()):'';
+  if(B.shareUrl!==shareUrl){ _resetRepositoryBlueprintShare(); B.shareUrl=shareUrl; }
+  atelierBlueprintCopy.hidden=!shareUrl;
   atelierBlueprintOutline.querySelectorAll('[data-blueprint-index]').forEach(button=>{
     button.setAttribute('aria-current',button.dataset.blueprintIndex===String(index)?'true':'false');
   });
@@ -12800,7 +12881,27 @@ function _focusRepositoryBlueprintNode(index,focusDom=false){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint,projection=B&&B.projection;
   if(!projection||!Number.isInteger(index)||index<0||index>=projection.nodes.length) return false;
   if(B.selected>=0) _repositoryBlueprintPaintNode(B.selected,false);
-  B.selected=index; _repositoryBlueprintPaintNode(index,true); _syncRepositoryBlueprintSelection(focusDom); return true;
+  const clearedMissing=B.status==='path_missing'; B.selected=index; _repositoryBlueprintPaintNode(index,true);
+  if(clearedMissing){ B.status=projection.status; B.deepLink=null; _renderRepositoryBlueprintChrome(false); }
+  else _syncRepositoryBlueprintSelection(focusDom);
+  return true;
+}
+function _restoreRepositoryBlueprintDeepLinkFocus(path){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint,resolved=B&&resolveRepositoryBlueprintFocus(B.projection,B.target,path);
+  if(!B||!resolved) return false;
+  B.deepLink={path,status:resolved.ok?'restored':resolved.reason};
+  if(resolved.ok) return _focusRepositoryBlueprintNode(resolved.index,true);
+  if(B.selected>=0) _repositoryBlueprintPaintNode(B.selected,false);
+  B.selected=-1; B.status=resolved.reason==='missing'?'path_missing':resolved.reason; _syncRepositoryBlueprintSelection(false); return false;
+}
+async function _copyRepositoryBlueprintDeepLink(){
+  const B=REPOSITORY_ATELIER&&REPOSITORY_ATELIER.blueprint;if(!B||!B.shareUrl) return false;
+  let copied=false; try{ copied=await _copyPostcardText(B.shareUrl); }catch(_){ copied=false; }
+  if(copied){ atelierBlueprintLinkFallback.hidden=true; _setRepositoryBlueprintShareStatus('blueprintLinkCopied','success'); return true; }
+  atelierBlueprintLinkFallback.value=B.shareUrl; atelierBlueprintLinkFallback.hidden=false;
+  _setRepositoryBlueprintShareStatus('blueprintLinkCopyFailed','error');
+  requestAnimationFrame(()=>{ atelierBlueprintLinkFallback.focus(); atelierBlueprintLinkFallback.select(); });
+  return false;
 }
 function _renderRepositoryBlueprintChrome(rebuildOutline=false){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!B) return;
@@ -12810,6 +12911,7 @@ function _renderRepositoryBlueprintChrome(rebuildOutline=false){
   atelierBlueprintStatus.textContent=t(status==='empty'?'atelierBlueprintEmpty':_repositoryBlueprintStatusKey(status));
   atelierBlueprintStatus.dataset.tone=['truncated','partial'].includes(status)?'limited':
     (!['idle','scanning','ready','empty'].includes(status)?'error':'');
+  if(B.shareStatus) _setRepositoryBlueprintShareStatus(B.shareStatus.key,B.shareStatus.tone);
   if(rebuildOutline) _repositoryBlueprintRenderOutline();
   atelierBlueprintOutline.hidden=!projection; atelierBlueprintBudget.hidden=!projection;
   if(projection){
@@ -12819,7 +12921,7 @@ function _renderRepositoryBlueprintChrome(rebuildOutline=false){
     })+(counts.omittedNodes?tf('atelierBlueprintOmitted',{count:counts.omittedNodes}):'');
     _syncRepositoryBlueprintSelection(false);
   } else {
-    atelierBlueprintBudget.textContent=''; atelierBlueprintSelected.hidden=true; atelierBlueprintPath.hidden=true;
+    atelierBlueprintBudget.textContent=''; atelierBlueprintSelected.hidden=true; atelierBlueprintPath.hidden=true; _resetRepositoryBlueprintShare();
   }
 }
 function _repositoryBlueprintWorldPosition(node){
@@ -12885,27 +12987,34 @@ function _bindRepositoryBlueprint(repo){
   B.compact=B.capacityCompact||VISUAL_GOVERNOR_STATE.tier===2;
   B.nodeCap=B.compact?REPOSITORY_BLUEPRINT_LIMITS.compactNodes:REPOSITORY_BLUEPRINT_LIMITS.desktopNodes;
   B.edgeCap=B.compact?REPOSITORY_BLUEPRINT_LIMITS.compactEdges:REPOSITORY_BLUEPRINT_LIMITS.desktopEdges;
-  B.target=target.ok?target:null; B.status=target.ok?'idle':target.reason; B.requestsStarted=0; B.decodedBytes=0; B.lastResult=null; B.scanId++;
+  B.target=target.ok?target:null; B.status=target.ok?'idle':target.reason; B.requestsStarted=0; B.decodedBytes=0; B.lastResult=null;
+  B.deepLink=null; B.scanId++; _resetRepositoryBlueprintShare();
   atelierBlueprintToggle.disabled=!target.ok; _renderRepositoryBlueprintChrome(true);
 }
-async function _scanRepositoryBlueprint(){
+async function _scanRepositoryBlueprint(requestedPath=''){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!A||A.state!=='inside'||!B||!B.target||B.controller) return false;
   if(!B.panelOpen&&!_openRepositoryBlueprint()) return false;
+  B.deepLink=requestedPath?{path:requestedPath,status:'loading'}:null;
   const cached=B.cache.get(B.target);
   if(cached){ B.lastResult=cached; B.status=cached.status; B.decodedBytes=cached.decodedBytes||0; _applyRepositoryBlueprintProjection(cached.projection);
-    _renderRepositoryBlueprintChrome(true); return true; }
+    _renderRepositoryBlueprintChrome(true);
+    if(requestedPath){ _restoreRepositoryBlueprintDeepLinkFocus(requestedPath); _renderRepositoryBlueprintChrome(false); }
+    return true; }
   const scanId=++B.scanId,controller=new AbortController(); B.controller=controller; B.status='scanning'; _renderRepositoryBlueprintChrome(false);
   const result=await scanRepositoryBlueprint(B.target,{compact:B.compact,signal:controller.signal});
   if(!REPOSITORY_ATELIER||REPOSITORY_ATELIER!==A||B.scanId!==scanId) return false;
   B.controller=null; B.requestsStarted+=result.requestsStarted; B.lastResult=result; B.status=result.status; B.decodedBytes=result.decodedBytes||0;
-  if(result.ok&&result.projection){ B.cache.set(B.target,result); _applyRepositoryBlueprintProjection(result.projection); }
-  else _clearRepositoryBlueprintVisuals();
-  _renderRepositoryBlueprintChrome(true); return result.ok;
+  if(result.ok&&result.projection){ B.cache.set(B.target,result); _applyRepositoryBlueprintProjection(result.projection);
+    _renderRepositoryBlueprintChrome(true);
+    if(requestedPath){ _restoreRepositoryBlueprintDeepLinkFocus(requestedPath); _renderRepositoryBlueprintChrome(false); } }
+  else { _clearRepositoryBlueprintVisuals(); _renderRepositoryBlueprintChrome(true); }
+  return result.ok;
 }
 function _resetRepositoryBlueprintVisit(){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!B) return;
   if(B.controller) B.controller.abort(); B.controller=null; B.scanId++; _closeRepositoryBlueprint(false); B.cache.clear(); _clearRepositoryBlueprintVisuals();
-  B.target=null; B.status='idle'; B.requestsStarted=0; B.decodedBytes=0; B.lastResult=null; _renderRepositoryBlueprintChrome(true);
+  B.target=null; B.status='idle'; B.requestsStarted=0; B.decodedBytes=0; B.lastResult=null; B.deepLink=null;
+  _resetRepositoryBlueprintShare(); _renderRepositoryBlueprintChrome(true);
 }
 function _resolveRepositoryBlueprintTableCollision(position){
   const A=REPOSITORY_ATELIER,bounds=A&&A.blueprintTableBounds;if(!bounds||position.x<=bounds.minX||position.x>=bounds.maxX||position.z<=bounds.minZ||position.z>=bounds.maxZ) return;
@@ -13101,7 +13210,7 @@ function enterRepositoryAtelier(repo,options={}){
   const A=REPOSITORY_ATELIER||{state:'outside',created:false,resources:{geometries:new Set(),materials:new Set(),textures:new Set()},dummy:new THREE.Object3D()};
   REPOSITORY_ATELIER=A; _snapshotRepositoryAtelier(repo); A.repo=repo; A.chat=createRepositoryAtelierChatVisit(target.slug);
   if(options.autoChat===false) A.chat.autoStarted=true;
-  A.outsideChat=null;
+  A.blueprintDeepLinkPath=typeof options.blueprintPath==='string'?options.blueprintPath:null; A.outsideChat=null;
   A.pendingExit=false; A.pendingHash=false; A.afterExit=null; A.state='entering'; A.phase='cover'; A.t=0; A.renderInterior=false;
   _resetRepositoryAtelierInput(); atelierFade.classList.add('blocking'); atelierFade.style.opacity='0';
   return true;
@@ -13162,7 +13271,9 @@ function _repositoryAtelierTransition(dt){
       if(A.t>=REPOSITORY_ATELIER_FADE){ _activateRepositoryAtelier(); A.phase='reveal'; A.t=0; atelierFade.style.opacity='1'; } return A.renderInterior?'interior':'exterior'; }
     atelierFade.style.opacity=String(Math.max(0,1-A.t/REPOSITORY_ATELIER_FADE));
     if(A.t>=REPOSITORY_ATELIER_FADE){ A.state='inside'; A.phase=null; A.t=0; atelierFade.style.opacity='0'; atelierFade.classList.remove('blocking');
-      if(!A.pendingExit) _startRepositoryAtelierChatVisit();
+      if(!A.pendingExit&&A.blueprintDeepLinkPath){ const path=A.blueprintDeepLinkPath; A.blueprintDeepLinkPath=null;
+        _openRepositoryBlueprint(false); _scanRepositoryBlueprint(path); }
+      else if(!A.pendingExit) _startRepositoryAtelierChatVisit();
       if(repoPortalRequested&&!A.ahaTracked){ A.ahaTracked=true;
         trackPortal('aha_completed',{entry:'link',device:_repoPortalDevice(),lang:LANG,result:repoPortalResult?.result||'local',
           latency:repoPortalLatencyBucket((typeof performance!=='undefined'?performance.now():Date.now())-repoPortalStartedAt)});
@@ -13260,6 +13371,7 @@ atelierPortalExplore.addEventListener('click',event=>{ event.stopPropagation(); 
 atelierBlueprintToggle.addEventListener('click',event=>{ event.stopPropagation(); _openRepositoryBlueprint(); });
 atelierBlueprintClose.addEventListener('click',event=>{ event.stopPropagation(); _closeRepositoryBlueprint(); });
 atelierBlueprintScan.addEventListener('click',event=>{ event.stopPropagation(); _scanRepositoryBlueprint(); });
+atelierBlueprintCopy.addEventListener('click',event=>{ event.stopPropagation(); _copyRepositoryBlueprintDeepLink(); });
 atelierBlueprintOutline.addEventListener('focusin',event=>{ const button=event.target.closest?.('[data-blueprint-index]');
   if(button) _focusRepositoryBlueprintNode(Number(button.dataset.blueprintIndex),false); });
 atelierBlueprintOutline.addEventListener('click',event=>{ const button=event.target.closest?.('[data-blueprint-index]');
@@ -13288,6 +13400,7 @@ function _repositoryAtelierDebug(){
       nodes:A.blueprint.projection?.counts.nodes||0,edges:A.blueprint.projection?.counts.edges||0,maxDepth:A.blueprint.projection?.counts.maxDepth||0,
       omittedNodes:A.blueprint.projection?.counts.omittedNodes||0,selectedPath:A.blueprint.projection?.nodes[A.blueprint.selected]?.path||null,
       cache:A.blueprint.cache.snapshot(),render:A.blueprint.render||null,cameraUnchanged:A.blueprint.cameraUnchanged,
+      deepLink:A.blueprint.deepLink,shareUrl:A.blueprint.shareUrl,shareStatus:A.blueprint.shareStatus,
       limits:{nodeCap:A.blueprint.nodeCap,edgeCap:A.blueprint.edgeCap,decodedBytes:REPOSITORY_BLUEPRINT_LIMITS.maxDecodedBytes,
         timeoutMs:REPOSITORY_BLUEPRINT_LIMITS.timeoutMs,drawCalls:REPOSITORY_BLUEPRINT_LIMITS.additionalDrawCalls,atlases:REPOSITORY_BLUEPRINT_LIMITS.canvasAtlases}},
     chat:repositoryAtelierChatSnapshot(A.chat),
@@ -13308,6 +13421,7 @@ if(_DIAGNOSTICS){
   window.__atelierBlueprintOpen=()=>_openRepositoryBlueprint();
   window.__atelierBlueprintScan=()=>_scanRepositoryBlueprint();
   window.__atelierBlueprintFocus=index=>_focusRepositoryBlueprintNode(Number(index),true);
+  window.__atelierBlueprintRestore=path=>{ const ok=_restoreRepositoryBlueprintDeepLinkFocus(String(path||'')); _renderRepositoryBlueprintChrome(true); return {ok,blueprint:_repositoryAtelierDebug().blueprint}; };
   window.__atelierBlueprintPoint=index=>{ const A=REPOSITORY_ATELIER,visual=A&&A.blueprint?.visuals?.[Number(index)]; if(!visual) return null;
     const point=new THREE.Vector3(visual.x,visual.y,visual.z).project(camera),rect=dom.getBoundingClientRect();
     return {x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2,path:A.blueprint.projection.nodes[Number(index)].path}; };

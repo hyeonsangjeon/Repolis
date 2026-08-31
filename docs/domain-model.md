@@ -316,6 +316,7 @@ fail closed to that town's local navigation rather than inheriting the owner's s
 | **Owner town** | bare URL | The generated owner snapshot from `repos.json`. The taxi + scholars are fully live. |
 | **Public town** | `?user=<login>` | Rebuilds the town from any public GitHub user's repos (cached in `localStorage`, stale-fallback). Cross-town taxi driving is disabled; a "go home" button returns to the owner city. |
 | **Repo Portal** | `?repo=<owner>/<repo>&ref=repo-portal` | Resolves one public repo first, shows a compact proof, then opens its Atelier after one entry click. |
+| **Blueprint Deep Link** | `?repo=<owner>/<repo>&view=blueprint&path=<relative>&ref=blueprint` | Confirms one exact public repo/path before the existing bounded Blueprint request and restores only an exact projected node. |
 | **Expanded owner town** | `?user=<owner>&focus=<repo>&ref=repo-portal` | Loads the existing public-town catalog only after explicit expansion, merges the target when needed, and opens the same Atelier. |
 | **Repo Route entry** | `?user=<login>&route=<repo1>,<repo2>,<repo3>&ref=repo-route` | Confirms an ordered current-catalog route before entry, then guides the existing town one real house at a time. |
 
@@ -405,6 +406,12 @@ The intro and GitHub Station share the parser. A repository resolves to
 `?repo=owner/repo&ref=repo-portal`; entering hides unrelated proof actions and opens the bound Atelier. The
 Atelier can copy the same published address, open GitHub, or navigate to an explicit `?user=&focus=`
 expansion. Expansion is the only action that fetches the owner catalog before showing it.
+
+Blueprint Deep Links extend that same exact-repository boundary with fixed `view=blueprint`,
+`ref=blueprint`, and one 512-byte-capped decoded relative path. The recipient confirmation starts no Tree
+request. Its explicit Load action reuses Repository Blueprint's one request, validates the returned
+projection's owner/repo, and restores exact DOM/3D focus only when the path exists. Missing or unavailable
+paths remain unselected and never trigger guessing, crawling, or cross-repository substitution.
 
 New Portal funnel events use a page-lifetime session ID and coarse enums only. They remove owner, repo, URL,
 raw input, query text, `cityUser`, and persistent instance ID before the optional analytics sink. See
