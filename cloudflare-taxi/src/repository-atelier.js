@@ -149,25 +149,67 @@ function fullNameFromUrl(value) {
   }
 }
 
-export function projectRepositoryAtelierReferences(references, repoName) {
+function fullNameFromRepository(value) {
+  const repo = object(value);
+  return String(repo?.full_name || fullNameFromUrl(repo?.html_url)).replace(/\.git$/i, '');
+}
+
+function repositoryActivityScopes(activities, repoName) {
+  const target = String(repoName || '').toLowerCase();
+  const scopes = new Map();
+  for (const activity of Array.isArray(activities) ? activities : []) {
+    if (!activity || activity.type !== 'mcpServer') continue;
+    const call = object(activity.mcpServerArguments);
+    const args = object(call?.toolArguments);
+    const owner = clean(args?.owner, 100);
+    const repo = clean(args?.repo, 100);
+    if (!owner || !repo) continue;
+    scopes.set(String(activity.id), {
+      exact: `${owner}/${repo}`.toLowerCase() === target,
+      tool: clean(call?.toolName, 100),
+    });
+  }
+  return scopes;
+}
+
+export function projectRepositoryAtelierReferences(references, repoName, activities = []) {
   const target = String(repoName || '').toLowerCase();
   const refs = [];
+  const seen = new Set();
+  const scopes = repositoryActivityScopes(activities, repoName);
   let rejected = 0;
   for (const reference of Array.isArray(references) ? references : []) {
-    const repo = referenceObject(reference);
-    const fullName = String(repo?.full_name || fullNameFromUrl(repo?.html_url)).replace(/\.git$/i, '');
-    if (!repo || fullName.toLowerCase() !== target) {
+    const source = referenceObject(reference);
+    const scope = scopes.get(String(reference?.activitySource));
+    if (reference?.toolName === 'get_file_contents'
+      && source?.type === 'file'
+      && scope?.tool === 'get_file_contents') {
+      if (!scope.exact) rejected += 1;
+      continue;
+    }
+
+    const repositories = Array.isArray(source?.items) ? source.items : [source];
+    if (!source || !repositories.length) {
       rejected += 1;
       continue;
     }
-    refs.push({
-      name: fullName,
-      url: repo.html_url || `https://github.com/${fullName}`,
-      snippet: clean(repo.description, 600),
-      stars: Number.isFinite(Number(repo.stargazers_count)) ? Number(repo.stargazers_count) : null,
-      lang: clean(repo.language, 50),
-      tool: reference.toolName || '',
-    });
+    for (const repo of repositories) {
+      const fullName = fullNameFromRepository(repo);
+      if (!fullName || fullName.toLowerCase() !== target) {
+        rejected += 1;
+        continue;
+      }
+      if (seen.has(fullName.toLowerCase())) continue;
+      seen.add(fullName.toLowerCase());
+      refs.push({
+        name: fullName,
+        url: repo.html_url || `https://github.com/${fullName}`,
+        snippet: clean(repo.description, 600),
+        stars: Number.isFinite(Number(repo.stargazers_count)) ? Number(repo.stargazers_count) : null,
+        lang: clean(repo.language, 50),
+        tool: reference.toolName || '',
+      });
+    }
   }
   return { refs, rejected, exact: refs.length > 0 && rejected === 0 };
 }
