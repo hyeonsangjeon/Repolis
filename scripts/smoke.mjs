@@ -829,6 +829,41 @@ ok(/## 11\. Repo Portal/.test(DOMAIN_MODEL)&&/Public API modes do not have traff
   &&/Repo Portal: `\?repo=owner\/repo/.test(LLMS_INDEX)&&/\[1\.87\.0\]/.test(CHANGELOG),
   'domain, limitations, agent guide, manifest, LLM index, and changelog stay in sync');
 
+group('Intent Lens — three goals reuse existing navigation');
+const intentLensSrc=(HTML.match(/\/\*INTENT_LENS:START\*\/([\s\S]*?)\/\*INTENT_LENS:END\*\//)||[,''])[1];
+const intentTargetSrc=(intentLensSrc.match(/function intentLensTargetRepo\(\)\{[\s\S]*?\n\}/)||[''])[0];
+ok(intentLensSrc.length>0&&intentTargetSrc.length>0, 'Intent Lens runtime is a small extractable integration block');
+ok((HTML.match(/class="intentLensChoice" type="button" data-intent="/g)||[]).length===3
+  &&HTML.indexOf('id="intentLens"')<HTML.indexOf('id="tourReplayBtn"'),
+  'three native intent buttons lead the existing Wayfinding surface without hiding its controls');
+[
+  ['intentUnderstand','레포 하나 이해하기','Understand a repository'],
+  ['intentExplore','이 개발자의 도시 둘러보기',"Explore this developer's town"],
+  ['intentContribute','기여할 일 찾기','Find something to contribute']
+].forEach(([key,ko,en])=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2&&HTML.includes(ko)&&HTML.includes(en),
+  `Intent Lens key ${key} is bilingual and concise`));
+ok(/intent==='understand'[\s\S]*?intentLensTargetRepo\(\)[\s\S]*?openStationModal\(\)[\s\S]*?enterRepositoryAtelier\(repo,\{autoChat:false\}\)/.test(intentLensSrc)
+  &&/intent==='explore'[\s\S]*?openMap\(\)/.test(intentLensSrc)
+  &&/intent==='contribute'[\s\S]*?openContributionQuestBoard\('menu'\)/.test(intentLensSrc),
+  'each intent dispatches only to the existing Portal/Atelier, World Map, or Quests flow');
+ok(!/fetch\(|loadContributionQuests|_sendRepositoryAtelierChat|localStorage|sessionStorage|indexedDB|new THREE|setTimeout|setInterval|requestAnimationFrame|track\(/.test(intentLensSrc),
+  'Intent Lens itself adds no request, model call, resource, timer, storage, profiling, or analytics work');
+ok(/querySelectorAll\('#intentLens \[data-intent\]'\)[\s\S]*?addEventListener\('click'/.test(intentLensSrc)
+  &&/\.intentLensChoice \{[^}]*min-height: 40px/.test(HTML)
+  &&/@media \(max-width: 520px\) \{[\s\S]*?#intentLens \{ margin-top: 48px; \}[\s\S]*?#panel:not\(\.hidden\) ~ #chat \{ visibility: hidden; opacity: 0; pointer-events: none; \}/.test(HTML)
+  &&/@media \(hover: none\) and \(pointer: coarse\) \{[\s\S]*?\.intentLensChoice \{ min-height: 44px; \}/.test(HTML),
+  'native activation covers keyboard, touch, and pointer while mobile HUD and chat stay clear');
+if(intentTargetSrc){
+  const portalTarget={owner:'Octo-Cat',repo:'hello-world',slug:'Octo-Cat/hello-world'};
+  const repo={repo:'hello-world',_owner:'Octo-Cat'};
+  const resolve=(mode,target,found,resolved)=>new Function('cityMode','repoPortalTarget','repoByKey','_repositoryPortalTarget',
+    `${intentTargetSrc}\nreturn intentLensTargetRepo();`)(mode,target,()=>found,()=>resolved);
+  ok(resolve('portal',portalTarget,repo,portalTarget)===repo
+    &&resolve('portal',portalTarget,repo,{...portalTarget,owner:'Other',slug:'Other/hello-world'})===null
+    &&resolve('owner',portalTarget,repo,portalTarget)===null,
+    'target handoff requires the same exact owner/repo while untargeted towns never guess a repository');
+}
+
 group('Twin Towns — recipient-specific, reversible public-town referrals');
 const twinLeft = [
   { repo:'agent-harbor', lang:'JavaScript', topics:['agents','threejs'], stars:12, forks:2 },
@@ -2126,7 +2161,7 @@ ok(/validateRepositoryBlueprintTarget\(\{[\s\S]*?repoName:parsed&&parsed\.slug[\
   'Blueprint pins the current exact owner/repo, known default branch, and exact GitHub path');
 ok(/atelierBlueprintScan\.addEventListener\('click'[\s\S]*?_scanRepositoryBlueprint\(\)/.test(atelierSrc)
   &&!/scanRepositoryBlueprint\(/.test(blueprintOpenSrc)
-  &&!/scanRepositoryBlueprint\(/.test((atelierSrc.match(/function enterRepositoryAtelier\(repo\)\{[\s\S]*?(?=\nfunction _activateRepositoryAtelier)/)||[''])[0])
+  &&!/scanRepositoryBlueprint\(/.test((atelierSrc.match(/function enterRepositoryAtelier\(repo,options=\{\}\)\{[\s\S]*?(?=\nfunction _activateRepositoryAtelier)/)||[''])[0])
   &&/await scanRepositoryBlueprint\(B\.target,\{compact:B\.compact,signal:controller\.signal\}\)/.test(blueprintScanSrc)
   &&!/fetch\(/.test(blueprintSrc),
   'only the explicit Blueprint scan starts its single pure-module request; entry and panel reopen stay silent');
@@ -2182,12 +2217,14 @@ ok(/opts&&opts\.repo&&!repositoryAtelierActive\(\)/.test(HTML)
   &&/function startScholarHandoff\(kind\)\{ if\(repositoryAtelierActive\(\)\) return false/.test(HTML),
   'chat replies cannot start an exterior taxi ride or scholar handoff while the room owns interaction');
 ok(!/fetch\(|new WebSocket|groundedAsk|webllmAsk|proxyAsk|import\(/.test(atelierCreateSrc+atelierBindSrc), 'creating and rebinding the reusable room adds no model, CDN, or dynamic-import work');
-ok(/A\.chat=createRepositoryAtelierChatVisit\(target\.slug\)/.test(atelierSrc)
+ok(/function enterRepositoryAtelier\(repo,options=\{\}\)/.test(atelierSrc)
+  &&/A\.chat=createRepositoryAtelierChatVisit\(target\.slug\)/.test(atelierSrc)
+  &&/if\(options\.autoChat===false\) A\.chat\.autoStarted=true/.test(atelierSrc)
   && /_startRepositoryAtelierChatVisit\(\)/.test(atelierSrc)
   && /_sendRepositoryAtelierChat\(t\('atelierChatAuto'\),true\)/.test(atelierSrc)
   && /beginRepositoryAtelierChatCall\(visit\)/.test(atelierSrc)
   && /repositoryAtelierChatPayload\(visit,question,LANG\)/.test(atelierSrc),
-  'entry pins exact owner/repo memory, auto-explains at 1/5, and every started request uses the scoped payload');
+  'entry pins exact owner/repo memory, keeps default auto-explain, and supports an explicit request-free handoff');
 ok(/function _captureRepositoryAtelierChatThread\(\)/.test(atelierSrc)
   && /nodes:\[\.\.\.chatLog\.childNodes\]/.test(atelierSrc)
   && /function _restoreRepositoryAtelierChatThread\(\)/.test(atelierSrc)
