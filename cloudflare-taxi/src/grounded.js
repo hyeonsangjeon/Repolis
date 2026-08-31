@@ -1925,7 +1925,11 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
     }, 200, env);
   }
 
-  const scoped = projectRepositoryAtelierReferences(out.data?.references, authorized.repoName);
+  const scoped = projectRepositoryAtelierReferences(
+    out.data?.references,
+    authorized.repoName,
+    out.data?.activity,
+  );
   if (!scoped.exact || !out.answer || isNotFound(out.answer)) {
     emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
       groundingPath: "grounded_via_kb",

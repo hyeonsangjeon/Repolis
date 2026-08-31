@@ -2443,7 +2443,7 @@ ok(/authorizeRepositoryAtelierRequest\(body\)/.test(atelierWorkerSrc)
   && /buildRepositoryAtelierMessages\(/.test(atelierWorkerSrc)
   && /repositoryAtelierKnowledgeSource\(base\.ks\)/.test(atelierWorkerSrc)
   && /failOnError: true/.test(atelierWorkerSrc)
-  && /projectRepositoryAtelierReferences\(out\.data\?\.references, authorized\.repoName\)/.test(atelierWorkerSrc),
+  && /projectRepositoryAtelierReferences\([\s\S]*?out\.data\?\.references,[\s\S]*?authorized\.repoName,[\s\S]*?out\.data\?\.activity,[\s\S]*?\)/.test(atelierWorkerSrc),
   'the Atelier Worker path validates owner/repo, queries one required GitHub MCP source, and rejects non-exact references');
 ok(/if \(out\.fallback\)/.test(atelierWorkerSrc)
   && /repositoryAtelierMessage\("unavailable"/.test(atelierWorkerSrc)

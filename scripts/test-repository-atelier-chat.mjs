@@ -32,6 +32,46 @@ function reference(fullName) {
   };
 }
 
+function searchReference(fullNames) {
+  return {
+    toolName: 'search_repositories',
+    activitySource: 1,
+    sourceData: {
+      content: JSON.stringify({
+        total_count: fullNames.length,
+        items: fullNames.map((fullName) => ({
+          full_name: fullName,
+          name: fullName.split('/')[1],
+          html_url: `https://github.com/${fullName}`,
+          description: `${fullName} description`,
+          stargazers_count: 11,
+        })),
+      }),
+    },
+  };
+}
+
+function fileReference(activitySource, path = 'README.md') {
+  return {
+    toolName: 'get_file_contents',
+    activitySource,
+    sourceData: {
+      content: JSON.stringify({ name: path, path, type: 'file' }),
+    },
+  };
+}
+
+function fileActivity(id, owner, repo) {
+  return {
+    type: 'mcpServer',
+    id,
+    mcpServerArguments: {
+      toolName: 'get_file_contents',
+      toolArguments: { owner, repo, path: '/', ref: 'main' },
+    },
+  };
+}
+
 export async function runRepositoryAtelierChatTests(check) {
   const previous = createRepositoryAtelierChatVisit('hyeonsangjeon/YoutubeDlNas');
   appendRepositoryAtelierChatTurn(previous, 'user', 'How does YoutubeDlNas work?');
@@ -105,13 +145,40 @@ export async function runRepositoryAtelierChatTests(check) {
     'hyeonsangjeon/Dataplatformfrm',
   );
   const missing = projectRepositoryAtelierReferences([], 'hyeonsangjeon/Dataplatformfrm');
+  const foundryExact = projectRepositoryAtelierReferences(
+    [
+      searchReference(['hyeonsangjeon/Dataplatformfrm']),
+      fileReference(3),
+    ],
+    'hyeonsangjeon/Dataplatformfrm',
+    [fileActivity(3, 'hyeonsangjeon', 'Dataplatformfrm')],
+  );
+  const forgedFileScope = projectRepositoryAtelierReferences(
+    [
+      searchReference(['hyeonsangjeon/Dataplatformfrm']),
+      fileReference(4),
+    ],
+    'hyeonsangjeon/Dataplatformfrm',
+    [fileActivity(4, 'hyeonsangjeon', 'YoutubeDlNas')],
+  );
+  const mixedSearch = projectRepositoryAtelierReferences(
+    [searchReference(['hyeonsangjeon/Dataplatformfrm', 'hyeonsangjeon/YoutubeDlNas'])],
+    'hyeonsangjeon/Dataplatformfrm',
+  );
   check(exact.exact
     && exact.refs[0].name === 'hyeonsangjeon/Dataplatformfrm'
     && !mixed.exact
     && mixed.rejected === 1
     && !missing.exact
+    && foundryExact.exact
+    && foundryExact.refs.length === 1
+    && foundryExact.rejected === 0
+    && !forgedFileScope.exact
+    && forgedFileScope.rejected === 1
+    && !mixedSearch.exact
+    && mixedSearch.rejected === 1
     && repositoryAtelierKnowledgeSource('github-repos-mcp-ks,other-ks') === 'github-repos-mcp-ks',
-  'Atelier grounding accepts only exact-repo references and selects only the existing GitHub MCP knowledge source');
+  'Atelier grounding accepts exact Foundry MCP references, rejects cross-repo activity, and selects only the GitHub source');
 
   check(repositoryAtelierMessage('not_found', 'hyeonsangjeon/Dataplatformfrm', 'ko').includes('현재 공개 정보를 찾지 못')
     && repositoryAtelierMessage('not_found', 'hyeonsangjeon/Dataplatformfrm', 'en').includes("couldn't find current public information")
