@@ -62,6 +62,10 @@
   .intentLensChoice:focus-visible { outline: 3px solid rgba(217,143,46,.34); outline-offset: 1px; }
   .intentLensChoice:active { transform: translateY(1px); }
   .intentLensIcon { flex: 0 0 23px; font-size: 16px; line-height: 1; text-align: center; }
+  @media (max-width: 520px) {
+    #intentLens { margin-top: 48px; }
+    #panel:not(.hidden) ~ #chat { visibility: hidden; opacity: 0; pointer-events: none; }
+  }
   #tourReplayBtn, #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }

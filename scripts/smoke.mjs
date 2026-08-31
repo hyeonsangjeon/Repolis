@@ -850,8 +850,9 @@ ok(!/fetch\(|loadContributionQuests|_sendRepositoryAtelierChat|localStorage|sess
   'Intent Lens itself adds no request, model call, resource, timer, storage, profiling, or analytics work');
 ok(/querySelectorAll\('#intentLens \[data-intent\]'\)[\s\S]*?addEventListener\('click'/.test(intentLensSrc)
   &&/\.intentLensChoice \{[^}]*min-height: 40px/.test(HTML)
+  &&/@media \(max-width: 520px\) \{[\s\S]*?#intentLens \{ margin-top: 48px; \}[\s\S]*?#panel:not\(\.hidden\) ~ #chat \{ visibility: hidden; opacity: 0; pointer-events: none; \}/.test(HTML)
   &&/@media \(hover: none\) and \(pointer: coarse\) \{[\s\S]*?\.intentLensChoice \{ min-height: 44px; \}/.test(HTML),
-  'native click activation covers keyboard, touch, and pointer with desktop and coarse-pointer targets');
+  'native activation covers keyboard, touch, and pointer while mobile HUD and chat stay clear');
 if(intentTargetSrc){
   const portalTarget={owner:'Octo-Cat',repo:'hello-world',slug:'Octo-Cat/hello-world'};
   const repo={repo:'hello-world',_owner:'Octo-Cat'};
