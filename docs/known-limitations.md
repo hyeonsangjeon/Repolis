@@ -69,6 +69,11 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   this tab. Anonymous Search API rate limits can produce an explicit temporary error. A changed, closed,
   renamed, deleted, private, or newly filtered issue disappears on the next page load; Repolis does not claim,
   assign, cache, refresh, or track contribution outcomes.
+- **Issue-to-Code Scout is lexical triage, not code analysis.** It can run only when one exact current Quest
+  and an already-loaded Blueprint belong to the same repository. It compares title/label words with bounded
+  path metadata, offers at most five candidate paths to inspect first, and makes no claim about file
+  relationships, modification locations, ownership, or runtime architecture. Generic or zero-overlap input
+  returns no candidates; the visit-local result is cleared on repository change or Atelier exit.
 - **Creator Hall reads one public profile explicitly.** Opening the hall requests GitHub's public
   `/users/<login>` endpoint and caches only the fields it renders for 24 hours. Anonymous API rate limits
   can hide the avatar/bio temporarily; the hall still falls back to the public repository facts already

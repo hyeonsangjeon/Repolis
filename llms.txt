@@ -27,6 +27,7 @@
 - [assets/repo-portal.js](assets/repo-portal.js): strict GitHub target parser, public repo projection, route precedence, and canonical Repo Portal links.
 - [assets/repo-route.js](assets/repo-route.js): strict current-catalog validation and canonical links for ordered 2–3 house Repo Routes.
 - [assets/contribution-quests.js](assets/contribution-quests.js): pure current-owner/catalog issue projection and bounded ranking for Open Source Quests.
+- [assets/issue-code-scout.js](assets/issue-code-scout.js): deterministic exact-repo Quest title/label matching against an already-loaded Blueprint, capped at five candidate paths.
 - [assets/contribution-library.json](assets/contribution-library.json): generated bilingual Contribution Library data.
 
 ## Main product systems
@@ -41,6 +42,7 @@
 - The Undercroft: World Tree Roots open into a bounded walkable archive of the current town's matching archived public repositories; the Chronicle remains the accessible summary and overflow fallback.
 - Repo Route: after opening repo houses, visitors can share an ordered 2–3 stop path that recipients follow through the same real cards and compass.
 - Open Source Quests: one explicit anonymous search turns up to three current public issues into taxi rides to their real repo houses and exact GitHub handoffs.
+- Issue-to-Code Scout: after an explicit Blueprint load, the selected same-repo Quest can surface up to five conservative candidate paths with no additional request, persistence, or file-relationship claim.
 - Repository Atelier: one walkable room rebinds current repo history, impact signals, metric artifacts, current chibi avatar, and in-room Gitber/Why actions without rendering the exterior.
 - Local Town Gazette: added/removed repos, releases, pushes, and positive metric deltas since the last marked-read snapshot.
 - Named residents with individually styled Starlight Row cottages, resident-coloured gardens, a shared flower commons, perimeter trees, home/work commutes, moods, friendships, Shared Joy, conversations, festivals, and specialist handoffs.

@@ -616,6 +616,21 @@
   #atelierBlueprintSelected { min-height:42px; margin:0 14px 9px; padding:9px 10px; border:1px solid rgba(255,255,255,.1);
     border-radius:11px; color:#dce9e7; background:rgba(255,255,255,.045); font:650 10.5px/1.42 ui-monospace,SFMono-Regular,Menlo,monospace;
     overflow-wrap:anywhere; }
+  #issueCodeScout { margin:0 14px 9px; padding:9px 10px 10px; border:1px solid rgba(228,189,104,.3);
+    border-radius:11px; background:rgba(228,189,104,.065); }
+  #issueCodeScout[hidden] { display:none; }
+  #issueCodeScout h3 { margin:0; color:#fff2ce; font:800 11px/1.35 system-ui,sans-serif; }
+  #issueCodeScoutIssue { margin:3px 0 0; overflow:hidden; color:#a9c7c9; font:650 9.5px/1.35 system-ui,sans-serif;
+    text-overflow:ellipsis; white-space:nowrap; }
+  #issueCodeScoutStatus { margin:5px 0 0; color:#bad2d2; font-size:10px; line-height:1.4; }
+  #issueCodeScoutList { display:flex; gap:7px; margin:8px 0 0; padding:0 0 3px; overflow-x:auto; list-style:none; }
+  #issueCodeScoutList:empty { display:none; }
+  #issueCodeScoutList li { flex:0 0 auto; }
+  #issueCodeScoutList button { width:220px; min-height:40px; overflow:hidden; border:1px solid rgba(143,214,221,.3);
+    border-radius:9px; padding:7px 9px; color:#dce9e7; background:#1b3338; font:650 10px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;
+    text-align:left; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+  #issueCodeScoutList button:hover, #issueCodeScoutList button:focus-visible { border-color:#8fd6dd; outline:none; }
+  #issueCodeScoutList button[aria-current="true"] { border-color:#e4bd68; color:#fff2ce; background:#314038; }
   #atelierBlueprintOutline { flex:1; min-height:0; margin:0; padding:0 10px 12px 14px; overflow:auto; list-style:none; }
   #atelierBlueprintOutline li { margin:0; padding:0; }
   #atelierBlueprintOutline button { display:flex; width:100%; min-height:38px; align-items:center; gap:8px; margin:2px 0; padding:7px 9px;
@@ -671,6 +686,8 @@
     #atelierBlueprintScan, #atelierBlueprintCopy, #atelierBlueprintPath { min-height:44px; }
     #atelierBlueprintStatus { padding:0 12px 8px; }
     #atelierBlueprintSelected { margin:0 12px 8px; }
+    #issueCodeScout { margin:0 12px 8px; }
+    #issueCodeScoutList button { width:240px; min-height:44px; }
     #atelierBlueprintOutline button { min-height:44px; }
     body.atelier-active #prompt { left: 12px; right: 94px; bottom: calc(18px + env(safe-area-inset-bottom,0px));
       max-width: none; transform: translateY(20px); font-size: 12.5px; padding: 10px 12px; }
@@ -1816,6 +1833,12 @@
     </div>
     <p id="atelierBlueprintStatus" role="status" aria-live="polite" aria-atomic="true"></p>
     <p id="atelierBlueprintSelected" aria-live="polite"></p>
+    <section id="issueCodeScout" hidden aria-labelledby="issueCodeScoutTitle">
+      <h3 id="issueCodeScoutTitle" data-i18n="issueCodeScoutTitle">먼저 살펴볼 후보 경로</h3>
+      <p id="issueCodeScoutIssue"></p>
+      <p id="issueCodeScoutStatus" role="status" aria-live="polite" aria-atomic="true"></p>
+      <ol id="issueCodeScoutList" role="list" data-i18n-aria="issueCodeScoutListAria" aria-label="먼저 살펴볼 후보 경로"></ol>
+    </section>
     <ol id="atelierBlueprintOutline" role="tree" data-i18n-aria="atelierBlueprintOutlineAria" aria-label="Projected public source tree"></ol>
     <p id="atelierBlueprintBudget" class="atelierBlueprintBudget"></p>
   </section>
@@ -2127,6 +2150,7 @@ import { clearSessionFootprints, createSessionFootprintState, sessionFootprintSc
 import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
 import { REPOSITORY_ATELIER_CHAT_LIMIT, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v1';
 import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, resolveRepositoryBlueprintFocus, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v2';
+import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from './assets/issue-code-scout.js?v=issue-code-scout-v1';
 
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
@@ -2753,6 +2777,10 @@ const I18N = {
     blueprintLinkMissing:'공유된 경로를 제한된 공개 Blueprint에서 찾지 못했습니다. 다른 경로를 선택하지 않았습니다.',
     blueprintLinkCopy:'Blueprint 링크 복사', blueprintLinkCopied:'Blueprint 링크를 복사했습니다.',
     blueprintLinkCopyFailed:'복사하지 못했습니다. 아래 URL을 선택해 직접 복사하세요.', blueprintLinkFallbackAria:'선택 가능한 Blueprint 링크',
+    issueCodeScoutTitle:'먼저 살펴볼 후보 경로', issueCodeScoutListAria:'먼저 살펴볼 후보 경로',
+    issueCodeScoutReady:'제목·라벨과 실제 경로 메타데이터의 보수적 어휘 일치 {count}개입니다. 먼저 확인할 후보일 뿐입니다.',
+    issueCodeScoutNone:'현재 Blueprint에서 보수적으로 일치하는 후보가 없습니다. Scout는 경로를 선택하지 않았습니다.',
+    issueCodeScoutCandidateAria:'후보 경로에 초점 이동: {path}',
     atelierBlueprintFolder:'폴더', atelierBlueprintFile:'파일',
     atelierBlueprintSelected:'{type} · {path}', atelierBlueprintCounts:'노드 {nodes}/{nodeCap} · 엣지 {edges}/{edgeCap} · 깊이 {depth}/4 · {bytes}',
     atelierBlueprintOmitted:' · 한도 밖 노드 {count}개', atelierBlueprintTable:'Blueprint Table · 공개 소스 지도',
@@ -3129,6 +3157,10 @@ const I18N = {
     blueprintLinkMissing:'The shared path was not found in the bounded public Blueprint. No nearby path was selected.',
     blueprintLinkCopy:'Copy Blueprint Link', blueprintLinkCopied:'Blueprint link copied.',
     blueprintLinkCopyFailed:'Copy failed. Select the URL below and copy it directly.', blueprintLinkFallbackAria:'Selectable Blueprint link',
+    issueCodeScoutTitle:'Candidate paths to inspect first', issueCodeScoutListAria:'Candidate paths to inspect first',
+    issueCodeScoutReady:'{count} conservative lexical matches from the title, labels, and actual path metadata. Inspect these candidates first.',
+    issueCodeScoutNone:'No conservative match was found in this Blueprint. Scout did not select a path.',
+    issueCodeScoutCandidateAria:'Focus candidate path: {path}',
     atelierBlueprintFolder:'Folder', atelierBlueprintFile:'File',
     atelierBlueprintSelected:'{type} · {path}', atelierBlueprintCounts:'Nodes {nodes}/{nodeCap} · edges {edges}/{edgeCap} · depth {depth}/4 · {bytes}',
     atelierBlueprintOmitted:' · {count} nodes outside the cap', atelierBlueprintTable:'Blueprint Table · public source map',
@@ -10246,6 +10278,13 @@ window.__questOpen=()=>openContributionQuestBoard('debug'); window.__questLoad=(
 window.__questSelect=(index=0)=>guideToContributionQuest(CONTRIBUTION_QUESTS.quests[index]);
 window.__questHandoff=(index=0)=>markContributionQuestHandoff(CONTRIBUTION_QUESTS.quests[index],'debug');
 window.__questClose=()=>closeContributionQuestBoard();
+if(_DIAGNOSTICS) window.__questFixture=(repoName='Repolis',title='Test main path',labels=['bug'])=>{
+  const repo=repoByKey(repoName); if(!repo) return null; const owner=repo._owner||currentUser;
+  const quest=Object.freeze({owner,repo:repo.repo,number:112,title:String(title).slice(0,180),
+    url:`https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo.repo)}/issues/112`,
+    labels:Object.freeze((Array.isArray(labels)?labels:[]).map(String).slice(0,8)),tier:'open',comments:0,assigned:false,createdAt:0,updatedAt:0});
+  CONTRIBUTION_QUESTS.active=quest; return {owner:quest.owner,repo:quest.repo,number:quest.number,title:quest.title,labels:[...quest.labels]};
+};
 renderContributionQuestBoard();
 /*CONTRIBUTION_QUESTS:END*/
 
@@ -12539,7 +12578,9 @@ const atelierFade=document.getElementById('atelierFade'),atelierHud=document.get
   atelierBlueprintPath=document.getElementById('atelierBlueprintPath'),atelierBlueprintLinkFallback=document.getElementById('atelierBlueprintLinkFallback'),
   atelierBlueprintShareStatus=document.getElementById('atelierBlueprintShareStatus'),
   atelierBlueprintStatus=document.getElementById('atelierBlueprintStatus'),atelierBlueprintSelected=document.getElementById('atelierBlueprintSelected'),
-  atelierBlueprintOutline=document.getElementById('atelierBlueprintOutline'),atelierBlueprintBudget=document.getElementById('atelierBlueprintBudget');
+  atelierBlueprintOutline=document.getElementById('atelierBlueprintOutline'),atelierBlueprintBudget=document.getElementById('atelierBlueprintBudget'),
+  issueCodeScout=document.getElementById('issueCodeScout'),issueCodeScoutIssue=document.getElementById('issueCodeScoutIssue'),
+  issueCodeScoutStatus=document.getElementById('issueCodeScoutStatus'),issueCodeScoutList=document.getElementById('issueCodeScoutList');
 
 function repositoryAtelierActive(){ return !!REPOSITORY_ATELIER&&REPOSITORY_ATELIER.state!=='outside'; }
 function repositoryAtelierTransitioning(){ return !!REPOSITORY_ATELIER&&(REPOSITORY_ATELIER.state==='entering'||REPOSITORY_ATELIER.state==='exiting'); }
@@ -12576,7 +12617,7 @@ function _atelierMesh(geometry,material){ return new THREE.Mesh(_atelierTrackGeo
 function _repositoryBlueprintState(){
   return {cache:createRepositoryBlueprintMemoryCache(),target:null,status:'idle',projection:null,selected:-1,panelOpen:false,
     previousFocus:null,controller:null,scanId:0,requestsStarted:0,decodedBytes:0,lastResult:null,cameraOnOpen:null,cameraUnchanged:null,
-    deepLink:null,shareUrl:'',shareStatus:null};
+    deepLink:null,shareUrl:'',shareStatus:null,scout:null};
 }
 function _atelierCanvas(width,height,name){
   const canvas=document.createElement('canvas'); canvas.width=width; canvas.height=height; canvas.dataset.atelier=name;
@@ -12860,7 +12901,8 @@ function _syncRepositoryBlueprintSelection(focusDom=false){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint,projection=B&&B.projection;
   if(!projection||!projection.nodes.length||B.selected<0){
     atelierBlueprintSelected.hidden=true; atelierBlueprintPath.hidden=true; _resetRepositoryBlueprintShare();
-    atelierBlueprintOutline.querySelectorAll('[data-blueprint-index]').forEach(button=>button.setAttribute('aria-current','false')); return;
+    atelierBlueprintOutline.querySelectorAll('[data-blueprint-index]').forEach(button=>button.setAttribute('aria-current','false'));
+    _syncIssueCodeScoutSelection(''); return;
   }
   const index=Math.max(0,Math.min(projection.nodes.length-1,B.selected)),node=projection.nodes[index];
   B.selected=index; atelierBlueprintSelected.hidden=false; atelierBlueprintSelected.textContent=tf('atelierBlueprintSelected',{
@@ -12874,6 +12916,7 @@ function _syncRepositoryBlueprintSelection(focusDom=false){
   atelierBlueprintOutline.querySelectorAll('[data-blueprint-index]').forEach(button=>{
     button.setAttribute('aria-current',button.dataset.blueprintIndex===String(index)?'true':'false');
   });
+  _syncIssueCodeScoutSelection(node.path);
   if(focusDom){ requestAnimationFrame(()=>{ const button=atelierBlueprintOutline.querySelector(`[data-blueprint-index="${index}"]`);
     if(button){ button.focus({preventScroll:true}); button.scrollIntoView({block:'nearest'}); } }); }
 }
@@ -12903,6 +12946,39 @@ async function _copyRepositoryBlueprintDeepLink(){
   requestAnimationFrame(()=>{ atelierBlueprintLinkFallback.focus(); atelierBlueprintLinkFallback.select(); });
   return false;
 }
+function _clearIssueCodeScoutDom(){
+  issueCodeScout.hidden=true; issueCodeScoutIssue.textContent=''; issueCodeScoutStatus.textContent=''; issueCodeScoutList.replaceChildren();
+}
+function _resetIssueCodeScout(){
+  const B=REPOSITORY_ATELIER&&REPOSITORY_ATELIER.blueprint;if(B) B.scout=null; _clearIssueCodeScoutDom();
+}
+function _syncIssueCodeScoutSelection(path=''){
+  issueCodeScoutList.querySelectorAll('[data-scout-path]').forEach(button=>{
+    button.setAttribute('aria-current',button.dataset.scoutPath===path?'true':'false');
+  });
+}
+function _renderIssueCodeScout(){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint,quest=CONTRIBUTION_QUESTS.active;
+  if(!B||!B.projection||!quest){ _resetIssueCodeScout(); return; }
+  const result=scoutIssueCodePaths(quest,B.projection); B.scout=result; _clearIssueCodeScoutDom();
+  if(!result.ok) return;
+  issueCodeScout.hidden=false; issueCodeScoutIssue.textContent=`${quest.repo} #${quest.number} · ${quest.title}`;
+  issueCodeScoutStatus.textContent=result.reason==='ready'?tf('issueCodeScoutReady',{count:result.candidates.length}):t('issueCodeScoutNone');
+  const fragment=document.createDocumentFragment();
+  result.candidates.forEach(candidate=>{
+    const item=document.createElement('li'),button=document.createElement('button'); button.type='button';
+    button.dataset.scoutPath=candidate.path; button.textContent=candidate.path; button.title=candidate.path;
+    button.setAttribute('aria-label',tf('issueCodeScoutCandidateAria',{path:candidate.path})); item.appendChild(button); fragment.appendChild(item);
+  });
+  issueCodeScoutList.appendChild(fragment);
+  const selected=B.selected>=0?B.projection.nodes[B.selected]?.path:''; _syncIssueCodeScoutSelection(selected||'');
+}
+function _focusIssueCodeScoutPath(path){
+  const A=REPOSITORY_ATELIER,B=A&&A.blueprint,allowed=B&&B.scout?.candidates.some(candidate=>candidate.path===path);
+  if(!allowed||!B.projection) return false;
+  const index=B.projection.nodes.findIndex(node=>node.path===path);
+  return index>=0?_focusRepositoryBlueprintNode(index,true):false;
+}
 function _renderRepositoryBlueprintChrome(rebuildOutline=false){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!B) return;
   const projection=B.projection,status=projection&&projection.nodes.length===0?'empty':B.status;
@@ -12923,6 +12999,7 @@ function _renderRepositoryBlueprintChrome(rebuildOutline=false){
   } else {
     atelierBlueprintBudget.textContent=''; atelierBlueprintSelected.hidden=true; atelierBlueprintPath.hidden=true; _resetRepositoryBlueprintShare();
   }
+  _renderIssueCodeScout();
 }
 function _repositoryBlueprintWorldPosition(node){
   return {x:-4.75+node.layout.x*1.55,y:.83+(4-node.depth)*.018,z:1.45+node.layout.z*2.72};
@@ -12959,6 +13036,7 @@ function _clearRepositoryBlueprintVisuals(){
   A.blueprintFolders.count=0; A.blueprintFiles.count=0; A.blueprintEdges.geometry.setDrawRange(0,0); A.blueprintGroup.visible=false;
   B.projection=null; B.selected=-1; B.visuals=[]; B.folderNodeIndexes=[]; B.fileNodeIndexes=[];
   B.render={nodes:0,edges:0,instancedBatches:0,lineSegments:0,drawCalls:0,atlases:0};
+  _resetIssueCodeScout();
 }
 function _repositoryBlueprintCameraSnapshot(){
   return {position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),yaw:camYaw,pitch:camPitch,distance:camDist};
@@ -13372,6 +13450,8 @@ atelierBlueprintToggle.addEventListener('click',event=>{ event.stopPropagation()
 atelierBlueprintClose.addEventListener('click',event=>{ event.stopPropagation(); _closeRepositoryBlueprint(); });
 atelierBlueprintScan.addEventListener('click',event=>{ event.stopPropagation(); _scanRepositoryBlueprint(); });
 atelierBlueprintCopy.addEventListener('click',event=>{ event.stopPropagation(); _copyRepositoryBlueprintDeepLink(); });
+issueCodeScoutList.addEventListener('click',event=>{ const button=event.target.closest?.('[data-scout-path]');
+  if(button){ event.stopPropagation(); _focusIssueCodeScoutPath(button.dataset.scoutPath); } });
 atelierBlueprintOutline.addEventListener('focusin',event=>{ const button=event.target.closest?.('[data-blueprint-index]');
   if(button) _focusRepositoryBlueprintNode(Number(button.dataset.blueprintIndex),false); });
 atelierBlueprintOutline.addEventListener('click',event=>{ const button=event.target.closest?.('[data-blueprint-index]');
@@ -13401,6 +13481,8 @@ function _repositoryAtelierDebug(){
       omittedNodes:A.blueprint.projection?.counts.omittedNodes||0,selectedPath:A.blueprint.projection?.nodes[A.blueprint.selected]?.path||null,
       cache:A.blueprint.cache.snapshot(),render:A.blueprint.render||null,cameraUnchanged:A.blueprint.cameraUnchanged,
       deepLink:A.blueprint.deepLink,shareUrl:A.blueprint.shareUrl,shareStatus:A.blueprint.shareStatus,
+      scout:A.blueprint.scout?{ok:A.blueprint.scout.ok,reason:A.blueprint.scout.reason,issueNumber:A.blueprint.scout.issueNumber||null,
+        candidates:A.blueprint.scout.candidates.map(candidate=>candidate.path),limit:ISSUE_CODE_SCOUT_LIMITS.maxCandidates}:null,
       limits:{nodeCap:A.blueprint.nodeCap,edgeCap:A.blueprint.edgeCap,decodedBytes:REPOSITORY_BLUEPRINT_LIMITS.maxDecodedBytes,
         timeoutMs:REPOSITORY_BLUEPRINT_LIMITS.timeoutMs,drawCalls:REPOSITORY_BLUEPRINT_LIMITS.additionalDrawCalls,atlases:REPOSITORY_BLUEPRINT_LIMITS.canvasAtlases}},
     chat:repositoryAtelierChatSnapshot(A.chat),
@@ -13410,7 +13492,7 @@ function _repositoryAtelierDebug(){
 }
 if(_DIAGNOSTICS){
   window.__repositoryAtelier=()=>_repositoryAtelierDebug();
-  window.__atelierEnter=name=>{ const repo=repoByKey(name); return repo?{ok:enterRepositoryAtelier(repo),repo:repo.repo}:null; };
+  window.__atelierEnter=(name,options={})=>{ const repo=repoByKey(name); return repo?{ok:enterRepositoryAtelier(repo,options),repo:repo.repo}:null; };
   window.__atelierExit=()=>{ const ok=exitRepositoryAtelier(); return {ok,state:REPOSITORY_ATELIER&&REPOSITORY_ATELIER.state}; };
   window.__atelierMove=(x=0,z=0)=>{ if(!REPOSITORY_ATELIER||!REPOSITORY_ATELIER.renderInterior) return null; player.position.set(THREE.MathUtils.clamp(x,-7.1,7.1),0,THREE.MathUtils.clamp(z,-9.7,9.7)); return _repositoryAtelierDebug(); };
   window.__atelierSelect=kind=>{ const A=REPOSITORY_ATELIER;if(!A||!A.renderInterior) return null; if(kind==='exit') player.position.copy(A.exitPosition);
@@ -13422,6 +13504,8 @@ if(_DIAGNOSTICS){
   window.__atelierBlueprintScan=()=>_scanRepositoryBlueprint();
   window.__atelierBlueprintFocus=index=>_focusRepositoryBlueprintNode(Number(index),true);
   window.__atelierBlueprintRestore=path=>{ const ok=_restoreRepositoryBlueprintDeepLinkFocus(String(path||'')); _renderRepositoryBlueprintChrome(true); return {ok,blueprint:_repositoryAtelierDebug().blueprint}; };
+  window.__issueCodeScout=()=>_repositoryAtelierDebug().blueprint.scout;
+  window.__issueCodeScoutFocus=path=>({ok:_focusIssueCodeScoutPath(String(path||'')),blueprint:_repositoryAtelierDebug().blueprint});
   window.__atelierBlueprintPoint=index=>{ const A=REPOSITORY_ATELIER,visual=A&&A.blueprint?.visuals?.[Number(index)]; if(!visual) return null;
     const point=new THREE.Vector3(visual.x,visual.y,visual.z).project(camera),rect=dom.getBoundingClientRect();
     return {x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2,path:A.blueprint.projection.nodes[Number(index)].path}; };

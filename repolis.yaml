@@ -60,6 +60,7 @@ entrypoints:
   repo_portal: assets/repo-portal.js
   repo_route: assets/repo-route.js
   contribution_quests: assets/contribution-quests.js
+  issue_code_scout: assets/issue-code-scout.js
   elder_lore: assets/lore-fragments.js
   taxi_voice: assets/taxi-voice.js
   session_footprints: assets/session-footprints.js
