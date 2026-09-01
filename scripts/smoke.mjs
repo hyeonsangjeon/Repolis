@@ -22,6 +22,7 @@ import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
 import { runRepositoryAtelierChatTests } from './test-repository-atelier-chat.mjs';
 import { runRepositoryBlueprintTests } from './test-repository-blueprint.mjs';
+import { runIssueCodeScoutTests } from './test-issue-code-scout.mjs';
 import { runTaxiBoundaryTests } from './test-taxi-boundary.mjs';
 import { runTaxiVoiceTests } from './test-taxi-voice.mjs';
 import {
@@ -72,6 +73,7 @@ import {
   projectContributionQuest,
   selectContributionQuests
 } from '../assets/contribution-quests.js';
+import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from '../assets/issue-code-scout.js';
 import {
   WEAR_THRESHOLDS_DAYS,
   REPO_NEWCOMER_DAYS,
@@ -142,6 +144,7 @@ const TOWN_GROWTH_SRC = readFileSync(join(ROOT, 'assets/town-growth.js'), 'utf8'
 const REPO_PORTAL_SRC = readFileSync(join(ROOT, 'assets/repo-portal.js'), 'utf8');
 const REPO_ROUTE_SRC = readFileSync(join(ROOT, 'assets/repo-route.js'), 'utf8');
 const CONTRIBUTION_QUEST_SRC = readFileSync(join(ROOT, 'assets/contribution-quests.js'), 'utf8');
+const ISSUE_CODE_SCOUT_SRC = readFileSync(join(ROOT, 'assets/issue-code-scout.js'), 'utf8');
 const CITY_TIME_SRC = readFileSync(join(ROOT, 'assets/city-time.js'), 'utf8');
 const WORLD_TREE_STATE_SRC = readFileSync(join(ROOT, 'assets/world-tree/world-tree-state.js'), 'utf8');
 const SESSION_FOOTPRINT_SRC = readFileSync(join(ROOT, 'assets/session-footprints.js'), 'utf8');
@@ -1407,10 +1410,51 @@ ok(/current public issues ranked for approachability, each connected to its real
   &&/\| Open Source Quest Board \| 5 \| 5 \| 5 \| 4 \| 3 \| \*\*22\*\* \|/.test(CHANGELOG),
   'READMEs, domain model, limitations, manifest, LLM index, and scored BOLT decision make the contribution loop discoverable');
 
+group('Issue-to-Code Scout — bounded Quest-to-path candidates');
+runIssueCodeScoutTests(ok);
+const issueCodeScoutRuntime=(HTML.match(/function _clearIssueCodeScoutDom\(\)\{[\s\S]*?(?=\nfunction _renderRepositoryBlueprintChrome)/)||[''])[0];
+ok(ISSUE_CODE_SCOUT_LIMITS.maxCandidates===5&&typeof scoutIssueCodePaths==='function'
+  &&ISSUE_CODE_SCOUT_SRC.length<12000
+  &&!/\bwindow\.|\bdocument\.|fetch\(|WebSocket|localStorage|sessionStorage|Date\.|performance\.|Math\.random|setTimeout|setInterval/.test(ISSUE_CODE_SCOUT_SRC),
+  'the pure Scout is small, five-capped, and independent of network, storage, DOM, clock, and random state');
+ok(/from '\.\/assets\/issue-code-scout\.js\?v=issue-code-scout-v1'/.test(HTML)
+  &&/id="issueCodeScout" hidden aria-labelledby="issueCodeScoutTitle"/.test(HTML)
+  &&/id="issueCodeScoutStatus" role="status" aria-live="polite" aria-atomic="true"/.test(HTML)
+  &&/id="issueCodeScoutList" role="list" data-i18n-aria="issueCodeScoutListAria"/.test(HTML),
+  'the existing Blueprint panel owns one labelled, live, accessible Scout strip');
+ok(/const A=REPOSITORY_ATELIER,B=A&&A\.blueprint,quest=CONTRIBUTION_QUESTS\.active/.test(issueCodeScoutRuntime)
+  &&/if\(!B\|\|!B\.projection\|\|!quest\)\{ _resetIssueCodeScout\(\); return; \}/.test(issueCodeScoutRuntime)
+  &&/const result=scoutIssueCodePaths\(quest,B\.projection\)/.test(issueCodeScoutRuntime)
+  &&!/fetch\(|loadContributionQuests|scanRepositoryBlueprint|track\(|localStorage|sessionStorage|new THREE/.test(issueCodeScoutRuntime),
+  'Scout consumes only the active sanitized Quest and already-loaded current Blueprint projection');
+ok(/B\.scout\?\.candidates\.some\(candidate=>candidate\.path===path\)/.test(issueCodeScoutRuntime)
+  &&/B\.projection\.nodes\.findIndex\(node=>node\.path===path\)/.test(issueCodeScoutRuntime)
+  &&/_focusRepositoryBlueprintNode\(index,true\)/.test(issueCodeScoutRuntime)
+  &&/button\.dataset\.scoutPath=candidate\.path/.test(issueCodeScoutRuntime),
+  'candidate activation exact-matches a projected path and reuses Blueprint DOM/3D focus and path actions');
+ok(/function _clearRepositoryBlueprintVisuals\(\)[\s\S]*?_resetIssueCodeScout\(\)/.test(HTML)
+  &&/function _resetRepositoryBlueprintVisit\(\)[\s\S]*?_clearRepositoryBlueprintVisuals\(\)/.test(HTML)
+  &&/scout:null/.test(HTML),
+  'Scout state lives only in the current Blueprint visit and resets on repository bind or Atelier exit');
+ok(/#issueCodeScoutList \{[^}]*overflow-x:auto/.test(HTML)
+  &&/#issueCodeScoutList button \{[^}]*width:220px[^}]*min-height:40px/.test(HTML)
+  &&/#issueCodeScoutList button \{ width:240px; min-height:44px; \}/.test(HTML),
+  'desktop and 390px candidate controls remain bounded, scrollable, and touch-sized');
+['issueCodeScoutTitle','issueCodeScoutListAria','issueCodeScoutReady','issueCodeScoutNone','issueCodeScoutCandidateAria']
+  .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Issue-to-Code Scout key ${key} is bilingual`));
+ok(/먼저 살펴볼 후보 경로/.test(HTML)&&/Candidate paths to inspect first/.test(HTML)
+  &&!/관련 파일|수정 위치|code owner|runtime architecture/i.test(issueCodeScoutRuntime),
+  'Scout copy stays candidate-only and makes no file relationship, modification, ownership, or architecture claim');
+ok(/Issue-to-Code Scout/.test(README_EN)&&/Issue-to-Code Scout/.test(README_KO)
+  &&/Issue-to-Code Scout/.test(DOMAIN_MODEL)&&/Issue-to-Code Scout/.test(KNOWN_LIMITATIONS)
+  &&/issue_code_scout: assets\/issue-code-scout\.js/.test(MANIFEST)
+  &&/assets\/issue-code-scout\.js/.test(LLMS_INDEX)&&/Issue-to-Code Scout/.test(AGENTS_GUIDE),
+  'Scout boundaries and entry points stay discoverable in public and agent-facing docs');
+
 const runtimeLocalFiles = [
   'index.html','repolis.config.js','scholars.js','repos.json','data/city-state.json','assets/contribution-library.json',
   'assets/world-tree/createRepolisHero.js','assets/camera-obstruction.js','assets/canal-ferry.js',
-  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js','assets/repo-route.js','assets/contribution-quests.js','assets/city-time.js',
+  'assets/public-town-proof.js','assets/rain-garden.js','assets/town-postcard.js','assets/twin-towns.js','assets/town-creator.js','assets/town-growth.js','assets/repo-portal.js','assets/repo-route.js','assets/contribution-quests.js','assets/issue-code-scout.js','assets/city-time.js',
   'council/council.config.json','council/engine.js','council/fixtures.js','council/guards.js','council/live.js'
 ];
 const runtimeLocalBytes = runtimeLocalFiles.reduce((sum,file)=>sum+readFileSync(join(ROOT,file)).length,0);

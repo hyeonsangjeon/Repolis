@@ -461,6 +461,20 @@ persistent instance identity.
 The feature adds no Three.js object, texture, light, storage key, dependency, startup network request, or
 recurring timer. Its only network work is the visitor-triggered public search.
 
+### Issue-to-Code Scout
+
+[`assets/issue-code-scout.js`](../assets/issue-code-scout.js) accepts only the current sanitized Quest and an
+already explicitly loaded Repository Blueprint projection for the same exact owner/repo. It tokenizes the
+issue title and labels, compares meaningful exact lexical evidence with existing path, basename, group, type,
+and category metadata, deduplicates actual paths, and returns at most five deterministically ordered
+candidates.
+
+The Scout result is current-Atelier visit memory only. A repository rebind or Atelier exit clears it. Candidate
+buttons call the existing exact Blueprint DOM/3D focus helper, so the already-bound GitHub path and Blueprint
+link actions update without another request. Cross-repository or unsafe paths fail closed; generic or
+zero-overlap input produces a factual no-match state with no selected path. Scout does not read issue bodies,
+infer modification locations or ownership, add analytics, or claim runtime architecture.
+
 ---
 
 ## 14. Repository Atelier
