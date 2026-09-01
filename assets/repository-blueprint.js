@@ -115,6 +115,18 @@ export function createRepositoryBlueprintPathUrl(value, node) {
   return `https://github.com/${encodeURIComponent(target.owner)}/${encodeURIComponent(target.repo)}/${route}/${encodeURIComponent(target.defaultBranch)}/${path}`;
 }
 
+export function resolveRepositoryBlueprintFocus(projection, value, path) {
+  const target = validateRepositoryBlueprintTarget(value);
+  if (!target.ok) return invalidTarget(target.reason);
+  if (!projection || !Array.isArray(projection.nodes) || !projection.target) return invalidTarget('projection');
+  const projectionTarget = validateRepositoryBlueprintTarget(projection.target);
+  if (!projectionTarget.ok || projectionTarget.key !== target.key) return invalidTarget('scope_mismatch');
+  if (!validPath(path)) return invalidTarget('path');
+  const index = projection.nodes.findIndex(node => node.path === path);
+  if (index < 0) return Object.freeze({ ok: false, reason: 'missing', index: -1, node: null });
+  return Object.freeze({ ok: true, index, node: projection.nodes[index] });
+}
+
 function apiRepositoryScope(value, target, expectedKind = null) {
   try {
     const url = new URL(String(value || ''));

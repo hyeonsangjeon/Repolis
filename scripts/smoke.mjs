@@ -48,14 +48,17 @@ import { createTwinTownLink, createTwinTownMatch, summarizeTwinTown } from '../a
 import { selectTownCreatorFields, summarizeTownCreator } from '../assets/town-creator.js';
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from '../assets/town-growth.js';
 import {
+  BLUEPRINT_DEEP_LINK_LIMITS,
   REPO_PORTAL_LIMITS,
   createRepoOwnerTownUrl,
   createRepoPortalUrl,
+  createRepositoryBlueprintDeepLink,
   parseRepoPortalInput,
   projectPublicRepo,
   projectPublicRepos,
   repoPortalLatencyBucket,
-  resolveRepoPortalRequest
+  resolveRepoPortalRequest,
+  resolveRepositoryBlueprintDeepLink
 } from '../assets/repo-portal.js';
 import {
   REPO_ROUTE_LIMITS,
@@ -263,7 +266,7 @@ ok(/introProfileStatus\.textContent=introProfileResult\?t\(introProfileResult\.k
   && (HTML.match(/introPinProfile:'/g)||[]).length===2 && (HTML.match(/introProfileCopied:/g)||[]).length===2
   && /window\.__introCopyProfile=\(\)=>copyIntroProfileReadme\(\)/.test(HTML), 'copy feedback is text-only, bilingual, language-refreshable, and browser-diagnosable');
 ok(/\.introProofActions \{[^}]*display: flex[^}]*flex-wrap: wrap/.test(HTML)
-  && /\.introProofActions button \{[^}]*flex: 1 1 150px[^}]*min-height: 44px/.test(HTML), 'the ready-state actions stay stable, touch-sized, and wrap instead of overflowing on mobile');
+  && /\.introProofActions button, \.introProofActions a \{[^}]*flex: 1 1 150px[^}]*min-height: 44px/.test(HTML), 'the ready-state actions stay stable, touch-sized, and wrap instead of overflowing on mobile');
 ok(/document\.getElementById\('startBtn'\)\.onclick=[\s\S]*?showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/.test(HTML)
   && /if\(!rb&&!_reqFocus\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
   && (HTML.match(/showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/g)||[]).length===1,
@@ -729,7 +732,7 @@ ok(repoPortalLatencyBucket(999)==='under-1s'&&repoPortalLatencyBucket(1000)==='1
 
 const portalLoader=(HTML.match(/let _ownerSnapshotPromise=null;[\s\S]*?(?=\ntrack\('page_load'\);)/)||[''])[0];
 const portalTargetLoader=(portalLoader.match(/async function _loadRepoPortalTarget\(target\)\{[\s\S]*?\n\}/)||[''])[0];
-ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v1'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v2'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
   'the zero-build runtime imports one small dedicated Portal module');
 ok(!/document|window|localStorage|sessionStorage|fetch\(|Math\.random|THREE/.test(REPO_PORTAL_SRC),
   'parser, canonicalizer, projection, and link builders stay pure and browser-independent');
@@ -772,7 +775,7 @@ ok(/target=parseRepoPortalInput\(input\.value\)/.test(HTML)
   &&/createRepoPortalUrl\(target,location\.href\)/.test(HTML),
   'both entry surfaces use the same strict resolver and canonical link builder');
 ok(/const portalRepo=cityMode==='portal'[\s\S]*?introPortalReady[\s\S]*?introPortalStats/.test(HTML)
-  &&/introProofActions\.hidden=portalReady/.test(HTML)&&/introTourBtn\.hidden=portalReady/.test(HTML),
+  &&/introProofActions\.hidden=!publicReady&&!blueprintReady/.test(HTML)&&/introTourBtn\.hidden=portalReady\|\|routeReady/.test(HTML),
   'a loaded target replaces generic actions with one concise repo proof and one exhibition CTA');
 ok(/if\(cityMode==='portal'&&repoPortalTarget\)[\s\S]*?enterRepositoryAtelier\(repo\)/.test(HTML)
   &&/else if\(_reqFocus\)[\s\S]*?enterRepositoryAtelier\(repo\)/.test(HTML),
@@ -828,6 +831,52 @@ ok(/## 11\. Repo Portal/.test(DOMAIN_MODEL)&&/Public API modes do not have traff
   &&/assets\/repo-portal\.js/.test(AGENTS_GUIDE)&&/id: repo-portal/.test(MANIFEST)
   &&/Repo Portal: `\?repo=owner\/repo/.test(LLMS_INDEX)&&/\[1\.87\.0\]/.test(CHANGELOG),
   'domain, limitations, agent guide, manifest, LLM index, and changelog stay in sync');
+
+group('Blueprint Deep Link — exact public source landmarks');
+const blueprintDeepUrl=createRepositoryBlueprintDeepLink('hyeonsangjeon/Repolis','src/agents','https://example.test/Repolis/?old=1#repo=x');
+const blueprintDeepResolved=resolveRepositoryBlueprintDeepLink(new URL(blueprintDeepUrl).search);
+ok(BLUEPRINT_DEEP_LINK_LIMITS.maxDecodedPathBytes===512
+  &&blueprintDeepUrl==='https://example.test/Repolis/?repo=hyeonsangjeon/Repolis&view=blueprint&path=src%2Fagents&ref=blueprint'
+  &&blueprintDeepResolved.ok&&blueprintDeepResolved.target.slug==='hyeonsangjeon/Repolis'&&blueprintDeepResolved.path==='src/agents',
+  'canonical links preserve one exact repo and a 512-byte-capped public relative path');
+ok(!resolveRepositoryBlueprintDeepLink('?repo=hyeonsangjeon/Repolis&view=blueprint&path=src%2F..%2Fsecret&ref=blueprint').ok
+  &&!resolveRepositoryBlueprintDeepLink('?repo=hyeonsangjeon/Repolis&view=blueprint&path=src%2Fagents&ref=blueprint&user=other').ok,
+  'traversal and extra query state fail closed instead of composing another route');
+const blueprintDeepIntro=(HTML.match(/function blueprintDeepLinkRepo\(\)\{[\s\S]*?(?=\nconst introLaunch=)/)||[''])[0];
+ok(/const BLUEPRINT_DEEP_LINK = resolveRepositoryBlueprintDeepLink\(location\.search,location\.hash\)/.test(HTML)
+  &&/id="introBlueprintLoad"[\s\S]*?id="introBlueprintGithub"[\s\S]*?id="introBlueprintTown"/.test(HTML)
+  &&/classList\.toggle\('blueprint-link',blueprintReady\)/.test(HTML)
+  &&/#intro\.blueprint-link \.ctrls, #intro\.blueprint-link #startBtn \{ display:none; \}/.test(HTML)
+  &&/if\(blueprintReady\)\{[\s\S]*?blueprintLinkTitle[\s\S]*?blueprintLinkFocus[\s\S]*?blueprintLinkLoad/.test(HTML),
+  'cold recipients reuse the existing intro for repo, focus, public-path notice, Load, GitHub, and town choices');
+ok(/blueprintPath=!blueprintDeepLinkBypass&&blueprintDeepLinkRepo\(\)\?BLUEPRINT_DEEP_LINK\.path:null/.test(blueprintDeepIntro)
+  &&/enterRepositoryAtelier\(repo,blueprintPath\?\{autoChat:false,blueprintPath\}:\{\}\)/.test(blueprintDeepIntro)
+  &&/introBlueprintLoad\.onclick=\(\)=>introStartBtn\.click\(\)/.test(HTML)
+  &&/introBlueprintTown\.onclick=\(\)=>\{ blueprintDeepLinkBypass=true; introStartBtn\.click\(\); \}/.test(HTML)
+  &&!/scanRepositoryBlueprint|fetch\(/.test(blueprintDeepIntro),
+  'boot and confirmation stay request-free; only the explicit Load action queues the exact path');
+ok(/id="atelierBlueprintCopy"[^>]*hidden/.test(HTML)
+  &&/id="atelierBlueprintLinkFallback" type="text" readonly hidden/.test(HTML)
+  &&/function _copyRepositoryBlueprintDeepLink\(\)[\s\S]*?atelierBlueprintLinkFallback\.select\(\)/.test(HTML)
+  &&!/function _copyRepositoryBlueprintDeepLink\(\)[\s\S]*?track\(/.test(HTML.match(/function _copyRepositoryBlueprintDeepLink\(\)[\s\S]*?(?=\nfunction _renderRepositoryBlueprintChrome)/)?.[0]||''),
+  'focused nodes expose canonical copy and GitHub actions with a selectable non-telemetry fallback');
+ok(/resolveRepositoryBlueprintFocus\(B\.projection,B\.target,path\)/.test(HTML)
+  &&/resolved\.reason==='missing'\?'path_missing'/.test(HTML)
+  &&/B\.selected=-1/.test(HTML)
+  &&/_focusRepositoryBlueprintNode\(resolved\.index,true\)/.test(HTML),
+  'recipient focus restores the exact accessible node while a missing path selects nothing');
+ok(/#atelierBlueprintScan, #atelierBlueprintCopy, #atelierBlueprintPath \{ min-height:44px; \}/.test(HTML)
+  &&/#atelierBlueprintPanel \{ top:auto; left:10px; right:10px; bottom:calc\(10px/.test(HTML),
+  '390px Blueprint share controls stay touch-sized inside the existing bounded panel');
+['blueprintLinkTitle','blueprintLinkFocus','blueprintLinkPublic','blueprintLinkLoad','blueprintLinkOpenGithub',
+  'blueprintLinkEnterTown','blueprintLinkInvalid','blueprintLinkMissing','blueprintLinkCopy','blueprintLinkCopied',
+  'blueprintLinkCopyFailed','blueprintLinkFallbackAria']
+  .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Blueprint Deep Link key ${key} is bilingual`));
+ok(/Blueprint Deep Link/.test(README_EN)&&/Blueprint Deep Link/.test(README_KO)
+  &&/view=blueprint/.test(REPO_PORTAL_GUIDE)&&/512 bytes/.test(REPO_PORTAL_GUIDE)
+  &&/Blueprint Deep Link/.test(DOMAIN_MODEL)&&/shared\s+Blueprint path/.test(KNOWN_LIMITATIONS)
+  &&/Blueprint Deep Link/.test(AGENTS_GUIDE)&&/Blueprint Deep Link/.test(LLMS_INDEX),
+  'public docs record the canonical URL, bounded privacy contract, and explicit request gate');
 
 group('Intent Lens — three goals reuse existing navigation');
 const intentLensSrc=(HTML.match(/\/\*INTENT_LENS:START\*\/([\s\S]*?)\/\*INTENT_LENS:END\*\//)||[,''])[1];
@@ -2092,7 +2141,7 @@ const atelierBindSrc=(atelierSrc.match(/function _bindRepositoryAtelier\(repo\)\
 const blueprintSrc=(atelierSrc.match(/function _repositoryBlueprintTarget\(repo\)\{[\s\S]*?(?=\nfunction _bindRepositoryAtelier)/)||[''])[0];
 const blueprintCreateSrc=(atelierCreateSrc.match(/const blueprintCapacityCompact=[\s\S]*?(?=\n  A\.avatar=model\.clone)/)||[''])[0];
 const blueprintOpenSrc=(blueprintSrc.match(/function _openRepositoryBlueprint\(focusSelected=false\)\{[\s\S]*?(?=\nfunction _closeRepositoryBlueprint)/)||[''])[0];
-const blueprintScanSrc=(blueprintSrc.match(/async function _scanRepositoryBlueprint\(\)\{[\s\S]*?(?=\nfunction _resetRepositoryBlueprintVisit)/)||[''])[0];
+const blueprintScanSrc=(blueprintSrc.match(/async function _scanRepositoryBlueprint\(requestedPath=''\)\{[\s\S]*?(?=\nfunction _resetRepositoryBlueprintVisit)/)||[''])[0];
 await runRepositoryAtelierChatTests(ok);
 await runRepositoryBlueprintTests(ok);
 ok(atelierSrc.length>0, 'atelier runtime is a bounded, extractable integration block');
@@ -2163,8 +2212,9 @@ ok(/atelierBlueprintScan\.addEventListener\('click'[\s\S]*?_scanRepositoryBluepr
   &&!/scanRepositoryBlueprint\(/.test(blueprintOpenSrc)
   &&!/scanRepositoryBlueprint\(/.test((atelierSrc.match(/function enterRepositoryAtelier\(repo,options=\{\}\)\{[\s\S]*?(?=\nfunction _activateRepositoryAtelier)/)||[''])[0])
   &&/await scanRepositoryBlueprint\(B\.target,\{compact:B\.compact,signal:controller\.signal\}\)/.test(blueprintScanSrc)
+  &&/if\(!A\.pendingExit&&A\.blueprintDeepLinkPath\)[\s\S]*?_scanRepositoryBlueprint\(path\)/.test(atelierSrc)
   &&!/fetch\(/.test(blueprintSrc),
-  'only the explicit Blueprint scan starts its single pure-module request; entry and panel reopen stay silent');
+  'only Scan or a confirmed deep link starts the single pure-module request; entry and panel reopen stay silent');
 ok((blueprintCreateSrc.match(/new THREE\.InstancedMesh/g)||[]).length===2
   &&(blueprintCreateSrc.match(/new THREE\.LineSegments/g)||[]).length===1
   &&!/CanvasTexture|new THREE\.(?:PointLight|HemisphereLight|DirectionalLight|SpotLight)/.test(blueprintCreateSrc)

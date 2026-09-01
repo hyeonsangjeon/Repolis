@@ -29,6 +29,7 @@ already has an audience instead of asking people to share Repolis as a destinati
 | Purpose | URL |
 |---|---|
 | Canonical repository entry | `?repo=owner/repo&ref=repo-portal` |
+| Canonical Blueprint landmark | `?repo=owner/repo&view=blueprint&path=src%2Fagents&ref=blueprint` |
 | Public owner-town expansion | `?user=owner&focus=repo&ref=repo-portal` |
 | Canonical owner-town expansion | `?focus=repo&ref=repo-portal` |
 | Existing public town | `?user=owner` |
@@ -48,6 +49,21 @@ The shared parser accepts:
 It rejects non-GitHub hosts, credentials, ports, extra path segments, query strings, fragments, encoded path
 separators, traversal, control characters, and malformed owner or repository names. Rejected input never
 starts a GitHub API request.
+
+### Blueprint Deep Link contract
+
+A focused Repository Blueprint node can be shared with exactly four query fields: `repo`, fixed
+`view=blueprint`, one encoded public relative `path`, and fixed `ref=blueprint`. The decoded path is capped at
+512 bytes. Parent or encoded traversal, absolute paths, backslashes, control characters, malformed encoding,
+empty path segments, duplicate fields, and every unrelated query field are rejected.
+
+Opening the link reuses Repo Portal's exact public repository load, then shows a lightweight confirmation with
+the repository and focus path. This confirmation makes zero GitHub Tree requests. Only **Load public
+Blueprint** enters the existing Atelier and starts Repository Blueprint's one bounded Tree request. The
+fetched projection must carry the same owner/repo and contain the exact path before DOM/3D focus is restored.
+A missing path selects nothing, triggers no follow-up request, and remains available for ordinary
+Atelier/town navigation. The URL never contains source contents, chat, tokens, metrics, visitor/session IDs,
+or telemetry identifiers.
 
 ## Target-first data path
 

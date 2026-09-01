@@ -5,12 +5,17 @@ export const REPO_PORTAL_LIMITS = Object.freeze({
   cacheMaxEntries: 30,
 });
 
+export const BLUEPRINT_DEEP_LINK_LIMITS = Object.freeze({
+  maxDecodedPathBytes: 512,
+});
+
 export const GITHUB_LOGIN_RE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
 export const GITHUB_REPO_RE = /^[A-Za-z0-9_.-]{1,100}$/;
 
 const CONTROL_RE = /[\u0000-\u001f\u007f]/;
 const ENCODED_PATH_RE = /%(?:2e|2f|5c)/i;
 const TRAVERSAL_RE = /(?:^|\/)\.{1,2}(?:\/|$)/;
+const BLUEPRINT_QUERY_KEYS = new Set(['repo', 'view', 'path', 'ref']);
 
 function invalid(reason) {
   return Object.freeze({ ok: false, reason });
@@ -91,6 +96,87 @@ function cleanBase(baseUrl) {
 export function createRepoPortalUrl(value, baseUrl) {
   const target = repoTarget(value);
   return `${cleanBase(baseUrl)}?repo=${encodeURIComponent(target.owner)}/${encodeURIComponent(target.repo)}&ref=repo-portal`;
+}
+
+function utf8Bytes(value) {
+  return new TextEncoder().encode(value).byteLength;
+}
+
+export function validateRepositoryBlueprintPath(value) {
+  if (typeof value !== 'string' || !value) return invalid('path');
+  if (CONTROL_RE.test(value)) return invalid('control');
+  if (value.startsWith('/') || /^[A-Za-z]:\//.test(value) || value.includes('\\')) return invalid('absolute');
+  if (value.endsWith('/') || value.includes('//')) return invalid('segments');
+  if (ENCODED_PATH_RE.test(value)) return invalid('encoding');
+  const segments = value.split('/');
+  if (segments.some(segment => !segment)) return invalid('segments');
+  if (segments.some(segment => segment === '.' || segment === '..')) return invalid('traversal');
+  if (utf8Bytes(value) > BLUEPRINT_DEEP_LINK_LIMITS.maxDecodedPathBytes) return invalid('oversized');
+  return Object.freeze({ ok: true, path: value });
+}
+
+function blueprintPath(value) {
+  const result = validateRepositoryBlueprintPath(value);
+  if (!result.ok) {
+    const error = new TypeError(`Invalid Repository Blueprint path: ${result.reason}`);
+    error.code = result.reason;
+    throw error;
+  }
+  return result.path;
+}
+
+function decodeBlueprintQueryPart(value) {
+  if (value.includes('+')) return invalid('encoding');
+  try { return Object.freeze({ ok: true, value: decodeURIComponent(value) }); }
+  catch (_) { return invalid('encoding'); }
+}
+
+function parseBlueprintQuery(search) {
+  const query = String(search || '').replace(/^\?/, '');
+  if (!query || query.includes('#') || CONTROL_RE.test(query)) return invalid('parameters');
+  const values = new Map();
+  for (const pair of query.split('&')) {
+    const separator = pair.indexOf('=');
+    if (!pair || separator <= 0 || pair.indexOf('=', separator + 1) !== -1) return invalid('parameters');
+    const rawKey = decodeBlueprintQueryPart(pair.slice(0, separator));
+    const rawValue = decodeBlueprintQueryPart(pair.slice(separator + 1));
+    if (!rawKey.ok || !rawValue.ok) return invalid('encoding');
+    if (!BLUEPRINT_QUERY_KEYS.has(rawKey.value) || values.has(rawKey.value)) return invalid('parameters');
+    values.set(rawKey.value, rawValue.value);
+  }
+  if (values.size !== BLUEPRINT_QUERY_KEYS.size
+    || [...BLUEPRINT_QUERY_KEYS].some(key => !values.has(key))) return invalid('parameters');
+  return Object.freeze({ ok: true, values });
+}
+
+export function createRepositoryBlueprintDeepLink(value, path, baseUrl) {
+  const target = repoTarget(value);
+  const exactPath = blueprintPath(path);
+  return `${cleanBase(baseUrl)}?repo=${encodeURIComponent(target.owner)}/${encodeURIComponent(target.repo)}`
+    + `&view=blueprint&path=${encodeURIComponent(exactPath)}&ref=blueprint`;
+}
+
+export function resolveRepositoryBlueprintDeepLink(search, hash = '') {
+  const query = String(search || '').replace(/^\?/, '');
+  const probe = new URLSearchParams(query);
+  const requested = probe.has('view') || probe.has('path') || probe.get('ref') === 'blueprint';
+  if (!requested) return Object.freeze({ requested: false, ok: false, target: null, path: null, error: null });
+  if (String(hash || '')) return Object.freeze({ requested: true, ok: false, target: null, path: null, error: 'parameters' });
+  const parsed = parseBlueprintQuery(query);
+  if (!parsed.ok) return Object.freeze({ requested: true, ok: false, target: null, path: null, error: parsed.reason });
+  const target = parseRepoPortalInput(parsed.values.get('repo'));
+  if (!target.ok || target.kind !== 'repo') {
+    return Object.freeze({ requested: true, ok: false, target: null, path: null, error: target.reason || 'shape' });
+  }
+  if (parsed.values.get('view') !== 'blueprint') {
+    return Object.freeze({ requested: true, ok: false, target, path: null, error: 'view' });
+  }
+  if (parsed.values.get('ref') !== 'blueprint') {
+    return Object.freeze({ requested: true, ok: false, target, path: null, error: 'ref' });
+  }
+  const path = validateRepositoryBlueprintPath(parsed.values.get('path'));
+  if (!path.ok) return Object.freeze({ requested: true, ok: false, target, path: null, error: path.reason });
+  return Object.freeze({ requested: true, ok: true, target, path: path.path, error: null });
 }
 
 export function createRepoOwnerTownUrl(value, baseUrl, projectOwner = '') {

@@ -4,9 +4,15 @@ import {
   createRepositoryBlueprintPathUrl,
   createRepositoryBlueprintTreeUrl,
   projectRepositoryBlueprint,
+  resolveRepositoryBlueprintFocus,
   scanRepositoryBlueprint,
   validateRepositoryBlueprintTarget,
 } from '../assets/repository-blueprint.js';
+import {
+  BLUEPRINT_DEEP_LINK_LIMITS,
+  createRepositoryBlueprintDeepLink,
+  resolveRepositoryBlueprintDeepLink,
+} from '../assets/repo-portal.js';
 
 const TARGET = Object.freeze({
   repoName: 'hyeonsangjeon/Dataplatformfrm',
@@ -64,6 +70,41 @@ export async function runRepositoryBlueprintTests(check) {
       === 'https://github.com/hyeonsangjeon/Dataplatformfrm/blob/main/src/main.py',
   'Blueprint targets one exact public owner/repo and its known default branch');
 
+  const blueprintLink = createRepositoryBlueprintDeepLink(
+    TARGET.repoName,
+    'src/agents',
+    'https://example.test/Repolis/?old=1#repo=x',
+  );
+  const normalizedBlueprintLink = createRepositoryBlueprintDeepLink(
+    'https://github.com/hyeonsangjeon/Dataplatformfrm.git/',
+    'src/agents',
+    'https://example.test/Repolis/',
+  );
+  const resolvedBlueprintLink = resolveRepositoryBlueprintDeepLink(new URL(blueprintLink).search);
+  check(blueprintLink === 'https://example.test/Repolis/?repo=hyeonsangjeon/Dataplatformfrm&view=blueprint&path=src%2Fagents&ref=blueprint'
+    && normalizedBlueprintLink === blueprintLink
+    && resolvedBlueprintLink.ok
+    && resolvedBlueprintLink.target.slug === TARGET.repoName
+    && resolvedBlueprintLink.path === 'src/agents',
+  'Blueprint Deep Links are canonical, deterministic, and preserve exact public owner/repo plus path');
+
+  const blueprintQuery = path => `?repo=${TARGET.repoName}&view=blueprint&path=${path}&ref=blueprint`;
+  const rejectedBlueprintLinks = [
+    blueprintQuery('src%2F..%2Fsecret'),
+    blueprintQuery('src%252F..%252Fsecret'),
+    blueprintQuery('%2Fsrc%2Fagents'),
+    blueprintQuery('src%2F%00agents'),
+    blueprintQuery('%E0%A4%A'),
+    blueprintQuery(encodeURIComponent('a'.repeat(BLUEPRINT_DEEP_LINK_LIMITS.maxDecodedPathBytes + 1))),
+    blueprintQuery('src%2F%2Fagents'),
+    `${blueprintQuery('src%2Fagents')}&user=another`,
+    `${blueprintQuery('src%2Fagents')}&path=tests`,
+  ].map(resolveRepositoryBlueprintDeepLink);
+  check(rejectedBlueprintLinks.every(result => result.requested && !result.ok)
+    && !resolveRepositoryBlueprintDeepLink(blueprintQuery('src%2Fagents'), '#repo=other').ok
+    && resolveRepositoryBlueprintDeepLink('?repo=hyeonsangjeon/Repolis&ref=repo-portal').requested === false,
+  'Blueprint Deep Links reject traversal, encoded, absolute, control, malformed, over-cap, empty, extra, and duplicate input');
+
   const tree = [
     item('src', 'tree'), item('src/main.py'), item('src/internal', 'tree'), item('src/internal/load.py'),
     item('tests', 'tree'), item('tests/test_main.py'), item('docs', 'tree'), item('docs/guide.md'),
@@ -82,6 +123,17 @@ export async function runRepositoryBlueprintTests(check) {
     && !paths.has('src/internal/deep/ignored/file.py')
     && projected.counts.maxDepth === REPOSITORY_BLUEPRINT_LIMITS.maxDepth,
   'successful fixtures project stable folders, landmarks, grouping, ordering, and depth');
+
+  const exactFocus = resolveRepositoryBlueprintFocus(projected, target, 'src/internal');
+  const missingFocus = resolveRepositoryBlueprintFocus(projected, target, 'src/agents');
+  const crossRepoFocus = resolveRepositoryBlueprintFocus(projected, {
+    repoName: 'another/Dataplatformfrm',
+    defaultBranch: 'main',
+  }, 'src/internal');
+  check(exactFocus.ok && exactFocus.node.path === 'src/internal'
+    && missingFocus.reason === 'missing' && missingFocus.index === -1 && missingFocus.node === null
+    && crossRepoFocus.reason === 'scope_mismatch',
+  'deep-link focus restores only an exact bounded node and never guesses or crosses repositories');
 
   const largeTree = [];
   for (let index = 0; index < 260; index += 1) {
