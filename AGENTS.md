@@ -36,6 +36,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`data/lore/fragments.json` + `assets/lore-fragments.js`** | Hand-authored KO/EN elder fragments plus strict validation, deterministic active-roster allocation, and session-bounded delivery. | Changing The Silence fragments or their rarity/allocation contract. Never generate or overwrite the JSON. |
 | **`assets/taxi-voice.js`** | Pure local taxi Shared-state answers, household redirect, and once-per-ride seasonal/district observations. | Changing travel voice without adding a backend call. |
 | **`assets/session-footprints.js`** | Pure bounded current-tab footprint ring: movement threshold, lifetime, LOW_END/reduced-motion policy, and teardown. | Changing the local player's ephemeral walking trace. |
+| **`assets/procedural-surfaces.js`** | Pure facade/roof seed, UV phase, family, and bounded-cache contract for the shared procedural maps. | Changing repository-house material identity, tiling, or texture budgets. |
 | **`scripts/fork_lineage.py` + `assets/fork-lineage.js`** | Public-only fork source sanitizer plus deterministic six-color crest projection. | Changing generated fork source truth, lineage cards, or the shared crest batch. |
 | **`scholars.js`** | `window.SCHOLARS` roster: POLARIS · VEGA · RIGEL · MIRA · LYRA. | Adding / editing an NPC scholar. |
 | **`assets/world-tree/createRepolisHero.js`** | Procedural World Tree factory imported by `index.html`. | Changing the tree geometry, materials, sockets, or actions. |
@@ -53,6 +54,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`scripts/resident_profiles.py` + `data/residents/`** | Generates sanitized public resident profiles, the boot manifest, and the Worker authority registry. Profile JSON is generated — do not hand-edit. | Changing repository-bound resident identity or Shared/Bound inputs. |
 | **`scripts/smoke.mjs`** | Hermetic static and behavioral regression guards for the city runtime. | Any client feature, navigation, or generated-module integration change. |
 | **`scripts/test-visual-governor.mjs`** | Extracts and deterministically replays the inline adaptive visual-governor core. | Changing warm-up, thresholds, hysteresis, dwell, LOW_END/reduced-motion bounds, or recovery. |
+| **`scripts/test-procedural-surfaces.mjs`** | Hermetic seed, UV, family, bounded-cache, pixel-hash, and disposal fixtures. | Changing procedural facade/roof helpers or cache limits. |
 | **`scripts/test-portable-town.mjs`** | Deterministic fixtures for canonical, foreign, empty/archive-only, partial, missing-date, leakage, resident-cap, and zero-request portable towns. | Changing public-town projection or local resident derivation. |
 | **`.github/workflows/refresh.yml`** | "Refresh Repolis data" — daily Action that regenerates `repos.json` and pushes `chore: refresh`. | CI / data-refresh changes. |
 | **`scripts/build-contribution-library.mjs` + `assets/contribution-library.json`** | Generates the in-app **Contribution Library** JSON from the sibling `Hyeonsang-AI-Contributions` README (KO/EN); `index.html` fetches it at runtime. JSON is **generated — do not hand-edit.** Daily via `.github/workflows/update-contribution-library.yml`. | Changing the library landmark's data/source. |
@@ -138,6 +140,7 @@ python3 scripts/validate_city_state.py
 python3 scripts/test_fork_lineage.py
 node scripts/test-city-time.mjs
 node scripts/test-session-footprints.mjs
+node scripts/test-procedural-surfaces.mjs
 node scripts/test-fork-lineage.mjs
 node scripts/test-repository-atelier-chat.mjs
 node scripts/test-repository-blueprint.mjs
@@ -193,6 +196,7 @@ Tested on Node v24. There is no linter or formatter configured — match the sur
 | Change Repository Atelier room, avatar, data walls, action terminals, or scoped chat | `assets/repository-atelier-chat.js` + `cloudflare-taxi/src/repository-atelier.js` + `/*REPOSITORY_ATELIER*/` in `index.html` + the Atelier group in `scripts/smoke.mjs`; preserve one lazy reusable room, three bounded canvas atlases, exact exterior restore, zero exterior renders inside, exact public `owner/repo` grounding, isolated in-memory visit history, five started calls, panel-reopen continuity, room-reentry reset, and explicit-only exit/GitHub navigation. |
 | Change Repository Blueprint scanning, Blueprint Deep Link sharing, projection, or DOM/3D focus | `assets/repo-portal.js` + `assets/repository-blueprint.js` + `/*REPOSITORY_ATELIER*/` in `index.html` + `scripts/test-repository-blueprint.mjs` + the Atelier smoke group; preserve explicit one-request Tree API access, exact owner/repo, 512-byte shared paths, confirmation-before-request, 8 s/2 MiB bounds, current-repo-only memory, 220/96 nodes, depth 4, 160/64 edges, two instanced batches, one line batch, zero Blueprint atlases/lights/exterior objects, and factual source-tree-only copy. |
 | Change adaptive frame thresholds or visual tiers | `/*VISUAL_GOVERNOR_CORE*/` + `/*VISUAL_GOVERNOR_RUNTIME*/` in `index.html`, `scripts/test-visual-governor.mjs`, and the matching smoke group; preserve 6 s eligible warm-up, separated hysteresis/dwell, balanced-before-lean ambient ordering, LOW_END/reduced-motion authority, state continuity, and zero storage/network/telemetry. |
+| Change repository-house facade or roof surfaces | `assets/procedural-surfaces.js` + `/*PROCEDURAL_SURFACES*/` in `index.html` + `scripts/test-procedural-surfaces.mjs` + the matching smoke group; preserve the eight facade families, shingle, nine-entry texture cap, seeded scene RNG sequence, color-space/filter/wrap contract, context restore, zero feature draws, and LOW_END `+0` texture ceiling. |
 | Change the 30-day Sap Ledger fields, retention, or Chronicle summary | `scripts/city_state.py` + `data/city-state.schema.json` + `assets/world-tree/world-tree-state.js` + `/*WORLD_TREE_CHRONICLE*/` in `index.html`; preserve actual UTC entries only, same-day replacement, 30-entry/32 KiB caps, public aggregate privacy, and unavailable foreign history. |
 | Change Twin Towns matching or two-person share links | `assets/twin-towns.js` + the Twin Towns block in `index.html` + `scripts/smoke.mjs`. |
 | Change Town Gazette / return-visit freshness | `/*FRESHNESS*/` + Passport render/start flow in `index.html`; keep snapshots local, bounded, per-town, and explicit-read only. |

@@ -138,6 +138,7 @@ const REPO_BUILDER = readFileSync(join(ROOT, 'scripts/build_repos.py'), 'utf8');
 const CAMERA_MATH_SRC = readFileSync(join(ROOT, 'assets/camera-obstruction.js'), 'utf8');
 const POSTCARD_SRC = readFileSync(join(ROOT, 'assets/town-postcard.js'), 'utf8');
 const PUBLIC_TOWN_PROOF_SRC = readFileSync(join(ROOT, 'assets/public-town-proof.js'), 'utf8');
+const PROCEDURAL_SURFACE_SRC = readFileSync(join(ROOT, 'assets/procedural-surfaces.js'), 'utf8');
 const TWIN_TOWNS_SRC = readFileSync(join(ROOT, 'assets/twin-towns.js'), 'utf8');
 const TOWN_CREATOR_SRC = readFileSync(join(ROOT, 'assets/town-creator.js'), 'utf8');
 const TOWN_GROWTH_SRC = readFileSync(join(ROOT, 'assets/town-growth.js'), 'utf8');
@@ -3628,6 +3629,70 @@ ok((HTML.match(/watchKicker:\s*['"]/g) || []).length >= 2 && (HTML.match(/watchC
 ok(/window\.__lanternWatchPlan=/.test(HTML) && /window\.__lanternWatchStart=/.test(HTML)
   && /window\.__lanternWatchNext=/.test(HTML) && /window\.__lanternWatchEnd=/.test(HTML), '?dbg watch plan/start/advance/end hooks are present');
 ok(/updateLanternWatch\(clock\.elapsedTime\)/.test(HTML), 'the main world loop updates active night-watch lanterns');
+
+group('Procedural Surface Pass v2 - bounded deterministic facade and roof detail');
+const proceduralSurfaceBlock = (HTML.match(/\/\*PROCEDURAL_SURFACES:START\*\/([\s\S]*?)\/\*PROCEDURAL_SURFACES:END\*\//) || [, ''])[1];
+ok(proceduralSurfaceBlock.length > 0
+  && /procedural-surfaces\.js\?v=procedural-surface-v2-3/.test(HTML)
+  && /PROCEDURAL_SURFACE_FAMILIES/.test(HTML),
+  'surface runtime and pure deterministic helper remain explicit and extractable');
+ok(/\[\s*'brick',[\s\S]*?'siding',[\s\S]*?'panel',[\s\S]*?'stone',[\s\S]*?'stucco',[\s\S]*?'timber',[\s\S]*?'board',[\s\S]*?'metal'/.test(PROCEDURAL_SURFACE_SRC)
+  && /surfaceTextureKey\(kind, family, variant\)/.test(PROCEDURAL_SURFACE_SRC)
+  && /surfaceVariant\(seed, compact = false\)/.test(PROCEDURAL_SURFACE_SRC),
+  'all existing facade families and shared shingle variants keep deterministic keys');
+ok(/desktopCacheEntries: PROCEDURAL_SURFACE_FAMILIES\.length \+ 1/.test(PROCEDURAL_SURFACE_SRC)
+  && /compactCacheEntries: PROCEDURAL_SURFACE_FAMILIES\.length \+ 1/.test(PROCEDURAL_SURFACE_SRC)
+  && /getOrCreateBoundedSurface\(_surfaceCache,key,SURFACE_CACHE_LIMIT/.test(proceduralSurfaceBlock)
+  && /materialCacheEntries: 384/.test(PROCEDURAL_SURFACE_SRC)
+  && /SURFACE_MATERIAL_CACHE_LIMIT=PROCEDURAL_SURFACE_LIMITS\.materialCacheEntries/.test(proceduralSurfaceBlock)
+  && /surface cache limit exceeded/.test(PROCEDURAL_SURFACE_SRC)
+  && /surface material cache limit exceeded/.test(proceduralSurfaceBlock),
+  'desktop and compact texture/material keyspaces are fixed and fail explicitly at their bounds');
+ok(/texture\.colorSpace=THREE\.SRGBColorSpace/.test(proceduralSurfaceBlock)
+  && /texture\.generateMipmaps=true/.test(proceduralSurfaceBlock)
+  && /texture\.minFilter=THREE\.LinearMipmapLinearFilter/.test(proceduralSurfaceBlock)
+  && /texture\.magFilter=THREE\.LinearFilter/.test(proceduralSurfaceBlock)
+  && /texture\.wrapS=texture\.wrapT=THREE\.RepeatWrapping/.test(proceduralSurfaceBlock)
+  && /texture\.anisotropy=Math\.min\(MAXANISO,SURFACE_COMPACT\?4:8\)/.test(proceduralSurfaceBlock),
+  'surface color space, mipmaps, filters, anisotropy, wrapping, and grazing-angle sampling are explicit');
+ok(/function _surfaceUv\(geometry,repeatX,repeatY,seed\)/.test(proceduralSurfaceBlock)
+  && /surfaceUvTransform\(seed\)/.test(proceduralSurfaceBlock)
+  && /surfaceWallRepeat\(wstyle,w,h\)/.test(HTML)
+  && /_applySurfaceMaterial\(body,wtex,repo\.wall/.test(HTML)
+  && /makeRoof\(typ\.roof, topW, topH, repo\.roof,`\$\{repo\.repo\}:principal-roof`\)/.test(HTML)
+  && !/texMat\(wtex/.test(HTML),
+  'per-house UV transforms reuse pooled maps without minting full-resolution texture clones');
+ok(/surfaceGlow=texture\.userData\.kind==='wall'\?Math\.round\(Math\.max\(0,Math\.min\(1,glow\)\)\*2\)\/2\*\.45:0/.test(proceduralSurfaceBlock)
+  && /material\.userData\.proceduralSurfaceGlow=surfaceGlow/.test(proceduralSurfaceBlock)
+  && /glow:repo\._ruin\?0:repo\._activity/.test(HTML)
+  && /for\(const material of _surfaceMaterialCache\.values\(\)\)/.test(HTML)
+  && /material\.userData\.proceduralSurfaceGlow\|\|0/.test(HTML)
+  && !/aSurfaceGlow|onBeforeRender=_surfaceBeforeRender|_setSurfaceGlow/.test(HTML)
+  && /addWing[\s\S]*?legacyMaterial:false/.test(HTML)
+  && !/addWing[\s\S]*?_applySurfaceMaterial\([^;]+wb\.material\)/.test(HTML),
+  'activity-bucketed materials preserve full/mid house warmth while grand-house wings stay dark and textured');
+ok(/function _preserveTextureCloneUuidSequence\(\)\{ THREE\.MathUtils\.generateUUID\(\); THREE\.MathUtils\.generateUUID\(\); \}/.test(proceduralSurfaceBlock)
+  && /function _surfacePrivateUuid\(key,create\)/.test(proceduralSurfaceBlock)
+  && /finally \{ Math\.random=globalRandom; \}/.test(proceduralSurfaceBlock),
+  'removing Texture plus Source clones preserves the unrelated seeded scene RNG sequence');
+ok(/function _restoreProceduralSurfaceTextures\(\)/.test(proceduralSurfaceBlock)
+  && /texture\.needsUpdate=true/.test(proceduralSurfaceBlock)
+  && /function _disposeProceduralSurfaceTextures\(\)/.test(proceduralSurfaceBlock)
+  && /disposeBoundedSurfaceCache\(_surfaceCache\); disposeBoundedSurfaceCache\(_surfaceMaterialCache\)/.test(proceduralSurfaceBlock)
+  && /if\(!event\.persisted\) _disposeProceduralSurfaceTextures\(\)/.test(proceduralSurfaceBlock)
+  && /webglcontextrestored'[\s\S]*?_restoreProceduralSurfaceTextures\(\)/.test(HTML),
+  'surface maps have explicit context-restore upload and non-bfcache disposal');
+ok(/window\.__proceduralSurfaces=/.test(HTML) && /window\.__proceduralSurfaceFixture=/.test(HTML)
+  && /pixelHash:surfacePixelHash/.test(proceduralSurfaceBlock)
+  && /pixelStats:\{min,max,mean:/.test(proceduralSurfaceBlock)
+  && /sharedFacadeBindings:/.test(HTML) && /distinctSharedEmissiveGroups:/.test(HTML) && /missingMaps:/.test(HTML)
+  && /window\.__canvasPixels=/.test(HTML)
+  && /_renderWorldTreeFrame\(\); gl\.readPixels/.test(HTML),
+  '?dbg exposes cache, deterministic pixel, family, binding, and visual-fixture evidence');
+ok(!/(?:fetch|XMLHttpRequest|WebSocket|sendBeacon|TextureLoader|GLTFLoader|setTimeout|setInterval|requestAnimationFrame)\s*\(/.test(proceduralSurfaceBlock + PROCEDURAL_SURFACE_SRC)
+  && !/new THREE\.(?:PointLight|SpotLight|DirectionalLight|AmbientLight|HemisphereLight)/.test(proceduralSurfaceBlock)
+  && !/(?:bumpMap|normalMap|roughnessMap)/.test(proceduralSurfaceBlock),
+  'surface pass adds no request, binary/model load, timer, light, or unproven PBR channel');
 
 group('Adaptive Visual Governor - sustained frame budget without gameplay resets');
 const visualGovernorCoreBlock = (HTML.match(/\/\*VISUAL_GOVERNOR_CORE:START\*\/([\s\S]*?)\/\*VISUAL_GOVERNOR_CORE:END\*\//) || [, ''])[1];
