@@ -8,7 +8,7 @@
 
 **Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.**
 
-[![Open the live town](https://img.shields.io/badge/Open-Live%20Town-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/)
+[![Open the live town](https://img.shields.io/badge/Open-Live%20Town-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/?view=plaza&lang=en)
 [![Try my GitHub](https://img.shields.io/badge/Try-My%20GitHub-234d49?style=for-the-badge&logo=github&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/?launch=1)
 [![Use this template](https://img.shields.io/badge/Use-This%20Template-c2702f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon)
 
