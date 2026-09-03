@@ -6,6 +6,17 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/); date
 This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier releases are preserved in
 [`docs/changelog-archive.md`](docs/changelog-archive.md).
 
+## [Unreleased]
+
+### Procedural Surface Pass v2
+
+- Brick, siding, panel, stone, stucco, timber, board-and-batten, metal, and shingle now use deterministic seeded
+  procedural relief with material-correct seams, mortar, grain, fasteners, restrained variation, and UV phase.
+- Nine shared texture entries replace per-house texture clones. The bounded pools preserve existing palette,
+  wear, ruins, signs, windows, flower boxes, gutters, scaffolding, architectural LOD, and Visual Governor truth.
+- Fixed seeded warm-route p95 held flat or improved up to 15.7%, reduced live textures by 30 desktop and 12
+  LOW_END, and added no draw, request, asset, light, collider, timer, or PBR channel.
+
 ## [1.95.0] — 2026-08-29
 
 ### 🌳 The Undercroft — a walkable archive beneath the World Tree

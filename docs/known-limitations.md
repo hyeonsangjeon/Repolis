@@ -117,6 +117,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 - **No full browser automation suite.** `scripts/smoke.mjs` guards many static and extracted behavioral
   contracts, but visual and interaction changes still require serving locally and driving the page in
   Chrome DevTools with 0 console errors on mobile + desktop.
+- **Facade relief is intentionally lightweight.** Eight facade families and the roof use nine shared seeded
+  color maps plus per-geometry UV phases, not downloaded materials or a photorealistic PBR stack. LOW_END keeps
+  the same material identities with fewer micro-marks and lower anisotropy. No bump, normal, or roughness map
+  is retained.
 - **Adaptive quality is an in-memory safety rail, not a benchmark or device profile.** The governor observes
   visible, active exterior render intervals only after 6 seconds of eligible warm-up, uses three coarse reversible
   tiers, and forgets everything on reload. Hidden tabs, the intentional idle cap, intro/modals, Atelier, and Growth

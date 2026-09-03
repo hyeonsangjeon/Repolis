@@ -65,6 +65,7 @@ entrypoints:
   taxi_voice: assets/taxi-voice.js
   session_footprints: assets/session-footprints.js
   fork_lineage: assets/fork-lineage.js
+  procedural_surfaces: assets/procedural-surfaces.js
   data_builder: scripts/build_repos.py
   launch_config: repolis.config.js
   library_builder: scripts/build-contribution-library.mjs
@@ -110,6 +111,12 @@ endpoints:
 features:
   - id: data-built-city
     summary: Repository traffic and metadata shape houses, gardens, ornaments, and night glow.
+  - id: procedural-surfaces
+    summary: Eight facade families and shingle use deterministic seeded UV phases over nine bounded shared CanvasTextures.
+    desktop_texture_cache_cap: 9
+    low_end_texture_cache_cap: 9
+    added_runtime_requests: 0
+    added_draw_calls: 0
   - id: thirty-day-sap-ledger
     summary: The owner World Tree keeps up to 30 actual UTC daily public aggregate entries with same-day replacement, explicit gaps, and no foreign history reuse.
     runtime_requests: 0

@@ -28,6 +28,8 @@
 - [assets/repo-route.js](assets/repo-route.js): strict current-catalog validation and canonical links for ordered 2–3 house Repo Routes.
 - [assets/contribution-quests.js](assets/contribution-quests.js): pure current-owner/catalog issue projection and bounded ranking for Open Source Quests.
 - [assets/issue-code-scout.js](assets/issue-code-scout.js): deterministic exact-repo Quest title/label matching against an already-loaded Blueprint, capped at five candidate paths.
+- [assets/procedural-surfaces.js](assets/procedural-surfaces.js): deterministic seeded facade/roof variants, UV phases, and bounded shared caches.
+- [docs/procedural-surface-pass-v2.md](docs/procedural-surface-pass-v2.md): rendering contract and reproducible desktop/LOW_END budget evidence.
 - [assets/contribution-library.json](assets/contribution-library.json): generated bilingual Contribution Library data.
 
 ## Main product systems
