@@ -41,7 +41,7 @@ export function selectTownCreatorFields(raw = {}) {
   });
 }
 
-export function summarizeTownCreator(profile, repos = [], nowMs = Date.now()) {
+export function summarizeTownCreator(profile, repos = [], nowMs = Date.now(), options = {}) {
   const selected = selectTownCreatorFields({
     login: profile?.login,
     name: profile?.name,
@@ -67,6 +67,11 @@ export function summarizeTownCreator(profile, repos = [], nowMs = Date.now()) {
       languages.set(language, (languages.get(language) || 0) + 1);
     }
   }
+  const requestedPublicStars = Number(options?.publicStars);
+  const publicStars = options?.publicStars !== null && options?.publicStars !== undefined
+    && options?.publicStars !== '' && Number.isFinite(requestedPublicStars)
+    ? Math.max(stars, nonNegative(requestedPublicStars))
+    : stars;
 
   const topLanguages = [...languages.entries()]
     .map(([name, count]) => Object.freeze({ name, count }))
@@ -94,7 +99,7 @@ export function summarizeTownCreator(profile, repos = [], nowMs = Date.now()) {
   if (list.length >= 10 || selected.publicRepos >= 10) badges.push('builder');
   if (topLanguages.length >= 4) badges.push('polyglot');
   if (latestPush && now - latestPush <= 90 * DAY_MS) badges.push('maintainer');
-  if (stars >= 100) badges.push('starred');
+  if (publicStars >= 100) badges.push('starred');
   if (years >= 5) badges.push('veteran');
 
   return Object.freeze({
@@ -103,6 +108,7 @@ export function summarizeTownCreator(profile, repos = [], nowMs = Date.now()) {
     profileUrl: `https://github.com/${selected.login}`,
     townRepos: list.length,
     townStars: stars,
+    publicStars,
     townForks: forks,
     years,
     joinedYear: createdAt ? new Date(createdAt).getUTCFullYear() : null,

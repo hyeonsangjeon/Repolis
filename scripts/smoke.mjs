@@ -998,8 +998,9 @@ const creatorSummary = summarizeTownCreator(creatorFields, [
   {repo:'beta',lang:'Rust',stars:10,forks:2,pushed:'2025-01-01T00:00:00Z',desc:'Beta'},
   {repo:'gamma',lang:'JavaScript',stars:2,forks:0,pushed:'2024-01-01T00:00:00Z'},
   {repo:'delta',lang:'Go',stars:1,forks:0,pushed:'2023-01-01T00:00:00Z'}
-], creatorNow);
+], creatorNow, {publicStars:33});
 ok(creatorSummary.displayName==='The Octocat' && creatorSummary.townRepos===4 && creatorSummary.townStars===18
+  && creatorSummary.publicStars===33
   && creatorSummary.townForks===3 && creatorSummary.years===15 && creatorSummary.joinedYear===2011,
   'creator proof combines public profile age with truthful facts from the rendered town');
 ok(creatorSummary.topLanguages.map(item=>item.name).join(',')==='Go,JavaScript,Python,Rust'
@@ -1038,6 +1039,9 @@ ok(/const CREATOR_CACHE_TTL=24\*3600\*1000/.test(creatorPanelBlock)
   && /selectTownCreatorFields\(await response\.json\(\)\)/.test(creatorPanelBlock)
   && /localStorage\.setItem\(key,JSON\.stringify\(\{fetchedAt:now,profile\}\)\)/.test(creatorPanelBlock),
   'an explicit hall open caches only the selected public profile fields for one day');
+ok(/CITY_STATE\?\.stats\?\.public_repository_stars/.test(creatorPanelBlock)
+  && /\[summary\.publicStars,'creatorStatStars'\]/.test(creatorPanelBlock),
+  'Creator Hall uses the generated all-public repository Star total without widening its runtime profile request');
 ok(/openCreatorHall=\(entry='landmark'\)=>/.test(creatorPanelBlock)
   && /loadCreatorHallProfile\(false\)/.test(creatorPanelBlock)
   && !/await _loadTownCreatorProfile\(currentUser/.test(HTML.slice(0,HTML.indexOf('openCreatorHall='))),

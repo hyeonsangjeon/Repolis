@@ -448,7 +448,14 @@ def _merge_sap_ledger(prior_ledger, entry):
     return ledger
 
 
-def build_city_state(repositories, source_timestamps=None, *, as_of=None, prior_ledger=None):
+def build_city_state(
+    repositories,
+    source_timestamps=None,
+    *,
+    as_of=None,
+    prior_ledger=None,
+    public_repository_stars=None,
+):
     public = _public_repositories(repositories)
     reference_time = _reference_time(public, source_timestamps, as_of)
     reference_day = reference_time.date()
@@ -469,6 +476,11 @@ def build_city_state(repositories, source_timestamps=None, *, as_of=None, prior_
     push_count = sum(bool(_parse_datetime(repo.get("pushed") or repo.get("pushed_at"))) for repo in public)
     season = _season(public, reference_day)
     silence = _silence(public, reference_day)
+    town_stars = sum(max(0, int(repo.get("stars") or 0)) for repo in public)
+    if public_repository_stars is None:
+        profile_stars = town_stars
+    else:
+        profile_stars = max(town_stars, min(MAX_SAFE_INTEGER, max(0, int(public_repository_stars))))
 
     state = {
         "schema": SCHEMA_NAME,
@@ -492,7 +504,8 @@ def build_city_state(repositories, source_timestamps=None, *, as_of=None, prior_
             "repository_count": len(public),
             "active_repository_count": len(public) - len(archived),
             "archived_repository_count": len(archived),
-            "total_stars": sum(max(0, int(repo.get("stars") or 0)) for repo in public),
+            "total_stars": town_stars,
+            "public_repository_stars": profile_stars,
             "total_forks": sum(max(0, int(repo.get("forks") or 0)) for repo in public),
             "language_distribution": language_distribution,
             "latest_push_signal": {
@@ -533,12 +546,18 @@ def main():
     parser.add_argument("--repos", default=root / "repos.json", type=Path)
     parser.add_argument("--output", default=root / "data" / "city-state.json", type=Path)
     parser.add_argument("--as-of", help="Explicit ISO-8601 UTC reference date or timestamp.")
+    parser.add_argument(
+        "--public-repository-stars",
+        type=int,
+        help="Star total across all public owner repositories, including town-excluded forks.",
+    )
     args = parser.parse_args()
     repositories = json.loads(args.repos.read_text(encoding="utf-8"))
     state = build_city_state(
         repositories,
         as_of=args.as_of,
         prior_ledger=load_sap_ledger(args.output),
+        public_repository_stars=args.public_repository_stars,
     )
     write_city_state(args.output, state)
     print(

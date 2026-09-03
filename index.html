@@ -2650,7 +2650,7 @@ const I18N = {
     creatorPartial:'프로필 세부 정보를 불러오지 못해 마을에 이미 있는 공개 레포 정보만 보여드려요.', creatorRetry:'다시 불러오기',
     creatorNoBio:'공개 bio가 아직 없어요. 대신 이 마을의 레포가 소개를 이어갑니다.',
     creatorCompany:'소속 · {value}', creatorLocation:'위치 · {value}', creatorJoined:'GitHub 시작 · {year}',
-    creatorStatRepos:'마을 레포', creatorStatStars:'받은 Star', creatorStatFollowers:'팔로워', creatorStatYears:'GitHub 활동', creatorYearsValue:'{count}년',
+    creatorStatRepos:'마을 레포', creatorStatStars:'전체 공개 Star', creatorStatFollowers:'팔로워', creatorStatYears:'GitHub 활동', creatorYearsValue:'{count}년',
     creatorBadgesTitle:'이 마을의 신호', creatorLanguagesTitle:'주요 언어', creatorSignatureTitle:'대표 프로젝트',
     creatorBadgeBuilder:'🏗️ 공개 레포 빌더', creatorBadgePolyglot:'🌐 다중 언어', creatorBadgeMaintainer:'🛠️ 최근 관리', creatorBadgeStarred:'⭐ Star 받은 작업', creatorBadgeVeteran:'🧭 장기 메이커',
     creatorNoBadges:'아직 배지를 만들 만큼 공개 신호가 쌓이지 않았어요.', creatorNoLanguages:'표시할 주요 언어가 없어요.', creatorNoRepos:'표시할 공개 대표 프로젝트가 없어요.',
@@ -3030,7 +3030,7 @@ const I18N = {
     creatorPartial:'Profile details could not be loaded, so this hall is using the public repository facts already in town.', creatorRetry:'Try again',
     creatorNoBio:'No public bio yet. The repositories in this town continue the introduction.',
     creatorCompany:'Company · {value}', creatorLocation:'Location · {value}', creatorJoined:'Joined GitHub · {year}',
-    creatorStatRepos:'Town repos', creatorStatStars:'Stars earned', creatorStatFollowers:'Followers', creatorStatYears:'On GitHub', creatorYearsValue:'{count}y',
+    creatorStatRepos:'Town repos', creatorStatStars:'Public repo Stars', creatorStatFollowers:'Followers', creatorStatYears:'On GitHub', creatorYearsValue:'{count}y',
     creatorBadgesTitle:'Signals from this town', creatorLanguagesTitle:'Top languages', creatorSignatureTitle:'Signature projects',
     creatorBadgeBuilder:'🏗️ Public repo builder', creatorBadgePolyglot:'🌐 Polyglot', creatorBadgeMaintainer:'🛠️ Recently maintained', creatorBadgeStarred:'⭐ Starred work', creatorBadgeVeteran:'🧭 Long-haul maker',
     creatorNoBadges:'Not enough public signals for a town badge yet.', creatorNoLanguages:'No top language to show yet.', creatorNoRepos:'No public signature project to show yet.',
@@ -10582,13 +10582,17 @@ async function _loadTownCreatorProfile(user,force=false){
   }
 }
 function _creatorFallbackProfile(){ return selectTownCreatorFields({login:currentUser,public_repos:REPOS.length}); }
+function _creatorSummary(profile){
+  const publicStars=Number(CITY_STATE?.stats?.public_repository_stars);
+  return summarizeTownCreator(profile,REPOS,_now,{publicStars:Number.isFinite(publicStars)?publicStars:null});
+}
 function _creatorStatusSet(key='',tone='',retry=false){
   CREATOR_STATE.status=key?{key,tone,retry}:null; creatorStatus.textContent=key?t(key):''; creatorStatus.dataset.tone=tone||'';
   if(retry){ const button=document.createElement('button'); button.type='button'; button.textContent=t('creatorRetry'); button.onclick=()=>loadCreatorHallProfile(true); creatorStatus.appendChild(button); }
 }
 function _creatorEmpty(container,key){ const empty=document.createElement('div'); empty.className='creatorEmpty'; empty.textContent=t(key); container.appendChild(empty); }
 function renderCreatorHall(summary=CREATOR_STATE.summary){
-  if(!summary) summary=summarizeTownCreator(_creatorFallbackProfile(),REPOS,_now);
+  if(!summary) summary=_creatorSummary(_creatorFallbackProfile());
   CREATOR_STATE.summary=summary;
   document.getElementById('creatorName').textContent=summary.displayName;
   document.getElementById('creatorLogin').textContent='@'+summary.login;
@@ -10604,7 +10608,7 @@ function renderCreatorHall(summary=CREATOR_STATE.summary){
     const chip=document.createElement('span'); chip.textContent=tf(key,{value}); meta.appendChild(chip); });
   if(summary.joinedYear){ const chip=document.createElement('span'); chip.textContent=tf('creatorJoined',{year:summary.joinedYear}); meta.appendChild(chip); }
   const stats=document.getElementById('creatorStats'); stats.innerHTML='';
-  [[summary.townRepos,'creatorStatRepos'],[summary.townStars,'creatorStatStars'],[summary.followers,'creatorStatFollowers'],
+  [[summary.townRepos,'creatorStatRepos'],[summary.publicStars,'creatorStatStars'],[summary.followers,'creatorStatFollowers'],
     [summary.joinedYear?tf('creatorYearsValue',{count:summary.years}):'\u2014','creatorStatYears']].forEach(([value,key])=>{
       const box=document.createElement('div'); box.className='creatorStat'; const number=document.createElement('b'),label=document.createElement('span');
       number.textContent=typeof value==='number'?_creatorNumber(value):value; label.textContent=t(key); box.appendChild(number); box.appendChild(label); stats.appendChild(box); });
@@ -10627,15 +10631,15 @@ function renderCreatorHall(summary=CREATOR_STATE.summary){
 }
 async function loadCreatorHallProfile(force=false){
   const requestId=++CREATOR_STATE.requestId; CREATOR_STATE.loading=true; creatorCard.setAttribute('aria-busy','true');
-  _creatorStatusSet('creatorLoading'); renderCreatorHall(summarizeTownCreator(_creatorFallbackProfile(),REPOS,_now));
+  _creatorStatusSet('creatorLoading'); renderCreatorHall(_creatorSummary(_creatorFallbackProfile()));
   const result=await _loadTownCreatorProfile(currentUser,force);
   if(requestId!==CREATOR_STATE.requestId) return false;
   CREATOR_STATE.loading=false; CREATOR_STATE.source=result.source; creatorCard.setAttribute('aria-busy','false');
   if(result.profile){
-    renderCreatorHall(summarizeTownCreator(result.profile,REPOS,_now)); _creatorStatusSet('creatorReady','success');
+    renderCreatorHall(_creatorSummary(result.profile)); _creatorStatusSet('creatorReady','success');
     track('creator_profile_loaded',{source:result.source,partial:false}); return CREATOR_STATE.summary;
   }
-  renderCreatorHall(summarizeTownCreator(_creatorFallbackProfile(),REPOS,_now)); _creatorStatusSet('creatorPartial','error',true);
+  renderCreatorHall(_creatorSummary(_creatorFallbackProfile())); _creatorStatusSet('creatorPartial','error',true);
   track('creator_profile_loaded',{source:result.source,partial:true,reason:result.error?.reason||'unknown'}); return CREATOR_STATE.summary;
 }
 openCreatorHall=(entry='landmark')=>{
@@ -14108,7 +14112,7 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
       meshes:CREATOR_HALL.meshes,draws:CREATOR_HALL.draws,textures:2,lights:0,repoGap:+repoGap.toFixed(2),nearestRepo,
       placement:{gap:+CREATOR_HALL.placement.gap.toFixed(2),near:CREATOR_HALL.placement.near,center:CREATOR_HALL.placement.center.map(value=>+value.toFixed(2))},
       open:CREATOR_STATE.open,loading:CREATOR_STATE.loading,source:CREATOR_STATE.source,
-      profile:summary?{login:summary.login,name:summary.displayName,repos:summary.townRepos,stars:summary.townStars,followers:summary.followers,
+      profile:summary?{login:summary.login,name:summary.displayName,repos:summary.townRepos,stars:summary.publicStars,townStars:summary.townStars,followers:summary.followers,
         languages:summary.topLanguages.map(item=>item.name),badges:summary.badges.slice(),signature:summary.signatureRepos.map(repo=>repo.name)}:null}; };
   window.__creatorOpen=async(force=false)=>{ openCreatorHall('debug'); await loadCreatorHallProfile(force); return window.__creatorHall(); };
   window.__creatorClose=()=>closeCreatorHall();

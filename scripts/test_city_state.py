@@ -49,11 +49,16 @@ class CityStateTests(unittest.TestCase):
             repo("memory", "2018-03-04", "2022-04-05", archived=True, stars=3, desc="Archived public work."),
             repo("secret", "2017-01-01", "2026-06-30", private=True, stars=999),
         ]
-        state = build_city_state(repos, {"active": "2026-06-30T12:00:00Z"})
+        state = build_city_state(
+            repos,
+            {"active": "2026-06-30T12:00:00Z"},
+            public_repository_stars=25,
+        )
         self.validate_state(state)
         self.assertEqual(state["era"]["oldest_repository"], "memory")
         self.assertEqual(state["stats"]["repository_count"], 2)
         self.assertEqual(state["stats"]["total_stars"], 10)
+        self.assertEqual(state["stats"]["public_repository_stars"], 25)
         self.assertIsNone(state["stats"]["commit_history"]["total"])
         self.assertFalse(state["stats"]["commit_history"]["available"])
         self.assertEqual([root["repo"] for root in state["roots"]], ["memory"])
@@ -62,6 +67,19 @@ class CityStateTests(unittest.TestCase):
         self.assertEqual(state["silence"]["repositories"]["with_push_date"], 1)
         self.assertEqual(state["silence"]["quiet"]["at_least_365_days"], 0)
         self.assertNotIn("secret", serialize_city_state(state))
+
+    def test_public_repository_stars_falls_back_to_town_total_and_never_undercounts(self):
+        repos = [repo("alpha", "2020-01-01", "2026-06-30", stars=7)]
+        fallback = build_city_state(repos, as_of="2026-06-30T00:00:00Z")
+        lower_override = build_city_state(
+            repos,
+            as_of="2026-06-30T00:00:00Z",
+            public_repository_stars=3,
+        )
+        self.assertEqual(fallback["stats"]["public_repository_stars"], 7)
+        self.assertEqual(lower_override["stats"]["public_repository_stars"], 7)
+        self.validate_state(fallback)
+        self.validate_state(lower_override)
 
     def test_identical_inputs_are_byte_stable_and_order_independent(self):
         repos = [
@@ -416,6 +434,7 @@ class CityStateTests(unittest.TestCase):
             repositories,
             as_of=f"{checked_in['era']['as_of']}T00:00:00Z",
             prior_ledger=checked_in.get("sap_ledger"),
+            public_repository_stars=checked_in["stats"]["public_repository_stars"],
         )
         self.assertEqual(serialize_city_state(regenerated), state_path.read_text(encoding="utf-8"))
 
