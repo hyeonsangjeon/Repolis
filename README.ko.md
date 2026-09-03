@@ -8,9 +8,15 @@
 
 **Repolis는 공개 GitHub 레포를 직접 걸어 다니는 3D 마을로 바꿉니다. 트래픽이 건물을 만들고, 주민이 살아가며, 깃버가 원하는 프로젝트까지 데려갑니다.**
 
-[![라이브 마을 열기](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EB%B8%8C-%EB%A7%88%EC%9D%84%20%EC%97%B4%EA%B8%B0-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/?view=plaza&lang=ko)
-[![내 GitHub로 보기](https://img.shields.io/badge/%EB%B0%94%EB%A1%9C-%EB%82%B4%20GitHub%EB%A1%9C%20%EB%B3%B4%EA%B8%B0-234d49?style=for-the-badge&logo=github&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/?launch=1)
-[![템플릿 사용](https://img.shields.io/badge/%EC%82%AC%EC%9A%A9-%EC%9D%B4%20%ED%85%9C%ED%94%8C%EB%A6%BF-c2702f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon)
+<p>
+  <a href="https://hyeonsangjeon.github.io/Repolis/?view=plaza&amp;lang=ko"><img src="https://img.shields.io/badge/-%E2%96%B6%20%EC%A7%80%EA%B8%88%20%EB%A7%88%EC%9D%84%20%EC%9E%85%EC%9E%A5-178f86?style=for-the-badge" alt="지금 Repolis 라이브 마을 입장" height="40"></a><br>
+  <sub><strong>먼저 눌러보세요:</strong> 지금 운영 중인 Repolis 광장으로 바로 들어갑니다.</sub>
+</p>
+<p>
+  <a href="https://hyeonsangjeon.github.io/Repolis/?launch=1"><img src="https://img.shields.io/badge/-%EB%82%B4%20GITHUB%EB%A1%9C%20%EB%B3%B4%EA%B8%B0-24292f?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="내 GitHub로 Repolis 보기" height="32"></a>
+  <a href="https://github.com/new?template_name=Repolis&amp;template_owner=hyeonsangjeon"><img src="https://img.shields.io/badge/-%EB%82%B4%20%EB%A7%88%EC%9D%84%EB%A1%9C%20%EB%B3%B5%EC%A0%9C-c56a26?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Repolis 템플릿으로 내 마을 만들기" height="32"></a><br>
+  <sub>내 공개 레포 미리보기 · 또는 템플릿을 복제해 내 마을 만들기</sub>
+</p>
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.ko.gif" alt="Repolis 데모: 트래픽으로 지은 살아 있는 GitHub 마을, 깃버 검색과 택시 이동, 실제 레포 카드" width="92%"></a>
 

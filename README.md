@@ -8,9 +8,15 @@
 
 **Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.**
 
-[![Open the live town](https://img.shields.io/badge/Open-Live%20Town-4fb4c2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/?view=plaza&lang=en)
-[![Try my GitHub](https://img.shields.io/badge/Try-My%20GitHub-234d49?style=for-the-badge&logo=github&logoColor=white)](https://hyeonsangjeon.github.io/Repolis/?launch=1)
-[![Use this template](https://img.shields.io/badge/Use-This%20Template-c2702f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/new?template_name=Repolis&template_owner=hyeonsangjeon)
+<p>
+  <a href="https://hyeonsangjeon.github.io/Repolis/?view=plaza&amp;lang=en"><img src="https://img.shields.io/badge/-%E2%96%B6%20ENTER%20LIVE%20TOWN-178f86?style=for-the-badge" alt="Enter the live Repolis town" height="40"></a><br>
+  <sub><strong>Start here:</strong> enter the live Repolis plaza now.</sub>
+</p>
+<p>
+  <a href="https://hyeonsangjeon.github.io/Repolis/?launch=1"><img src="https://img.shields.io/badge/-TRY%20MY%20GITHUB-24292f?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Try Repolis with my GitHub" height="32"></a>
+  <a href="https://github.com/new?template_name=Repolis&amp;template_owner=hyeonsangjeon"><img src="https://img.shields.io/badge/-USE%20THIS%20TEMPLATE-c56a26?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Use the Repolis template" height="32"></a><br>
+  <sub>Preview your public repos · or copy the template to build your own town.</sub>
+</p>
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis demo: a living traffic-shaped GitHub town, Gitber search, taxi ride, and real repository card" width="92%"></a>
 

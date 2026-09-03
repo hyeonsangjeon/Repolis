@@ -194,10 +194,10 @@ group('README hero leads with one current story, CTA, and bounded media');
 const heroCopy = 'Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.';
 const heroCopyKo = 'Repolis는 공개 GitHub 레포를 직접 걸어 다니는 3D 마을로 바꿉니다. 트래픽이 건물을 만들고, 주민이 살아가며, 깃버가 원하는 프로젝트까지 데려갑니다.';
 ok(README_EN.includes(`**${heroCopy}**`) && README_KO.includes(`**${heroCopyKo}**`), 'EN/KO heroes carry one copyable product sentence');
-const heroOrderEn = [README_EN.indexOf(`**${heroCopy}**`), README_EN.indexOf('Open-Live%20Town'),
+const heroOrderEn = [README_EN.indexOf(`**${heroCopy}**`), README_EN.indexOf('alt="Enter the live Repolis town" height="40"'),
   README_EN.indexOf('assets/demo.gif'), README_EN.indexOf('🎬 <strong>15-second demo:</strong>'),
   README_EN.indexOf('<code>WASD</code> / touch to walk'), README_EN.indexOf('>Star Repolis</a>'), README_EN.indexOf('daily%20refresh')];
-const heroOrderKo = [README_KO.indexOf(`**${heroCopyKo}**`), README_KO.indexOf('%EB%9D%BC%EC%9D%B4%EB%B8%8C-'),
+const heroOrderKo = [README_KO.indexOf(`**${heroCopyKo}**`), README_KO.indexOf('alt="지금 Repolis 라이브 마을 입장" height="40"'),
   README_KO.indexOf('assets/demo.ko.gif'), README_KO.indexOf('🎬 <strong>15초 데모:</strong>'),
   README_KO.indexOf('<code>WASD</code> / 터치로 걷기'), README_KO.indexOf('>Star 남기기</a>'), README_KO.indexOf('daily%20refresh')];
 ok(heroOrderEn.every(i => i >= 0) && heroOrderEn.every((i, n) => n === 0 || heroOrderEn[n - 1] < i), 'English hero orders story → live CTA → demo → caption → controls → Star → utility proof');
@@ -209,8 +209,11 @@ ok(/<code>Enter<\/code> \/ tap to open · no sign-up or build/.test(README_EN)
 ok((README_EN.match(/href="https:\/\/github\.com\/hyeonsangjeon\/Repolis">Star Repolis<\/a>/g)||[]).length===1
   &&(README_KO.match(/href="https:\/\/github\.com\/hyeonsangjeon\/Repolis">Star 남기기<\/a>/g)||[]).length===1, 'each hero contains exactly one calm repository Star CTA');
 ok((HTML.split(heroCopy).length - 1) === 3 && !HTML.includes('6-pin grid'), 'description, Open Graph, and Twitter share the current positioning');
-ok(/Try-My%20GitHub/.test(README_EN) && /template_name=Repolis&template_owner=hyeonsangjeon/.test(README_EN)
-  &&/%EB%82%B4%20GitHub%EB%A1%9C%20%EB%B3%B4%EA%B8%B0/.test(README_KO), 'EN/KO heroes expose personal preview and template adoption above the demo');
+ok(/href="https:\/\/hyeonsangjeon\.github\.io\/Repolis\/\?view=plaza&amp;lang=en"><img[^>]+height="40"/.test(README_EN)
+  &&/href="https:\/\/hyeonsangjeon\.github\.io\/Repolis\/\?view=plaza&amp;lang=ko"><img[^>]+height="40"/.test(README_KO)
+  &&/href="https:\/\/hyeonsangjeon\.github\.io\/Repolis\/\?launch=1"><img[^>]+height="32"/.test(README_EN)
+  &&/template_name=Repolis&amp;template_owner=hyeonsangjeon"><img[^>]+height="32"/.test(README_EN)
+  &&/alt="내 GitHub로 Repolis 보기" height="32"/.test(README_KO), 'EN/KO heroes distinguish one primary live entry from secondary preview and template actions');
 ok(README_EN.indexOf('## What the demo proves') < README_EN.indexOf('## A village that lives')
   && README_KO.indexOf('## 이 데모가 보여 주는 것') < README_KO.indexOf('## 실제로 살아가는 마을'), 'proof and adoption appear before the long feature narrative');
 ok(/No token, account connection, or fork is required/.test(README_EN)
