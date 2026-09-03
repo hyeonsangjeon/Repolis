@@ -720,6 +720,11 @@ ok(!resolvePlazaDirectLink('?view=plaza&lang=fr').ok
   &&!resolvePlazaDirectLink('?view=plaza&lang=en&repo=owner/repo').ok
   &&!resolvePlazaDirectLink('?view=plaza&lang=en','#repo=old').ok,
   'Plaza Direct Link rejects invalid language, composed state, and hashes');
+ok(/const bootQuery=new URLSearchParams\(location\.search\)/.test(HTML)
+  &&/document\.documentElement\.lang=bootLang/.test(HTML)
+  &&/data-boot-lang="ko">레포 도시를 짓는 중…<\/span><span data-boot-lang="en">Building Repolis…<\/span>/.test(HTML)
+  &&/html\[lang="en"\] #loadingText \[data-boot-lang="en"\]/.test(HTML),
+  'direct-entry language is painted on the initial loading frame before the deferred city module starts');
 ok(createRepoOwnerTownUrl(portalSlug,'https://example.test/Repolis/?repo=old','owner')
     ==='https://example.test/Repolis/?user=Octo-Cat&focus=hello-world&ref=repo-portal'
   && createRepoOwnerTownUrl('owner/repo','https://example.test/Repolis/','owner')
