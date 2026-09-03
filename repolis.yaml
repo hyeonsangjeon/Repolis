@@ -157,8 +157,9 @@ features:
   - id: town-growth-replay
     summary: Public repo creation dates raise existing houses through a reversible, shareable year timeline without inventing historical metrics or adding render assets.
   - id: repo-portal
-    summary: A canonical owner/repo link loads one public target before the owner catalog, opens its Atelier, and keeps unavailable traffic unknown.
+    summary: A canonical owner/repo link loads one public target before the owner catalog; an optional covered direct link opens the same Atelier after a 1.2-second initialization pause.
     url: "?repo=<owner>/<repo>&ref=repo-portal"
+    direct_atelier_url: "?repo=<owner>/<repo>&view=atelier"
     cache: "15 minutes, 30 entries, 512 KiB LRU"
     cold_github_requests_before_aha: 1
   - id: portable-living-towns

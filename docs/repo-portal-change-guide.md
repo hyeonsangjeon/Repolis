@@ -6,6 +6,12 @@ Repo Portal gives one public repository its own front door into Repolis:
 https://hyeonsangjeon.github.io/Repolis/?repo=owner/repo&ref=repo-portal
 ```
 
+Campaigns can begin inside the exhibition with a covered direct entry:
+
+```text
+https://hyeonsangjeon.github.io/Repolis/?repo=owner/repo&view=atelier
+```
+
 This is the product change most likely to improve Star acquisition because it shortens the path from a
 developer sharing real work to a visitor understanding Repolis. A repository link now opens one
 metadata-shaped building and its Repository Atelier before Repolis requests the owner catalog. The recipient
@@ -29,6 +35,7 @@ already has an audience instead of asking people to share Repolis as a destinati
 | Purpose | URL |
 |---|---|
 | Canonical repository entry | `?repo=owner/repo&ref=repo-portal` |
+| Covered Atelier direct entry | `?repo=owner/repo&view=atelier` |
 | Canonical Blueprint landmark | `?repo=owner/repo&view=blueprint&path=src%2Fagents&ref=blueprint` |
 | Public owner-town expansion | `?user=owner&focus=repo&ref=repo-portal` |
 | Canonical owner-town expansion | `?focus=repo&ref=repo-portal` |
@@ -38,6 +45,12 @@ already has an audience instead of asking people to share Repolis as a destinati
 `twin`, `growth`, and hash state instead of composing ambiguous experiences. Browser history remains
 ordinary navigation: entering the Atelier does not push a synthetic history entry, and Back returns to the
 previous page.
+
+The direct form accepts exactly `repo` and fixed `view=atelier`. It keeps the loading layer above the intro,
+shows a lightweight ring transition after a 1.2-second initialization pause, and programmatically reuses the
+normal entry action. The loading cover is released only after the existing Atelier fade owns the frame. Extra
+query state, duplicate fields, or a hash disables auto-entry and falls back to the normal confirmation flow.
+Reduced-motion keeps the same covered timing with static rings.
 
 The shared parser accepts:
 

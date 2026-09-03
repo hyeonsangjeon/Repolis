@@ -8,6 +8,15 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Repository Atelier direct entry
+
+- A strict `?repo=owner/repo&view=atelier` link now holds a lightweight portal cover for a 1.2-second
+  initialization pause, then enters the exact existing Repository Atelier without flashing the intro or
+  exterior town. Normal Repo Portal links keep their explicit confirmation step.
+- Extra query fields, duplicate keys, hashes, invalid targets, and Blueprint links cannot trigger automatic
+  entry. The transition respects reduced motion and adds no request, storage, model path, scene resource,
+  dependency, or build step.
+
 ### Creator Hall public Star total
 
 - Creator Hall now reports Stars across every public repository in the account, including forks intentionally

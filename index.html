@@ -1166,6 +1166,22 @@
 
   #loading { position: fixed; inset: 0; z-index: 40; background: #5fb0a8; color: #fff; display: flex;
     align-items: center; justify-content: center; font-size: 15px; font-weight: 600; }
+  #loadingPortal { display:none; }
+  #loading.atelier-direct { flex-direction:column; gap:24px; overflow:hidden; background:#102a2f; }
+  #loading.atelier-direct #loadingPortal { position:relative; display:block; width:min(46vw,220px); aspect-ratio:1;
+    border:2px solid rgba(139,210,202,.8); border-radius:50%; box-shadow:0 0 0 22px rgba(139,210,202,.16),0 0 0 52px rgba(228,189,104,.1);
+    animation:atelier-direct-portal 1.8s cubic-bezier(.2,.68,.2,1) infinite; }
+  #loading.atelier-direct #loadingPortal::before, #loading.atelier-direct #loadingPortal::after { content:""; position:absolute; border-radius:50%; }
+  #loading.atelier-direct #loadingPortal::before { inset:18%; border:2px solid rgba(228,189,104,.76);
+    animation:atelier-direct-ring 1.8s ease-in-out infinite reverse; }
+  #loading.atelier-direct #loadingPortal::after { inset:39%; border:1px solid rgba(238,245,244,.86); background:#0a1d21;
+    box-shadow:0 0 26px rgba(139,210,202,.42); }
+  #loading.atelier-direct #loadingText { position:relative; max-width:min(82vw,520px); text-align:center; line-height:1.5; }
+  @keyframes atelier-direct-portal { 0%{ transform:scale(.78); opacity:.5; } 55%{ opacity:1; } 100%{ transform:scale(1.08); opacity:.36; } }
+  @keyframes atelier-direct-ring { 0%,100%{ transform:scale(.82); opacity:.45; } 50%{ transform:scale(1.08); opacity:1; } }
+  @media (prefers-reduced-motion: reduce) {
+    #loading.atelier-direct #loadingPortal, #loading.atelier-direct #loadingPortal::before { animation:none; }
+  }
 
   /* ---- Roblox-style touch controls: floating left thumbstick + drag-to-look right half + round action button ---- */
   #joy { position: fixed; z-index: 11; width: 134px; height: 134px; margin-left: -67px; margin-top: -67px;
@@ -1515,7 +1531,7 @@
 </head>
 <body>
 <div id="app"></div>
-<div id="loading" data-i18n="loading">레포 도시를 짓는 중…</div>
+<div id="loading"><span id="loadingPortal" aria-hidden="true"></span><span id="loadingText" data-i18n="loading">레포 도시를 짓는 중…</span></div>
 
 <div id="topbar" class="hud">
   <div class="badge">🏙️ Repolis</div>
@@ -2140,7 +2156,7 @@ import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-re
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
 import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
-import { REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolveRepoPortalRequest, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v2';
+import { REPO_PORTAL_LIMITS, REPOSITORY_ATELIER_DIRECT_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v3';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
 import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse, residentNewcomerLine } from './assets/resident-profiles.js?v=world-tree-phase4-v1';
@@ -2168,6 +2184,7 @@ let REPOS = [], CITY_STATE = null, RESIDENT_MANIFEST = null, RESIDENT_MANIFEST_S
 const GH_LOGIN_RE = GITHUB_LOGIN_RE;
 const _QUERY = new URLSearchParams(location.search);
 const _repoRoute = resolveRepoPortalRequest(location.search, OWNER);
+const ATELIER_DIRECT_LINK = resolveRepositoryAtelierDirectLink(location.search,location.hash);
 const BLUEPRINT_DEEP_LINK = resolveRepositoryBlueprintDeepLink(location.search,location.hash);
 const _reqUser = (_QUERY.get('user') || '').trim().replace(/^@+/,'');
 const _reqTwin = (_QUERY.get('twin') || '').trim();
@@ -2185,6 +2202,7 @@ let dataSource = cityMode === 'portal' ? 'repo-api' : (cityMode === 'public' ? '
 let cityError = null;              // { status, reason } when a public town can't load
 let blueprintDeepLinkBypass = false;
 if(BLUEPRINT_DEEP_LINK.ok) document.title=`${BLUEPRINT_DEEP_LINK.target.slug} · Repository Blueprint`;
+else if(ATELIER_DIRECT_LINK.ok) document.title=`${ATELIER_DIRECT_LINK.target.slug} · Repository Atelier`;
 else if(repoPortalTarget) document.title=`${repoPortalTarget.slug} · Repolis Repo Portal`;
 
 /* --- lightweight, non-blocking analytics. Default sink = in-memory (+ console under ?dbg).
@@ -2385,7 +2403,7 @@ if(cityMode === 'owner'){
   track(REPOS.length ? 'city_data_load_success' : 'city_data_load_fail', { repoCount:REPOS.length });
 } else if(cityMode === 'public') {
   try{ const _l = (function(){ let l=localStorage.getItem('repolisLang'); if(l!=='ko'&&l!=='en') l=(navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; return l; })();
-    const le=document.getElementById('loading'); if(le) le.textContent = _l==='ko' ? (currentUser+' 님의 레포를 불러오는 중…') : ('Fetching '+currentUser+"'s repos…"); }catch(e){}
+    const le=document.getElementById('loadingText'); if(le) le.textContent = _l==='ko' ? (currentUser+' 님의 레포를 불러오는 중…') : ('Fetching '+currentUser+"'s repos…"); }catch(e){}
   const pub = await _loadPublicCity(currentUser);
   REPOS = pub.repos || []; dataSource = pub.source || 'github-public'; cityError = pub.error || null;
   PUBLIC_TOWN_COVERAGE = pub.coverage || {partial:false,error:cityError?.reason||null};
@@ -2396,7 +2414,7 @@ if(cityMode === 'owner'){
   track(cityError ? 'city_data_load_fail' : 'city_data_load_success',
     { targetUser:currentUser, repoCount:REPOS.length, reason: cityError ? cityError.reason : undefined });
 } else {
-  try{ const le=document.getElementById('loading'); if(le) le.textContent=_repoPortalLang()==='ko'?'레포 포털을 여는 중…':'Opening the repo portal…'; }catch(e){}
+  try{ const le=document.getElementById('loadingText'); if(le) le.textContent=_repoPortalLang()==='ko'?'레포 포털을 여는 중…':'Opening the repo portal…'; }catch(e){}
   if(!repoPortalTarget) repoPortalResult={repo:null,source:'repo-api',result:'error',error:{status:0,reason:'invalid_repo'}};
   else repoPortalResult=await _loadRepoPortalTarget(repoPortalTarget);
   if(repoPortalResult.repo){ REPOS=[repoPortalResult.repo]; dataSource=repoPortalResult.source; currentUser=repoPortalTarget.owner; }
@@ -2749,6 +2767,7 @@ const I18N = {
     atelierGithub:'GitHub 열기', atelierAsk:'깃버에게 이 레포 질문', atelierWhy:'왜 이 구역인가',
     atelierRoomHint:'데이터 전시 · 실내 깃버 · 구역 해설', atelierChatTitle:'전시실 깃버', atelierChatPh:'이 전시 레포에 이어서 질문…', atelierChatCount:'대화 {n}/5', atelierSignalsNow:'현재 공개 메타데이터 기준',
     atelierChatAuto:'이 레포를 설명해 주세요.', atelierChatSearching:'{repo} 공개 정보를 GitHub MCP에서 찾고 있어요 🔍',
+    atelierDirectOpening:'{repo} 전시실로 이동하는 중…',
     atelierChatLimit:'이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요.',
     atelierChatUnavailable:'{repo}의 공개 정보를 지금 불러오지 못했어요. 다른 레포로 대신 답하지 않을게요.',
     atelierChatNoBackend:'이 마을에서는 Repository Atelier GitHub MCP가 비활성화되어 있어요. 다른 레포로 대신 답하지 않을게요.',
@@ -3129,6 +3148,7 @@ const I18N = {
     atelierGithub:'Open GitHub', atelierAsk:'Ask Gitber about this repo', atelierWhy:'Why this district?',
     atelierRoomHint:'Data exhibits · in-room Gitber · district context', atelierChatTitle:'Atelier Gitber', atelierChatPh:'Ask a follow-up about this exhibit…', atelierChatCount:'Chat {n}/5', atelierSignalsNow:"Using today's public metadata",
     atelierChatAuto:'Explain this repository.', atelierChatSearching:'Searching GitHub MCP for public information about {repo} 🔍',
+    atelierDirectOpening:'Entering the {repo} exhibition…',
     atelierChatLimit:'You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation.',
     atelierChatUnavailable:'Public information for {repo} is unavailable right now. I will not substitute another repository.',
     atelierChatNoBackend:'The Repository Atelier GitHub MCP is disabled in this town. I will not substitute another repository.',
@@ -10725,6 +10745,12 @@ function blueprintDeepLinkRepo(){
   const repo=repoByKey(repoPortalTarget.repo),target=repo&&_repositoryPortalTarget(repo);
   return target&&target.slug.toLowerCase()===BLUEPRINT_DEEP_LINK.target.slug.toLowerCase()?repo:null;
 }
+function repositoryAtelierDirectLinkRepo(){
+  if(!ATELIER_DIRECT_LINK.ok||cityMode!=='portal'||!repoPortalTarget
+    ||ATELIER_DIRECT_LINK.target.slug.toLowerCase()!==repoPortalTarget.slug.toLowerCase()) return null;
+  const repo=repoByKey(repoPortalTarget.repo),target=repo&&_repositoryPortalTarget(repo);
+  return target&&target.slug.toLowerCase()===ATELIER_DIRECT_LINK.target.slug.toLowerCase()?repo:null;
+}
 document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
   track('town_enter', { returning: !!VISITOR.returning });
   const rb=VISITOR.returning, news=hasFreshness(),blueprintPath=!blueprintDeepLinkBypass&&blueprintDeepLinkRepo()?BLUEPRINT_DEEP_LINK.path:null;
@@ -10829,7 +10855,20 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
   const replay=document.getElementById('tourReplayBtn'); if(replay) replay.onclick=()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); startTour(); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
 document.addEventListener('keydown',event=>{ if(event.key==='Escape'&&tour&&tour.active){ event.preventDefault(); event.stopImmediatePropagation(); endTour(false); } },true);
-document.getElementById('loading').style.display='none';
+function _scheduleRepositoryAtelierDirectEntry(){
+  const repo=repositoryAtelierDirectLinkRepo(),loading=document.getElementById('loading'),intro=document.getElementById('intro');
+  if(!repo||!loading||!intro||cityError) return false;
+  loading.style.display='flex'; loading.classList.add('atelier-direct');
+  document.getElementById('loadingText').textContent=tf('atelierDirectOpening',{repo:ATELIER_DIRECT_LINK.target.slug});
+  const enter=()=>setTimeout(()=>{
+      if(intro.classList.contains('hidden')||repositoryAtelierActive()){ loading.style.display='none'; return; }
+      introStartBtn.click();
+      setTimeout(()=>{ loading.style.display='none'; },REPOSITORY_ATELIER_DIRECT_LIMITS.coverReleaseMs);
+    },REPOSITORY_ATELIER_DIRECT_LIMITS.initializationDelayMs);
+  if(typeof requestAnimationFrame==='function') requestAnimationFrame(()=>requestAnimationFrame(enter)); else enter();
+  return true;
+}
+if(!_scheduleRepositoryAtelierDirectEntry()) document.getElementById('loading').style.display='none';
 
 /* ====================== ↔ TWIN TOWNS (two-person referral bridge) ====================== */
 const twinModal=document.getElementById('twinModal'),twinStudio=twinModal.querySelector('.twinStudio'),
@@ -11064,7 +11103,8 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
     coverage:TOWN_PROJECTION.cityState?.portable?.coverage||null });
   window.__events=()=>recentAnalyticsEvents.slice();
   window.__repoPortal=()=>({requested:repoPortalRequested,mode:cityMode,target:repoPortalTarget&&repoPortalTarget.slug||null,
-    source:dataSource,result:repoPortalResult&&repoPortalResult.result||null,fallback:repoPortalFallback,trafficKnown:REPOS[0]?.trafficKnown??null});
+    source:dataSource,result:repoPortalResult&&repoPortalResult.result||null,fallback:repoPortalFallback,trafficKnown:REPOS[0]?.trafficKnown??null,
+    directAtelier:ATELIER_DIRECT_LINK.ok});
   window.__depart=depart; window.__goHome=goHome;
 
   // --- init city-mode visuals ---

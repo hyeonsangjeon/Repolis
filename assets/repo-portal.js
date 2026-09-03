@@ -9,6 +9,11 @@ export const BLUEPRINT_DEEP_LINK_LIMITS = Object.freeze({
   maxDecodedPathBytes: 512,
 });
 
+export const REPOSITORY_ATELIER_DIRECT_LIMITS = Object.freeze({
+  initializationDelayMs: 1200,
+  coverReleaseMs: 900,
+});
+
 export const GITHUB_LOGIN_RE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
 export const GITHUB_REPO_RE = /^[A-Za-z0-9_.-]{1,100}$/;
 
@@ -16,6 +21,7 @@ const CONTROL_RE = /[\u0000-\u001f\u007f]/;
 const ENCODED_PATH_RE = /%(?:2e|2f|5c)/i;
 const TRAVERSAL_RE = /(?:^|\/)\.{1,2}(?:\/|$)/;
 const BLUEPRINT_QUERY_KEYS = new Set(['repo', 'view', 'path', 'ref']);
+const ATELIER_DIRECT_QUERY_KEYS = new Set(['repo', 'view']);
 
 function invalid(reason) {
   return Object.freeze({ ok: false, reason });
@@ -98,6 +104,11 @@ export function createRepoPortalUrl(value, baseUrl) {
   return `${cleanBase(baseUrl)}?repo=${encodeURIComponent(target.owner)}/${encodeURIComponent(target.repo)}&ref=repo-portal`;
 }
 
+export function createRepositoryAtelierDirectLink(value, baseUrl) {
+  const target = repoTarget(value);
+  return `${cleanBase(baseUrl)}?repo=${encodeURIComponent(target.owner)}/${encodeURIComponent(target.repo)}&view=atelier`;
+}
+
 function utf8Bytes(value) {
   return new TextEncoder().encode(value).byteLength;
 }
@@ -131,7 +142,7 @@ function decodeBlueprintQueryPart(value) {
   catch (_) { return invalid('encoding'); }
 }
 
-function parseBlueprintQuery(search) {
+function parseExactQuery(search, keys) {
   const query = String(search || '').replace(/^\?/, '');
   if (!query || query.includes('#') || CONTROL_RE.test(query)) return invalid('parameters');
   const values = new Map();
@@ -141,12 +152,30 @@ function parseBlueprintQuery(search) {
     const rawKey = decodeBlueprintQueryPart(pair.slice(0, separator));
     const rawValue = decodeBlueprintQueryPart(pair.slice(separator + 1));
     if (!rawKey.ok || !rawValue.ok) return invalid('encoding');
-    if (!BLUEPRINT_QUERY_KEYS.has(rawKey.value) || values.has(rawKey.value)) return invalid('parameters');
+    if (!keys.has(rawKey.value) || values.has(rawKey.value)) return invalid('parameters');
     values.set(rawKey.value, rawValue.value);
   }
-  if (values.size !== BLUEPRINT_QUERY_KEYS.size
-    || [...BLUEPRINT_QUERY_KEYS].some(key => !values.has(key))) return invalid('parameters');
+  if (values.size !== keys.size || [...keys].some(key => !values.has(key))) return invalid('parameters');
   return Object.freeze({ ok: true, values });
+}
+
+function parseBlueprintQuery(search) {
+  return parseExactQuery(search, BLUEPRINT_QUERY_KEYS);
+}
+
+export function resolveRepositoryAtelierDirectLink(search, hash = '') {
+  const query = String(search || '').replace(/^\?/, '');
+  const probe = new URLSearchParams(query);
+  const requested = probe.get('view') === 'atelier';
+  if (!requested) return Object.freeze({ requested: false, ok: false, target: null, error: null });
+  if (String(hash || '')) return Object.freeze({ requested: true, ok: false, target: null, error: 'parameters' });
+  const parsed = parseExactQuery(query, ATELIER_DIRECT_QUERY_KEYS);
+  if (!parsed.ok) return Object.freeze({ requested: true, ok: false, target: null, error: parsed.reason });
+  const target = parseRepoPortalInput(parsed.values.get('repo'));
+  if (!target.ok || target.kind !== 'repo') {
+    return Object.freeze({ requested: true, ok: false, target: null, error: target.reason || 'shape' });
+  }
+  return Object.freeze({ requested: true, ok: true, target, error: null });
 }
 
 export function createRepositoryBlueprintDeepLink(value, path, baseUrl) {
@@ -159,7 +188,7 @@ export function createRepositoryBlueprintDeepLink(value, path, baseUrl) {
 export function resolveRepositoryBlueprintDeepLink(search, hash = '') {
   const query = String(search || '').replace(/^\?/, '');
   const probe = new URLSearchParams(query);
-  const requested = probe.has('view') || probe.has('path') || probe.get('ref') === 'blueprint';
+  const requested = probe.get('view') === 'blueprint' || probe.has('path') || probe.get('ref') === 'blueprint';
   if (!requested) return Object.freeze({ requested: false, ok: false, target: null, path: null, error: null });
   if (String(hash || '')) return Object.freeze({ requested: true, ok: false, target: null, path: null, error: 'parameters' });
   const parsed = parseBlueprintQuery(query);

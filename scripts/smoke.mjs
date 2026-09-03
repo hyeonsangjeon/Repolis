@@ -51,14 +51,17 @@ import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYe
 import {
   BLUEPRINT_DEEP_LINK_LIMITS,
   REPO_PORTAL_LIMITS,
+  REPOSITORY_ATELIER_DIRECT_LIMITS,
   createRepoOwnerTownUrl,
   createRepoPortalUrl,
+  createRepositoryAtelierDirectLink,
   createRepositoryBlueprintDeepLink,
   parseRepoPortalInput,
   projectPublicRepo,
   projectPublicRepos,
   repoPortalLatencyBucket,
   resolveRepoPortalRequest,
+  resolveRepositoryAtelierDirectLink,
   resolveRepositoryBlueprintDeepLink
 } from '../assets/repo-portal.js';
 import {
@@ -689,6 +692,18 @@ ok(portalSlug.ok&&portalSlug.kind==='repo'&&portalSlug.slug==='Octo-Cat/hello-wo
 const portalCanonical=createRepoPortalUrl(portalSlug,'https://example.test/Repolis/?user=other&twin=friend&growth=2020#repo=old');
 ok(portalCanonical==='https://example.test/Repolis/?repo=Octo-Cat/hello-world&ref=repo-portal',
   'canonical Portal URL strips town, twin, growth, and hash state without hiding the owner/repo slash');
+const atelierDirectUrl=createRepositoryAtelierDirectLink(portalSlug,'https://example.test/Repolis/?user=other#repo=old');
+const atelierDirectResolved=resolveRepositoryAtelierDirectLink(new URL(atelierDirectUrl).search);
+ok(atelierDirectUrl==='https://example.test/Repolis/?repo=Octo-Cat/hello-world&view=atelier'
+  &&atelierDirectResolved.ok&&atelierDirectResolved.target.slug==='Octo-Cat/hello-world'
+  &&REPOSITORY_ATELIER_DIRECT_LIMITS.initializationDelayMs===1200
+  &&REPOSITORY_ATELIER_DIRECT_LIMITS.coverReleaseMs===900,
+  'Atelier Direct Link keeps one exact repository and a covered 1.2-second initialization pause');
+ok(!resolveRepositoryAtelierDirectLink('?repo=Octo-Cat/hello-world&view=atelier&user=other').ok
+  &&!resolveRepositoryAtelierDirectLink('?repo=Octo-Cat/hello-world&view=atelier','#repo=other').ok
+  &&!resolveRepositoryAtelierDirectLink('?repo=Octo-Cat/hello-world&view=blueprint').requested
+  &&!resolveRepositoryBlueprintDeepLink(new URL(atelierDirectUrl).search).requested,
+  'direct entry rejects composed state and remains disjoint from ordinary Portal and Blueprint links');
 ok(createRepoOwnerTownUrl(portalSlug,'https://example.test/Repolis/?repo=old','owner')
     ==='https://example.test/Repolis/?user=Octo-Cat&focus=hello-world&ref=repo-portal'
   && createRepoOwnerTownUrl('owner/repo','https://example.test/Repolis/','owner')
@@ -736,7 +751,7 @@ ok(repoPortalLatencyBucket(999)==='under-1s'&&repoPortalLatencyBucket(1000)==='1
 
 const portalLoader=(HTML.match(/let _ownerSnapshotPromise=null;[\s\S]*?(?=\ntrack\('page_load'\);)/)||[''])[0];
 const portalTargetLoader=(portalLoader.match(/async function _loadRepoPortalTarget\(target\)\{[\s\S]*?\n\}/)||[''])[0];
-ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v2'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v3'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
   'the zero-build runtime imports one small dedicated Portal module');
 ok(!/document|window|localStorage|sessionStorage|fetch\(|Math\.random|THREE/.test(REPO_PORTAL_SRC),
   'parser, canonicalizer, projection, and link builders stay pure and browser-independent');
@@ -784,6 +799,22 @@ ok(/const portalRepo=cityMode==='portal'[\s\S]*?introPortalReady[\s\S]*?introPor
 ok(/if\(cityMode==='portal'&&repoPortalTarget\)[\s\S]*?enterRepositoryAtelier\(repo\)/.test(HTML)
   &&/else if\(_reqFocus\)[\s\S]*?enterRepositoryAtelier\(repo\)/.test(HTML),
   'shared targets and expanded owner towns arrive at the exact Atelier after one entry click');
+const atelierDirectBoot=(HTML.match(/function repositoryAtelierDirectLinkRepo\(\)\{[\s\S]*?(?=\n\/\* ====================== ↔ TWIN TOWNS)/)||[''])[0];
+ok(/const ATELIER_DIRECT_LINK = resolveRepositoryAtelierDirectLink\(location\.search,location\.hash\)/.test(HTML)
+  &&/function _scheduleRepositoryAtelierDirectEntry\(\)/.test(atelierDirectBoot)
+  &&/loading\.style\.display='flex'/.test(atelierDirectBoot)
+  &&/classList\.add\('atelier-direct'\)/.test(atelierDirectBoot)
+  &&/requestAnimationFrame\(\(\)=>requestAnimationFrame\(enter\)\)/.test(atelierDirectBoot)
+  &&/introStartBtn\.click\(\)/.test(atelierDirectBoot)
+  &&/REPOSITORY_ATELIER_DIRECT_LIMITS\.initializationDelayMs/.test(atelierDirectBoot)
+  &&/REPOSITORY_ATELIER_DIRECT_LIMITS\.coverReleaseMs/.test(atelierDirectBoot),
+  'a valid direct link paints the loading cover, holds the initialization pause, then reuses the exact Atelier entry');
+ok(/id="loadingPortal" aria-hidden="true"/.test(HTML)
+  &&/#loading\.atelier-direct #loadingPortal/.test(HTML)
+  &&/@media \(prefers-reduced-motion: reduce\)[\s\S]*?#loading\.atelier-direct #loadingPortal/.test(HTML)
+  &&!/getElementById\('loading'\)[^;\n]*textContent/.test(HTML)
+  &&!/fetch\(|localStorage|sessionStorage|indexedDB|groundedAsk|webllmAsk|proxyAsk/.test(atelierDirectBoot),
+  'the direct-entry transition is covered, reduced-motion safe, and adds no request, storage, or model path');
 ok(/if\(!rb&&!_reqFocus\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
   &&/if\(cityMode!=='portal'&&!_reqFocus&&REPOS\.length\)/.test(HTML),
   'target arrivals suppress the generic public-town toast, Gazette, and Chronicle until after the focused Aha');
@@ -803,7 +834,7 @@ ok(/atelierPortalExplore\.hidden=cityMode!=='portal'/.test(HTML)
   'portalSourceCache','portalSourceStale','repoTargetAria','modePortalLabel','repoPortalOf','trainDepartRepo',
   'fetchingRepo','portalInvalidTitle','portalInvalidMsg','portalNotFoundMsg','portalRateMsg','portalNetMsg',
   'portalContinue','portalActionsAria','portalCopy','portalCopied','portalCopyFailed','portalExplore',
-  'atelierTrafficUnavailable','publicTrafficUnavailable']
+  'atelierTrafficUnavailable','atelierDirectOpening','publicTrafficUnavailable']
   .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Repo Portal key ${key} is bilingual`));
 ok(/id="introPublicProof" hidden role="status" aria-live="polite"/.test(HTML)
   &&/id="introLaunchErr" role="alert"/.test(HTML)
@@ -1814,7 +1845,7 @@ ok((HTML.match(/ferryName:/g)||[]).length===2 && (HTML.match(/ferryReached:/g)||
   && (HTML.match(/ferryRiding:/g)||[]).length===2 && /if\(canalFerryRide\)\{ promptEl\.innerHTML = t\('ferryRiding'\)/.test(HTML)
   && /window\.__canalFerry=/.test(HTML) && /window\.__boardFerry=/.test(HTML) && /window\.__finishFerry=/.test(HTML),
   'Korean/English ride copy and bounded debug board/finish probes are present');
-ok(/boardable low-profile ferry/.test(README_EN) && /낮은 유람선에 올라/.test(README_KO),
+ok(/boardable,? low-profile ferry/.test(README_EN) && /낮은 유람선에 올라/.test(README_KO),
   'both READMEs describe the real boardable canal interaction');
 
 group('Rain Garden Weather Bell — one bounded town sunshower');

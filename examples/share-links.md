@@ -10,6 +10,7 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 | `https://hyeonsangjeon.github.io/Repolis/?launch=1` | The username launchpad, focused and ready to build a personal preview. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob` | A town built live from `mrdoob`'s public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?repo=mrdoob/three.js&ref=repo-portal` | The `three.js` building and Repository Atelier before the owner catalog. |
+| `https://hyeonsangjeon.github.io/Repolis/?repo=hyeonsangjeon/Repolis&view=atelier` | A covered direct transition into the `Repolis` Repository Atelier, with no exterior-town step. |
 | `https://hyeonsangjeon.github.io/Repolis/?repo=owner/repo&view=blueprint&path=src%2Fagents&ref=blueprint` | A confirmation for one exact public Blueprint path; no Tree request starts until Load. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=torvalds` | A town built from `torvalds`' public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob&route=three.js,stats.js&ref=repo-route` | An ordered two-house Repo Route in `mrdoob`'s town. |
@@ -32,6 +33,16 @@ repository becomes:
 The link loads one target first, confirms its public facts, and opens its Repository Atelier after one entry
 click. **Copy Repo Portal** produces the same canonical address. **Explore @owner's full town** is an
 explicit second step that reuses the existing public-town loader and keeps the target focused.
+
+For an invitation or campaign that should begin with the exhibition itself, use the strict direct form:
+
+```text
+?repo=<owner>/<repo>&view=atelier
+```
+
+It keeps the loading cover visible, shows a short portal transition after a 1.2-second initialization pause,
+and then reuses the same Repository Atelier entry. The intro and exterior town never flash underneath the
+transition. Extra query state or a hash disables automatic entry and falls back to the ordinary Portal flow.
 
 Trailing slashes and `.git` are accepted. Non-GitHub hosts, extra paths, query injection, traversal, and
 control characters are rejected before any GitHub request. If `repo` and `user` conflict, the repository
