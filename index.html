@@ -1167,20 +1167,20 @@
   #loading { position: fixed; inset: 0; z-index: 40; background: #5fb0a8; color: #fff; display: flex;
     align-items: center; justify-content: center; font-size: 15px; font-weight: 600; }
   #loadingPortal { display:none; }
-  #loading.atelier-direct { flex-direction:column; gap:24px; overflow:hidden; background:#102a2f; }
-  #loading.atelier-direct #loadingPortal { position:relative; display:block; width:min(46vw,220px); aspect-ratio:1;
+  #loading.direct-entry { flex-direction:column; gap:24px; overflow:hidden; background:#102a2f; }
+  #loading.direct-entry #loadingPortal { position:relative; display:block; width:min(46vw,220px); aspect-ratio:1;
     border:2px solid rgba(139,210,202,.8); border-radius:50%; box-shadow:0 0 0 22px rgba(139,210,202,.16),0 0 0 52px rgba(228,189,104,.1);
-    animation:atelier-direct-portal 1.8s cubic-bezier(.2,.68,.2,1) infinite; }
-  #loading.atelier-direct #loadingPortal::before, #loading.atelier-direct #loadingPortal::after { content:""; position:absolute; border-radius:50%; }
-  #loading.atelier-direct #loadingPortal::before { inset:18%; border:2px solid rgba(228,189,104,.76);
-    animation:atelier-direct-ring 1.8s ease-in-out infinite reverse; }
-  #loading.atelier-direct #loadingPortal::after { inset:39%; border:1px solid rgba(238,245,244,.86); background:#0a1d21;
+    animation:direct-entry-portal 1.8s cubic-bezier(.2,.68,.2,1) infinite; }
+  #loading.direct-entry #loadingPortal::before, #loading.direct-entry #loadingPortal::after { content:""; position:absolute; border-radius:50%; }
+  #loading.direct-entry #loadingPortal::before { inset:18%; border:2px solid rgba(228,189,104,.76);
+    animation:direct-entry-ring 1.8s ease-in-out infinite reverse; }
+  #loading.direct-entry #loadingPortal::after { inset:39%; border:1px solid rgba(238,245,244,.86); background:#0a1d21;
     box-shadow:0 0 26px rgba(139,210,202,.42); }
-  #loading.atelier-direct #loadingText { position:relative; max-width:min(82vw,520px); text-align:center; line-height:1.5; }
-  @keyframes atelier-direct-portal { 0%{ transform:scale(.78); opacity:.5; } 55%{ opacity:1; } 100%{ transform:scale(1.08); opacity:.36; } }
-  @keyframes atelier-direct-ring { 0%,100%{ transform:scale(.82); opacity:.45; } 50%{ transform:scale(1.08); opacity:1; } }
+  #loading.direct-entry #loadingText { position:relative; max-width:min(82vw,520px); text-align:center; line-height:1.5; }
+  @keyframes direct-entry-portal { 0%{ transform:scale(.78); opacity:.5; } 55%{ opacity:1; } 100%{ transform:scale(1.08); opacity:.36; } }
+  @keyframes direct-entry-ring { 0%,100%{ transform:scale(.82); opacity:.45; } 50%{ transform:scale(1.08); opacity:1; } }
   @media (prefers-reduced-motion: reduce) {
-    #loading.atelier-direct #loadingPortal, #loading.atelier-direct #loadingPortal::before { animation:none; }
+    #loading.direct-entry #loadingPortal, #loading.direct-entry #loadingPortal::before { animation:none; }
   }
 
   /* ---- Roblox-style touch controls: floating left thumbstick + drag-to-look right half + round action button ---- */
@@ -2156,7 +2156,7 @@ import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-re
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
 import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
-import { REPO_PORTAL_LIMITS, REPOSITORY_ATELIER_DIRECT_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v3';
+import { DIRECT_ENTRY_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v4';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
 import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse, residentNewcomerLine } from './assets/resident-profiles.js?v=world-tree-phase4-v1';
@@ -2184,7 +2184,9 @@ let REPOS = [], CITY_STATE = null, RESIDENT_MANIFEST = null, RESIDENT_MANIFEST_S
 const GH_LOGIN_RE = GITHUB_LOGIN_RE;
 const _QUERY = new URLSearchParams(location.search);
 const _repoRoute = resolveRepoPortalRequest(location.search, OWNER);
+const PLAZA_DIRECT_LINK = resolvePlazaDirectLink(location.search,location.hash);
 const ATELIER_DIRECT_LINK = resolveRepositoryAtelierDirectLink(location.search,location.hash);
+const DIRECT_ENTRY_LANG = PLAZA_DIRECT_LINK.ok?PLAZA_DIRECT_LINK.lang:(ATELIER_DIRECT_LINK.ok?ATELIER_DIRECT_LINK.lang:null);
 const BLUEPRINT_DEEP_LINK = resolveRepositoryBlueprintDeepLink(location.search,location.hash);
 const _reqUser = (_QUERY.get('user') || '').trim().replace(/^@+/,'');
 const _reqTwin = (_QUERY.get('twin') || '').trim();
@@ -2278,7 +2280,8 @@ function trackContributionQuest(eventName,payload){
   track(eventName,safe);
 }
 function _repoPortalDevice(){ return matchMedia('(pointer:coarse)').matches||innerWidth<700?'mobile':'desktop'; }
-function _repoPortalLang(){ try{ const value=localStorage.getItem('repolisLang'); if(value==='ko'||value==='en') return value; }catch(e){}
+function _repoPortalLang(){ if(DIRECT_ENTRY_LANG) return DIRECT_ENTRY_LANG;
+  try{ const value=localStorage.getItem('repolisLang'); if(value==='ko'||value==='en') return value; }catch(e){}
   return (navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; }
 
 /* --- public town: normalize allowlisted GitHub REST fields without manufacturing traffic. --- */
@@ -2491,7 +2494,7 @@ const hexstr = n => '#'+(n>>>0).toString(16).padStart(6,'0');
 const labelOf = s => s.replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 
 /* ====================== i18n (EN / KO) ====================== */
-let LANG = localStorage.getItem('repolisLang');
+let LANG = DIRECT_ENTRY_LANG || localStorage.getItem('repolisLang');
 if(LANG!=='ko'&&LANG!=='en') LANG = (navigator.language||'').toLowerCase().startsWith('ko') ? 'ko' : 'en';
 const I18N = {
   ko:{
@@ -2767,7 +2770,7 @@ const I18N = {
     atelierGithub:'GitHub 열기', atelierAsk:'깃버에게 이 레포 질문', atelierWhy:'왜 이 구역인가',
     atelierRoomHint:'데이터 전시 · 실내 깃버 · 구역 해설', atelierChatTitle:'전시실 깃버', atelierChatPh:'이 전시 레포에 이어서 질문…', atelierChatCount:'대화 {n}/5', atelierSignalsNow:'현재 공개 메타데이터 기준',
     atelierChatAuto:'이 레포를 설명해 주세요.', atelierChatSearching:'{repo} 공개 정보를 GitHub MCP에서 찾고 있어요 🔍',
-    atelierDirectOpening:'{repo} 전시실로 이동하는 중…',
+    atelierDirectOpening:'{repo} 전시실로 이동하는 중…', plazaDirectOpening:'Repolis 광장으로 이동하는 중…',
     atelierChatLimit:'이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요.',
     atelierChatUnavailable:'{repo}의 공개 정보를 지금 불러오지 못했어요. 다른 레포로 대신 답하지 않을게요.',
     atelierChatNoBackend:'이 마을에서는 Repository Atelier GitHub MCP가 비활성화되어 있어요. 다른 레포로 대신 답하지 않을게요.',
@@ -3148,7 +3151,7 @@ const I18N = {
     atelierGithub:'Open GitHub', atelierAsk:'Ask Gitber about this repo', atelierWhy:'Why this district?',
     atelierRoomHint:'Data exhibits · in-room Gitber · district context', atelierChatTitle:'Atelier Gitber', atelierChatPh:'Ask a follow-up about this exhibit…', atelierChatCount:'Chat {n}/5', atelierSignalsNow:"Using today's public metadata",
     atelierChatAuto:'Explain this repository.', atelierChatSearching:'Searching GitHub MCP for public information about {repo} 🔍',
-    atelierDirectOpening:'Entering the {repo} exhibition…',
+    atelierDirectOpening:'Entering the {repo} exhibition…', plazaDirectOpening:'Entering the Repolis plaza…',
     atelierChatLimit:'You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation.',
     atelierChatUnavailable:'Public information for {repo} is unavailable right now. I will not substitute another repository.',
     atelierChatNoBackend:'The Repository Atelier GitHub MCP is disabled in this town. I will not substitute another repository.',
@@ -10763,7 +10766,7 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
   setTimeout(()=>{ try{
     if(cityMode==='portal'&&repoPortalTarget){ const repo=repoByKey(repoPortalTarget.repo);
-      if(repo) enterRepositoryAtelier(repo,blueprintPath?{autoChat:false,blueprintPath}:{}); }
+      if(repo) enterRepositoryAtelier(repo,blueprintPath?{autoChat:false,blueprintPath}:(repositoryAtelierDirectLinkRepo()?{autoChat:false}:{})); }
     else if(_reqFocus){ const repo=repoByKey(_reqFocus.repo); if(repo) enterRepositoryAtelier(repo); else openRepoFromHash(); }
     else openRepoFromHash();
   }catch(e){} }, 480);
@@ -10855,20 +10858,28 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
   const replay=document.getElementById('tourReplayBtn'); if(replay) replay.onclick=()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); startTour(); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
 document.addEventListener('keydown',event=>{ if(event.key==='Escape'&&tour&&tour.active){ event.preventDefault(); event.stopImmediatePropagation(); endTour(false); } },true);
-function _scheduleRepositoryAtelierDirectEntry(){
-  const repo=repositoryAtelierDirectLinkRepo(),loading=document.getElementById('loading'),intro=document.getElementById('intro');
-  if(!repo||!loading||!intro||cityError) return false;
-  loading.style.display='flex'; loading.classList.add('atelier-direct');
-  document.getElementById('loadingText').textContent=tf('atelierDirectOpening',{repo:ATELIER_DIRECT_LINK.target.slug});
+function _scheduleCoveredDirectEntry(message,alreadyEntered){
+  const loading=document.getElementById('loading'),intro=document.getElementById('intro');
+  if(!loading||!intro||cityError) return false;
+  loading.style.display='flex'; loading.classList.add('direct-entry');
+  document.getElementById('loadingText').textContent=message;
   const enter=()=>setTimeout(()=>{
-      if(intro.classList.contains('hidden')||repositoryAtelierActive()){ loading.style.display='none'; return; }
+      if(intro.classList.contains('hidden')||alreadyEntered()){ loading.style.display='none'; return; }
       introStartBtn.click();
-      setTimeout(()=>{ loading.style.display='none'; },REPOSITORY_ATELIER_DIRECT_LIMITS.coverReleaseMs);
-    },REPOSITORY_ATELIER_DIRECT_LIMITS.initializationDelayMs);
+      setTimeout(()=>{ loading.style.display='none'; },DIRECT_ENTRY_LIMITS.coverReleaseMs);
+    },DIRECT_ENTRY_LIMITS.initializationDelayMs);
   if(typeof requestAnimationFrame==='function') requestAnimationFrame(()=>requestAnimationFrame(enter)); else enter();
   return true;
 }
-if(!_scheduleRepositoryAtelierDirectEntry()) document.getElementById('loading').style.display='none';
+function _schedulePlazaDirectEntry(){
+  if(!PLAZA_DIRECT_LINK.ok||cityMode!=='owner') return false;
+  return _scheduleCoveredDirectEntry(t('plazaDirectOpening'),()=>false);
+}
+function _scheduleRepositoryAtelierDirectEntry(){
+  if(!repositoryAtelierDirectLinkRepo()) return false;
+  return _scheduleCoveredDirectEntry(tf('atelierDirectOpening',{repo:ATELIER_DIRECT_LINK.target.slug}),()=>repositoryAtelierActive());
+}
+if(!_schedulePlazaDirectEntry()&&!_scheduleRepositoryAtelierDirectEntry()) document.getElementById('loading').style.display='none';
 
 /* ====================== ↔ TWIN TOWNS (two-person referral bridge) ====================== */
 const twinModal=document.getElementById('twinModal'),twinStudio=twinModal.querySelector('.twinStudio'),
@@ -11100,7 +11111,7 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
   };
   window.__station=()=>({ mode:cityMode, user:currentUser, source:dataSource, error:effErr, repoCount:REPOS.length, open:!stationEl.classList.contains('hidden') });
   window.__city=()=>({ mode:cityMode, user:currentUser, source:dataSource, projection:TOWN_PROJECTION.kind, repoCount:REPOS.length, error:cityError,
-    coverage:TOWN_PROJECTION.cityState?.portable?.coverage||null });
+    coverage:TOWN_PROJECTION.cityState?.portable?.coverage||null,directPlaza:PLAZA_DIRECT_LINK.ok });
   window.__events=()=>recentAnalyticsEvents.slice();
   window.__repoPortal=()=>({requested:repoPortalRequested,mode:cityMode,target:repoPortalTarget&&repoPortalTarget.slug||null,
     source:dataSource,result:repoPortalResult&&repoPortalResult.result||null,fallback:repoPortalFallback,trafficKnown:REPOS[0]?.trafficKnown??null,

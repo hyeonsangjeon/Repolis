@@ -8,11 +8,15 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
-### Repository Atelier direct entry
+### Covered plaza and Repository Atelier direct entry
 
-- A strict `?repo=owner/repo&view=atelier` link now holds a lightweight portal cover for a 1.2-second
+- `?view=plaza&lang=en` now provides an English-first campaign link that keeps the portal cover up, skips the
+  intro, and lands at the existing owner-town plaza without opening a repository room or chat.
+
+- A strict `?repo=owner/repo&view=atelier&lang=en` link now holds a lightweight portal cover for a 1.2-second
   initialization pause, then enters the exact existing Repository Atelier without flashing the intro or
-  exterior town. Normal Repo Portal links keep their explicit confirmation step.
+  exterior town. Direct entry defaults to English and leaves Gitber chat closed so the repository exhibition
+  is the first view; `lang=ko` explicitly selects Korean. Normal Repo Portal links keep their existing behavior.
 - Extra query fields, duplicate keys, hashes, invalid targets, and Blueprint links cannot trigger automatic
   entry. The transition respects reduced motion and adds no request, storage, model path, scene resource,
   dependency, or build step.

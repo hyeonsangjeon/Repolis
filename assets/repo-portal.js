@@ -9,7 +9,7 @@ export const BLUEPRINT_DEEP_LINK_LIMITS = Object.freeze({
   maxDecodedPathBytes: 512,
 });
 
-export const REPOSITORY_ATELIER_DIRECT_LIMITS = Object.freeze({
+export const DIRECT_ENTRY_LIMITS = Object.freeze({
   initializationDelayMs: 1200,
   coverReleaseMs: 900,
 });
@@ -21,7 +21,10 @@ const CONTROL_RE = /[\u0000-\u001f\u007f]/;
 const ENCODED_PATH_RE = /%(?:2e|2f|5c)/i;
 const TRAVERSAL_RE = /(?:^|\/)\.{1,2}(?:\/|$)/;
 const BLUEPRINT_QUERY_KEYS = new Set(['repo', 'view', 'path', 'ref']);
-const ATELIER_DIRECT_QUERY_KEYS = new Set(['repo', 'view']);
+const ATELIER_DIRECT_QUERY_KEYS = new Set(['repo', 'view', 'lang']);
+const ATELIER_DIRECT_REQUIRED_QUERY_KEYS = new Set(['repo', 'view']);
+const PLAZA_DIRECT_QUERY_KEYS = new Set(['view', 'lang']);
+const PLAZA_DIRECT_REQUIRED_QUERY_KEYS = new Set(['view']);
 
 function invalid(reason) {
   return Object.freeze({ ok: false, reason });
@@ -104,9 +107,15 @@ export function createRepoPortalUrl(value, baseUrl) {
   return `${cleanBase(baseUrl)}?repo=${encodeURIComponent(target.owner)}/${encodeURIComponent(target.repo)}&ref=repo-portal`;
 }
 
-export function createRepositoryAtelierDirectLink(value, baseUrl) {
+export function createRepositoryAtelierDirectLink(value, baseUrl, lang = 'en') {
   const target = repoTarget(value);
-  return `${cleanBase(baseUrl)}?repo=${encodeURIComponent(target.owner)}/${encodeURIComponent(target.repo)}&view=atelier`;
+  if (lang !== 'en' && lang !== 'ko') throw new TypeError('Repository Atelier language must be en or ko');
+  return `${cleanBase(baseUrl)}?repo=${encodeURIComponent(target.owner)}/${encodeURIComponent(target.repo)}&view=atelier&lang=${lang}`;
+}
+
+export function createPlazaDirectLink(baseUrl, lang = 'en') {
+  if (lang !== 'en' && lang !== 'ko') throw new TypeError('Repolis plaza language must be en or ko');
+  return `${cleanBase(baseUrl)}?view=plaza&lang=${lang}`;
 }
 
 function utf8Bytes(value) {
@@ -142,7 +151,7 @@ function decodeBlueprintQueryPart(value) {
   catch (_) { return invalid('encoding'); }
 }
 
-function parseExactQuery(search, keys) {
+function parseExactQuery(search, keys, requiredKeys = keys) {
   const query = String(search || '').replace(/^\?/, '');
   if (!query || query.includes('#') || CONTROL_RE.test(query)) return invalid('parameters');
   const values = new Map();
@@ -155,7 +164,7 @@ function parseExactQuery(search, keys) {
     if (!keys.has(rawKey.value) || values.has(rawKey.value)) return invalid('parameters');
     values.set(rawKey.value, rawValue.value);
   }
-  if (values.size !== keys.size || [...keys].some(key => !values.has(key))) return invalid('parameters');
+  if ([...requiredKeys].some(key => !values.has(key))) return invalid('parameters');
   return Object.freeze({ ok: true, values });
 }
 
@@ -169,13 +178,34 @@ export function resolveRepositoryAtelierDirectLink(search, hash = '') {
   const requested = probe.get('view') === 'atelier';
   if (!requested) return Object.freeze({ requested: false, ok: false, target: null, error: null });
   if (String(hash || '')) return Object.freeze({ requested: true, ok: false, target: null, error: 'parameters' });
-  const parsed = parseExactQuery(query, ATELIER_DIRECT_QUERY_KEYS);
+  const parsed = parseExactQuery(query, ATELIER_DIRECT_QUERY_KEYS, ATELIER_DIRECT_REQUIRED_QUERY_KEYS);
   if (!parsed.ok) return Object.freeze({ requested: true, ok: false, target: null, error: parsed.reason });
   const target = parseRepoPortalInput(parsed.values.get('repo'));
   if (!target.ok || target.kind !== 'repo') {
     return Object.freeze({ requested: true, ok: false, target: null, error: target.reason || 'shape' });
   }
-  return Object.freeze({ requested: true, ok: true, target, error: null });
+  const lang = parsed.values.get('lang') || 'en';
+  if (lang !== 'en' && lang !== 'ko') {
+    return Object.freeze({ requested: true, ok: false, target, lang: null, error: 'lang' });
+  }
+  return Object.freeze({ requested: true, ok: true, target, lang, error: null });
+}
+
+export function resolvePlazaDirectLink(search, hash = '') {
+  const query = String(search || '').replace(/^\?/, '');
+  const probe = new URLSearchParams(query);
+  const requested = probe.get('view') === 'plaza';
+  if (!requested) return Object.freeze({ requested: false, ok: false, lang: null, error: null });
+  if (String(hash || '')) return Object.freeze({ requested: true, ok: false, lang: null, error: 'parameters' });
+  const parsed = parseExactQuery(query, PLAZA_DIRECT_QUERY_KEYS, PLAZA_DIRECT_REQUIRED_QUERY_KEYS);
+  if (!parsed.ok || parsed.values.get('view') !== 'plaza') {
+    return Object.freeze({ requested: true, ok: false, lang: null, error: parsed.reason || 'view' });
+  }
+  const lang = parsed.values.get('lang') || 'en';
+  if (lang !== 'en' && lang !== 'ko') {
+    return Object.freeze({ requested: true, ok: false, lang: null, error: 'lang' });
+  }
+  return Object.freeze({ requested: true, ok: true, lang, error: null });
 }
 
 export function createRepositoryBlueprintDeepLink(value, path, baseUrl) {

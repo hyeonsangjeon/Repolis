@@ -8,9 +8,10 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 |---|---|
 | `https://hyeonsangjeon.github.io/Repolis/` | The owner's generated city snapshot. |
 | `https://hyeonsangjeon.github.io/Repolis/?launch=1` | The username launchpad, focused and ready to build a personal preview. |
+| `https://hyeonsangjeon.github.io/Repolis/?view=plaza&lang=en` | A covered direct transition into the English owner-town plaza, with no intro step. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob` | A town built live from `mrdoob`'s public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?repo=mrdoob/three.js&ref=repo-portal` | The `three.js` building and Repository Atelier before the owner catalog. |
-| `https://hyeonsangjeon.github.io/Repolis/?repo=hyeonsangjeon/Repolis&view=atelier` | A covered direct transition into the `Repolis` Repository Atelier, with no exterior-town step. |
+| `https://hyeonsangjeon.github.io/Repolis/?repo=hyeonsangjeon/Repolis&view=atelier&lang=en` | A covered direct transition into the English `Repolis` Repository Atelier, with no exterior-town or auto-open chat step. |
 | `https://hyeonsangjeon.github.io/Repolis/?repo=owner/repo&view=blueprint&path=src%2Fagents&ref=blueprint` | A confirmation for one exact public Blueprint path; no Tree request starts until Load. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=torvalds` | A town built from `torvalds`' public repos. |
 | `https://hyeonsangjeon.github.io/Repolis/?user=mrdoob&route=three.js,stats.js&ref=repo-route` | An ordered two-house Repo Route in `mrdoob`'s town. |
@@ -20,6 +21,15 @@ Repolis is one static page, so every entry point is just a URL. No accounts, no 
 stale fallback). It activates only for a valid, non-owner username; a bad name shows a friendly "lost"
 overlay, and a "go home" button always returns to the owner city. Cross-town taxi driving is disabled in
 public mode.
+
+For an invitation or campaign that should skip the intro and begin in the owner's plaza, use:
+
+```text
+?view=plaza&lang=en
+```
+
+The language defaults to English when omitted; use `lang=ko` for Korean. The strict form does not combine
+with repository, town, route, or hash state.
 
 ## Share one repository
 
@@ -37,12 +47,13 @@ explicit second step that reuses the existing public-town loader and keeps the t
 For an invitation or campaign that should begin with the exhibition itself, use the strict direct form:
 
 ```text
-?repo=<owner>/<repo>&view=atelier
+?repo=<owner>/<repo>&view=atelier&lang=en
 ```
 
-It keeps the loading cover visible, shows a short portal transition after a 1.2-second initialization pause,
-and then reuses the same Repository Atelier entry. The intro and exterior town never flash underneath the
-transition. Extra query state or a hash disables automatic entry and falls back to the ordinary Portal flow.
+It keeps the loading cover visible for a 1.2-second portal transition, then enters the same Repository Atelier
+without showing the intro, exterior town, or auto-open Gitber chat. English is the direct-link default; use
+`lang=ko` for Korean. Extra query state, an invalid language, or a hash disables automatic entry and falls back
+to the ordinary Portal flow.
 
 Trailing slashes and `.git` are accepted. Non-GitHub hosts, extra paths, query injection, traversal, and
 control characters are rejected before any GitHub request. If `repo` and `user` conflict, the repository

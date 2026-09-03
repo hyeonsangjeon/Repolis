@@ -154,12 +154,15 @@ features:
     generated_fields: [lineage.source, lineage.url]
     added_draw_calls: 1
     runtime_github_requests: 0
+  - id: plaza-direct-link
+    summary: An English-first covered campaign link skips the intro and starts at the existing owner-town plaza.
+    url: "?view=plaza&lang=en"
   - id: town-growth-replay
     summary: Public repo creation dates raise existing houses through a reversible, shareable year timeline without inventing historical metrics or adding render assets.
   - id: repo-portal
     summary: A canonical owner/repo link loads one public target before the owner catalog; an optional covered direct link opens the same Atelier after a 1.2-second initialization pause.
     url: "?repo=<owner>/<repo>&ref=repo-portal"
-    direct_atelier_url: "?repo=<owner>/<repo>&view=atelier"
+    direct_atelier_url: "?repo=<owner>/<repo>&view=atelier&lang=en"
     cache: "15 minutes, 30 entries, 512 KiB LRU"
     cold_github_requests_before_aha: 1
   - id: portable-living-towns

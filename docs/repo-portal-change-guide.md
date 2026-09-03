@@ -9,7 +9,13 @@ https://hyeonsangjeon.github.io/Repolis/?repo=owner/repo&ref=repo-portal
 Campaigns can begin inside the exhibition with a covered direct entry:
 
 ```text
-https://hyeonsangjeon.github.io/Repolis/?repo=owner/repo&view=atelier
+https://hyeonsangjeon.github.io/Repolis/?repo=owner/repo&view=atelier&lang=en
+```
+
+A general Repolis campaign should instead begin in the owner-town plaza:
+
+```text
+https://hyeonsangjeon.github.io/Repolis/?view=plaza&lang=en
 ```
 
 This is the product change most likely to improve Star acquisition because it shortens the path from a
@@ -34,8 +40,9 @@ already has an audience instead of asking people to share Repolis as a destinati
 
 | Purpose | URL |
 |---|---|
+| Covered owner-plaza entry | `?view=plaza&lang=en` |
 | Canonical repository entry | `?repo=owner/repo&ref=repo-portal` |
-| Covered Atelier direct entry | `?repo=owner/repo&view=atelier` |
+| Covered Atelier direct entry | `?repo=owner/repo&view=atelier&lang=en` |
 | Canonical Blueprint landmark | `?repo=owner/repo&view=blueprint&path=src%2Fagents&ref=blueprint` |
 | Public owner-town expansion | `?user=owner&focus=repo&ref=repo-portal` |
 | Canonical owner-town expansion | `?focus=repo&ref=repo-portal` |
@@ -46,11 +53,12 @@ already has an audience instead of asking people to share Repolis as a destinati
 ordinary navigation: entering the Atelier does not push a synthetic history entry, and Back returns to the
 previous page.
 
-The direct form accepts exactly `repo` and fixed `view=atelier`. It keeps the loading layer above the intro,
-shows a lightweight ring transition after a 1.2-second initialization pause, and programmatically reuses the
-normal entry action. The loading cover is released only after the existing Atelier fade owns the frame. Extra
-query state, duplicate fields, or a hash disables auto-entry and falls back to the normal confirmation flow.
-Reduced-motion keeps the same covered timing with static rings.
+The direct form accepts `repo`, fixed `view=atelier`, and optional `lang=en|ko`; omitted language defaults to
+English. It keeps the loading layer above the intro for a lightweight 1.2-second ring transition and
+programmatically reuses the normal entry action with automatic chat closed. The loading cover is released only
+after the existing Atelier fade owns the frame. Extra query state, duplicate fields, an invalid language, or a
+hash disables auto-entry and falls back to the normal confirmation flow. Reduced-motion keeps the same covered
+timing with static rings.
 
 The shared parser accepts:
 
