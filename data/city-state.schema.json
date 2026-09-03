@@ -688,6 +688,11 @@
           "minimum": 0,
           "type": "integer"
         },
+        "public_repository_stars": {
+          "description": "Stars across every public repository owned by the GitHub account, including forks excluded from the town catalog.",
+          "minimum": 0,
+          "type": "integer"
+        },
         "total_forks": {
           "minimum": 0,
           "type": "integer"
@@ -702,6 +707,7 @@
         "active_repository_count",
         "archived_repository_count",
         "total_stars",
+        "public_repository_stars",
         "total_forks",
         "language_distribution",
         "latest_push_signal",

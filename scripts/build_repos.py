@@ -319,6 +319,11 @@ def build():
     # Public owner endpoint works with the built-in Actions token, so a fork can
     # build its first city without a PAT. A PAT is only needed for traffic data.
     repos = gh_api(f"/users/{OWNER}/repos?per_page=100&type=owner&sort=full_name")
+    public_repository_stars = sum(
+        max(0, int(repo.get("stargazers_count") or 0))
+        for repo in repos
+        if repo.get("private") is not True
+    )
     social = social_map(OWNER)
     out = []
     source_timestamps = {}
@@ -395,6 +400,7 @@ def build():
         source_timestamps,
         as_of=CITY_STATE_AS_OF,
         prior_ledger=load_sap_ledger(CITY_STATE_OUT),
+        public_repository_stars=public_repository_stars,
     )
     write_city_state(CITY_STATE_OUT, city_state)
     resident_summary = write_resident_artifacts(

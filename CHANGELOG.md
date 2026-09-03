@@ -8,6 +8,11 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Creator Hall public Star total
+
+- Creator Hall now reports Stars across every public repository in the account, including forks intentionally
+  omitted from the 3D town, while the town catalog and building rules remain unchanged.
+
 ### Procedural Surface Pass v2
 
 - Brick, siding, panel, stone, stucco, timber, board-and-batten, metal, and shingle now use deterministic seeded
