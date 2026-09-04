@@ -2910,9 +2910,10 @@ ok(/test_resident_profiles\.py/.test(REFRESH_WORKFLOW)
   && /validate_resident_profiles\.py/.test(REFRESH_WORKFLOW)
   && /scan_public_artifacts\.py/.test(REFRESH_WORKFLOW),
   'daily publication is gated by resident determinism, schema, and public-safety checks');
-ok(/NPC_AMBIENT_ENABLED = "false"/.test(TAXI_WRANGLER)
+ok(/NPC_AMBIENT_ENABLED = "true"/.test(TAXI_WRANGLER)
+  && /NPC_DAY_CAP_USD = "0\.15"/.test(TAXI_WRANGLER)
   && /scriptedAmbient:true/.test(npcBlock),
-  'canonical ambient town life is scripted and zero-cost; only explicit resident dialogue may reach a model');
+  'canonical ambient AI stays owner-controlled and durably capped at $0.15/day with scripted fallback');
 
 group('Phase 4 lore, newcomers, warm ruins, and Shared-only taxi travel');
 await runLoreTests(ok);

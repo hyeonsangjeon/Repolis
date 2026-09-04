@@ -372,7 +372,7 @@ to best-effort accounting.
 | Var | Default | Meaning |
 |---|---|---|
 | `NPC_AI_ENABLED` | `false` | Top-level env ceiling. Anything except `"true"` means **never** a resident model call. KV cannot override it on. |
-| `NPC_AMBIENT_ENABLED` | `false` | Env ceiling for model-powered ambient turns (also requires `NPC_AI_ENABLED`). The canonical Phase 3 deployment keeps this `false`; ambient town life is scripted and costs $0. |
+| `NPC_AMBIENT_ENABLED` | `false` in code; `true` in the canonical deployment | Env ceiling for model-powered ambient turns (also requires `NPC_AI_ENABLED`). The canonical pilot permits owner-controlled ambient calls behind KV and the durable daily cap; blocked or unavailable calls retain the scripted fallback. |
 | `NPC_PLAYER_CHAT_ENABLED` | `false` | Env ceiling for model-powered player chat (also requires `NPC_AI_ENABLED`). |
 | `NPC_LIVE_TOGGLE` | `false` | Enables per-request `NPC_FLAGS` kill switches. When off, KV is ignored. |
 | `NPC_MODEL_DEFAULT` | `gpt-5.4-mini` | Azure OpenAI deployment name for resident turns. |
