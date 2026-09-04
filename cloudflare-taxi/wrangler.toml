@@ -95,9 +95,11 @@ NPC_PLAYER_CHAT_ENABLED = "true"
 NPC_DAY_CAP_USD = "0.15"
 
 # Explicit visitor-to-resident Bound dialogue uses its own Durable Object ledger.
-# It is stricter than ambient NPC traffic and stays separate from scholar usage.
+# Its output, turn, attempt, and rate bounds stay separate from scholar usage.
 RESIDENT_DIALOGUE_MAX_COMPLETION_TOKENS = "96"
+# The baseline remains unchanged while monotonic same-day revisions are deployed.
 RESIDENT_DIALOGUE_DAY_CAP_USD = "0.05"
+RESIDENT_DIALOGUE_DAY_CAP_REVISION = "1"
 RESIDENT_DIALOGUE_DAILY_TURN_MAX = "120"
 RESIDENT_DIALOGUE_DAILY_ATTEMPT_MAX = "240"
 RESIDENT_DIALOGUE_RATE_MAX = "12"

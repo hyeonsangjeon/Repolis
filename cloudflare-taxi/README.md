@@ -311,7 +311,9 @@ so loss of availability cannot become cap overshoot.
 UTC rollover starts a clean active-day aggregate on the first Governor operation of the new day. Prior-day
 in-flight reservations and their aggregate remain only as needed to settle/release cross-midnight calls safely.
 Lowering the cap or imposing a tighter turn limit during a day is sticky until the next UTC day, so an older
-Worker isolate cannot reopen it with stale higher settings. In-day increases deliberately wait until rollover.
+Worker isolate cannot reopen it with stale higher settings. In-day increases normally wait until rollover. An
+operator can deliberately apply one immediately, without clearing spend or reservations, by increasing the
+matching monotonic `*_DAY_CAP_REVISION`; calls from an older revision cannot overwrite that cap.
 If current spend/reservations already exceed a new lower cap, no new reservation is accepted.
 `NPC_DAY_CAP_USD=0` disables model turns immediately at the Governor.
 Accepted reservations also increment a durable attempt counter. `NPC_DAILY_ATTEMPT_MAX` provides a bounded
@@ -334,10 +336,13 @@ possibly billable dollars.
 //                  hardAiEnabled, hardAmbientEnabled, hardPlayerChatEnabled,
 //                  maxTurns, hardMaxTurns, source:"durable-object", flagSource, liveToggle },
 //      budget:{ source:"durable-object", durable:true, enforcement:"atomic_reservation",
-//               available, ... } }
+//               scope:"npc", dayCapUsd, capRevision, available, ... },
+//      residentDialogueBudget:{ source:"durable-object", durable:true,
+//               enforcement:"atomic_reservation", scope:"resident-dialogue",
+//               dayCapUsd, capRevision, available, ... } }
 { "npc_action": "npcBudget" }
 // → { ok, budget:{ enabled, available, source:"durable-object", durable:true,
-//                  enforcement:"atomic_reservation", day, dayCapUsd,
+//                  enforcement:"atomic_reservation", day, dayCapUsd, capRevision,
 //                  spentUsd, reservedUsd, remainingUsd, turnsToday, reservedTurns,
 //                  dailyTurnMax, attemptsToday, dailyAttemptMax, blocked } }
 { "npc_action": "npcAmbientTurn", "speaker":"sol", "listener":"jun", "topic":"model", "lang":"ko",
@@ -380,6 +385,7 @@ to best-effort accounting.
 | `NPC_MODEL_PRICING_JSON` | built-in `gpt-5.4-mini` table | JSON map of deployment alias to `inputPer1MUsd`, `cachedInputPer1MUsd`, `outputPer1MUsd`, `maxInputTokens`, and `maxOutputTokens`. Invalid/unknown/incomplete means no call. |
 | `NPC_MAX_COMPLETION_TOKENS` | `120` | Provider output cap and reservation output bound (1–4096). |
 | `NPC_DAY_CAP_USD` | `0.15` in this deployment (`10` code default) | Durable UTC-day hard cap. The committed value bounds a 31-day month to `$4.65` of resident Azure model calls. `0` disables calls; invalid values fail closed. |
+| `NPC_DAY_CAP_REVISION` | `1` | Monotonic operator revision for an explicit same-day NPC cap change. Keep unchanged for normal rollover changes; increase it only when an in-day cap replacement is intentional. |
 | `NPC_DAILY_TURN_MAX` | `0` (off) | Optional durable daily turn cap; in-flight reservations consume slots. |
 | `NPC_DAILY_ATTEMPT_MAX` | `5000` | Hard abuse/storage ceiling for accepted reservations, including provider failures. Must be positive. |
 | `NPC_BUDGET_TIMEOUT_MS` | `3000` | Internal Governor response deadline (100–10000 ms); timeout fails closed. Retryable failures wait 100–250 ms before one idempotent retry; overload is not retried. |
@@ -387,7 +393,8 @@ to best-effort accounting.
 | `NPC_TIMEOUT_MS` | `12000` | Entra token + model request deadline; timeout aborts the request and releases its reservation. |
 | `NPC_MAX_TURNS` / `NPC_HARD_MAX_TURNS` | `6` / `10` | Advertised default / absolute ambient conversation caps. |
 | `RESIDENT_DIALOGUE_MAX_COMPLETION_TOKENS` | `96` | Separate explicit resident-dialogue output/reservation cap. |
-| `RESIDENT_DIALOGUE_DAY_CAP_USD` | `0.05` | Separate daily visitor resident-dialogue cap (31-day worst case `$1.55`). Missing configuration defaults to zero and fails closed. |
+| `RESIDENT_DIALOGUE_DAY_CAP_USD` | `0.05` in this deployment | Separate daily visitor resident-dialogue dollar ceiling; the independent turn, attempt, and rate caps remain in force. Missing configuration defaults to zero and fails closed. |
+| `RESIDENT_DIALOGUE_DAY_CAP_REVISION` | `1` in this deployment | Monotonic operator revision for an explicit same-day visitor-dialogue cap replacement. |
 | `RESIDENT_DIALOGUE_DAILY_TURN_MAX` | `120` | Separate completed/in-flight visitor dialogue cap. |
 | `RESIDENT_DIALOGUE_DAILY_ATTEMPT_MAX` | `240` | Separate accepted-attempt/storage ceiling. |
 | `RESIDENT_DIALOGUE_RATE_MAX` / `RESIDENT_DIALOGUE_RATE_WINDOW_S` | `12` / `60` | Durable aggregate rate cap; stores counts only, with no IP, user agent, cookie, transcript, or visitor identity. |

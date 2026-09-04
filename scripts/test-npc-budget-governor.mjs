@@ -149,6 +149,16 @@ export async function runNpcBudgetGovernorTests(check) {
 
   {
     const { governor } = makeGovernor();
+    const env = { ...baseEnv(governor), NPC_DAY_CAP_REVISION: '0' };
+    const status = await npcBudgetStatus(env, true);
+    check(status.available === false
+      && status.blocked === true
+      && status.reason === 'npc_budget_config_invalid',
+    'an invalid cap revision fails closed before a model call');
+  }
+
+  {
+    const { governor } = makeGovernor();
     const policy = { capNanos: 1_000_000, dailyTurnMax: 0, dailyAttemptMax: 5000, reservationLeaseMs: 60_000 };
     const reservations = await Promise.all([
       operation(governor, { op: 'reserve', ...policy, reservationId: reservationId(1), amountNanos: 600_000 }),
@@ -286,6 +296,127 @@ export async function runNpcBudgetGovernorTests(check) {
       && !staleHigherCap.accepted && staleHigherCap.reason === 'day_cap_zero'
       && staleHigherCap.budget.dayCapUsd === 0,
     'midday reductions are sticky so cap=0 cannot be reopened by a stale Worker');
+  }
+
+  {
+    const { governor, nowRef } = makeGovernor();
+    const initial = {
+      capNanos: 1_000_000,
+      capRevision: 1,
+      dailyTurnMax: 0,
+      dailyAttemptMax: 5000,
+      reservationLeaseMs: 60_000,
+    };
+    const id = reservationId(72);
+    await operation(governor, { op: 'reserve', ...initial, reservationId: id, amountNanos: 500_000 });
+    await operation(governor, { op: 'settle', ...initial, reservationId: id, actualNanos: 400_000 });
+    const raised = await operation(governor, {
+      op: 'status', ...initial, capNanos: 2_000_000, capRevision: 2,
+    });
+    const staleRevision = await operation(governor, {
+      op: 'status', ...initial, capNanos: 300_000, capRevision: 1,
+    });
+    const unversionedStale = await operation(governor, {
+      op: 'status',
+      capNanos: 300_000,
+      dailyTurnMax: 0,
+      dailyAttemptMax: 5000,
+      reservationLeaseMs: 60_000,
+    });
+    const sameRevisionIncrease = await operation(governor, {
+      op: 'status', ...initial, capNanos: 3_000_000, capRevision: 2,
+    });
+    nowRef.value = Date.parse('2026-07-31T00:00:01Z');
+    const staleFirstAfterRollover = await operation(governor, {
+      op: 'status', ...initial,
+    });
+    const currentAfterRollover = await operation(governor, {
+      op: 'status', ...initial, capNanos: 2_000_000, capRevision: 2,
+    });
+    const staleAfterRollover = await operation(governor, {
+      op: 'status', ...initial, capNanos: 300_000, capRevision: 1,
+    });
+    check(raised.budget.dayCapUsd === 0.002
+      && raised.budget.capRevision === 2
+      && raised.budget.spentUsd === 0.0004
+      && raised.budget.turnsToday === 1
+      && staleRevision.budget.dayCapUsd === 0.002
+      && staleRevision.budget.capRevision === 2
+      && unversionedStale.budget.dayCapUsd === 0.002
+      && sameRevisionIncrease.budget.dayCapUsd === 0.002
+      && staleFirstAfterRollover.reset === true
+      && staleFirstAfterRollover.budget.dayCapUsd === 0.001
+      && staleFirstAfterRollover.budget.spentUsd === 0
+      && currentAfterRollover.budget.dayCapUsd === 0.002
+      && currentAfterRollover.budget.capRevision === 2
+      && staleAfterRollover.budget.dayCapUsd === 0.002,
+    'a higher cap revision applies an intentional same-day increase while preserving usage and ignoring stale Workers');
+  }
+
+  {
+    const { state, governor, nowRef } = makeGovernor();
+    const pendingId = reservationId(73);
+    await state.storage.put({
+      ledger: {
+        day: '2026-07-30',
+        scope: 'resident-dialogue',
+        capNanos: 50_000_000,
+        dailyTurnMax: 120,
+        dailyAttemptMax: 240,
+        rateMax: 12,
+        rateWindowSeconds: 60,
+        rateWindowKey: Math.floor(nowRef.value / 60_000),
+        rateCount: 3,
+        spentNanos: 10_000_000,
+        reservedNanos: 5_000_000,
+        turns: 2,
+        reservedTurns: 1,
+        attempts: 4,
+      },
+      ['reservation:' + pendingId]: {
+        day: '2026-07-30',
+        status: 'pending',
+        amountNanos: 5_000_000,
+        expiresAtMs: nowRef.value + 60_000,
+      },
+    });
+    const revised = await operation(governor, {
+      op: 'status',
+      scope: 'resident-dialogue',
+      capNanos: 10_000_000_000,
+      capRevision: 2,
+      dailyTurnMax: 120,
+      dailyAttemptMax: 240,
+      rateMax: 12,
+      rateWindowSeconds: 60,
+      reservationLeaseMs: 60_000,
+    });
+    const expandedReservation = await operation(governor, {
+      op: 'reserve',
+      scope: 'resident-dialogue',
+      capNanos: 10_000_000_000,
+      capRevision: 2,
+      dailyTurnMax: 120,
+      dailyAttemptMax: 240,
+      rateMax: 12,
+      rateWindowSeconds: 60,
+      reservationLeaseMs: 60_000,
+      reservationId: reservationId(74),
+      amountNanos: 100_000_000,
+    });
+    check(revised.budget.dayCapUsd === 10
+      && revised.budget.capRevision === 2
+      && revised.budget.spentUsd === 0.01
+      && revised.budget.reservedUsd === 0.005
+      && revised.budget.remainingUsd === 9.985
+      && revised.budget.turnsToday === 2
+      && revised.budget.reservedTurns === 1
+      && revised.budget.attemptsToday === 4
+      && revised.budget.rateCount === 3
+      && expandedReservation.accepted === true
+      && expandedReservation.budget.reservedUsd === 0.105
+      && expandedReservation.budget.remainingUsd === 9.885,
+    'a legacy ledger upgrades to the explicit cap revision without clearing spend, reservations, turns, attempts, or rate state');
   }
 
   {

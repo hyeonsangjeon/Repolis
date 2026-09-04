@@ -1671,7 +1671,10 @@ async function npcHandler(body, request, env, ctx) {
   const requestMeta = metricContext(body, request);
 
   if (action === "npcConfig") {
-    const budget = await npcBudgetStatus(env, aiEnabled, emitBudgetMetric);
+    const [budget, residentDialogueBudget] = await Promise.all([
+      npcBudgetStatus(env, aiEnabled, emitBudgetMetric),
+      npcBudgetStatus(env, playerOn, emitBudgetMetric, "resident-dialogue"),
+    ]);
     const status = npcControlStatus(flags, budget);
     const budgetReady = status.runtimeAvailable;
     const effective = status.effective;
@@ -1702,7 +1705,7 @@ async function npcHandler(body, request, env, ctx) {
       hardCeiling: flags.hardCeiling,
       maxTurns: Number(env.NPC_MAX_TURNS || 6), hardMaxTurns: Number(env.NPC_HARD_MAX_TURNS || 10),
       source: "durable-object", flagSource: flags.source, liveToggle: flags.liveToggle,
-    }, budget }, 200, env);
+    }, budget, residentDialogueBudget }, 200, env);
   }
   if (action === "npcBudget") {
     return json({ ok: true, budget: await npcBudgetStatus(env, aiEnabled, emitBudgetMetric) }, 200, env);

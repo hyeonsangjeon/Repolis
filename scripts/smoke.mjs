@@ -2876,6 +2876,9 @@ ok(/name = "NPC_BUDGET_GOVERNOR"/.test(TAXI_WRANGLER)
 ok(/source: "durable-object"/.test(WORKER)
   && /NPC_BUDGET_SOURCE = "durable-object"/.test(NPC_GOVERNOR),
   'npcConfig and npcBudget identify the Durable Object as their budget authority');
+ok(/residentDialogueBudget/.test(WORKER)
+  && /npcBudgetStatus\(env, playerOn, emitBudgetMetric, "resident-dialogue"\)/.test(WORKER),
+  'npcConfig exposes the separate visitor resident-dialogue Durable Object budget without replacing the NPC budget');
 
 group('Durable NPC budget governor — hermetic atomicity and fail-closed behavior');
 await runNpcBudgetGovernorTests(ok);
@@ -2914,6 +2917,9 @@ ok(/NPC_AMBIENT_ENABLED = "true"/.test(TAXI_WRANGLER)
   && /NPC_DAY_CAP_USD = "0\.15"/.test(TAXI_WRANGLER)
   && /scriptedAmbient:true/.test(npcBlock),
   'canonical ambient AI stays owner-controlled and durably capped at $0.15/day with scripted fallback');
+ok(/RESIDENT_DIALOGUE_DAY_CAP_USD = "0\.05"/.test(TAXI_WRANGLER)
+  && /RESIDENT_DIALOGUE_DAY_CAP_REVISION = "1"/.test(TAXI_WRANGLER),
+  'canonical visitor dialogue keeps its baseline cap while same-day policy revisions are deployed');
 
 group('Phase 4 lore, newcomers, warm ruins, and Shared-only taxi travel');
 await runLoreTests(ok);

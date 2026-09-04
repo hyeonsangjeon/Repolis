@@ -65,6 +65,8 @@ function validLedger(ledger) {
     && /^\d{4}-\d{2}-\d{2}$/.test(String(ledger.day || ""))
     && Object.prototype.hasOwnProperty.call(NPC_BUDGET_OBJECT_NAMES, ledger.scope)
     && isSafeNonNegativeInteger(ledger.capNanos)
+    && isSafeNonNegativeInteger(ledger.capRevision)
+    && ledger.capRevision > 0
     && isSafeNonNegativeInteger(ledger.dailyTurnMax)
     && isSafeNonNegativeInteger(ledger.dailyAttemptMax)
     && ledger.dailyAttemptMax > 0
@@ -80,11 +82,12 @@ function validLedger(ledger) {
     && isSafeNonNegativeInteger(ledger.attempts);
 }
 
-function freshLedger(day, scope, capNanos, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds, nowMs) {
+function freshLedger(day, scope, capNanos, capRevision, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds, nowMs) {
   return {
     day,
     scope,
     capNanos,
+    capRevision,
     dailyTurnMax,
     dailyAttemptMax,
     rateMax,
@@ -102,6 +105,7 @@ function freshLedger(day, scope, capNanos, dailyTurnMax, dailyAttemptMax, rateMa
 function upgradeLedger(ledger) {
   if (!ledger || typeof ledger !== "object") return ledger;
   if (ledger.scope === undefined) ledger.scope = "npc";
+  if (ledger.capRevision === undefined) ledger.capRevision = 1;
   if (ledger.rateMax === undefined) ledger.rateMax = 0;
   if (ledger.rateWindowSeconds === undefined) ledger.rateWindowSeconds = 60;
   if (ledger.rateWindowKey === undefined) ledger.rateWindowKey = 0;
@@ -115,19 +119,29 @@ function tighterTurnMax(current, incoming) {
   return Math.min(current, incoming);
 }
 
-function tightenPolicy(ledger, capNanos, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds) {
-  const nextCap = Math.min(ledger.capNanos, capNanos);
+// Same-revision calls can only tighten a cap. Raising the monotonic revision is
+// the explicit operator signal for a same-day replacement; older isolates are
+// then ignored for this field so they cannot restore the superseded cap.
+function tightenPolicy(ledger, capNanos, capRevision, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds) {
+  const capRevisionRaised = capRevision > ledger.capRevision;
+  const capRevisionCurrent = capRevision === ledger.capRevision;
+  let nextCap = ledger.capNanos;
+  if (capRevisionRaised) nextCap = capNanos;
+  else if (capRevisionCurrent) nextCap = Math.min(ledger.capNanos, capNanos);
+  const nextCapRevision = Math.max(ledger.capRevision, capRevision);
   const nextTurnMax = tighterTurnMax(ledger.dailyTurnMax, dailyTurnMax);
   const nextAttemptMax = Math.min(ledger.dailyAttemptMax, dailyAttemptMax);
   const nextRateMax = tighterTurnMax(ledger.rateMax, rateMax);
   const nextRateWindowSeconds = Math.max(ledger.rateWindowSeconds, rateWindowSeconds);
   const changed = nextCap !== ledger.capNanos
+    || nextCapRevision !== ledger.capRevision
     || nextTurnMax !== ledger.dailyTurnMax
     || nextAttemptMax !== ledger.dailyAttemptMax
     || nextRateMax !== ledger.rateMax
     || nextRateWindowSeconds !== ledger.rateWindowSeconds;
   if (changed) {
     ledger.capNanos = nextCap;
+    ledger.capRevision = nextCapRevision;
     ledger.dailyTurnMax = nextTurnMax;
     ledger.dailyAttemptMax = nextAttemptMax;
     ledger.rateMax = nextRateMax;
@@ -146,6 +160,10 @@ function budgetPolicy(env, scope = "npc") {
   const capNanos = usdToNanos(
     resident ? env?.RESIDENT_DIALOGUE_DAY_CAP_USD : env?.NPC_DAY_CAP_USD,
     resident ? 0 : 10,
+  );
+  const capRevision = parseNonNegativeInteger(
+    resident ? env?.RESIDENT_DIALOGUE_DAY_CAP_REVISION : env?.NPC_DAY_CAP_REVISION,
+    1,
   );
   const dailyTurnMax = parseNonNegativeInteger(
     resident ? env?.RESIDENT_DIALOGUE_DAILY_TURN_MAX : env?.NPC_DAILY_TURN_MAX,
@@ -177,7 +195,7 @@ function budgetPolicy(env, scope = "npc") {
   const reservationLeaseMs = hasConfiguredLease
     ? configuredLeaseMs
     : Math.max(60_000, minimumLeaseMs || 0);
-  if (capNanos === null || dailyTurnMax === null
+  if (capNanos === null || capRevision === null || capRevision < 1 || dailyTurnMax === null
     || dailyAttemptMax === null || dailyAttemptMax < 1
     || rateMax === null || rateWindowSeconds === null
     || rateWindowSeconds < 10 || rateWindowSeconds > 3600
@@ -191,6 +209,7 @@ function budgetPolicy(env, scope = "npc") {
     ok: true,
     scope,
     capNanos,
+    capRevision,
     dailyTurnMax,
     dailyAttemptMax,
     rateMax,
@@ -202,6 +221,8 @@ function budgetPolicy(env, scope = "npc") {
 function validPolicyPayload(body) {
   return validScope(body?.scope)
     && isSafeNonNegativeInteger(body?.capNanos)
+    && isSafeNonNegativeInteger(body?.capRevision)
+    && body.capRevision > 0
     && isSafeNonNegativeInteger(body?.dailyTurnMax)
     && isSafeNonNegativeInteger(body?.dailyAttemptMax)
     && body.dailyAttemptMax > 0
@@ -225,6 +246,7 @@ function publicBudget(ledger) {
     scope: ledger.scope,
     day: ledger.day,
     dayCapUsd: nanosToUsd(capNanos),
+    capRevision: ledger.capRevision,
     spentUsd: nanosToUsd(ledger.spentNanos),
     reservedUsd: nanosToUsd(ledger.reservedNanos),
     remainingUsd: nanosToUsd(remainingNanos),
@@ -248,6 +270,7 @@ function unavailableBudget(reason, policy) {
     scope: policy?.scope || null,
     day: null,
     dayCapUsd: policy?.ok ? nanosToUsd(policy.capNanos) : null,
+    capRevision: policy?.ok ? policy.capRevision : null,
     spentUsd: null,
     reservedUsd: null,
     remainingUsd: null,
@@ -377,7 +400,7 @@ export class NpcBudgetGovernor {
     }
   }
 
-  async loadLedger(scope, capNanos, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds) {
+  async loadLedger(scope, capNanos, capRevision, dailyTurnMax, dailyAttemptMax, rateMax, rateWindowSeconds) {
     const day = utcDay(this.now());
     const nowMs = this.now();
     const stored = upgradeLedger(await this.state.storage.get(NPC_LEDGER_KEY));
@@ -386,6 +409,7 @@ export class NpcBudgetGovernor {
         day,
         scope,
         capNanos,
+        capRevision,
         dailyTurnMax,
         dailyAttemptMax,
         rateMax,
@@ -401,6 +425,7 @@ export class NpcBudgetGovernor {
       let changed = tightenPolicy(
         stored,
         capNanos,
+        capRevision,
         dailyTurnMax,
         dailyAttemptMax,
         rateMax,
@@ -422,6 +447,7 @@ export class NpcBudgetGovernor {
       day,
       scope,
       capNanos,
+      capRevision,
       dailyTurnMax,
       dailyAttemptMax,
       rateMax,
@@ -505,6 +531,7 @@ export class NpcBudgetGovernor {
     }
     if (body && typeof body === "object") {
       if (body.scope === undefined) body.scope = "npc";
+      if (body.capRevision === undefined) body.capRevision = 1;
       if (body.rateMax === undefined) body.rateMax = 0;
       if (body.rateWindowSeconds === undefined) body.rateWindowSeconds = 60;
     }
@@ -515,6 +542,7 @@ export class NpcBudgetGovernor {
     const loaded = await this.loadLedger(
       body.scope,
       body.capNanos,
+      body.capRevision,
       body.dailyTurnMax,
       body.dailyAttemptMax,
       body.rateMax,
