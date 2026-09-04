@@ -2917,9 +2917,9 @@ ok(/NPC_AMBIENT_ENABLED = "true"/.test(TAXI_WRANGLER)
   && /NPC_DAY_CAP_USD = "0\.15"/.test(TAXI_WRANGLER)
   && /scriptedAmbient:true/.test(npcBlock),
   'canonical ambient AI stays owner-controlled and durably capped at $0.15/day with scripted fallback');
-ok(/RESIDENT_DIALOGUE_DAY_CAP_USD = "0\.05"/.test(TAXI_WRANGLER)
-  && /RESIDENT_DIALOGUE_DAY_CAP_REVISION = "1"/.test(TAXI_WRANGLER),
-  'canonical visitor dialogue keeps its baseline cap while same-day policy revisions are deployed');
+ok(/RESIDENT_DIALOGUE_DAY_CAP_USD = "10"/.test(TAXI_WRANGLER)
+  && /RESIDENT_DIALOGUE_DAY_CAP_REVISION = "2"/.test(TAXI_WRANGLER),
+  'canonical visitor dialogue uses the explicitly revised $10/day dollar ceiling');
 
 group('Phase 4 lore, newcomers, warm ruins, and Shared-only taxi travel');
 await runLoreTests(ok);
