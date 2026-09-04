@@ -393,8 +393,8 @@ to best-effort accounting.
 | `NPC_TIMEOUT_MS` | `12000` | Entra token + model request deadline; timeout aborts the request and releases its reservation. |
 | `NPC_MAX_TURNS` / `NPC_HARD_MAX_TURNS` | `6` / `10` | Advertised default / absolute ambient conversation caps. |
 | `RESIDENT_DIALOGUE_MAX_COMPLETION_TOKENS` | `96` | Separate explicit resident-dialogue output/reservation cap. |
-| `RESIDENT_DIALOGUE_DAY_CAP_USD` | `0.05` in this deployment | Separate daily visitor resident-dialogue dollar ceiling; the independent turn, attempt, and rate caps remain in force. Missing configuration defaults to zero and fails closed. |
-| `RESIDENT_DIALOGUE_DAY_CAP_REVISION` | `1` in this deployment | Monotonic operator revision for an explicit same-day visitor-dialogue cap replacement. |
+| `RESIDENT_DIALOGUE_DAY_CAP_USD` | `10` in this deployment | Separate daily visitor resident-dialogue dollar ceiling (`$310` across 31 days if considered alone); the independent turn, attempt, and rate caps remain in force. Missing configuration defaults to zero and fails closed. |
+| `RESIDENT_DIALOGUE_DAY_CAP_REVISION` | `2` in this deployment | Monotonic operator revision applying the `$10` visitor-dialogue cap immediately while preserving today's ledger. |
 | `RESIDENT_DIALOGUE_DAILY_TURN_MAX` | `120` | Separate completed/in-flight visitor dialogue cap. |
 | `RESIDENT_DIALOGUE_DAILY_ATTEMPT_MAX` | `240` | Separate accepted-attempt/storage ceiling. |
 | `RESIDENT_DIALOGUE_RATE_MAX` / `RESIDENT_DIALOGUE_RATE_WINDOW_S` | `12` / `60` | Durable aggregate rate cap; stores counts only, with no IP, user agent, cookie, transcript, or visitor identity. |

@@ -97,9 +97,10 @@ NPC_DAY_CAP_USD = "0.15"
 # Explicit visitor-to-resident Bound dialogue uses its own Durable Object ledger.
 # Its output, turn, attempt, and rate bounds stay separate from scholar usage.
 RESIDENT_DIALOGUE_MAX_COMPLETION_TOKENS = "96"
-# The baseline remains unchanged while monotonic same-day revisions are deployed.
-RESIDENT_DIALOGUE_DAY_CAP_USD = "0.05"
-RESIDENT_DIALOGUE_DAY_CAP_REVISION = "1"
+# Owner-selected dollar ceiling; separate turn/attempt/rate bounds remain in force.
+RESIDENT_DIALOGUE_DAY_CAP_USD = "10"
+# Revision 2 applies this increase immediately without clearing today's ledger.
+RESIDENT_DIALOGUE_DAY_CAP_REVISION = "2"
 RESIDENT_DIALOGUE_DAILY_TURN_MAX = "120"
 RESIDENT_DIALOGUE_DAILY_ATTEMPT_MAX = "240"
 RESIDENT_DIALOGUE_RATE_MAX = "12"
