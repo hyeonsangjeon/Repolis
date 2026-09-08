@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
-import { parseRepoPortalInput } from '../assets/repo-portal.js';
+import { DIRECT_ENTRY_LIMITS, parseRepoPortalInput } from '../assets/repo-portal.js';
 
 const HTML=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const block=name=>(HTML.match(new RegExp(`/\\*${name}:START\\*/([\\s\\S]*?)/\\*${name}:END\\*/`))||[])[1];
 
-export function runFirstVisitTests(check){
+export async function runFirstVisitTests(check){
   const context={};
   runInNewContext(block('TOWN_SPEECH_CORE')+'\nglobalThis.api={wrapTownSpeech,layoutTownSpeech,TOWN_SPEECH_LIMITS};',context);
   const {wrapTownSpeech:wrap,layoutTownSpeech:layout,TOWN_SPEECH_LIMITS:L}=context.api;
@@ -71,9 +71,101 @@ export function runFirstVisitTests(check){
   check(!/fetch\(|localStorage|sessionStorage|new THREE|track\(|StarNudge|loadContributionQuests/.test(picker)
     &&intent.indexOf('intentLensTargetRepo()')<intent.indexOf('openFirstRepoPicker()'),
     'picker adds no network, storage, scene resources or Star requests and explicit Portal targets keep precedence');
+
+  const arrival={};
+  runInNewContext(block('ARRIVAL_CORE')+'\nglobalThis.api={createArrivalState,claimArrivalEntry,stepArrival,takeArrivalAction};',arrival);
+  const {createArrivalState:create,claimArrivalEntry:claim,stepArrival:step,takeArrivalAction:take}=arrival.api;
+  const frame=(now,extra={})=>({now,kind:'town',inside:false,target:null,blocked:false,contextLost:false,...extra});
+  const ordinary=create();
+  check(step(ordinary,frame(0),DIRECT_ENTRY_LIMITS)===null&&!claim(ordinary,0),'uninitialized scenes cannot reveal or record entry');
+  ordinary.initialized=true;
+  check(step(ordinary,frame(10),DIRECT_ENTRY_LIMITS)===null&&step(ordinary,frame(30),DIRECT_ENTRY_LIMITS)==='reveal',
+    'the ordinary intro is released only after completed scene frames');
+  check(step(ordinary,frame(40),DIRECT_ENTRY_LIMITS)===null&&claim(ordinary,40)&&!claim(ordinary,41),
+    'reveal and entry claims are idempotent without changing event definitions');
+  const direct=create(); Object.assign(direct,{initialized:true,direct:true,target:'octo/same'});
+  step(direct,frame(100),DIRECT_ENTRY_LIMITS);
+  check(step(direct,frame(1299),DIRECT_ENTRY_LIMITS)===null&&step(direct,frame(1300),DIRECT_ENTRY_LIMITS)==='enter'
+    &&step(direct,frame(1301),DIRECT_ENTRY_LIMITS)===null&&claim(direct,1300),
+    'direct entry retains the existing initialization minimum and dispatches one entry action');
+  for(const extra of [{kind:'town'},{kind:'atelier',inside:false,target:'octo/same'},
+    {kind:'atelier',inside:true,target:'other/same'},{kind:'atelier',inside:true,target:'octo/same',contextLost:true},
+    {kind:'atelier',inside:true,target:'octo/same',blocked:true}]){
+    check(step(direct,frame(2300,extra),DIRECT_ENTRY_LIMITS)===null,'elapsed time cannot release an unready, wrong-owner, blocked, or lost-context scene');
+  }
+  check(step(direct,frame(2199,{kind:'atelier',inside:true,target:'octo/same'}),DIRECT_ENTRY_LIMITS)===null
+    &&step(direct,frame(2300,{kind:'atelier',inside:true,target:'OCTO/same'}),DIRECT_ENTRY_LIMITS)==='reveal',
+    'direct Atelier reveals only its completed exact-target interior after the existing cover minimum');
+  const action=()=>true; direct.actions.push({at:500,run:action});
+  check(take(direct,499,false)===null&&take(direct,900,true)===null&&direct.actions.length===1
+    &&take(direct,901,false)===action&&take(direct,902,false)===null,
+    'context interruptions retain the pending arrival action until an unblocked frame, without replaying it');
+  const recovery=block('ARRIVAL_RECOVERY');
+  check(HTML.indexOf('/*ARRIVAL_RECOVERY:START*/')<HTML.indexOf('<script src="repolis.config.js">')
+    &&/setTimeout\(\(\)=>fail\('stalled'\),45000\)/.test(recovery)&&/event\.target instanceof HTMLScriptElement/.test(recovery),
+    'a standalone bounded recovery UI exists before required scripts and module initialization');
+  check(/retry\.onclick=\(\)=>location\.reload\(\)/.test(recovery)&&/home\.href=url\.href/.test(recovery)
+    &&/restoring&&!restored/.test(recovery)&&/inertBefore/.test(recovery)
+    &&!/fetch\(|setInterval|localStorage|sessionStorage|track\(/.test(recovery),
+    'recovery requires explicit navigation or a rendered-frame resume, retains focus ownership, and adds no request or storage');
+  check(/FIRST_ARRIVAL\.initialized=true/.test(HTML)&&/_arrivalRendered\('atelier'\)/.test(HTML)
+    &&/_arrivalRendered\('town'\)/.test(HTML)&&/if\(!_claimTownEntry\(\)\) return/.test(HTML),
+    'runtime uses real completed renders and one entry claim rather than a cover-release timer');
+  check(/_reqFocus\.slug\.toLowerCase\(\)/.test(HTML)&&/repoPortalTarget\.slug\.toLowerCase\(\)/.test(HTML)
+    &&/window\.REPOLIS_ARRIVAL\.fail\(effErr/.test(HTML),
+    'focused and Portal arrivals compare exact owner/repo and keep failure behind explicit recovery');
+  check(/if\(BLUEPRINT_DEEP_LINK\.ok&&blueprintDeepLinkBypass\) return;/.test(HTML),
+    'Blueprint cancellation stays in the existing town without an automatic room or scan');
+
+  const timers=new Map(); let timerId=0;
+  const data={AbortController,Response,TextDecoder,SyntaxError,
+    setTimeout:(fn,ms)=>{ timers.set(++timerId,{fn,ms}); return timerId; },clearTimeout:id=>timers.delete(id)};
+  runInNewContext(block('ARRIVAL_DATA')+'\nglobalThis.api={fetchArrivalResponse,arrivalDataReason,ARRIVAL_DATA_LIMITS};',data);
+  const {fetchArrivalResponse:load,arrivalDataReason:reason,ARRIVAL_DATA_LIMITS:limits}=data.api;
+  check(limits.timeoutMs===8000&&limits.maxBytes===2*1024*1024&&limits.optionalTimeoutMs===4000,
+    'boot data has fixed request/body bounds and a shorter optional-data deadline');
+  let requests=0;
+  const response=await load('fixture',{},limits,async()=>{ requests++; return new Response('{"public":true}'); });
+  check((await response.json()).public&&requests===1&&timers.size===0,'successful data is consumed once and clears its deadline');
+  for(const status of [403,429,404,500]){
+    let failure;
+    try{ await load('fixture',{},limits,async()=>{ requests++; return new Response('',{status}); }); }catch(error){ failure=error; }
+    check(failure?.status===status&&reason(failure)===(status===404?'not_found':(status===500?'http':'rate_limit'))&&timers.size===0,
+      'HTTP failures retain their status, classify rate limits, and do not retry');
+  }
+  check(requests===5,'status cases perform exactly one fetch each');
+  let headerFailure,streamFailure,aborted=false;
+  try{ await load('fixture',{}, {maxBytes:8},async(_url,options)=>{
+    options.signal.addEventListener('abort',()=>{ aborted=true; });
+    return new Response('small',{headers:{'content-length':'99'}});
+  }); }catch(error){ headerFailure=error; }
+  check(reason(headerFailure)==='oversized'&&aborted&&timers.size===0,'declared oversized bodies are aborted before consumption');
+  try{ await load('fixture',{}, {maxBytes:8},async()=>new Response(new ReadableStream({
+    start(controller){ controller.enqueue(new TextEncoder().encode('한국어한국어')); controller.close(); }
+  }))); }catch(error){ streamFailure=error; }
+  check(reason(streamFailure)==='oversized'&&timers.size===0,'stream limits count decoded bytes rather than characters or just Content-Length');
+  for(const phase of ['headers','body']){
+    let failure,reads=0;
+    const pending=load('fixture',{},limits,async(_url,options)=>{
+      if(phase==='headers') return new Promise((_resolve,reject)=>options.signal.addEventListener('abort',()=>reject(new Error('aborted'))));
+      return new Response(new ReadableStream({start(controller){
+        reads++; options.signal.addEventListener('abort',()=>controller.error(new Error('aborted')));
+      }}));
+    });
+    [...timers.values()].at(-1).fn();
+    try{ await pending; }catch(error){ failure=error; }
+    check(reason(failure)==='timeout'&&timers.size===0&&(phase==='headers'||reads===1),'deadline covers both a hung fetch and a hung response body');
+  }
+  let malformed;
+  try{ const value=await load('fixture',{},limits,async()=>new Response('{')); await value.json(); }catch(error){ malformed=error; }
+  check(reason(malformed)==='malformed'&&timers.size===0,'malformed JSON is explicit rather than a successful empty catalog');
+  check(/if\(!Array\.isArray\(raw\)\) throw new ArrivalDataError\('malformed'\)/.test(HTML)
+    &&/loadResidentManifest\(\{owner:currentUser,fetchImpl:fetchOptionalArrival\}\)/.test(HTML)
+    &&/loadLoreFragments\(\{fetchImpl:fetchOptionalArrival\}\)/.test(HTML),
+    'public arrays validate before cache writes and awaited optional loaders reuse the same bounded fetch');
 }
 
 if(process.argv[1]===fileURLToPath(import.meta.url)){
-  let count=0; runFirstVisitTests((ok,message)=>{ if(!ok) throw new Error(message); count++; });
+  let count=0; await runFirstVisitTests((ok,message)=>{ if(!ok) throw new Error(message); count++; });
   console.log(`First visit: ${count} checks passed`);
 }

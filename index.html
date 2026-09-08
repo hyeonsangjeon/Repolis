@@ -240,17 +240,18 @@
   #trainOverlay .tmsg { color: #eaf1ff; font-size: 18px; font-weight: 800; margin-top: 22px; letter-spacing: .01em; }
   #trainOverlay .tsub { color: #9fb2d4; font-size: 13px; margin-top: 8px; }
   /* 🚉 City error / empty overlay */
-  #cityError { position: fixed; inset: 0; z-index: 41; display: flex; align-items: center; justify-content: center;
+  #cityError { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center;
     background: rgba(10,14,24,.82); backdrop-filter: blur(4px); padding: 22px; transition: opacity .2s ease; }
-  #cityError.hidden { opacity: 0; pointer-events: none; }
+  #cityError.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
   #cityError .ceCard { width: 100%; max-width: 380px; background: rgba(255,251,242,.98); border-radius: 20px;
-    box-shadow: 0 18px 56px rgba(0,0,0,.4); padding: 24px 22px; text-align: center; }
+    box-shadow: 0 18px 56px rgba(0,0,0,.4); padding: 24px 22px; text-align: center; max-height: calc(100dvh - 44px); overflow: auto; }
   #cityError .ceCard h2 { font-size: 19px; color: #4a2f1e; margin-bottom: 9px; }
   #cityError .ceCard p { font-size: 13px; color: #8a6f4e; line-height: 1.5; margin-bottom: 18px; }
   #cityError .ceActions { display: flex; flex-direction: column; gap: 9px; }
-  #cityError .ceActions button { font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; padding: 11px;
-    border-radius: 12px; border: none; color: #fff; background: linear-gradient(150deg,#e8b34a,#d98f2e); }
-  #cityError .ceActions button.alt { color: #8a6f4e; background: #fffdf8; border: 1.5px solid #e3d2b6; }
+  #cityError .ceActions button, #cityError .ceActions a { font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; padding: 11px; min-height: 44px; text-decoration: none;
+    border-radius: 12px; border: none; color: #4a2f1e; background: linear-gradient(150deg,#e8b34a,#d98f2e); }
+  #cityError .ceActions .alt { color: #6b5133; background: #fffdf8; border: 1.5px solid #e3d2b6; }
+  #cityError .ceActions :focus-visible { outline: 3px solid #31765c; outline-offset: 3px; }
   #townLabel { background: rgba(217,143,46,.16) !important; color: #9a5e16 !important; }
   /* 📰 Town Gazette — public repo changes since this browser last marked the town read */
   .freshBox { border-radius: 14px; padding: 10px 11px 11px; margin: 0 0 11px;
@@ -1891,7 +1892,7 @@
   </div>
 </div>
 
-<div id="cityError" class="hidden">
+<div id="cityError" class="hidden" role="alertdialog" aria-modal="true" aria-labelledby="ceTitle" aria-describedby="ceMsg" aria-hidden="true" inert>
   <div class="ceCard">
     <h2 id="ceTitle"></h2>
     <p id="ceMsg"></p>
@@ -2209,6 +2210,108 @@
   </div>
 </div>
 
+<script>
+/*ARRIVAL_RECOVERY:START*/
+(function(){
+  // This boundary must run even when an imported module or WebGL cannot start.
+  const copy={
+    ko:{title:'마을을 열지 못했어요',contextTitle:'그래픽 연결이 끊겼어요',restoredTitle:'그래픽을 복원했어요',
+      retry:'같은 링크 다시 시도',home:'기본 광장으로 이동',github:'원래 GitHub 열기',resume:'계속하기',
+      stalled:'마을 준비가 오래 걸리고 있어요. 연결을 확인한 뒤 다시 시도해 주세요. 자동으로 재요청하지 않아요.',
+      script:'필요한 스크립트를 불러오지 못했어요. 연결이나 콘텐츠 차단 설정을 확인한 뒤 다시 시도해 주세요.',
+      initialization:'마을을 준비하는 중 오류가 발생했어요. 같은 링크를 다시 열거나 기본 광장으로 이동할 수 있어요.',
+      webgl:'이 브라우저에서 WebGL을 시작하지 못했어요. 하드웨어 가속과 WebGL 지원을 확인해 주세요.',
+      context_lost:'그래픽 연결이 끊겼어요. 브라우저가 복원할 때까지 기다리거나 같은 링크를 다시 열 수 있어요.',
+      restored:'그래픽 연결과 첫 화면을 복원했어요. 계속하기를 누르면 멈춘 곳으로 돌아가요.',
+      timeout:'데이터 응답이 제한 시간 안에 끝나지 않았어요. 자동으로 재요청하지 않아요.',
+      oversized:'데이터 응답이 안전한 크기 한도를 넘었어요. GitHub에서 원본을 확인하거나 다시 시도해 주세요.',
+      malformed:'데이터 응답을 읽을 수 없어요. GitHub에서 원본을 확인하거나 다시 시도해 주세요.',
+      data_load:'마을의 레포 목록 파일을 불러오지 못했어요. 파일이 없거나 응답을 읽을 수 없는 상태예요. 같은 링크를 다시 시도하거나 GitHub에서 확인해 주세요.',
+      target:'요청한 레포에 도착하지 못했어요. 다른 레포로 대신 이동하지 않았어요.'},
+    en:{title:'This town could not open',contextTitle:'Graphics interrupted',restoredTitle:'Graphics restored',
+      retry:'Retry the same link',home:'Open the default plaza',github:'Open the original GitHub',resume:'Continue',
+      stalled:'Town preparation is taking too long. Check the connection and retry when ready. No automatic retry is running.',
+      script:'A required script could not load. Check the connection or content-blocking settings, then retry.',
+      initialization:'The town could not initialize. Retry the same link or open the default plaza.',
+      webgl:'This browser could not start WebGL. Check hardware acceleration and WebGL support.',
+      context_lost:'The graphics context was lost. Wait for the browser to restore it, or reload the same link.',
+      restored:'Graphics and the first frame have been restored. Choose Continue to return to where you stopped.',
+      timeout:'The data response did not finish within its time limit. No automatic retry is running.',
+      oversized:'The data response exceeded its safe size limit. Check the original on GitHub or retry.',
+      malformed:'The data response could not be read. Check the original on GitHub or retry.',
+      data_load:'The town repository catalog could not load. Its file may be unavailable or unreadable. Retry the same link or check GitHub.',
+      target:'The requested repository could not be opened. No other repository was substituted.'}
+  };
+  const overlay=document.getElementById('cityError'),loading=document.getElementById('loading'),intro=document.getElementById('intro');
+  let reason=null,details=null,bootReady=false,target=null,restoring=false,restored=false,focusBefore=null,loadingBefore='',inertBefore=[];
+  intro.inert=true;
+  const lang=()=>document.documentElement.lang==='ko'?'ko':'en';
+  let watchdog=setTimeout(()=>fail('stalled'),45000);
+  function render(){
+    if(!reason) return;
+    const words=copy[lang()],actions=document.getElementById('ceActions');
+    document.getElementById('ceTitle').textContent=restored?words.restoredTitle:(reason==='context_lost'?words.contextTitle:(details?.title||words.title));
+    document.getElementById('ceMsg').textContent=restored?words.restored:(words[reason]||details?.message||words.initialization);
+    overlay.dataset.reason=reason; actions.replaceChildren();
+    if(restored){
+      const resume=document.createElement('button'); resume.type='button'; resume.id='arrivalResume'; resume.textContent=words.resume;
+      resume.onclick=()=>{
+        reason=null; restoring=false; restored=false; details=null;
+        overlay.classList.add('hidden'); overlay.inert=true; overlay.setAttribute('aria-hidden','true');
+        for(const [element,inert] of inertBefore) element.inert=inert;
+        inertBefore=[]; loading.style.display=bootReady?'none':loadingBefore;
+        if(!bootReady) watchdog=setTimeout(()=>fail('stalled'),45000);
+        if(focusBefore?.isConnected&&!focusBefore.closest('[inert]')) focusBefore.focus({preventScroll:true});
+      };
+      actions.appendChild(resume);
+    }
+    const retry=document.createElement('button'); retry.type='button'; retry.id='arrivalRetry'; retry.textContent=words.retry;
+    retry.onclick=()=>location.reload(); actions.appendChild(retry);
+    if(target){
+      const original=document.createElement('a'); original.id='arrivalGithub'; original.className='alt'; original.textContent=words.github;
+      original.href=target; original.target='_blank'; original.rel='noopener noreferrer'; actions.appendChild(original);
+    }
+    const home=document.createElement('a'),url=new URL(location.href); url.search=''; url.hash='';
+    url.searchParams.set('view','plaza'); url.searchParams.set('lang',lang());
+    home.id='arrivalHome'; home.className='alt'; home.href=url.href; home.textContent=words.home; actions.appendChild(home);
+  }
+  function fail(next,options=null){
+    if(reason) return false;
+    clearTimeout(watchdog); reason=next; details=options; focusBefore=document.activeElement; loadingBefore=loading.style.display;
+    inertBefore=[...document.body.children].filter(el=>el!==overlay&&!['SCRIPT','STYLE','LINK'].includes(el.tagName)).map(el=>[el,el.inert]);
+    for(const [element] of inertBefore) element.inert=true;
+    loading.style.display='none'; overlay.inert=false; overlay.setAttribute('aria-hidden','false'); overlay.classList.remove('hidden');
+    window.REPOLIS_ARRIVAL.onBlock?.(); render(); overlay.querySelector('button').focus({preventScroll:true});
+    return true;
+  }
+  window.REPOLIS_ARRIVAL={
+    get blocked(){ return !!reason; },get recovering(){ return reason==='context_lost'; },
+    fail,refresh:render,onBlock:null,
+    setTarget(url){ const value=new URL(url); if(value.origin==='https://github.com'&&!value.username&&!value.password&&!value.search&&!value.hash) target=value.href; },
+    ready(){ if(reason) return false; bootReady=true; clearTimeout(watchdog); return true; },
+    contextRestored(){ if(reason==='context_lost') restoring=true; },
+    rendered(){ if(restoring&&!restored){ restored=true; render(); overlay.querySelector('button').focus({preventScroll:true}); } }
+  };
+  addEventListener('error',event=>{
+    if(bootReady||reason) return;
+    if(event.target instanceof HTMLScriptElement) fail('script');
+    else if(event instanceof ErrorEvent) fail('initialization');
+  },true);
+  addEventListener('unhandledrejection',()=>{ if(!bootReady&&!reason) fail('initialization'); });
+  document.addEventListener('keydown',event=>{
+    if(!reason) return;
+    event.stopImmediatePropagation();
+    if(event.key==='Escape') event.preventDefault();
+    if(event.key!=='Tab') return;
+    const items=[...overlay.querySelectorAll('button,a[href]')],first=items[0],last=items.at(-1);
+    if(!overlay.contains(document.activeElement)||(event.shiftKey&&document.activeElement===first)){
+      event.preventDefault(); (event.shiftKey?last:first).focus();
+    }else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+  },true);
+  document.addEventListener('focusin',event=>{ if(reason&&!overlay.contains(event.target)) overlay.querySelector('button').focus({preventScroll:true}); },true);
+})();
+/*ARRIVAL_RECOVERY:END*/
+</script>
 <script src="repolis.config.js"></script>
 <script src="scholars.js"></script>
 <script src="council/engine.js"></script>
@@ -2286,6 +2389,7 @@ let cityMode = _repoRoute.mode;     // 'owner' | 'public' | 'portal'
 let dataSource = cityMode === 'portal' ? 'repo-api' : (cityMode === 'public' ? 'github-public' : 'owner-ci');
 let cityError = null;              // { status, reason } when a public town can't load
 let blueprintDeepLinkBypass = false;
+window.REPOLIS_ARRIVAL.setTarget('https://github.com/'+(repoPortalTarget?.slug||_reqFocus?.slug||(GH_LOGIN_RE.test(currentUser)?currentUser:OWNER)));
 if(BLUEPRINT_DEEP_LINK.ok) document.title=`${BLUEPRINT_DEEP_LINK.target.slug} · Repository Blueprint`;
 else if(ATELIER_DIRECT_LINK.ok) document.title=`${ATELIER_DIRECT_LINK.target.slug} · Repository Atelier`;
 else if(repoPortalTarget) document.title=`${repoPortalTarget.slug} · Repolis Repo Portal`;
@@ -2368,6 +2472,44 @@ function _repoPortalLang(){ if(DIRECT_ENTRY_LANG) return DIRECT_ENTRY_LANG;
   return (navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; }
 
 /* --- public town: normalize allowlisted GitHub REST fields without manufacturing traffic. --- */
+/*ARRIVAL_DATA:START*/
+const ARRIVAL_DATA_LIMITS=Object.freeze({timeoutMs:8000,maxBytes:2*1024*1024,optionalTimeoutMs:4000});
+class ArrivalDataError extends Error{
+  constructor(reason,status=0){ super(reason); this.name='ArrivalDataError'; this.reason=reason; this.status=status; }
+}
+function arrivalDataReason(error){
+  return error instanceof ArrivalDataError?error.reason:(error instanceof SyntaxError?'malformed':'network');
+}
+async function fetchArrivalResponse(url,options={},limits=ARRIVAL_DATA_LIMITS,fetchImpl=globalThis.fetch){
+  const controller=new AbortController(),timeoutMs=limits.timeoutMs??ARRIVAL_DATA_LIMITS.timeoutMs,maxBytes=limits.maxBytes??ARRIVAL_DATA_LIMITS.maxBytes;
+  let reader=null,timedOut=false;
+  const timer=setTimeout(()=>{ timedOut=true; controller.abort(); },timeoutMs);
+  try{
+    const response=await fetchImpl(url,{...options,signal:controller.signal});
+    if(!response.ok) throw new ArrivalDataError(response.status===404?'not_found':(response.status===403||response.status===429?'rate_limit':'http'),response.status);
+    if(Number(response.headers.get('content-length'))>maxBytes) throw new ArrivalDataError('oversized');
+    let text='';
+    if(response.body?.getReader){
+      reader=response.body.getReader(); const decoder=new TextDecoder(); let bytes=0;
+      while(true){
+        const {done,value}=await reader.read(); if(done) break;
+        bytes+=value.byteLength; if(bytes>maxBytes) throw new ArrivalDataError('oversized');
+        text+=decoder.decode(value,{stream:true});
+      }
+      text+=decoder.decode();
+    }else{
+      const bytes=await response.arrayBuffer(); if(bytes.byteLength>maxBytes) throw new ArrivalDataError('oversized');
+      text=new TextDecoder().decode(bytes);
+    }
+    return new Response(text,{status:response.status,headers:response.headers});
+  }catch(error){
+    controller.abort();
+    if(error instanceof ArrivalDataError) throw error;
+    throw new ArrivalDataError(timedOut?'timeout':'network');
+  }finally{ clearTimeout(timer); reader?.releaseLock(); }
+}
+const fetchOptionalArrival=(url,options)=>fetchArrivalResponse(url,options,{timeoutMs:ARRIVAL_DATA_LIMITS.optionalTimeoutMs});
+/*ARRIVAL_DATA:END*/
 function _normPublicRepos(raw, user){
   return projectPublicRepos(raw,user);
 }
@@ -2380,33 +2522,27 @@ async function _loadPublicCity(user){
       coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
   track('city_data_load_start', { targetUser:user });
   try{
-    const res = await fetch('https://api.github.com/users/'+encodeURIComponent(user)+'/repos?per_page=100&sort=pushed',
+    const res = await fetchArrivalResponse('https://api.github.com/users/'+encodeURIComponent(user)+'/repos?per_page=100&sort=pushed',
       { headers:{ 'Accept':'application/vnd.github+json' } });
-    if(!res.ok){
-      const reason = res.status===404 ? 'not_found' : (res.status===403 ? 'rate_limit' : 'http');
-      if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache',
-        coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:reason} };
-      return { repos:[], source:'github-public', error:{ status:res.status, reason },
-        coverage:{partial:false,error:reason} };
-    }
     const raw = await res.json();
+    if(!Array.isArray(raw)) throw new ArrivalDataError('malformed');
     try{ localStorage.setItem(key, JSON.stringify({ username:user, fetchedAt:Date.now(), repos:raw, source:'github-public' })); }catch(e){}
     return { repos:_normPublicRepos(raw,user), source:'github-public',
       coverage:{partial:raw.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
   }catch(e){
+    const reason=arrivalDataReason(e);
     if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache',
-      coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:'network'} };
-    return { repos:[], source:'github-public', error:{ status:0, reason:'network' },
-      coverage:{partial:false,error:'network'} };
+      coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:reason} };
+    return { repos:[], source:'github-public', error:{ status:e.status||0, reason },
+      coverage:{partial:false,error:reason} };
   }
 }
 
 let _ownerSnapshotPromise=null;
 function _ownerSnapshot(){
   if(_ownerSnapshotPromise) return _ownerSnapshotPromise;
-  _ownerSnapshotPromise=fetch('repos.json',{cache:'no-cache'}).then(async res=>{
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data=await res.json(); if(!Array.isArray(data)) throw new Error('repos.json is not an array');
+  _ownerSnapshotPromise=fetchArrivalResponse('repos.json',{cache:'no-cache'}).then(async res=>{
+    const data=await res.json(); if(!Array.isArray(data)) throw new ArrivalDataError('malformed');
     return data;
   });
   return _ownerSnapshotPromise;
@@ -2414,10 +2550,9 @@ function _ownerSnapshot(){
 let _cityStatePromise=null;
 function _cityStateSnapshot(){
   if(_cityStatePromise) return _cityStatePromise;
-  _cityStatePromise=fetch('data/city-state.json',{cache:'no-cache'}).then(async res=>{
-    if(!res.ok) throw new Error('HTTP '+res.status);
+  _cityStatePromise=fetchArrivalResponse('data/city-state.json',{cache:'no-cache'}).then(async res=>{
     const data=await res.json();
-    if(data?.schema!==CITY_STATE_SCHEMA||data?.version!==CITY_STATE_VERSION) throw new Error('unsupported city-state schema');
+    if(data?.schema!==CITY_STATE_SCHEMA||data?.version!==CITY_STATE_VERSION) throw new ArrivalDataError('malformed');
     return data;
   });
   return _cityStatePromise;
@@ -2460,22 +2595,19 @@ function _repoPortalCacheStore(target,repo){
 async function _loadRepoPortalTarget(target){
   if(target.owner.toLowerCase()===OWNER.toLowerCase()){
     try{ const exact=_ownerRepos(await _ownerSnapshot()).find(repo=>repo.repo.toLowerCase()===target.repo.toLowerCase());
-      if(exact) return {repo:exact,source:'owner-snapshot',result:'local'}; }catch(e){}
+      if(exact) return {repo:exact,source:'owner-snapshot',result:'local'}; }
+    catch(e){ console.warn('Owner snapshot unavailable; trying the exact public repository',e); }
   }
   const cached=_repoPortalCacheLookup(target); if(cached.fresh) return {repo:cached.fresh,source:'repo-cache',result:'cache'};
   try{
-    const res=await fetch('https://api.github.com/repos/'+encodeURIComponent(target.owner)+'/'+encodeURIComponent(target.repo),
+    const res=await fetchArrivalResponse('https://api.github.com/repos/'+encodeURIComponent(target.owner)+'/'+encodeURIComponent(target.repo),
       {headers:{Accept:'application/vnd.github+json'}});
-    if(!res.ok){
-      if(cached.stale) return {repo:cached.stale,source:'repo-stale-cache',result:'stale'};
-      return {repo:null,source:'repo-api',result:'error',error:{status:res.status,reason:res.status===404?'not_found':(res.status===403||res.status===429?'rate_limit':'http')}};
-    }
     const repo=projectPublicRepo(await res.json(),target.owner);
     if(!repo||repo.repo.toLowerCase()!==target.repo.toLowerCase()) return {repo:null,source:'repo-api',result:'error',error:{status:404,reason:'not_found'}};
     _repoPortalCacheStore(target,repo); return {repo,source:'repo-api',result:'api'};
   }catch(e){
     if(cached.stale) return {repo:cached.stale,source:'repo-stale-cache',result:'stale'};
-    return {repo:null,source:'repo-api',result:'error',error:{status:0,reason:'network'}};
+    return {repo:null,source:'repo-api',result:'error',error:{status:e.status||0,reason:arrivalDataReason(e)}};
   }
 }
 
@@ -2485,7 +2617,7 @@ trackPortal('feature_seen',{entry:repoPortalRequested?'link':'intro',device:_rep
 if(cityMode === 'owner'){
   const cityStateLoad=_cityStateSnapshot().catch(error=>{ console.warn('city-state.json load failed',error); return null; });
   try { REPOS=_ownerRepos(await _ownerSnapshot()); CITY_STATE=await cityStateLoad; }
-  catch(e){ cityError={status:0,reason:'data_load'}; console.error('repos.json load failed', e); }
+  catch(e){ cityError={status:0,reason:'data_load'}; cityError.cause=arrivalDataReason(e); console.error('repos.json load failed', e); }
   track(REPOS.length ? 'city_data_load_success' : 'city_data_load_fail', { repoCount:REPOS.length });
 } else if(cityMode === 'public') {
   try{ const _l = (function(){ let l=localStorage.getItem('repolisLang'); if(l!=='ko'&&l!=='en') l=(navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; return l; })();
@@ -2529,19 +2661,21 @@ if(TOWN_PROJECTION.kind==='portable'){
 }
 if(cityMode==='owner'&&currentUser.toLowerCase()===OWNER.toLowerCase()){
   const [residentLoad,loreLoad]=await Promise.allSettled([
-    loadResidentManifest({owner:currentUser}),
-    loadLoreFragments(),
+    loadResidentManifest({owner:currentUser,fetchImpl:fetchOptionalArrival}),
+    loadLoreFragments({fetchImpl:fetchOptionalArrival}),
   ]);
   if(residentLoad.status==='fulfilled'){ RESIDENT_MANIFEST=residentLoad.value; RESIDENT_MANIFEST_STATE='ready'; }
+  else console.warn('Resident manifest unavailable; using local residents',residentLoad.reason);
   if(loreLoad.status==='fulfilled'){ LORE_FRAGMENTS=loreLoad.value; LORE_FRAGMENT_STATE='ready'; }
+  else console.warn('Lore fragments unavailable; using local dialogue',loreLoad.reason);
 }
 const RESIDENT_PROFILE_STORE=createResidentProfileStore({manifest:RESIDENT_MANIFEST});
 const TOWN_GROWTH=buildTownGrowthTimeline(REPOS);
 
 /* Chronopolis council config (sages/chair/ambient) — optional; chamber uses an inline fallback if missing */
 let CHRONO_CFG=null;
-try { CHRONO_CFG = await fetch('council/council.config.json', { cache:'no-cache' }).then(r=>r.json()); }
-catch(e){ /* config optional */ }
+try { CHRONO_CFG = await fetchOptionalArrival('council/council.config.json', { cache:'no-cache' }).then(r=>r.json()); }
+catch(e){ console.warn('Council config unavailable; using the inline configuration',e); }
 
 /* Contribution Library data (generated daily into assets/contribution-library.json). Loaded in the
    background (no await) so a slow fetch never blocks the city from booting — nothing during boot reads
@@ -3461,7 +3595,9 @@ const _maxScore = Math.max(0.001, ...REPOS.map(r=>r.score||0));
 
 /* ====================== RENDERER / SCENE ====================== */
 const app = document.getElementById('app');
-const renderer = new THREE.WebGLRenderer({ antialias:true });
+const renderer = (()=>{ try{ return new THREE.WebGLRenderer({ antialias:true }); }
+  catch(error){ window.REPOLIS_ARRIVAL.fail('webgl'); throw error; } })();
+let arrivalContextLost=false;
 const _desktopFinePointer=matchMedia('(pointer:fine)');
 const _desktopFrameDropGuard=()=>_desktopFinePointer.matches&&innerWidth*innerHeight>=900000;
 let _renderQualityDesktopGuard=_desktopFrameDropGuard();
@@ -3538,8 +3674,10 @@ function _installShadowMetrics(){
   wrapped.__repolisMetrics=true; shadowMap.render=wrapped;
 }
 if(_DIAGNOSTICS) _installShadowMetrics();
-renderer.domElement.addEventListener('webglcontextlost',()=>{ _suspendGpuTimer(); RENDER_METRICS.lastStartedAt=0; });
-renderer.domElement.addEventListener('webglcontextrestored',()=>{ if(_DIAGNOSTICS){ _installShadowMetrics(); _installGpuTimer(); } invalidateTownShadows('context-restored'); if(typeof _restoreProceduralSurfaceTextures==='function') _restoreProceduralSurfaceTextures(); if(MEMORIAL_TREE) MEMORIAL_TREE.bloomDirty=true; if(typeof _undercroftContextRestored==='function') _undercroftContextRestored(); if(typeof _repositoryAtelierContextRestored==='function') _repositoryAtelierContextRestored(); });
+renderer.domElement.addEventListener('webglcontextlost',event=>{ event.preventDefault(); arrivalContextLost=true;
+  _suspendGpuTimer(); RENDER_METRICS.lastStartedAt=0; window.REPOLIS_ARRIVAL.fail('context_lost'); });
+renderer.domElement.addEventListener('webglcontextrestored',()=>{ if(_DIAGNOSTICS){ _installShadowMetrics(); _installGpuTimer(); } invalidateTownShadows('context-restored'); if(typeof _restoreProceduralSurfaceTextures==='function') _restoreProceduralSurfaceTextures(); if(MEMORIAL_TREE) MEMORIAL_TREE.bloomDirty=true; if(typeof _undercroftContextRestored==='function') _undercroftContextRestored(); if(typeof _repositoryAtelierContextRestored==='function') _repositoryAtelierContextRestored();
+  arrivalContextLost=false; window.REPOLIS_ARRIVAL.contextRestored(); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) RENDER_METRICS.lastStartedAt=0; });
 
 /* ---- device quality tier: gate detail density so mobile/low-end lower overdraw without touching desktop ---- */
@@ -3803,6 +3941,7 @@ function _renderWorldTreeFrame(){
   const finalToken=_beginMeasuredPass('final'); finalComposer.render(); _recordRenderPass('final',finalToken);
   if(MEMORIAL_TREE){ if(forceProofLayer) _setWorldTreeGlowLayers(false);
     MEMORIAL_TREE.group.visible=requestedTreeVisible; _setWorldTreeSapVisible(requestedTreeVisible); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=requestedTreeVisible; }); }
+  _arrivalRendered('town');
 }
 
 /* toon gradient + material factory */
@@ -10990,6 +11129,57 @@ function flushStarNudge(){ if(!_starNudgePending) return; const reason=_starNudg
   if(x) x.onclick=()=>{ track('star_nudge_dismiss'); _starNudgeClose('dismissed'); };
   if(go) go.onclick=()=>{ if(repoPortalRequested) trackPortal('project_star_click',{entry:'earned',device:_repoPortalDevice(),lang:LANG,channel:'github'});
     else track('project_star_click'); _starNudgeClose('clicked'); }; })();
+/*ARRIVAL_CORE:START*/
+function createArrivalState(){
+  return {initialized:false,frames:0,firstFrameAt:0,entered:false,enteredAt:0,direct:false,target:null,startRequested:false,complete:false,actions:[]};
+}
+function claimArrivalEntry(state,now){
+  if(!state.initialized||state.frames<2||state.entered) return false;
+  state.entered=true; state.enteredAt=now; return true;
+}
+function stepArrival(state,frame,limits){
+  if(!state.initialized||state.complete||frame.blocked||frame.contextLost) return null;
+  if(!state.frames) state.firstFrameAt=frame.now;
+  state.frames++;
+  if(state.frames<2) return null;
+  if(!state.direct){ state.complete=true; return 'reveal'; }
+  if(!state.entered){
+    if(!state.startRequested&&frame.now-state.firstFrameAt>=limits.initializationDelayMs){ state.startRequested=true; return 'enter'; }
+    return null;
+  }
+  const destinationReady=state.target?frame.kind==='atelier'&&frame.inside&&frame.target?.toLowerCase()===state.target.toLowerCase():frame.kind==='town';
+  if(destinationReady&&frame.now-state.enteredAt>=limits.coverReleaseMs){ state.complete=true; return 'reveal'; }
+  return null;
+}
+function takeArrivalAction(state,now,blocked){
+  if(blocked||!state.actions.length||state.actions[0].at>now) return null;
+  return state.actions.shift().run;
+}
+/*ARRIVAL_CORE:END*/
+const FIRST_ARRIVAL=createArrivalState();
+function _queueArrivalAction(delay,run){ FIRST_ARRIVAL.actions.push({at:performance.now()+delay,run}); }
+function _arrivalRendered(kind){
+  const recovery=window.REPOLIS_ARRIVAL;
+  if(arrivalContextLost) return;
+  if(recovery.recovering){ recovery.rendered(); return; }
+  if(recovery.blocked) return;
+  if(FIRST_ARRIVAL.complete&&!FIRST_ARRIVAL.actions.length) return;
+  const now=performance.now(),pending=takeArrivalAction(FIRST_ARRIVAL,now,false);
+  if(pending){ try{ pending(); }catch(error){ console.error('Arrival action failed',error); recovery.fail('initialization'); } }
+  if(FIRST_ARRIVAL.complete||recovery.blocked) return;
+  const A=kind==='atelier'?REPOSITORY_ATELIER:null;
+  const action=stepArrival(FIRST_ARRIVAL,{now,kind,inside:A?.state==='inside',target:A?.portal?.slug,
+    blocked:!!cityError,contextLost:arrivalContextLost},DIRECT_ENTRY_LIMITS);
+  if(action==='enter'){ introStartBtn.click(); return; }
+  if(action==='reveal'&&recovery.ready()){
+    const loading=document.getElementById('loading'),intro=document.getElementById('intro');
+    loading.style.display='none'; loading.dataset.ready='true';
+    if(!intro.classList.contains('hidden')){ intro.inert=false; if(_QUERY.has('launch')) document.getElementById('introUser').focus({preventScroll:true}); }
+  }
+}
+function _claimTownEntry(){
+  return !cityError&&!window.REPOLIS_ARRIVAL.blocked&&claimArrivalEntry(FIRST_ARRIVAL,performance.now());
+}
 function blueprintDeepLinkRepo(){
   if(!BLUEPRINT_DEEP_LINK.ok||cityMode!=='portal'||!repoPortalTarget
     ||BLUEPRINT_DEEP_LINK.target.slug.toLowerCase()!==repoPortalTarget.slug.toLowerCase()) return null;
@@ -11002,7 +11192,8 @@ function repositoryAtelierDirectLinkRepo(){
   const repo=repoByKey(repoPortalTarget.repo),target=repo&&_repositoryPortalTarget(repo);
   return target&&target.slug.toLowerCase()===ATELIER_DIRECT_LINK.target.slug.toLowerCase()?repo:null;
 }
-document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
+document.getElementById('startBtn').onclick=()=>{ if(!_claimTownEntry()) return;
+  document.getElementById('intro').classList.add('hidden');
   track('town_enter', { returning: !!VISITOR.returning });
   const rb=VISITOR.returning, news=hasFreshness(),blueprintPath=!blueprintDeepLinkBypass&&blueprintDeepLinkRepo()?BLUEPRINT_DEEP_LINK.path:null;
   if(cityMode==='public'){
@@ -11012,14 +11203,19 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
   try{ if(cityMode!=='portal'&&!_reqFocus&&REPOS.length){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
-  setTimeout(()=>{ try{
+  _queueArrivalAction(480,()=>{
+    if(BLUEPRINT_DEEP_LINK.ok&&blueprintDeepLinkBypass) return;
     if(cityMode==='portal'&&repoPortalTarget){ const repo=repoByKey(repoPortalTarget.repo);
-      if(repo) enterRepositoryAtelier(repo,blueprintPath?{autoChat:false,blueprintPath}:(repositoryAtelierDirectLinkRepo()?{autoChat:false}:{})); }
-    else if(_reqFocus){ const repo=repoByKey(_reqFocus.repo); if(repo) enterRepositoryAtelier(repo); else openRepoFromHash(); }
+      const target=repo&&_repositoryPortalTarget(repo);
+      if(!target||target.slug.toLowerCase()!==repoPortalTarget.slug.toLowerCase()
+        ||!enterRepositoryAtelier(repo,blueprintPath?{autoChat:false,blueprintPath}:(repositoryAtelierDirectLinkRepo()?{autoChat:false}:{}))) window.REPOLIS_ARRIVAL.fail('target'); }
+    else if(_reqFocus){ const repo=repoByKey(_reqFocus.repo),target=repo&&_repositoryPortalTarget(repo);
+      if(target?.slug.toLowerCase()===_reqFocus.slug.toLowerCase()){ if(!enterRepositoryAtelier(repo)) window.REPOLIS_ARRIVAL.fail('target'); }
+      else window.REPOLIS_ARRIVAL.fail('target'); }
     else openRepoFromHash();
-  }catch(e){} }, 480);
-  if(REPO_ROUTE_REQUEST.valid&&cityMode!=='portal') setTimeout(()=>{ try{ startRepoRoute('link'); }catch(e){} },620);
-  else if(_reqGrowth&&cityMode!=='portal') setTimeout(()=>{ try{ startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false}); }catch(e){} },620); };
+  });
+  if(REPO_ROUTE_REQUEST.valid&&cityMode!=='portal') _queueArrivalAction(620,()=>startRepoRoute('link'));
+  else if(_reqGrowth&&cityMode!=='portal') _queueArrivalAction(620,()=>startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false})); };
 const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introLaunch.querySelector('.launchLabel'),
   introLaunchForm=document.getElementById('introLaunchForm'),introLaunchHint=document.getElementById('introLaunchHint'),
   introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
@@ -11085,7 +11281,8 @@ async function copyIntroProfileReadme(){
 }
 window.__publicIntroRefresh=renderPublicIntro;
 introPinProfile.onclick=copyIntroProfileReadme;
-introGrowth.onclick=()=>{ introStartBtn.click(); setTimeout(()=>startTownGrowthReplay({entry:'intro',autoplay:true}),620); };
+introGrowth.onclick=()=>{ if(FIRST_ARRIVAL.entered) return; introStartBtn.click();
+  if(FIRST_ARRIVAL.entered) _queueArrivalAction(620,()=>startTownGrowthReplay({entry:'intro',autoplay:true})); };
 introCompare.onclick=()=>openTwinTowns('intro');
 introBlueprintLoad.onclick=()=>introStartBtn.click();
 introBlueprintTown.onclick=()=>{ blueprintDeepLinkBypass=true; introStartBtn.click(); };
@@ -11101,33 +11298,28 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
     const user=target.user; track('intro_personal_preview',{targetUser:user});
     const url=location.origin+location.pathname+(user.toLowerCase()===OWNER.toLowerCase()?'':'?user='+encodeURIComponent(user));
     location.href=url; }; renderPublicIntro(); })();
-(function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
-    document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
+(function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ if(!_claimTownEntry()) return; document.getElementById('intro').classList.add('hidden');
+    document.getElementById('loading').style.display='none'; _queueArrivalAction(650,()=>startTour()); };
   const replay=document.getElementById('tourReplayBtn'); if(replay) replay.onclick=()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); startTour(); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
 document.addEventListener('keydown',event=>{ if(event.key==='Escape'&&tour&&tour.active){ event.preventDefault(); event.stopImmediatePropagation(); endTour(false); } },true);
-function _scheduleCoveredDirectEntry(message,alreadyEntered){
+function _scheduleCoveredDirectEntry(message,target=null){
   const loading=document.getElementById('loading'),intro=document.getElementById('intro');
   if(!loading||!intro||cityError) return false;
+  FIRST_ARRIVAL.direct=true; FIRST_ARRIVAL.target=target;
   loading.style.display='flex'; loading.classList.add('direct-entry');
   document.getElementById('loadingText').textContent=message;
-  const enter=()=>setTimeout(()=>{
-      if(intro.classList.contains('hidden')||alreadyEntered()){ loading.style.display='none'; return; }
-      introStartBtn.click();
-      setTimeout(()=>{ loading.style.display='none'; },DIRECT_ENTRY_LIMITS.coverReleaseMs);
-    },DIRECT_ENTRY_LIMITS.initializationDelayMs);
-  if(typeof requestAnimationFrame==='function') requestAnimationFrame(()=>requestAnimationFrame(enter)); else enter();
   return true;
 }
 function _schedulePlazaDirectEntry(){
   if(!PLAZA_DIRECT_LINK.ok||cityMode!=='owner') return false;
-  return _scheduleCoveredDirectEntry(t('plazaDirectOpening'),()=>false);
+  return _scheduleCoveredDirectEntry(t('plazaDirectOpening'));
 }
 function _scheduleRepositoryAtelierDirectEntry(){
   if(!repositoryAtelierDirectLinkRepo()) return false;
-  return _scheduleCoveredDirectEntry(tf('atelierDirectOpening',{repo:ATELIER_DIRECT_LINK.target.slug}),()=>repositoryAtelierActive());
+  return _scheduleCoveredDirectEntry(tf('atelierDirectOpening',{repo:ATELIER_DIRECT_LINK.target.slug}),ATELIER_DIRECT_LINK.target.slug);
 }
-if(!_schedulePlazaDirectEntry()&&!_scheduleRepositoryAtelierDirectEntry()) document.getElementById('loading').style.display='none';
+if(!_schedulePlazaDirectEntry()) _scheduleRepositoryAtelierDirectEntry();
 
 /* ====================== ↔ TWIN TOWNS (two-person referral bridge) ====================== */
 const twinModal=document.getElementById('twinModal'),twinStudio=twinModal.querySelector('.twinStudio'),
@@ -11339,13 +11531,7 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
     else if(effErr==='network'){ title=t('publicNotFound'); msg=t('publicNetMsg'); }
     else if(effErr==='not_found'){ title=t('publicNotFound'); msg=tf('publicNotFoundMsg',{user:currentUser}); }
     else { title=t('publicNotFound'); msg=t('publicNetMsg'); }
-    document.getElementById('ceTitle').textContent=title; document.getElementById('ceMsg').textContent=msg;
-    const a=document.getElementById('ceActions'); a.innerHTML='';
-    const retry=document.createElement('button'); retry.textContent=t('stationRetry'); retry.onclick=()=>{ errEl.classList.add('hidden'); openStation(); }; a.appendChild(retry);
-    const home=document.createElement('button'); home.className='alt'; home.textContent=repoPortalFallback?t('portalContinue'):tf('goOwnerCity',{user:OWNER});
-    home.onclick=()=>{ if(repoPortalFallback){ errEl.classList.add('hidden'); try{ history.replaceState(null,'',baseUrl()); }catch(e){} } else goHome(); }; a.appendChild(home);
-    const intro=document.getElementById('intro'); if(intro) intro.classList.add('hidden');
-    errEl.classList.remove('hidden');
+    window.REPOLIS_ARRIVAL.fail(effErr,{title,message:msg});
   }
 
   window.__cityLangRefresh=()=>{
@@ -11355,7 +11541,8 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
       const isub=document.querySelector('#intro .sub'); if(isub) isub.innerHTML=t('introSubPortal'); }
     else townLabel.style.display='none';
     if(!stationEl.classList.contains('hidden')) renderStation();
-    if(!errEl.classList.contains('hidden')) showCityError();
+    if(effErr&&!errEl.classList.contains('hidden')) showCityError();
+    window.REPOLIS_ARRIVAL.refresh();
   };
   window.__station=()=>({ mode:cityMode, user:currentUser, source:dataSource, error:effErr, repoCount:REPOS.length, open:!stationEl.classList.contains('hidden') });
   window.__city=()=>({ mode:cityMode, user:currentUser, source:dataSource, projection:TOWN_PROJECTION.kind, repoCount:REPOS.length, error:cityError,
@@ -12610,6 +12797,7 @@ function townFocusables(element){
     .filter(el=>!el.hidden&&!el.closest('[inert]')&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');
 }
 function syncTownPanels(records=[]){
+  if(window.REPOLIS_ARRIVAL.blocked){ for(const item of townPanels) item.element.inert=true; return; }
   const opening=records.filter(record=>record.type==='attributes'&&record.attributeName==='class'&&(record.oldValue||'').split(/\s+/).includes('hidden')
     &&!record.target.classList.contains('hidden')).map(record=>townPanels.find(p=>p.element===record.target)).filter(Boolean).pop();
   if(opening) closeTownPanels(opening.element);
@@ -12659,6 +12847,7 @@ function syncTownViewport(){
 window.visualViewport?.addEventListener('resize',syncTownViewport);
 window.visualViewport?.addEventListener('scroll',syncTownViewport);
 addEventListener('resize',syncTownViewport); syncTownViewport(); syncTownPanels();
+window.REPOLIS_ARRIVAL.onBlock=clearTownInput;
 /*TOWN_UI_RUNTIME:END*/
 
 /*INTENT_LENS:START*/
@@ -12964,6 +13153,7 @@ function _renderUndercroft(){
   renderer.shadowMap.needsUpdate=false; renderer.info.reset(); renderer.clear(); renderer.render(A.scene,camera);
   A.lastInterior={calls:renderer.info.render.calls,triangles:renderer.info.render.triangles}; A.peakInterior.calls=Math.max(A.peakInterior.calls,A.lastInterior.calls); A.peakInterior.triangles=Math.max(A.peakInterior.triangles,A.lastInterior.triangles);
   renderer.toneMapping=savedTone; renderer.outputColorSpace=savedSpace; renderer.shadowMap.needsUpdate=savedShadow;
+  _arrivalRendered('undercroft');
 }
 function _undercroftFrame(dt){
   const mode=_undercroftTransition(dt); if(!mode) return false; _updateSessionFootprints(dt,false,true);
@@ -13851,6 +14041,7 @@ function _renderRepositoryAtelier(){
   A.lastInterior={calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};
   A.peakInterior.calls=Math.max(A.peakInterior.calls,A.lastInterior.calls); A.peakInterior.triangles=Math.max(A.peakInterior.triangles,A.lastInterior.triangles);
   renderer.toneMapping=savedTone; renderer.outputColorSpace=savedSpace; renderer.shadowMap.needsUpdate=savedShadow;
+  _arrivalRendered('atelier');
 }
 function _repositoryAtelierFrame(dt){
   const mode=_repositoryAtelierTransition(dt); if(!mode) return false;
@@ -13906,7 +14097,7 @@ function _repositoryAtelierDebug(){
     render:{calls:interior.calls,triangles:interior.triangles,peakCalls:peak.calls,peakTriangles:peak.triangles,exteriorCalls:A.renderInterior?0:null},
     style:A.created?{roomId:A.group.uuid.slice(0,8),seed:A.hash,shape:A.hash%3,language:A.materials.core.color.getHexString(),district:A.materials.ring.color.getHexString()}:null,
     bindings:A.bindings||null,portal:A.portal||null,near:A.near&&A.near.kind||null,lastAction:A.lastAction,inRoomChat:!!A.inRoomChat,roomPanel:A.roomPanel,
-    blueprint:{status:A.blueprint.status,panelOpen:A.blueprint.panelOpen,target:A.blueprint.target&&A.blueprint.target.repoName||null,
+    blueprint:A.blueprint?{status:A.blueprint.status,panelOpen:A.blueprint.panelOpen,target:A.blueprint.target&&A.blueprint.target.repoName||null,
       requestsStarted:A.blueprint.requestsStarted,retries:A.blueprint.lastResult?.retries||0,decodedBytes:A.blueprint.decodedBytes,
       nodes:A.blueprint.projection?.counts.nodes||0,edges:A.blueprint.projection?.counts.edges||0,maxDepth:A.blueprint.projection?.counts.maxDepth||0,
       omittedNodes:A.blueprint.projection?.counts.omittedNodes||0,selectedPath:A.blueprint.projection?.nodes[A.blueprint.selected]?.path||null,
@@ -13915,7 +14106,7 @@ function _repositoryAtelierDebug(){
       scout:A.blueprint.scout?{ok:A.blueprint.scout.ok,reason:A.blueprint.scout.reason,issueNumber:A.blueprint.scout.issueNumber||null,
         candidates:A.blueprint.scout.candidates.map(candidate=>candidate.path),limit:ISSUE_CODE_SCOUT_LIMITS.maxCandidates}:null,
       limits:{nodeCap:A.blueprint.nodeCap,edgeCap:A.blueprint.edgeCap,decodedBytes:REPOSITORY_BLUEPRINT_LIMITS.maxDecodedBytes,
-        timeoutMs:REPOSITORY_BLUEPRINT_LIMITS.timeoutMs,drawCalls:REPOSITORY_BLUEPRINT_LIMITS.additionalDrawCalls,atlases:REPOSITORY_BLUEPRINT_LIMITS.canvasAtlases}},
+        timeoutMs:REPOSITORY_BLUEPRINT_LIMITS.timeoutMs,drawCalls:REPOSITORY_BLUEPRINT_LIMITS.additionalDrawCalls,atlases:REPOSITORY_BLUEPRINT_LIMITS.canvasAtlases}}:null,
     chat:repositoryAtelierChatSnapshot(A.chat),
     exhibits:A.created?{architecture:A.architecture.count,path:A.pathTiles.count,signals:A.metricSignals||[],signalCards:A.textLayout?.signalCards||0}:null,
     saved:A.lastSaved,restored:A.lastRestored,
@@ -14057,6 +14248,15 @@ _applyVisualGovernorTier('initial');
 function animate(){
   requestAnimationFrame(animate);
   frame++;
+  if(arrivalContextLost||window.REPOLIS_ARRIVAL.recovering){
+    clearTownInput(); clock.getDelta();
+    if(!arrivalContextLost){
+      if(REPOSITORY_ATELIER?.renderInterior) _renderRepositoryAtelier();
+      else if(UNDERCROFT.renderInterior) _renderUndercroft();
+      else { _beginRenderMetrics(true); _renderWorldTreeFrame(); _endRenderMetrics(); }
+    }
+    return;
+  }
   const _now=performance.now();
   const _idle=_effectiveIdle(_now);   // perf matrix can toggle cadence without synthetic input
   const _idleCapped=_idle && !undercroftActive() && !repositoryAtelierActive() && !GROWTH_REPLAY.active && !(tour&&tour.active) && !ferris && !carousel && !canalFerryRide && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0;
@@ -14270,6 +14470,7 @@ function animate(){
   _updateBuildingLodPrototype(renderedFrame);
   _beginRenderMetrics(_idle); _renderWorldTreeFrame(); _endRenderMetrics();
 }
+FIRST_ARRIVAL.initialized=true;
 requestAnimationFrame(animate);
 function _resizeViewportQuality(){ const previousDesktopGuard=_renderQualityDesktopGuard;
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(_rendererDpr()); renderer.setSize(innerWidth,innerHeight);

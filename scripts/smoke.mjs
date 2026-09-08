@@ -430,7 +430,7 @@ ok(resolveCitySeason(CITY_STATE)===CITY_STATE.season.value
   'season accepts four generated values, falls back neutrally, and has distinct fixture palettes');
 ok(!/\bfetch\s*\(|api\.github|workers\.dev|\/taxi\b/i.test(CITY_TIME_SRC),
   'city-time projection is local and adds no runtime API, LLM, or backend call');
-ok(/fetch\('data\/city-state\.json',\{cache:'no-cache'\}\)/.test(HTML)
+ok(/fetchArrivalResponse\('data\/city-state\.json',\{cache:'no-cache'\}\)/.test(HTML)
   &&/cityStateLoad/.test(HTML)
   &&/scene\.fog = new THREE\.Fog\(CITY_SEASON_STYLE\.fog/.test(HTML)
   &&/SKY_KEYS\.forEach\(k=>/.test(HTML)
@@ -785,10 +785,10 @@ ok(REPO_PORTAL_LIMITS.cacheTtlMs===15*60*1000&&REPO_PORTAL_LIMITS.cacheMaxBytes=
   'public repo cache is fixed at 15 minutes, 512 KiB, and 30 LRU entries');
 ok(/_ownerRepos\(await _ownerSnapshot\(\)\)\.find/.test(portalTargetLoader)
   &&portalTargetLoader.indexOf('_ownerSnapshot')<portalTargetLoader.indexOf('_repoPortalCacheLookup')
-  &&portalTargetLoader.indexOf('_repoPortalCacheLookup')<portalTargetLoader.indexOf("fetch('https://api.github.com/repos/"),
+  &&portalTargetLoader.indexOf('_repoPortalCacheLookup')<portalTargetLoader.indexOf("fetchArrivalResponse('https://api.github.com/repos/"),
   'target loading checks the local owner snapshot, then fresh cache, then one exact repo endpoint');
-ok((portalTargetLoader.match(/fetch\(/g)||[]).length===1
-  &&/if\(!res\.ok\)\{[\s\S]*?if\(cached\.stale\) return \{repo:cached\.stale,source:'repo-stale-cache',result:'stale'\}/.test(portalTargetLoader)
+ok((portalTargetLoader.match(/fetchArrivalResponse\(/g)||[]).length===1
+  &&/catch\(e\)\{[\s\S]*?if\(cached\.stale\) return \{repo:cached\.stale,source:'repo-stale-cache',result:'stale'\}/.test(portalTargetLoader)
   &&!/retry|setTimeout/.test(portalTargetLoader),
   'the target path makes one GitHub request, never retries 403/429, and labels stale recovery');
 ok(/while\(bytes>REPO_PORTAL_LIMITS\.cacheMaxBytes&&cache\.order\.length>1\)/.test(portalLoader)
@@ -833,14 +833,13 @@ ok(/const ATELIER_DIRECT_LINK = resolveRepositoryAtelierDirectLink\(location\.se
   &&/function _scheduleRepositoryAtelierDirectEntry\(\)/.test(atelierDirectBoot)
   &&/loading\.style\.display='flex'/.test(atelierDirectBoot)
   &&/classList\.add\('direct-entry'\)/.test(atelierDirectBoot)
-  &&/requestAnimationFrame\(\(\)=>requestAnimationFrame\(enter\)\)/.test(atelierDirectBoot)
-  &&/introStartBtn\.click\(\)/.test(atelierDirectBoot)
-  &&/DIRECT_ENTRY_LIMITS\.initializationDelayMs/.test(atelierDirectBoot)
-  &&/DIRECT_ENTRY_LIMITS\.coverReleaseMs/.test(atelierDirectBoot),
-  'valid direct links paint one shared cover, hold the initialization pause, then reuse the normal entry action');
+  &&/FIRST_ARRIVAL\.direct=true; FIRST_ARRIVAL\.target=target/.test(atelierDirectBoot)
+  &&/if\(action==='enter'\)\{ introStartBtn\.click\(\)/.test(HTML)
+  &&/stepArrival\(FIRST_ARRIVAL,[\s\S]*?DIRECT_ENTRY_LIMITS\)/.test(HTML),
+  'valid direct links keep the shared cover until real frame readiness and reuse the normal entry action');
 ok(/PLAZA_DIRECT_LINK\.ok\|\|cityMode!=='owner'/.test(atelierDirectBoot)
-  &&/_scheduleCoveredDirectEntry\(t\('plazaDirectOpening'\),\(\)=>false\)/.test(atelierDirectBoot)
-  &&/_schedulePlazaDirectEntry\(\)&&!_scheduleRepositoryAtelierDirectEntry\(\)/.test(atelierDirectBoot),
+  &&/_scheduleCoveredDirectEntry\(t\('plazaDirectOpening'\)\)/.test(atelierDirectBoot)
+  &&/if\(!_schedulePlazaDirectEntry\(\)\) _scheduleRepositoryAtelierDirectEntry\(\)/.test(atelierDirectBoot),
   'the English-first Plaza link bypasses the intro into the existing owner-town spawn');
 ok(/repositoryAtelierDirectLinkRepo\(\)\?\{autoChat:false\}:\{\}/.test(atelierDirectBoot),
   'direct entry reveals the repository exhibition first instead of covering it with the Gitber chat');
@@ -1199,7 +1198,7 @@ ok(/function _growthFocusables\(\)/.test(townGrowthBlock)
   'background UI is inert, focus is trapped, the slider names its year, and mobile actions stay 44px');
 ok(/const _reqGrowth = .*get\('growth'\)/.test(HTML)
   && /startTownGrowthReplay\(\{entry:'link',year:_reqGrowth,autoplay:false\}\)/.test(HTML)
-  && /introGrowth\.onclick=.*startTownGrowthReplay\(\{entry:'intro',autoplay:true\}\)/.test(HTML),
+  && /introGrowth\.onclick=[\s\S]*?startTownGrowthReplay\(\{entry:'intro',autoplay:true\}\)/.test(HTML),
   'shared years open after town entry without autoplay while the explicit Watch action starts the story');
 ok(/repo\._growthHidden=!visible/.test(townGrowthBlock)
   && /repo\._group\.visible=visible/.test(townGrowthBlock)
@@ -2894,7 +2893,7 @@ ok(RESIDENT_MANIFEST.profile_count === CITY_REPOS.length
   && RESIDENT_MANIFEST.active_count === 9
   && RESIDENT_MANIFEST.active_roster.every(entry => !RESIDENT_MANIFEST.profiles.find(profile => profile.slug === entry.slug)?.archived),
   'the manifest covers every public repo while the bounded active roster excludes archives');
-ok(/loadResidentManifest\(\{owner:currentUser\}\)/.test(HTML)
+ok(/loadResidentManifest\(\{owner:currentUser,fetchImpl:fetchOptionalArrival\}\)/.test(HTML)
   && /async function ensureResidentProfile\(res,retry=false\)/.test(HTML)
   && !/api\.github\.com/.test(RESIDENT_RUNTIME_SRC),
   'boot loads only the local manifest and profile details stay interaction-lazy with zero resident GitHub API calls');
@@ -2934,7 +2933,7 @@ const taxiPromptBlock=(TAXI_BOUNDARY_SRC.match(/export function taxiSystemPrompt
 ok(LORE_SCHEMA.properties.fragments.minItems===10
   && LORE_SCHEMA.properties.fragments.maxItems===15
   && Buffer.byteLength(LORE_SOURCE)<32768
-  && /loadLoreFragments\(\)/.test(HTML)
+  && /loadLoreFragments\(\{fetchImpl:fetchOptionalArrival\}\)/.test(HTML)
   && /allocateElderFragments\(\{manifest:RESIDENT_MANIFEST,repositories:ELDER_LORE_REPOSITORIES,cityState:CITY_STATE,lore:LORE_FRAGMENTS\}\)/.test(HTML),
   'owner boot validates one bounded hand-authored lore file and allocates it from the existing active roster');
 ok(loreDeliveryBlock.length>0
@@ -3777,7 +3776,7 @@ const visualGovernorRuntimeBlock = (HTML.match(/\/\*VISUAL_GOVERNOR_RUNTIME:STAR
 ok(visualGovernorCoreBlock.length > 0 && visualGovernorRuntimeBlock.length > 0,
   'governor pure transition and runtime adapter blocks remain independently extractable');
 await runVisualGovernorTests(ok);
-runFirstVisitTests(ok);
+await runFirstVisitTests(ok);
 ok(/warmupMs:6000,emaAlpha:0\.08,minFrameMs:4,maxFrameMs:120/.test(visualGovernorCoreBlock)
   && /downFrameMs:22\.5,downHoldMs:3000/.test(visualGovernorCoreBlock)
   && /downFrameMs:28\.5,downHoldMs:5000,upFrameMs:17\.5,upHoldMs:14000/.test(visualGovernorCoreBlock)
