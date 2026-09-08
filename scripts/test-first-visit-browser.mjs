@@ -295,6 +295,16 @@ for(const failure of failures) await run({lang:'en',...failure,name:failure.name
   const ax=await page.send('Accessibility.getFullAXTree');
   assert(ax.nodes.some(node=>!node.ignored&&node.role?.value==='alertdialog'&&node.name?.value),'recovery is a named accessibility dialog');
   assert(await page.evaluate("[...document.querySelectorAll('#ceActions button,#ceActions a')].every(el=>{const r=el.getBoundingClientRect();return r.width>=44&&r.height>=44})"),'recovery tap targets are at least 44px');
+  const contrast=await page.evaluate(`(()=>{
+    const rgb=value=>(value.match(/[\\d.]+/g)||[]).map(Number);
+    const luminance=values=>values.slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
+    const ratio=(a,b)=>(Math.max(luminance(a),luminance(b))+.05)/(Math.min(luminance(a),luminance(b))+.05);
+    const card=rgb(getComputedStyle(document.querySelector('#cityError .ceCard')).backgroundColor);
+    const background=card.slice(0,3).map(v=>v*(card[3]??1)),retry=getComputedStyle(document.getElementById('arrivalRetry'));
+    return {body:ratio(rgb(getComputedStyle(document.getElementById('ceMsg')).color),background),
+      primary:[...retry.backgroundImage.matchAll(/rgba?\\([^)]+\\)/g)].map(match=>ratio(rgb(retry.color),rgb(match[0])))};
+  })()`);
+  assert(contrast.body>=4.5&&contrast.primary.length===2&&contrast.primary.every(ratio=>ratio>=4.5),'recovery text passes contrast even over a black backdrop');
   await page.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',modifiers:8});
   await page.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',modifiers:8});
   assert.equal(await page.evaluate('document.activeElement.id'),'arrivalHome','reverse Tab stays in recovery');

@@ -1,0 +1,356 @@
+{
+  "reference": "76f3b1d81d9a2ed6f5fc28950b8554f6b98d1c26",
+  "currentRevision": "b1163988fbe0da8906556f04dbb174a3828f32af",
+  "referenceAt": "2026-09-08T15:21:53.345Z",
+  "currentAt": "2026-09-08T15:22:36.403Z",
+  "fixtures": [
+    {
+      "name": "mixed-speech-en-desktop",
+      "population": {
+        "residents": 9,
+        "scholars": 5
+      },
+      "visible": [
+        14,
+        2
+      ],
+      "clipped": [
+        7,
+        0
+      ],
+      "draws": [
+        2312,
+        2300
+      ],
+      "textures": [
+        134,
+        122
+      ],
+      "gpuGeometries": [
+        3521,
+        3521
+      ],
+      "scene": [
+        {
+          "objects": 8316,
+          "geometries": 4578,
+          "materials": 5038
+        },
+        {
+          "objects": 8315,
+          "geometries": 4577,
+          "materials": 5037
+        }
+      ],
+      "frameMs": [
+        8.899999976158142,
+        9.200000047683716
+      ],
+      "cadenceMs": [
+        16.600000023841858,
+        16.399999976158142
+      ],
+      "rotations": [
+        {
+          "angle": 0,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 0.8,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 3.141592653589793,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 0,
+          "visible": 2,
+          "clipped": 0
+        }
+      ],
+      "governor": [
+        {
+          "force": "balanced",
+          "tier": "balanced"
+        },
+        {
+          "force": "lean",
+          "tier": "lean"
+        },
+        {
+          "force": "full",
+          "tier": "full"
+        },
+        {
+          "force": "auto",
+          "tier": "full"
+        }
+      ]
+    },
+    {
+      "name": "mixed-speech-ko-desktop",
+      "population": {
+        "residents": 9,
+        "scholars": 5
+      },
+      "visible": [
+        14,
+        2
+      ],
+      "clipped": [
+        7,
+        0
+      ],
+      "draws": [
+        2312,
+        2300
+      ],
+      "textures": [
+        134,
+        122
+      ],
+      "gpuGeometries": [
+        3521,
+        3521
+      ],
+      "scene": [
+        {
+          "objects": 8315,
+          "geometries": 4577,
+          "materials": 5037
+        },
+        {
+          "objects": 8315,
+          "geometries": 4577,
+          "materials": 5037
+        }
+      ],
+      "frameMs": [
+        9.399999976158142,
+        9.100000023841858
+      ],
+      "cadenceMs": [
+        16.800000071525574,
+        16.700000047683716
+      ],
+      "rotations": [
+        {
+          "angle": 0,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 0.8,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 3.141592653589793,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 0,
+          "visible": 2,
+          "clipped": 0
+        }
+      ],
+      "governor": [
+        {
+          "force": "balanced",
+          "tier": "balanced"
+        },
+        {
+          "force": "lean",
+          "tier": "lean"
+        },
+        {
+          "force": "full",
+          "tier": "full"
+        },
+        {
+          "force": "auto",
+          "tier": "full"
+        }
+      ]
+    },
+    {
+      "name": "mixed-speech-en-mobile",
+      "population": {
+        "residents": 9,
+        "scholars": 5
+      },
+      "visible": [
+        14,
+        2
+      ],
+      "clipped": [
+        14,
+        0
+      ],
+      "draws": [
+        1150,
+        1138
+      ],
+      "textures": [
+        104,
+        92
+      ],
+      "gpuGeometries": [
+        2723,
+        2723
+      ],
+      "scene": [
+        {
+          "objects": 7524,
+          "geometries": 4260,
+          "materials": 4707
+        },
+        {
+          "objects": 7524,
+          "geometries": 4260,
+          "materials": 4707
+        }
+      ],
+      "frameMs": [
+        6.200000047683716,
+        5.600000023841858
+      ],
+      "cadenceMs": [
+        16.799999952316284,
+        16.799999952316284
+      ],
+      "rotations": [
+        {
+          "angle": 0,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 0.8,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 3.141592653589793,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 0,
+          "visible": 2,
+          "clipped": 0
+        }
+      ],
+      "governor": [
+        {
+          "force": "balanced",
+          "tier": "balanced"
+        },
+        {
+          "force": "lean",
+          "tier": "lean"
+        },
+        {
+          "force": "full",
+          "tier": "balanced"
+        },
+        {
+          "force": "auto",
+          "tier": "balanced"
+        }
+      ]
+    },
+    {
+      "name": "mixed-speech-ko-mobile",
+      "population": {
+        "residents": 9,
+        "scholars": 5
+      },
+      "visible": [
+        14,
+        2
+      ],
+      "clipped": [
+        14,
+        0
+      ],
+      "draws": [
+        1150,
+        1138
+      ],
+      "textures": [
+        104,
+        92
+      ],
+      "gpuGeometries": [
+        2723,
+        2723
+      ],
+      "scene": [
+        {
+          "objects": 7524,
+          "geometries": 4260,
+          "materials": 4707
+        },
+        {
+          "objects": 7524,
+          "geometries": 4260,
+          "materials": 4707
+        }
+      ],
+      "frameMs": [
+        6.5,
+        6.099999904632568
+      ],
+      "cadenceMs": [
+        16.600000023841858,
+        16.5
+      ],
+      "rotations": [
+        {
+          "angle": 0,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 0.8,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 3.141592653589793,
+          "visible": 2,
+          "clipped": 0
+        },
+        {
+          "angle": 0,
+          "visible": 2,
+          "clipped": 0
+        }
+      ],
+      "governor": [
+        {
+          "force": "balanced",
+          "tier": "balanced"
+        },
+        {
+          "force": "lean",
+          "tier": "lean"
+        },
+        {
+          "force": "full",
+          "tier": "balanced"
+        },
+        {
+          "force": "auto",
+          "tier": "balanced"
+        }
+      ]
+    }
+  ]
+}

@@ -75,3 +75,124 @@ Public API responses in these scenarios were **local intercepted fixtures**, not
 Picker opening preserved renderer geometry/texture counts. Each entered Atelier had the existing one room, 25 geometries, 16 materials, three canvas atlases and five exhibit batches; scoped chat reported zero started calls, zero history turns and the unchanged five-call limit. Blueprint reported zero requests until explicitly scanned. Local configured AI/realtime/analytics endpoints remained empty.
 
 Cancel preserved player coordinates and camera controls; camera position differed by less than 0.001 world units while its existing spring finished settling. Atelier exit restored the original player pose. Desktop keyboard, 390 x 844 touch emulation, text overflow, search/no-match, next-page and cancel/return checks had no captured application errors. Physical-device touch and keyboard behavior remain a separate, unverified boundary.
+
+## #122: readiness, exact destinations and explicit recovery
+
+Implementation commits are separated for review: `bb19dd4b` (#120), `57758d89` (#121), and `b1163988` (#122). The final evidence follow-up also darkens recovery explanation text for contrast; it does not change the measured plaza's boot logic or byte count.
+
+The ordinary intro now waits for two completed scene frames. Covered direct entry retains the existing 1,200 ms initialization and 900 ms cover minima, but only a rendered owner plaza or the exact requested Atelier's **inside** state can release the cover. Repeated activation cannot repeat entry. A frame-drained queue retains a pending destination across context loss instead of discarding its timer callback.
+
+Awaited boot responses have an 8 s / 2 MiB decoded-body bound; optional resident/lore/Council loads have a 4 s deadline and retain their validated local fallbacks. Required script/module failures and a 45 s startup watchdog have an independent KO/EN recovery dialog. It offers exact-link reload, the validated original GitHub target when available, and a language-preserving default plaza. There is no automatic retry or wrong-owner substitution.
+
+Two concrete integration defects were reproduced and fixed: Blueprint's **Enter town instead** previously entered the Atelier anyway, and context loss could discard an initial arrival callback. Context restoration now waits for a rendered frame and explicit **Continue**, preserving the current room, input focus, chat draft and pending entry. A missing `focus` keeps its exact GitHub destination rather than returning a different repository or only the owner's profile.
+
+### Final browser matrix
+
+Each normal row ran in **EN and KO, 1440 x 900 desktop and 390 x 844 touch emulation**. Strict direct links seeded the opposite stored language to check URL precedence. GitHub responses were locally intercepted; optional services remained empty and Worker URLs were blocked.
+
+| Entry | Expected destination and return behavior | Cases |
+|---|---|---:|
+| Default | Existing intro after a real frame; ordinary town entry | 4 |
+| `?launch=1` | Existing input focused only after readiness | 4 |
+| `?view=plaza&lang=en|ko` | Covered owner-plaza entry, original spawn | 4 |
+| `?user=fixture-town` | Current public catalog, local/solo town | 4 |
+| `?repo=fixture-town/alpha&user=wrong-town` | Repo owner wins; exact Atelier and GitHub link; exterior return | 4 |
+| Strict `view=atelier` | Exact interior before cover release; explicit exit | 4 |
+| Blueprint confirmation | Zero Tree requests before consent; one Tree GET and exact shared path afterward | 4 |
+| Blueprint cancellation | Existing exterior, no Atelier entry or Tree request | 4 |
+| Repo Route | Existing ordered route and cancel behavior | 4 |
+| Public-town `focus` | Exact current-catalog repo and exterior return | 4 |
+| Growth Replay | Existing year-specific replay and close behavior | 4 |
+
+Additional groups: **22 failure scenarios**, **7 slow/LOW_END/reduced-motion/context scenarios**, and **4 mixed-speech/panel/governor scenarios**. Total: **77 passing cases**, including 55 non-fault scenarios with zero captured runtime, console-API or browser resource errors. Injected missing resources, HTTP failures and unavailable WebGL produce expected browser errors and are recorded separately, not reported as ordinary zero-error sessions.
+
+Failure coverage includes required classic/module failure, hung module, optional missing/hung data, malformed/missing local catalog, WebGL unavailable, public and Portal 403/429/404, response deadline, malformed/invalid/oversized JSON, explicit retry, empty town, wrong-owner response and missing focus. Recovery checks include the accessibility-tree dialog name, 44 px targets, focus containment, readable contrast, original/default links and no forced wrong room.
+
+The normal public/Portal cases make one existing public GET. Blueprint adds its one explicit Tree GET and existing CORS preflight. An absent public-town focus retains the existing catalog GET plus exact-repository lookup; explicit retry adds one request only when chosen. No test used a production counter or AI endpoint.
+
+[Machine-readable browser results](browser-results.json) retain every case and distinguish expected injected errors. A final 29-case failure/context rerun also checks text contrast after the recovery-palette correction: at least 4.5:1 for primary-button text and explanation text even with a black backdrop behind the translucent card. Recovery captures: [KO missing module](arrival-required-module.jpg), [EN rate limit](arrival-portal-429.jpg), [WebGL unavailable](arrival-webgl-unavailable.jpg), [KO restored Atelier](arrival-context-atelier-mobile.jpg), [restored chat draft](arrival-context-chat.jpg).
+
+### Extended #120 comparison: residents, rotation and graphics policy
+
+The historical HTML at `76f3b1d` was replayed locally **after implementation**, without changing HEAD or the checkout. This supplements, rather than replaces, the original pre-change observation. The same fixture places nine existing residents and five scholars near the camera and feeds their actual bubble factories long KO/EN text. Their unchanged greeting/routine code can replace that text as the camera rotates.
+
+The renderer's real camera moved through offsets 0, 0.8, pi and back to 0 radians. All 16 post-change angle observations kept at most two speech rectangles, zero clipped speech and no overlap. Complete selected dialogue was also exposed as accessible DOM text. Mobile fixtures combined LOW_END with reduced motion.
+
+| Near fixture | Visible / clipped before -> after | Draws before -> after | GPU-resident textures before -> after | GPU geometries | Median render CPU, ms |
+|---|---:|---:|---:|---:|---:|
+| Desktop EN | 14 / 7 -> 2 / 0 | 2,312 -> 2,300 | 134 -> 122 | 3,521 unchanged | 8.9 -> 9.2 |
+| Desktop KO | 14 / 7 -> 2 / 0 | 2,312 -> 2,300 | 134 -> 122 | 3,521 unchanged | 9.4 -> 9.1 |
+| Mobile EN | 14 / 14 -> 2 / 0 | 1,150 -> 1,138 | 104 -> 92 | 2,723 unchanged | 6.2 -> 5.6 |
+| Mobile KO | 14 / 14 -> 2 / 0 | 1,150 -> 1,138 | 104 -> 92 | 2,723 unchanged | 6.5 -> 6.1 |
+
+These are approximately 900 ms frozen-scene samples, not a statistical speed claim. The EN desktop render median increased 0.3 ms; the other medians fell. No geometry/resource budget was enlarged to produce this result. Scene census was identical except one transient-count difference in the EN desktop snapshot; renderer residency and snapshot timing must not be confused with allocation budgets.
+
+| View | Near, before / after | Rotated, before / after |
+|---|---|---|
+| Desktop EN | [Before](before-mixed-speech-en-desktop-near.jpg) / [After](after-mixed-speech-en-desktop-near.jpg) | [Before](before-mixed-speech-en-desktop-rotated.jpg) / [After](after-mixed-speech-en-desktop-rotated.jpg) |
+| Desktop KO | [Before](before-mixed-speech-ko-desktop-near.jpg) / [After](after-mixed-speech-ko-desktop-near.jpg) | [Before](before-mixed-speech-ko-desktop-rotated.jpg) / [After](after-mixed-speech-ko-desktop-rotated.jpg) |
+| 390 x 844 EN | [Before](before-mixed-speech-en-mobile-near.jpg) / [After](after-mixed-speech-en-mobile-near.jpg) | [Before](before-mixed-speech-en-mobile-rotated.jpg) / [After](after-mixed-speech-en-mobile-rotated.jpg) |
+| 390 x 844 KO | [Before](before-mixed-speech-ko-mobile-near.jpg) / [After](after-mixed-speech-ko-mobile-near.jpg) | [Before](before-mixed-speech-ko-mobile-rotated.jpg) / [After](after-mixed-speech-ko-mobile-rotated.jpg) |
+
+World-space nameplates/signs remain unchanged and can overlap or clip in this deliberately crowded arrangement; the speech bounds do not claim to clamp every label in the 3D world. Existing governor transitions balanced -> lean -> full -> auto retained the active speaker, input focus and draft; LOW_END correctly clamped the full request to balanced. Pointer drags behind chat neither moved the player/camera nor opened a repository. [Comparison data](viewport-comparison.json).
+
+### Same-protocol cold/warm result
+
+Post-change measurement at **2026-09-08 15:33 UTC**, revision `b1163988fbe0da8906556f04dbb174a3828f32af`, used the original server, exact English plaza URL, clock, seed, network, viewport and cold/warm rules. No competing browser test ran during measurement.
+
+| Pair | Cache | Scene / controls available, ms | Camera moved after W, ms | Requests | ResourceTiming transfer, bytes |
+|---|---|---:|---:|---:|---:|
+| 1 | Cold | 5,448 | 5,683 | 48 | 2,248,353 |
+| 1 | Warm | 3,601 | 3,718 | 48 | 1,800 |
+| 2 | Cold | 5,417 | 5,667 | 48 | 2,248,353 |
+| 2 | Warm | 3,628 | 3,841 | 48 | 1,800 |
+| 3 | Cold | 5,407 | 5,591 | 48 | 2,248,353 |
+| 3 | Warm | 3,610 | 3,806 | 48 | 1,800 |
+
+| Scene/control availability | Original baseline median (range), ms | After median (range), ms |
+|---|---:|---:|
+| Cold | 5,319 (5,287-7,461) | 5,417 (5,407-5,448) |
+| Warm | 3,568 (3,541-3,573) | 3,610 (3,601-3,628) |
+
+Observed median deltas are **+98 ms cold / +42 ms warm**, not a speed improvement. Request count stayed 48. Cold transfer grew **37,726 bytes**, exactly the HTML growth for UI, KO/EN copy and recovery logic; there is no new runtime module/image/request. Warm transfer stayed 1,800 bytes. rAF medians stayed 16.7 ms, shader programs stayed 59, and GPU-resident textures fell 131 -> 118. Renderer-resident geometry ranges were 3,226-3,231 before and 3,229-3,234 after; the fixed mixed-scene test and the coordinate-based replay below show no enlarged geometry budget.
+
+### Actual-player timing supplement
+
+The original probe observed camera displacement, which alone cannot prove a player's movement timestamp. A second paired comparison identifies the unique existing player group through its contact shadow and face-light structure, then records its actual world-coordinate displacement after W in rAF. No debug query, application-source change or visitor identifier is needed.
+
+This is a **historical-code replay**, not a claim that extra instrumentation existed in the original baseline. Both versions used the same loopback comparison server on port 8018 and the same conditions as above, three cold/warm pairs each. The snapshot's Last-Modified timestamp was aligned to the current HTML to avoid differing heuristic cache freshness. An earlier unmatched-mtime trial was excluded because it added a 300-byte warm revalidation; its values are not used below.
+
+| Code / cache | Scene median (range), ms | Actual player moved median (range), ms |
+|---|---:|---:|
+| Historical / cold | 5,362 (5,351-5,405) | 5,468 (5,455-5,479) |
+| Current / cold | 5,399 (5,393-5,409) | 5,515 (5,509-5,526) |
+| Historical / warm | 3,610 (3,596-3,626) | 3,676 (3,660-3,713) |
+| Current / warm | 3,583 (3,576-3,602) | 3,650 (3,626-3,652) |
+
+The matched replay has 48 requests in every run, the same cold/warm bytes as the primary comparison, 59 programs, 16.7 ms median rAF and the same 3,230-3,234 geometry range on both sides. All actual-player samples changed position and had no captured application/console errors. This timestamps an emulated W action, not human reaction time or physical-device input latency. With only three pairs, small timing differences are descriptive, not a causal latency or conversion claim.
+
+[Raw measurements](arrival-measurements.json) preserve all four retained series, each sample, first-draw timing, source revisions, transfer sizes and resources. The original baseline captured window errors/rejections; subsequent runs additionally captured console errors. Neither series is a production measurement. The deployed revision remains the baseline until a separately approved merge/deployment.
+
+## Reproduction and release boundary
+
+Run the full **22-command AGENTS.md hermetic block**, plus `node --check scripts/test-first-visit-browser.mjs`. All passed; [release record](release-gates.json). Smoke reports **1,538 checks**, including **53 first-visit checks**; these are not additive totals. The final browser flow also reran the earlier panel/picker fixtures.
+
+The browser runner uses only Node's built-in APIs and an already-running local static server plus isolated Chrome CDP browser. No package install or production URL is required:
+
+```bash
+python3 -m http.server 8000 --bind 127.0.0.1
+# In another terminal, start your installed Chrome with an unused debugging port
+# and a fresh user-data directory; do not attach the test to your everyday profile.
+# Example macOS executable: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+# Flags: --headless=new --remote-debugging-address=127.0.0.1
+#        --remote-debugging-port=9222 --user-data-dir=<fresh-directory> about:blank
+REPOLIS_TEST_URL=http://127.0.0.1:8000/ \
+BROWSER_CDP_URL=http://127.0.0.1:9222/ \
+node scripts/test-first-visit-browser.mjs
+```
+
+Optional `FIRST_VISIT_GROUP=matrix|failures|policy|viewport` or `FIRST_VISIT_CASE=<substring>` narrows a run. `FIRST_VISIT_OUTPUT` selects an evidence directory; otherwise the runner creates a fresh temporary directory. Non-local hosts and selectors matching no cases fail closed. `FIRST_VISIT_REFERENCE=76f3b1d` with `FIRST_VISIT_GROUP=viewport` reads historical HTML via `git show` for observations only; it never checks out or alters the working tree. Shared modules/catalog must remain matched for an A/B comparison. Historical violation counts are observations, not assertions that old behavior passes the new bounds.
+
+**Still unverified:** physical iOS/Android devices, native virtual keyboards, Safari/Firefox, hardware/driver-induced context loss and production latency. The context-loss extension, shortened viewport, touch and hardware flags are emulations. Nameplates and world signage remain world-space. No Star/traffic/conversion gain is promised.
+
+The PR is ready for review, not deployment approval. Issues remain open and the board moves to **In review**, never Done. Merge and production deployment are deliberately outside this task.

@@ -1,0 +1,2811 @@
+{
+  "sourceRevision": "b1163988fbe0da8906556f04dbb174a3828f32af",
+  "browser": "Chrome/152.0.7977.76",
+  "at": "2026-09-08T15:32:12.658Z",
+  "base": "http://127.0.0.1:8017/",
+  "realHardware": false,
+  "results": [
+    {
+      "name": "default-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "launch-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "plaza-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "public-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "portal-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "atelier-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "blueprint-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 47,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha",
+        "https://api.github.com/repos/fixture-town/alpha/git/trees/main?recursive=1"
+      ],
+      "preflights": 1,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "route-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "focus-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "growth-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "blueprint-cancel-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "default-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "launch-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "plaza-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "public-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "portal-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "atelier-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "blueprint-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 47,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha",
+        "https://api.github.com/repos/fixture-town/alpha/git/trees/main?recursive=1"
+      ],
+      "preflights": 1,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "route-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "focus-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "growth-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "blueprint-cancel-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "default-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "launch-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "plaza-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "public-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "portal-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "atelier-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "blueprint-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 47,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha",
+        "https://api.github.com/repos/fixture-town/alpha/git/trees/main?recursive=1"
+      ],
+      "preflights": 1,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "route-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "focus-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "growth-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "blueprint-cancel-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "default-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "launch-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "plaza-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "public-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "portal-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "atelier-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "blueprint-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 47,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha",
+        "https://api.github.com/repos/fixture-town/alpha/git/trees/main?recursive=1"
+      ],
+      "preflights": 1,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "route-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "focus-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "growth-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "blueprint-cancel-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "required-script",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "script",
+      "ready": false,
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ]
+    },
+    {
+      "name": "required-module",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "script",
+      "ready": false,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 36,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ]
+    },
+    {
+      "name": "module-watchdog",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "stalled",
+      "ready": false,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 42,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "optional-static",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ]
+    },
+    {
+      "name": "optional-deadline",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "catalog-malformed",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "data_load",
+      "ready": false,
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [
+        "repos.json load failed SyntaxError: Failed to execute 'json' on 'Response': Expected property name or '}' in JSON at position 1 (line 1 column 2)\n    at http://127.0.0.1:8017/:2545:26\n    at async http://127.0.0.1:8017/:2619:27"
+      ],
+      "resourceErrors": []
+    },
+    {
+      "name": "catalog-missing",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "data_load",
+      "ready": false,
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [
+        "repos.json load failed ArrivalDataError: not_found\n    at fetchArrivalResponse (http://127.0.0.1:8017/:2489:28)\n    at async http://127.0.0.1:8017/:2619:27"
+      ],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ]
+    },
+    {
+      "name": "webgl-unavailable",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "webgl",
+      "ready": false,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [
+        "THREE.WebGLRenderer: Error creating WebGL context.",
+        "Error: Error creating WebGL context.\n    at new WebGLRenderer (https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js:28672:13)\n    at http://127.0.0.1:8017/?repo=fixture-town/alpha&view=atelier&lang=en:3598:37\n    at http://127.0.0.1:8017/?repo=fixture-town/alpha&view=atelier&lang=en:3599:72"
+      ],
+      "resourceErrors": []
+    },
+    {
+      "name": "public-403",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "rate_limit",
+      "ready": false,
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+        }
+      ]
+    },
+    {
+      "name": "portal-403",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "rate_limit",
+      "ready": false,
+      "owner": "hyeonsangjeon",
+      "target": "wrong-town/Repolis",
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 49,
+      "apiRequests": [
+        "https://api.github.com/repos/wrong-town/Repolis"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+        }
+      ]
+    },
+    {
+      "name": "public-429",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "rate_limit",
+      "ready": false,
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+        }
+      ]
+    },
+    {
+      "name": "portal-429",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "rate_limit",
+      "ready": false,
+      "owner": "hyeonsangjeon",
+      "target": "wrong-town/Repolis",
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 49,
+      "apiRequests": [
+        "https://api.github.com/repos/wrong-town/Repolis"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+        }
+      ]
+    },
+    {
+      "name": "public-404",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "not_found",
+      "ready": false,
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ]
+    },
+    {
+      "name": "portal-404",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 97,
+      "apiRequests": [
+        "https://api.github.com/repos/wrong-town/Repolis"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ]
+    },
+    {
+      "name": "api-deadline",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "timeout",
+      "ready": false,
+      "owner": "hyeonsangjeon",
+      "target": "fixture-town/alpha",
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 49,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "api-malformed",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "malformed",
+      "ready": false,
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "api-invalid-shape",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "malformed",
+      "ready": false,
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "api-oversized",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "oversized",
+      "ready": false,
+      "owner": "hyeonsangjeon",
+      "target": "fixture-town/alpha",
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 49,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "explicit-retry",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 94,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha",
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": [
+        {
+          "source": "network",
+          "text": "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+        }
+      ]
+    },
+    {
+      "name": "mismatched-owner",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "not_found",
+      "ready": false,
+      "owner": "hyeonsangjeon",
+      "target": "fixture-town/alpha",
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 49,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "missing-focus",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "target",
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 46,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed",
+        "https://api.github.com/repos/fixture-town/missing"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "empty-public",
+      "group": "failures",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "empty",
+      "ready": false,
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 0,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "slow-public",
+      "group": "policy",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "low-end",
+      "group": "policy",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": true,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "reduced-mobile",
+      "group": "policy",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "context-pending-direct",
+      "group": "policy",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "context_lost",
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "context-town",
+      "group": "policy",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "context_lost",
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "context-chat",
+      "group": "policy",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": "context_lost",
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "context-atelier-mobile",
+      "group": "policy",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": "context_lost",
+      "ready": "true",
+      "owner": "fixture-town",
+      "target": "fixture-town/alpha",
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 45,
+      "apiRequests": [
+        "https://api.github.com/repos/fixture-town/alpha"
+      ],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "mixed-speech-en-desktop",
+      "group": "viewport",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "mixed-speech-ko-desktop",
+      "group": "viewport",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "mixed-speech-en-mobile",
+      "group": "viewport",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "lang": "en",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    },
+    {
+      "name": "mixed-speech-ko-mobile",
+      "group": "viewport",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "lang": "ko",
+      "reason": null,
+      "ready": "true",
+      "owner": "hyeonsangjeon",
+      "target": null,
+      "entries": 1,
+      "pageLoads": 1,
+      "services": {
+        "grounded": "",
+        "realtime": "",
+        "analytics": ""
+      },
+      "requests": 48,
+      "apiRequests": [],
+      "preflights": 0,
+      "consoleErrors": [],
+      "resourceErrors": []
+    }
+  ],
+  "finalRecoveryFollowup": {
+    "sourceBlob": "ad9e281f77d7da08a62e502166e82937997535b0",
+    "at": "2026-09-08T15:57:46.613Z",
+    "results": [
+      {
+        "name": "required-script",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "script",
+        "entries": 0,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          }
+        ]
+      },
+      {
+        "name": "required-module",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "script",
+        "requests": 35,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          }
+        ]
+      },
+      {
+        "name": "module-watchdog",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "stalled",
+        "requests": 42,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "optional-static",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": null,
+        "entries": 1,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          }
+        ]
+      },
+      {
+        "name": "optional-deadline",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": null,
+        "entries": 1,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "catalog-malformed",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "data_load",
+        "entries": 0,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [
+          "repos.json load failed SyntaxError: Failed to execute 'json' on 'Response': Expected property name or '}' in JSON at position 1 (line 1 column 2)\n    at http://127.0.0.1:8017/:2545:26\n    at async http://127.0.0.1:8017/:2619:27"
+        ],
+        "resourceErrors": []
+      },
+      {
+        "name": "catalog-missing",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "data_load",
+        "entries": 0,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [
+          "repos.json load failed ArrivalDataError: not_found\n    at fetchArrivalResponse (http://127.0.0.1:8017/:2489:28)\n    at async http://127.0.0.1:8017/:2619:27"
+        ],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          }
+        ]
+      },
+      {
+        "name": "webgl-unavailable",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "webgl",
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/repos/fixture-town/alpha"
+        ],
+        "consoleErrors": [
+          "THREE.WebGLRenderer: Error creating WebGL context.",
+          "Error: Error creating WebGL context.\n    at new WebGLRenderer (https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js:28672:13)\n    at http://127.0.0.1:8017/?repo=fixture-town/alpha&view=atelier&lang=en:3598:37\n    at http://127.0.0.1:8017/?repo=fixture-town/alpha&view=atelier&lang=en:3599:72"
+        ],
+        "resourceErrors": []
+      },
+      {
+        "name": "public-403",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "rate_limit",
+        "entries": 0,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+          }
+        ]
+      },
+      {
+        "name": "portal-403",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "rate_limit",
+        "entries": 0,
+        "requests": 49,
+        "apiRequests": [
+          "https://api.github.com/repos/wrong-town/Repolis"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+          }
+        ]
+      },
+      {
+        "name": "public-429",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "rate_limit",
+        "entries": 0,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+          }
+        ]
+      },
+      {
+        "name": "portal-429",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "rate_limit",
+        "entries": 0,
+        "requests": 49,
+        "apiRequests": [
+          "https://api.github.com/repos/wrong-town/Repolis"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+          }
+        ]
+      },
+      {
+        "name": "public-404",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "not_found",
+        "entries": 0,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          }
+        ]
+      },
+      {
+        "name": "portal-404",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": null,
+        "entries": 1,
+        "requests": 97,
+        "apiRequests": [
+          "https://api.github.com/repos/wrong-town/Repolis"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          }
+        ]
+      },
+      {
+        "name": "api-deadline",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "timeout",
+        "entries": 0,
+        "requests": 49,
+        "apiRequests": [
+          "https://api.github.com/repos/fixture-town/alpha"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "api-malformed",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "malformed",
+        "entries": 0,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "api-invalid-shape",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "malformed",
+        "entries": 0,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "api-oversized",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "oversized",
+        "entries": 0,
+        "requests": 49,
+        "apiRequests": [
+          "https://api.github.com/repos/fixture-town/alpha"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "explicit-retry",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": null,
+        "entries": 1,
+        "requests": 94,
+        "apiRequests": [
+          "https://api.github.com/repos/fixture-town/alpha",
+          "https://api.github.com/repos/fixture-town/alpha"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": [
+          {
+            "source": "network",
+            "text": "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+          }
+        ]
+      },
+      {
+        "name": "mismatched-owner",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "not_found",
+        "entries": 0,
+        "requests": 49,
+        "apiRequests": [
+          "https://api.github.com/repos/fixture-town/alpha"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "missing-focus",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "target",
+        "entries": 1,
+        "requests": 46,
+        "apiRequests": [
+          "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed",
+          "https://api.github.com/repos/fixture-town/missing"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "empty-public",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "empty",
+        "entries": 0,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "slow-public",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": null,
+        "entries": 1,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/users/fixture-town/repos?per_page=100&sort=pushed"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "low-end",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": true,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": null,
+        "entries": 1,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "reduced-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "lang": "ko",
+        "reason": null,
+        "entries": 1,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "context-pending-direct",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "context_lost",
+        "entries": 1,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/repos/fixture-town/alpha"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "context-town",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "context_lost",
+        "entries": 1,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "context-chat",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "en",
+        "reason": "context_lost",
+        "entries": 1,
+        "requests": 48,
+        "apiRequests": [],
+        "consoleErrors": [],
+        "resourceErrors": []
+      },
+      {
+        "name": "context-atelier-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "lang": "ko",
+        "reason": "context_lost",
+        "entries": 1,
+        "requests": 45,
+        "apiRequests": [
+          "https://api.github.com/repos/fixture-town/alpha"
+        ],
+        "consoleErrors": [],
+        "resourceErrors": []
+      }
+    ]
+  }
+}
