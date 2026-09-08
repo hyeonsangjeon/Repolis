@@ -53,6 +53,8 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`scripts/build_repos.py`** | Rebuilds `repos.json` and `data/city-state.json` from `data/logs/*` traffic + `gh api`. | Refreshing the city data locally. |
 | **`scripts/resident_profiles.py` + `data/residents/`** | Generates sanitized public resident profiles, the boot manifest, and the Worker authority registry. Profile JSON is generated — do not hand-edit. | Changing repository-bound resident identity or Shared/Bound inputs. |
 | **`scripts/smoke.mjs`** | Hermetic static and behavioral regression guards for the city runtime. | Any client feature, navigation, or generated-module integration change. |
+| **`scripts/check-hermetic.sh` + `.github/workflows/pr-quality.yml`** | Shared local/PR hermetic command list and read-only exact-head GitHub check. | Changing the regression gate; keep one command list and preserve failure propagation. |
+| **`scripts/test-first-visit.mjs` + `scripts/test-first-visit-browser.mjs`** | Hermetic first-visit guards plus a separate local-only browser matrix. | Changing speech/panel focus, repository selection, arrival, or recovery. Browser execution is not part of hermetic CI. |
 | **`scripts/test-visual-governor.mjs`** | Extracts and deterministically replays the inline adaptive visual-governor core. | Changing warm-up, thresholds, hysteresis, dwell, LOW_END/reduced-motion bounds, or recovery. |
 | **`scripts/test-procedural-surfaces.mjs`** | Hermetic seed, UV, family, bounded-cache, pixel-hash, and disposal fixtures. | Changing procedural facade/roof helpers or cache limits. |
 | **`scripts/test-portable-town.mjs`** | Deterministic fixtures for canonical, foreign, empty/archive-only, partial, missing-date, leakage, resident-cap, and zero-request portable towns. | Changing public-town projection or local resident derivation. |
@@ -126,38 +128,30 @@ Worker secrets live in Cloudflare (set via `npx wrangler secret put …`) and lo
 
 ## ✅ Verify before you ship (the golden rule)
 
-**Everything below must pass before any deploy.** These tests are hermetic — zero network, zero clock,
-zero LLM, zero cost — so run them freely:
+**Every command in [`scripts/check-hermetic.sh`](scripts/check-hermetic.sh) must pass before any deploy.**
+This is the single command list for local runs and PR CI. It exits on the first failed command; do not
+add failure suppression. The tests are hermetic — zero network, zero clock, zero LLM, zero cost:
 
 ```bash
-node council/test.mjs        # deterministic Council crosscheck
-node council/test-live.mjs   # live guards + state machine
-node scripts/smoke.mjs       # city/runtime static + behavioral regression guards
-node scripts/test-visual-governor.mjs
-node scripts/test-portable-town.mjs
-python3 scripts/test_city_state.py
-python3 scripts/validate_city_state.py
-python3 scripts/test_fork_lineage.py
-node scripts/test-city-time.mjs
-node scripts/test-session-footprints.mjs
-node scripts/test-procedural-surfaces.mjs
-node scripts/test-fork-lineage.mjs
-node scripts/test-repository-atelier-chat.mjs
-node scripts/test-repository-blueprint.mjs
-node scripts/test-issue-code-scout.mjs
-node scripts/validate-lore-fragments.mjs
-node --check scholars.js
-node --check cloudflare-taxi/src/grounded.js
-node --check cloudflare-taxi/src/taxi-boundary.js
-node --check assets/repo-route.js
-node --check assets/contribution-quests.js
-node --check assets/issue-code-scout.js
+bash scripts/check-hermetic.sh
 ```
 
-For UI / client changes there is no unit harness — verify by **serving locally and driving the page**
+The list retains all 22 original checks and explicitly runs the first-visit suite (also included in
+Smoke) and the browser runner's syntax check. The **PR quality gate / Hermetic regression** job uses
+one `ubuntu-24.04` runner, Node `24.7.0`, and Python `3.12.11`. It checks out and asserts the exact
+PR head SHA, has a 10-minute timeout, and cancels superseded runs for the same PR. Checkout has only
+`contents: read` and does not retain credentials. Action/runtime setup may download public tools;
+the test commands use only local public fixtures, without secrets, generation, deployment, or API/model
+calls. `workflow_dispatch` runs the same list on its selected ref. No branch-protection settings are
+changed by this workflow.
+
+For UI / client changes, hermetic CI does not replace **serving locally and driving the page**
 (Chrome DevTools is the project's tool of choice): load `http://localhost:8000`, exercise the changed
 flow, and confirm **0 console errors** at a mobile viewport (390×844) and desktop. The repo ships with
 in-page debug helpers (e.g. `window.__trace(...)`) for poking the chat/trace UI during local verification.
+The local-only first-visit browser runner and its [reproduction instructions](docs/first-visit-evidence/README.md)
+are separate from CI; viewport emulation does not establish physical-device, native-keyboard,
+Safari/Firefox, or hardware WebGL recovery coverage.
 
 Tested on Node v24. There is no linter or formatter configured — match the surrounding style.
 
