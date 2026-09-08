@@ -1,14 +1,14 @@
 {
   "era": {
-    "as_of": "2026-09-07",
+    "as_of": "2026-09-08",
     "basis": "Oldest creation date among the public repositories included in repos.json.",
-    "city_age_days": 3514,
+    "city_age_days": 3515,
     "city_age_years": 9.62,
     "city_year": 10,
     "founded_on": "2017-01-23",
     "oldest_repository": "vertx-embedded-springboot"
   },
-  "last_sap_flow": "2026-09-07T00:00:00Z",
+  "last_sap_flow": "2026-09-08T00:00:00Z",
   "roots": [],
   "sap_ledger": {
     "entries": [
@@ -383,6 +383,37 @@
           "repositories_without_value": 0,
           "total": 577
         }
+      },
+      {
+        "forks": {
+          "repositories_with_value": 69,
+          "repositories_without_value": 0,
+          "total": 140
+        },
+        "reference_date": "2026-09-08",
+        "repositories": {
+          "archived": 0,
+          "latest_push_with_date": 69,
+          "latest_push_without_date": 0,
+          "public": 69,
+          "recent_active_30d": 19
+        },
+        "season": {
+          "fallback_used": false,
+          "value": "spring"
+        },
+        "silence": {
+          "at_least_365_days": 37,
+          "at_least_730_days": 32,
+          "unarchived": 69,
+          "with_push_date": 69,
+          "without_push_date": 0
+        },
+        "stars": {
+          "repositories_with_value": 69,
+          "repositories_without_value": 0,
+          "total": 579
+        }
       }
     ],
     "gap_policy": "actual_entries_only",
@@ -413,8 +444,8 @@
       "activity_signal": "latest_push_per_repository",
       "historical_average": 1.667,
       "historical_bucket_counts": [
-        5,
-        3,
+        4,
+        4,
         0,
         1,
         0,
@@ -424,7 +455,7 @@
       "recent_active_repositories": 19,
       "recent_to_historical_ratio": 11.4,
       "recent_window_days": 30,
-      "reference_date": "2026-09-07",
+      "reference_date": "2026-09-08",
       "repositories_with_push_date": 69
     },
     "reason": "Recent latest-push count is 11.40x the average of the prior 6 30-day buckets.",
@@ -436,12 +467,12 @@
       "at_least_365_days": 37,
       "at_least_730_days": 32,
       "longest": {
-        "elapsed_days": 3009,
+        "elapsed_days": 3010,
         "last_public_push": "2018-06-12",
         "repo": "jenkins-dind"
       }
     },
-    "reference_date": "2026-09-07",
+    "reference_date": "2026-09-08",
     "repositories": {
       "total": 69,
       "with_push_date": 69,
@@ -513,10 +544,10 @@
       "recent_30d_repositories": 19,
       "repositories_with_push_date": 69
     },
-    "public_repository_stars": 592,
+    "public_repository_stars": 594,
     "repository_count": 69,
-    "total_forks": 138,
-    "total_stars": 577
+    "total_forks": 140,
+    "total_stars": 579
   },
   "version": 1
 }
