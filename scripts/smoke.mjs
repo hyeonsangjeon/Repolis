@@ -17,6 +17,7 @@ import { createHash } from 'crypto';
 import { runInNewContext } from 'vm';
 import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
 import { runVisualGovernorTests } from './test-visual-governor.mjs';
+import { runFirstVisitTests } from './test-first-visit.mjs';
 import { runLoreTests } from './test-lore.mjs';
 import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
@@ -184,8 +185,9 @@ ok(viewport.length > 0, 'meta viewport tag exists');
 ok(!/user-scalable\s*=\s*no/i.test(viewport), 'viewport has no user-scalable=no');
 ok(!/maximum-scale/i.test(viewport), 'viewport has no maximum-scale');
 ok(/width=device-width/i.test(viewport), 'viewport still width=device-width');
-ok(/@media \(max-width: 520px\) \{[^\n]*#mapBtn \{ order: 10; \}/.test(HTML),
-  'the mobile map action wraps below the hamburger instead of overlapping it');
+ok(/#topbar \{[^}]*max-width: calc\(100vw - 88px\)/.test(HTML)
+  &&HTML.indexOf('id="mapBtn"')<HTML.indexOf('id="townTools"'),
+  'the compact mobile navigation reserves the hamburger lane and keeps Map one action away');
 ok(/@media \(hover: none\) and \(pointer: coarse\) \{[\s\S]*?#prompt \{ left: 12px; right: 112px;[\s\S]*?white-space: normal/.test(HTML)
   && /#prompt\.show \{ transform: translateY\(0\); \}/.test(HTML),
   'mobile interaction prompts wrap inside a left lane reserved away from the round action button');
@@ -967,7 +969,7 @@ ok(!/fetch\(|loadContributionQuests|_sendRepositoryAtelierChat|localStorage|sess
   'Intent Lens itself adds no request, model call, resource, timer, storage, profiling, or analytics work');
 ok(/querySelectorAll\('#intentLens \[data-intent\]'\)[\s\S]*?addEventListener\('click'/.test(intentLensSrc)
   &&/\.intentLensChoice \{[^}]*min-height: 40px/.test(HTML)
-  &&/@media \(max-width: 520px\) \{[\s\S]*?#intentLens \{ margin-top: 48px; \}[\s\S]*?#panel:not\(\.hidden\) ~ #chat \{ visibility: hidden; opacity: 0; pointer-events: none; \}/.test(HTML)
+  &&/function closeTownPanels/.test(HTML)&&/townPanelObserver\.observe/.test(HTML)
   &&/@media \(hover: none\) and \(pointer: coarse\) \{[\s\S]*?\.intentLensChoice \{ min-height: 44px; \}/.test(HTML),
   'native activation covers keyboard, touch, and pointer while mobile HUD and chat stay clear');
 if(intentTargetSrc){
@@ -2421,7 +2423,7 @@ ok(/player\.position\.copy\(s\.playerPosition\)/.test(atelierSrc)
 ok(/_resetRepositoryAtelierInput\(\)/.test(atelierSrc) && /clearKeys\(\); stickVec=\{x:0,y:0\}/.test(atelierSrc)
   && /moveTid=null; lookTid=null/.test(atelierSrc), 'entry and exit clear keyboard and touch ownership so movement cannot stick');
 ok(/if\(e\.code==='Enter'&&e\.repeat\)\{ e\.preventDefault\(\); return; \}/.test(HTML), 'held Enter cannot repeatedly fire a room terminal');
-ok(/const isUiKeyTarget=e=>/.test(HTML) && /if\(isTyping\(\)\|\|isUiKeyTarget\(e\)\) return/.test(HTML)
+ok(/const isUiKeyTarget=e=>/.test(HTML) && /if\(isTyping\(\)\|\|isUiKeyTarget\(e\)\|\|townInputBlocked\(\)\) return/.test(HTML)
   && /\^\(BUTTON\|A\|INPUT\|SELECT\|TEXTAREA\)\$/.test(HTML), 'focused native controls own Enter/Space without also firing a world action');
 ok(/!repositoryAtelierActive\(\)\|\|repositoryAtelierChatActive\(\)/.test(HTML)
   && /\(!repositoryAtelierActive\(\)\|\|repositoryAtelierChatActive\(\)\)&&!chatEl\.classList\.contains\('hidden'\)/.test(HTML)
@@ -3127,7 +3129,7 @@ ok(/function marketFollowup\(q\)\{ if\(!_marketThread\) return false;[\s\S]*?yes
 ok(/function cancelMarketRequest\(\)\{ _marketRequestSeq\+\+;[\s\S]*?_marketAbort\.abort\(\)/.test(npcBlock)
   &&/requestSeq!==_marketRequestSeq\|\|!activeNpc\|\|activeNpc\.res!==res\|\|chatEl\.classList\.contains\('hidden'\)/.test(npcBlock)
   &&/if\(activeNpc!==npc\)\{ cancelMarketRequest\(\);/.test(HTML)
-  &&/function closeChat\(\)\{ cancelMarketRequest\(\);/.test(HTML), 'switching or closing chat aborts and generation-gates late AURI responses');
+  &&/function closeChat\(restoreFocus=true\)\{ cancelMarketRequest\(\);/.test(HTML), 'switching or closing chat aborts and generation-gates late AURI responses');
 ok(/function _socialResident\(L\)\{ return !!L && !L\.res\.oracle; \}/.test(npcBlock)
   &&/const P=RESIDENTS_LIVE\.filter\(_socialResident\)/.test(npcBlock)
   &&/if\(!_socialResident\(seed\)\) return null/.test(npcBlock), 'the market easter egg stays outside ambient circles and group chat');
@@ -3775,6 +3777,7 @@ const visualGovernorRuntimeBlock = (HTML.match(/\/\*VISUAL_GOVERNOR_RUNTIME:STAR
 ok(visualGovernorCoreBlock.length > 0 && visualGovernorRuntimeBlock.length > 0,
   'governor pure transition and runtime adapter blocks remain independently extractable');
 await runVisualGovernorTests(ok);
+runFirstVisitTests(ok);
 ok(/warmupMs:6000,emaAlpha:0\.08,minFrameMs:4,maxFrameMs:120/.test(visualGovernorCoreBlock)
   && /downFrameMs:22\.5,downHoldMs:3000/.test(visualGovernorCoreBlock)
   && /downFrameMs:28\.5,downHoldMs:5000,upFrameMs:17\.5,upHoldMs:14000/.test(visualGovernorCoreBlock)
@@ -3898,7 +3901,7 @@ ok(/worldTreeModal\.addEventListener\('keydown',event=>\{ if\(event\.key==='Esca
   &&/event\.key!=='Tab'/.test(worldTreeChronicleBlock)
   &&/WORLD_TREE_UI\.previousFocus=source\|\|document\.activeElement\|\|worldTreeTrigger/.test(worldTreeChronicleBlock)
   &&/previous&&previous\.isConnected&&!previous\.hidden\?previous:fallback/.test(worldTreeChronicleBlock)
-  &&/actBtn\.addEventListener\('click',\(\)=>\{ if\(modalOpen\) return; doAct\(actBtn\); \}\)/.test(HTML)
+  &&/actBtn\.addEventListener\('click',\(\)=>\{ if\(townInputBlocked\(\)\) return; doAct\(actBtn\); \}\)/.test(HTML)
   &&/if\(event\.target===worldTreeModal\) closeWorldTreeChronicle\(\)/.test(worldTreeChronicleBlock),
   'Chronicle traps focus, closes by Escape or backdrop, and restores the originating trigger');
 ok(/worldTreeRootSearchWrap\.hidden=total<10/.test(worldTreeChronicleBlock)

@@ -45,13 +45,26 @@
   canvas { display: block; }
 
   .hud { position: fixed; z-index: 10; color: #4a2f1e; }
-  #topbar { top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  #topbar { top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: calc(100vw - 88px); z-index: 13; }
   .badge { background: rgba(255,251,242,.86); backdrop-filter: blur(6px);
     border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: 13px;
     box-shadow: 0 4px 14px rgba(80,50,20,.16); }
   .badge b { color: #d2622f; }
   #liveBadge .hudShort { display: none; }
-  @media (max-width: 520px) { #liveBadge .hudFull { display: none; } #liveBadge .hudShort { display: inline; } #mapBtn { order: 10; } }
+  #townTools { position: relative; padding: 0; }
+  #townTools > summary { padding: 10px 12px; min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+  #townToolsPanel { position: fixed; top: calc(66px + env(safe-area-inset-top,0px)); left: 14px; width: min(360px,calc(100vw - 28px));
+    max-height: calc(var(--town-ui-height,100dvh) - 88px); overflow: auto; overscroll-behavior: contain;
+    padding: 14px; border-radius: 16px; background: #fffbf2; box-shadow: 0 12px 40px rgba(70,40,15,.26);
+    display: flex; flex-wrap: wrap; gap: 10px; }
+  #townToolsPanel .badge { box-shadow: none; background: #f6ecdb; }
+  #townToolsPanel #liveBadge { width: 100%; line-height: 1.8; white-space: normal; font-variant-numeric: tabular-nums; }
+  #townToolsPanel #liveBadge > span { white-space: normal; }
+  #townToolsPanel .hudShort { display: none; }
+  #townToolsPanel #townLabel { overflow-wrap: anywhere; }
+  #topbar button { min-height: 44px; }
+  #navBadge { max-width: min(420px,calc(100vw - 100px)); overflow-wrap: anywhere; }
+  @media (max-width: 520px) { #townBrand { display: none; } #topbar .badge { font-size: 12px; padding: 7px 10px; } #topbar #townTools { padding: 0; } }
 
   #menuBtn { top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); width: 46px; height: 46px; border: none; cursor: pointer;
     border-radius: 14px; background: rgba(255,251,242,.9); box-shadow: 0 4px 14px rgba(80,50,20,.2);
@@ -63,7 +76,7 @@
     background: rgba(255,251,242,.95); backdrop-filter: blur(10px); border-radius: 18px;
     box-shadow: 0 12px 40px rgba(70,40,15,.26); padding: 12px; transform-origin: top right;
     max-height: calc(100dvh - 88px); overflow-y: auto; transition: opacity .18s ease, transform .18s ease; }
-  #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; visibility: hidden; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
   #intentLens { margin: 0 0 10px; padding: 8px; border: 1px solid #e7d5b7; border-radius: 13px;
@@ -77,10 +90,18 @@
   .intentLensChoice:focus-visible { outline: 3px solid rgba(217,143,46,.34); outline-offset: 1px; }
   .intentLensChoice:active { transform: translateY(1px); }
   .intentLensIcon { flex: 0 0 23px; font-size: 16px; line-height: 1; text-align: center; }
-  @media (max-width: 520px) {
-    #intentLens { margin-top: 48px; }
-    #panel:not(.hidden) ~ #chat { visibility: hidden; opacity: 0; pointer-events: none; }
-  }
+  #townPanelBackdrop { position: fixed; inset: 0; z-index: 11; background: transparent; touch-action: none; }
+  #townPanelBackdrop[hidden] { display: none; }
+  .townPanelClose { float: right; min-width: 44px; min-height: 44px; margin: -4px -4px 4px 8px; border: 0;
+    border-radius: 12px; background: #f0e3cc; color: #6a4a22; font: 20px/1 inherit; cursor: pointer; }
+  #panel h3 { min-height: 42px; }
+  #nearbySpeech { margin: 10px 0; padding: 10px; background: #f6ecdb; border-radius: 12px; }
+  #nearbySpeech summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 12px; font-weight: 700; }
+  #nearbySpeechText { font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+  :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline: 3px solid #397f86; outline-offset: 2px; }
+  body.town-panel-open :is(#prompt,#actBtn,#emoteBar,#emoteBtn) { visibility: hidden; pointer-events: none; }
+  body.town-panel-open #greetToast { z-index: 10 !important; }
+  @media (prefers-reduced-motion: reduce) { #panel, #passport, #station, #chat { transition: none; } }
   #tourReplayBtn, #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
@@ -128,7 +149,7 @@
     background: rgba(255,251,242,.96); backdrop-filter: blur(10px); border-radius: 18px;
     box-shadow: 0 12px 40px rgba(70,40,15,.26); padding: 14px; transform-origin: top right;
     max-height: calc(100vh - 88px); overflow-y: auto; transition: opacity .18s ease, transform .18s ease; }
-  #passport.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #passport.hidden { opacity: 0; transform: scale(.94); pointer-events: none; visibility: hidden; }
   #passport h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 2px 2px 4px; display: flex; align-items: center; gap: 6px; }
   #passport .psub { font-size: 11px; color: #ab8a66; padding: 0 2px 10px; }
@@ -148,7 +169,7 @@
     box-shadow: 0 12px 40px rgba(70,40,15,.28); padding: 16px; transform-origin: top right;
     max-height: calc(100vh - 88px); overflow-y: auto;
     transition: opacity .18s ease, transform .18s ease; }
-  #station.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #station.hidden { opacity: 0; transform: scale(.94); pointer-events: none; visibility: hidden; }
   #station h3 { font-size: 13px; letter-spacing: .03em; color: #9a6e1e; padding: 2px 34px 4px 2px;
     display: flex; align-items: center; gap: 6px; }
   #station .sclose { position: absolute; top: 11px; right: 11px; width: 30px; height: 30px; padding: 0;
@@ -1260,7 +1281,14 @@
     background: rgba(255,251,242,.97); backdrop-filter: blur(12px); border-radius: 20px;
     box-shadow: 0 16px 48px rgba(70,40,15,.32); display: flex; flex-direction: column; overflow: hidden;
     transform-origin: bottom right; transition: opacity .2s ease, transform .2s ease; }
-  #chat.hidden { opacity: 0; transform: scale(.92) translateY(8px); pointer-events: none; }
+  #chat.hidden { opacity: 0; transform: scale(.92) translateY(8px); pointer-events: none; visibility: hidden; }
+  body.town-panel-open #chat { bottom: max(12px,calc(100dvh - var(--town-ui-top,0px) - var(--town-ui-height,100dvh) + 12px));
+    max-height: calc(var(--town-ui-height,100dvh) - 88px); }
+  #chat .chatHead { flex: 0 0 auto; }
+  #chat .chatHead .ttl { min-width: 0; overflow-wrap: anywhere; }
+  #chat #chatLog { min-height: 0; flex: 1 1 320px; overscroll-behavior: contain; user-select: text; }
+  #chat input, #chat textarea { font-size: 16px; }
+  #chat .chatHead .x, #station .sclose { min-width: 44px; min-height: 44px; }
   #chat.residentChat { border-color: rgba(115,143,106,.42); box-shadow: 0 14px 48px rgba(43,67,42,.24); }
   #residentStatus { display:flex; align-items:center; gap:8px; min-height:34px; padding:7px 12px;
     border-bottom:1px solid #e4eadc; background:#f3f7ed; color:#53634b; font-size:10.5px; line-height:1.35; }
@@ -1544,6 +1572,10 @@
   @media (prefers-reduced-motion:reduce) {
     #worldTreeModal, .worldTreeChronicle, #worldTreeTrigger { transition:none !important; }
   }
+  #panel, #passport, #station { top: calc(var(--town-ui-top,0px) + 70px + env(safe-area-inset-top,0px));
+    max-height: calc(var(--town-ui-height,100dvh) - 88px - env(safe-area-inset-top,0px)); overscroll-behavior: contain; }
+  #mapWrap.hidden { visibility: hidden; }
+  #mapLegend button { font-family: inherit; }
 </style>
 </head>
 <body>
@@ -1551,20 +1583,27 @@
 <div id="loading"><span id="loadingPortal" aria-hidden="true"></span><span id="loadingText" data-i18n="loading"><span data-boot-lang="ko">레포 도시를 짓는 중…</span><span data-boot-lang="en">Building Repolis…</span></span></div>
 
 <div id="topbar" class="hud">
-  <div class="badge">🏙️ Repolis</div>
-  <div class="badge" id="townLabel" style="display:none;font-weight:700;"></div>
+  <div class="badge" id="townBrand">🏙️ Repolis</div>
   <button id="stationBtn" class="badge" title="Travel to another GitHub town" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;" data-i18n="stationBtn">🚉 역</button>
+  <button id="mapBtn" class="badge" title="World map" aria-label="World map" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🗺️ <span data-i18n="mapBtn">지도</span></button>
+  <details id="townTools" class="badge">
+  <summary data-i18n="townTools">마을 · 방문</summary>
+  <div id="townToolsPanel">
+  <div class="badge" id="townLabel" style="display:none;font-weight:700;"></div>
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
   <button id="dayBtn" class="badge" title="Time of day" aria-label="Time of day" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
-  <button id="mapBtn" class="badge" title="World map" aria-label="World map" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🗺️ <span data-i18n="mapBtn">지도</span></button>
   <div class="badge"><span data-i18n="visited">탐험</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
   <button id="passBtn" class="badge" title="Explorer Passport" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🛂 <span data-i18n="passport">여권</span></button>
   <div class="badge" id="liveBadge" title="online now · entries today · total entries · all-time unique guests · UTC">🟢 <b id="liveCount">1</b><span id="entryWrap" style="display:none;"> · <span class="hudFull" data-i18n="entriesTodayWord">오늘 입장</span><span class="hudShort" data-i18n="entriesTodayShort">입장</span> <b id="entryCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="entryTotalWrap" style="display:none;"> · <span class="hudFull" data-i18n="entriesTotalWord">누적 입장</span><span class="hudShort" data-i18n="entriesTotalShort">누적</span> <b id="entryTotalCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="allWrap" style="display:none;"> · <span data-i18n="uniqueWord">고유</span> <b id="allCount">0</b><span data-i18n="peopleUnit">명</span></span></div>
+  </div>
+  </details>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
 </div>
 <button id="menuBtn" type="button" aria-controls="panel" aria-expanded="false" data-i18n-aria="wayfinding">☰<span class="dot"></span></button>
+<div id="townPanelBackdrop" hidden aria-hidden="true"></div>
 
-<div id="panel" class="hidden">
+<div id="panel" class="hidden" role="dialog" aria-modal="true" data-i18n-aria="wayfinding" inert>
+  <button class="townPanelClose" type="button" data-town-close="panel" data-i18n-aria="close">✕</button>
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
   <section id="intentLens" aria-labelledby="intentLensTitle">
     <div id="intentLensTitle" data-i18n="intentLensTitle">무엇을 하러 왔나요?</div>
@@ -1603,11 +1642,13 @@
     <span class="pmIcon" aria-hidden="true">📸</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="postcardMenu">타운 엽서 만들기</span><span class="pmSub" data-i18n="postcardMenuSub">지금 보이는 마을을 PNG로</span></span>
   </button>
-  <input id="repoSearch" type="text" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" autocomplete="off" />
+  <details id="nearbySpeech"><summary data-i18n="nearbySpeech">주변 대화 읽기</summary><div id="nearbySpeechText"></div></details>
+  <input id="repoSearch" type="text" name="repository" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" data-i18n-aria="searchPh" autocomplete="off" />
   <div id="repoList"></div>
 </div>
 
-<div id="passport" class="hidden">
+<div id="passport" class="hidden" role="dialog" aria-modal="true" data-i18n-aria="passportTitle" inert>
+  <button class="townPanelClose" type="button" data-town-close="passport" data-i18n-aria="close">✕</button>
   <h3>🛂 <span data-i18n="passportTitle">탐험 여권</span></h3>
   <div class="psub" data-i18n="passportSub">마을을 거닐며 스탬프를 모아요.</div>
   <div class="growthBox" id="growthBox" style="display:none;"></div>
@@ -2138,7 +2179,7 @@
   <div id="chatLog" role="log" aria-live="polite" aria-relevant="additions"></div>
   <div class="chatIn">
     <span id="atelierChatCount" role="status" aria-live="polite"></span>
-    <input id="chatText" type="text" placeholder="어떤 레포를 찾으세요? 예: 제일 인기있는 레포" data-i18n-ph="chatPh" autocomplete="off" />
+    <input id="chatText" name="message" type="text" placeholder="어떤 레포를 찾으세요? 예: 제일 인기있는 레포" data-i18n-ph="chatPh" data-i18n-aria="chatPh" autocomplete="off" />
     <button id="chatSend" type="button" aria-label="Send">▶</button>
   </div>
 </div>
@@ -2517,6 +2558,7 @@ const I18N = {
   ko:{
     loading:'레포 도시를 짓는 중…',
     visited:'탐험', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
+    townTools:'마을 · 방문', nearbySpeech:'주변 대화 읽기', nearbySpeechEmpty:'지금 가까이에서 들리는 대화가 없어요.',
     visitorsWord:'방문자', entriesWord:'입장', entriesUnit:'회', peopleUnit:'명',
     entriesTodayWord:'오늘 입장', entriesTodayShort:'입장', entriesTotalWord:'누적 입장', entriesTotalShort:'누적', uniqueWord:'고유',
     passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프와 이야기를 모아요.',
@@ -2898,6 +2940,7 @@ const I18N = {
   en:{
     loading:'Building Repolis…',
     visited:'Explored', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
+    townTools:'Town · visits', nearbySpeech:'Read nearby dialogue', nearbySpeechEmpty:'No nearby dialogue right now.',
     visitorsWord:'visitors', entriesWord:'entries', entriesUnit:'', peopleUnit:'',
     entriesTodayWord:'entries today', entriesTodayShort:'entries', entriesTotalWord:'total entries', entriesTotalShort:'total', uniqueWord:'unique',
     passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps and stories.',
@@ -7879,6 +7922,82 @@ function buildRoamingScholar(kind){ const sc=window.scholarByKind&&window.schola
   const npc={group:g,pos:g.position,kind,reach:4.6,patrol:{points,index:1,waitUntil:0,speed:LOW_END?0.62:0.88}}; NPCS.push(npc); return npc; }
 const MIRA_NPC=buildRoamingScholar('context7'), LYRA_NPC=buildRoamingScholar('huggingface');
 
+/*TOWN_SPEECH_CORE:START*/
+const TOWN_SPEECH_LIMITS=Object.freeze({count:2,width:272,mobileWidth:224,margin:12,top:84,bottom:120,exitGraceMs:350});
+function wrapTownSpeech(text,measure,maxWidth,maxLines){
+  const lines=[]; let line='';
+  for(const word of String(text||'').trim().split(/\s+/)){
+    if(line&&measure(line+' '+word)<=maxWidth){ line+=' '+word; continue; }
+    if(line){ lines.push(line); line=''; }
+    for(const char of word){ if(line&&measure(line+char)>maxWidth){ lines.push(line); line=''; } line+=char; }
+  }
+  if(line) lines.push(line);
+  const visible=lines.slice(0,maxLines);
+  if(lines.length>maxLines){ let tail=Array.from(visible[maxLines-1]); while(tail.length&&measure(tail.join('')+'…')>maxWidth) tail.pop();
+    visible[maxLines-1]=tail.join('')+'…'; }
+  return visible;
+}
+function layoutTownSpeech(candidates,width,height,now){
+  const L=TOWN_SPEECH_LIMITS,margin=L.margin,top=Math.min(L.top,height*.2),bottom=Math.max(top,height-L.bottom);
+  const sorted=candidates.filter(c=>c.speaking&&(c.eligible||(c.selected&&now-c.lastVisibleAt<L.exitGraceMs)))
+    .sort((a,b)=>b.priority-a.priority||Number(b.selected)-Number(a.selected)||a.distance-b.distance||a.id.localeCompare(b.id));
+  const chosen=[];
+  for(const c of sorted){
+    if(chosen.length>=L.count) break;
+    if(!c.eligible){ chosen.push({...c,visible:false}); continue; }
+    const w=Math.min(c.width,width-2*margin),h=Math.min(c.height,bottom-top),x=Math.max(margin,Math.min(width-margin-w,c.x-w/2));
+    let y=Math.max(top,Math.min(bottom-h,c.y-h/2));
+    const overlaps=(yy)=>chosen.some(p=>p.visible&&x<p.x+p.width+margin&&x+w+margin>p.x&&yy<p.y+p.height+margin&&yy+h+margin>p.y);
+    if(overlaps(y)){
+      const alternatives=chosen.flatMap(p=>[p.y-h-margin,p.y+p.height+margin]);
+      const fit=alternatives.find(yy=>yy>=top&&yy+h<=bottom&&!overlaps(yy)); if(fit===undefined) continue; y=fit;
+    }
+    chosen.push({...c,x,y,width:w,height:h,visible:true});
+  }
+  return chosen;
+}
+/*TOWN_SPEECH_CORE:END*/
+/*TOWN_SPEECH_RUNTIME:START*/
+const TOWN_SPEECH=[],TOWN_SPEECH_WORLD=new THREE.Vector3(),TOWN_SPEECH_VIEW=new THREE.Vector3();
+let _townSpeechText='';
+function registerTownSpeech(bubble,npc,name){
+  const sprite=bubble.sprite;
+  TOWN_SPEECH.push({bubble,npc,name,id:npc.id||npc.kind,baseWidth:sprite.scale.x,baseHeight:sprite.scale.y,selected:false,lastVisibleAt:0});
+}
+function updateTownSpeech(){
+  const now=performance.now(),focal=camera.projectionMatrix.elements[5]*innerHeight/2,maxWidth=innerWidth<=520?TOWN_SPEECH_LIMITS.mobileWidth:TOWN_SPEECH_LIMITS.width;
+  camera.updateMatrixWorld();
+  const candidates=TOWN_SPEECH.map(entry=>{
+    const sprite=entry.bubble.sprite; sprite.updateWorldMatrix(true,false); sprite.getWorldPosition(TOWN_SPEECH_WORLD);
+    TOWN_SPEECH_VIEW.copy(TOWN_SPEECH_WORLD).applyMatrix4(camera.matrixWorldInverse);
+    const depth=-TOWN_SPEECH_VIEW.z,distance=TOWN_SPEECH_WORLD.distanceTo(player.position);
+    TOWN_SPEECH_WORLD.project(camera);
+    const eligible=depth>camera.near&&TOWN_SPEECH_WORLD.z>=-1&&TOWN_SPEECH_WORLD.z<=1&&Math.abs(TOWN_SPEECH_WORLD.x)<1.12&&Math.abs(TOWN_SPEECH_WORLD.y)<1.12&&distance<45;
+    if(eligible) entry.lastVisibleAt=now;
+    const width=Math.min(maxWidth,entry.baseWidth*focal/Math.max(.01,depth));
+    return {...entry,depth,distance,eligible,speaking:entry.bubble.speaking||sprite.material.opacity>.08,
+      priority:activeNpc===entry.npc?3:(nearNpc===entry.npc||nearResident===entry.npc?2:0),
+      x:(TOWN_SPEECH_WORLD.x+1)*innerWidth/2,y:(1-TOWN_SPEECH_WORLD.y)*innerHeight/2,
+      width,height:width*entry.baseHeight/entry.baseWidth};
+  });
+  const placements=layoutTownSpeech(candidates,innerWidth,innerHeight,now),blocked=townInputBlocked();
+  for(const entry of TOWN_SPEECH){
+    const placement=placements.find(p=>p.id===entry.id),sprite=entry.bubble.sprite;
+    entry.selected=!!placement; sprite.visible=!!placement?.visible&&!blocked;
+    if(!placement?.visible) continue;
+    const units=placement.depth/focal;
+    sprite.scale.set(placement.width*units,placement.height*units,1);
+    const anchor=candidates.find(c=>c.id===entry.id);
+    sprite.center.set((anchor.x-placement.x)/placement.width,1-(anchor.y-placement.y)/placement.height);
+  }
+  if(!blocked){
+    const text=placements.filter(p=>p.visible&&p.bubble.sprite.userData.currentLine)
+      .map(p=>p.name()+': '+p.bubble.sprite.userData.currentLine).join('\n\n')||t('nearbySpeechEmpty');
+    if(text!==_townSpeechText){ _townSpeechText=text; document.getElementById('nearbySpeechText').textContent=text; }
+  }
+}
+/*TOWN_SPEECH_RUNTIME:END*/
+
 /* ---- NPCs feel alive: breathing bob, look-around, occasional wave + speech bubble (near-only) ---- */
 const NPC_COL={taxi:'#f0c069',msdocs:'#7fa8ee',deepwiki:'#4fc8bd',context7:'#d79a7a',huggingface:'#e88954'};
 const NPC_LINES={
@@ -7893,21 +8012,23 @@ const NPC_LINES={
   huggingface:{ ko:['어떤 모델을 벼릴까요? 🤗','데이터셋도 찾아드려요','새 논문 불씨가 보여요','AI 연구구역 순회 중','좋은 재료를 골라봐요'],
             en:['Which model shall we forge? 🤗','I find datasets too','Fresh paper sparks ahead','Patrolling the AI district','Let us choose good material'] } };
 function makeNpcBubble(x,z){ const cv=document.createElement('canvas'); cv.width=320; cv.height=140; const c=cv.getContext('2d');
-  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false}));
+  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false,depthTest:false,fog:false}));
   sp.scale.set(5.6,2.45,1); sp.position.set(x,3.55,z); sp.renderOrder=18; scene.add(sp);
   let life=0;
   function draw(text,col){ c.clearRect(0,0,320,140); c.fillStyle='rgba(255,251,242,0.96)'; const r=22;
     c.beginPath(); c.moveTo(r,6); c.arcTo(314,6,314,100,r); c.arcTo(314,100,6,100,r); c.arcTo(6,100,6,6,r); c.arcTo(6,6,314,6,r); c.fill();
     c.beginPath(); c.moveTo(146,98); c.lineTo(174,98); c.lineTo(150,126); c.closePath(); c.fill();      // little speech tail
     c.lineWidth=4; c.strokeStyle=col||'#caa'; c.stroke();
-    c.font='700 25px system-ui,sans-serif'; c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle';
-    c.fillText(text,160,54); tex.needsUpdate=true; }
-  return { sprite:sp, say(text,kind){ draw(text,NPC_COL[kind]||'#caa'); life=4.2; },
+    c.font='700 23px system-ui,sans-serif'; c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle';
+    const lines=wrapTownSpeech(text,value=>c.measureText(value).width,280,3);
+    lines.forEach((line,i)=>c.fillText(line,160,54+(i-(lines.length-1)/2)*27)); tex.needsUpdate=true; }
+  return { sprite:sp, get speaking(){ return life>0; }, say(text,kind){ sp.userData.currentLine=String(text); draw(text,NPC_COL[kind]||'#caa'); life=4.2; },
     update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0;
       sp.material.opacity += (want - sp.material.opacity)*0.12;
       sp.position.y = 3.55 + Math.sin(clock.elapsedTime*1.6)*0.05; } }; }
 for(const n of NPCS){ const g=n.group; g._baseRot=g.rotation.y; g._ph=Math.random()*6.283; g._bt=4+Math.random()*7; g._gt=0;
-  if(g._head) g._head._baseY=g._head.position.y; g._bub=makeNpcBubble(g.position.x,g.position.z); }
+  if(g._head) g._head._baseY=g._head.position.y; g._bub=makeNpcBubble(g.position.x,g.position.z);
+  registerTownSpeech(g._bub,n,()=>n.scholar?.star||n.kind); }
 function updateNpcs(dt){ const tt=clock.elapsedTime;
   for(const n of NPCS){ const g=n.group;
     const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz);
@@ -8277,20 +8398,15 @@ function residentTag(res){ const W=256,H=100,c=document.createElement('canvas');
   const tx=new THREE.CanvasTexture(c); tx.anisotropy=4;
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false,fog:false})); s.scale.set(2.9,1.13,1); s.position.y=3.06; s.renderOrder=6; s._res=res; return s; }
 function makeResBubble(){ const W=448,H=252, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const c=cv.getContext('2d');
-  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false})); sp.scale.set(7.47,4.2,1); sp.renderOrder=19; let life=0;
-  const ML=5, FS=24, LH=30;                                                    // up to 5 lines so a full conversational line shows instead of being cut off after 3
-  function wrap(text,maxw){ const words=String(text).split(/\s+/); const lines=[]; let cur='';
-    for(const w of words){ const tryl=cur?cur+' '+w:w; if(c.measureText(tryl).width>maxw && cur){ lines.push(cur); cur=w; if(lines.length>=ML) break; } else cur=tryl; }
-    if(cur&&lines.length<ML) lines.push(cur);
-    if(lines.length>=ML){ let last=lines[ML-1]; while(c.measureText(last+'\u2026').width>maxw && last.length>1) last=last.slice(0,-1); lines[ML-1]=last+'\u2026'; }
-    return lines; }
-  function draw(text,hex){ c.clearRect(0,0,W,H); c.font='600 '+FS+'px system-ui,sans-serif'; const lines=wrap(text,W-56);
+  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false,depthTest:false,fog:false})); sp.scale.set(7.47,4.2,1); sp.renderOrder=19; let life=0;
+  const ML=5, FS=28, LH=34;
+  function draw(text,hex){ c.clearRect(0,0,W,H); c.font='600 '+FS+'px system-ui,sans-serif'; const lines=wrapTownSpeech(text,value=>c.measureText(value).width,W-56,ML);
     const bh=LH*lines.length+30, top=(H-26)-bh, r=24;
     c.beginPath(); c.moveTo(12+r,top); c.arcTo(W-12,top,W-12,top+bh,r); c.arcTo(W-12,top+bh,12,top+bh,r); c.arcTo(12,top+bh,12,top,r); c.arcTo(12,top,W-12,top,r); c.closePath();
     c.fillStyle='rgba(255,251,242,0.97)'; c.fill(); c.lineWidth=4; c.strokeStyle=hex||'#caa'; c.stroke();
     c.beginPath(); c.moveTo(W/2-14,top+bh-2); c.lineTo(W/2+14,top+bh-2); c.lineTo(W/2-10,top+bh+20); c.closePath(); c.fillStyle='rgba(255,251,242,0.97)'; c.fill();
     c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle'; lines.forEach((ln,i)=>{ c.fillText(ln, W/2, top+24+i*LH); }); tex.needsUpdate=true; }
-  return { sprite:sp, say(text,hex){ sp.userData.currentLine=String(text); draw(text,hex); life=Math.min(11, 4.0 + String(text).length*0.035); }, clear(){ life=0; sp.userData.currentLine=''; },
+  return { sprite:sp, get speaking(){ return life>0; }, say(text,hex){ sp.userData.currentLine=String(text); draw(text,hex); life=Math.min(11, 4.0 + String(text).length*0.035); }, clear(){ life=0; sp.userData.currentLine=''; },
     update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0; sp.material.opacity+=(want-sp.material.opacity)*0.14; sp.position.y=4.55+Math.sin(clock.elapsedTime*1.5)*0.05; } }; }
 
 const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
@@ -8541,6 +8657,7 @@ function placeResident(res){ const g=buildResident(res), work=_residentSpot(res)
     _routineAt:2+RESIDENTS_LIVE.length*1.3, _routineLock:0, _rt:null, _rest:null, _rp:Math.random()*4, _wk:Math.random()*6.28, _wspd:RES_MOVE.wanderSpd*(0.85+Math.random()*0.3),
     _pNear:false, _greetCd:0, _emoteCd:8+Math.random()*40 };
   live._npc={ resident:true, id:res.id, kind:'resident', res, pos:g.position, reach:RES_REACH }; res._live=live;
+  registerTownSpeech(bub,live._npc,()=>(res[LANG]||res.ko).name);
   if(homeRec) homeRec.occupied=atHome;
   RESIDENTS_LIVE.push(live); return live; }
 if(NPC_CFG.modeEnabled && NPC_CFG.visualEnabled){ for(const res of RESIDENTS.slice(0,MAX_RESIDENTS)) placeResident(res); }
@@ -9249,9 +9366,21 @@ let navTarget=null;
 const keys={};
 const MOVE=new Set(['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space']);
 const clearKeys=()=>{ for(const k in keys) keys[k]=false; };   /* drop every held key — stops walking instantly when focus/keyup is lost */
-const isTyping=()=>{ const a=document.activeElement; return a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
+const TOWN_UI={active:null,previousFocus:null,mousePointer:null};
+function townInputBlocked(){
+  return !!TOWN_UI.active||modalOpen||document.getElementById('townTools').open
+    ||!document.getElementById('intro').classList.contains('hidden')
+    ||!document.getElementById('cityError').classList.contains('hidden')
+    ||document.getElementById('loading').style.display!=='none';
+}
+function clearTownInput(){
+  clearKeys(); dragging=false; dom.style.cursor=''; document.body.style.cursor='';
+  for(const id of [moveTid,lookTid,TOWN_UI.mousePointer]){ if(id!==null&&dom.hasPointerCapture(id)) dom.releasePointerCapture(id); }
+  moveTid=null; lookTid=null; TOWN_UI.mousePointer=null; stickVec={x:0,y:0}; joy.style.display='none';
+}
+const isTyping=()=>{ const a=document.activeElement; return a&&(a.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)); };
 const isUiKeyTarget=e=>{ const target=e&&e.target; return !!(target&&(target.isContentEditable||/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(target.tagName)||target.closest?.('[role="button"]'))); };
-addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)) return;
+addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)||townInputBlocked()) return;
   if(e.code==='Escape'&&undercroftActive()){ e.preventDefault(); exitUndercroft(); return; }
   if(undercroftTransitioning()){ if(MOVE.has(e.code)) e.preventDefault(); clearKeys(); return; }
   if(e.code==='Enter'&&undercroftActive()){ e.preventDefault(); if(!e.repeat) undercroftAct(); return; }
@@ -9396,20 +9525,21 @@ function _settleClearSightArrival(destination){
 /*CLEAR_SIGHT_CAMERA:END*/
 const dom=renderer.domElement;
 addEventListener('contextmenu',e=>{ e.preventDefault(); clearKeys(); },true);   // WoW: suppress browser right-click menu globally (capture phase, any target). Also drop held keys so a misfired right-click never leaves you walking.
-dom.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch') return; if(e.button!==0&&e.button!==2) return;
+dom.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch'||townInputBlocked()) return; if(e.button!==0&&e.button!==2) return;
+  TOWN_UI.mousePointer=e.pointerId;
   dragging=true; dragBtn=e.button; dragMoved=false; px=e.clientX; py=e.clientY;
   if(e.button===2) e.preventDefault();
   try{ dom.setPointerCapture(e.pointerId); }catch(_){}
   dom.style.cursor='grabbing'; document.body.style.cursor='grabbing'; });
-addEventListener('pointermove',e=>{ if(e.pointerType==='touch') return; if(!dragging) return;
+addEventListener('pointermove',e=>{ if(e.pointerType==='touch') return; if(!dragging||townInputBlocked()) return;
   const dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
   if(Math.abs(dx)+Math.abs(dy)>3) dragMoved=true;
   camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005));
   if(dragBtn===2){ model.rotation.y=camYaw+Math.PI; freeLook=false; }  // right drag = mouselook: steer character with the view
   else freeLook=true; });                                             // left drag = free look: camera holds its angle
-addEventListener('pointerup',e=>{ if(dragging&&!dragMoved&&dragBtn===0&&!modalOpen){ tapAt(e.clientX,e.clientY); }
-  dragging=false; dom.style.cursor=''; document.body.style.cursor=''; });
-dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
+addEventListener('pointerup',e=>{ if(dragging&&!dragMoved&&dragBtn===0&&!townInputBlocked()){ tapAt(e.clientX,e.clientY); }
+  dragging=false; TOWN_UI.mousePointer=null; dom.style.cursor=''; document.body.style.cursor=''; });
+dom.addEventListener('wheel',e=>{ if(!townInputBlocked()) camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
 
 /* ===== Roblox-style touch controls =====
    Left half: a floating thumbstick spawns wherever you first touch (drives stickVec — camera-relative move).
@@ -9421,7 +9551,7 @@ let moveTid=null, joyOX=0, joyOY=0, moveMoved=false; const JOYR=54;
 let lookTid=null, lookLX=0, lookLY=0, lookMoved=false;
 function setNub(dx,dy){ joyNub.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }
 dom.addEventListener('pointerdown',e=>{
-  if(e.pointerType!=='touch') return;
+  if(e.pointerType!=='touch'||townInputBlocked()) return;
   if(e.clientX < innerWidth*0.5 && moveTid===null){
     moveTid=e.pointerId; joyOX=e.clientX; joyOY=e.clientY; moveMoved=false;
     joy.style.left=joyOX+'px'; joy.style.top=joyOY+'px'; joy.style.display='block'; setNub(0,0);
@@ -9432,7 +9562,7 @@ dom.addEventListener('pointerdown',e=>{
   }
 });
 dom.addEventListener('pointermove',e=>{
-  if(e.pointerType!=='touch') return;
+  if(e.pointerType!=='touch'||townInputBlocked()) return;
   if(e.pointerId===moveTid){
     let dx=e.clientX-joyOX, dy=e.clientY-joyOY; const d=Math.hypot(dx,dy);
     if(d>12) moveMoved=true;
@@ -9450,16 +9580,16 @@ function endTouch(e){
   if(e.pointerId===moveTid){
     // a tap on the move half (no joystick drag) opens the building you're standing at,
     // mirroring the look half — so tapping the house works wherever it renders on screen
-    if(!moveMoved && !modalOpen){ tapAt(e.clientX,e.clientY); }
+    if(e.type==='pointerup'&&!moveMoved && !townInputBlocked()){ tapAt(e.clientX,e.clientY); }
     moveTid=null; stickVec={x:0,y:0}; joy.style.display='none';
   }
-  else if(e.pointerId===lookTid){ if(!lookMoved&&!modalOpen){ tapAt(e.clientX,e.clientY); } lookTid=null; }
+  else if(e.pointerId===lookTid){ if(e.type==='pointerup'&&!lookMoved&&!townInputBlocked()){ tapAt(e.clientX,e.clientY); } lookTid=null; }
 }
 dom.addEventListener('pointerup',endTouch);
 dom.addEventListener('pointercancel',endTouch);
 /* round action button (bottom-right): open the repo you're standing at (mobile substitute for Enter) */
 const actBtn=document.getElementById('actBtn');
-actBtn.addEventListener('click',()=>{ if(modalOpen) return; doAct(actBtn); });
+actBtn.addEventListener('click',()=>{ if(townInputBlocked()) return; doAct(actBtn); });
 
 /* ====================== UI ====================== */
 document.getElementById('totalCount').textContent=REPOS.length;
@@ -11770,7 +11900,7 @@ function fallbackCopy(url, ok){ try{ const ta=document.createElement('textarea')
 const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
 function scholarPersona(kind, slot){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(sc&&sc.active&&sc.persona){ const p=sc.persona[LANG]||sc.persona.ko; if(p&&p[slot]) return p[slot]; } return null; }
 function npcGreet(n){ if(_isGroupChat(n)) return groupGreet(n); if(n&&n.resident) return residentGreet(n.res); const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
-function applyNpcChrome(n){ const resident=!!(n&&n.resident); chatEl.classList.toggle('residentChat',resident); document.body.classList.toggle('resident-chat-open',resident); chatEl.setAttribute('aria-modal',resident?'true':'false');
+function applyNpcChrome(n){ const resident=!!(n&&n.resident); chatEl.classList.toggle('residentChat',resident); document.body.classList.toggle('resident-chat-open',resident); chatEl.setAttribute('aria-modal','true');
   residentStatusEl.hidden=!resident; chatText.maxLength=resident?320:2000; chatCloseBtn.setAttribute('aria-label',resident?t('residentChatClose'):'Close'); chatSendBtn.setAttribute('aria-label',resident?t('residentChatSend'):'Send');
   if(_isGroupChat(n)){ if(chatHeadTtl) chatHeadTtl.innerHTML=_groupNames(n.live||[])+' \u00b7 '+(LANG==='ko'?'\uBAA8\uC784':'circle'); modeSel.style.display='none'; chatText.placeholder=(LANG==='ko'?'\uBAA8\uC784\uC5D0 \uB9D0 \uAC78\uAE30\u2026':'Say something to the circle\u2026'); setResidentChatStatus(n.res&&n.res._profileState||'local',n.res); return; }
   if(resident){ if(chatHeadTtl) chatHeadTtl.innerHTML=residentTitle(n.res); modeSel.style.display='none'; chatText.placeholder=residentPh(n.res); setResidentChatStatus(n.res&&n.res._profileState||'loading',n.res); return; }
@@ -11788,16 +11918,16 @@ function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi');
   if(npc&&npc.resident) prepareResidentChat(npc);
   trackChatEvent('chat_open', { npc:npcKindOf(npc) });
   setTimeout(()=>{ if((!repositoryAtelierActive()||repositoryAtelierChatActive())&&!chatEl.classList.contains('hidden')) chatText.focus(); },60); return true; }
-function closeChat(){ cancelMarketRequest(); queuedChatQuestions.length=0; pendingChatNpc=null; chatEl.classList.add('hidden'); chatEl.classList.remove('atelierChat');
+function closeChat(restoreFocus=true){ cancelMarketRequest(); queuedChatQuestions.length=0; pendingChatNpc=null; chatEl.classList.add('hidden'); chatEl.classList.remove('atelierChat');
   chatEl.classList.remove('residentChat'); document.body.classList.remove('resident-chat-open'); chatEl.setAttribute('aria-hidden','true'); chatEl.setAttribute('aria-modal','false'); residentStatusEl.hidden=true;
   document.body.classList.remove('atelier-chat-open'); if(REPOSITORY_ATELIER){ REPOSITORY_ATELIER.inRoomChat=false; setRepositoryAtelierChatPanel(REPOSITORY_ATELIER.chat,false); }
   if(!repositoryAtelierActive()) _releaseGroup(); trackChatEvent('chat_close');
   const previous=chatPreviousFocus; chatPreviousFocus=null; if(chatEl.contains(document.activeElement)) document.activeElement.blur();
-  setTimeout(()=>{ if(!chatEl.classList.contains('hidden')) return; const visible=element=>element&&element.isConnected&&element!==document.body&&getComputedStyle(element).display!=='none'&&getComputedStyle(element).visibility!=='hidden';
+  if(restoreFocus) setTimeout(()=>{ if(TOWN_UI.active||!chatEl.classList.contains('hidden')) return; const visible=element=>element&&element.isConnected&&element!==document.body&&!element.closest('[inert]')&&element.getClientRects().length&&getComputedStyle(element).visibility!=='hidden';
     const target=visible(previous)?previous:(visible(actBtn)&&actBtn.classList.contains('avail')?actBtn:taxiBtn); try{ target.focus(); }catch(e){} },80); }
 chatEl.addEventListener('keydown',event=>{ if(chatEl.classList.contains('hidden')) return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeChat(); return; }
-  if(event.key!=='Tab'||!(activeNpc&&activeNpc.resident)) return; const items=[...chatEl.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')]
+  if(event.defaultPrevented||event.key!=='Tab'||!(activeNpc&&activeNpc.resident)) return; const items=[...chatEl.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')]
     .filter(element=>!element.hidden&&getComputedStyle(element).display!=='none');
   if(!items.length) return; const first=items[0],last=items[items.length-1]; if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
   else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); } },true);
@@ -12337,7 +12467,7 @@ function drawMinimap(){
   ctx.fillStyle='#ff3b6e'; ctx.strokeStyle='#fff'; ctx.lineWidth=1.6; ctx.fill(); ctx.stroke();
 }
 function buildMapLegend(){ if(!mapLegend) return; mapLegend.innerHTML='';
-  for(const z of ZONES){ const b=document.createElement('div'); b.className='mz';
+  for(const z of ZONES){ const b=document.createElement('button'); b.type='button'; b.className='mz';
     b.innerHTML=`<i style="background:${_mhex(z.tone)}"></i>${z.icon} ${esc(LANG==='ko'?z.ko:z.en)} <span class="mzc">${z.repos.length}</span>`;
     b.onclick=()=>{ gotoZone(z.id); }; mapLegend.appendChild(b); }
 }
@@ -12360,6 +12490,74 @@ if(mapCanvas) mapCanvas.onclick=(e)=>{ const r=mapCanvas.getBoundingClientRect()
   for(const z of ZONES){ const a0=((z._bStart%TWO)+TWO)%TWO, len=((z._bEnd-z._bStart)%TWO+TWO)%TWO, d=((ang-a0)%TWO+TWO)%TWO; if(d<=len){ hit=z; break; } }
   if(hit) gotoZone(hit.id); };
 _mapReady=true; syncMapChrome();                                     // initialise the map-button label now that the DOM refs exist
+
+/*TOWN_UI_RUNTIME:START*/
+const townTools=document.getElementById('townTools'),townPanelBackdrop=document.getElementById('townPanelBackdrop');
+const townPanels=[
+  {element:panel,trigger:menuBtn,close:()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); }},
+  {element:passportEl,trigger:townTools.querySelector('summary'),close:()=>passportEl.classList.add('hidden')},
+  {element:document.getElementById('station'),trigger:document.getElementById('stationBtn'),close:()=>document.getElementById('station').classList.add('hidden')},
+  {element:chatEl,trigger:taxiBtn,close:()=>closeChat(false)},
+  {element:mapWrap,trigger:mapBtn,close:closeMap},
+];
+function closeTownPanels(except=null){
+  for(const item of townPanels){ if(item.element!==except&&!item.element.classList.contains('hidden')) item.close(); }
+  if(except!==townTools) townTools.open=false;
+}
+function townFocusables(element){
+  return [...element.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex="0"]')]
+    .filter(el=>!el.hidden&&!el.closest('[inert]')&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');
+}
+function syncTownPanels(records=[]){
+  const opening=records.filter(record=>record.type==='attributes'&&record.attributeName==='class'&&(record.oldValue||'').split(/\s+/).includes('hidden')
+    &&!record.target.classList.contains('hidden')).map(record=>townPanels.find(p=>p.element===record.target)).filter(Boolean).pop();
+  if(opening) closeTownPanels(opening.element);
+  const current=townPanels.find(item=>!item.element.classList.contains('hidden'))||null,previous=TOWN_UI.active;
+  if(current!==previous){
+    clearTownInput(); TOWN_UI.active=current;
+    if(current){
+      TOWN_UI.previousFocus=document.activeElement;
+      current.element.inert=false; current.element.setAttribute('aria-hidden','false');
+      const target=current.element===panel?panel.querySelector('[data-intent]'):townFocusables(current.element)[0];
+      if(target&&!current.element.contains(document.activeElement)) target.focus({preventScroll:true});
+    }else if(previous){
+      const saved=TOWN_UI.previousFocus; TOWN_UI.previousFocus=null;
+      const target=saved&&saved!==document.body&&!saved.closest('[inert]')&&saved.getClientRects().length?saved:previous.trigger;
+      requestAnimationFrame(()=>{ if(!TOWN_UI.active&&!modalOpen&&(document.activeElement===document.body||previous.element.contains(document.activeElement))) target?.focus({preventScroll:true}); });
+    }
+  }
+  for(const item of townPanels){ const hidden=item.element.classList.contains('hidden'); item.element.inert=hidden||modalOpen; item.element.setAttribute('aria-hidden',String(hidden));
+    item.element.setAttribute('role','dialog'); item.element.setAttribute('aria-modal',String(!hidden&&!modalOpen)); }
+  if(current&&!modalOpen&&document.activeElement.closest('[aria-hidden="true"],.hidden')) townFocusables(current.element)[0]?.focus({preventScroll:true});
+  const open=!!current||townTools.open;
+  townPanelBackdrop.hidden=!open; document.body.classList.toggle('town-panel-open',open);
+}
+const townPanelObserver=new MutationObserver(syncTownPanels);
+for(const item of townPanels) townPanelObserver.observe(item.element,{attributes:true,attributeFilter:['class'],attributeOldValue:true});
+for(const element of document.querySelectorAll('[role="dialog"],#modal,#chronoModal,#obsModal,#libModal')){
+  if(!townPanels.some(item=>item.element===element)) townPanelObserver.observe(element,{attributes:true,attributeFilter:['class'],attributeOldValue:true});
+}
+document.querySelectorAll('[data-town-close]').forEach(button=>button.addEventListener('click',()=>townPanels.find(p=>p.element.id===button.dataset.townClose)?.close()));
+townTools.addEventListener('toggle',()=>{ if(townTools.open){ closeTownPanels(townTools); clearTownInput(); } syncTownPanels(); });
+townPanelBackdrop.addEventListener('click',event=>{ event.stopPropagation(); closeTownPanels(); });
+document.addEventListener('keydown',event=>{
+  const element=TOWN_UI.active?.element||(townTools.open?townTools:null); if(!element||modalOpen) return;
+  if(event.key==='Escape'){ event.preventDefault(); event.stopImmediatePropagation();
+    if(TOWN_UI.active) TOWN_UI.active.close(); else { townTools.open=false; townTools.querySelector('summary').focus(); } return; }
+  if(event.key!=='Tab') return;
+  const items=townFocusables(element),first=items[0],last=items[items.length-1]; if(!first) return;
+  if(!element.contains(document.activeElement)||(event.shiftKey&&document.activeElement===first)){ event.preventDefault(); (event.shiftKey?last:first).focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+},true);
+function syncTownViewport(){
+  const viewport=window.visualViewport;
+  document.documentElement.style.setProperty('--town-ui-height',(viewport?.height||innerHeight)+'px');
+  document.documentElement.style.setProperty('--town-ui-top',(viewport?.offsetTop||0)+'px');
+}
+window.visualViewport?.addEventListener('resize',syncTownViewport);
+window.visualViewport?.addEventListener('scroll',syncTownViewport);
+addEventListener('resize',syncTownViewport); syncTownViewport(); syncTownPanels();
+/*TOWN_UI_RUNTIME:END*/
 
 /*INTENT_LENS:START*/
 function intentLensTargetRepo(){
@@ -13514,6 +13712,7 @@ function _updateRepositoryAtelierTerminalHighlight(index){
   A.terminalScreens.instanceMatrix.needsUpdate=true;
 }
 function _updateRepositoryAtelier(dt){
+  if(townInputBlocked()) clearTownInput();
   const A=REPOSITORY_ATELIER;if(repositoryBlueprintOpen()) return; A.moveForward.subVectors(player.position,camera.position); A.moveForward.y=0;
   if(A.moveForward.lengthSq()<.001) A.moveForward.set(0,0,-1); else A.moveForward.normalize();
   A.moveRight.crossVectors(A.moveForward,A.up).normalize(); A.moveDelta.set(0,0,0);
@@ -13771,6 +13970,7 @@ function animate(){
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
   mv.set(0,0,0);
+  if(townInputBlocked()) clearTownInput();
   const userInput = keys['Space']||keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
   if(tour&&tour.active&&!tour.waiting&&!ride&&userInput){ endTour(false); }
   const cameraOwner=_cameraOwnerAtFrameStart();
@@ -13960,6 +14160,7 @@ function animate(){
   updateNpcs(dt);
   updateResidents(dt);
   updateRainGarden(dt);
+  updateTownSpeech();
   updateHearth(clock.elapsedTime);
   rtTick(dt);
   if(userInput||moving||ride||canalFerryRide||dragging||navTarget||GROWTH_REPLAY.playing||GROWTH_REPLAY.reveals.length) lastAct=_now;   // dynamic state keeps interaction responsive; shadow invalidation is independent
