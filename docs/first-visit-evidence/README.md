@@ -175,7 +175,7 @@ The matched replay has 48 requests in every run, the same cold/warm bytes as the
 
 ## Reproduction and release boundary
 
-Run the full **22-command AGENTS.md hermetic block**, plus `node --check scripts/test-first-visit-browser.mjs`. All passed; [release record](release-gates.json). Smoke reports **1,538 checks**, including **53 first-visit checks**; these are not additive totals. The final browser flow also reran the earlier panel/picker fixtures.
+The original `c17abcda` release record ran the **22-command AGENTS.md hermetic block**, plus `node --check scripts/test-first-visit-browser.mjs`. All passed; [release record](release-gates.json). Smoke reported **1,538 checks**, including **53 first-visit checks**; these are not additive totals. That browser flow also reran the earlier panel/picker fixtures. For the current complete local/CI command list, run `bash scripts/check-hermetic.sh`; see the #124 follow-up below.
 
 The browser runner uses only Node's built-in APIs and an already-running local static server plus isolated Chrome CDP browser. No package install or production URL is required:
 
@@ -191,8 +191,35 @@ BROWSER_CDP_URL=http://127.0.0.1:9222/ \
 node scripts/test-first-visit-browser.mjs
 ```
 
-Optional `FIRST_VISIT_GROUP=matrix|failures|policy|viewport` or `FIRST_VISIT_CASE=<substring>` narrows a run. `FIRST_VISIT_OUTPUT` selects an evidence directory; otherwise the runner creates a fresh temporary directory. Non-local hosts and selectors matching no cases fail closed. `FIRST_VISIT_REFERENCE=76f3b1d` with `FIRST_VISIT_GROUP=viewport` reads historical HTML via `git show` for observations only; it never checks out or alters the working tree. Shared modules/catalog must remain matched for an A/B comparison. Historical violation counts are observations, not assertions that old behavior passes the new bounds.
+Optional `FIRST_VISIT_GROUP` selects one or more comma-separated groups from `matrix,failures,policy,viewport,regressions`; `FIRST_VISIT_CASE=<substring>` narrows a run further. `FIRST_VISIT_OUTPUT` selects an evidence directory; otherwise the runner creates a fresh temporary directory. Non-local hosts and selectors matching no cases fail closed. `FIRST_VISIT_REFERENCE=76f3b1d` with only `FIRST_VISIT_GROUP=viewport` reads historical HTML via `git show` for observations only; it never checks out or alters the working tree. Shared modules/catalog must remain matched for an A/B comparison. Historical violation counts are observations, not assertions that old behavior passes the new bounds.
 
 **Still unverified:** physical iOS/Android devices, native virtual keyboards, Safari/Firefox, hardware/driver-induced context loss and production latency. The context-loss extension, shortened viewport, touch and hardware flags are emulations. Nameplates and world signage remain world-space. No Star/traffic/conversion gain is promised.
 
 The PR is ready for review, not deployment approval. Issues remain open and the board moves to **In review**, never Done. Merge and production deployment are deliberately outside this task.
+
+## #124: PR gate and release review (2026-09-09 KST)
+
+[`scripts/check-hermetic.sh`](../../scripts/check-hermetic.sh) is now the shared **24-command** local/CI list: all 22 original commands, standalone first-visit guards, and the browser runner's syntax check. Injected Node, Python, and late first-visit failures each stopped the script with their original exit code (37), before later commands ran.
+
+The **PR quality gate / Hermetic regression** job uses one ordinary Ubuntu 24.04 runner, Node 24.7.0, Python 3.12.11, a 10-minute timeout, and cancellation of superseded same-PR runs. It asserts the checked-out PR head SHA. Actions are SHA-pinned; checkout has `contents: read` and `persist-credentials: false`. No secrets, caches, model/production requests, data regeneration, write-enabled refresh workflows, commits, merges, or deployments are used. Actions and runtime setup may download public tools; the hermetic commands themselves do not use the network.
+
+The release review reproduced and fixed three boundaries without changing product scope or graphics:
+
+| Boundary | Reproduction | Fix |
+|---|---|---|
+| Native disclosure keys | Focus the closed Town/visits summary; Space was consumed and Enter could also run a world action. | Summary and its descendants retain native activation keys. |
+| Recovery panel ownership | A delayed existing tour callback opened Passport or closed chat while recovery owned focus. Continue restored stale inert/focus state. | Keep panels mutually exclusive while blocked; reconcile current and pending panel mutations on explicit Continue. |
+| Asynchronous context-loss event | During repeated loss injection, a frame could reach Three.js with an already-lost context before the DOM event updated the state flag, producing a null shader-log error. | Read the actual context state at the frame boundary; no rendering or readiness progress through a lost context. |
+
+The final local run passed **1,549 Smoke checks**, including **64 first-visit checks** (11 more than the original report), and all 24 shared commands. Local Python was 3.11.7; the separate GitHub Linux execution uses the explicitly selected 3.12.11. Platform agreement is established by that execution, not assumed from the local run.
+
+The affected browser selection passed **45 cases**: 22 injected failures, 7 policy/context cases, 12 new keyboard/deferred-panel regressions, and 4 mixed-speech/panel/governor cases. The new regressions cover KO/EN at 1440x900 and 390x844; existing selected cases retain LOW_END and reduced-motion coverage. Non-failure cases had zero captured console/runtime/resource errors; expected injected failures remain separate. The original 44-entry matrix and performance measurements above are historical evidence, not newly rerun measurements for this follow-up.
+
+With the local server and isolated Chrome already running, reproduce that selection with:
+
+```bash
+REPOLIS_TEST_URL=http://127.0.0.1:8000/ BROWSER_CDP_URL=http://127.0.0.1:9222/ \
+FIRST_VISIT_GROUP=failures,policy,viewport,regressions node scripts/test-first-visit-browser.mjs
+```
+
+[Compact regression evidence](quality-gate-review.json) records the before failures, after cases, emulation boundaries, and tested source blobs. The exact final-head GitHub check, run URL, result and elapsed time are recorded in [PR #123](https://github.com/hyeonsangjeon/Repolis/pull/123) and [issue #124](https://github.com/hyeonsangjeon/Repolis/issues/124), avoiding a self-referential evidence commit. Physical devices, native keyboards, Safari/Firefox, hardware/driver loss and production latency remain unverified. Required-check settings, merge and deployment still require separate approval.

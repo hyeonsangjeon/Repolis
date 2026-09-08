@@ -1,6 +1,6 @@
 /* Local-only browser gate. Requires an existing static server and isolated Chrome CDP endpoint.
  * REPOLIS_TEST_URL=http://127.0.0.1:8000/ BROWSER_CDP_URL=http://127.0.0.1:9222 node scripts/test-first-visit-browser.mjs
- * FIRST_VISIT_GROUP=matrix|failures|policy|viewport and FIRST_VISIT_CASE=<substring> select a smaller run.
+ * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions and FIRST_VISIT_CASE=<substring> select a smaller run.
  * FIRST_VISIT_REFERENCE=<commit SHA> replays only viewport observations against historical HTML.
  */
 import assert from 'node:assert/strict';
@@ -17,10 +17,10 @@ const endpoint=new URL(process.env.BROWSER_CDP_URL||'http://127.0.0.1:9222/');
 for(const url of [base,endpoint]) assert(['127.0.0.1','localhost','[::1]'].includes(url.hostname),'Failure injection is local-only');
 const output=process.env.FIRST_VISIT_OUTPUT||await mkdtemp(join(tmpdir(),'repolis-first-visit-'));
 await mkdir(output,{recursive:true});
-const results=[],group=process.env.FIRST_VISIT_GROUP||'',only=process.env.FIRST_VISIT_CASE||'';
+const results=[],groups=(process.env.FIRST_VISIT_GROUP||'').split(',').filter(Boolean),only=process.env.FIRST_VISIT_CASE||'';
 const reference=process.env.FIRST_VISIT_REFERENCE||'';
-assert(['','matrix','failures','policy','viewport'].includes(group),'Unknown browser gate group');
-if(reference) assert(group==='viewport'&&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and the viewport group');
+assert(groups.every(group=>['matrix','failures','policy','viewport','regressions'].includes(group)),'Unknown browser gate group');
+if(reference) assert(groups.length===1&&groups[0]==='viewport'&&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and the viewport group');
 const referenceHtml=reference?execFileSync('git',['show',`${reference}:index.html`],{encoding:'utf8',maxBuffer:5*1024*1024}):null;
 const version=await (await fetch(new URL('/json/version',endpoint))).json();
 const ownerCatalog=JSON.parse(await readFile(new URL('../repos.json',import.meta.url),'utf8'));
@@ -177,7 +177,7 @@ async function assertOneEntry(page){
   assert.equal(await page.evaluate("__events().filter(event=>event.ev==='page_load').length"),1,'one page load per document');
 }
 async function run(test,work){
-  if((group&&group!==test.group)||(only&&!test.name.includes(only))) return;
+  if((groups.length&&!groups.includes(test.group))||(only&&!test.name.includes(only))) return;
   const s=await session(test); let result;
   try{
     await s.page.send('Page.navigate',{url:new URL(test.query||'',base).href});
@@ -392,6 +392,68 @@ for(const variant of [
     await delay(200);
     await page.send('Input.dispatchKeyEvent',{type:'keyUp',key:'w',code:'KeyW',windowsVirtualKeyCode:87});
     assert.notDeepEqual(await page.evaluate('__pos()'),before.pose,'actual player movement works after readiness');
+  }
+  await assertOneEntry(page);
+});
+
+for(const mobile of [false,true]) for(const lang of ['en','ko']) for(const kind of ['disclosure-keys','context-tour-panel','context-closed-chat']) await run({
+  name:`${kind}-${lang}-${mobile?'mobile':'desktop'}`,group:'regressions',query:'?dbg=1',lang,mobile,kind
+},async(s,test)=>{
+  const {page}=s; await ready(page); await click(page,'startBtn'); await delay(900);
+  const press=async(key,code,virtualKey)=>{
+    const text=code==='Enter'?'\r':(code==='Space'?' ':'');
+    await page.send('Input.dispatchKeyEvent',{type:'keyDown',key,code,windowsVirtualKeyCode:virtualKey,text,unmodifiedText:text});
+    await page.send('Input.dispatchKeyEvent',{type:'keyUp',key,code,windowsVirtualKeyCode:virtualKey});
+  };
+  if(test.kind==='disclosure-keys'){
+    for(const [key,code,virtualKey] of [[' ','Space',32],['Enter','Enter',13]]){
+      await page.evaluate(`document.querySelector('#townTools summary').focus();
+        __browserGate.activationPrevented=null;
+        addEventListener('keydown',event=>{__browserGate.activationPrevented=event.defaultPrevented;},{once:true})`);
+      await press(key,code,virtualKey); await delay(100);
+      assert.equal(await page.evaluate('__browserGate.activationPrevented'),false,'world controls do not consume disclosure activation');
+      assert.equal(await page.evaluate("document.getElementById('townTools').open"),true,`native disclosure opens with ${code}`);
+      assert.equal(await page.evaluate("document.getElementById('chat').classList.contains('hidden')&&!document.getElementById('modal').classList.contains('show')"),true,'disclosure activation cannot also open a world interaction');
+      await press('Escape','Escape',27);
+      await page.until("!document.getElementById('townTools').open");
+      assert.equal(await page.evaluate("document.activeElement===document.querySelector('#townTools summary')"),true);
+    }
+  }else{
+    await page.evaluate('__tourStart()');
+    if(test.kind==='context-tour-panel'){
+      await page.evaluate("for(let i=0;i<10&&__tour().kind!=='passport';i++) __tourNext()");
+      assert.equal(await page.evaluate('__tour().kind'),'passport','the existing delayed Passport tour step is scheduled');
+    }else{
+      await page.evaluate("document.getElementById('taxiBtn').focus();__talk('deepwiki')");
+      await page.until("document.activeElement.id==='chatText'");
+    }
+    await page.evaluate("__browserGate.contextControl=__browserGate.renderer.getContext().getExtension('WEBGL_lose_context');__browserGate.contextControl.loseContext()");
+    await page.until('REPOLIS_ARRIVAL.blocked');
+    if(test.kind==='context-tour-panel'){
+      await page.until("!document.getElementById('passport').classList.contains('hidden')");
+      assert.equal(await page.evaluate("document.getElementById('passport').inert"),true,'a delayed panel cannot steal recovery focus');
+    }else{
+      await page.until("document.getElementById('chat').classList.contains('hidden')");
+      await page.evaluate('__tourEnd()');
+    }
+    await page.evaluate('__browserGate.contextControl.restoreContext()');
+    await page.until("!!document.getElementById('arrivalResume')");
+    await click(page,'arrivalResume'); await page.until('!REPOLIS_ARRIVAL.blocked'); await delay(120);
+    if(test.kind==='context-tour-panel'){
+      assert.equal(await page.evaluate("!document.getElementById('passport').inert&&document.getElementById('passport').contains(document.activeElement)"),true,'Continue gives the deferred panel focus and input ownership');
+      assert.equal(await page.evaluate("document.body.classList.contains('town-panel-open')"),true);
+      await press('Escape','Escape',27); await page.until("document.getElementById('passport').classList.contains('hidden')");
+      await page.evaluate('__tourEnd()');
+    }
+    assert.equal(await page.evaluate("document.body.classList.contains('town-panel-open')"),false,'a closed panel cannot retain the backdrop or block world input after Continue');
+    assert.equal(await page.evaluate("document.getElementById('chat').inert"),true);
+    await page.until("!!document.activeElement.getClientRects().length&&!document.activeElement.closest('[inert],.hidden')");
+    await page.evaluate('document.activeElement.blur()');
+    const before=await page.evaluate('__pos()');
+    await page.send('Input.dispatchKeyEvent',{type:'keyDown',key:'w',code:'KeyW',windowsVirtualKeyCode:87});
+    await delay(200);
+    await page.send('Input.dispatchKeyEvent',{type:'keyUp',key:'w',code:'KeyW',windowsVirtualKeyCode:87});
+    assert.notDeepEqual(await page.evaluate('__pos()'),before,'world movement is restored after the last panel closes');
   }
   await assertOneEntry(page);
 });

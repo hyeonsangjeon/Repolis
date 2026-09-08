@@ -1,0 +1,778 @@
+{
+  "scope": "Issue #124 follow-up to PR #123; local emulation, not physical-device QA",
+  "sourceBlobs": {
+    "index.html": "fcf7ea2f06b9b60c346e94f186e836dd0f69819a",
+    "scripts/smoke.mjs": "53fa1928f987784f22fd6d4e89b38da97055afe3",
+    "scripts/test-first-visit.mjs": "e1f815492fb4b01d5354a47df2bad8f5e5d4f008",
+    "scripts/test-first-visit-browser.mjs": "ed9f2c04e09a4aa987d62678401b7102340a5c29",
+    "repos.json": "4ba36ce4233b09971d6efb434269ce347435cd03"
+  },
+  "localHermetic": {
+    "node": "v24.7.0",
+    "python": "3.11.7",
+    "commands": 24,
+    "smokeChecks": 1549,
+    "firstVisitChecks": 64,
+    "firstVisitIncludedInSmoke": true,
+    "passed": true
+  },
+  "before": {
+    "application": "c17abcda526fcec19f3be36a3ccf65c7c3f3c386",
+    "failures": [
+      {
+        "name": "disclosure-keys-en-desktop",
+        "error": "AssertionError [ERR_ASSERTION]: world controls do not consume disclosure activation\n\ntrue !== false\n"
+      },
+      {
+        "name": "context-tour-panel-en-desktop",
+        "error": "AssertionError [ERR_ASSERTION]: Continue gives the deferred panel focus and input ownership\n\nfalse !== true\n"
+      },
+      {
+        "name": "context-closed-chat-en-desktop",
+        "error": "AssertionError [ERR_ASSERTION]: a closed panel cannot retain the backdrop or block world input after Continue\n\ntrue !== false\n"
+      }
+    ],
+    "additionalContextRace": "Injected loss intermittently reached Three.js onFirstUse with a null shader log before the asynchronous webglcontextlost event. The frame now checks the live context before rendering; hermetic guards cover event-lag, repeated loss, and restored frames."
+  },
+  "after": {
+    "browser": "Chrome/152.0.7977.76",
+    "completedAt": "2026-09-08T18:37:39.096Z",
+    "groups": {
+      "failures": 22,
+      "policy": 7,
+      "regressions": 12,
+      "viewport": 4
+    },
+    "passed": 45,
+    "cases": [
+      {
+        "name": "required-script",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "required-module",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "module-watchdog",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "optional-static",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "optional-deadline",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "catalog-malformed",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 1,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "catalog-missing",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 1,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "webgl-unavailable",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 2,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "public-403",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "portal-403",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "public-429",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "portal-429",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "public-404",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "portal-404",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "api-deadline",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "api-malformed",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "api-invalid-shape",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "api-oversized",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "explicit-retry",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 2,
+        "consoleErrors": 0,
+        "resourceErrors": 1,
+        "expectedFailure": true,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "mismatched-owner",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "missing-focus",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 2,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": "true",
+        "blocked": true
+      },
+      {
+        "name": "empty-public",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": true,
+        "ready": false,
+        "blocked": true
+      },
+      {
+        "name": "slow-public",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "low-end",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": true,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "reduced-mobile",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-pending-direct",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-town",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-chat",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-atelier-mobile",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 1,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "disclosure-keys-en-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-tour-panel-en-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-closed-chat-en-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "disclosure-keys-ko-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-tour-panel-ko-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-closed-chat-ko-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "disclosure-keys-en-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-tour-panel-en-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-closed-chat-en-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "disclosure-keys-ko-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-tour-panel-ko-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "context-closed-chat-ko-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "mixed-speech-en-desktop",
+        "group": "viewport",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "mixed-speech-ko-desktop",
+        "group": "viewport",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "mixed-speech-en-mobile",
+        "group": "viewport",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      },
+      {
+        "name": "mixed-speech-ko-mobile",
+        "group": "viewport",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "apiGets": 0,
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "expectedFailure": false,
+        "ready": "true",
+        "blocked": false
+      }
+    ]
+  },
+  "ci": "Exact final-head GitHub check URL, duration and result are recorded in PR #123 and issue #124 to avoid a self-referential evidence commit.",
+  "stillUnverified": [
+    "Physical iOS/Android devices",
+    "Native virtual keyboards",
+    "Safari/Firefox",
+    "Hardware/driver-induced context loss",
+    "Production latency"
+  ]
+}

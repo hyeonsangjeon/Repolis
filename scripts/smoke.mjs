@@ -2423,7 +2423,9 @@ ok(/_resetRepositoryAtelierInput\(\)/.test(atelierSrc) && /clearKeys\(\); stickV
   && /moveTid=null; lookTid=null/.test(atelierSrc), 'entry and exit clear keyboard and touch ownership so movement cannot stick');
 ok(/if\(e\.code==='Enter'&&e\.repeat\)\{ e\.preventDefault\(\); return; \}/.test(HTML), 'held Enter cannot repeatedly fire a room terminal');
 ok(/const isUiKeyTarget=e=>/.test(HTML) && /if\(isTyping\(\)\|\|isUiKeyTarget\(e\)\|\|townInputBlocked\(\)\) return/.test(HTML)
-  && /\^\(BUTTON\|A\|INPUT\|SELECT\|TEXTAREA\)\$/.test(HTML), 'focused native controls own Enter/Space without also firing a world action');
+  && /\^\(BUTTON\|A\|INPUT\|SELECT\|TEXTAREA\|SUMMARY\)\$/.test(HTML)
+  && /closest\?\.\('summary,\[role="button"\]'\)/.test(HTML),
+  'focused native controls and nested summary content own Enter/Space without also firing a world action');
 ok(/!repositoryAtelierActive\(\)\|\|repositoryAtelierChatActive\(\)/.test(HTML)
   && /\(!repositoryAtelierActive\(\)\|\|repositoryAtelierChatActive\(\)\)&&!chatEl\.classList\.contains\('hidden'\)/.test(HTML)
   && /if\(document\.activeElement===chatText\) chatText\.blur\(\)/.test(atelierSrc),

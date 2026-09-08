@@ -46,6 +46,62 @@ export async function runFirstVisitTests(check){
   check(['liveCount','entryCount','entryTotalCount','allCount'].every(id=>tools.includes(`id="${id}"`))
     &&/id="townTools"[\s\S]*?<summary/.test(tools),'one native disclosure retains every existing visitor counter');
 
+  let keyHandler,worldActions=0;
+  const keyboard={document:{activeElement:{tagName:'BODY'}},keys:{},MOVE:new Set(['Space']),
+    addEventListener:(_type,handler)=>{ keyHandler=handler; },townInputBlocked:()=>false,
+    undercroftActive:()=>false,undercroftTransitioning:()=>false,repositoryBlueprintOpen:()=>false,
+    repositoryAtelierActive:()=>false,repositoryAtelierTransitioning:()=>false,
+    nearWorldTree:false,nearNpc:false,modalOpen:false,doAct:()=>{ worldActions++; }};
+  runInNewContext(HTML.slice(HTML.indexOf('const isTyping='),HTML.indexOf("addEventListener('keyup',")),keyboard);
+  const summary={tagName:'SUMMARY',closest:selector=>selector.split(',').includes('summary')?summary:null};
+  const nested={tagName:'SPAN',closest:selector=>selector.split(',').includes('summary')?summary:null};
+  for(const target of [summary,nested,{tagName:'BUTTON'}]){
+    let prevented=false; keyboard.document.activeElement=target;
+    for(const code of ['Space','Enter']) keyHandler({target,code,repeat:false,preventDefault:()=>{ prevented=true; }});
+    check(!prevented&&worldActions===0&&Object.keys(keyboard.keys).length===0,
+      'native disclosure, nested disclosure content and buttons keep activation keys out of world controls');
+    worldActions=0; keyboard.keys={};
+  }
+  keyboard.document.activeElement={tagName:'BODY'};
+  keyHandler({target:keyboard.document.activeElement,code:'Enter',repeat:false});
+  check(worldActions===1,'unowned Enter still performs the existing world action');
+
+  const document={activeElement:null};
+  function panelFixture(hidden=false){
+    const classes=new Set(hidden?['hidden']:[]);
+    const element={inert:hidden,attributes:{},
+      classList:{contains:value=>classes.has(value),add:value=>classes.add(value),remove:value=>classes.delete(value),
+        toggle:(value,on)=>on?classes.add(value):classes.delete(value)},
+      setAttribute:(name,value)=>{ element.attributes[name]=value; },closest:()=>element.inert?element:null,
+      getClientRects:()=>classes.has('hidden')?[]:[{}],contains:target=>target===element||target===element.control};
+    element.control={hidden:false,closest:()=>element.inert?element:null,getClientRects:element.getClientRects,
+      focus:()=>{ document.activeElement=element.control; }};
+    element.querySelectorAll=()=>[element.control]; element.querySelector=()=>element.control;
+    return element;
+  }
+  document.body=panelFixture(); document.activeElement=document.body;
+  const menu=panelFixture(true),passport=panelFixture(true),chat=panelFixture(),trigger=panelFixture();
+  const panels=[menu,passport,chat].map(element=>({element,trigger:trigger.control,close:()=>element.classList.add('hidden')}));
+  const panelState={window:{REPOLIS_ARRIVAL:{blocked:true}},document,townPanels:panels,
+    panel:menu,townTools:{open:false},townPanelBackdrop:{hidden:false},
+    TOWN_UI:{active:panels[2],previousFocus:trigger.control},FIRST_REPO:{active:false},modalOpen:false,
+    clearTownInput:()=>{},getComputedStyle:()=>({visibility:'visible'}),requestAnimationFrame:callback=>callback()};
+  runInNewContext(ui.slice(ui.indexOf('function closeTownPanels'),ui.indexOf('const townPanelObserver'))
+    +'\nglobalThis.sync=syncTownPanels;',panelState);
+  passport.classList.remove('hidden');
+  panelState.sync([{type:'attributes',attributeName:'class',oldValue:'hidden',target:passport}]);
+  check(chat.classList.contains('hidden')&&passport.inert&&document.activeElement===document.body,
+    'a deferred panel opening preserves exclusivity without taking recovery focus');
+  panelState.window.REPOLIS_ARRIVAL.blocked=false; panelState.sync();
+  check(panelState.TOWN_UI.active===panels[1]&&!passport.inert&&passport.attributes['aria-hidden']==='false'
+    &&!panelState.townPanelBackdrop.hidden&&document.activeElement===passport.control,
+    'resume reconciles a panel opened during recovery and restores its input ownership');
+  panelState.window.REPOLIS_ARRIVAL.blocked=true; passport.classList.add('hidden'); panelState.sync();
+  document.activeElement=document.body; panelState.window.REPOLIS_ARRIVAL.blocked=false; panelState.sync();
+  check(panelState.TOWN_UI.active===null&&passport.inert&&panelState.townPanelBackdrop.hidden
+    &&!document.body.classList.contains('town-panel-open')&&document.activeElement===trigger.control,
+    'resume reconciles a panel closed during recovery without retaining a hidden focus trap');
+
   const catalogContext={parseRepoPortalInput};
   runInNewContext(block('FIRST_REPO_CORE')+'\nglobalThis.page=firstRepoPage;',catalogContext);
   const repo=(name,extra={})=>({repo:name,_owner:'octo',url:`https://github.com/octo/${name}`,desc:'Public description',lang:'JavaScript',topics:['topic'],...extra});
@@ -108,6 +164,9 @@ export async function runFirstVisitTests(check){
     &&/restoring&&!restored/.test(recovery)&&/inertBefore/.test(recovery)
     &&!/fetch\(|setInterval|localStorage|sessionStorage|track\(/.test(recovery),
     'recovery requires explicit navigation or a rendered-frame resume, retains focus ownership, and adds no request or storage');
+  check(/window\.REPOLIS_ARRIVAL\.onResume\?\.\(\)/.test(recovery)
+    &&/onResume=\(\)=>syncTownPanels\(townPanelObserver\.takeRecords\(\)\)/.test(ui),
+    'explicit resume reconciles pending panel mutations through the existing shared runtime');
   check(/FIRST_ARRIVAL\.initialized=true/.test(HTML)&&/_arrivalRendered\('atelier'\)/.test(HTML)
     &&/_arrivalRendered\('town'\)/.test(HTML)&&/if\(!_claimTownEntry\(\)\) return/.test(HTML),
     'runtime uses real completed renders and one entry claim rather than a cover-release timer');
@@ -116,6 +175,21 @@ export async function runFirstVisitTests(check){
     'focused and Portal arrivals compare exact owner/repo and keep failure behind explicit recovery');
   check(/if\(BLUEPRINT_DEEP_LINK\.ok&&blueprintDeepLinkBypass\) return;/.test(HTML),
     'Blueprint cancellation stays in the existing town without an automatic room or scan');
+
+  let lost=true,renders=0,clears=0;
+  const animation={frame:0,arrivalContextLost:false,renderer:{getContext:()=>({isContextLost:()=>lost})},
+    window:{REPOLIS_ARRIVAL:{recovering:false}},requestAnimationFrame:()=>{},clearTownInput:()=>{ clears++; },
+    clock:{getDelta:()=>0},REPOSITORY_ATELIER:null,UNDERCROFT:{renderInterior:false},
+    _beginRenderMetrics:()=>{},_endRenderMetrics:()=>{},_renderWorldTreeFrame:()=>{ renders++; }};
+  const animationStart=HTML.indexOf('function animate(){');
+  runInNewContext(HTML.slice(animationStart,HTML.indexOf('  const _now=performance.now();',animationStart))
+    +'\n}\nglobalThis.tick=animate;',animation);
+  animation.tick();
+  check(clears===1&&renders===0,'a lost WebGL context pauses the frame before its asynchronous DOM event arrives');
+  renders=0; clears=0; animation.window.REPOLIS_ARRIVAL.recovering=true; animation.tick();
+  check(clears===1&&renders===0,'a second loss cannot render a recovery frame through an already-lost context');
+  renders=0; clears=0; lost=false; animation.tick();
+  check(clears===1&&renders===1,'a live restored context can render behind the explicit Continue cover');
 
   const timers=new Map(); let timerId=0;
   const data={AbortController,Response,TextDecoder,SyntaxError,

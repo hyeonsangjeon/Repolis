@@ -2262,6 +2262,7 @@
         inertBefore=[]; loading.style.display=bootReady?'none':loadingBefore;
         if(!bootReady) watchdog=setTimeout(()=>fail('stalled'),45000);
         if(focusBefore?.isConnected&&!focusBefore.closest('[inert]')) focusBefore.focus({preventScroll:true});
+        window.REPOLIS_ARRIVAL.onResume?.();
       };
       actions.appendChild(resume);
     }
@@ -2286,7 +2287,7 @@
   }
   window.REPOLIS_ARRIVAL={
     get blocked(){ return !!reason; },get recovering(){ return reason==='context_lost'; },
-    fail,refresh:render,onBlock:null,
+    fail,refresh:render,onBlock:null,onResume:null,
     setTarget(url){ const value=new URL(url); if(value.origin==='https://github.com'&&!value.username&&!value.password&&!value.search&&!value.hash) target=value.href; },
     ready(){ if(reason) return false; bootReady=true; clearTimeout(watchdog); return true; },
     contextRestored(){ if(reason==='context_lost') restoring=true; },
@@ -9553,7 +9554,7 @@ function clearTownInput(){
   moveTid=null; lookTid=null; TOWN_UI.mousePointer=null; stickVec={x:0,y:0}; joy.style.display='none';
 }
 const isTyping=()=>{ const a=document.activeElement; return a&&(a.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)); };
-const isUiKeyTarget=e=>{ const target=e&&e.target; return !!(target&&(target.isContentEditable||/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(target.tagName)||target.closest?.('[role="button"]'))); };
+const isUiKeyTarget=e=>{ const target=e&&e.target; return !!(target&&(target.isContentEditable||/^(BUTTON|A|INPUT|SELECT|TEXTAREA|SUMMARY)$/.test(target.tagName)||target.closest?.('summary,[role="button"]'))); };
 addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)||townInputBlocked()) return;
   if(e.code==='Escape'&&undercroftActive()){ e.preventDefault(); exitUndercroft(); return; }
   if(undercroftTransitioning()){ if(MOVE.has(e.code)) e.preventDefault(); clearKeys(); return; }
@@ -12797,10 +12798,10 @@ function townFocusables(element){
     .filter(el=>!el.hidden&&!el.closest('[inert]')&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');
 }
 function syncTownPanels(records=[]){
-  if(window.REPOLIS_ARRIVAL.blocked){ for(const item of townPanels) item.element.inert=true; return; }
   const opening=records.filter(record=>record.type==='attributes'&&record.attributeName==='class'&&(record.oldValue||'').split(/\s+/).includes('hidden')
     &&!record.target.classList.contains('hidden')).map(record=>townPanels.find(p=>p.element===record.target)).filter(Boolean).pop();
   if(opening) closeTownPanels(opening.element);
+  if(window.REPOLIS_ARRIVAL.blocked){ for(const item of townPanels) item.element.inert=true; return; }
   const current=townPanels.find(item=>!item.element.classList.contains('hidden'))||null,previous=TOWN_UI.active;
   if(FIRST_REPO.active&&panel.classList.contains('hidden')) closeFirstRepoPicker(false);
   if(current!==previous){
@@ -12848,6 +12849,7 @@ window.visualViewport?.addEventListener('resize',syncTownViewport);
 window.visualViewport?.addEventListener('scroll',syncTownViewport);
 addEventListener('resize',syncTownViewport); syncTownViewport(); syncTownPanels();
 window.REPOLIS_ARRIVAL.onBlock=clearTownInput;
+window.REPOLIS_ARRIVAL.onResume=()=>syncTownPanels(townPanelObserver.takeRecords());
 /*TOWN_UI_RUNTIME:END*/
 
 /*INTENT_LENS:START*/
@@ -14248,9 +14250,10 @@ _applyVisualGovernorTier('initial');
 function animate(){
   requestAnimationFrame(animate);
   frame++;
-  if(arrivalContextLost||window.REPOLIS_ARRIVAL.recovering){
+  const contextLost=arrivalContextLost||renderer.getContext().isContextLost();
+  if(contextLost||window.REPOLIS_ARRIVAL.recovering){
     clearTownInput(); clock.getDelta();
-    if(!arrivalContextLost){
+    if(!contextLost){
       if(REPOSITORY_ATELIER?.renderInterior) _renderRepositoryAtelier();
       else if(UNDERCROFT.renderInterior) _renderUndercroft();
       else { _beginRenderMetrics(true); _renderWorldTreeFrame(); _endRenderMetrics(); }
