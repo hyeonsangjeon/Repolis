@@ -98,8 +98,22 @@
   #nearbySpeech { margin: 10px 0; padding: 10px; background: #f6ecdb; border-radius: 12px; }
   #nearbySpeech summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 12px; font-weight: 700; }
   #nearbySpeechText { font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+  #firstRepoPicker[hidden], #firstRepoPager[hidden] { display: none; }
+  #panel.firstRepoMode > :is(#intentLens,#tourReplayBtn,#questMenuBtn,#creatorMenuBtn,#repoRouteMenuBtn,#growthMenuBtn,#twinMenuBtn,#postcardMenuBtn,#nearbySpeech) { display: none; }
+  #firstRepoPicker h4 { margin: 0 0 6px; font-size: 16px; line-height: 1.35; }
+  #firstRepoPicker p, #firstRepoStatus { margin: 6px 0 10px; color: #806444; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+  #firstRepoPicker button, #firstRepoPager button { min-height: 44px; padding: 8px 12px; border: 1px solid #d8c7ad;
+    border-radius: 10px; background: #fffaf1; color: #614726; font: 700 12px/1.3 inherit; cursor: pointer; }
+  #firstRepoPager { display: flex; justify-content: space-between; gap: 12px; padding-top: 10px; }
+  #firstRepoPager button:disabled { opacity: .5; cursor: default; }
+  .firstRepoRow { display: block; width: 100%; margin: 8px 0; padding: 12px; min-height: 44px; text-align: left;
+    border: 1px solid #dfceb1; border-radius: 13px; background: #fffaf0; color: #48311e; cursor: pointer; font: inherit; }
+  .firstRepoRow strong, .firstRepoRow span { display: block; overflow-wrap: anywhere; white-space: normal; }
+  .firstRepoRow strong { font-size: 13px; line-height: 1.4; }
+  .firstRepoRow .firstRepoDescription { margin-top: 7px; font-size: 12px; line-height: 1.5; }
+  .firstRepoRow .firstRepoFacts { margin-top: 7px; font-size: 11px; line-height: 1.4; color: #7d6040; }
   :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline: 3px solid #397f86; outline-offset: 2px; }
-  body.town-panel-open :is(#prompt,#actBtn,#emoteBar,#emoteBtn) { visibility: hidden; pointer-events: none; }
+  body.town-panel-open :is(#prompt,#actBtn,#emoteBar,#emoteBtn,#taxiBtn,#worldTreeTrigger) { visibility: hidden; pointer-events: none; }
   body.town-panel-open #greetToast { z-index: 10 !important; }
   @media (prefers-reduced-motion: reduce) { #panel, #passport, #station, #chat { transition: none; } }
   #tourReplayBtn, #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
@@ -1643,8 +1657,19 @@
     <span class="pmCopy"><span class="pmTitle" data-i18n="postcardMenu">타운 엽서 만들기</span><span class="pmSub" data-i18n="postcardMenuSub">지금 보이는 마을을 PNG로</span></span>
   </button>
   <details id="nearbySpeech"><summary data-i18n="nearbySpeech">주변 대화 읽기</summary><div id="nearbySpeechText"></div></details>
+  <section id="firstRepoPicker" hidden aria-labelledby="firstRepoTitle">
+    <h4 id="firstRepoTitle" data-i18n="firstRepoTitle">이 마을의 레포 하나 고르기</h4>
+    <p data-i18n="firstRepoBasis">현재 불러온 공개 목록 순서입니다. 선택하면 자동 질문 없이 전시실에 들어가요.</p>
+    <button id="firstRepoBack" type="button" data-i18n="firstRepoBack">목적 선택으로</button>
+    <button id="firstRepoCancel" type="button" data-i18n="firstRepoCancel">마을로 돌아가기</button>
+    <p id="firstRepoStatus" role="status" aria-live="polite"></p>
+  </section>
   <input id="repoSearch" type="text" name="repository" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" data-i18n-aria="searchPh" autocomplete="off" />
   <div id="repoList"></div>
+  <div id="firstRepoPager" hidden>
+    <button id="firstRepoPrev" type="button" data-i18n="firstRepoPrev">이전 6개</button>
+    <button id="firstRepoNext" type="button" data-i18n="firstRepoNext">다음 6개</button>
+  </div>
 </div>
 
 <div id="passport" class="hidden" role="dialog" aria-modal="true" data-i18n-aria="passportTitle" inert>
@@ -2559,6 +2584,11 @@ const I18N = {
     loading:'레포 도시를 짓는 중…',
     visited:'탐험', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
     townTools:'마을 · 방문', nearbySpeech:'주변 대화 읽기', nearbySpeechEmpty:'지금 가까이에서 들리는 대화가 없어요.',
+    firstRepoTitle:'이 마을의 레포 하나 고르기', firstRepoBasis:'현재 불러온 공개 목록 순서입니다. 선택하면 자동 질문 없이 전시실에 들어가요.',
+    firstRepoBack:'목적 선택으로', firstRepoCancel:'마을로 돌아가기', firstRepoPrev:'이전 6개', firstRepoNext:'다음 6개',
+    firstRepoCount:'{total}개 중 {from}–{to} · 다른 레포는 검색해 보세요.', firstRepoPartial:'불러온 일부 공개 레포만 표시합니다.',
+    firstRepoEmpty:'이 마을에서 고를 수 있는 공개 레포가 없어요. 역에서 다른 마을로 이동할 수 있어요.',
+    firstRepoNoDesc:'등록된 설명이 없어요.', firstRepoArchived:'아카이브', firstRepoUnavailable:'현재 마을의 레포를 확인할 수 없어요. 목록에서 다시 골라 주세요.',
     visitorsWord:'방문자', entriesWord:'입장', entriesUnit:'회', peopleUnit:'명',
     entriesTodayWord:'오늘 입장', entriesTodayShort:'입장', entriesTotalWord:'누적 입장', entriesTotalShort:'누적', uniqueWord:'고유',
     passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프와 이야기를 모아요.',
@@ -2941,6 +2971,11 @@ const I18N = {
     loading:'Building Repolis…',
     visited:'Explored', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
     townTools:'Town · visits', nearbySpeech:'Read nearby dialogue', nearbySpeechEmpty:'No nearby dialogue right now.',
+    firstRepoTitle:'Choose a repository in this town', firstRepoBasis:'Current loaded public-catalog order. Select a repository to enter its Atelier without an automatic question.',
+    firstRepoBack:'Back to purposes', firstRepoCancel:'Back to town', firstRepoPrev:'Previous 6', firstRepoNext:'Next 6',
+    firstRepoCount:'{from}–{to} of {total} · Search for another repository.', firstRepoPartial:'Only the loaded portion of the public catalog is shown.',
+    firstRepoEmpty:'No public repository is available to select in this town. Use Station to visit another town.',
+    firstRepoNoDesc:'No description provided.', firstRepoArchived:'Archived', firstRepoUnavailable:'This repository could not be confirmed in the current town. Choose again from the list.',
     visitorsWord:'visitors', entriesWord:'entries', entriesUnit:'', peopleUnit:'',
     entriesTodayWord:'entries today', entriesTodayShort:'entries', entriesTotalWord:'total entries', entriesTotalShort:'total', uniqueWord:'unique',
     passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps and stories.',
@@ -9939,6 +9974,71 @@ function onCourseProgress(){ if(!REPOS.length) return; if(!passportEl.classList.
 document.getElementById('passBtn').onclick=()=>{ const hidden=passportEl.classList.toggle('hidden'); if(!hidden){ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); renderPassport(); } };
 document.getElementById('menuBtn').addEventListener('click',()=> passportEl.classList.add('hidden'));
 const repoList=document.getElementById('repoList');
+/*FIRST_REPO_CORE:START*/
+const FIRST_REPO_PAGE_SIZE=6;
+function firstRepoPage(catalog,owner,query,page,resolveTarget){
+  const seen=new Set(),q=String(query||'').trim().toLowerCase();
+  const rows=[];
+  for(const repo of catalog){
+    if(!repo||repo._isLibrary||repo.private===true) continue;
+    const target=resolveTarget(repo),url=typeof repo.url==='string'?parseRepoPortalInput(repo.url):null;
+    if(!target||target.owner.toLowerCase()!==owner.toLowerCase()||!url?.ok||url.kind!=='repo'||url.slug.toLowerCase()!==target.slug.toLowerCase()) continue;
+    const key=target.slug.toLowerCase(); if(seen.has(key)) continue; seen.add(key);
+    const description=typeof repo.desc==='string'?repo.desc.trim():'';
+    const facts=[repo.lang&&repo.lang!=='—'?repo.lang:'',...(Array.isArray(repo.topics)?repo.topics.filter(x=>typeof x==='string'):[])].filter(Boolean);
+    if(q&&![target.slug,description,...facts].join(' ').toLowerCase().includes(q)) continue;
+    rows.push({repo,target,description,facts});
+  }
+  const index=Math.min(Math.max(0,Math.trunc(page)||0),Math.max(0,Math.ceil(rows.length/FIRST_REPO_PAGE_SIZE)-1));
+  return {rows:rows.slice(index*FIRST_REPO_PAGE_SIZE,(index+1)*FIRST_REPO_PAGE_SIZE),total:rows.length,page:index};
+}
+/*FIRST_REPO_CORE:END*/
+/*FIRST_REPO_RUNTIME:START*/
+const FIRST_REPO={active:false,page:0,previousQuery:'',previousScroll:0};
+const firstRepoPicker=document.getElementById('firstRepoPicker'),firstRepoPager=document.getElementById('firstRepoPager'),
+  firstRepoStatus=document.getElementById('firstRepoStatus'),repoSearch=document.getElementById('repoSearch');
+function renderFirstRepoList(query){
+  const result=firstRepoPage(REPOS,currentUser,query,FIRST_REPO.page,_repositoryPortalTarget);
+  FIRST_REPO.page=result.page; repoList.replaceChildren();
+  firstRepoStatus.textContent=result.total
+    ?tf('firstRepoCount',{total:result.total,from:result.page*FIRST_REPO_PAGE_SIZE+1,to:Math.min(result.total,(result.page+1)*FIRST_REPO_PAGE_SIZE)})
+    :(query.trim()?t('noResults'):t('firstRepoEmpty'));
+  if(PUBLIC_TOWN_COVERAGE.partial) firstRepoStatus.textContent+=' '+t('firstRepoPartial');
+  for(const item of result.rows){
+    const button=document.createElement('button'); button.type='button'; button.className='firstRepoRow'; button.dataset.repo=item.target.slug;
+    const name=document.createElement('strong'),description=document.createElement('span'),facts=document.createElement('span');
+    name.textContent=item.target.slug; description.className='firstRepoDescription'; description.textContent=item.description||t('firstRepoNoDesc');
+    facts.className='firstRepoFacts'; facts.textContent=[...item.facts,item.repo.archived?t('firstRepoArchived'):''].filter(Boolean).join(' · ');
+    button.append(name,description,facts);
+    button.addEventListener('click',()=>{
+      const current=REPOS.includes(item.repo)&&firstRepoPage([item.repo],currentUser,'',0,_repositoryPortalTarget).rows.find(row=>row.target.slug.toLowerCase()===item.target.slug.toLowerCase());
+      if(!current){ firstRepoStatus.textContent=t('firstRepoUnavailable'); return; }
+      if(enterRepositoryAtelier(current.repo,{autoChat:false})){ closeIntentLensWayfinding(); closeFirstRepoPicker(false); }
+      else firstRepoStatus.textContent=t('atelierChatWait');
+    });
+    repoList.appendChild(button);
+  }
+  firstRepoPager.hidden=result.total<=FIRST_REPO_PAGE_SIZE;
+  document.getElementById('firstRepoPrev').disabled=result.page===0;
+  document.getElementById('firstRepoNext').disabled=(result.page+1)*FIRST_REPO_PAGE_SIZE>=result.total;
+}
+function openFirstRepoPicker(){
+  if(!FIRST_REPO.active){ FIRST_REPO.previousQuery=repoSearch.value; FIRST_REPO.previousScroll=panel.scrollTop; }
+  FIRST_REPO.active=true; FIRST_REPO.page=0; panel.classList.add('firstRepoMode'); firstRepoPicker.hidden=false;
+  repoSearch.value=''; renderList(); panel.scrollTop=0; repoSearch.focus({preventScroll:true});
+}
+function closeFirstRepoPicker(focus=true){
+  if(!FIRST_REPO.active) return;
+  FIRST_REPO.active=false; panel.classList.remove('firstRepoMode'); firstRepoPicker.hidden=true; firstRepoPager.hidden=true;
+  repoSearch.value=FIRST_REPO.previousQuery; renderList(repoSearch.value); panel.scrollTop=FIRST_REPO.previousScroll;
+  if(focus&&!panel.classList.contains('hidden')) panel.querySelector('[data-intent="understand"]').focus({preventScroll:true});
+}
+document.getElementById('firstRepoBack').onclick=()=>closeFirstRepoPicker();
+document.getElementById('firstRepoCancel').onclick=()=>{ closeIntentLensWayfinding(); closeFirstRepoPicker(false); };
+for(const [id,offset] of [['firstRepoPrev',-1],['firstRepoNext',1]]) document.getElementById(id).onclick=()=>{
+  FIRST_REPO.page+=offset; renderList(repoSearch.value); panel.scrollTop=0; repoSearch.focus({preventScroll:true});
+};
+/*FIRST_REPO_RUNTIME:END*/
 function buildRow(repo){
   const row=document.createElement('div'); row.className='repoRow'; repo._row=row;
   if(repo._visited) row.classList.add('visited');
@@ -9951,6 +10051,7 @@ function buildRow(repo){
   return row;
 }
 function renderList(q=''){
+  if(FIRST_REPO.active){ renderFirstRepoList(q); return; }
   q=q.trim().toLowerCase();
   const hit=repo=> !q || (repo.repo+' '+repo.label+' '+(repo.lang||'')+' '+(repo.desc||'')+' '+((repo.topics||[]).join(' '))).toLowerCase().includes(q);
   const down=REPOS.filter(r=>r._downtown && hit(r));
@@ -9965,7 +10066,7 @@ function renderList(q=''){
 }
 renderList();
 restorePassport();
-document.getElementById('repoSearch').addEventListener('input',e=>renderList(e.target.value));
+document.getElementById('repoSearch').addEventListener('input',e=>{ FIRST_REPO.page=0; renderList(e.target.value); });
 const langBtn=document.getElementById('langBtn');
 function setLang(l){ if(l!==LANG){ LANG=l; localStorage.setItem('repolisLang',LANG); }
   applyLang();
@@ -12513,6 +12614,7 @@ function syncTownPanels(records=[]){
     &&!record.target.classList.contains('hidden')).map(record=>townPanels.find(p=>p.element===record.target)).filter(Boolean).pop();
   if(opening) closeTownPanels(opening.element);
   const current=townPanels.find(item=>!item.element.classList.contains('hidden'))||null,previous=TOWN_UI.active;
+  if(FIRST_REPO.active&&panel.classList.contains('hidden')) closeFirstRepoPicker(false);
   if(current!==previous){
     clearTownInput(); TOWN_UI.active=current;
     if(current){
@@ -12569,7 +12671,7 @@ function closeIntentLensWayfinding(){ panel.classList.add('hidden'); menuBtn.set
 function dispatchIntentLens(intent){
   if(intent==='understand'){
     const repo=intentLensTargetRepo();
-    if(!repo){ openStationModal(); return true; }
+    if(!repo){ openFirstRepoPicker(); return true; }
     const entered=enterRepositoryAtelier(repo,{autoChat:false}); if(entered) closeIntentLensWayfinding(); return entered;
   }
   if(intent==='explore'){ closeIntentLensWayfinding(); openMap(); return true; }

@@ -54,3 +54,24 @@ The compact top row keeps Station, Map and Wayfinding direct. “Town / visits�
 Local functional checks passed for Wayfinding, Map, Station, chat and Passport: one panel at a time, inert hidden controls, Tab containment, Escape/close focus return, held-key clearing, no player-coordinate movement behind panels, and no console exceptions. A 430 px shortened viewport kept chat/input bottoms at 418/408 px on desktop and touch-emulated mobile ([desktop](viewport-chat-desktop.jpg), [mobile](viewport-chat-mobile.jpg)). This is a virtual-keyboard sizing fixture, **not an iOS/Android keyboard test**.
 
 The existing smoke harness includes `scripts/test-first-visit.mjs` for wrapping, bounds, retention, priority, resource boundaries, counter ownership, inert/focus and cancellation guards. Final combined entry, failure, LOW_END/reduced-motion and full AGENTS gates are recorded below after #121 and #122.
+
+## #121: a current-catalog path, not a new onboarding flow
+
+“Understand a repository” now switches the existing Wayfinding search/list to a picker. It starts with six entries in **existing `REPOS` order**, with six-entry paging and in-memory search for the rest. Station remains a separate top-row action. Each native button contains the exact `owner/repo`, existing description or explicit missing-description text, language/topics and an archive marker. There is no new score, recommendation claim, inferred content, or Star prompt.
+
+One Intent Lens choice plus one row selection enters `enterRepositoryAtelier(repo,{autoChat:false})`. Selection revalidates object membership, exact owner and GitHub URL against the current public catalog. A valid explicit Portal target still bypasses the picker; mixed `?repo=fixture-town/...&user=wrong-town` retained the exact repository owner. Route/Blueprint URL handling is unchanged by this issue and is included in the combined arrival matrix.
+
+| Local scenario | Input / result | Evidence |
+|---|---|---|
+| Canonical EN desktop | Intent + keyboard Enter -> `hyeonsangjeon/youtube-dl-nas` | [Picker](picker-canonical-en.jpg) |
+| Canonical KO 390 x 844 | Intent + emulated touch -> same exact repo | [Picker](picker-canonical-ko-mobile.jpg) |
+| Foreign EN 390 x 844 | Long name, absent description, archive marker; exact fixture owner | [Picker](picker-foreign-en-mobile.jpg) |
+| Partial foreign KO desktop | 100-record API fixture; explicitly limited to loaded public catalog | [Picker](picker-partial-ko.jpg) |
+| Empty catalog EN | Explicit empty state; no guessed destination | [Picker](picker-empty-en.jpg) |
+| Single Portal KO, conflicting user | Reentry remained in the explicit Portal repo; one existing room | Target, chat and resource assertions |
+
+Public API responses in these scenarios were **local intercepted fixtures**, not live GitHub requests. Picker opening, typed no-match search, paging and selection generated **zero network requests** after the loaded scene. Opening/search produced zero storage calls. The unchanged canonical Atelier path read its existing `taxiGroundedUrl` override once; portable Atelier did not. No picker storage access or writes were added.
+
+Picker opening preserved renderer geometry/texture counts. Each entered Atelier had the existing one room, 25 geometries, 16 materials, three canvas atlases and five exhibit batches; scoped chat reported zero started calls, zero history turns and the unchanged five-call limit. Blueprint reported zero requests until explicitly scanned. Local configured AI/realtime/analytics endpoints remained empty.
+
+Cancel preserved player coordinates and camera controls; camera position differed by less than 0.001 world units while its existing spring finished settling. Atelier exit restored the original player pose. Desktop keyboard, 390 x 844 touch emulation, text overflow, search/no-match, next-page and cancel/return checks had no captured application errors. Physical-device touch and keyboard behavior remain a separate, unverified boundary.

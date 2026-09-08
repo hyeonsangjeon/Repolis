@@ -961,10 +961,10 @@ ok((HTML.match(/class="intentLensChoice" type="button" data-intent="/g)||[]).len
   ['intentContribute','기여할 일 찾기','Find something to contribute']
 ].forEach(([key,ko,en])=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2&&HTML.includes(ko)&&HTML.includes(en),
   `Intent Lens key ${key} is bilingual and concise`));
-ok(/intent==='understand'[\s\S]*?intentLensTargetRepo\(\)[\s\S]*?openStationModal\(\)[\s\S]*?enterRepositoryAtelier\(repo,\{autoChat:false\}\)/.test(intentLensSrc)
+ok(/intent==='understand'[\s\S]*?intentLensTargetRepo\(\)[\s\S]*?openFirstRepoPicker\(\)[\s\S]*?enterRepositoryAtelier\(repo,\{autoChat:false\}\)/.test(intentLensSrc)
   &&/intent==='explore'[\s\S]*?openMap\(\)/.test(intentLensSrc)
   &&/intent==='contribute'[\s\S]*?openContributionQuestBoard\('menu'\)/.test(intentLensSrc),
-  'each intent dispatches only to the existing Portal/Atelier, World Map, or Quests flow');
+  'each intent reuses current-catalog/Portal Atelier, World Map, or Quests without an automatic recommendation');
 ok(!/fetch\(|loadContributionQuests|_sendRepositoryAtelierChat|localStorage|sessionStorage|indexedDB|new THREE|setTimeout|setInterval|requestAnimationFrame|track\(/.test(intentLensSrc),
   'Intent Lens itself adds no request, model call, resource, timer, storage, profiling, or analytics work');
 ok(/querySelectorAll\('#intentLens \[data-intent\]'\)[\s\S]*?addEventListener\('click'/.test(intentLensSrc)

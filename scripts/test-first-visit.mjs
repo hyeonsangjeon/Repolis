@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
+import { parseRepoPortalInput } from '../assets/repo-portal.js';
 
 const HTML=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const block=name=>(HTML.match(new RegExp(`/\\*${name}:START\\*/([\\s\\S]*?)/\\*${name}:END\\*/`))||[])[1];
@@ -44,6 +45,32 @@ export function runFirstVisitTests(check){
   const tools=HTML.slice(HTML.indexOf('<details id="townTools"'),HTML.indexOf('<div class="badge" id="navBadge"'));
   check(['liveCount','entryCount','entryTotalCount','allCount'].every(id=>tools.includes(`id="${id}"`))
     &&/id="townTools"[\s\S]*?<summary/.test(tools),'one native disclosure retains every existing visitor counter');
+
+  const catalogContext={parseRepoPortalInput};
+  runInNewContext(block('FIRST_REPO_CORE')+'\nglobalThis.page=firstRepoPage;',catalogContext);
+  const repo=(name,extra={})=>({repo:name,_owner:'octo',url:`https://github.com/octo/${name}`,desc:'Public description',lang:'JavaScript',topics:['topic'],...extra});
+  const resolveTarget=r=>{ const target=parseRepoPortalInput(`${r._owner||'octo'}/${r.repo}`); return target.ok&&target.kind==='repo'?target:null; };
+  const page=(catalog,q='',index=0)=>catalogContext.page(catalog,'octo',q,index,resolveTarget);
+  const catalog=Array.from({length:15},(_,i)=>repo('repo-'+i));
+  check(page(catalog).rows.length===6&&page(catalog).rows.map(row=>row.repo.repo).join(',')===catalog.slice(0,6).map(row=>row.repo).join(','),
+    'first picker page has six entries in current catalog order, not a new ranking');
+  check(page(catalog,'',2).rows.length===3&&page(catalog,'',99).page===2&&page(catalog,'repo-14').rows[0].target.slug==='octo/repo-14',
+    'search and bounded paging reach the rest of the already loaded catalog');
+  const special=[repo('same'),repo('same',{_owner:'other',url:'https://github.com/other/same'}),repo('wrong',{url:'https://github.com/other/wrong'}),
+    repo('private',{private:true}),repo('landmark',{_isLibrary:true}),repo('same')];
+  check(page(special).rows.length===1&&page(special).rows[0].target.slug==='octo/same',
+    'same names, mismatched owner URLs, private records, landmarks and duplicates cannot misroute selection');
+  const absent=page([repo('long'.repeat(25),{desc:null,topics:null,lang:'—',archived:true})]).rows[0];
+  check(absent.description===''&&absent.facts.length===0&&absent.repo.archived&&absent.target.repo.length===100,
+    'missing facts, archived state and long exact names are retained without fabricated claims');
+  check(page([]).total===0&&page(catalog,'no-match').rows.length===0,'empty and no-match catalogs stay explicit');
+  const picker=block('FIRST_REPO_RUNTIME'),intent=block('INTENT_LENS');
+  check(/enterRepositoryAtelier\(current\.repo,\{autoChat:false\}\)/.test(picker)
+    &&/REPOS\.includes\(item\.repo\)/.test(picker)&&/button\.type='button'/.test(picker),
+    'a native picker selection revalidates catalog membership and uses the existing no-auto-chat Atelier');
+  check(!/fetch\(|localStorage|sessionStorage|new THREE|track\(|StarNudge|loadContributionQuests/.test(picker)
+    &&intent.indexOf('intentLensTargetRepo()')<intent.indexOf('openFirstRepoPicker()'),
+    'picker adds no network, storage, scene resources or Star requests and explicit Portal targets keep precedence');
 }
 
 if(process.argv[1]===fileURLToPath(import.meta.url)){
