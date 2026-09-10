@@ -2298,7 +2298,6 @@
     if(event.target instanceof HTMLScriptElement) fail('script');
     else if(event instanceof ErrorEvent) fail('initialization');
   },true);
-  addEventListener('unhandledrejection',()=>{ if(!bootReady&&!reason) fail('initialization'); });
   document.addEventListener('keydown',event=>{
     if(!reason) return;
     event.stopImmediatePropagation();
@@ -2356,6 +2355,9 @@ import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, crea
 import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from './assets/issue-code-scout.js?v=issue-code-scout-v1';
 import { PROCEDURAL_SURFACE_FAMILIES, PROCEDURAL_SURFACE_LIMITS, PROCEDURAL_SURFACE_VERSION, createSurfaceRng, disposeBoundedSurfaceCache, getOrCreateBoundedSurface, normalizeSurfaceFamily, surfacePixelHash, surfaceTextureKey, surfaceUvTransform, surfaceVariant, surfaceWallRepeat } from './assets/procedural-surfaces.js?v=procedural-surface-v2-3';
 
+// Own rejected startup awaits without treating unrelated host promises as town failures.
+/*TOWN_INITIALIZATION:START*/
+try {
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
    Public mode (?user=someone) builds a town from any GitHub user's PUBLIC
@@ -15388,6 +15390,11 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     return chrome; };
 }
 _finalizeStaticInstances();
+}catch(error){
+  window.REPOLIS_ARRIVAL.fail('initialization');
+  throw error;
+}
+/*TOWN_INITIALIZATION:END*/
 </script>
 </body>
 </html>

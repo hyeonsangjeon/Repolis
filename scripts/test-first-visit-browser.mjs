@@ -22,6 +22,7 @@ const reference=process.env.FIRST_VISIT_REFERENCE||'';
 assert(groups.every(group=>['matrix','failures','policy','viewport','regressions'].includes(group)),'Unknown browser gate group');
 if(reference) assert(groups.length===1&&groups[0]==='viewport'&&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and the viewport group');
 const referenceHtml=reference?execFileSync('git',['show',`${reference}:index.html`],{encoding:'utf8',maxBuffer:5*1024*1024}):null;
+const currentHtml=await readFile(new URL('../index.html',import.meta.url),'utf8');
 const version=await (await fetch(new URL('/json/version',endpoint))).json();
 const ownerCatalog=JSON.parse(await readFile(new URL('../repos.json',import.meta.url),'utf8'));
 const ownerRepo=ownerCatalog.find(repo=>repo.repo==='Repolis')||ownerCatalog[0];
@@ -93,7 +94,7 @@ async function session(test){
   const page=new CDP(tabs.find(item=>item.id===tab.targetId).webSocketDebuggerUrl);
   const errors=[],networkErrors=[],requests=[],requestInfo=[],interceptionErrors=[]; let failedRequests=0;
   await page.send('Page.enable'); await page.send('Runtime.enable'); await page.send('Network.enable'); await page.send('Log.enable');
-  page.on('Runtime.exceptionThrown',event=>errors.push(event.exceptionDetails.exception?.description||event.exceptionDetails.text));
+  page.on('Runtime.exceptionThrown',event=>errors.push(event.exceptionDetails.exception?.description||event.exceptionDetails.exception?.value||event.exceptionDetails.text));
   page.on('Runtime.consoleAPICalled',event=>{ if(event.type==='error') errors.push(event.args.map(arg=>arg.description||arg.value).join(' ')); });
   page.on('Log.entryAdded',event=>{ if(event.entry.level==='error') networkErrors.push({source:event.entry.source,text:event.entry.text}); });
   page.on('Network.requestWillBeSent',event=>{ requests.push(event.request.url); requestInfo.push({url:event.request.url,method:event.request.method}); });
@@ -104,6 +105,12 @@ async function session(test){
   const intercept=async event=>{
     const url=new URL(event.request.url),fail=test.failure;
     if(referenceHtml&&url.origin===base.origin&&url.pathname===base.pathname) return fulfill(event,200,referenceHtml,'text/html');
+    if(test.bootstrapReject&&url.origin===base.origin&&url.pathname===base.pathname){
+      const anchor="const OWNER = window.REPOLIS_CONFIG?.town?.owner || 'hyeonsangjeon';";
+      assert(currentHtml.includes(anchor),'owned bootstrap failure fixture has an exact module anchor');
+      const rejection=test.bootstrapReject==='string'?"'Local test: owned bootstrap rejection'":"new Error('Local test: owned bootstrap rejection')";
+      return fulfill(event,200,currentHtml.replace(anchor,`await Promise.reject(${rejection});\n${anchor}`),'text/html');
+    }
     if(test.failPath&&url.pathname.endsWith(test.failPath)&&(!test.retry||failedRequests===0)){
       failedRequests++;
       if(fail==='hung-module'||fail==='hung-static') return;
@@ -130,7 +137,7 @@ async function session(test){
   };
   page.on('Fetch.requestPaused',event=>{ intercept(event).catch(error=>interceptionErrors.push(String(error))); });
   await page.send('Fetch.enable',{patterns:[{urlPattern:'*api.github.com/*'},...(test.failPath?[{urlPattern:'*'+test.failPath+'*'}]:[]),
-    ...(referenceHtml?[{urlPattern:base.origin+base.pathname+'*',resourceType:'Document'}]:[])]});
+    ...(referenceHtml||test.bootstrapReject?[{urlPattern:base.origin+base.pathname+'*',resourceType:'Document'}]:[])]});
   await page.send('Network.setBlockedURLs',{urls:['*workers.dev*']});
   await page.send('Emulation.setDeviceMetricsOverride',{width:test.mobile?390:1440,height:test.mobile?844:900,deviceScaleFactor:1,mobile:!!test.mobile});
   await page.send('Emulation.setTouchEmulationEnabled',{enabled:!!test.mobile});
@@ -139,6 +146,14 @@ async function session(test){
   let source=probe+`\nlocalStorage.setItem('repolisLang','${stored}');`;
   if(test.lowEnd) source+="\nObject.defineProperty(navigator,'hardwareConcurrency',{get:()=>4});Object.defineProperty(navigator,'deviceMemory',{get:()=>4});";
   if(test.failure==='webgl') source+=`\nconst nativeContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/i.test(type)?null:nativeContext.call(this,type,...args);};`;
+  if(test.hostRejection) source+=`\n{
+    const observer=new MutationObserver(()=>{
+      if(!window.REPOLIS_ARRIVAL) return;
+      observer.disconnect(); window.__browserGate.hostRejectionInjected=true;
+      Promise.reject('Local test: unrelated host permission probe');
+    });
+    observer.observe(document,{childList:true,subtree:true});
+  }`;
   await page.send('Page.addScriptToEvaluateOnNewDocument',{source});
   return {page,errors,networkErrors,requests,requestInfo,interceptionErrors,
     async close(){ page.close(); await browser.send('Target.disposeBrowserContext',context); browser.close(); }};
@@ -187,7 +202,13 @@ async function run(test,work){
     assert.equal(s.requests.filter(url=>url.includes('workers.dev')).length,0,'no upstream service traffic');
     if(state.services) assert(Object.values(state.services).every(value=>!value),'localhost optional services stay closed');
     assert.equal(s.interceptionErrors.length,0,JSON.stringify(s.interceptionErrors));
-    if(!test.failure){ assert.deepEqual(s.errors,[]); assert.deepEqual(s.networkErrors,[]); }
+    if(!test.failure){
+      if(test.hostRejection){
+        assert.equal(s.errors.length,1,'exactly the injected host rejection remains visible');
+        assert(s.errors[0].includes('Local test: unrelated host permission probe'),'no application exception is hidden by the host fixture');
+      }else assert.deepEqual(s.errors,[]);
+      assert.deepEqual(s.networkErrors,[]);
+    }
     result={name:test.name,group:test.group,ok:true,emulation:{mobile:!!test.mobile,lowEnd:!!test.lowEnd,reduced:!!test.reduced},
       state,requests:s.requests.length,apiRequests:apiRequests(s),preflights:s.requestInfo.filter(item=>item.method==='OPTIONS').length,
       consoleErrors:s.errors,resourceErrors:s.networkErrors,evidence};
@@ -260,6 +281,8 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']){
 }
 
 const failures=[
+  {name:'owned-bootstrap-error',bootstrapReject:'error',failure:'bootstrap',query:'?view=plaza&lang=en',direct:true},
+  {name:'owned-bootstrap-string',bootstrapReject:'string',failure:'bootstrap',query:'?view=plaza&lang=ko',lang:'ko',direct:true,mobile:true},
   {name:'required-script',failure:'script',failPath:'/scholars.js',query:'?view=plaza&lang=en',direct:true},
   {name:'required-module',failure:'module',failPath:'/assets/repo-route.js',query:'?view=plaza&lang=ko',direct:true,lang:'ko',mobile:true},
   {name:'module-watchdog',failure:'hung-module',failPath:'/assets/repo-route.js',query:'?launch=1'},
@@ -316,6 +339,7 @@ for(const failure of failures) await run({lang:'en',...failure,name:failure.name
   }
   if(test.enteredFailure) assert.equal(await page.evaluate("document.getElementById('arrivalGithub').href"),'https://github.com/fixture-town/missing');
   if(test.name==='module-watchdog') assert.equal(state.reason,'stalled');
+  if(test.bootstrapReject) assert.equal(state.reason,'initialization','owned rejected awaits retain explicit startup recovery');
   if(test.name==='api-deadline') assert.equal(state.reason,'timeout');
   if(test.name==='api-oversized') assert.equal(state.reason,'oversized');
   await delay(250);
@@ -333,6 +357,17 @@ for(const failure of failures) await run({lang:'en',...failure,name:failure.name
     await click(page,'arrivalHome'); await page.until("location.search.startsWith('?view=plaza')");
     await ready(page); await assertOneEntry(page);
   }
+});
+
+for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
+  name:`host-rejection-${lang}-${mobile?'mobile':'desktop'}`,group:'regressions',
+  query:`?view=plaza&lang=${lang}`,lang,mobile,direct:true,hostRejection:true
+},async(s)=>{
+  await ready(s.page);
+  assert.equal(await s.page.evaluate('__browserGate.hostRejectionInjected'),true,'the host rejection ran before readiness');
+  assert.equal(await s.page.evaluate('REPOLIS_ARRIVAL.blocked'),false,'an unrelated host promise cannot poison a rendered plaza');
+  assert.equal(await s.page.evaluate("document.getElementById('intro').classList.contains('hidden')"),true);
+  await assertOneEntry(s.page);
 });
 
 for(const variant of [

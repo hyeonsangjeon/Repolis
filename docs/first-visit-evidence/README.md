@@ -171,7 +171,7 @@ This is a **historical-code replay**, not a claim that extra instrumentation exi
 
 The matched replay has 48 requests in every run, the same cold/warm bytes as the primary comparison, 59 programs, 16.7 ms median rAF and the same 3,230-3,234 geometry range on both sides. All actual-player samples changed position and had no captured application/console errors. This timestamps an emulated W action, not human reaction time or physical-device input latency. With only three pairs, small timing differences are descriptive, not a causal latency or conversion claim.
 
-[Raw measurements](arrival-measurements.json) preserve all four retained series, each sample, first-draw timing, source revisions, transfer sizes and resources. The original baseline captured window errors/rejections; subsequent runs additionally captured console errors. Neither series is a production measurement. The deployed revision remains the baseline until a separately approved merge/deployment.
+[Raw measurements](arrival-measurements.json) preserve all four retained series, each sample, first-draw timing, source revisions, transfer sizes and resources. The original baseline captured window errors/rejections; subsequent runs additionally captured console errors. Neither series is a production measurement. These are historical revisions: daily generated-data refreshes can advance main and Pages independently. This PR's runtime changes have not been merged or deployed.
 
 ## Reproduction and release boundary
 
@@ -223,3 +223,45 @@ FIRST_VISIT_GROUP=failures,policy,viewport,regressions node scripts/test-first-v
 ```
 
 [Compact regression evidence](quality-gate-review.json) records the before failures, after cases, emulation boundaries, and tested source blobs. The exact final-head GitHub check, run URL, result and elapsed time are recorded in [PR #123](https://github.com/hyeonsangjeon/Repolis/pull/123) and [issue #124](https://github.com/hyeonsangjeon/Repolis/issues/124), avoiding a self-referential evidence commit. Physical devices, native keyboards, Safari/Firefox, hardware/driver loss and production latency remain unverified. Required-check settings, merge and deployment still require separate approval.
+
+## Review closeout: startup ownership and transport evidence (2026-09-11 KST)
+
+The local GHCP preview failure was reproducible on a fresh English plaza navigation, not just an old failure-injection screen. Its embedded WebKit host rejected a notification-permission probe with `Command plugin:notification|is_permission_granted not allowed by ACL` before town readiness. The global preboot `unhandledrejection` listener incorrectly turned that unrelated host rejection into the town's fatal initialization state.
+
+The fix removes that indiscriminate promise listener and explicitly catches the town module's own initialization, after its static imports. Owned awaited failures still show recovery and rethrow their original Error or non-Error reason. Required-script/ErrorEvent recovery, the 45-second watchdog, bounded data loading, WebGL recovery and real-render readiness remain intact. This distinction matters: embedded WebKit reports failed top-level module awaits as promise rejections too, so simply removing the listener would lose genuine startup recovery.
+
+The original synthetic host rejection failed before the change (`blocked:true`, `initialization`); it now remains visible in diagnostics while the town becomes ready. A diagnostic-only WebKit capture also retained the actual host ACL rejection while readiness succeeded. No error was prevented or hidden, and no host ACL, notification permission, Safari automation setting or CSP allowlist was changed. Fresh normal KO/EN preview entries and the current-repository Atelier handoff were checked separately from that diagnostic capture.
+
+### Executed gates
+
+All **24** shared hermetic commands passed: **1,554 Smoke checks**, including **69 first-visit checks**, not additive totals. The existing local browser runner passed **95 cases** in installed Chrome **152.0.7977.84**: 44 entry, 24 failure, 7 policy/context, 16 regression and 4 mixed-speech cases. The six new cases cover four KO/EN desktop/mobile host rejections and two owned bootstrap rejection types.
+
+The **67 non-fault cases** had zero captured runtime exceptions, console-API errors and browser Log errors. Injected faults remain separate; each host fixture requires exactly its one injected diagnostic rather than permitting arbitrary errors. The runner does not collect raw CDP `Network.loadingFailed`, so this is not a transport-level zero-failure claim. Local public API fixtures, empty AI/realtime/analytics endpoints and blocked Worker URLs remain in force.
+
+[Compact closeout evidence](release-closeout.json) retains the tested source blobs, before failure, all 95 outcomes, mixed-speech observations and the request-lifecycle records below. The normal strict plaza still recorded 48 requests and 59 programs. This startup-boundary fix adds no request or scene allocation. Earlier cold/warm, frame and transfer comparisons remain dated historical measurements; they were not relabeled as new measurements for this follow-up. Exact final-head CI links belong in the PR and #124, not in a self-referential commit.
+
+### Completed response versus application cancellation
+
+The preceding compatibility run remains **16/16 UI outcomes, 14/16 strict network-gate outcomes**. Its two failing scenarios were English desktop plaza and Korean desktop slow public loading; full bodies had been consumed when the browser reported `ERR_ABORTED`. That raw result has not been changed to green.
+
+A bounded follow-up used the exact existing `ARRIVAL_DATA` loader outside the 3D app, the same local 57,909-byte catalog over HTTP/1.1, four samples per reading method, and explicit garbage collection after each sample. Sixteen successful consumptions were compared with one explicit pre-response abort.
+
+| Method | Samples | Successful consumers | Raw failed transport events | Application aborts |
+|---|---:|---:|---:|---:|
+| Native JSON | 4 | 4 | 0 | 0 |
+| Native text + JSON parse | 4 | 4 | 0 | 0 |
+| Existing bounded stream loader | 4 | 4 | 1 | 0 |
+| Same loader retaining the native Response | 4 | 4 | 0 | 0 |
+| Explicit pre-response abort control | 1 | 0 | 1 | 1 |
+
+For request `3096.13`, HTTP 200 arrived at 1.66 ms and the canceled `ERR_ABORTED` event at 2.72 ms. CDP and the reader both counted all 57,909 bytes, the reader reached `done:true`, JSON consumption succeeded and the application's signal was not aborted. The deliberate abort control (`3096.19`) had no response/body completion, an aborted application signal and an `AbortError`. Times are relative to each request, not page load.
+
+This reproduces a completed-consumption transport diagnostic, not an intentional application cancellation or an observed missing-data failure. Native Response lifetime is a plausible explanation given the retention control, but four samples do not establish a browser-internal root cause. No retention workaround or transport-error suppression was added. The hermetic success path now explicitly asserts an un-aborted signal; raw transport failures remain recorded alongside request identity, complete-body/parse evidence and the failing control. Reader instrumentation applies to the two stream methods, not native `json()`/`text()` internals.
+
+### Local review and approval boundary
+
+The review server is loopback-only at `http://127.0.0.1:8043/?view=plaza&lang=ko`; use `lang=en` for English. Its optional service endpoints are empty, and its local CSP disallows production Worker connections. No public tunnel or LAN listener is used. This URL lasts only while the task-owned local server runs.
+
+The preceding compatibility inspection found Safari **26.6.2**, but an automated session could not start because remote automation was disabled; that setting was left alone. Firefox was absent from the inspected application, PATH and browser-cache locations. The GHCP embedded WebKit observations are **not Safari tests**. Physical mobile devices/native keyboards, actual GPU-driver failures and production latency remain unverified.
+
+After separately approved merge, record the actual Pages build's commit and completion time, then perform a small manual KO/EN direct-entry and exact-Atelier/cancel check. Do not mistake a newer daily data refresh for this PR's deployment. If a regression appears, retain its URL/revision/error evidence, use the existing explicit recovery actions, and seek approval for a tested revert PR; do not reset history, discard newer generated data or start an automatic retry loop. No merge, deployment, branch-protection change or Done/Closed transition is authorized by this closeout.

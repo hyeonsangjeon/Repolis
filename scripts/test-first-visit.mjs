@@ -160,6 +160,22 @@ export async function runFirstVisitTests(check){
   check(HTML.indexOf('/*ARRIVAL_RECOVERY:START*/')<HTML.indexOf('<script src="repolis.config.js">')
     &&/setTimeout\(\(\)=>fail\('stalled'\),45000\)/.test(recovery)&&/event\.target instanceof HTMLScriptElement/.test(recovery),
     'a standalone bounded recovery UI exists before required scripts and module initialization');
+  const initialization=block('TOWN_INITIALIZATION');
+  check(!!initialization&&/^\s*try\s*\{/.test(initialization)
+    &&!recovery.includes("addEventListener('unhandledrejection'"),
+    'only owned initialization rejects readiness; unrelated host promises remain browser diagnostics');
+  const failureBoundary=initialization.match(/\}catch\(error\)\{\s*window\.REPOLIS_ARRIVAL\.fail\('initialization'\);\s*throw error;\s*\}\s*$/)?.[0];
+  check(!!failureBoundary&&/fail\('initialization'\)/.test(failureBoundary)&&/throw error;/.test(failureBoundary),
+    'owned bootstrap errors enter recovery and are rethrown rather than swallowed');
+  for(const thrown of [new Error('Owned awaited failure'),'Owned non-Error rejection']){
+    const reasons=[]; let caught;
+    try{
+      await runInNewContext('(async()=>{try {await Promise.reject(thrown);'+failureBoundary+'})()',
+        {thrown,window:{REPOLIS_ARRIVAL:{fail:reason=>reasons.push(reason)}}});
+    }catch(error){ caught=error; }
+    check(caught===thrown&&reasons.join(',')==='initialization',
+      'owned Error and non-Error await rejections both fail once and retain the original reason');
+  }
   check(/retry\.onclick=\(\)=>location\.reload\(\)/.test(recovery)&&/home\.href=url\.href/.test(recovery)
     &&/restoring&&!restored/.test(recovery)&&/inertBefore/.test(recovery)
     &&!/fetch\(|setInterval|localStorage|sessionStorage|track\(/.test(recovery),
@@ -198,9 +214,12 @@ export async function runFirstVisitTests(check){
   const {fetchArrivalResponse:load,arrivalDataReason:reason,ARRIVAL_DATA_LIMITS:limits}=data.api;
   check(limits.timeoutMs===8000&&limits.maxBytes===2*1024*1024&&limits.optionalTimeoutMs===4000,
     'boot data has fixed request/body bounds and a shorter optional-data deadline');
-  let requests=0;
-  const response=await load('fixture',{},limits,async()=>{ requests++; return new Response('{"public":true}'); });
+  let requests=0,successSignal;
+  const response=await load('fixture',{},limits,async(_url,options)=>{
+    requests++; successSignal=options.signal; return new Response('{"public":true}');
+  });
   check((await response.json()).public&&requests===1&&timers.size===0,'successful data is consumed once and clears its deadline');
+  check(!successSignal.aborted,'fully consumed successful data does not intentionally abort its request');
   for(const status of [403,429,404,500]){
     let failure;
     try{ await load('fixture',{},limits,async()=>{ requests++; return new Response('',{status}); }); }catch(error){ failure=error; }
