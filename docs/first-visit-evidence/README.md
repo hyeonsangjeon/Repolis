@@ -265,3 +265,37 @@ The review server is loopback-only at `http://127.0.0.1:8043/?view=plaza&lang=ko
 The preceding compatibility inspection found Safari **26.6.2**, but an automated session could not start because remote automation was disabled; that setting was left alone. Firefox was absent from the inspected application, PATH and browser-cache locations. The GHCP embedded WebKit observations are **not Safari tests**. Physical mobile devices/native keyboards, actual GPU-driver failures and production latency remain unverified.
 
 After separately approved merge, record the actual Pages build's commit and completion time, then perform a small manual KO/EN direct-entry and exact-Atelier/cancel check. Do not mistake a newer daily data refresh for this PR's deployment. If a regression appears, retain its URL/revision/error evidence, use the existing explicit recovery actions, and seek approval for a tested revert PR; do not reset history, discard newer generated data or start an automatic retry loop. No merge, deployment, branch-protection change or Done/Closed transition is authorized by this closeout.
+
+## Atelier chat request follow-up: 2026-09-12
+
+The reported screenshot shows three unavailable replies at 3/5 inside the correct exhibition, not a town-initialization error. Its URL, HTTP response and elapsed time were not available. The normal loopback review has no AI endpoint and already returns before incrementing the call count; it cannot explain that screenshot's 3/5. The changes below fix reproduced client defects, **not a confirmed diagnosis of the unobserved production request**.
+
+### Reproduced defects and bounded repair
+
+The unchanged Worker configuration gives its retrieval fetch 25,000 ms, but the Atelier client aborted after 9,500 ms. Replaying the actual pre-change request function with virtual time rejected a valid exact-repository reply at 10,000 ms. A second regression delivered headers but stalled JSON consumption: the client had already cleared its timer, leaving the body unbounded.
+
+The client now waits at most 30,000 ms through headers **and body completion**. This allows the existing Worker fetch budget plus 5,000 ms of transport/body overhead; it does not extend the Worker fetch or model-runtime settings. HTTP failures, known service failures, malformed/empty or wrong-repository responses and network timeouts receive distinct, safe KO/EN guidance. Raw backend messages are not shown as answers or saved as assistant history. `chat.lastFailure` is a visit-local diagnostic category, not new storage or telemetry.
+
+The five-**started**-call limit remains: failures and timeouts count, duplicate in-flight submissions do not start another request, closing/reopening the panel preserves the visit, and only room re-entry resets it. There is no automatic retry, model call refund, new service or change to foreign/fork closure.
+
+### Local evidence, not live AI
+
+Conditions: installed Chrome **152.0.7977.84**, Node **24.7.0**, KO/EN, 1440 x 900 and 390 x 844 touch emulation, with LOW_END/reduced-motion cases. The existing browser runner starts a task-owned loopback HTTP fixture only for the configured-chat cases. It forwards static GETs to the existing review server, returns canned replies through native browser `fetch`, keeps ambient AI disabled, and closes the fixture afterward. The normal review configuration is unchanged. No operational AI, realtime or telemetry endpoint was used.
+
+All **24 hermetic commands** passed, with **1,565 Smoke checks**, including **69 first-visit checks** and **16 Atelier chat groups**; these are not additive totals. The targeted browser run passed **17 cases**: four existing foreign direct-Atelier entries, twelve chat cases, and the existing Atelier context-recovery case. The new cases cover delayed success, closed-panel completion, exact scope, malformed JSON, rate/access/configuration failures, five-call exhaustion, body timeout, room-exit cancellation, fresh re-entry and four disabled-service combinations. Korean cases also send UTF-8 Korean text. A timeout during simulated WebGL recovery preserved recovery focus until explicit resume.
+
+The four delayed fixtures completed at **10,202 ms each**, measured at the fixture server. The two incomplete-body timeout fixtures were closed at **30,002 ms** and **30,000 ms**. These are local request-fixture durations, not production latency or new cold/warm measurements. Atelier-owned geometry/material/atlas counts stayed unchanged across chat outcomes, and the exterior remained paused.
+
+Captured runtime, console-API and browser Log errors were **zero** in all 17 cases. Raw `Network.loadingFailed` was additionally recorded **only for the fixture endpoint**: 32 scoped requests, 28 completed responses and four expected pending-body cancellations (two timeouts, two explicit room exits), each `ERR_ABORTED` with `canceled:true`. This does not reclassify the earlier completed-consumption transport diagnostics or turn their 14/16 result green.
+
+[Compact source/case evidence](atelier-chat-follow-up.json) · [Korean desktop failure/quota](atelier-chat-errors-ko-desktop.jpg) · [Korean mobile timeout after simulated recovery](atelier-chat-timeout-ko.jpg). Both images are local fixtures, not live AI or physical-device captures.
+
+With the existing local server and isolated Chrome setup above:
+
+```bash
+REPOLIS_TEST_URL=http://127.0.0.1:8043/ BROWSER_CDP_URL=http://127.0.0.1:9351/ \
+FIRST_VISIT_GROUP=atelier-chat,matrix,policy FIRST_VISIT_CASE=atelier \
+node scripts/test-first-visit-browser.mjs
+```
+
+The ordinary review remains at `http://127.0.0.1:8043/?view=plaza&lang=ko` while its task-owned server runs, with AI/RT/analytics disabled. Actual live AI success, the screenshot's upstream cause, physical mobile/native keyboards, Safari/Firefox and hardware GPU failure remain unverified. No Worker deployment, merge, main push or branch-protection change is part of this repair; the exact final-head CI record belongs in PR #123 and the issue review record.

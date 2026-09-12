@@ -1,6 +1,6 @@
 /* Local-only browser gate. Requires an existing static server and isolated Chrome CDP endpoint.
  * REPOLIS_TEST_URL=http://127.0.0.1:8000/ BROWSER_CDP_URL=http://127.0.0.1:9222 node scripts/test-first-visit-browser.mjs
- * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions and FIRST_VISIT_CASE=<substring> select a smaller run.
+ * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat and FIRST_VISIT_CASE=<substring> select a smaller run.
  * FIRST_VISIT_REFERENCE=<commit SHA> replays only viewport observations against historical HTML.
  */
 import assert from 'node:assert/strict';
@@ -8,9 +8,11 @@ import { mkdir, mkdtemp, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createServer } from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
 import { createRepositoryBlueprintDeepLink, parseRepoPortalInput } from '../assets/repo-portal.js';
 import { createRepoRouteUrl } from '../assets/repo-route.js';
+import { authorizeRepositoryAtelierRequest } from '../cloudflare-taxi/src/repository-atelier.js';
 
 const base=new URL(process.env.REPOLIS_TEST_URL||'http://127.0.0.1:8000/');
 const endpoint=new URL(process.env.BROWSER_CDP_URL||'http://127.0.0.1:9222/');
@@ -19,13 +21,14 @@ const output=process.env.FIRST_VISIT_OUTPUT||await mkdtemp(join(tmpdir(),'repoli
 await mkdir(output,{recursive:true});
 const results=[],groups=(process.env.FIRST_VISIT_GROUP||'').split(',').filter(Boolean),only=process.env.FIRST_VISIT_CASE||'';
 const reference=process.env.FIRST_VISIT_REFERENCE||'';
-assert(groups.every(group=>['matrix','failures','policy','viewport','regressions'].includes(group)),'Unknown browser gate group');
+assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat'].includes(group)),'Unknown browser gate group');
 if(reference) assert(groups.length===1&&groups[0]==='viewport'&&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and the viewport group');
 const referenceHtml=reference?execFileSync('git',['show',`${reference}:index.html`],{encoding:'utf8',maxBuffer:5*1024*1024}):null;
 const currentHtml=await readFile(new URL('../index.html',import.meta.url),'utf8');
 const version=await (await fetch(new URL('/json/version',endpoint))).json();
 const ownerCatalog=JSON.parse(await readFile(new URL('../repos.json',import.meta.url),'utf8'));
 const ownerRepo=ownerCatalog.find(repo=>repo.repo==='Repolis')||ownerCatalog[0];
+const atelierRepoName=new URL(ownerRepo.url).pathname.slice(1);
 const target=parseRepoPortalInput('fixture-town/alpha');
 const publicRepo=(name,index=0)=>({name,full_name:`fixture-town/${name}`,owner:{login:'fixture-town'},private:false,
   description:index?'Existing public repository description':null,language:'JavaScript',topics:['fixture'],archived:index===2,
@@ -87,17 +90,80 @@ class CDP{
   close(){ this.socket.close(); }
 }
 
+async function atelierTransportFixture(){
+  const calls=[],errors=[]; let origin,configCalls=0;
+  const server=createServer((request,response)=>{
+    const serve=async()=>{
+      const url=new URL(request.url,origin);
+      assert.equal(url.origin,origin,'the fixture cannot proxy another origin');
+      const json=value=>{
+        const body=JSON.stringify(value);
+        response.writeHead(200,{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)});
+        response.end(body);
+      };
+      if(url.pathname==='/__atelier_chat_fixture'){
+        assert.equal(request.method,'POST');
+        const chunks=[]; let bytes=0;
+        for await(const chunk of request){ bytes+=chunk.length; assert(bytes<=16384,'bounded fixture request'); chunks.push(chunk); }
+        const payload=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        if(payload.npc_action==='npcConfig'){ configCalls++; return json({config:{aiEnabled:false,ambientEnabled:false,playerChatEnabled:false}}); }
+        const authorized=authorizeRepositoryAtelierRequest(payload);
+        assert(authorized.ok,authorized.reason); assert.equal(authorized.repoName,atelierRepoName);
+        const mode=payload.question.split(' ').at(-1);
+        assert(['slow','body','valid','malformed','mismatch','rate','denied','unconfigured'].includes(mode),'known fixture question');
+        const call={mode,payload:{surface:payload.surface,repoName:payload.repoName,question:payload.question,history:payload.history,lang:payload.lang},
+          headersSent:false,completed:false,cancelled:false};
+        calls.push(call); const started=performance.now();
+        response.once('finish',()=>{ call.completed=true; call.elapsedMs=Math.round(performance.now()-started); });
+        response.once('close',()=>{ if(!response.writableFinished){call.cancelled=true;call.elapsedMs=Math.round(performance.now()-started);} });
+        if(mode==='slow') await delay(10200);
+        const data={repoName:atelierRepoName,message:`Local fixture response for ${atelierRepoName}. This is not a live AI answer.`};
+        if(mode==='mismatch'){data.repoName='another/repository';data.message='WRONG_REPO_MUST_NOT_REACH_UI';}
+        if(['rate','denied','unconfigured'].includes(mode)){
+          data.fallback=true; data.reason=mode==='rate'?'kb 429':mode==='denied'?'kb 403':'grounding not configured';
+          data.message='RAW_DETAIL_MUST_NOT_REACH_UI';
+        }
+        if(mode==='body'){
+          const full=JSON.stringify(data);
+          response.writeHead(200,{'Content-Type':'application/json','Content-Length':Buffer.byteLength(full)});
+          response.write('{"repoName":'); response.flushHeaders(); call.headersSent=true;
+          const guard=setTimeout(()=>response.destroy(),40000);
+          response.once('close',()=>clearTimeout(guard)); return;
+        }
+        call.headersSent=true;
+        if(mode==='malformed'){response.writeHead(200,{'Content-Type':'application/json'});response.end('{');return;}
+        return json(data);
+      }
+      assert.equal(request.method,'GET','only static GETs are forwarded to the existing loopback server');
+      const upstreamUrl=new URL(base); upstreamUrl.pathname=url.pathname; upstreamUrl.search=url.search;
+      const upstream=await fetch(upstreamUrl,{redirect:'manual',signal:AbortSignal.timeout(10000)});
+      const body=Buffer.from(await upstream.arrayBuffer());
+      const headers=Object.fromEntries([...upstream.headers].filter(([name])=>!['connection','keep-alive','transfer-encoding','content-encoding','content-length'].includes(name)));
+      response.writeHead(upstream.status,{...headers,'Content-Length':body.length}); response.end(body);
+    };
+    serve().catch(error=>{errors.push(String(error));response.destroy();});
+  });
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  origin=`http://127.0.0.1:${server.address().port}`;
+  return {origin,calls,errors,get configCalls(){return configCalls;},
+    async close(){server.closeAllConnections();await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}};
+}
+
 async function session(test){
+  let fixture=null;
   const browser=new CDP(version.webSocketDebuggerUrl),context=await browser.send('Target.createBrowserContext');
   const tab=await browser.send('Target.createTarget',{url:'about:blank',browserContextId:context.browserContextId});
   const tabs=await (await fetch(new URL('/json/list',endpoint))).json();
   const page=new CDP(tabs.find(item=>item.id===tab.targetId).webSocketDebuggerUrl);
-  const errors=[],networkErrors=[],requests=[],requestInfo=[],interceptionErrors=[]; let failedRequests=0;
+  const errors=[],networkErrors=[],requests=[],requestInfo=[],interceptionErrors=[],fixtureFailures=[],requestUrls=new Map(); let failedRequests=0;
   await page.send('Page.enable'); await page.send('Runtime.enable'); await page.send('Network.enable'); await page.send('Log.enable');
   page.on('Runtime.exceptionThrown',event=>errors.push(event.exceptionDetails.exception?.description||event.exceptionDetails.exception?.value||event.exceptionDetails.text));
   page.on('Runtime.consoleAPICalled',event=>{ if(event.type==='error') errors.push(event.args.map(arg=>arg.description||arg.value).join(' ')); });
   page.on('Log.entryAdded',event=>{ if(event.entry.level==='error') networkErrors.push({source:event.entry.source,text:event.entry.text}); });
-  page.on('Network.requestWillBeSent',event=>{ requests.push(event.request.url); requestInfo.push({url:event.request.url,method:event.request.method}); });
+  page.on('Network.requestWillBeSent',event=>{ requests.push(event.request.url); requestInfo.push({url:event.request.url,method:event.request.method}); requestUrls.set(event.requestId,event.request.url); });
+  page.on('Network.loadingFailed',event=>{
+    if(fixture&&requestUrls.get(event.requestId)===fixture.origin+'/__atelier_chat_fixture') fixtureFailures.push({error:event.errorText,cancelled:!!event.canceled});
+  });
   const fulfill=(event,status,body,contentType='application/json')=>page.send('Fetch.fulfillRequest',{requestId:event.requestId,responseCode:status,
     responseHeaders:[{name:'Content-Type',value:contentType},{name:'Access-Control-Allow-Origin',value:'*'},
       {name:'Access-Control-Allow-Headers',value:'accept,x-github-api-version'},{name:'Access-Control-Allow-Methods',value:'GET,OPTIONS'}],
@@ -142,8 +208,15 @@ async function session(test){
   await page.send('Emulation.setDeviceMetricsOverride',{width:test.mobile?390:1440,height:test.mobile?844:900,deviceScaleFactor:1,mobile:!!test.mobile});
   await page.send('Emulation.setTouchEmulationEnabled',{enabled:!!test.mobile});
   if(test.reduced) await page.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  if(test.atelierTransport) fixture=await atelierTransportFixture();
   const stored=test.direct?(test.lang==='ko'?'en':'ko'):test.lang;
   let source=probe+`\nlocalStorage.setItem('repolisLang','${stored}');`;
+  if(fixture) source+=`\n{
+    let config;
+    Object.defineProperty(window,'REPOLIS_CONFIG',{configurable:true,get:()=>config,set:value=>{
+      config=Object.freeze({...value,services:Object.freeze({...value.services,grounded:${JSON.stringify(fixture.origin+'/__atelier_chat_fixture')}})});
+    }});
+  }`;
   if(test.lowEnd) source+="\nObject.defineProperty(navigator,'hardwareConcurrency',{get:()=>4});Object.defineProperty(navigator,'deviceMemory',{get:()=>4});";
   if(test.failure==='webgl') source+=`\nconst nativeContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/i.test(type)?null:nativeContext.call(this,type,...args);};`;
   if(test.hostRejection) source+=`\n{
@@ -154,9 +227,14 @@ async function session(test){
     });
     observer.observe(document,{childList:true,subtree:true});
   }`;
-  await page.send('Page.addScriptToEvaluateOnNewDocument',{source});
-  return {page,errors,networkErrors,requests,requestInfo,interceptionErrors,
-    async close(){ page.close(); await browser.send('Target.disposeBrowserContext',context); browser.close(); }};
+  try{ await page.send('Page.addScriptToEvaluateOnNewDocument',{source}); }
+  catch(error){ if(fixture) await fixture.close(); throw error; }
+  return {page,errors,networkErrors,requests,requestInfo,interceptionErrors,fixture,fixtureFailures,
+    async close(){
+      page.close();
+      try{ await browser.send('Target.disposeBrowserContext',context); }
+      finally{ browser.close(); if(fixture) await fixture.close(); }
+    }};
 }
 
 const visible=id=>`(()=>{const el=document.getElementById('${id}');if(!el)return false;const s=getComputedStyle(el);return !el.hidden&&!el.classList.contains('hidden')&&s.display!=='none'&&s.visibility!=='hidden'&&Number(s.opacity)>.01;})()`;
@@ -195,12 +273,15 @@ async function run(test,work){
   if((groups.length&&!groups.includes(test.group))||(only&&!test.name.includes(only))) return;
   const s=await session(test); let result;
   try{
-    await s.page.send('Page.navigate',{url:new URL(test.query||'',base).href});
+    await s.page.send('Page.navigate',{url:new URL(test.query||'',s.fixture?s.fixture.origin+base.pathname:base).href});
     const evidence=await work(s,test);
     const state=await snapshot(s.page);
     assert.equal(state.lang,test.lang,'initial language matches the route or existing language preference');
     assert.equal(s.requests.filter(url=>url.includes('workers.dev')).length,0,'no upstream service traffic');
-    if(state.services) assert(Object.values(state.services).every(value=>!value),'localhost optional services stay closed');
+    if(s.fixture){
+      assert.deepEqual(state.services,{grounded:s.fixture.origin+'/__atelier_chat_fixture',realtime:'',analytics:''},'only the exact task-owned loopback fixture is enabled');
+      assert.deepEqual(s.fixture.errors,[],'fixture failures are not hidden');
+    }else if(state.services) assert(Object.values(state.services).every(value=>!value),'localhost optional services stay closed');
     assert.equal(s.interceptionErrors.length,0,JSON.stringify(s.interceptionErrors));
     if(!test.failure){
       if(test.hostRejection){
@@ -212,6 +293,7 @@ async function run(test,work){
     result={name:test.name,group:test.group,ok:true,emulation:{mobile:!!test.mobile,lowEnd:!!test.lowEnd,reduced:!!test.reduced},
       state,requests:s.requests.length,apiRequests:apiRequests(s),preflights:s.requestInfo.filter(item=>item.method==='OPTIONS').length,
       consoleErrors:s.errors,resourceErrors:s.networkErrors,evidence};
+    if(s.fixture) result.fixture={kind:'local HTTP fixture, not live AI',calls:s.fixture.calls,configCalls:s.fixture.configCalls,nativeFailures:s.fixtureFailures};
     console.log(JSON.stringify({name:test.name,ok:true,requests:result.requests,apiRequests:result.apiRequests.length,expectedErrors:s.errors.length+s.networkErrors.length}));
   }catch(error){
     result={name:test.name,group:test.group,ok:false,error:String(error),state:await snapshot(s.page),consoleErrors:s.errors,resourceErrors:s.networkErrors};
@@ -357,6 +439,149 @@ for(const failure of failures) await run({lang:'en',...failure,name:failure.name
     await click(page,'arrivalHome'); await page.until("location.search.startsWith('?view=plaza')");
     await ready(page); await assertOneEntry(page);
   }
+});
+
+async function openAtelierChat(page){
+  await ready(page); await click(page,'startBtn');
+  const entered=await page.evaluate(`__atelierEnter(${JSON.stringify(ownerRepo.repo)},{autoChat:false})`);
+  assert(entered.ok,'the existing room entry accepts the current public repository');
+  await page.until(inside);
+  assert.equal(await page.evaluate("document.getElementById('atelierPortalGithub').href"),ownerRepo.url);
+  await page.evaluate("__atelierAction('ask')");
+  await page.until("document.activeElement.id==='chatText'");
+}
+async function chatState(page){
+  return page.evaluate(`({
+    atelier:__repositoryAtelier(),counter:document.getElementById('atelierChatCount').textContent,focus:document.activeElement.id,
+    inputDisabled:document.getElementById('chatText').disabled,sendDisabled:document.getElementById('chatSend').disabled,
+    bots:[...document.querySelectorAll('#chatLog .msg.bot')].map(el=>el.textContent),
+    overflow:[...document.querySelectorAll('#chatLog .msg')].some(el=>el.scrollWidth>el.clientWidth+1),
+    chatBox:(()=>{const r=document.getElementById('chat').getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom}})()
+  })`);
+}
+async function submitChat(page,mode){
+  await page.evaluate("document.getElementById('chatText').value='';document.getElementById('chatText').focus()");
+  const lang=await page.evaluate('document.documentElement.lang');
+  await page.send('Input.insertText',{text:(lang==='ko'?'로컬 확인 fixture: ':'Local fixture: ')+mode});
+  await click(page,'chatSend');
+}
+function assertChatLayout(state,mobile){
+  assert.equal(state.overflow,false,'the complete error text wraps inside the chat');
+  const box=state.chatBox;
+  assert(box.left>=0&&box.top>=0&&box.right<=(mobile?390:1440)+1&&box.bottom<=(mobile?844:900)+1,'the chat remains inside the viewport');
+  assert.equal(state.atelier.render.exteriorCalls,0,'chat keeps the exterior paused');
+}
+for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
+  name:`atelier-chat-flow-${lang}-${mobile?'mobile':'desktop'}`,group:'atelier-chat',query:'?dbg=1',
+  lang,mobile,lowEnd:mobile,reduced:mobile,atelierTransport:true
+},async(s,test)=>{
+  const {page}=s; await openAtelierChat(page);
+  if(test.lowEnd) assert.equal(await page.evaluate('__perf().tier.lowEnd'),true);
+  if(test.reduced) assert.equal(await page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"),true);
+  const before=await chatState(page);
+  await submitChat(page,'slow'); await click(page,'chatSend');
+  await click(page,'chatClose'); await page.evaluate("__atelierAction('ask')");
+  assert.equal((await chatState(page)).atelier.chat.calls,1,'reopening a pending conversation cannot start another call');
+  await click(page,'chatClose');
+  await page.until("document.querySelector('#chatLog')?.textContent.includes('This is not a live AI answer.')",16000);
+  assert.equal(await page.evaluate("document.getElementById('chat').classList.contains('hidden')"),true,'a late reply cannot reopen a closed panel');
+  assert.equal((await chatState(page)).atelier.chat.historyTurns,2,'the closed panel still retains the visit reply');
+  await page.evaluate("__atelierAction('ask')"); await page.until("document.activeElement.id==='chatText'");
+  const slow=await chatState(page);
+  assert.equal(slow.atelier.chat.calls,1); assert.equal(slow.atelier.chat.lastFailure,null);
+  assert.equal(s.fixture.calls.length,1); assert(s.fixture.calls[0].completed&&s.fixture.calls[0].elapsedMs>=10200);
+  assert.equal(slow.focus,'chatText','completion returns focus to the active input');
+  const turns=[];
+  for(const [mode,failure] of [['malformed','invalid_response'],[lang==='ko'?'denied':'rate',lang==='ko'?'access_denied':'rate_limited'],
+    ['mismatch','scope_mismatch'],['unconfigured','unconfigured']]){
+    await submitChat(page,mode);
+    await page.until(`__repositoryAtelier().chat.lastFailure===${JSON.stringify(failure)}`);
+    const state=await chatState(page); assertChatLayout(state,mobile);
+    assert(!state.bots.join(' ').includes('MUST_NOT_REACH_UI'),'invalid or raw backend details never enter the transcript');
+    turns.push({mode,failure,calls:state.atelier.chat.calls,messages:state.bots.slice(-2)});
+  }
+  const exhausted=await chatState(page);
+  assert.equal(exhausted.atelier.chat.calls,5); assert(exhausted.inputDisabled&&exhausted.sendDisabled);
+  assert.deepEqual(exhausted.atelier.resources,before.atelier.resources,'chat outcomes allocate no additional room resources');
+  await click(page,'chatSend'); await click(page,'chatClose'); await page.evaluate("__atelierAction('ask')");
+  await delay(120);
+  assert.equal(s.fixture.calls.length,5,'the sixth submission and panel reopen stay request-free');
+  assert(s.fixture.calls.every(call=>call.payload.repoName===atelierRepoName&&call.payload.lang===lang));
+  assert(s.fixture.calls.every(call=>!JSON.stringify(call.payload.history).includes('MUST_NOT_REACH_UI')));
+  assert.deepEqual(s.fixtureFailures,[],'completed native responses are not cancelled');
+  await screenshot(page,test.name);
+  await click(page,'atelierExit'); await page.until(outside);
+  assert.equal(await page.evaluate('__repositoryAtelier().chat'),null,'room exit releases visit state');
+  assert((await page.evaluate(`__atelierEnter(${JSON.stringify(ownerRepo.repo)},{autoChat:false})`)).ok);
+  await page.until(inside); await page.evaluate("__atelierAction('ask')");
+  assert.equal((await chatState(page)).atelier.chat.calls,0,'room re-entry, not panel reopen, resets the five-call budget');
+  await submitChat(page,'valid');
+  await page.until("document.querySelector('#chatLog')?.textContent.includes('This is not a live AI answer.')");
+  assert.equal(s.fixture.calls.length,6,'the new visit starts exactly one explicit call');
+  await click(page,'atelierExit'); await page.until(outside);
+  return {slow:{calls:slow.atelier.chat.calls,elapsedMs:s.fixture.calls[0].elapsedMs},turns,resources:before.atelier.resources,
+    exhausted:{counter:exhausted.counter,inputDisabled:exhausted.inputDisabled,sendDisabled:exhausted.sendDisabled},reentryCalls:1};
+});
+for(const mode of ['timeout','exit']) for(const lang of ['en','ko']) await run({
+  name:`atelier-chat-${mode}-${lang}`,group:'atelier-chat',query:'?dbg=1',lang,mobile:lang==='ko',
+  lowEnd:lang==='ko',reduced:lang==='ko',atelierTransport:true
+},async(s,test)=>{
+  const {page}=s; await openAtelierChat(page); await submitChat(page,'body');
+  await delay(250); assert.equal(s.fixture.calls.length,1); assert(s.fixture.calls[0].headersSent);
+  assert.equal((await chatState(page)).atelier.chat.calls,1);
+  const pendingContext=mode==='timeout'&&lang==='ko';
+  if(pendingContext){
+    await page.evaluate("__browserGate.contextControl=__browserGate.renderer.getContext().getExtension('WEBGL_lose_context');__browserGate.contextControl.loseContext()");
+    await page.until('REPOLIS_ARRIVAL.blocked'); await delay(150);
+    await page.evaluate('__browserGate.contextControl.restoreContext()');
+    await page.until("!!document.getElementById('arrivalResume')");
+  }
+  let state;
+  if(mode==='timeout'){
+    await page.until("__repositoryAtelier().chat.lastFailure==='timeout'",33000);
+    if(pendingContext){
+      assert.equal(await page.evaluate('REPOLIS_ARRIVAL.blocked'),true,'chat completion cannot dismiss context recovery');
+      assert.equal(await page.evaluate('document.activeElement.id'),'arrivalResume','a late timeout cannot steal recovery focus');
+      await click(page,'arrivalResume'); await page.until('!REPOLIS_ARRIVAL.blocked');
+      await page.until("document.activeElement.id==='chatText'");
+    }
+    state=await chatState(page); assertChatLayout(state,test.mobile);
+    assert.equal(state.atelier.chat.calls,1); assert.equal(state.focus,'chatText');
+    assert(!state.inputDisabled&&!state.sendDisabled,'a bounded failure leaves the remaining four calls available');
+    assert(state.bots.at(-1).includes(lang==='ko'?'제한 시간':'time limit'));
+    await screenshot(page,test.name);
+  }else{
+    await click(page,'atelierExit'); await page.until(outside);
+    assert.equal(await page.evaluate('__repositoryAtelier().chat'),null);
+  }
+  await delay(150);
+  assert(s.fixture.calls[0].cancelled&&!s.fixture.calls[0].completed,'the native body was closed before completion');
+  assert.deepEqual(s.fixtureFailures,[{error:'net::ERR_ABORTED',cancelled:true}],'exactly the intended pending request is cancelled');
+  const cancellation={...s.fixture.calls[0]};
+  if(mode==='timeout'){await click(page,'atelierExit');await page.until(outside);}
+  assert((await page.evaluate(`__atelierEnter(${JSON.stringify(ownerRepo.repo)},{autoChat:false})`)).ok);
+  await page.until(inside); await page.evaluate("__atelierAction('ask')");
+  const reset=await chatState(page);
+  assert.equal(reset.atelier.chat.calls,0); assert.equal(reset.atelier.chat.lastFailure,null); assert.deepEqual(reset.bots,[]);
+  await submitChat(page,'valid');
+  await page.until("document.querySelector('#chatLog')?.textContent.includes('This is not a live AI answer.')");
+  assert.equal((await chatState(page)).atelier.chat.calls,1);
+  await click(page,'atelierExit'); await page.until(outside);
+  return {mode,simulatedContextLoss:pendingContext,cancellation,timeoutMessage:state?.bots.at(-1),resetCalls:reset.atelier.chat.calls};
+});
+for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
+  name:`atelier-chat-disabled-${lang}-${mobile?'mobile':'desktop'}`,group:'atelier-chat',query:'?dbg=1',lang,mobile
+},async(s,test)=>{
+  await openAtelierChat(s.page);
+  for(let index=0;index<3;index++) await submitChat(s.page,'valid');
+  const state=await chatState(s.page);
+  assert.equal(state.atelier.chat.calls,0,'disabled services never spend started-call quota');
+  assert.equal(state.atelier.chat.lastFailure,null,'disabled is not misclassified as an upstream failure');
+  assert.equal(s.requestInfo.filter(request=>request.method==='POST').length,0,'the standard review copy makes no backend requests');
+  assert(state.bots.at(-1).includes(lang==='ko'?'비활성화':'disabled'));
+  assertChatLayout(state,mobile);
+  await click(s.page,'atelierExit'); await s.page.until(outside);
+  return {calls:state.atelier.chat.calls,message:state.bots.at(-1)};
 });
 
 for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({

@@ -1,0 +1,975 @@
+{
+  "recordedAt": "2026-09-12T06:26:31.071Z",
+  "browser": "Chrome/152.0.7977.84",
+  "scope": "Local regression fixtures, not live AI or physical-device QA",
+  "originalScreenshot": {
+    "url": null,
+    "httpResponse": null,
+    "causeConfirmed": false
+  },
+  "before": {
+    "runtimeRevision": "53c7785744020c7fe242fe0bd79debe8dcf81bba",
+    "method": "Actual inline request function, virtual clock and fake fetch",
+    "failed": [
+      "not ok - the actual Atelier client accepts a 10-second scoped reply within the Worker fetch budget (virtual time)",
+      "not ok - the actual Atelier deadline also bounds a stalled JSON body after response headers (virtual time)"
+    ]
+  },
+  "testedSourceBlobs": {
+    "index.html": "8d146b7814bcb8c0e0757a1ad00361aeb0bddab0",
+    "assets/repository-atelier-chat.js": "93b52adf8bfdedb3a6310bf46a28910334bfab7c",
+    "scripts/test-repository-atelier-chat.mjs": "c0471aa5787c9d0c4c558d3f2d70b6a1cc597981",
+    "scripts/test-first-visit-browser.mjs": "48f8b303e31aed342825eaa8f92d96a477f9849a",
+    "cloudflare-taxi/src/repository-atelier.js": "3b73b3002e5e318d6f801cfae63431c149ed6c5e",
+    "cloudflare-taxi/wrangler.toml": "b192056e82efeb4c4883b79945e573ee37998b08"
+  },
+  "gate": {
+    "command": "bash scripts/check-hermetic.sh",
+    "commands": 24,
+    "exitCode": 0,
+    "smokeChecks": 1565,
+    "firstVisitSubset": 69,
+    "atelierChatSubset": 16
+  },
+  "policy": {
+    "clientDeadlineMs": 30000,
+    "unchangedWorkerFetchBudgetMs": 25000,
+    "startedCallsPerVisit": 5,
+    "automaticRetries": 0,
+    "productionRequests": 0
+  },
+  "transport": {
+    "scope": "Raw loadingFailed only for the local fixture endpoint",
+    "requests": 32,
+    "completed": 28,
+    "cancelled": 4
+  },
+  "cases": [
+    {
+      "name": "atelier-en-desktop",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 45,
+      "publicApiFixtureRequests": 1,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null
+    },
+    {
+      "name": "atelier-ko-desktop",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 45,
+      "publicApiFixtureRequests": 1,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null
+    },
+    {
+      "name": "atelier-en-mobile",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 45,
+      "publicApiFixtureRequests": 1,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null
+    },
+    {
+      "name": "atelier-ko-mobile",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 45,
+      "publicApiFixtureRequests": 1,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null
+    },
+    {
+      "name": "atelier-chat-flow-en-desktop",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 55,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": {
+        "kind": "local HTTP fixture, not live AI",
+        "configCalls": 1,
+        "nativeFailures": [],
+        "requests": [
+          {
+            "mode": "slow",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 10202
+          },
+          {
+            "mode": "malformed",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "rate",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "mismatch",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "unconfigured",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "valid",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          }
+        ]
+      },
+      "evidence": {
+        "slow": {
+          "calls": 1,
+          "elapsedMs": 10202
+        },
+        "turns": [
+          {
+            "mode": "malformed",
+            "failure": "invalid_response",
+            "calls": 2,
+            "messages": [
+              "Local fixture response for hyeonsangjeon/Repolis. This is not a live AI answer.",
+              "I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead."
+            ]
+          },
+          {
+            "mode": "rate",
+            "failure": "rate_limited",
+            "calls": 3,
+            "messages": [
+              "I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead.",
+              "The AI service reached its request limit. Ask again later or open the repository on GitHub."
+            ]
+          },
+          {
+            "mode": "mismatch",
+            "failure": "scope_mismatch",
+            "calls": 4,
+            "messages": [
+              "The AI service reached its request limit. Ask again later or open the repository on GitHub.",
+              "I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead."
+            ]
+          },
+          {
+            "mode": "unconfigured",
+            "failure": "unconfigured",
+            "calls": 5,
+            "messages": [
+              "The AI search connection is not configured. The site operator needs to set it up.",
+              "You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation."
+            ]
+          }
+        ],
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "exhausted": {
+          "counter": "Chat 5/5",
+          "inputDisabled": true,
+          "sendDisabled": true
+        },
+        "reentryCalls": 1
+      }
+    },
+    {
+      "name": "atelier-chat-flow-ko-desktop",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 55,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": {
+        "kind": "local HTTP fixture, not live AI",
+        "configCalls": 1,
+        "nativeFailures": [],
+        "requests": [
+          {
+            "mode": "slow",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 10202
+          },
+          {
+            "mode": "malformed",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "denied",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "mismatch",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "unconfigured",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "valid",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          }
+        ]
+      },
+      "evidence": {
+        "slow": {
+          "calls": 1,
+          "elapsedMs": 10202
+        },
+        "turns": [
+          {
+            "mode": "malformed",
+            "failure": "invalid_response",
+            "calls": 2,
+            "messages": [
+              "Local fixture response for hyeonsangjeon/Repolis. This is not a live AI answer.",
+              "현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요."
+            ]
+          },
+          {
+            "mode": "denied",
+            "failure": "access_denied",
+            "calls": 3,
+            "messages": [
+              "현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요.",
+              "AI 서비스가 요청을 거절했어요. 사이트 운영자가 서버의 접근 설정을 확인해야 합니다."
+            ]
+          },
+          {
+            "mode": "mismatch",
+            "failure": "scope_mismatch",
+            "calls": 4,
+            "messages": [
+              "AI 서비스가 요청을 거절했어요. 사이트 운영자가 서버의 접근 설정을 확인해야 합니다.",
+              "현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요."
+            ]
+          },
+          {
+            "mode": "unconfigured",
+            "failure": "unconfigured",
+            "calls": 5,
+            "messages": [
+              "AI 서비스의 검색 연결이 설정되어 있지 않아요. 사이트 운영자의 설정이 필요합니다.",
+              "이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요."
+            ]
+          }
+        ],
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "exhausted": {
+          "counter": "대화 5/5",
+          "inputDisabled": true,
+          "sendDisabled": true
+        },
+        "reentryCalls": 1
+      }
+    },
+    {
+      "name": "atelier-chat-flow-en-mobile",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "requests": 55,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": {
+        "kind": "local HTTP fixture, not live AI",
+        "configCalls": 1,
+        "nativeFailures": [],
+        "requests": [
+          {
+            "mode": "slow",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 10202
+          },
+          {
+            "mode": "malformed",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "rate",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "mismatch",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "unconfigured",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "valid",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          }
+        ]
+      },
+      "evidence": {
+        "slow": {
+          "calls": 1,
+          "elapsedMs": 10202
+        },
+        "turns": [
+          {
+            "mode": "malformed",
+            "failure": "invalid_response",
+            "calls": 2,
+            "messages": [
+              "Local fixture response for hyeonsangjeon/Repolis. This is not a live AI answer.",
+              "I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead."
+            ]
+          },
+          {
+            "mode": "rate",
+            "failure": "rate_limited",
+            "calls": 3,
+            "messages": [
+              "I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead.",
+              "The AI service reached its request limit. Ask again later or open the repository on GitHub."
+            ]
+          },
+          {
+            "mode": "mismatch",
+            "failure": "scope_mismatch",
+            "calls": 4,
+            "messages": [
+              "The AI service reached its request limit. Ask again later or open the repository on GitHub.",
+              "I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead."
+            ]
+          },
+          {
+            "mode": "unconfigured",
+            "failure": "unconfigured",
+            "calls": 5,
+            "messages": [
+              "The AI search connection is not configured. The site operator needs to set it up.",
+              "You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation."
+            ]
+          }
+        ],
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "exhausted": {
+          "counter": "Chat 5/5",
+          "inputDisabled": true,
+          "sendDisabled": true
+        },
+        "reentryCalls": 1
+      }
+    },
+    {
+      "name": "atelier-chat-flow-ko-mobile",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "requests": 55,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": {
+        "kind": "local HTTP fixture, not live AI",
+        "configCalls": 1,
+        "nativeFailures": [],
+        "requests": [
+          {
+            "mode": "slow",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 10202
+          },
+          {
+            "mode": "malformed",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "denied",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "mismatch",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "unconfigured",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          },
+          {
+            "mode": "valid",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          }
+        ]
+      },
+      "evidence": {
+        "slow": {
+          "calls": 1,
+          "elapsedMs": 10202
+        },
+        "turns": [
+          {
+            "mode": "malformed",
+            "failure": "invalid_response",
+            "calls": 2,
+            "messages": [
+              "Local fixture response for hyeonsangjeon/Repolis. This is not a live AI answer.",
+              "현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요."
+            ]
+          },
+          {
+            "mode": "denied",
+            "failure": "access_denied",
+            "calls": 3,
+            "messages": [
+              "현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요.",
+              "AI 서비스가 요청을 거절했어요. 사이트 운영자가 서버의 접근 설정을 확인해야 합니다."
+            ]
+          },
+          {
+            "mode": "mismatch",
+            "failure": "scope_mismatch",
+            "calls": 4,
+            "messages": [
+              "AI 서비스가 요청을 거절했어요. 사이트 운영자가 서버의 접근 설정을 확인해야 합니다.",
+              "현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요."
+            ]
+          },
+          {
+            "mode": "unconfigured",
+            "failure": "unconfigured",
+            "calls": 5,
+            "messages": [
+              "AI 서비스의 검색 연결이 설정되어 있지 않아요. 사이트 운영자의 설정이 필요합니다.",
+              "이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요."
+            ]
+          }
+        ],
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "exhausted": {
+          "counter": "대화 5/5",
+          "inputDisabled": true,
+          "sendDisabled": true
+        },
+        "reentryCalls": 1
+      }
+    },
+    {
+      "name": "atelier-chat-timeout-en",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 51,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": {
+        "kind": "local HTTP fixture, not live AI",
+        "configCalls": 1,
+        "nativeFailures": [
+          {
+            "error": "net::ERR_ABORTED",
+            "cancelled": true
+          }
+        ],
+        "requests": [
+          {
+            "mode": "body",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": false,
+            "cancelled": true,
+            "elapsedMs": 30002
+          },
+          {
+            "mode": "valid",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          }
+        ]
+      },
+      "evidence": {
+        "mode": "timeout",
+        "simulatedContextLoss": false,
+        "cancellation": {
+          "mode": "body",
+          "payload": {
+            "surface": "repository_atelier",
+            "repoName": "hyeonsangjeon/Repolis",
+            "question": "Local fixture: body",
+            "history": [],
+            "lang": "en"
+          },
+          "headersSent": true,
+          "completed": false,
+          "cancelled": true,
+          "elapsedMs": 30002
+        },
+        "timeoutMessage": "The AI response did not arrive within the time limit. Ask again later or open the repository on GitHub.",
+        "resetCalls": 0
+      }
+    },
+    {
+      "name": "atelier-chat-timeout-ko",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "requests": 51,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": {
+        "kind": "local HTTP fixture, not live AI",
+        "configCalls": 1,
+        "nativeFailures": [
+          {
+            "error": "net::ERR_ABORTED",
+            "cancelled": true
+          }
+        ],
+        "requests": [
+          {
+            "mode": "body",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": false,
+            "cancelled": true,
+            "elapsedMs": 30000
+          },
+          {
+            "mode": "valid",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          }
+        ]
+      },
+      "evidence": {
+        "mode": "timeout",
+        "simulatedContextLoss": true,
+        "cancellation": {
+          "mode": "body",
+          "payload": {
+            "surface": "repository_atelier",
+            "repoName": "hyeonsangjeon/Repolis",
+            "question": "로컬 확인 fixture: body",
+            "history": [],
+            "lang": "ko"
+          },
+          "headersSent": true,
+          "completed": false,
+          "cancelled": true,
+          "elapsedMs": 30000
+        },
+        "timeoutMessage": "AI 응답이 제한 시간 안에 도착하지 않았어요. 잠시 후 다시 질문하거나 GitHub 원문을 확인해 주세요.",
+        "resetCalls": 0
+      }
+    },
+    {
+      "name": "atelier-chat-exit-en",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 51,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": {
+        "kind": "local HTTP fixture, not live AI",
+        "configCalls": 1,
+        "nativeFailures": [
+          {
+            "error": "net::ERR_ABORTED",
+            "cancelled": true
+          }
+        ],
+        "requests": [
+          {
+            "mode": "body",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": false,
+            "cancelled": true,
+            "elapsedMs": 254
+          },
+          {
+            "mode": "valid",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "en",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          }
+        ]
+      },
+      "evidence": {
+        "mode": "exit",
+        "simulatedContextLoss": false,
+        "cancellation": {
+          "mode": "body",
+          "payload": {
+            "surface": "repository_atelier",
+            "repoName": "hyeonsangjeon/Repolis",
+            "question": "Local fixture: body",
+            "history": [],
+            "lang": "en"
+          },
+          "headersSent": true,
+          "completed": false,
+          "cancelled": true,
+          "elapsedMs": 254
+        },
+        "resetCalls": 0
+      }
+    },
+    {
+      "name": "atelier-chat-exit-ko",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "requests": 50,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": {
+        "kind": "local HTTP fixture, not live AI",
+        "configCalls": 0,
+        "nativeFailures": [
+          {
+            "error": "net::ERR_ABORTED",
+            "cancelled": true
+          }
+        ],
+        "requests": [
+          {
+            "mode": "body",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": false,
+            "cancelled": true,
+            "elapsedMs": 255
+          },
+          {
+            "mode": "valid",
+            "repoName": "hyeonsangjeon/Repolis",
+            "lang": "ko",
+            "headersSent": true,
+            "completed": true,
+            "cancelled": false,
+            "elapsedMs": 0
+          }
+        ]
+      },
+      "evidence": {
+        "mode": "exit",
+        "simulatedContextLoss": false,
+        "cancellation": {
+          "mode": "body",
+          "payload": {
+            "surface": "repository_atelier",
+            "repoName": "hyeonsangjeon/Repolis",
+            "question": "로컬 확인 fixture: body",
+            "history": [],
+            "lang": "ko"
+          },
+          "headersSent": true,
+          "completed": false,
+          "cancelled": true,
+          "elapsedMs": 255
+        },
+        "resetCalls": 0
+      }
+    },
+    {
+      "name": "atelier-chat-disabled-en-desktop",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 48,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null,
+      "evidence": {
+        "calls": 0,
+        "message": "The Repository Atelier GitHub MCP is disabled in this town. I will not substitute another repository."
+      }
+    },
+    {
+      "name": "atelier-chat-disabled-ko-desktop",
+      "ok": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 48,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null,
+      "evidence": {
+        "calls": 0,
+        "message": "이 마을에서는 Repository Atelier GitHub MCP가 비활성화되어 있어요. 다른 레포로 대신 답하지 않을게요."
+      }
+    },
+    {
+      "name": "atelier-chat-disabled-en-mobile",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 48,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null,
+      "evidence": {
+        "calls": 0,
+        "message": "The Repository Atelier GitHub MCP is disabled in this town. I will not substitute another repository."
+      }
+    },
+    {
+      "name": "atelier-chat-disabled-ko-mobile",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 48,
+      "publicApiFixtureRequests": 0,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null,
+      "evidence": {
+        "calls": 0,
+        "message": "이 마을에서는 Repository Atelier GitHub MCP가 비활성화되어 있어요. 다른 레포로 대신 답하지 않을게요."
+      }
+    },
+    {
+      "name": "context-atelier-mobile",
+      "ok": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "requests": 45,
+      "publicApiFixtureRequests": 1,
+      "consoleErrors": [],
+      "resourceErrors": [],
+      "fixture": null
+    }
+  ],
+  "limitations": [
+    "The screenshot URL and failed upstream response are unknown.",
+    "No operational AI/RT/telemetry calls.",
+    "Physical mobile, native keyboards, Safari/Firefox, actual GPU failures and production latency unverified.",
+    "Previous 14/16 strict transport result remains unchanged. No merge or deployment."
+  ]
+}

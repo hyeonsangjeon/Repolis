@@ -1,4 +1,6 @@
 export const REPOSITORY_ATELIER_CHAT_LIMIT = 5;
+// The existing Worker fetch budget is 25 seconds; allow transport/body overhead without extending it.
+export const REPOSITORY_ATELIER_CHAT_TIMEOUT_MS = 30000;
 
 const REPO_NAME_RE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?\/[A-Za-z0-9_.-]{1,100}$/;
 
@@ -25,6 +27,7 @@ export function createRepositoryAtelierChatVisit(repoName) {
     sequence: 0,
     controller: null,
     cancelled: false,
+    lastFailure: null,
   };
 }
 
@@ -38,7 +41,27 @@ export function beginRepositoryAtelierChatCall(visit) {
   if (!visit || visit.cancelled || visit.calls >= REPOSITORY_ATELIER_CHAT_LIMIT) return null;
   visit.calls += 1;
   visit.sequence += 1;
+  visit.lastFailure = null;
   return { sequence: visit.sequence, call: visit.calls };
+}
+
+export function repositoryAtelierChatResponseFailure(status, data, repoName) {
+  const httpFailure = code => code === 429 ? 'rate_limited'
+    : code === 401 || code === 403 ? 'access_denied'
+    : code === 408 || code === 504 ? 'timeout' : 'http_error';
+  if (!Number.isInteger(status) || status < 100 || status > 599) return 'invalid_response';
+  if (status < 200 || status >= 300) return httpFailure(status);
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return 'invalid_response';
+  if (typeof repoName !== 'string' || !validRepositoryAtelierRepoName(repoName)
+    || typeof data.repoName !== 'string' || data.repoName.toLowerCase() !== repoName.toLowerCase()) return 'scope_mismatch';
+  if (data.fallback) {
+    if (data.reason === 'grounding not configured') return 'unconfigured';
+    if (typeof data.reason === 'string' && /^timeout \d+ms$/.test(data.reason)) return 'timeout';
+    const kbStatus = typeof data.reason === 'string' && /^kb (\d{3})$/.exec(data.reason);
+    return kbStatus ? httpFailure(Number(kbStatus[1])) : 'unavailable';
+  }
+  if (typeof data.message !== 'string' || !data.message.trim()) return 'invalid_response';
+  return null;
 }
 
 export function appendRepositoryAtelierChatTurn(visit, role, text) {
@@ -77,5 +100,6 @@ export function repositoryAtelierChatSnapshot(visit) {
     autoStarted: visit.autoStarted,
     exhausted: visit.calls >= REPOSITORY_ATELIER_CHAT_LIMIT,
     cancelled: visit.cancelled,
+    lastFailure: visit.lastFailure,
   };
 }

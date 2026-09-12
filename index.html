@@ -2350,7 +2350,7 @@ import { allocateElderFragments, createLoreDeliveryState, loadLoreFragments } fr
 import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from './assets/taxi-voice.js?v=world-tree-phase4-v1';
 import { clearSessionFootprints, createSessionFootprintState, sessionFootprintScale, sessionFootprintSnapshot, stepSessionFootprints, teardownSessionFootprints } from './assets/session-footprints.js?v=world-tree-phase5-footprints-v1';
 import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
-import { REPOSITORY_ATELIER_CHAT_LIMIT, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v1';
+import { REPOSITORY_ATELIER_CHAT_LIMIT, REPOSITORY_ATELIER_CHAT_TIMEOUT_MS, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatResponseFailure, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v2';
 import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, resolveRepositoryBlueprintFocus, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v2';
 import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from './assets/issue-code-scout.js?v=issue-code-scout-v1';
 import { PROCEDURAL_SURFACE_FAMILIES, PROCEDURAL_SURFACE_LIMITS, PROCEDURAL_SURFACE_VERSION, createSurfaceRng, disposeBoundedSurfaceCache, getOrCreateBoundedSurface, normalizeSurfaceFamily, surfacePixelHash, surfaceTextureKey, surfaceUvTransform, surfaceVariant, surfaceWallRepeat } from './assets/procedural-surfaces.js?v=procedural-surface-v2-3';
@@ -2999,6 +2999,13 @@ const I18N = {
     atelierDirectOpening:'{repo} 전시실로 이동하는 중…', plazaDirectOpening:'Repolis 광장으로 이동하는 중…',
     atelierChatLimit:'이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요.',
     atelierChatUnavailable:'{repo}의 공개 정보를 지금 불러오지 못했어요. 다른 레포로 대신 답하지 않을게요.',
+    atelierChatTimeout:'AI 응답이 제한 시간 안에 도착하지 않았어요. 잠시 후 다시 질문하거나 GitHub 원문을 확인해 주세요.',
+    atelierChatNetworkError:'AI 서비스와 연결이 끊겼어요. 네트워크 연결을 확인한 뒤 다시 질문해 주세요.',
+    atelierChatInvalidResponse:'현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요.',
+    atelierChatAccessDenied:'AI 서비스가 요청을 거절했어요. 사이트 운영자가 서버의 접근 설정을 확인해야 합니다.',
+    atelierChatRateLimited:'AI 서비스의 요청 한도에 걸렸어요. 잠시 후 다시 질문하거나 GitHub 원문을 확인해 주세요.',
+    atelierChatNotConfigured:'AI 서비스의 검색 연결이 설정되어 있지 않아요. 사이트 운영자의 설정이 필요합니다.',
+    atelierChatServiceError:'AI 서비스가 요청을 처리하지 못했어요. 잠시 후 다시 질문하거나 GitHub 원문을 확인해 주세요.',
     atelierChatNoBackend:'이 마을에서는 Repository Atelier GitHub MCP가 비활성화되어 있어요. 다른 레포로 대신 답하지 않을게요.',
     atelierChatWait:'진행 중인 대화가 끝난 뒤 전시실에 입장해 주세요.',
     atelierDoor:'출구 · 마을로 돌아가기', atelierWalk:'WASD / 터치로 전시실을 걸어 보세요',
@@ -3386,6 +3393,13 @@ const I18N = {
     atelierDirectOpening:'Entering the {repo} exhibition…', plazaDirectOpening:'Entering the Repolis plaza…',
     atelierChatLimit:'You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation.',
     atelierChatUnavailable:'Public information for {repo} is unavailable right now. I will not substitute another repository.',
+    atelierChatTimeout:'The AI response did not arrive within the time limit. Ask again later or open the repository on GitHub.',
+    atelierChatNetworkError:'The connection to the AI service was interrupted. Check your network connection before asking again.',
+    atelierChatInvalidResponse:'I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead.',
+    atelierChatAccessDenied:'The AI service denied the request. The site operator needs to check the server access settings.',
+    atelierChatRateLimited:'The AI service reached its request limit. Ask again later or open the repository on GitHub.',
+    atelierChatNotConfigured:'The AI search connection is not configured. The site operator needs to set it up.',
+    atelierChatServiceError:'The AI service could not process the request. Ask again later or open the repository on GitHub.',
     atelierChatNoBackend:'The Repository Atelier GitHub MCP is disabled in this town. I will not substitute another repository.',
     atelierChatWait:'Wait for the current conversation to finish before entering the Atelier.',
     atelierDoor:'Exit · return to town', atelierWalk:'Walk the exhibition with WASD / touch',
@@ -13840,26 +13854,29 @@ function _showRepositoryAtelierLimit(visit){
 async function _askRepositoryAtelier(visit,question,call,url){
   const aiStarted=nowMs(),payload=aiRequestPayload(repositoryAtelierChatPayload(visit,question,LANG));
   const sb=showTyping(addMsg('bot',tf('atelierChatSearching',{repo:visit.repoName}),{noHist:true}));
-  const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),9500); visit.controller=ctrl;
+  const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),REPOSITORY_ATELIER_CHAT_TIMEOUT_MS); visit.controller=ctrl;
+  const fail=(kind,error)=>{
+    visit.lastFailure=kind;
+    const key={timeout:'atelierChatTimeout',network_error:'atelierChatNetworkError',invalid_response:'atelierChatInvalidResponse',
+      scope_mismatch:'atelierChatInvalidResponse',access_denied:'atelierChatAccessDenied',rate_limited:'atelierChatRateLimited',
+      unconfigured:'atelierChatNotConfigured',http_error:'atelierChatServiceError'}[kind]||'atelierChatUnavailable';
+    trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:kind,...(error?{err:errName(error)}:{})});
+    addMsg('bot',tf(key,{repo:esc(visit.repoName)}),{noHist:true});
+  };
+  let res,data;
   try{
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal});
-    clearTimeout(to); const data=await res.json().catch(()=>({}));
-    if(visit.cancelled||visit.sequence!==call.sequence){ sb.remove(); return; }
-    sb.remove();
-    if(!res.ok){ trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:data.error||'http_error'});
-      addMsg('bot',esc(data.message||tf('atelierChatUnavailable',{repo:visit.repoName})),{noHist:true}); return; }
-    if(String(data.repoName||'').toLowerCase()!==visit.repoName.toLowerCase()){
-      trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'scope_mismatch'});
-      addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true}); return; }
-    if(data.message){ const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
-      trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:!data.fallback&&!data.notFound,refs:traceRefCount(data.trace),fallback:data.fallback?'worker_fallback':data.notFound?'not_found':undefined});
-      addMsg('bot',msg,{trace:data.trace}); return; }
-    trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'empty_result'});
-    addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true});
-  }catch(e){ clearTimeout(to); sb.remove(); if(visit.cancelled) return;
-    trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'fetch_fail',err:errName(e)});
-    addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true});
-  }finally{ if(visit.controller===ctrl) visit.controller=null; }
+    res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal});
+    data=await res.json();
+  }catch(e){ sb.remove(); if(visit.cancelled||visit.sequence!==call.sequence) return;
+    fail(ctrl.signal.aborted?'timeout':res&&!res.ok?repositoryAtelierChatResponseFailure(res.status,null,visit.repoName):
+      e?.name==='SyntaxError'?'invalid_response':'network_error',e); return;
+  }finally{ clearTimeout(to); if(visit.controller===ctrl) visit.controller=null; }
+  sb.remove(); if(visit.cancelled||visit.sequence!==call.sequence) return;
+  const failure=repositoryAtelierChatResponseFailure(res.status,data,visit.repoName);
+  if(failure){ fail(failure); return; }
+  const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
+  trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:!data.notFound,refs:traceRefCount(data.trace),fallback:data.notFound?'not_found':undefined});
+  addMsg('bot',msg,{trace:data.trace});
 }
 async function _sendRepositoryAtelierChat(question,automatic=false){
   const A=REPOSITORY_ATELIER,visit=A&&A.chat,q=String(question||'').trim(); if(!visit||visit.cancelled||!q||busy) return false;
