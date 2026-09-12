@@ -54,11 +54,14 @@ ordinary navigation: entering the Atelier does not push a synthetic history entr
 previous page.
 
 The direct form accepts `repo`, fixed `view=atelier`, and optional `lang=en|ko`; omitted language defaults to
-English. It keeps the loading layer above the intro for a lightweight 1.2-second ring transition and
-programmatically reuses the normal entry action with automatic chat closed. The loading cover is released only
-after the existing Atelier fade owns the frame. Extra query state, duplicate fields, an invalid language, or a
-hash disables auto-entry and falls back to the normal confirmation flow. Reduced-motion keeps the same covered
-timing with static rings.
+English. It keeps the loading layer above the intro for the existing minimum 1.2-second ring transition,
+measured from a completed scene frame, and reuses the normal entry action with automatic chat closed.
+The existing 900 ms cover minimum starts at accepted entry; elapsed time alone cannot release it. The exact
+requested Atelier must be inside and have completed a render. Ordinary confirmation waits for two completed
+scene frames. Entry ownership is idempotent, including repeated button activation.
+Extra query state, duplicate fields, an invalid language, or a hash disables auto-entry and falls back to
+normal confirmation. Reduced-motion keeps the covered timing with static rings and the existing shorter
+Atelier fade.
 
 The shared parser accepts:
 
@@ -84,7 +87,8 @@ Blueprint** enters the existing Atelier and starts Repository Blueprint's one bo
 fetched projection must carry the same owner/repo and contain the exact path before DOM/3D focus is restored.
 A missing path selects nothing, triggers no follow-up request, and remains available for ordinary
 Atelier/town navigation. The URL never contains source contents, chat, tokens, metrics, visitor/session IDs,
-or telemetry identifiers.
+or telemetry identifiers. **Enter town instead** stays in the already loaded exterior and starts no Tree
+request; it does not enter an unrequested Atelier.
 
 ## Target-first data path
 
@@ -96,13 +100,33 @@ The runtime resolves a repository in this order:
 | 2 | Fresh local Portal cache | Reuses allowlisted public metadata for 15 minutes. |
 | 3 | `GET /repos/{owner}/{repo}` | Makes one unauthenticated GitHub request with no automatic retry. |
 | 4 | Stale local Portal cache | Recovers explicitly as stale when the request fails. |
-| 5 | Existing owner town | Preserves a usable local scene and displays the target error. |
+| 5 | Existing owner-town background | Preserves a local scene behind the target error, never a substitute destination. |
 
 The Portal cache is an LRU capped at 30 entries and 512 KiB. It stores only the public fields projected by
-`assets/repo-portal.js`. A 403 or 429 is surfaced immediately; the runtime does not retry or fetch an owner
-catalog. The owner catalog is requested only after the visitor chooses **Explore @owner's full town**.
+`assets/repo-portal.js`. A 403 or 429 is surfaced without automatic retry or a request for the target owner's
+public catalog. That public catalog is requested only after **Explore @owner's full town**. A failed target
+can still reuse the existing local owner snapshot for its covered background. Public-town `focus` retains
+its existing exact-repository lookup when the focused repo is absent from the first catalog page.
 Target-only mode does not write a Town Gazette baseline or Village Chronicle payload. A Postcard copy-link
 returns the same canonical Portal URL instead of dropping the target or composing unrelated feature state.
+
+### Readiness and recovery
+
+Awaited boot data responses have an 8-second deadline through headers and body, with a 2 MiB decoded-byte
+ceiling. Optional resident manifest, lore and Council loads use a 4-second deadline and their existing
+validated local fallbacks. This adds no request, retry loop, storage or service. Malformed catalogs are not
+cached. Existing fresh/stale public and Portal cache semantics remain intact.
+
+A standalone KO/EN recovery dialog runs before required scripts. Script/module failure, unavailable WebGL,
+bounded data failure, or the 45-second startup watchdog presents an explanation rather than an endless
+loading cover. **Retry the same link** reloads the exact URL. **Open the original GitHub** uses the validated
+repository/profile target when the parser has loaded; **Open the default plaza** preserves language on the
+same site path. No failed target silently enters a same-named repository from another owner.
+
+Context loss pauses input and simulation. Existing texture/shadow/room restoration hooks rebuild GPU state,
+not the scene. One restored frame enables **Continue**; focus, draft and any queued initial arrival remain
+owned by the interrupted flow. Restoring the context does not emit another entry or repeat a completed
+arrival action. All failure injection is local-only; no production counter or Worker is a test target.
 
 ## Traffic truth boundary
 
@@ -156,6 +180,8 @@ text, `cityUser`, and the persistent anonymous instance ID.
 | `assets/repo-portal.js` | Parser, route precedence, public projection, canonical links, and latency buckets. |
 | `index.html` | Loading, bounded cache, truthful architecture, intro/Station UX, Atelier actions, and events. |
 | `scripts/smoke.mjs` | Hermetic parser, security, fallback, privacy, i18n, accessibility, and budget guards. |
+| `scripts/test-first-visit.mjs` | Extracted speech, picker, readiness, bounded-fetch and recovery regressions, included in smoke. |
+| `scripts/test-first-visit-browser.mjs` | Local-only entry/failure/policy matrix and mixed-speech browser fixtures using an existing isolated CDP browser. |
 | `examples/share-links.md` | Copy-ready public URL examples. |
 | `docs/domain-model.md` | Portal mode and `trafficKnown` semantics. |
 | `docs/known-limitations.md` | API, cache, and public-traffic constraints. |
@@ -163,6 +189,9 @@ text, `cityUser`, and the persistent anonymous instance ID.
 Keep parsing and link construction in the pure module. Do not add a second input resolver or build Portal
 links by editing `location.search` in place. Do not add synthetic traffic fields to make existing building
 math convenient.
+
+See [first-visit review evidence](first-visit-evidence/README.md) for reproduction commands, controlled
+measurements, screenshots, release-gate results and the separate physical-device verification boundary.
 
 ## Verification
 

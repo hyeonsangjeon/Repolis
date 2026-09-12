@@ -1,0 +1,890 @@
+{
+  "baseline": {
+    "label": "baseline",
+    "revision": "76f3b1d81d9a2ed6f5fc28950b8554f6b98d1c26",
+    "browser": "Chrome/152.0.7977.76",
+    "at": "2026-09-08T13:56:01.485Z",
+    "viewport": "1440x900 DPR 1",
+    "network": "40 ms latency; download 1,250,000 B/s; upload 625,000 B/s",
+    "fixedDate": "2026-09-08T14:00:00Z",
+    "randomSeed": 120121122,
+    "mode": "Headless Chrome desktop emulation, instrumented native Three.js devtools renderer observation; not real mobile hardware",
+    "runs": [
+      {
+        "cache": "cold",
+        "pair": 1,
+        "movementObservedMs": 7580.199999928474,
+        "firstDrawMs": 4674.799999952316,
+        "sceneDisplayedMs": 7460.7,
+        "controlsReadyMs": 7460.7,
+        "requests": 48,
+        "transferBytes": 2210627,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.69999999999891,
+        "frameP95Ms": 16.799999999999272,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3226,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 1,
+        "movementObservedMs": 3788.8000000715256,
+        "firstDrawMs": 1380.7000000476837,
+        "sceneDisplayedMs": 3572.6,
+        "controlsReadyMs": 3572.6,
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "cold",
+        "pair": 2,
+        "movementObservedMs": 5482.700000047684,
+        "firstDrawMs": 3151.7000000476837,
+        "sceneDisplayedMs": 5319.2,
+        "controlsReadyMs": 5319.2,
+        "requests": 48,
+        "transferBytes": 2210627,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.799999999999272,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 2,
+        "movementObservedMs": 3778.0999999046326,
+        "firstDrawMs": 1385.0999999046326,
+        "sceneDisplayedMs": 3567.8,
+        "controlsReadyMs": 3567.8,
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3231,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "cold",
+        "pair": 3,
+        "movementObservedMs": 5451.199999928474,
+        "firstDrawMs": 3115.6999999284744,
+        "sceneDisplayedMs": 5286.8,
+        "controlsReadyMs": 5286.8,
+        "requests": 48,
+        "transferBytes": 2210627,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.800000000000182,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 3,
+        "movementObservedMs": 3740.5,
+        "firstDrawMs": 1349.2999999523163,
+        "sceneDisplayedMs": 3541.4,
+        "controlsReadyMs": 3541.4,
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.799999999999272,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3231,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      }
+    ]
+  },
+  "after": {
+    "label": "after",
+    "revision": "b1163988fbe0da8906556f04dbb174a3828f32af",
+    "sourceBlob": "5570d34a0ce84dfe2168a74da9faf6565394423a",
+    "catalogBlob": "4ba36ce4233b09971d6efb434269ce347435cd03",
+    "browser": "Chrome/152.0.7977.76",
+    "at": "2026-09-08T15:33:35.117Z",
+    "viewport": "1440x900 DPR 1",
+    "network": "40 ms latency; download 1,250,000 B/s; upload 625,000 B/s",
+    "fixedDate": "2026-09-08T14:00:00Z",
+    "randomSeed": 120121122,
+    "mode": "Headless Chrome desktop emulation, instrumented native Three.js devtools renderer observation; not real mobile hardware",
+    "runs": [
+      {
+        "cache": "cold",
+        "pair": 1,
+        "movementObservedMs": 5682.600000023842,
+        "firstDrawMs": 3320.2000000476837,
+        "sceneDisplayedMs": 5447.9,
+        "controlsReadyMs": 5447.9,
+        "requests": 48,
+        "transferBytes": 2248353,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.800000000000182,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 1,
+        "movementObservedMs": 3718.100000023842,
+        "firstDrawMs": 1427.3999999761581,
+        "sceneDisplayedMs": 3600.6,
+        "controlsReadyMs": 3600.6,
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3233,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "cold",
+        "pair": 2,
+        "movementObservedMs": 5666.799999952316,
+        "firstDrawMs": 3261.100000023842,
+        "sceneDisplayedMs": 5416.7,
+        "controlsReadyMs": 5416.7,
+        "requests": 48,
+        "transferBytes": 2248353,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 33.30000000000018,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3229,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 2,
+        "movementObservedMs": 3840.600000023842,
+        "firstDrawMs": 1449.7000000476837,
+        "sceneDisplayedMs": 3627.5,
+        "controlsReadyMs": 3627.5,
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "cold",
+        "pair": 3,
+        "movementObservedMs": 5591.300000071526,
+        "firstDrawMs": 3258.8000000715256,
+        "sceneDisplayedMs": 5406.5,
+        "controlsReadyMs": 5406.5,
+        "requests": 48,
+        "transferBytes": 2248353,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.800000000000182,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 3,
+        "movementObservedMs": 3806.2999999523163,
+        "firstDrawMs": 1424.8999999761581,
+        "sceneDisplayedMs": 3609.6,
+        "controlsReadyMs": 3609.6,
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3234,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8017": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      }
+    ]
+  },
+  "reference-player": {
+    "label": "reference-player",
+    "revision": "76f3b1d81d9a2ed6f5fc28950b8554f6b98d1c26",
+    "base": "http://127.0.0.1:8018/",
+    "sourceBlob": "1ad64400ef1a8d027ed02bd845a62a0b2ed50cfe",
+    "catalogBlob": "4ba36ce4233b09971d6efb434269ce347435cd03",
+    "browser": "Chrome/152.0.7977.76",
+    "at": "2026-09-08T15:44:53.877Z",
+    "viewport": "1440x900 DPR 1",
+    "network": "40 ms latency; download 1,250,000 B/s; upload 625,000 B/s",
+    "fixedDate": "2026-09-08T14:00:00Z",
+    "randomSeed": 120121122,
+    "mode": "Headless Chrome desktop emulation, instrumented native Three.js devtools renderer observation; not real mobile hardware",
+    "runs": [
+      {
+        "cache": "cold",
+        "pair": 1,
+        "movementObservedMs": 5556.100000023842,
+        "firstDrawMs": 3206.7999999523163,
+        "sceneDisplayedMs": 5405,
+        "controlsReadyMs": 5405,
+        "playerMovementObservedMs": 5455,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.600000028862637,
+          0,
+          -1.8391999995708475
+        ],
+        "requests": 48,
+        "transferBytes": 2210627,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3232,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 1,
+        "movementObservedMs": 3788.6999999284744,
+        "firstDrawMs": 1391,
+        "sceneDisplayedMs": 3595.8,
+        "controlsReadyMs": 3595.8,
+        "playerMovementObservedMs": 3712.5,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.600009657612231,
+          0,
+          -1.9615999998250242
+        ],
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3233,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "cold",
+        "pair": 2,
+        "movementObservedMs": 5562.300000071526,
+        "firstDrawMs": 3174.600000023842,
+        "sceneDisplayedMs": 5361.9,
+        "controlsReadyMs": 5361.9,
+        "playerMovementObservedMs": 5478.5,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.6000000151429736,
+          0,
+          -2.2955
+        ],
+        "requests": 48,
+        "transferBytes": 2210627,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 2,
+        "movementObservedMs": 3755.8000000715256,
+        "firstDrawMs": 1414.4000000953674,
+        "sceneDisplayedMs": 3625.8,
+        "controlsReadyMs": 3625.8,
+        "playerMovementObservedMs": 3675.8,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.600014593970612,
+          0,
+          -1.9075999998723887
+        ],
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3233,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "cold",
+        "pair": 3,
+        "movementObservedMs": 5581.700000047684,
+        "firstDrawMs": 3169.399999976158,
+        "sceneDisplayedMs": 5351,
+        "controlsReadyMs": 5351,
+        "playerMovementObservedMs": 5467.6,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.6000000237111234,
+          0,
+          -1.9949000002145763
+        ],
+        "requests": 48,
+        "transferBytes": 2210627,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.800000000000182,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 3,
+        "movementObservedMs": 3754.7000000476837,
+        "firstDrawMs": 1409.7000000476837,
+        "sceneDisplayedMs": 3609.7,
+        "controlsReadyMs": 3609.7,
+        "playerMovementObservedMs": 3659.8,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.60001176598405,
+          0,
+          -1.8005000000527702
+        ],
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2196227,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.800000000000182,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 131,
+          "geometries": 3234,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      }
+    ]
+  },
+  "after-player": {
+    "label": "after-player",
+    "revision": "b1163988fbe0da8906556f04dbb174a3828f32af",
+    "base": "http://127.0.0.1:8018/",
+    "sourceBlob": "5570d34a0ce84dfe2168a74da9faf6565394423a",
+    "catalogBlob": "4ba36ce4233b09971d6efb434269ce347435cd03",
+    "browser": "Chrome/152.0.7977.76",
+    "at": "2026-09-08T15:42:38.814Z",
+    "viewport": "1440x900 DPR 1",
+    "network": "40 ms latency; download 1,250,000 B/s; upload 625,000 B/s",
+    "fixedDate": "2026-09-08T14:00:00Z",
+    "randomSeed": 120121122,
+    "mode": "Headless Chrome desktop emulation, instrumented native Three.js devtools renderer observation; not real mobile hardware",
+    "runs": [
+      {
+        "cache": "cold",
+        "pair": 1,
+        "movementObservedMs": 5624.600000023842,
+        "firstDrawMs": 3237.399999976158,
+        "sceneDisplayedMs": 5392.7,
+        "controlsReadyMs": 5392.7,
+        "playerMovementObservedMs": 5509.3,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.6000000208087526,
+          0,
+          -1.9985000000000002
+        ],
+        "requests": 48,
+        "transferBytes": 2248353,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.799999999999272,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3230,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 1,
+        "movementObservedMs": 3734.7999999523163,
+        "firstDrawMs": 1442.8999999761581,
+        "sceneDisplayedMs": 3601.9,
+        "controlsReadyMs": 3601.9,
+        "playerMovementObservedMs": 3652,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.6000139119083543,
+          0,
+          -1.863500000076249
+        ],
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3233,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "cold",
+        "pair": 2,
+        "movementObservedMs": 5615.899999976158,
+        "firstDrawMs": 3267.0999999046326,
+        "sceneDisplayedMs": 5398.6,
+        "controlsReadyMs": 5398.6,
+        "playerMovementObservedMs": 5515.2,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.6000000233854825,
+          0,
+          -2.0110999997854235
+        ],
+        "requests": 48,
+        "transferBytes": 2248353,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3231,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 2,
+        "movementObservedMs": 3718.2999999523163,
+        "firstDrawMs": 1437.8999999761581,
+        "sceneDisplayedMs": 3583,
+        "controlsReadyMs": 3583,
+        "playerMovementObservedMs": 3649.6,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.600012476790437,
+          0,
+          -2.1496999996481305
+        ],
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3231,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "cold",
+        "pair": 3,
+        "movementObservedMs": 5638.700000047684,
+        "firstDrawMs": 3258.8000000715256,
+        "sceneDisplayedMs": 5408.9,
+        "controlsReadyMs": 5408.9,
+        "playerMovementObservedMs": 5525.5,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.600000023712673,
+          0,
+          -2.0002999993562702
+        ],
+        "requests": 48,
+        "transferBytes": 2248353,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.799999999999272,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3231,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      },
+      {
+        "cache": "warm",
+        "pair": 3,
+        "movementObservedMs": 3704.899999976158,
+        "firstDrawMs": 1424.1999999284744,
+        "sceneDisplayedMs": 3575.6,
+        "controlsReadyMs": 3575.6,
+        "playerMovementObservedMs": 3625.6,
+        "playerBefore": [
+          2.6,
+          0,
+          -3.2
+        ],
+        "playerAfter": [
+          2.6000145915628865,
+          0,
+          -2.0137999994497413
+        ],
+        "requests": 48,
+        "transferBytes": 1800,
+        "encodedBytes": 2233953,
+        "frameMedianMs": 16.699999999999818,
+        "frameP95Ms": 16.700000000000728,
+        "frameSamples": 180,
+        "resources": {
+          "textures": 118,
+          "geometries": 3234,
+          "programs": 59
+        },
+        "errors": [],
+        "services": {
+          "grounded": "",
+          "realtime": "",
+          "analytics": ""
+        },
+        "requestsByHost": {
+          "127.0.0.1:8018": 34,
+          "cdn.jsdelivr.net": 13
+        }
+      }
+    ]
+  }
+}

@@ -17,6 +17,7 @@ import { createHash } from 'crypto';
 import { runInNewContext } from 'vm';
 import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
 import { runVisualGovernorTests } from './test-visual-governor.mjs';
+import { runFirstVisitTests } from './test-first-visit.mjs';
 import { runLoreTests } from './test-lore.mjs';
 import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
@@ -184,8 +185,9 @@ ok(viewport.length > 0, 'meta viewport tag exists');
 ok(!/user-scalable\s*=\s*no/i.test(viewport), 'viewport has no user-scalable=no');
 ok(!/maximum-scale/i.test(viewport), 'viewport has no maximum-scale');
 ok(/width=device-width/i.test(viewport), 'viewport still width=device-width');
-ok(/@media \(max-width: 520px\) \{[^\n]*#mapBtn \{ order: 10; \}/.test(HTML),
-  'the mobile map action wraps below the hamburger instead of overlapping it');
+ok(/#topbar \{[^}]*max-width: calc\(100vw - 88px\)/.test(HTML)
+  &&HTML.indexOf('id="mapBtn"')<HTML.indexOf('id="townTools"'),
+  'the compact mobile navigation reserves the hamburger lane and keeps Map one action away');
 ok(/@media \(hover: none\) and \(pointer: coarse\) \{[\s\S]*?#prompt \{ left: 12px; right: 112px;[\s\S]*?white-space: normal/.test(HTML)
   && /#prompt\.show \{ transform: translateY\(0\); \}/.test(HTML),
   'mobile interaction prompts wrap inside a left lane reserved away from the round action button');
@@ -428,7 +430,7 @@ ok(resolveCitySeason(CITY_STATE)===CITY_STATE.season.value
   'season accepts four generated values, falls back neutrally, and has distinct fixture palettes');
 ok(!/\bfetch\s*\(|api\.github|workers\.dev|\/taxi\b/i.test(CITY_TIME_SRC),
   'city-time projection is local and adds no runtime API, LLM, or backend call');
-ok(/fetch\('data\/city-state\.json',\{cache:'no-cache'\}\)/.test(HTML)
+ok(/fetchArrivalResponse\('data\/city-state\.json',\{cache:'no-cache'\}\)/.test(HTML)
   &&/cityStateLoad/.test(HTML)
   &&/scene\.fog = new THREE\.Fog\(CITY_SEASON_STYLE\.fog/.test(HTML)
   &&/SKY_KEYS\.forEach\(k=>/.test(HTML)
@@ -783,10 +785,10 @@ ok(REPO_PORTAL_LIMITS.cacheTtlMs===15*60*1000&&REPO_PORTAL_LIMITS.cacheMaxBytes=
   'public repo cache is fixed at 15 minutes, 512 KiB, and 30 LRU entries');
 ok(/_ownerRepos\(await _ownerSnapshot\(\)\)\.find/.test(portalTargetLoader)
   &&portalTargetLoader.indexOf('_ownerSnapshot')<portalTargetLoader.indexOf('_repoPortalCacheLookup')
-  &&portalTargetLoader.indexOf('_repoPortalCacheLookup')<portalTargetLoader.indexOf("fetch('https://api.github.com/repos/"),
+  &&portalTargetLoader.indexOf('_repoPortalCacheLookup')<portalTargetLoader.indexOf("fetchArrivalResponse('https://api.github.com/repos/"),
   'target loading checks the local owner snapshot, then fresh cache, then one exact repo endpoint');
-ok((portalTargetLoader.match(/fetch\(/g)||[]).length===1
-  &&/if\(!res\.ok\)\{[\s\S]*?if\(cached\.stale\) return \{repo:cached\.stale,source:'repo-stale-cache',result:'stale'\}/.test(portalTargetLoader)
+ok((portalTargetLoader.match(/fetchArrivalResponse\(/g)||[]).length===1
+  &&/catch\(e\)\{[\s\S]*?if\(cached\.stale\) return \{repo:cached\.stale,source:'repo-stale-cache',result:'stale'\}/.test(portalTargetLoader)
   &&!/retry|setTimeout/.test(portalTargetLoader),
   'the target path makes one GitHub request, never retries 403/429, and labels stale recovery');
 ok(/while\(bytes>REPO_PORTAL_LIMITS\.cacheMaxBytes&&cache\.order\.length>1\)/.test(portalLoader)
@@ -831,14 +833,13 @@ ok(/const ATELIER_DIRECT_LINK = resolveRepositoryAtelierDirectLink\(location\.se
   &&/function _scheduleRepositoryAtelierDirectEntry\(\)/.test(atelierDirectBoot)
   &&/loading\.style\.display='flex'/.test(atelierDirectBoot)
   &&/classList\.add\('direct-entry'\)/.test(atelierDirectBoot)
-  &&/requestAnimationFrame\(\(\)=>requestAnimationFrame\(enter\)\)/.test(atelierDirectBoot)
-  &&/introStartBtn\.click\(\)/.test(atelierDirectBoot)
-  &&/DIRECT_ENTRY_LIMITS\.initializationDelayMs/.test(atelierDirectBoot)
-  &&/DIRECT_ENTRY_LIMITS\.coverReleaseMs/.test(atelierDirectBoot),
-  'valid direct links paint one shared cover, hold the initialization pause, then reuse the normal entry action');
+  &&/FIRST_ARRIVAL\.direct=true; FIRST_ARRIVAL\.target=target/.test(atelierDirectBoot)
+  &&/if\(action==='enter'\)\{ introStartBtn\.click\(\)/.test(HTML)
+  &&/stepArrival\(FIRST_ARRIVAL,[\s\S]*?DIRECT_ENTRY_LIMITS\)/.test(HTML),
+  'valid direct links keep the shared cover until real frame readiness and reuse the normal entry action');
 ok(/PLAZA_DIRECT_LINK\.ok\|\|cityMode!=='owner'/.test(atelierDirectBoot)
-  &&/_scheduleCoveredDirectEntry\(t\('plazaDirectOpening'\),\(\)=>false\)/.test(atelierDirectBoot)
-  &&/_schedulePlazaDirectEntry\(\)&&!_scheduleRepositoryAtelierDirectEntry\(\)/.test(atelierDirectBoot),
+  &&/_scheduleCoveredDirectEntry\(t\('plazaDirectOpening'\)\)/.test(atelierDirectBoot)
+  &&/if\(!_schedulePlazaDirectEntry\(\)\) _scheduleRepositoryAtelierDirectEntry\(\)/.test(atelierDirectBoot),
   'the English-first Plaza link bypasses the intro into the existing owner-town spawn');
 ok(/repositoryAtelierDirectLinkRepo\(\)\?\{autoChat:false\}:\{\}/.test(atelierDirectBoot),
   'direct entry reveals the repository exhibition first instead of covering it with the Gitber chat');
@@ -959,15 +960,15 @@ ok((HTML.match(/class="intentLensChoice" type="button" data-intent="/g)||[]).len
   ['intentContribute','기여할 일 찾기','Find something to contribute']
 ].forEach(([key,ko,en])=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2&&HTML.includes(ko)&&HTML.includes(en),
   `Intent Lens key ${key} is bilingual and concise`));
-ok(/intent==='understand'[\s\S]*?intentLensTargetRepo\(\)[\s\S]*?openStationModal\(\)[\s\S]*?enterRepositoryAtelier\(repo,\{autoChat:false\}\)/.test(intentLensSrc)
+ok(/intent==='understand'[\s\S]*?intentLensTargetRepo\(\)[\s\S]*?openFirstRepoPicker\(\)[\s\S]*?enterRepositoryAtelier\(repo,\{autoChat:false\}\)/.test(intentLensSrc)
   &&/intent==='explore'[\s\S]*?openMap\(\)/.test(intentLensSrc)
   &&/intent==='contribute'[\s\S]*?openContributionQuestBoard\('menu'\)/.test(intentLensSrc),
-  'each intent dispatches only to the existing Portal/Atelier, World Map, or Quests flow');
+  'each intent reuses current-catalog/Portal Atelier, World Map, or Quests without an automatic recommendation');
 ok(!/fetch\(|loadContributionQuests|_sendRepositoryAtelierChat|localStorage|sessionStorage|indexedDB|new THREE|setTimeout|setInterval|requestAnimationFrame|track\(/.test(intentLensSrc),
   'Intent Lens itself adds no request, model call, resource, timer, storage, profiling, or analytics work');
 ok(/querySelectorAll\('#intentLens \[data-intent\]'\)[\s\S]*?addEventListener\('click'/.test(intentLensSrc)
   &&/\.intentLensChoice \{[^}]*min-height: 40px/.test(HTML)
-  &&/@media \(max-width: 520px\) \{[\s\S]*?#intentLens \{ margin-top: 48px; \}[\s\S]*?#panel:not\(\.hidden\) ~ #chat \{ visibility: hidden; opacity: 0; pointer-events: none; \}/.test(HTML)
+  &&/function closeTownPanels/.test(HTML)&&/townPanelObserver\.observe/.test(HTML)
   &&/@media \(hover: none\) and \(pointer: coarse\) \{[\s\S]*?\.intentLensChoice \{ min-height: 44px; \}/.test(HTML),
   'native activation covers keyboard, touch, and pointer while mobile HUD and chat stay clear');
 if(intentTargetSrc){
@@ -1197,7 +1198,7 @@ ok(/function _growthFocusables\(\)/.test(townGrowthBlock)
   'background UI is inert, focus is trapped, the slider names its year, and mobile actions stay 44px');
 ok(/const _reqGrowth = .*get\('growth'\)/.test(HTML)
   && /startTownGrowthReplay\(\{entry:'link',year:_reqGrowth,autoplay:false\}\)/.test(HTML)
-  && /introGrowth\.onclick=.*startTownGrowthReplay\(\{entry:'intro',autoplay:true\}\)/.test(HTML),
+  && /introGrowth\.onclick=[\s\S]*?startTownGrowthReplay\(\{entry:'intro',autoplay:true\}\)/.test(HTML),
   'shared years open after town entry without autoplay while the explicit Watch action starts the story');
 ok(/repo\._growthHidden=!visible/.test(townGrowthBlock)
   && /repo\._group\.visible=visible/.test(townGrowthBlock)
@@ -2421,8 +2422,10 @@ ok(/player\.position\.copy\(s\.playerPosition\)/.test(atelierSrc)
 ok(/_resetRepositoryAtelierInput\(\)/.test(atelierSrc) && /clearKeys\(\); stickVec=\{x:0,y:0\}/.test(atelierSrc)
   && /moveTid=null; lookTid=null/.test(atelierSrc), 'entry and exit clear keyboard and touch ownership so movement cannot stick');
 ok(/if\(e\.code==='Enter'&&e\.repeat\)\{ e\.preventDefault\(\); return; \}/.test(HTML), 'held Enter cannot repeatedly fire a room terminal');
-ok(/const isUiKeyTarget=e=>/.test(HTML) && /if\(isTyping\(\)\|\|isUiKeyTarget\(e\)\) return/.test(HTML)
-  && /\^\(BUTTON\|A\|INPUT\|SELECT\|TEXTAREA\)\$/.test(HTML), 'focused native controls own Enter/Space without also firing a world action');
+ok(/const isUiKeyTarget=e=>/.test(HTML) && /if\(isTyping\(\)\|\|isUiKeyTarget\(e\)\|\|townInputBlocked\(\)\) return/.test(HTML)
+  && /\^\(BUTTON\|A\|INPUT\|SELECT\|TEXTAREA\|SUMMARY\)\$/.test(HTML)
+  && /closest\?\.\('summary,\[role="button"\]'\)/.test(HTML),
+  'focused native controls and nested summary content own Enter/Space without also firing a world action');
 ok(/!repositoryAtelierActive\(\)\|\|repositoryAtelierChatActive\(\)/.test(HTML)
   && /\(!repositoryAtelierActive\(\)\|\|repositoryAtelierChatActive\(\)\)&&!chatEl\.classList\.contains\('hidden'\)/.test(HTML)
   && /if\(document\.activeElement===chatText\) chatText\.blur\(\)/.test(atelierSrc),
@@ -2892,7 +2895,7 @@ ok(RESIDENT_MANIFEST.profile_count === CITY_REPOS.length
   && RESIDENT_MANIFEST.active_count === 9
   && RESIDENT_MANIFEST.active_roster.every(entry => !RESIDENT_MANIFEST.profiles.find(profile => profile.slug === entry.slug)?.archived),
   'the manifest covers every public repo while the bounded active roster excludes archives');
-ok(/loadResidentManifest\(\{owner:currentUser\}\)/.test(HTML)
+ok(/loadResidentManifest\(\{owner:currentUser,fetchImpl:fetchOptionalArrival\}\)/.test(HTML)
   && /async function ensureResidentProfile\(res,retry=false\)/.test(HTML)
   && !/api\.github\.com/.test(RESIDENT_RUNTIME_SRC),
   'boot loads only the local manifest and profile details stay interaction-lazy with zero resident GitHub API calls');
@@ -2932,7 +2935,7 @@ const taxiPromptBlock=(TAXI_BOUNDARY_SRC.match(/export function taxiSystemPrompt
 ok(LORE_SCHEMA.properties.fragments.minItems===10
   && LORE_SCHEMA.properties.fragments.maxItems===15
   && Buffer.byteLength(LORE_SOURCE)<32768
-  && /loadLoreFragments\(\)/.test(HTML)
+  && /loadLoreFragments\(\{fetchImpl:fetchOptionalArrival\}\)/.test(HTML)
   && /allocateElderFragments\(\{manifest:RESIDENT_MANIFEST,repositories:ELDER_LORE_REPOSITORIES,cityState:CITY_STATE,lore:LORE_FRAGMENTS\}\)/.test(HTML),
   'owner boot validates one bounded hand-authored lore file and allocates it from the existing active roster');
 ok(loreDeliveryBlock.length>0
@@ -3127,7 +3130,7 @@ ok(/function marketFollowup\(q\)\{ if\(!_marketThread\) return false;[\s\S]*?yes
 ok(/function cancelMarketRequest\(\)\{ _marketRequestSeq\+\+;[\s\S]*?_marketAbort\.abort\(\)/.test(npcBlock)
   &&/requestSeq!==_marketRequestSeq\|\|!activeNpc\|\|activeNpc\.res!==res\|\|chatEl\.classList\.contains\('hidden'\)/.test(npcBlock)
   &&/if\(activeNpc!==npc\)\{ cancelMarketRequest\(\);/.test(HTML)
-  &&/function closeChat\(\)\{ cancelMarketRequest\(\);/.test(HTML), 'switching or closing chat aborts and generation-gates late AURI responses');
+  &&/function closeChat\(restoreFocus=true\)\{ cancelMarketRequest\(\);/.test(HTML), 'switching or closing chat aborts and generation-gates late AURI responses');
 ok(/function _socialResident\(L\)\{ return !!L && !L\.res\.oracle; \}/.test(npcBlock)
   &&/const P=RESIDENTS_LIVE\.filter\(_socialResident\)/.test(npcBlock)
   &&/if\(!_socialResident\(seed\)\) return null/.test(npcBlock), 'the market easter egg stays outside ambient circles and group chat');
@@ -3775,6 +3778,7 @@ const visualGovernorRuntimeBlock = (HTML.match(/\/\*VISUAL_GOVERNOR_RUNTIME:STAR
 ok(visualGovernorCoreBlock.length > 0 && visualGovernorRuntimeBlock.length > 0,
   'governor pure transition and runtime adapter blocks remain independently extractable');
 await runVisualGovernorTests(ok);
+await runFirstVisitTests(ok);
 ok(/warmupMs:6000,emaAlpha:0\.08,minFrameMs:4,maxFrameMs:120/.test(visualGovernorCoreBlock)
   && /downFrameMs:22\.5,downHoldMs:3000/.test(visualGovernorCoreBlock)
   && /downFrameMs:28\.5,downHoldMs:5000,upFrameMs:17\.5,upHoldMs:14000/.test(visualGovernorCoreBlock)
@@ -3898,7 +3902,7 @@ ok(/worldTreeModal\.addEventListener\('keydown',event=>\{ if\(event\.key==='Esca
   &&/event\.key!=='Tab'/.test(worldTreeChronicleBlock)
   &&/WORLD_TREE_UI\.previousFocus=source\|\|document\.activeElement\|\|worldTreeTrigger/.test(worldTreeChronicleBlock)
   &&/previous&&previous\.isConnected&&!previous\.hidden\?previous:fallback/.test(worldTreeChronicleBlock)
-  &&/actBtn\.addEventListener\('click',\(\)=>\{ if\(modalOpen\) return; doAct\(actBtn\); \}\)/.test(HTML)
+  &&/actBtn\.addEventListener\('click',\(\)=>\{ if\(townInputBlocked\(\)\) return; doAct\(actBtn\); \}\)/.test(HTML)
   &&/if\(event\.target===worldTreeModal\) closeWorldTreeChronicle\(\)/.test(worldTreeChronicleBlock),
   'Chronicle traps focus, closes by Escape or backdrop, and restores the originating trigger');
 ok(/worldTreeRootSearchWrap\.hidden=total<10/.test(worldTreeChronicleBlock)

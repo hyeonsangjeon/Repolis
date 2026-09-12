@@ -1,0 +1,4520 @@
+{
+  "scope": "PR #123 closeout; local browser observations, not physical-device or production QA",
+  "sourceBlobs": {
+    "index.html": "6403d9d706be09aa97391ba0f92cbac1e591c67f",
+    "scripts/test-first-visit.mjs": "2e7780cdbaedfce704a5ebe34239840b1441d547",
+    "scripts/test-first-visit-browser.mjs": "083b90df04e2f1ff073958f23cfdb9ed5f529f92",
+    "repos.json": "4ba36ce4233b09971d6efb434269ce347435cd03"
+  },
+  "localHermetic": {
+    "node": "v24.7.0",
+    "python": "3.11.7",
+    "commands": 24,
+    "smokeChecks": 1554,
+    "firstVisitChecks": 69,
+    "firstVisitIncludedInSmoke": true,
+    "passed": true
+  },
+  "before": {
+    "revision": "f139f11e1926ba5658415e5a97a59d455de2e12f",
+    "name": "host-rejection-en-desktop",
+    "ok": false,
+    "blocked": true,
+    "reason": "initialization",
+    "diagnostics": [
+      "Local test: unrelated host permission probe"
+    ]
+  },
+  "after": {
+    "browser": "Chrome/152.0.7977.84",
+    "completedAt": "2026-09-10T19:27:50.488Z",
+    "base": "http://127.0.0.1:8043/",
+    "groups": {
+      "matrix": 44,
+      "failures": 24,
+      "regressions": 16,
+      "policy": 7,
+      "viewport": 4
+    },
+    "passed": 95,
+    "nonFaultCases": 67,
+    "nonFaultConsoleAndLogErrors": 0,
+    "collectsRawNetworkLoadingFailed": false,
+    "cases": [
+      {
+        "name": "default-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "launch-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "plaza-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "public-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "portal-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "atelier-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "blueprint-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 47,
+        "apiGets": 2,
+        "preflights": 1,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "route-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "focus-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "growth-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "blueprint-cancel-en-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "default-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "launch-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "plaza-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "public-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "portal-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "atelier-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "blueprint-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 47,
+        "apiGets": 2,
+        "preflights": 1,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "route-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "focus-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "growth-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "blueprint-cancel-ko-desktop",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "default-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "launch-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "plaza-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "public-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "portal-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "atelier-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "blueprint-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 47,
+        "apiGets": 2,
+        "preflights": 1,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "route-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "focus-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "growth-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "blueprint-cancel-en-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "default-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "launch-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "plaza-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "public-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "portal-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "atelier-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "blueprint-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 47,
+        "apiGets": 2,
+        "preflights": 1,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "route-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "focus-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "growth-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "blueprint-cancel-ko-mobile",
+        "group": "matrix",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "owned-bootstrap-error",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 42,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 1,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "initialization",
+        "diagnostics": [
+          "Error: Local test: owned bootstrap rejection\n    at http://127.0.0.1:8043/?view=plaza&lang=en:2367:22"
+        ]
+      },
+      {
+        "name": "owned-bootstrap-string",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 42,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 1,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "initialization",
+        "diagnostics": [
+          "Local test: owned bootstrap rejection"
+        ]
+      },
+      {
+        "name": "required-script",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "script"
+      },
+      {
+        "name": "required-module",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 35,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "script"
+      },
+      {
+        "name": "module-watchdog",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 42,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "stalled"
+      },
+      {
+        "name": "optional-static",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "optional-deadline",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "catalog-malformed",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 1,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "data_load"
+      },
+      {
+        "name": "catalog-missing",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 1,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "data_load"
+      },
+      {
+        "name": "webgl-unavailable",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 2,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "webgl"
+      },
+      {
+        "name": "public-403",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "rate_limit"
+      },
+      {
+        "name": "portal-403",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 49,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "rate_limit"
+      },
+      {
+        "name": "public-429",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "rate_limit"
+      },
+      {
+        "name": "portal-429",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 49,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "rate_limit"
+      },
+      {
+        "name": "public-404",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "not_found"
+      },
+      {
+        "name": "portal-404",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 97,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "api-deadline",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 49,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "timeout"
+      },
+      {
+        "name": "api-malformed",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "malformed"
+      },
+      {
+        "name": "api-invalid-shape",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "malformed"
+      },
+      {
+        "name": "api-oversized",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 49,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "oversized"
+      },
+      {
+        "name": "explicit-retry",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 94,
+        "apiGets": 2,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 1,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "mismatched-owner",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 49,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "not_found"
+      },
+      {
+        "name": "missing-focus",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 46,
+        "apiGets": 2,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": true,
+        "reason": "target"
+      },
+      {
+        "name": "empty-public",
+        "group": "failures",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": false,
+        "blocked": true,
+        "reason": "empty"
+      },
+      {
+        "name": "host-rejection-en-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 1,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": false,
+        "reason": null,
+        "diagnostics": [
+          "Local test: unrelated host permission probe"
+        ]
+      },
+      {
+        "name": "host-rejection-ko-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 1,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": false,
+        "reason": null,
+        "diagnostics": [
+          "Local test: unrelated host permission probe"
+        ]
+      },
+      {
+        "name": "host-rejection-en-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 1,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": false,
+        "reason": null,
+        "diagnostics": [
+          "Local test: unrelated host permission probe"
+        ]
+      },
+      {
+        "name": "host-rejection-ko-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 1,
+        "logErrors": 0,
+        "expectedDiagnostics": true,
+        "ready": true,
+        "blocked": false,
+        "reason": null,
+        "diagnostics": [
+          "Local test: unrelated host permission probe"
+        ]
+      },
+      {
+        "name": "slow-public",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "low-end",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": true,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "reduced-mobile",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "context-pending-direct",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "context-town",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "context-chat",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "context-atelier-mobile",
+        "group": "policy",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 45,
+        "apiGets": 1,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "disclosure-keys-en-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "context-tour-panel-en-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "context-closed-chat-en-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "disclosure-keys-ko-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "context-tour-panel-ko-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "context-closed-chat-ko-desktop",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "disclosure-keys-en-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "context-tour-panel-en-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "context-closed-chat-en-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "disclosure-keys-ko-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "context-tour-panel-ko-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "context-closed-chat-ko-mobile",
+        "group": "regressions",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": "context_lost"
+      },
+      {
+        "name": "mixed-speech-en-desktop",
+        "group": "viewport",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "mixed-speech-ko-desktop",
+        "group": "viewport",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "mixed-speech-en-mobile",
+        "group": "viewport",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      },
+      {
+        "name": "mixed-speech-ko-mobile",
+        "group": "viewport",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "requests": 48,
+        "apiGets": 0,
+        "preflights": 0,
+        "consoleErrors": 0,
+        "logErrors": 0,
+        "expectedDiagnostics": false,
+        "ready": true,
+        "blocked": false,
+        "reason": null
+      }
+    ],
+    "viewport": [
+      {
+        "name": "mixed-speech-en-desktop",
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "evidence": {
+          "population": {
+            "residents": 9,
+            "scholars": 5
+          },
+          "observations": [
+            {
+              "angle": 0,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 655.7121587973177,
+                  "y": 215.50377026887296,
+                  "width": 272,
+                  "height": 152.93172690763055,
+                  "line": "👋 Oh, hello there!"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 574.2245539857297,
+                  "y": 380.43549717650353,
+                  "width": 271.99999999999994,
+                  "height": 152.93172690763052,
+                  "line": "A visitor! 👋"
+                }
+              ],
+              "nearby": "Kai: 👋 Oh, hello there!\n\nNoa: A visitor! 👋",
+              "camera": [
+                6.438154445002205e-8,
+                6.800885889643276,
+                -11.870156303069948
+              ],
+              "perf": {
+                "calls": 2300,
+                "triangles": 634016,
+                "geometries": 3521,
+                "textures": 122,
+                "programs": 62,
+                "dpr": 1,
+                "size": [
+                  1440,
+                  900
+                ],
+                "tier": {
+                  "mobile": false,
+                  "lowEnd": false,
+                  "reduced": false,
+                  "detail": 1,
+                  "adaptive": "full"
+                },
+                "frame": {
+                  "renderMs": 11.7,
+                  "cadenceMs": 16.3,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 2298,
+                    "triangles": 634014,
+                    "lines": 52,
+                    "points": 177,
+                    "cpuMs": 11.6
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0.1
+                  }
+                },
+                "baseScene": {
+                  "calls": 2298,
+                  "triangles": 634014
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.55,
+                  "bloom": 0.45,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 4
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2714.5999999046326
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 10.700000047683716,
+              "cadenceMedian": 16.700000047683716,
+              "scene": {
+                "objects": 8315,
+                "geometries": 4577,
+                "materials": 5037
+              }
+            },
+            {
+              "angle": 0.8,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 485.48637893456953,
+                  "y": 197.87673260846992,
+                  "width": 272,
+                  "height": 152.93172690763058,
+                  "line": "👋 Oh, hello there!"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 392.3656990413649,
+                  "y": 362.80845951610047,
+                  "width": 271.99999999999994,
+                  "height": 152.93172690763055,
+                  "line": "A visitor! 👋"
+                }
+              ],
+              "nearby": "Kai: 👋 Oh, hello there!\n\nNoa: A visitor! 👋",
+              "camera": [
+                -8.515077396281765,
+                6.800885889774408,
+                -8.27003924388159
+              ],
+              "perf": {
+                "calls": 2394,
+                "triangles": 682148,
+                "geometries": 3671,
+                "textures": 128,
+                "programs": 62,
+                "dpr": 1,
+                "size": [
+                  1440,
+                  900
+                ],
+                "tier": {
+                  "mobile": false,
+                  "lowEnd": false,
+                  "reduced": false,
+                  "detail": 1,
+                  "adaptive": "full"
+                },
+                "frame": {
+                  "renderMs": 11.4,
+                  "cadenceMs": 16.5,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 2392,
+                    "triangles": 682146,
+                    "lines": 44,
+                    "points": 177,
+                    "cpuMs": 11.4
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 2392,
+                  "triangles": 682146
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.55,
+                  "bloom": 0.45,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 4
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2714.5999999046326
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 11.699999809265137,
+              "cadenceMedian": 16.699999809265137,
+              "scene": {
+                "objects": 8318,
+                "geometries": 4580,
+                "materials": 5044
+              }
+            },
+            {
+              "angle": 3.141592653589793,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 602.2537147896229,
+                  "y": 157.1294313110496,
+                  "width": 272,
+                  "height": 152.93172690763058,
+                  "line": "👋 Oh, hello there!"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 590.1480563001949,
+                  "y": 322.06115821868013,
+                  "width": 271.99999999999994,
+                  "height": 152.93172690763055,
+                  "line": "A visitor! 👋"
+                }
+              ],
+              "nearby": "Kai: 👋 Oh, hello there!\n\nNoa: A visitor! 👋",
+              "camera": [
+                -0.00005147084927587878,
+                6.800885889774408,
+                11.870034483698836
+              ],
+              "perf": {
+                "calls": 2391,
+                "triangles": 582566,
+                "geometries": 4481,
+                "textures": 148,
+                "programs": 65,
+                "dpr": 1,
+                "size": [
+                  1440,
+                  900
+                ],
+                "tier": {
+                  "mobile": false,
+                  "lowEnd": false,
+                  "reduced": false,
+                  "detail": 1,
+                  "adaptive": "full"
+                },
+                "frame": {
+                  "renderMs": 11.1,
+                  "cadenceMs": 14.8,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 2389,
+                    "triangles": 582564,
+                    "lines": 36,
+                    "points": 191,
+                    "cpuMs": 11
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 2389,
+                  "triangles": 582564
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.55,
+                  "bloom": 0.45,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 4
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2714.5999999046326
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 11,
+              "cadenceMedian": 16.5,
+              "scene": {
+                "objects": 8436,
+                "geometries": 4557,
+                "materials": 5024
+              }
+            },
+            {
+              "angle": 0,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 520.3191983223066,
+                  "y": 186.78145616372692,
+                  "width": 271.99999999999994,
+                  "height": 152.93172690763055,
+                  "line": "👋 Oh, hello there!"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 574.2243632101804,
+                  "y": 351.71318307135743,
+                  "width": 272,
+                  "height": 152.93172690763055,
+                  "line": "A visitor! 👋"
+                }
+              ],
+              "nearby": "Kai: 👋 Oh, hello there!\n\nNoa: A visitor! 👋",
+              "camera": [
+                -2.7378703756055803e-10,
+                6.800885889774408,
+                -11.870012722820373
+              ],
+              "perf": {
+                "calls": 2324,
+                "triangles": 645468,
+                "geometries": 4481,
+                "textures": 148,
+                "programs": 65,
+                "dpr": 1,
+                "size": [
+                  1440,
+                  900
+                ],
+                "tier": {
+                  "mobile": false,
+                  "lowEnd": false,
+                  "reduced": false,
+                  "detail": 1,
+                  "adaptive": "full"
+                },
+                "frame": {
+                  "renderMs": 10.4,
+                  "cadenceMs": 17.8,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 2322,
+                    "triangles": 645466,
+                    "lines": 52,
+                    "points": 177,
+                    "cpuMs": 10.2
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 2322,
+                  "triangles": 645466
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.55,
+                  "bloom": 0.45,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2714.5999999046326
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 10.200000047683716,
+              "cadenceMedian": 16.600000143051147,
+              "scene": {
+                "objects": 8313,
+                "geometries": 4575,
+                "materials": 5035
+              }
+            }
+          ],
+          "transitions": [
+            {
+              "force": "balanced",
+              "tier": "balanced"
+            },
+            {
+              "force": "lean",
+              "tier": "lean"
+            },
+            {
+              "force": "full",
+              "tier": "full"
+            },
+            {
+              "force": "auto",
+              "tier": "full"
+            }
+          ],
+          "historicalObservation": false
+        }
+      },
+      {
+        "name": "mixed-speech-ko-desktop",
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "evidence": {
+          "population": {
+            "residents": 9,
+            "scholars": 5
+          },
+          "observations": [
+            {
+              "angle": 0,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 655.8237224785806,
+                  "y": 215.52705386297416,
+                  "width": 271.99999999999994,
+                  "height": 152.93172690763055,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 574.2245522346254,
+                  "y": 380.4587807706047,
+                  "width": 272,
+                  "height": 152.93172690763055,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                }
+              ],
+              "nearby": "카이: 별 밤이네요, 어서 와요 🌙\n\n노아: 별 밤이네요, 어서 와요 🌙",
+              "camera": [
+                6.440161317110205e-8,
+                6.80088588969577,
+                -11.870156303186269
+              ],
+              "perf": {
+                "calls": 2300,
+                "triangles": 634016,
+                "geometries": 3521,
+                "textures": 122,
+                "programs": 62,
+                "dpr": 1,
+                "size": [
+                  1440,
+                  900
+                ],
+                "tier": {
+                  "mobile": false,
+                  "lowEnd": false,
+                  "reduced": false,
+                  "detail": 1,
+                  "adaptive": "full"
+                },
+                "frame": {
+                  "renderMs": 12.6,
+                  "cadenceMs": 14.4,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 2298,
+                    "triangles": 634014,
+                    "lines": 52,
+                    "points": 177,
+                    "cpuMs": 12.4
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0.1
+                  }
+                },
+                "baseScene": {
+                  "calls": 2298,
+                  "triangles": 634014
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.55,
+                  "bloom": 0.45,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 4
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2726.5999999046326
+                }
+              },
+              "frameSamples": 55,
+              "renderMedian": 12.099999904632568,
+              "cadenceMedian": 16.700000047683716,
+              "scene": {
+                "objects": 8315,
+                "geometries": 4577,
+                "materials": 5037
+              }
+            },
+            {
+              "angle": 0.8,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 485.48071474921085,
+                  "y": 197.88108542461302,
+                  "width": 271.99999999999994,
+                  "height": 152.93172690763055,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 392.3651307567443,
+                  "y": 362.8128123322435,
+                  "width": 271.99999999999994,
+                  "height": 152.93172690763052,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                }
+              ],
+              "nearby": "카이: 별 밤이네요, 어서 와요 🌙\n\n노아: 별 밤이네요, 어서 와요 🌙",
+              "camera": [
+                -8.51508900813406,
+                6.800885889774408,
+                -8.270034334469166
+              ],
+              "perf": {
+                "calls": 2394,
+                "triangles": 682148,
+                "geometries": 3671,
+                "textures": 128,
+                "programs": 62,
+                "dpr": 1,
+                "size": [
+                  1440,
+                  900
+                ],
+                "tier": {
+                  "mobile": false,
+                  "lowEnd": false,
+                  "reduced": false,
+                  "detail": 1,
+                  "adaptive": "full"
+                },
+                "frame": {
+                  "renderMs": 19.8,
+                  "cadenceMs": 23.3,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 2392,
+                    "triangles": 682146,
+                    "lines": 44,
+                    "points": 177,
+                    "cpuMs": 19.7
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 2392,
+                  "triangles": 682146
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.55,
+                  "bloom": 0.45,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 4
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2726.5999999046326
+                }
+              },
+              "frameSamples": 56,
+              "renderMedian": 11.799999952316284,
+              "cadenceMedian": 16.700000047683716,
+              "scene": {
+                "objects": 8319,
+                "geometries": 4581,
+                "materials": 5045
+              }
+            },
+            {
+              "angle": 3.141592653589793,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 601.9976058750981,
+                  "y": 157.09747893165337,
+                  "width": 272,
+                  "height": 152.93172690763052,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 590.1480312920378,
+                  "y": 322.0292058392839,
+                  "width": 271.9999999999999,
+                  "height": 152.93172690763052,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                }
+              ],
+              "nearby": "카이: 별 밤이네요, 어서 와요 🌙\n\n노아: 별 밤이네요, 어서 와요 🌙",
+              "camera": [
+                -0.000051470889776334406,
+                6.800885889774408,
+                11.87003448371596
+              ],
+              "perf": {
+                "calls": 2391,
+                "triangles": 582566,
+                "geometries": 4481,
+                "textures": 148,
+                "programs": 65,
+                "dpr": 1,
+                "size": [
+                  1440,
+                  900
+                ],
+                "tier": {
+                  "mobile": false,
+                  "lowEnd": false,
+                  "reduced": false,
+                  "detail": 1,
+                  "adaptive": "full"
+                },
+                "frame": {
+                  "renderMs": 17.8,
+                  "cadenceMs": 19.3,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 2389,
+                    "triangles": 582564,
+                    "lines": 36,
+                    "points": 191,
+                    "cpuMs": 17.7
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0.1
+                  }
+                },
+                "baseScene": {
+                  "calls": 2389,
+                  "triangles": 582564
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.55,
+                  "bloom": 0.45,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 4
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2726.5999999046326
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 12.899999856948853,
+              "cadenceMedian": 16.700000047683716,
+              "scene": {
+                "objects": 8436,
+                "geometries": 4557,
+                "materials": 5024
+              }
+            },
+            {
+              "angle": 0,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 520.7111269627661,
+                  "y": 186.84911807416856,
+                  "width": 272,
+                  "height": 152.93172690763055,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 574.2242611755939,
+                  "y": 351.7808449817991,
+                  "width": 272,
+                  "height": 152.93172690763058,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                }
+              ],
+              "nearby": "카이: 별 밤이네요, 어서 와요 🌙\n\n노아: 별 밤이네요, 어서 와요 🌙",
+              "camera": [
+                -3.1112207663102816e-10,
+                6.800885889774408,
+                -11.869993154469514
+              ],
+              "perf": {
+                "calls": 2324,
+                "triangles": 645468,
+                "geometries": 4481,
+                "textures": 148,
+                "programs": 65,
+                "dpr": 1,
+                "size": [
+                  1440,
+                  900
+                ],
+                "tier": {
+                  "mobile": false,
+                  "lowEnd": false,
+                  "reduced": false,
+                  "detail": 1,
+                  "adaptive": "full"
+                },
+                "frame": {
+                  "renderMs": 10.7,
+                  "cadenceMs": 16.9,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 2322,
+                    "triangles": 645466,
+                    "lines": 52,
+                    "points": 177,
+                    "cpuMs": 10.6
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 2322,
+                  "triangles": 645466
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.55,
+                  "bloom": 0.45,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 4
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2726.5999999046326
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 13.200000047683716,
+              "cadenceMedian": 16.799999952316284,
+              "scene": {
+                "objects": 8313,
+                "geometries": 4575,
+                "materials": 5035
+              }
+            }
+          ],
+          "transitions": [
+            {
+              "force": "balanced",
+              "tier": "balanced"
+            },
+            {
+              "force": "lean",
+              "tier": "lean"
+            },
+            {
+              "force": "full",
+              "tier": "full"
+            },
+            {
+              "force": "auto",
+              "tier": "full"
+            }
+          ],
+          "historicalObservation": false
+        }
+      },
+      {
+        "name": "mixed-speech-en-mobile",
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "evidence": {
+          "population": {
+            "residents": 9,
+            "scholars": 5
+          },
+          "observations": [
+            {
+              "angle": 0,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 154.00000000000003,
+                  "y": 213.95702948722558,
+                  "width": 223.99999999999997,
+                  "height": 125.94377510040161,
+                  "line": "You made it — welcome! 👋"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 73.91238993111287,
+                  "y": 351.9008045876272,
+                  "width": 224,
+                  "height": 125.94377510040161,
+                  "line": "You made it — welcome! 👋"
+                }
+              ],
+              "nearby": "Kai: You made it — welcome! 👋\n\nNoa: You made it — welcome! 👋",
+              "camera": [
+                8.31373245378009e-8,
+                6.800885889605072,
+                -11.870156326087306
+              ],
+              "perf": {
+                "calls": 1138,
+                "triangles": 398869,
+                "geometries": 2723,
+                "textures": 92,
+                "programs": 62,
+                "dpr": 1,
+                "size": [
+                  390,
+                  844
+                ],
+                "tier": {
+                  "mobile": true,
+                  "lowEnd": true,
+                  "reduced": true,
+                  "detail": 0.5,
+                  "adaptive": "balanced"
+                },
+                "frame": {
+                  "renderMs": 8.5,
+                  "cadenceMs": 16.6,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 1136,
+                    "triangles": 398867,
+                    "lines": 44,
+                    "points": 124,
+                    "cpuMs": 8.3
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0.2
+                  }
+                },
+                "baseScene": {
+                  "calls": 1136,
+                  "triangles": 398867
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.75,
+                  "bloom": 0.5,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2581.7999999523163
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 7.799999952316284,
+              "cadenceMedian": 16.600000143051147,
+              "scene": {
+                "objects": 7524,
+                "geometries": 4260,
+                "materials": 4707
+              }
+            },
+            {
+              "angle": 0.8,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 12.000000000000028,
+                  "y": 201.57465292414028,
+                  "width": 223.99999999999994,
+                  "height": 125.94377510040161,
+                  "line": "You made it — welcome! 👋"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 12,
+                  "y": 339.5184280245419,
+                  "width": 224.00000000000003,
+                  "height": 125.94377510040162,
+                  "line": "You made it — welcome! 👋"
+                }
+              ],
+              "nearby": "Kai: You made it — welcome! 👋\n\nNoa: You made it — welcome! 👋",
+              "camera": [
+                -8.51507739628167,
+                6.800885889774408,
+                -8.270039243881701
+              ],
+              "perf": {
+                "calls": 944,
+                "triangles": 316493,
+                "geometries": 2823,
+                "textures": 102,
+                "programs": 62,
+                "dpr": 1,
+                "size": [
+                  390,
+                  844
+                ],
+                "tier": {
+                  "mobile": true,
+                  "lowEnd": true,
+                  "reduced": true,
+                  "detail": 0.5,
+                  "adaptive": "balanced"
+                },
+                "frame": {
+                  "renderMs": 5.6,
+                  "cadenceMs": 16.5,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 942,
+                    "triangles": 316491,
+                    "lines": 44,
+                    "points": 124,
+                    "cpuMs": 5.6
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 942,
+                  "triangles": 316491
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.75,
+                  "bloom": 0.5,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2581.7999999523163
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 6.799999952316284,
+              "cadenceMedian": 16.700000047683716,
+              "scene": {
+                "objects": 7393,
+                "geometries": 4166,
+                "materials": 4614
+              }
+            },
+            {
+              "angle": 3.141592653589793,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 73.39093087946844,
+                  "y": 151.41919828539477,
+                  "width": 224,
+                  "height": 125.94377510040162,
+                  "line": "You made it — welcome! 👋"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 88.73400925912843,
+                  "y": 289.3629733857964,
+                  "width": 223.99999999999997,
+                  "height": 125.9437751004016,
+                  "line": "You made it — welcome! 👋"
+                }
+              ],
+              "nearby": "Kai: You made it — welcome! 👋\n\nNoa: You made it — welcome! 👋",
+              "camera": [
+                -0.000051470812234593284,
+                6.800885889774408,
+                11.870034483683176
+              ],
+              "perf": {
+                "calls": 1038,
+                "triangles": 333231,
+                "geometries": 3140,
+                "textures": 114,
+                "programs": 64,
+                "dpr": 1,
+                "size": [
+                  390,
+                  844
+                ],
+                "tier": {
+                  "mobile": true,
+                  "lowEnd": true,
+                  "reduced": true,
+                  "detail": 0.5,
+                  "adaptive": "balanced"
+                },
+                "frame": {
+                  "renderMs": 9.9,
+                  "cadenceMs": 17.6,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 1036,
+                    "triangles": 333229,
+                    "lines": 36,
+                    "points": 124,
+                    "cpuMs": 9.7
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0.1
+                  }
+                },
+                "baseScene": {
+                  "calls": 1036,
+                  "triangles": 333229
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.75,
+                  "bloom": 0.5,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2581.7999999523163
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 8,
+              "cadenceMedian": 16.59999990463257,
+              "scene": {
+                "objects": 7575,
+                "geometries": 4248,
+                "materials": 4694
+              }
+            },
+            {
+              "angle": 0,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "mira",
+                  "kind": "resident",
+                  "x": 145.37308234191835,
+                  "y": 186.89021953272385,
+                  "width": 223.99999999999997,
+                  "height": 125.94377510040162,
+                  "line": "A starry night — welcome 🌙"
+                },
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 65.38766956687776,
+                  "y": 324.8339946331255,
+                  "width": 223.99999999999997,
+                  "height": 125.94377510040162,
+                  "line": "You made it — welcome! 👋"
+                }
+              ],
+              "nearby": "Mira: A starry night — welcome 🌙\n\nKai: You made it — welcome! 👋",
+              "camera": [
+                -3.1112160791831825e-10,
+                6.800885889774408,
+                -11.869993154469514
+              ],
+              "perf": {
+                "calls": 1126,
+                "triangles": 400737,
+                "geometries": 3140,
+                "textures": 115,
+                "programs": 64,
+                "dpr": 1,
+                "size": [
+                  390,
+                  844
+                ],
+                "tier": {
+                  "mobile": true,
+                  "lowEnd": true,
+                  "reduced": true,
+                  "detail": 0.5,
+                  "adaptive": "balanced"
+                },
+                "frame": {
+                  "renderMs": 5.7,
+                  "cadenceMs": 17.2,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 1124,
+                    "triangles": 400735,
+                    "lines": 44,
+                    "points": 124,
+                    "cpuMs": 5.7
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 1124,
+                  "triangles": 400735
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.75,
+                  "bloom": 0.5,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2581.7999999523163
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 7.099999904632568,
+              "cadenceMedian": 16.699999809265137,
+              "scene": {
+                "objects": 7521,
+                "geometries": 4257,
+                "materials": 4704
+              }
+            }
+          ],
+          "transitions": [
+            {
+              "force": "balanced",
+              "tier": "balanced"
+            },
+            {
+              "force": "lean",
+              "tier": "lean"
+            },
+            {
+              "force": "full",
+              "tier": "balanced"
+            },
+            {
+              "force": "auto",
+              "tier": "balanced"
+            }
+          ],
+          "historicalObservation": false
+        }
+      },
+      {
+        "name": "mixed-speech-ko-mobile",
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "evidence": {
+          "population": {
+            "residents": 9,
+            "scholars": 5
+          },
+          "observations": [
+            {
+              "angle": 0,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 154,
+                  "y": 213.76445696885477,
+                  "width": 223.99999999999997,
+                  "height": 125.94377510040161,
+                  "line": "👋 좋은 하루 보내요~"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 73.91228831961399,
+                  "y": 351.7082320692564,
+                  "width": 224,
+                  "height": 125.94377510040162,
+                  "line": "👋 노아예요 — 반가워요!"
+                }
+              ],
+              "nearby": "카이: 👋 좋은 하루 보내요~\n\n노아: 👋 노아예요 — 반가워요!",
+              "camera": [
+                8.31815748137638e-8,
+                6.800885889720819,
+                -11.87015632634379
+              ],
+              "perf": {
+                "calls": 1138,
+                "triangles": 398869,
+                "geometries": 2723,
+                "textures": 92,
+                "programs": 62,
+                "dpr": 1,
+                "size": [
+                  390,
+                  844
+                ],
+                "tier": {
+                  "mobile": true,
+                  "lowEnd": true,
+                  "reduced": true,
+                  "detail": 0.5,
+                  "adaptive": "balanced"
+                },
+                "frame": {
+                  "renderMs": 7.6,
+                  "cadenceMs": 16.7,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 1136,
+                    "triangles": 398867,
+                    "lines": 44,
+                    "points": 124,
+                    "cpuMs": 7.4
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 1136,
+                  "triangles": 398867
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.75,
+                  "bloom": 0.5,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2553.7000000476837
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 6.299999952316284,
+              "cadenceMedian": 16.799999952316284,
+              "scene": {
+                "objects": 7524,
+                "geometries": 4260,
+                "materials": 4707
+              }
+            },
+            {
+              "angle": 0.8,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 12.000000000000014,
+                  "y": 201.37549036519735,
+                  "width": 223.99999999999997,
+                  "height": 125.94377510040161,
+                  "line": "👋 좋은 하루 보내요~"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 12,
+                  "y": 339.31926546559896,
+                  "width": 224.00000000000003,
+                  "height": 125.94377510040164,
+                  "line": "👋 노아예요 — 반가워요!"
+                }
+              ],
+              "nearby": "카이: 👋 좋은 하루 보내요~\n\n노아: 👋 노아예요 — 반가워요!",
+              "camera": [
+                -8.51507739628167,
+                6.800885889774408,
+                -8.270039243881701
+              ],
+              "perf": {
+                "calls": 944,
+                "triangles": 316493,
+                "geometries": 2823,
+                "textures": 102,
+                "programs": 62,
+                "dpr": 1,
+                "size": [
+                  390,
+                  844
+                ],
+                "tier": {
+                  "mobile": true,
+                  "lowEnd": true,
+                  "reduced": true,
+                  "detail": 0.5,
+                  "adaptive": "balanced"
+                },
+                "frame": {
+                  "renderMs": 6.1,
+                  "cadenceMs": 16.4,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 942,
+                    "triangles": 316491,
+                    "lines": 44,
+                    "points": 124,
+                    "cpuMs": 6.1
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 942,
+                  "triangles": 316491
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.75,
+                  "bloom": 0.5,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2553.7000000476837
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 6.5,
+              "cadenceMedian": 16.59999990463257,
+              "scene": {
+                "objects": 7393,
+                "geometries": 4166,
+                "materials": 4614
+              }
+            },
+            {
+              "angle": 3.141592653589793,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 73.38022774271731,
+                  "y": 151.45346266374094,
+                  "width": 223.99999999999997,
+                  "height": 125.94377510040161,
+                  "line": "👋 좋은 하루 보내요~"
+                },
+                {
+                  "id": "noa",
+                  "kind": "resident",
+                  "x": 88.73382714602772,
+                  "y": 289.3972377641426,
+                  "width": 224,
+                  "height": 125.94377510040162,
+                  "line": "👋 노아예요 — 반가워요!"
+                }
+              ],
+              "nearby": "카이: 👋 좋은 하루 보내요~\n\n노아: 👋 노아예요 — 반가워요!",
+              "camera": [
+                -0.000058489581746654235,
+                6.800885889774408,
+                11.870017882732164
+              ],
+              "perf": {
+                "calls": 1038,
+                "triangles": 333231,
+                "geometries": 3140,
+                "textures": 114,
+                "programs": 64,
+                "dpr": 1,
+                "size": [
+                  390,
+                  844
+                ],
+                "tier": {
+                  "mobile": true,
+                  "lowEnd": true,
+                  "reduced": true,
+                  "detail": 0.5,
+                  "adaptive": "balanced"
+                },
+                "frame": {
+                  "renderMs": 6,
+                  "cadenceMs": 17.4,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 1036,
+                    "triangles": 333229,
+                    "lines": 36,
+                    "points": 124,
+                    "cpuMs": 5.9
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0
+                  }
+                },
+                "baseScene": {
+                  "calls": 1036,
+                  "triangles": 333229
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.75,
+                  "bloom": 0.5,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2553.7000000476837
+                }
+              },
+              "frameSamples": 54,
+              "renderMedian": 6.5,
+              "cadenceMedian": 16.700000047683716,
+              "scene": {
+                "objects": 7575,
+                "geometries": 4248,
+                "materials": 4694
+              }
+            },
+            {
+              "angle": 0,
+              "clipped": 0,
+              "boxes": [
+                {
+                  "id": "mira",
+                  "kind": "resident",
+                  "x": 145.8795673508302,
+                  "y": 186.99561090573144,
+                  "width": 224,
+                  "height": 125.94377510040162,
+                  "line": "별 밤이네요, 어서 와요 🌙"
+                },
+                {
+                  "id": "kai",
+                  "kind": "resident",
+                  "x": 65.7858600909183,
+                  "y": 324.9393860061331,
+                  "width": 224,
+                  "height": 125.94377510040162,
+                  "line": "👋 좋은 하루 보내요~"
+                }
+              ],
+              "nearby": "미라: 별 밤이네요, 어서 와요 🌙\n\n카이: 👋 좋은 하루 보내요~",
+              "camera": [
+                -3.5354761528312605e-10,
+                6.800885889774408,
+                -11.870012723009024
+              ],
+              "perf": {
+                "calls": 1126,
+                "triangles": 400737,
+                "geometries": 3140,
+                "textures": 115,
+                "programs": 64,
+                "dpr": 1,
+                "size": [
+                  390,
+                  844
+                ],
+                "tier": {
+                  "mobile": true,
+                  "lowEnd": true,
+                  "reduced": true,
+                  "detail": 0.5,
+                  "adaptive": "balanced"
+                },
+                "frame": {
+                  "renderMs": 5.8,
+                  "cadenceMs": 15.9,
+                  "idle": false,
+                  "night": false,
+                  "pitch": 0.42,
+                  "gpuMs": {}
+                },
+                "passes": {
+                  "base": {
+                    "calls": 1124,
+                    "triangles": 400735,
+                    "lines": 44,
+                    "points": 124,
+                    "cpuMs": 5.7
+                  },
+                  "shadow": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0,
+                    "lines": 0,
+                    "points": 0
+                  },
+                  "emissive": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "bloom": {
+                    "calls": 0,
+                    "triangles": 0,
+                    "cpuMs": 0
+                  },
+                  "final": {
+                    "calls": 2,
+                    "triangles": 2,
+                    "lines": 0,
+                    "points": 0,
+                    "cpuMs": 0.1
+                  }
+                },
+                "baseScene": {
+                  "calls": 1124,
+                  "triangles": 400735
+                },
+                "targets": {
+                  "base": 1,
+                  "emissive": 0.75,
+                  "bloom": 0.5,
+                  "final": 1
+                },
+                "gpuTimer": {
+                  "supported": true,
+                  "pending": 2
+                },
+                "idleCap": false,
+                "shadowAuto": false,
+                "shadow": {
+                  "dirty": false,
+                  "reason": "night-state",
+                  "lastRenderAt": 2553.7000000476837
+                }
+              },
+              "frameSamples": 55,
+              "renderMedian": 6.599999904632568,
+              "cadenceMedian": 16.699999809265137,
+              "scene": {
+                "objects": 7521,
+                "geometries": 4257,
+                "materials": 4704
+              }
+            }
+          ],
+          "transitions": [
+            {
+              "force": "balanced",
+              "tier": "balanced"
+            },
+            {
+              "force": "lean",
+              "tier": "lean"
+            },
+            {
+              "force": "full",
+              "tier": "balanced"
+            },
+            {
+              "force": "auto",
+              "tier": "balanced"
+            }
+          ],
+          "historicalObservation": false
+        }
+      }
+    ]
+  },
+  "embeddedWebKit": {
+    "environment": "GHCP embedded WebKit canvas, not actual Safari or a physical mobile browser",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "before": {
+      "freshStartupReproduced": true,
+      "blocked": true,
+      "reason": "initialization",
+      "hostRejection": "Command plugin:notification|is_permission_granted not allowed by ACL",
+      "earlyRejectionApproximateMs": 52
+    },
+    "afterDiagnostic": {
+      "url": "http://127.0.0.1:8045/?view=plaza&lang=en",
+      "ready": true,
+      "blocked": false,
+      "errorEvents": [],
+      "rejections": [
+        {
+          "message": "Command plugin:notification|is_permission_granted not allowed by ACL",
+          "atMs": 214
+        }
+      ],
+      "cspViolations": [
+        {
+          "directive": "connect-src",
+          "blocked": "ipc://localhost/plugin%3Anotification%7Cis_permission_granted"
+        }
+      ],
+      "diagnosticsSuppressed": false,
+      "hostPermissionsOrCspChanged": false
+    },
+    "normalEntries": [
+      {
+        "url": "http://127.0.0.1:8043/?view=plaza&lang=ko",
+        "language": "ko",
+        "ready": true,
+        "blocked": false,
+        "errorVisible": false,
+        "loadingVisible": false,
+        "menuControlVisible": true
+      },
+      {
+        "url": "http://127.0.0.1:8043/?view=plaza&lang=en",
+        "language": "en",
+        "ready": true,
+        "blocked": false,
+        "errorVisible": false,
+        "loadingVisible": false,
+        "menuControlVisible": true
+      }
+    ],
+    "repositoryFlow": {
+      "language": "ko",
+      "actions": [
+        "Open Wayfinding",
+        "Understand a repository",
+        "Select current catalog row",
+        "Exit Atelier"
+      ],
+      "structuredBrowserClicks": true,
+      "repository": "hyeonsangjeon/Repolis",
+      "visibleExactGitHubLink": "https://github.com/hyeonsangjeon/Repolis",
+      "returnedToReadyTown": true
+    },
+    "services": {
+      "grounded": "",
+      "realtime": "",
+      "analytics": ""
+    },
+    "limits": "Normal canvas pages were inspected through readiness, computed visibility and structured clicks, not a pre-document console capture. The diagnostic page records the host rejection separately. Native keyboard, physical touch and actual Safari remain unverified."
+  },
+  "previousCompatibility": {
+    "browser": "152.0.7977.84",
+    "functionalOutcomes": 16,
+    "strictNetworkPassed": 14,
+    "scenarios": 16,
+    "strictFailures": [
+      {
+        "name": "plaza-core-en-1440x900",
+        "error": "Error: normal path has no console/runtime/resource failures"
+      },
+      {
+        "name": "slow-public-ko-1440x900",
+        "error": "Error: normal path has no console/runtime/resource failures"
+      }
+    ],
+    "evidence": "https://github.com/hyeonsangjeon/Repolis/pull/123#issuecomment-5596911475"
+  },
+  "requestLifecycle": {
+    "browser": "152.0.7977.84",
+    "source": "exact ARRIVAL_DATA from current local index",
+    "pageErrors": [],
+    "records": [
+      {
+        "mode": "native-json",
+        "index": 0,
+        "url": "/repos.json?lifecycle=native-json-0",
+        "signalAborted": false,
+        "readerDone": false,
+        "readerBytes": 0,
+        "status": 200,
+        "expectedBytes": 57909,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "native-json",
+        "index": 1,
+        "url": "/repos.json?lifecycle=native-json-1",
+        "signalAborted": false,
+        "readerDone": false,
+        "readerBytes": 0,
+        "status": 200,
+        "expectedBytes": 57909,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "native-json",
+        "index": 2,
+        "url": "/repos.json?lifecycle=native-json-2",
+        "signalAborted": false,
+        "readerDone": false,
+        "readerBytes": 0,
+        "status": 200,
+        "expectedBytes": 57909,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "native-json",
+        "index": 3,
+        "url": "/repos.json?lifecycle=native-json-3",
+        "signalAborted": false,
+        "readerDone": false,
+        "readerBytes": 0,
+        "status": 200,
+        "expectedBytes": 57909,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "native-text",
+        "index": 0,
+        "url": "/repos.json?lifecycle=native-text-0",
+        "signalAborted": false,
+        "readerDone": false,
+        "readerBytes": 0,
+        "status": 200,
+        "expectedBytes": 57909,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "native-text",
+        "index": 1,
+        "url": "/repos.json?lifecycle=native-text-1",
+        "signalAborted": false,
+        "readerDone": false,
+        "readerBytes": 0,
+        "status": 200,
+        "expectedBytes": 57909,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "native-text",
+        "index": 2,
+        "url": "/repos.json?lifecycle=native-text-2",
+        "signalAborted": false,
+        "readerDone": false,
+        "readerBytes": 0,
+        "status": 200,
+        "expectedBytes": 57909,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "native-text",
+        "index": 3,
+        "url": "/repos.json?lifecycle=native-text-3",
+        "signalAborted": false,
+        "readerDone": false,
+        "readerBytes": 0,
+        "status": 200,
+        "expectedBytes": 57909,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "bounded-stream",
+        "index": 0,
+        "url": "/repos.json?lifecycle=bounded-stream-0",
+        "signalAborted": false,
+        "readerDone": true,
+        "readerBytes": 57909,
+        "status": 200,
+        "expectedBytes": 57909,
+        "released": true,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "bounded-stream",
+        "index": 1,
+        "url": "/repos.json?lifecycle=bounded-stream-1",
+        "signalAborted": false,
+        "readerDone": true,
+        "readerBytes": 57909,
+        "status": 200,
+        "expectedBytes": 57909,
+        "released": true,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "bounded-stream",
+        "index": 2,
+        "url": "/repos.json?lifecycle=bounded-stream-2",
+        "signalAborted": false,
+        "readerDone": true,
+        "readerBytes": 57909,
+        "status": 200,
+        "expectedBytes": 57909,
+        "released": true,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "bounded-stream",
+        "index": 3,
+        "url": "/repos.json?lifecycle=bounded-stream-3",
+        "signalAborted": false,
+        "readerDone": true,
+        "readerBytes": 57909,
+        "status": 200,
+        "expectedBytes": 57909,
+        "released": true,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "retained-stream",
+        "index": 0,
+        "url": "/repos.json?lifecycle=retained-stream-0",
+        "signalAborted": false,
+        "readerDone": true,
+        "readerBytes": 57909,
+        "status": 200,
+        "expectedBytes": 57909,
+        "released": true,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "retained-stream",
+        "index": 1,
+        "url": "/repos.json?lifecycle=retained-stream-1",
+        "signalAborted": false,
+        "readerDone": true,
+        "readerBytes": 57909,
+        "status": 200,
+        "expectedBytes": 57909,
+        "released": true,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "retained-stream",
+        "index": 2,
+        "url": "/repos.json?lifecycle=retained-stream-2",
+        "signalAborted": false,
+        "readerDone": true,
+        "readerBytes": 57909,
+        "status": 200,
+        "expectedBytes": 57909,
+        "released": true,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "retained-stream",
+        "index": 3,
+        "url": "/repos.json?lifecycle=retained-stream-3",
+        "signalAborted": false,
+        "readerDone": true,
+        "readerBytes": 57909,
+        "status": 200,
+        "expectedBytes": 57909,
+        "released": true,
+        "consumerComplete": true,
+        "repositories": 69
+      },
+      {
+        "mode": "explicit-abort",
+        "index": 0,
+        "url": "/repos.json?lifecycle=explicit-abort-0",
+        "signalAborted": true,
+        "readerDone": false,
+        "readerBytes": 0,
+        "abortReason": "AbortError: signal is aborted without reason",
+        "error": "AbortError: signal is aborted without reason",
+        "errorName": "AbortError"
+      }
+    ],
+    "network": [
+      {
+        "id": "3096.3",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=native-json-0",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 3.32
+          },
+          {
+            "type": "finished",
+            "ms": 3.42,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.4",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=native-json-1",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 2.4
+          },
+          {
+            "type": "finished",
+            "ms": 2.35,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.5",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=native-json-2",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.17
+          },
+          {
+            "type": "finished",
+            "ms": 1.12,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.6",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=native-json-3",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.06
+          },
+          {
+            "type": "finished",
+            "ms": 1.02,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.7",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=native-text-0",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.11
+          },
+          {
+            "type": "finished",
+            "ms": 1.04,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.8",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=native-text-1",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.12
+          },
+          {
+            "type": "finished",
+            "ms": 1.03,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.9",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=native-text-2",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.2
+          },
+          {
+            "type": "finished",
+            "ms": 1.15,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.10",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=native-text-3",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.13
+          },
+          {
+            "type": "finished",
+            "ms": 1.05,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.11",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=bounded-stream-0",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 0.91
+          },
+          {
+            "type": "finished",
+            "ms": 0.86,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.12",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=bounded-stream-1",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.17
+          },
+          {
+            "type": "finished",
+            "ms": 1.17,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.13",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=bounded-stream-2",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.66
+          },
+          {
+            "type": "failed",
+            "ms": 2.72,
+            "error": "net::ERR_ABORTED",
+            "canceled": true
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.14",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=bounded-stream-3",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.47
+          },
+          {
+            "type": "finished",
+            "ms": 1.41,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.15",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=retained-stream-0",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 3.67
+          },
+          {
+            "type": "finished",
+            "ms": 3.57,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.16",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=retained-stream-1",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.47
+          },
+          {
+            "type": "finished",
+            "ms": 1.37,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.17",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=retained-stream-2",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.57
+          },
+          {
+            "type": "finished",
+            "ms": 1.46,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.18",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=retained-stream-3",
+        "events": [
+          {
+            "type": "headers",
+            "ms": 1.51
+          },
+          {
+            "type": "finished",
+            "ms": 1.45,
+            "wireBytes": 58294
+          }
+        ],
+        "status": 200,
+        "decodedBytes": 57909
+      },
+      {
+        "id": "3096.19",
+        "url": "http://127.0.0.1:8045/repos.json?lifecycle=explicit-abort-0",
+        "events": [
+          {
+            "type": "failed",
+            "ms": 1.07,
+            "error": "net::ERR_ABORTED",
+            "canceled": true
+          }
+        ]
+      }
+    ],
+    "sourceRevision": "f139f11e1926ba5658415e5a97a59d455de2e12f; ARRIVAL_DATA is unchanged by the closeout fix",
+    "conditions": "Loopback HTTP/1.1; exact ARRIVAL_DATA outside the 3D app; four sequential samples per method; explicit GC after each sample; one pre-response abort control",
+    "instrumentation": "readerDone/readerBytes instrument only explicit getReader paths; native json/text consume internally. Native methods use no application AbortSignal.",
+    "interpretation": "One fully consumed bounded-stream request had a raw canceled ERR_ABORTED with an un-aborted application signal. Native Response lifetime is a hypothesis, not a proven browser root cause. No runtime retention workaround or suppression."
+  },
+  "unverified": [
+    "Physical iOS/Android devices",
+    "Native virtual keyboards",
+    "Safari",
+    "Firefox",
+    "Hardware/driver-induced context loss",
+    "Production latency",
+    "Post-merge Pages deployment"
+  ]
+}
