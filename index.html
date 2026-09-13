@@ -2999,6 +2999,7 @@ const I18N = {
     atelierDirectOpening:'{repo} 전시실로 이동하는 중…', plazaDirectOpening:'Repolis 광장으로 이동하는 중…',
     atelierChatLimit:'이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요.',
     atelierChatUnavailable:'{repo}의 공개 정보를 지금 불러오지 못했어요. 다른 레포로 대신 답하지 않을게요.',
+    atelierChatNotFound:'{repo}의 공개 근거를 확인하지 못했어요. GitHub 링크에서 직접 확인해 주세요.',
     atelierChatTimeout:'AI 응답이 제한 시간 안에 도착하지 않았어요. 잠시 후 다시 질문하거나 GitHub 원문을 확인해 주세요.',
     atelierChatNetworkError:'AI 서비스와 연결이 끊겼어요. 네트워크 연결을 확인한 뒤 다시 질문해 주세요.',
     atelierChatInvalidResponse:'현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요.',
@@ -3393,6 +3394,7 @@ const I18N = {
     atelierDirectOpening:'Entering the {repo} exhibition…', plazaDirectOpening:'Entering the Repolis plaza…',
     atelierChatLimit:'You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation.',
     atelierChatUnavailable:'Public information for {repo} is unavailable right now. I will not substitute another repository.',
+    atelierChatNotFound:'I could not verify public sources for {repo}. Open its GitHub link to check the repository directly.',
     atelierChatTimeout:'The AI response did not arrive within the time limit. Ask again later or open the repository on GitHub.',
     atelierChatNetworkError:'The connection to the AI service was interrupted. Check your network connection before asking again.',
     atelierChatInvalidResponse:'I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead.',
@@ -12229,7 +12231,8 @@ function closeChat(restoreFocus=true){ cancelMarketRequest(); queuedChatQuestion
   if(!repositoryAtelierActive()) _releaseGroup(); trackChatEvent('chat_close');
   const previous=chatPreviousFocus; chatPreviousFocus=null; if(chatEl.contains(document.activeElement)) document.activeElement.blur();
   if(restoreFocus) setTimeout(()=>{ if(TOWN_UI.active||!chatEl.classList.contains('hidden')) return; const visible=element=>element&&element.isConnected&&element!==document.body&&!element.closest('[inert]')&&element.getClientRects().length&&getComputedStyle(element).visibility!=='hidden';
-    const target=visible(previous)?previous:(visible(actBtn)&&actBtn.classList.contains('avail')?actBtn:taxiBtn); try{ target.focus(); }catch(e){} },80); }
+    const target=visible(previous)?previous:(visible(actBtn)&&actBtn.classList.contains('avail')?actBtn:
+      repositoryAtelierActive()&&visible(atelierExit)?atelierExit:taxiBtn); try{ target.focus(); }catch(e){} },80); }
 chatEl.addEventListener('keydown',event=>{ if(chatEl.classList.contains('hidden')) return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeChat(); return; }
   if(event.defaultPrevented||event.key!=='Tab'||!(activeNpc&&activeNpc.resident)) return; const items=[...chatEl.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')]
@@ -13859,7 +13862,7 @@ async function _askRepositoryAtelier(visit,question,call,url){
     visit.lastFailure=kind;
     const key={timeout:'atelierChatTimeout',network_error:'atelierChatNetworkError',invalid_response:'atelierChatInvalidResponse',
       scope_mismatch:'atelierChatInvalidResponse',access_denied:'atelierChatAccessDenied',rate_limited:'atelierChatRateLimited',
-      unconfigured:'atelierChatNotConfigured',http_error:'atelierChatServiceError'}[kind]||'atelierChatUnavailable';
+      unconfigured:'atelierChatNotConfigured',http_error:'atelierChatServiceError',not_found:'atelierChatNotFound'}[kind]||'atelierChatUnavailable';
     trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:kind,...(error?{err:errName(error)}:{})});
     addMsg('bot',tf(key,{repo:esc(visit.repoName)}),{noHist:true});
   };
@@ -13872,10 +13875,10 @@ async function _askRepositoryAtelier(visit,question,call,url){
       e?.name==='SyntaxError'?'invalid_response':'network_error',e); return;
   }finally{ clearTimeout(to); if(visit.controller===ctrl) visit.controller=null; }
   sb.remove(); if(visit.cancelled||visit.sequence!==call.sequence) return;
-  const failure=repositoryAtelierChatResponseFailure(res.status,data,visit.repoName);
+  const failure=repositoryAtelierChatResponseFailure(res.status,data,visit.repoName)||(data.notFound?'not_found':null);
   if(failure){ fail(failure); return; }
   const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
-  trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:!data.notFound,refs:traceRefCount(data.trace),fallback:data.notFound?'not_found':undefined});
+  trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:true,refs:traceRefCount(data.trace)});
   addMsg('bot',msg,{trace:data.trace});
 }
 async function _sendRepositoryAtelierChat(question,automatic=false){

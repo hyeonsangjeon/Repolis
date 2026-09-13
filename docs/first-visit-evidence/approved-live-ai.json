@@ -1,0 +1,479 @@
+{
+  "schema": "repolis-approved-live-ai-v1",
+  "date": "2026-09-13",
+  "release": {
+    "pr": "https://github.com/hyeonsangjeon/Repolis/pull/123",
+    "mergedBy": "hyeonsangjeon",
+    "mergedAt": "2026-09-13T04:56:58Z",
+    "mergeSha": "f7adafda62f5e078b7e29d20ae77d5a4fbcc8b79",
+    "reviewedHead": "3ccca9c50500ef0fba7d351b5fe06abc4222451e",
+    "headCi": "https://github.com/hyeonsangjeon/Repolis/actions/runs/34678527317"
+  },
+  "pages": {
+    "revision": "f7adafda62f5e078b7e29d20ae77d5a4fbcc8b79",
+    "status": "built",
+    "completedAt": "2026-09-13T04:57:21Z",
+    "run": "https://github.com/hyeonsangjeon/Repolis/actions/runs/34739091421",
+    "indexBlob": "8d146b7814bcb8c0e0757a1ad00361aeb0bddab0",
+    "atelierModuleBlob": "93b52adf8bfdedb3a6310bf46a28910334bfab7c",
+    "productionBytesMatched": true,
+    "productionBrowserScriptsExecuted": false
+  },
+  "worker": {
+    "versionId": "d3823cb5-ddce-4836-9d80-02aab8e81335",
+    "versionCreatedAt": "2026-09-04T12:31:51.995212Z",
+    "deploymentCreatedAt": "2026-09-04T12:31:52.668Z",
+    "trafficPercent": 100,
+    "settings": [
+      {
+        "name": "GROUNDED_MAX_RUNTIME_S",
+        "text": "30"
+      },
+      {
+        "name": "GROUNDED_TIMEOUT_MS",
+        "text": "25000"
+      },
+      {
+        "name": "SEARCH_API_VERSION",
+        "text": "2026-05-01-preview"
+      }
+    ],
+    "deployedDuringThisTask": false,
+    "deployedGitCommit": null
+  },
+  "conditions": {
+    "browser": "Chrome/152.0.7977.84",
+    "platform": "macOS, isolated installed headless Chrome",
+    "liveOrigin": "http://127.0.0.1:8046",
+    "reviewOrigin": "http://127.0.0.1:8043",
+    "route": "?view=plaza&lang=ko or en; ordinary repository card -> Atelier auto explanation",
+    "requestUnit": "One browser-to-Atelier Worker POST, not a count of internal model operations or billed units",
+    "requestCeiling": 8,
+    "requestsUsed": 7,
+    "sequential": true,
+    "automaticRetries": false,
+    "backendModelNames": null,
+    "billedCost": null,
+    "providerCacheState": "not controlled or exposed",
+    "localOnlyOverlay": [
+      "canonical development opt-in; only grounded service retained",
+      "non-Atelier grounding, NPC AI, realtime and browser analytics disabled",
+      "existing diagnostics enabled without changing strict route parameters",
+      "one-at-a-time loopback reservation before unchanged native Worker fetch",
+      "observe the application single JSON read; no proxy, cloned body, or fabricated reply"
+    ],
+    "workerInternalAccounting": "existing behavior unchanged",
+    "liveServer": "stopped after request 7; no further model calls scheduled"
+  },
+  "outcome": {
+    "groundedAnswers": 3,
+    "noSourceResults": 4,
+    "completeHttpResponses": 7,
+    "livePostTimeoutsOrTransportFailures": 0,
+    "note": "Heterogeneous diagnostic and lifecycle cases; not an accuracy rate or before/after latency comparison.",
+    "independentPublicMetadataCheck": {
+      "recordedAt": "2026-09-13T06:17:54.695Z",
+      "metadata": {
+        "archived": false,
+        "full_name": "hyeonsangjeon/Repolis",
+        "language": "HTML",
+        "license": "MIT",
+        "private": false,
+        "stargazers_count": 41,
+        "updated_at": "2026-09-13T04:57:03Z"
+      },
+      "note": "Separate public GitHub API confirmation after the live run; not the fields retrieved by the Worker."
+    },
+    "calls": [
+      {
+        "number": 1,
+        "repoName": "hyeonsangjeon/Repolis",
+        "language": "ko",
+        "viewport": "1440x900",
+        "question": "이 레포를 설명해 주세요.",
+        "startedAt": "2026-09-13T05:18:15.169753+00:00",
+        "finishedAt": "2026-09-13T05:18:30.809295+00:00",
+        "httpStatus": 200,
+        "result": "not_found",
+        "clientResponseMs": 15627,
+        "workerTotalMs": 15248,
+        "mcpActivityMs": 2135,
+        "tools": null,
+        "references": [],
+        "answer": null,
+        "requestHistoryTurns": 0,
+        "sourceStage": "merged client",
+        "sourceIndexBlob": "8d146b7814bcb8c0e0757a1ad00361aeb0bddab0"
+      },
+      {
+        "number": 2,
+        "repoName": "hyeonsangjeon/Repolis",
+        "language": "ko",
+        "viewport": "1440x900",
+        "question": "For hyeonsangjeon/Repolis only, first retrieve its current public GitHub repository metadata (full_name, html_url, description), not only README contents. Explain the repository using that exact repository record. Do not search or recommend any other repository.",
+        "startedAt": "2026-09-13T05:24:13.770056+00:00",
+        "finishedAt": "2026-09-13T05:24:20.673913+00:00",
+        "httpStatus": 200,
+        "result": "not_found",
+        "clientResponseMs": 6900,
+        "workerTotalMs": 6773,
+        "mcpActivityMs": 812,
+        "tools": [],
+        "references": [],
+        "answer": null,
+        "requestHistoryTurns": 2,
+        "sourceStage": "merged client",
+        "sourceIndexBlob": "8d146b7814bcb8c0e0757a1ad00361aeb0bddab0"
+      },
+      {
+        "number": 3,
+        "repoName": "hyeonsangjeon/Repolis",
+        "language": "en",
+        "viewport": "390x844",
+        "question": "Explain this repository.",
+        "startedAt": "2026-09-13T05:40:35.911222+00:00",
+        "finishedAt": "2026-09-13T05:40:44.068967+00:00",
+        "httpStatus": 200,
+        "result": "grounded_answer",
+        "clientResponseMs": 8153,
+        "workerTotalMs": 7852,
+        "mcpActivityMs": 827,
+        "tools": [
+          "search_repositories"
+        ],
+        "references": [
+          {
+            "url": "https://github.com/hyeonsangjeon/Repolis"
+          }
+        ],
+        "answer": "`Repolis` is a public GitHub project that turns public repositories into a walkable 3D town, where traffic shapes the buildings, residents live there, and Gitber drives you to the right project. It’s written in HTML, has 41 stars, and was last updated on 2026-09-13. Want a ride there?",
+        "requestHistoryTurns": 0,
+        "sourceStage": "merged client plus no-source UI correction; before focus correction",
+        "sourceIndexBlob": "70a9f8cc0dd758fc6290fa4395b07594e75859bb"
+      },
+      {
+        "number": 4,
+        "repoName": "hyeonsangjeon/Repolis",
+        "language": "en",
+        "viewport": "390x844",
+        "question": "For hyeonsangjeon/Repolis only, how do I run this project locally without a build step? Cite its README.",
+        "startedAt": "2026-09-13T05:42:00.228151+00:00",
+        "finishedAt": "2026-09-13T05:42:12.229244+00:00",
+        "httpStatus": 200,
+        "result": "not_found",
+        "clientResponseMs": 11996,
+        "workerTotalMs": 11883,
+        "mcpActivityMs": 1770,
+        "tools": [
+          "search_repositories",
+          "get_file_contents"
+        ],
+        "references": [],
+        "answer": null,
+        "requestHistoryTurns": 2,
+        "sourceStage": "merged client plus no-source UI correction; before focus correction",
+        "sourceIndexBlob": "70a9f8cc0dd758fc6290fa4395b07594e75859bb"
+      },
+      {
+        "number": 5,
+        "repoName": "hyeonsangjeon/Repolis",
+        "language": "en",
+        "viewport": "390x844",
+        "question": "For exactly hyeonsangjeon/Repolis, retrieve fresh public repository metadata and tell me whether it is archived and which license it uses. Include the exact repository as the source; do not read files or discuss other repositories.",
+        "startedAt": "2026-09-13T05:45:07.161329+00:00",
+        "finishedAt": "2026-09-13T05:45:19.302845+00:00",
+        "httpStatus": 200,
+        "result": "grounded_answer",
+        "clientResponseMs": 12138,
+        "workerTotalMs": 11994,
+        "mcpActivityMs": 1645,
+        "tools": [
+          "search_repositories"
+        ],
+        "references": [
+          {
+            "url": "https://github.com/hyeonsangjeon/Repolis"
+          }
+        ],
+        "answer": "For `hyeonsangjeon/Repolis`, the repository is not archived: `archived` is false. The search result also shows its metadata source as `hyeonsangjeon/Repolis`, but it does not include any license information, so I can’t confirm which license it uses from the retrieved public metadata.",
+        "requestHistoryTurns": 3,
+        "sourceStage": "merged client plus no-source UI correction; before focus correction",
+        "sourceIndexBlob": "70a9f8cc0dd758fc6290fa4395b07594e75859bb"
+      },
+      {
+        "number": 6,
+        "repoName": "hyeonsangjeon/Repolis",
+        "language": "en",
+        "viewport": "390x844",
+        "question": "Explain this repository.",
+        "startedAt": "2026-09-13T05:48:09.223831+00:00",
+        "finishedAt": "2026-09-13T05:48:17.076823+00:00",
+        "httpStatus": 200,
+        "result": "grounded_answer",
+        "clientResponseMs": 7850,
+        "workerTotalMs": 7727,
+        "mcpActivityMs": 821,
+        "tools": [
+          "search_repositories"
+        ],
+        "references": [
+          {
+            "url": "https://github.com/hyeonsangjeon/Repolis"
+          }
+        ],
+        "answer": "`Repolis` is a public project that turns GitHub repositories into a walkable 3D town, with traffic shaping the buildings, residents living there, and Gitber driving you to the right project. It’s written in HTML, has 41 stars, and was last updated on 2026-09-13T04:57:03Z. Want me to drive you through it?",
+        "requestHistoryTurns": 0,
+        "sourceStage": "merged client plus no-source UI correction; before focus correction",
+        "sourceIndexBlob": "70a9f8cc0dd758fc6290fa4395b07594e75859bb"
+      },
+      {
+        "number": 7,
+        "repoName": "hyeonsangjeon/Repolis",
+        "language": "ko",
+        "viewport": "1440x900",
+        "question": "이 레포를 설명해 주세요.",
+        "startedAt": "2026-09-13T05:48:53.782354+00:00",
+        "finishedAt": "2026-09-13T05:49:03.334453+00:00",
+        "httpStatus": 200,
+        "result": "not_found",
+        "clientResponseMs": 9549,
+        "workerTotalMs": 9326,
+        "mcpActivityMs": 2623,
+        "tools": [
+          "search_repositories",
+          "get_file_contents",
+          "list_commits"
+        ],
+        "references": [],
+        "answer": null,
+        "requestHistoryTurns": 0,
+        "sourceStage": "merged client plus no-source UI correction; before focus correction",
+        "sourceIndexBlob": "70a9f8cc0dd758fc6290fa4395b07594e75859bb"
+      }
+    ]
+  },
+  "lifecycle": {
+    "panelReopen": "3/5 and five history turns preserved, no additional request",
+    "reentry": {
+      "calls": 1,
+      "requestHistoryTurns": 0,
+      "createCount": 1,
+      "bindCount": 2,
+      "resources": {
+        "rooms": 1,
+        "geometries": 25,
+        "materials": 16,
+        "canvasTextures": 3,
+        "sharedAvatarDraws": 44,
+        "exhibitBatches": 5
+      },
+      "exteriorCallsInside": 0
+    }
+  },
+  "proposedFixes": {
+    "indexBlob": "51fb6c4792cf11b80d3ec1302ecb5b0ef8fe29d0",
+    "workerAtelierBlob": "dc31de78d0b44212b3f81c2ae65cb31658252be9",
+    "scope": [
+      "explicit no-source failure, without general-knowledge attribution or assistant error history",
+      "visible Atelier exit fallback when the previous chat focus target is unavailable",
+      "directory/file/commit context requires unique valid activity correlation, matching tool and exact repository",
+      "context never replaces the required exact repository metadata reference"
+    ],
+    "workerFixLiveVerified": false,
+    "rawLiveKbResponseCaptured": false,
+    "originalScreenshotCauseConfirmed": false,
+    "livePatchedIndexEvidence": "Reconstructed from the final index by removing only the later focus fallback; local-only overlay excluded"
+  },
+  "regression": {
+    "hermeticCommands": 24,
+    "smokeChecks": 1568,
+    "firstVisitChecksIncluded": 69,
+    "atelierGroupsIncluded": 19,
+    "browserCases": 16,
+    "source": "Local native HTTP fixtures, not additional live AI calls",
+    "cases": [
+      {
+        "name": "atelier-chat-flow-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-flow-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-flow-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-flow-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-no-source-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-no-source-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-no-source-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-no-source-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-timeout-en",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-timeout-ko",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-exit-en",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-exit-ko",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-disabled-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-disabled-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-disabled-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      },
+      {
+        "name": "atelier-chat-disabled-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrorCount": 0,
+        "resourceLogErrorCount": 0
+      }
+    ]
+  },
+  "limits": [
+    "No Worker deployment, Foundry setting change, permission expansion, or budget increase",
+    "Raw bootstrap ERR_ABORTED observations remain separate; no blanket transport-clean claim",
+    "Directory/commit rejection reproduced with fixtures; not proof of the unexposed live KB payload shape",
+    "Physical mobile, native keyboards, Safari, Firefox and hardware GPU failure remain unverified"
+  ]
+}

@@ -4,6 +4,7 @@ const REQUEST_BYTES = 16384;
 const QUESTION_CHARS = 2000;
 const CONTROL = /[\u0000-\u001f\u007f]/g;
 const REPO_NAME_RE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?\/[A-Za-z0-9_.-]{1,100}$/;
+const REPOSITORY_CONTEXT_TOOLS = new Set(['get_file_contents', 'list_commits']);
 const ALLOWED_FIELDS = new Set([
   'question',
   'npc',
@@ -154,17 +155,27 @@ function fullNameFromRepository(value) {
   return String(repo?.full_name || fullNameFromUrl(repo?.html_url)).replace(/\.git$/i, '');
 }
 
+function activityKey(value) {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value >= 0 ? String(value) : null;
+  return typeof value === 'string' && value.trim() ? value : null;
+}
+
 function repositoryActivityScopes(activities, repoName) {
   const target = String(repoName || '').toLowerCase();
   const scopes = new Map();
   for (const activity of Array.isArray(activities) ? activities : []) {
     if (!activity || activity.type !== 'mcpServer') continue;
+    const key = activityKey(activity.id);
+    if (key === null) continue;
+    // An ambiguous activity ID cannot prove a reference's repository.
+    if (scopes.has(key)) { scopes.set(key, null); continue; }
+    scopes.set(key, null);
     const call = object(activity.mcpServerArguments);
     const args = object(call?.toolArguments);
     const owner = clean(args?.owner, 100);
     const repo = clean(args?.repo, 100);
     if (!owner || !repo) continue;
-    scopes.set(String(activity.id), {
+    scopes.set(key, {
       exact: `${owner}/${repo}`.toLowerCase() === target,
       tool: clean(call?.toolName, 100),
     });
@@ -179,15 +190,14 @@ export function projectRepositoryAtelierReferences(references, repoName, activit
   const scopes = repositoryActivityScopes(activities, repoName);
   let rejected = 0;
   for (const reference of Array.isArray(references) ? references : []) {
-    const source = referenceObject(reference);
-    const scope = scopes.get(String(reference?.activitySource));
-    if (reference?.toolName === 'get_file_contents'
-      && source?.type === 'file'
-      && scope?.tool === 'get_file_contents') {
-      if (!scope.exact) rejected += 1;
+    const scope = scopes.get(activityKey(reference?.activitySource));
+    // File/directory and commit context can have different shapes; activity proves its repository.
+    if (REPOSITORY_CONTEXT_TOOLS.has(reference?.toolName)) {
+      if (!scope?.exact || scope.tool !== reference.toolName) rejected += 1;
       continue;
     }
 
+    const source = referenceObject(reference);
     const repositories = Array.isArray(source?.items) ? source.items : [source];
     if (!source || !repositories.length) {
       rejected += 1;
