@@ -45,13 +45,26 @@
   canvas { display: block; }
 
   .hud { position: fixed; z-index: 10; color: #4a2f1e; }
-  #topbar { top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  #topbar { top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: calc(100vw - 88px); z-index: 13; }
   .badge { background: rgba(255,251,242,.86); backdrop-filter: blur(6px);
     border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: 13px;
     box-shadow: 0 4px 14px rgba(80,50,20,.16); }
   .badge b { color: #d2622f; }
   #liveBadge .hudShort { display: none; }
-  @media (max-width: 520px) { #liveBadge .hudFull { display: none; } #liveBadge .hudShort { display: inline; } #mapBtn { order: 10; } }
+  #townTools { position: relative; padding: 0; }
+  #townTools > summary { padding: 10px 12px; min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+  #townToolsPanel { position: fixed; top: calc(66px + env(safe-area-inset-top,0px)); left: 14px; width: min(360px,calc(100vw - 28px));
+    max-height: calc(var(--town-ui-height,100dvh) - 88px); overflow: auto; overscroll-behavior: contain;
+    padding: 14px; border-radius: 16px; background: #fffbf2; box-shadow: 0 12px 40px rgba(70,40,15,.26);
+    display: flex; flex-wrap: wrap; gap: 10px; }
+  #townToolsPanel .badge { box-shadow: none; background: #f6ecdb; }
+  #townToolsPanel #liveBadge { width: 100%; line-height: 1.8; white-space: normal; font-variant-numeric: tabular-nums; }
+  #townToolsPanel #liveBadge > span { white-space: normal; }
+  #townToolsPanel .hudShort { display: none; }
+  #townToolsPanel #townLabel { overflow-wrap: anywhere; }
+  #topbar button { min-height: 44px; }
+  #navBadge { max-width: min(420px,calc(100vw - 100px)); overflow-wrap: anywhere; }
+  @media (max-width: 520px) { #townBrand { display: none; } #topbar .badge { font-size: 12px; padding: 7px 10px; } #topbar #townTools { padding: 0; } }
 
   #menuBtn { top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); width: 46px; height: 46px; border: none; cursor: pointer;
     border-radius: 14px; background: rgba(255,251,242,.9); box-shadow: 0 4px 14px rgba(80,50,20,.2);
@@ -63,7 +76,7 @@
     background: rgba(255,251,242,.95); backdrop-filter: blur(10px); border-radius: 18px;
     box-shadow: 0 12px 40px rgba(70,40,15,.26); padding: 12px; transform-origin: top right;
     max-height: calc(100dvh - 88px); overflow-y: auto; transition: opacity .18s ease, transform .18s ease; }
-  #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #panel.hidden { opacity: 0; transform: scale(.94); pointer-events: none; visibility: hidden; }
   #panel h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 4px 8px 10px; }
   #intentLens { margin: 0 0 10px; padding: 8px; border: 1px solid #e7d5b7; border-radius: 13px;
@@ -77,10 +90,32 @@
   .intentLensChoice:focus-visible { outline: 3px solid rgba(217,143,46,.34); outline-offset: 1px; }
   .intentLensChoice:active { transform: translateY(1px); }
   .intentLensIcon { flex: 0 0 23px; font-size: 16px; line-height: 1; text-align: center; }
-  @media (max-width: 520px) {
-    #intentLens { margin-top: 48px; }
-    #panel:not(.hidden) ~ #chat { visibility: hidden; opacity: 0; pointer-events: none; }
-  }
+  #townPanelBackdrop { position: fixed; inset: 0; z-index: 11; background: transparent; touch-action: none; }
+  #townPanelBackdrop[hidden] { display: none; }
+  .townPanelClose { float: right; min-width: 44px; min-height: 44px; margin: -4px -4px 4px 8px; border: 0;
+    border-radius: 12px; background: #f0e3cc; color: #6a4a22; font: 20px/1 inherit; cursor: pointer; }
+  #panel h3 { min-height: 42px; }
+  #nearbySpeech { margin: 10px 0; padding: 10px; background: #f6ecdb; border-radius: 12px; }
+  #nearbySpeech summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 12px; font-weight: 700; }
+  #nearbySpeechText { font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+  #firstRepoPicker[hidden], #firstRepoPager[hidden] { display: none; }
+  #panel.firstRepoMode > :is(#intentLens,#tourReplayBtn,#questMenuBtn,#creatorMenuBtn,#repoRouteMenuBtn,#growthMenuBtn,#twinMenuBtn,#postcardMenuBtn,#nearbySpeech) { display: none; }
+  #firstRepoPicker h4 { margin: 0 0 6px; font-size: 16px; line-height: 1.35; }
+  #firstRepoPicker p, #firstRepoStatus { margin: 6px 0 10px; color: #806444; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+  #firstRepoPicker button, #firstRepoPager button { min-height: 44px; padding: 8px 12px; border: 1px solid #d8c7ad;
+    border-radius: 10px; background: #fffaf1; color: #614726; font: 700 12px/1.3 inherit; cursor: pointer; }
+  #firstRepoPager { display: flex; justify-content: space-between; gap: 12px; padding-top: 10px; }
+  #firstRepoPager button:disabled { opacity: .5; cursor: default; }
+  .firstRepoRow { display: block; width: 100%; margin: 8px 0; padding: 12px; min-height: 44px; text-align: left;
+    border: 1px solid #dfceb1; border-radius: 13px; background: #fffaf0; color: #48311e; cursor: pointer; font: inherit; }
+  .firstRepoRow strong, .firstRepoRow span { display: block; overflow-wrap: anywhere; white-space: normal; }
+  .firstRepoRow strong { font-size: 13px; line-height: 1.4; }
+  .firstRepoRow .firstRepoDescription { margin-top: 7px; font-size: 12px; line-height: 1.5; }
+  .firstRepoRow .firstRepoFacts { margin-top: 7px; font-size: 11px; line-height: 1.4; color: #7d6040; }
+  :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline: 3px solid #397f86; outline-offset: 2px; }
+  body.town-panel-open :is(#prompt,#actBtn,#emoteBar,#emoteBtn,#taxiBtn,#worldTreeTrigger) { visibility: hidden; pointer-events: none; }
+  body.town-panel-open #greetToast { z-index: 10 !important; }
+  @media (prefers-reduced-motion: reduce) { #panel, #passport, #station, #chat { transition: none; } }
   #tourReplayBtn, #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
@@ -128,7 +163,7 @@
     background: rgba(255,251,242,.96); backdrop-filter: blur(10px); border-radius: 18px;
     box-shadow: 0 12px 40px rgba(70,40,15,.26); padding: 14px; transform-origin: top right;
     max-height: calc(100vh - 88px); overflow-y: auto; transition: opacity .18s ease, transform .18s ease; }
-  #passport.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #passport.hidden { opacity: 0; transform: scale(.94); pointer-events: none; visibility: hidden; }
   #passport h3 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #b08a5e;
     padding: 2px 2px 4px; display: flex; align-items: center; gap: 6px; }
   #passport .psub { font-size: 11px; color: #ab8a66; padding: 0 2px 10px; }
@@ -148,7 +183,7 @@
     box-shadow: 0 12px 40px rgba(70,40,15,.28); padding: 16px; transform-origin: top right;
     max-height: calc(100vh - 88px); overflow-y: auto;
     transition: opacity .18s ease, transform .18s ease; }
-  #station.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+  #station.hidden { opacity: 0; transform: scale(.94); pointer-events: none; visibility: hidden; }
   #station h3 { font-size: 13px; letter-spacing: .03em; color: #9a6e1e; padding: 2px 34px 4px 2px;
     display: flex; align-items: center; gap: 6px; }
   #station .sclose { position: absolute; top: 11px; right: 11px; width: 30px; height: 30px; padding: 0;
@@ -205,17 +240,18 @@
   #trainOverlay .tmsg { color: #eaf1ff; font-size: 18px; font-weight: 800; margin-top: 22px; letter-spacing: .01em; }
   #trainOverlay .tsub { color: #9fb2d4; font-size: 13px; margin-top: 8px; }
   /* 🚉 City error / empty overlay */
-  #cityError { position: fixed; inset: 0; z-index: 41; display: flex; align-items: center; justify-content: center;
+  #cityError { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center;
     background: rgba(10,14,24,.82); backdrop-filter: blur(4px); padding: 22px; transition: opacity .2s ease; }
-  #cityError.hidden { opacity: 0; pointer-events: none; }
+  #cityError.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
   #cityError .ceCard { width: 100%; max-width: 380px; background: rgba(255,251,242,.98); border-radius: 20px;
-    box-shadow: 0 18px 56px rgba(0,0,0,.4); padding: 24px 22px; text-align: center; }
+    box-shadow: 0 18px 56px rgba(0,0,0,.4); padding: 24px 22px; text-align: center; max-height: calc(100dvh - 44px); overflow: auto; }
   #cityError .ceCard h2 { font-size: 19px; color: #4a2f1e; margin-bottom: 9px; }
-  #cityError .ceCard p { font-size: 13px; color: #8a6f4e; line-height: 1.5; margin-bottom: 18px; }
+  #cityError .ceCard p { font-size: 13px; color: #765d40; line-height: 1.5; margin-bottom: 18px; }
   #cityError .ceActions { display: flex; flex-direction: column; gap: 9px; }
-  #cityError .ceActions button { font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; padding: 11px;
-    border-radius: 12px; border: none; color: #fff; background: linear-gradient(150deg,#e8b34a,#d98f2e); }
-  #cityError .ceActions button.alt { color: #8a6f4e; background: #fffdf8; border: 1.5px solid #e3d2b6; }
+  #cityError .ceActions button, #cityError .ceActions a { font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; padding: 11px; min-height: 44px; text-decoration: none;
+    border-radius: 12px; border: none; color: #4a2f1e; background: linear-gradient(150deg,#e8b34a,#d98f2e); }
+  #cityError .ceActions .alt { color: #6b5133; background: #fffdf8; border: 1.5px solid #e3d2b6; }
+  #cityError .ceActions :focus-visible { outline: 3px solid #31765c; outline-offset: 3px; }
   #townLabel { background: rgba(217,143,46,.16) !important; color: #9a5e16 !important; }
   /* 📰 Town Gazette — public repo changes since this browser last marked the town read */
   .freshBox { border-radius: 14px; padding: 10px 11px 11px; margin: 0 0 11px;
@@ -1260,7 +1296,14 @@
     background: rgba(255,251,242,.97); backdrop-filter: blur(12px); border-radius: 20px;
     box-shadow: 0 16px 48px rgba(70,40,15,.32); display: flex; flex-direction: column; overflow: hidden;
     transform-origin: bottom right; transition: opacity .2s ease, transform .2s ease; }
-  #chat.hidden { opacity: 0; transform: scale(.92) translateY(8px); pointer-events: none; }
+  #chat.hidden { opacity: 0; transform: scale(.92) translateY(8px); pointer-events: none; visibility: hidden; }
+  body.town-panel-open #chat { bottom: max(12px,calc(100dvh - var(--town-ui-top,0px) - var(--town-ui-height,100dvh) + 12px));
+    max-height: calc(var(--town-ui-height,100dvh) - 88px); }
+  #chat .chatHead { flex: 0 0 auto; }
+  #chat .chatHead .ttl { min-width: 0; overflow-wrap: anywhere; }
+  #chat #chatLog { min-height: 0; flex: 1 1 320px; overscroll-behavior: contain; user-select: text; }
+  #chat input, #chat textarea { font-size: 16px; }
+  #chat .chatHead .x, #station .sclose { min-width: 44px; min-height: 44px; }
   #chat.residentChat { border-color: rgba(115,143,106,.42); box-shadow: 0 14px 48px rgba(43,67,42,.24); }
   #residentStatus { display:flex; align-items:center; gap:8px; min-height:34px; padding:7px 12px;
     border-bottom:1px solid #e4eadc; background:#f3f7ed; color:#53634b; font-size:10.5px; line-height:1.35; }
@@ -1544,6 +1587,10 @@
   @media (prefers-reduced-motion:reduce) {
     #worldTreeModal, .worldTreeChronicle, #worldTreeTrigger { transition:none !important; }
   }
+  #panel, #passport, #station { top: calc(var(--town-ui-top,0px) + 70px + env(safe-area-inset-top,0px));
+    max-height: calc(var(--town-ui-height,100dvh) - 88px - env(safe-area-inset-top,0px)); overscroll-behavior: contain; }
+  #mapWrap.hidden { visibility: hidden; }
+  #mapLegend button { font-family: inherit; }
 </style>
 </head>
 <body>
@@ -1551,20 +1598,27 @@
 <div id="loading"><span id="loadingPortal" aria-hidden="true"></span><span id="loadingText" data-i18n="loading"><span data-boot-lang="ko">레포 도시를 짓는 중…</span><span data-boot-lang="en">Building Repolis…</span></span></div>
 
 <div id="topbar" class="hud">
-  <div class="badge">🏙️ Repolis</div>
-  <div class="badge" id="townLabel" style="display:none;font-weight:700;"></div>
+  <div class="badge" id="townBrand">🏙️ Repolis</div>
   <button id="stationBtn" class="badge" title="Travel to another GitHub town" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;" data-i18n="stationBtn">🚉 역</button>
+  <button id="mapBtn" class="badge" title="World map" aria-label="World map" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🗺️ <span data-i18n="mapBtn">지도</span></button>
+  <details id="townTools" class="badge">
+  <summary data-i18n="townTools">마을 · 방문</summary>
+  <div id="townToolsPanel">
+  <div class="badge" id="townLabel" style="display:none;font-weight:700;"></div>
   <button id="langBtn" class="badge" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌐 EN</button>
   <button id="dayBtn" class="badge" title="Time of day" aria-label="Time of day" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🌙</button>
-  <button id="mapBtn" class="badge" title="World map" aria-label="World map" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🗺️ <span data-i18n="mapBtn">지도</span></button>
   <div class="badge"><span data-i18n="visited">탐험</span> <b id="visitCount">0</b>/<span id="totalCount">0</span></div>
   <button id="passBtn" class="badge" title="Explorer Passport" style="border:none;cursor:pointer;font-family:inherit;color:#4a2f1e;">🛂 <span data-i18n="passport">여권</span></button>
   <div class="badge" id="liveBadge" title="online now · entries today · total entries · all-time unique guests · UTC">🟢 <b id="liveCount">1</b><span id="entryWrap" style="display:none;"> · <span class="hudFull" data-i18n="entriesTodayWord">오늘 입장</span><span class="hudShort" data-i18n="entriesTodayShort">입장</span> <b id="entryCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="entryTotalWrap" style="display:none;"> · <span class="hudFull" data-i18n="entriesTotalWord">누적 입장</span><span class="hudShort" data-i18n="entriesTotalShort">누적</span> <b id="entryTotalCount">0</b><span data-i18n="entriesUnit">회</span></span><span id="allWrap" style="display:none;"> · <span data-i18n="uniqueWord">고유</span> <b id="allCount">0</b><span data-i18n="peopleUnit">명</span></span></div>
+  </div>
+  </details>
   <div class="badge" id="navBadge" style="display:none;">🧭 <span id="navName"></span> · <span id="navDist"></span>m</div>
 </div>
 <button id="menuBtn" type="button" aria-controls="panel" aria-expanded="false" data-i18n-aria="wayfinding">☰<span class="dot"></span></button>
+<div id="townPanelBackdrop" hidden aria-hidden="true"></div>
 
-<div id="panel" class="hidden">
+<div id="panel" class="hidden" role="dialog" aria-modal="true" data-i18n-aria="wayfinding" inert>
+  <button class="townPanelClose" type="button" data-town-close="panel" data-i18n-aria="close">✕</button>
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
   <section id="intentLens" aria-labelledby="intentLensTitle">
     <div id="intentLensTitle" data-i18n="intentLensTitle">무엇을 하러 왔나요?</div>
@@ -1603,11 +1657,24 @@
     <span class="pmIcon" aria-hidden="true">📸</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="postcardMenu">타운 엽서 만들기</span><span class="pmSub" data-i18n="postcardMenuSub">지금 보이는 마을을 PNG로</span></span>
   </button>
-  <input id="repoSearch" type="text" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" autocomplete="off" />
+  <details id="nearbySpeech"><summary data-i18n="nearbySpeech">주변 대화 읽기</summary><div id="nearbySpeechText"></div></details>
+  <section id="firstRepoPicker" hidden aria-labelledby="firstRepoTitle">
+    <h4 id="firstRepoTitle" data-i18n="firstRepoTitle">이 마을의 레포 하나 고르기</h4>
+    <p data-i18n="firstRepoBasis">현재 불러온 공개 목록 순서입니다. 선택하면 자동 질문 없이 전시실에 들어가요.</p>
+    <button id="firstRepoBack" type="button" data-i18n="firstRepoBack">목적 선택으로</button>
+    <button id="firstRepoCancel" type="button" data-i18n="firstRepoCancel">마을로 돌아가기</button>
+    <p id="firstRepoStatus" role="status" aria-live="polite"></p>
+  </section>
+  <input id="repoSearch" type="text" name="repository" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" data-i18n-aria="searchPh" autocomplete="off" />
   <div id="repoList"></div>
+  <div id="firstRepoPager" hidden>
+    <button id="firstRepoPrev" type="button" data-i18n="firstRepoPrev">이전 6개</button>
+    <button id="firstRepoNext" type="button" data-i18n="firstRepoNext">다음 6개</button>
+  </div>
 </div>
 
-<div id="passport" class="hidden">
+<div id="passport" class="hidden" role="dialog" aria-modal="true" data-i18n-aria="passportTitle" inert>
+  <button class="townPanelClose" type="button" data-town-close="passport" data-i18n-aria="close">✕</button>
   <h3>🛂 <span data-i18n="passportTitle">탐험 여권</span></h3>
   <div class="psub" data-i18n="passportSub">마을을 거닐며 스탬프를 모아요.</div>
   <div class="growthBox" id="growthBox" style="display:none;"></div>
@@ -1825,7 +1892,7 @@
   </div>
 </div>
 
-<div id="cityError" class="hidden">
+<div id="cityError" class="hidden" role="alertdialog" aria-modal="true" aria-labelledby="ceTitle" aria-describedby="ceMsg" aria-hidden="true" inert>
   <div class="ceCard">
     <h2 id="ceTitle"></h2>
     <p id="ceMsg"></p>
@@ -2138,11 +2205,113 @@
   <div id="chatLog" role="log" aria-live="polite" aria-relevant="additions"></div>
   <div class="chatIn">
     <span id="atelierChatCount" role="status" aria-live="polite"></span>
-    <input id="chatText" type="text" placeholder="어떤 레포를 찾으세요? 예: 제일 인기있는 레포" data-i18n-ph="chatPh" autocomplete="off" />
+    <input id="chatText" name="message" type="text" placeholder="어떤 레포를 찾으세요? 예: 제일 인기있는 레포" data-i18n-ph="chatPh" data-i18n-aria="chatPh" autocomplete="off" />
     <button id="chatSend" type="button" aria-label="Send">▶</button>
   </div>
 </div>
 
+<script>
+/*ARRIVAL_RECOVERY:START*/
+(function(){
+  // This boundary must run even when an imported module or WebGL cannot start.
+  const copy={
+    ko:{title:'마을을 열지 못했어요',contextTitle:'그래픽 연결이 끊겼어요',restoredTitle:'그래픽을 복원했어요',
+      retry:'같은 링크 다시 시도',home:'기본 광장으로 이동',github:'원래 GitHub 열기',resume:'계속하기',
+      stalled:'마을 준비가 오래 걸리고 있어요. 연결을 확인한 뒤 다시 시도해 주세요. 자동으로 재요청하지 않아요.',
+      script:'필요한 스크립트를 불러오지 못했어요. 연결이나 콘텐츠 차단 설정을 확인한 뒤 다시 시도해 주세요.',
+      initialization:'마을을 준비하는 중 오류가 발생했어요. 같은 링크를 다시 열거나 기본 광장으로 이동할 수 있어요.',
+      webgl:'이 브라우저에서 WebGL을 시작하지 못했어요. 하드웨어 가속과 WebGL 지원을 확인해 주세요.',
+      context_lost:'그래픽 연결이 끊겼어요. 브라우저가 복원할 때까지 기다리거나 같은 링크를 다시 열 수 있어요.',
+      restored:'그래픽 연결과 첫 화면을 복원했어요. 계속하기를 누르면 멈춘 곳으로 돌아가요.',
+      timeout:'데이터 응답이 제한 시간 안에 끝나지 않았어요. 자동으로 재요청하지 않아요.',
+      oversized:'데이터 응답이 안전한 크기 한도를 넘었어요. GitHub에서 원본을 확인하거나 다시 시도해 주세요.',
+      malformed:'데이터 응답을 읽을 수 없어요. GitHub에서 원본을 확인하거나 다시 시도해 주세요.',
+      data_load:'마을의 레포 목록 파일을 불러오지 못했어요. 파일이 없거나 응답을 읽을 수 없는 상태예요. 같은 링크를 다시 시도하거나 GitHub에서 확인해 주세요.',
+      target:'요청한 레포에 도착하지 못했어요. 다른 레포로 대신 이동하지 않았어요.'},
+    en:{title:'This town could not open',contextTitle:'Graphics interrupted',restoredTitle:'Graphics restored',
+      retry:'Retry the same link',home:'Open the default plaza',github:'Open the original GitHub',resume:'Continue',
+      stalled:'Town preparation is taking too long. Check the connection and retry when ready. No automatic retry is running.',
+      script:'A required script could not load. Check the connection or content-blocking settings, then retry.',
+      initialization:'The town could not initialize. Retry the same link or open the default plaza.',
+      webgl:'This browser could not start WebGL. Check hardware acceleration and WebGL support.',
+      context_lost:'The graphics context was lost. Wait for the browser to restore it, or reload the same link.',
+      restored:'Graphics and the first frame have been restored. Choose Continue to return to where you stopped.',
+      timeout:'The data response did not finish within its time limit. No automatic retry is running.',
+      oversized:'The data response exceeded its safe size limit. Check the original on GitHub or retry.',
+      malformed:'The data response could not be read. Check the original on GitHub or retry.',
+      data_load:'The town repository catalog could not load. Its file may be unavailable or unreadable. Retry the same link or check GitHub.',
+      target:'The requested repository could not be opened. No other repository was substituted.'}
+  };
+  const overlay=document.getElementById('cityError'),loading=document.getElementById('loading'),intro=document.getElementById('intro');
+  let reason=null,details=null,bootReady=false,target=null,restoring=false,restored=false,focusBefore=null,loadingBefore='',inertBefore=[];
+  intro.inert=true;
+  const lang=()=>document.documentElement.lang==='ko'?'ko':'en';
+  let watchdog=setTimeout(()=>fail('stalled'),45000);
+  function render(){
+    if(!reason) return;
+    const words=copy[lang()],actions=document.getElementById('ceActions');
+    document.getElementById('ceTitle').textContent=restored?words.restoredTitle:(reason==='context_lost'?words.contextTitle:(details?.title||words.title));
+    document.getElementById('ceMsg').textContent=restored?words.restored:(words[reason]||details?.message||words.initialization);
+    overlay.dataset.reason=reason; actions.replaceChildren();
+    if(restored){
+      const resume=document.createElement('button'); resume.type='button'; resume.id='arrivalResume'; resume.textContent=words.resume;
+      resume.onclick=()=>{
+        reason=null; restoring=false; restored=false; details=null;
+        overlay.classList.add('hidden'); overlay.inert=true; overlay.setAttribute('aria-hidden','true');
+        for(const [element,inert] of inertBefore) element.inert=inert;
+        inertBefore=[]; loading.style.display=bootReady?'none':loadingBefore;
+        if(!bootReady) watchdog=setTimeout(()=>fail('stalled'),45000);
+        if(focusBefore?.isConnected&&!focusBefore.closest('[inert]')) focusBefore.focus({preventScroll:true});
+        window.REPOLIS_ARRIVAL.onResume?.();
+      };
+      actions.appendChild(resume);
+    }
+    const retry=document.createElement('button'); retry.type='button'; retry.id='arrivalRetry'; retry.textContent=words.retry;
+    retry.onclick=()=>location.reload(); actions.appendChild(retry);
+    if(target){
+      const original=document.createElement('a'); original.id='arrivalGithub'; original.className='alt'; original.textContent=words.github;
+      original.href=target; original.target='_blank'; original.rel='noopener noreferrer'; actions.appendChild(original);
+    }
+    const home=document.createElement('a'),url=new URL(location.href); url.search=''; url.hash='';
+    url.searchParams.set('view','plaza'); url.searchParams.set('lang',lang());
+    home.id='arrivalHome'; home.className='alt'; home.href=url.href; home.textContent=words.home; actions.appendChild(home);
+  }
+  function fail(next,options=null){
+    if(reason) return false;
+    clearTimeout(watchdog); reason=next; details=options; focusBefore=document.activeElement; loadingBefore=loading.style.display;
+    inertBefore=[...document.body.children].filter(el=>el!==overlay&&!['SCRIPT','STYLE','LINK'].includes(el.tagName)).map(el=>[el,el.inert]);
+    for(const [element] of inertBefore) element.inert=true;
+    loading.style.display='none'; overlay.inert=false; overlay.setAttribute('aria-hidden','false'); overlay.classList.remove('hidden');
+    window.REPOLIS_ARRIVAL.onBlock?.(); render(); overlay.querySelector('button').focus({preventScroll:true});
+    return true;
+  }
+  window.REPOLIS_ARRIVAL={
+    get blocked(){ return !!reason; },get recovering(){ return reason==='context_lost'; },
+    fail,refresh:render,onBlock:null,onResume:null,
+    setTarget(url){ const value=new URL(url); if(value.origin==='https://github.com'&&!value.username&&!value.password&&!value.search&&!value.hash) target=value.href; },
+    ready(){ if(reason) return false; bootReady=true; clearTimeout(watchdog); return true; },
+    contextRestored(){ if(reason==='context_lost') restoring=true; },
+    rendered(){ if(restoring&&!restored){ restored=true; render(); overlay.querySelector('button').focus({preventScroll:true}); } }
+  };
+  addEventListener('error',event=>{
+    if(bootReady||reason) return;
+    if(event.target instanceof HTMLScriptElement) fail('script');
+    else if(event instanceof ErrorEvent) fail('initialization');
+  },true);
+  document.addEventListener('keydown',event=>{
+    if(!reason) return;
+    event.stopImmediatePropagation();
+    if(event.key==='Escape') event.preventDefault();
+    if(event.key!=='Tab') return;
+    const items=[...overlay.querySelectorAll('button,a[href]')],first=items[0],last=items.at(-1);
+    if(!overlay.contains(document.activeElement)||(event.shiftKey&&document.activeElement===first)){
+      event.preventDefault(); (event.shiftKey?last:first).focus();
+    }else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+  },true);
+  document.addEventListener('focusin',event=>{ if(reason&&!overlay.contains(event.target)) overlay.querySelector('button').focus({preventScroll:true}); },true);
+})();
+/*ARRIVAL_RECOVERY:END*/
+</script>
 <script src="repolis.config.js"></script>
 <script src="scholars.js"></script>
 <script src="council/engine.js"></script>
@@ -2181,11 +2350,14 @@ import { allocateElderFragments, createLoreDeliveryState, loadLoreFragments } fr
 import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from './assets/taxi-voice.js?v=world-tree-phase4-v1';
 import { clearSessionFootprints, createSessionFootprintState, sessionFootprintScale, sessionFootprintSnapshot, stepSessionFootprints, teardownSessionFootprints } from './assets/session-footprints.js?v=world-tree-phase5-footprints-v1';
 import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
-import { REPOSITORY_ATELIER_CHAT_LIMIT, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v1';
+import { REPOSITORY_ATELIER_CHAT_LIMIT, REPOSITORY_ATELIER_CHAT_TIMEOUT_MS, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatResponseFailure, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v2';
 import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, resolveRepositoryBlueprintFocus, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v2';
 import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from './assets/issue-code-scout.js?v=issue-code-scout-v1';
 import { PROCEDURAL_SURFACE_FAMILIES, PROCEDURAL_SURFACE_LIMITS, PROCEDURAL_SURFACE_VERSION, createSurfaceRng, disposeBoundedSurfaceCache, getOrCreateBoundedSurface, normalizeSurfaceFamily, surfacePixelHash, surfaceTextureKey, surfaceUvTransform, surfaceVariant, surfaceWallRepeat } from './assets/procedural-surfaces.js?v=procedural-surface-v2-3';
 
+// Own rejected startup awaits without treating unrelated host promises as town failures.
+/*TOWN_INITIALIZATION:START*/
+try {
 /* ====================== REPO DATA + CITY MODE ======================
    Owner mode (default) loads the full CI-built repos.json — unchanged.
    Public mode (?user=someone) builds a town from any GitHub user's PUBLIC
@@ -2220,6 +2392,7 @@ let cityMode = _repoRoute.mode;     // 'owner' | 'public' | 'portal'
 let dataSource = cityMode === 'portal' ? 'repo-api' : (cityMode === 'public' ? 'github-public' : 'owner-ci');
 let cityError = null;              // { status, reason } when a public town can't load
 let blueprintDeepLinkBypass = false;
+window.REPOLIS_ARRIVAL.setTarget('https://github.com/'+(repoPortalTarget?.slug||_reqFocus?.slug||(GH_LOGIN_RE.test(currentUser)?currentUser:OWNER)));
 if(BLUEPRINT_DEEP_LINK.ok) document.title=`${BLUEPRINT_DEEP_LINK.target.slug} · Repository Blueprint`;
 else if(ATELIER_DIRECT_LINK.ok) document.title=`${ATELIER_DIRECT_LINK.target.slug} · Repository Atelier`;
 else if(repoPortalTarget) document.title=`${repoPortalTarget.slug} · Repolis Repo Portal`;
@@ -2302,6 +2475,44 @@ function _repoPortalLang(){ if(DIRECT_ENTRY_LANG) return DIRECT_ENTRY_LANG;
   return (navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; }
 
 /* --- public town: normalize allowlisted GitHub REST fields without manufacturing traffic. --- */
+/*ARRIVAL_DATA:START*/
+const ARRIVAL_DATA_LIMITS=Object.freeze({timeoutMs:8000,maxBytes:2*1024*1024,optionalTimeoutMs:4000});
+class ArrivalDataError extends Error{
+  constructor(reason,status=0){ super(reason); this.name='ArrivalDataError'; this.reason=reason; this.status=status; }
+}
+function arrivalDataReason(error){
+  return error instanceof ArrivalDataError?error.reason:(error instanceof SyntaxError?'malformed':'network');
+}
+async function fetchArrivalResponse(url,options={},limits=ARRIVAL_DATA_LIMITS,fetchImpl=globalThis.fetch){
+  const controller=new AbortController(),timeoutMs=limits.timeoutMs??ARRIVAL_DATA_LIMITS.timeoutMs,maxBytes=limits.maxBytes??ARRIVAL_DATA_LIMITS.maxBytes;
+  let reader=null,timedOut=false;
+  const timer=setTimeout(()=>{ timedOut=true; controller.abort(); },timeoutMs);
+  try{
+    const response=await fetchImpl(url,{...options,signal:controller.signal});
+    if(!response.ok) throw new ArrivalDataError(response.status===404?'not_found':(response.status===403||response.status===429?'rate_limit':'http'),response.status);
+    if(Number(response.headers.get('content-length'))>maxBytes) throw new ArrivalDataError('oversized');
+    let text='';
+    if(response.body?.getReader){
+      reader=response.body.getReader(); const decoder=new TextDecoder(); let bytes=0;
+      while(true){
+        const {done,value}=await reader.read(); if(done) break;
+        bytes+=value.byteLength; if(bytes>maxBytes) throw new ArrivalDataError('oversized');
+        text+=decoder.decode(value,{stream:true});
+      }
+      text+=decoder.decode();
+    }else{
+      const bytes=await response.arrayBuffer(); if(bytes.byteLength>maxBytes) throw new ArrivalDataError('oversized');
+      text=new TextDecoder().decode(bytes);
+    }
+    return new Response(text,{status:response.status,headers:response.headers});
+  }catch(error){
+    controller.abort();
+    if(error instanceof ArrivalDataError) throw error;
+    throw new ArrivalDataError(timedOut?'timeout':'network');
+  }finally{ clearTimeout(timer); reader?.releaseLock(); }
+}
+const fetchOptionalArrival=(url,options)=>fetchArrivalResponse(url,options,{timeoutMs:ARRIVAL_DATA_LIMITS.optionalTimeoutMs});
+/*ARRIVAL_DATA:END*/
 function _normPublicRepos(raw, user){
   return projectPublicRepos(raw,user);
 }
@@ -2314,33 +2525,27 @@ async function _loadPublicCity(user){
       coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
   track('city_data_load_start', { targetUser:user });
   try{
-    const res = await fetch('https://api.github.com/users/'+encodeURIComponent(user)+'/repos?per_page=100&sort=pushed',
+    const res = await fetchArrivalResponse('https://api.github.com/users/'+encodeURIComponent(user)+'/repos?per_page=100&sort=pushed',
       { headers:{ 'Accept':'application/vnd.github+json' } });
-    if(!res.ok){
-      const reason = res.status===404 ? 'not_found' : (res.status===403 ? 'rate_limit' : 'http');
-      if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache',
-        coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:reason} };
-      return { repos:[], source:'github-public', error:{ status:res.status, reason },
-        coverage:{partial:false,error:reason} };
-    }
     const raw = await res.json();
+    if(!Array.isArray(raw)) throw new ArrivalDataError('malformed');
     try{ localStorage.setItem(key, JSON.stringify({ username:user, fetchedAt:Date.now(), repos:raw, source:'github-public' })); }catch(e){}
     return { repos:_normPublicRepos(raw,user), source:'github-public',
       coverage:{partial:raw.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
   }catch(e){
+    const reason=arrivalDataReason(e);
     if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache',
-      coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:'network'} };
-    return { repos:[], source:'github-public', error:{ status:0, reason:'network' },
-      coverage:{partial:false,error:'network'} };
+      coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:reason} };
+    return { repos:[], source:'github-public', error:{ status:e.status||0, reason },
+      coverage:{partial:false,error:reason} };
   }
 }
 
 let _ownerSnapshotPromise=null;
 function _ownerSnapshot(){
   if(_ownerSnapshotPromise) return _ownerSnapshotPromise;
-  _ownerSnapshotPromise=fetch('repos.json',{cache:'no-cache'}).then(async res=>{
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data=await res.json(); if(!Array.isArray(data)) throw new Error('repos.json is not an array');
+  _ownerSnapshotPromise=fetchArrivalResponse('repos.json',{cache:'no-cache'}).then(async res=>{
+    const data=await res.json(); if(!Array.isArray(data)) throw new ArrivalDataError('malformed');
     return data;
   });
   return _ownerSnapshotPromise;
@@ -2348,10 +2553,9 @@ function _ownerSnapshot(){
 let _cityStatePromise=null;
 function _cityStateSnapshot(){
   if(_cityStatePromise) return _cityStatePromise;
-  _cityStatePromise=fetch('data/city-state.json',{cache:'no-cache'}).then(async res=>{
-    if(!res.ok) throw new Error('HTTP '+res.status);
+  _cityStatePromise=fetchArrivalResponse('data/city-state.json',{cache:'no-cache'}).then(async res=>{
     const data=await res.json();
-    if(data?.schema!==CITY_STATE_SCHEMA||data?.version!==CITY_STATE_VERSION) throw new Error('unsupported city-state schema');
+    if(data?.schema!==CITY_STATE_SCHEMA||data?.version!==CITY_STATE_VERSION) throw new ArrivalDataError('malformed');
     return data;
   });
   return _cityStatePromise;
@@ -2394,22 +2598,19 @@ function _repoPortalCacheStore(target,repo){
 async function _loadRepoPortalTarget(target){
   if(target.owner.toLowerCase()===OWNER.toLowerCase()){
     try{ const exact=_ownerRepos(await _ownerSnapshot()).find(repo=>repo.repo.toLowerCase()===target.repo.toLowerCase());
-      if(exact) return {repo:exact,source:'owner-snapshot',result:'local'}; }catch(e){}
+      if(exact) return {repo:exact,source:'owner-snapshot',result:'local'}; }
+    catch(e){ console.warn('Owner snapshot unavailable; trying the exact public repository',e); }
   }
   const cached=_repoPortalCacheLookup(target); if(cached.fresh) return {repo:cached.fresh,source:'repo-cache',result:'cache'};
   try{
-    const res=await fetch('https://api.github.com/repos/'+encodeURIComponent(target.owner)+'/'+encodeURIComponent(target.repo),
+    const res=await fetchArrivalResponse('https://api.github.com/repos/'+encodeURIComponent(target.owner)+'/'+encodeURIComponent(target.repo),
       {headers:{Accept:'application/vnd.github+json'}});
-    if(!res.ok){
-      if(cached.stale) return {repo:cached.stale,source:'repo-stale-cache',result:'stale'};
-      return {repo:null,source:'repo-api',result:'error',error:{status:res.status,reason:res.status===404?'not_found':(res.status===403||res.status===429?'rate_limit':'http')}};
-    }
     const repo=projectPublicRepo(await res.json(),target.owner);
     if(!repo||repo.repo.toLowerCase()!==target.repo.toLowerCase()) return {repo:null,source:'repo-api',result:'error',error:{status:404,reason:'not_found'}};
     _repoPortalCacheStore(target,repo); return {repo,source:'repo-api',result:'api'};
   }catch(e){
     if(cached.stale) return {repo:cached.stale,source:'repo-stale-cache',result:'stale'};
-    return {repo:null,source:'repo-api',result:'error',error:{status:0,reason:'network'}};
+    return {repo:null,source:'repo-api',result:'error',error:{status:e.status||0,reason:arrivalDataReason(e)}};
   }
 }
 
@@ -2419,7 +2620,7 @@ trackPortal('feature_seen',{entry:repoPortalRequested?'link':'intro',device:_rep
 if(cityMode === 'owner'){
   const cityStateLoad=_cityStateSnapshot().catch(error=>{ console.warn('city-state.json load failed',error); return null; });
   try { REPOS=_ownerRepos(await _ownerSnapshot()); CITY_STATE=await cityStateLoad; }
-  catch(e){ cityError={status:0,reason:'data_load'}; console.error('repos.json load failed', e); }
+  catch(e){ cityError={status:0,reason:'data_load'}; cityError.cause=arrivalDataReason(e); console.error('repos.json load failed', e); }
   track(REPOS.length ? 'city_data_load_success' : 'city_data_load_fail', { repoCount:REPOS.length });
 } else if(cityMode === 'public') {
   try{ const _l = (function(){ let l=localStorage.getItem('repolisLang'); if(l!=='ko'&&l!=='en') l=(navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; return l; })();
@@ -2463,19 +2664,21 @@ if(TOWN_PROJECTION.kind==='portable'){
 }
 if(cityMode==='owner'&&currentUser.toLowerCase()===OWNER.toLowerCase()){
   const [residentLoad,loreLoad]=await Promise.allSettled([
-    loadResidentManifest({owner:currentUser}),
-    loadLoreFragments(),
+    loadResidentManifest({owner:currentUser,fetchImpl:fetchOptionalArrival}),
+    loadLoreFragments({fetchImpl:fetchOptionalArrival}),
   ]);
   if(residentLoad.status==='fulfilled'){ RESIDENT_MANIFEST=residentLoad.value; RESIDENT_MANIFEST_STATE='ready'; }
+  else console.warn('Resident manifest unavailable; using local residents',residentLoad.reason);
   if(loreLoad.status==='fulfilled'){ LORE_FRAGMENTS=loreLoad.value; LORE_FRAGMENT_STATE='ready'; }
+  else console.warn('Lore fragments unavailable; using local dialogue',loreLoad.reason);
 }
 const RESIDENT_PROFILE_STORE=createResidentProfileStore({manifest:RESIDENT_MANIFEST});
 const TOWN_GROWTH=buildTownGrowthTimeline(REPOS);
 
 /* Chronopolis council config (sages/chair/ambient) — optional; chamber uses an inline fallback if missing */
 let CHRONO_CFG=null;
-try { CHRONO_CFG = await fetch('council/council.config.json', { cache:'no-cache' }).then(r=>r.json()); }
-catch(e){ /* config optional */ }
+try { CHRONO_CFG = await fetchOptionalArrival('council/council.config.json', { cache:'no-cache' }).then(r=>r.json()); }
+catch(e){ console.warn('Council config unavailable; using the inline configuration',e); }
 
 /* Contribution Library data (generated daily into assets/contribution-library.json). Loaded in the
    background (no await) so a slow fetch never blocks the city from booting — nothing during boot reads
@@ -2517,6 +2720,12 @@ const I18N = {
   ko:{
     loading:'레포 도시를 짓는 중…',
     visited:'탐험', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
+    townTools:'마을 · 방문', nearbySpeech:'주변 대화 읽기', nearbySpeechEmpty:'지금 가까이에서 들리는 대화가 없어요.',
+    firstRepoTitle:'이 마을의 레포 하나 고르기', firstRepoBasis:'현재 불러온 공개 목록 순서입니다. 선택하면 자동 질문 없이 전시실에 들어가요.',
+    firstRepoBack:'목적 선택으로', firstRepoCancel:'마을로 돌아가기', firstRepoPrev:'이전 6개', firstRepoNext:'다음 6개',
+    firstRepoCount:'{total}개 중 {from}–{to} · 다른 레포는 검색해 보세요.', firstRepoPartial:'불러온 일부 공개 레포만 표시합니다.',
+    firstRepoEmpty:'이 마을에서 고를 수 있는 공개 레포가 없어요. 역에서 다른 마을로 이동할 수 있어요.',
+    firstRepoNoDesc:'등록된 설명이 없어요.', firstRepoArchived:'아카이브', firstRepoUnavailable:'현재 마을의 레포를 확인할 수 없어요. 목록에서 다시 골라 주세요.',
     visitorsWord:'방문자', entriesWord:'입장', entriesUnit:'회', peopleUnit:'명',
     entriesTodayWord:'오늘 입장', entriesTodayShort:'입장', entriesTotalWord:'누적 입장', entriesTotalShort:'누적', uniqueWord:'고유',
     passport:'여권', passportTitle:'탐험 여권', passportSub:'마을을 거닐며 스탬프와 이야기를 모아요.',
@@ -2790,6 +2999,13 @@ const I18N = {
     atelierDirectOpening:'{repo} 전시실로 이동하는 중…', plazaDirectOpening:'Repolis 광장으로 이동하는 중…',
     atelierChatLimit:'이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요.',
     atelierChatUnavailable:'{repo}의 공개 정보를 지금 불러오지 못했어요. 다른 레포로 대신 답하지 않을게요.',
+    atelierChatTimeout:'AI 응답이 제한 시간 안에 도착하지 않았어요. 잠시 후 다시 질문하거나 GitHub 원문을 확인해 주세요.',
+    atelierChatNetworkError:'AI 서비스와 연결이 끊겼어요. 네트워크 연결을 확인한 뒤 다시 질문해 주세요.',
+    atelierChatInvalidResponse:'현재 레포에 맞는 AI 응답을 확인할 수 없어 표시하지 않았어요. GitHub 원문을 확인해 주세요.',
+    atelierChatAccessDenied:'AI 서비스가 요청을 거절했어요. 사이트 운영자가 서버의 접근 설정을 확인해야 합니다.',
+    atelierChatRateLimited:'AI 서비스의 요청 한도에 걸렸어요. 잠시 후 다시 질문하거나 GitHub 원문을 확인해 주세요.',
+    atelierChatNotConfigured:'AI 서비스의 검색 연결이 설정되어 있지 않아요. 사이트 운영자의 설정이 필요합니다.',
+    atelierChatServiceError:'AI 서비스가 요청을 처리하지 못했어요. 잠시 후 다시 질문하거나 GitHub 원문을 확인해 주세요.',
     atelierChatNoBackend:'이 마을에서는 Repository Atelier GitHub MCP가 비활성화되어 있어요. 다른 레포로 대신 답하지 않을게요.',
     atelierChatWait:'진행 중인 대화가 끝난 뒤 전시실에 입장해 주세요.',
     atelierDoor:'출구 · 마을로 돌아가기', atelierWalk:'WASD / 터치로 전시실을 걸어 보세요',
@@ -2898,6 +3114,12 @@ const I18N = {
   en:{
     loading:'Building Repolis…',
     visited:'Explored', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
+    townTools:'Town · visits', nearbySpeech:'Read nearby dialogue', nearbySpeechEmpty:'No nearby dialogue right now.',
+    firstRepoTitle:'Choose a repository in this town', firstRepoBasis:'Current loaded public-catalog order. Select a repository to enter its Atelier without an automatic question.',
+    firstRepoBack:'Back to purposes', firstRepoCancel:'Back to town', firstRepoPrev:'Previous 6', firstRepoNext:'Next 6',
+    firstRepoCount:'{from}–{to} of {total} · Search for another repository.', firstRepoPartial:'Only the loaded portion of the public catalog is shown.',
+    firstRepoEmpty:'No public repository is available to select in this town. Use Station to visit another town.',
+    firstRepoNoDesc:'No description provided.', firstRepoArchived:'Archived', firstRepoUnavailable:'This repository could not be confirmed in the current town. Choose again from the list.',
     visitorsWord:'visitors', entriesWord:'entries', entriesUnit:'', peopleUnit:'',
     entriesTodayWord:'entries today', entriesTodayShort:'entries', entriesTotalWord:'total entries', entriesTotalShort:'total', uniqueWord:'unique',
     passport:'Passport', passportTitle:'Explorer Passport', passportSub:'Stroll the town and collect stamps and stories.',
@@ -3171,6 +3393,13 @@ const I18N = {
     atelierDirectOpening:'Entering the {repo} exhibition…', plazaDirectOpening:'Entering the Repolis plaza…',
     atelierChatLimit:'You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation.',
     atelierChatUnavailable:'Public information for {repo} is unavailable right now. I will not substitute another repository.',
+    atelierChatTimeout:'The AI response did not arrive within the time limit. Ask again later or open the repository on GitHub.',
+    atelierChatNetworkError:'The connection to the AI service was interrupted. Check your network connection before asking again.',
+    atelierChatInvalidResponse:'I could not verify an AI response for this repository, so I did not display it. Open the repository on GitHub instead.',
+    atelierChatAccessDenied:'The AI service denied the request. The site operator needs to check the server access settings.',
+    atelierChatRateLimited:'The AI service reached its request limit. Ask again later or open the repository on GitHub.',
+    atelierChatNotConfigured:'The AI search connection is not configured. The site operator needs to set it up.',
+    atelierChatServiceError:'The AI service could not process the request. Ask again later or open the repository on GitHub.',
     atelierChatNoBackend:'The Repository Atelier GitHub MCP is disabled in this town. I will not substitute another repository.',
     atelierChatWait:'Wait for the current conversation to finish before entering the Atelier.',
     atelierDoor:'Exit · return to town', atelierWalk:'Walk the exhibition with WASD / touch',
@@ -3383,7 +3612,9 @@ const _maxScore = Math.max(0.001, ...REPOS.map(r=>r.score||0));
 
 /* ====================== RENDERER / SCENE ====================== */
 const app = document.getElementById('app');
-const renderer = new THREE.WebGLRenderer({ antialias:true });
+const renderer = (()=>{ try{ return new THREE.WebGLRenderer({ antialias:true }); }
+  catch(error){ window.REPOLIS_ARRIVAL.fail('webgl'); throw error; } })();
+let arrivalContextLost=false;
 const _desktopFinePointer=matchMedia('(pointer:fine)');
 const _desktopFrameDropGuard=()=>_desktopFinePointer.matches&&innerWidth*innerHeight>=900000;
 let _renderQualityDesktopGuard=_desktopFrameDropGuard();
@@ -3460,8 +3691,10 @@ function _installShadowMetrics(){
   wrapped.__repolisMetrics=true; shadowMap.render=wrapped;
 }
 if(_DIAGNOSTICS) _installShadowMetrics();
-renderer.domElement.addEventListener('webglcontextlost',()=>{ _suspendGpuTimer(); RENDER_METRICS.lastStartedAt=0; });
-renderer.domElement.addEventListener('webglcontextrestored',()=>{ if(_DIAGNOSTICS){ _installShadowMetrics(); _installGpuTimer(); } invalidateTownShadows('context-restored'); if(typeof _restoreProceduralSurfaceTextures==='function') _restoreProceduralSurfaceTextures(); if(MEMORIAL_TREE) MEMORIAL_TREE.bloomDirty=true; if(typeof _undercroftContextRestored==='function') _undercroftContextRestored(); if(typeof _repositoryAtelierContextRestored==='function') _repositoryAtelierContextRestored(); });
+renderer.domElement.addEventListener('webglcontextlost',event=>{ event.preventDefault(); arrivalContextLost=true;
+  _suspendGpuTimer(); RENDER_METRICS.lastStartedAt=0; window.REPOLIS_ARRIVAL.fail('context_lost'); });
+renderer.domElement.addEventListener('webglcontextrestored',()=>{ if(_DIAGNOSTICS){ _installShadowMetrics(); _installGpuTimer(); } invalidateTownShadows('context-restored'); if(typeof _restoreProceduralSurfaceTextures==='function') _restoreProceduralSurfaceTextures(); if(MEMORIAL_TREE) MEMORIAL_TREE.bloomDirty=true; if(typeof _undercroftContextRestored==='function') _undercroftContextRestored(); if(typeof _repositoryAtelierContextRestored==='function') _repositoryAtelierContextRestored();
+  arrivalContextLost=false; window.REPOLIS_ARRIVAL.contextRestored(); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) RENDER_METRICS.lastStartedAt=0; });
 
 /* ---- device quality tier: gate detail density so mobile/low-end lower overdraw without touching desktop ---- */
@@ -3725,6 +3958,7 @@ function _renderWorldTreeFrame(){
   const finalToken=_beginMeasuredPass('final'); finalComposer.render(); _recordRenderPass('final',finalToken);
   if(MEMORIAL_TREE){ if(forceProofLayer) _setWorldTreeGlowLayers(false);
     MEMORIAL_TREE.group.visible=requestedTreeVisible; _setWorldTreeSapVisible(requestedTreeVisible); MEMORIAL_TREE.bloomLights.forEach(light=>{ light.visible=requestedTreeVisible; }); }
+  _arrivalRendered('town');
 }
 
 /* toon gradient + material factory */
@@ -7879,6 +8113,82 @@ function buildRoamingScholar(kind){ const sc=window.scholarByKind&&window.schola
   const npc={group:g,pos:g.position,kind,reach:4.6,patrol:{points,index:1,waitUntil:0,speed:LOW_END?0.62:0.88}}; NPCS.push(npc); return npc; }
 const MIRA_NPC=buildRoamingScholar('context7'), LYRA_NPC=buildRoamingScholar('huggingface');
 
+/*TOWN_SPEECH_CORE:START*/
+const TOWN_SPEECH_LIMITS=Object.freeze({count:2,width:272,mobileWidth:224,margin:12,top:84,bottom:120,exitGraceMs:350});
+function wrapTownSpeech(text,measure,maxWidth,maxLines){
+  const lines=[]; let line='';
+  for(const word of String(text||'').trim().split(/\s+/)){
+    if(line&&measure(line+' '+word)<=maxWidth){ line+=' '+word; continue; }
+    if(line){ lines.push(line); line=''; }
+    for(const char of word){ if(line&&measure(line+char)>maxWidth){ lines.push(line); line=''; } line+=char; }
+  }
+  if(line) lines.push(line);
+  const visible=lines.slice(0,maxLines);
+  if(lines.length>maxLines){ let tail=Array.from(visible[maxLines-1]); while(tail.length&&measure(tail.join('')+'…')>maxWidth) tail.pop();
+    visible[maxLines-1]=tail.join('')+'…'; }
+  return visible;
+}
+function layoutTownSpeech(candidates,width,height,now){
+  const L=TOWN_SPEECH_LIMITS,margin=L.margin,top=Math.min(L.top,height*.2),bottom=Math.max(top,height-L.bottom);
+  const sorted=candidates.filter(c=>c.speaking&&(c.eligible||(c.selected&&now-c.lastVisibleAt<L.exitGraceMs)))
+    .sort((a,b)=>b.priority-a.priority||Number(b.selected)-Number(a.selected)||a.distance-b.distance||a.id.localeCompare(b.id));
+  const chosen=[];
+  for(const c of sorted){
+    if(chosen.length>=L.count) break;
+    if(!c.eligible){ chosen.push({...c,visible:false}); continue; }
+    const w=Math.min(c.width,width-2*margin),h=Math.min(c.height,bottom-top),x=Math.max(margin,Math.min(width-margin-w,c.x-w/2));
+    let y=Math.max(top,Math.min(bottom-h,c.y-h/2));
+    const overlaps=(yy)=>chosen.some(p=>p.visible&&x<p.x+p.width+margin&&x+w+margin>p.x&&yy<p.y+p.height+margin&&yy+h+margin>p.y);
+    if(overlaps(y)){
+      const alternatives=chosen.flatMap(p=>[p.y-h-margin,p.y+p.height+margin]);
+      const fit=alternatives.find(yy=>yy>=top&&yy+h<=bottom&&!overlaps(yy)); if(fit===undefined) continue; y=fit;
+    }
+    chosen.push({...c,x,y,width:w,height:h,visible:true});
+  }
+  return chosen;
+}
+/*TOWN_SPEECH_CORE:END*/
+/*TOWN_SPEECH_RUNTIME:START*/
+const TOWN_SPEECH=[],TOWN_SPEECH_WORLD=new THREE.Vector3(),TOWN_SPEECH_VIEW=new THREE.Vector3();
+let _townSpeechText='';
+function registerTownSpeech(bubble,npc,name){
+  const sprite=bubble.sprite;
+  TOWN_SPEECH.push({bubble,npc,name,id:npc.id||npc.kind,baseWidth:sprite.scale.x,baseHeight:sprite.scale.y,selected:false,lastVisibleAt:0});
+}
+function updateTownSpeech(){
+  const now=performance.now(),focal=camera.projectionMatrix.elements[5]*innerHeight/2,maxWidth=innerWidth<=520?TOWN_SPEECH_LIMITS.mobileWidth:TOWN_SPEECH_LIMITS.width;
+  camera.updateMatrixWorld();
+  const candidates=TOWN_SPEECH.map(entry=>{
+    const sprite=entry.bubble.sprite; sprite.updateWorldMatrix(true,false); sprite.getWorldPosition(TOWN_SPEECH_WORLD);
+    TOWN_SPEECH_VIEW.copy(TOWN_SPEECH_WORLD).applyMatrix4(camera.matrixWorldInverse);
+    const depth=-TOWN_SPEECH_VIEW.z,distance=TOWN_SPEECH_WORLD.distanceTo(player.position);
+    TOWN_SPEECH_WORLD.project(camera);
+    const eligible=depth>camera.near&&TOWN_SPEECH_WORLD.z>=-1&&TOWN_SPEECH_WORLD.z<=1&&Math.abs(TOWN_SPEECH_WORLD.x)<1.12&&Math.abs(TOWN_SPEECH_WORLD.y)<1.12&&distance<45;
+    if(eligible) entry.lastVisibleAt=now;
+    const width=Math.min(maxWidth,entry.baseWidth*focal/Math.max(.01,depth));
+    return {...entry,depth,distance,eligible,speaking:entry.bubble.speaking||sprite.material.opacity>.08,
+      priority:activeNpc===entry.npc?3:(nearNpc===entry.npc||nearResident===entry.npc?2:0),
+      x:(TOWN_SPEECH_WORLD.x+1)*innerWidth/2,y:(1-TOWN_SPEECH_WORLD.y)*innerHeight/2,
+      width,height:width*entry.baseHeight/entry.baseWidth};
+  });
+  const placements=layoutTownSpeech(candidates,innerWidth,innerHeight,now),blocked=townInputBlocked();
+  for(const entry of TOWN_SPEECH){
+    const placement=placements.find(p=>p.id===entry.id),sprite=entry.bubble.sprite;
+    entry.selected=!!placement; sprite.visible=!!placement?.visible&&!blocked;
+    if(!placement?.visible) continue;
+    const units=placement.depth/focal;
+    sprite.scale.set(placement.width*units,placement.height*units,1);
+    const anchor=candidates.find(c=>c.id===entry.id);
+    sprite.center.set((anchor.x-placement.x)/placement.width,1-(anchor.y-placement.y)/placement.height);
+  }
+  if(!blocked){
+    const text=placements.filter(p=>p.visible&&p.bubble.sprite.userData.currentLine)
+      .map(p=>p.name()+': '+p.bubble.sprite.userData.currentLine).join('\n\n')||t('nearbySpeechEmpty');
+    if(text!==_townSpeechText){ _townSpeechText=text; document.getElementById('nearbySpeechText').textContent=text; }
+  }
+}
+/*TOWN_SPEECH_RUNTIME:END*/
+
 /* ---- NPCs feel alive: breathing bob, look-around, occasional wave + speech bubble (near-only) ---- */
 const NPC_COL={taxi:'#f0c069',msdocs:'#7fa8ee',deepwiki:'#4fc8bd',context7:'#d79a7a',huggingface:'#e88954'};
 const NPC_LINES={
@@ -7893,21 +8203,23 @@ const NPC_LINES={
   huggingface:{ ko:['어떤 모델을 벼릴까요? 🤗','데이터셋도 찾아드려요','새 논문 불씨가 보여요','AI 연구구역 순회 중','좋은 재료를 골라봐요'],
             en:['Which model shall we forge? 🤗','I find datasets too','Fresh paper sparks ahead','Patrolling the AI district','Let us choose good material'] } };
 function makeNpcBubble(x,z){ const cv=document.createElement('canvas'); cv.width=320; cv.height=140; const c=cv.getContext('2d');
-  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false}));
+  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false,depthTest:false,fog:false}));
   sp.scale.set(5.6,2.45,1); sp.position.set(x,3.55,z); sp.renderOrder=18; scene.add(sp);
   let life=0;
   function draw(text,col){ c.clearRect(0,0,320,140); c.fillStyle='rgba(255,251,242,0.96)'; const r=22;
     c.beginPath(); c.moveTo(r,6); c.arcTo(314,6,314,100,r); c.arcTo(314,100,6,100,r); c.arcTo(6,100,6,6,r); c.arcTo(6,6,314,6,r); c.fill();
     c.beginPath(); c.moveTo(146,98); c.lineTo(174,98); c.lineTo(150,126); c.closePath(); c.fill();      // little speech tail
     c.lineWidth=4; c.strokeStyle=col||'#caa'; c.stroke();
-    c.font='700 25px system-ui,sans-serif'; c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle';
-    c.fillText(text,160,54); tex.needsUpdate=true; }
-  return { sprite:sp, say(text,kind){ draw(text,NPC_COL[kind]||'#caa'); life=4.2; },
+    c.font='700 23px system-ui,sans-serif'; c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle';
+    const lines=wrapTownSpeech(text,value=>c.measureText(value).width,280,3);
+    lines.forEach((line,i)=>c.fillText(line,160,54+(i-(lines.length-1)/2)*27)); tex.needsUpdate=true; }
+  return { sprite:sp, get speaking(){ return life>0; }, say(text,kind){ sp.userData.currentLine=String(text); draw(text,NPC_COL[kind]||'#caa'); life=4.2; },
     update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0;
       sp.material.opacity += (want - sp.material.opacity)*0.12;
       sp.position.y = 3.55 + Math.sin(clock.elapsedTime*1.6)*0.05; } }; }
 for(const n of NPCS){ const g=n.group; g._baseRot=g.rotation.y; g._ph=Math.random()*6.283; g._bt=4+Math.random()*7; g._gt=0;
-  if(g._head) g._head._baseY=g._head.position.y; g._bub=makeNpcBubble(g.position.x,g.position.z); }
+  if(g._head) g._head._baseY=g._head.position.y; g._bub=makeNpcBubble(g.position.x,g.position.z);
+  registerTownSpeech(g._bub,n,()=>n.scholar?.star||n.kind); }
 function updateNpcs(dt){ const tt=clock.elapsedTime;
   for(const n of NPCS){ const g=n.group;
     const dx=player.position.x-g.position.x, dz=player.position.z-g.position.z, d=Math.hypot(dx,dz);
@@ -8277,20 +8589,15 @@ function residentTag(res){ const W=256,H=100,c=document.createElement('canvas');
   const tx=new THREE.CanvasTexture(c); tx.anisotropy=4;
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false,fog:false})); s.scale.set(2.9,1.13,1); s.position.y=3.06; s.renderOrder=6; s._res=res; return s; }
 function makeResBubble(){ const W=448,H=252, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const c=cv.getContext('2d');
-  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false})); sp.scale.set(7.47,4.2,1); sp.renderOrder=19; let life=0;
-  const ML=5, FS=24, LH=30;                                                    // up to 5 lines so a full conversational line shows instead of being cut off after 3
-  function wrap(text,maxw){ const words=String(text).split(/\s+/); const lines=[]; let cur='';
-    for(const w of words){ const tryl=cur?cur+' '+w:w; if(c.measureText(tryl).width>maxw && cur){ lines.push(cur); cur=w; if(lines.length>=ML) break; } else cur=tryl; }
-    if(cur&&lines.length<ML) lines.push(cur);
-    if(lines.length>=ML){ let last=lines[ML-1]; while(c.measureText(last+'\u2026').width>maxw && last.length>1) last=last.slice(0,-1); lines[ML-1]=last+'\u2026'; }
-    return lines; }
-  function draw(text,hex){ c.clearRect(0,0,W,H); c.font='600 '+FS+'px system-ui,sans-serif'; const lines=wrap(text,W-56);
+  const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false,depthTest:false,fog:false})); sp.scale.set(7.47,4.2,1); sp.renderOrder=19; let life=0;
+  const ML=5, FS=28, LH=34;
+  function draw(text,hex){ c.clearRect(0,0,W,H); c.font='600 '+FS+'px system-ui,sans-serif'; const lines=wrapTownSpeech(text,value=>c.measureText(value).width,W-56,ML);
     const bh=LH*lines.length+30, top=(H-26)-bh, r=24;
     c.beginPath(); c.moveTo(12+r,top); c.arcTo(W-12,top,W-12,top+bh,r); c.arcTo(W-12,top+bh,12,top+bh,r); c.arcTo(12,top+bh,12,top,r); c.arcTo(12,top,W-12,top,r); c.closePath();
     c.fillStyle='rgba(255,251,242,0.97)'; c.fill(); c.lineWidth=4; c.strokeStyle=hex||'#caa'; c.stroke();
     c.beginPath(); c.moveTo(W/2-14,top+bh-2); c.lineTo(W/2+14,top+bh-2); c.lineTo(W/2-10,top+bh+20); c.closePath(); c.fillStyle='rgba(255,251,242,0.97)'; c.fill();
     c.fillStyle='#33271a'; c.textAlign='center'; c.textBaseline='middle'; lines.forEach((ln,i)=>{ c.fillText(ln, W/2, top+24+i*LH); }); tex.needsUpdate=true; }
-  return { sprite:sp, say(text,hex){ sp.userData.currentLine=String(text); draw(text,hex); life=Math.min(11, 4.0 + String(text).length*0.035); }, clear(){ life=0; sp.userData.currentLine=''; },
+  return { sprite:sp, get speaking(){ return life>0; }, say(text,hex){ sp.userData.currentLine=String(text); draw(text,hex); life=Math.min(11, 4.0 + String(text).length*0.035); }, clear(){ life=0; sp.userData.currentLine=''; },
     update(dt){ life=Math.max(0,life-dt); const want=life>0?1:0; sp.material.opacity+=(want-sp.material.opacity)*0.14; sp.position.y=4.55+Math.sin(clock.elapsedTime*1.5)*0.05; } }; }
 
 const RES_REACH=3.4; const RESIDENTS_LIVE=[]; let nearResident=null;
@@ -8541,6 +8848,7 @@ function placeResident(res){ const g=buildResident(res), work=_residentSpot(res)
     _routineAt:2+RESIDENTS_LIVE.length*1.3, _routineLock:0, _rt:null, _rest:null, _rp:Math.random()*4, _wk:Math.random()*6.28, _wspd:RES_MOVE.wanderSpd*(0.85+Math.random()*0.3),
     _pNear:false, _greetCd:0, _emoteCd:8+Math.random()*40 };
   live._npc={ resident:true, id:res.id, kind:'resident', res, pos:g.position, reach:RES_REACH }; res._live=live;
+  registerTownSpeech(bub,live._npc,()=>(res[LANG]||res.ko).name);
   if(homeRec) homeRec.occupied=atHome;
   RESIDENTS_LIVE.push(live); return live; }
 if(NPC_CFG.modeEnabled && NPC_CFG.visualEnabled){ for(const res of RESIDENTS.slice(0,MAX_RESIDENTS)) placeResident(res); }
@@ -9249,9 +9557,21 @@ let navTarget=null;
 const keys={};
 const MOVE=new Set(['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space']);
 const clearKeys=()=>{ for(const k in keys) keys[k]=false; };   /* drop every held key — stops walking instantly when focus/keyup is lost */
-const isTyping=()=>{ const a=document.activeElement; return a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
-const isUiKeyTarget=e=>{ const target=e&&e.target; return !!(target&&(target.isContentEditable||/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(target.tagName)||target.closest?.('[role="button"]'))); };
-addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)) return;
+const TOWN_UI={active:null,previousFocus:null,mousePointer:null};
+function townInputBlocked(){
+  return !!TOWN_UI.active||modalOpen||document.getElementById('townTools').open
+    ||!document.getElementById('intro').classList.contains('hidden')
+    ||!document.getElementById('cityError').classList.contains('hidden')
+    ||document.getElementById('loading').style.display!=='none';
+}
+function clearTownInput(){
+  clearKeys(); dragging=false; dom.style.cursor=''; document.body.style.cursor='';
+  for(const id of [moveTid,lookTid,TOWN_UI.mousePointer]){ if(id!==null&&dom.hasPointerCapture(id)) dom.releasePointerCapture(id); }
+  moveTid=null; lookTid=null; TOWN_UI.mousePointer=null; stickVec={x:0,y:0}; joy.style.display='none';
+}
+const isTyping=()=>{ const a=document.activeElement; return a&&(a.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)); };
+const isUiKeyTarget=e=>{ const target=e&&e.target; return !!(target&&(target.isContentEditable||/^(BUTTON|A|INPUT|SELECT|TEXTAREA|SUMMARY)$/.test(target.tagName)||target.closest?.('summary,[role="button"]'))); };
+addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)||townInputBlocked()) return;
   if(e.code==='Escape'&&undercroftActive()){ e.preventDefault(); exitUndercroft(); return; }
   if(undercroftTransitioning()){ if(MOVE.has(e.code)) e.preventDefault(); clearKeys(); return; }
   if(e.code==='Enter'&&undercroftActive()){ e.preventDefault(); if(!e.repeat) undercroftAct(); return; }
@@ -9396,20 +9716,21 @@ function _settleClearSightArrival(destination){
 /*CLEAR_SIGHT_CAMERA:END*/
 const dom=renderer.domElement;
 addEventListener('contextmenu',e=>{ e.preventDefault(); clearKeys(); },true);   // WoW: suppress browser right-click menu globally (capture phase, any target). Also drop held keys so a misfired right-click never leaves you walking.
-dom.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch') return; if(e.button!==0&&e.button!==2) return;
+dom.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch'||townInputBlocked()) return; if(e.button!==0&&e.button!==2) return;
+  TOWN_UI.mousePointer=e.pointerId;
   dragging=true; dragBtn=e.button; dragMoved=false; px=e.clientX; py=e.clientY;
   if(e.button===2) e.preventDefault();
   try{ dom.setPointerCapture(e.pointerId); }catch(_){}
   dom.style.cursor='grabbing'; document.body.style.cursor='grabbing'; });
-addEventListener('pointermove',e=>{ if(e.pointerType==='touch') return; if(!dragging) return;
+addEventListener('pointermove',e=>{ if(e.pointerType==='touch') return; if(!dragging||townInputBlocked()) return;
   const dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
   if(Math.abs(dx)+Math.abs(dy)>3) dragMoved=true;
   camYaw-=dx*0.005; camPitch=Math.min(1.1,Math.max(0.12,camPitch-dy*0.005));
   if(dragBtn===2){ model.rotation.y=camYaw+Math.PI; freeLook=false; }  // right drag = mouselook: steer character with the view
   else freeLook=true; });                                             // left drag = free look: camera holds its angle
-addEventListener('pointerup',e=>{ if(dragging&&!dragMoved&&dragBtn===0&&!modalOpen){ tapAt(e.clientX,e.clientY); }
-  dragging=false; dom.style.cursor=''; document.body.style.cursor=''; });
-dom.addEventListener('wheel',e=>{ camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
+addEventListener('pointerup',e=>{ if(dragging&&!dragMoved&&dragBtn===0&&!townInputBlocked()){ tapAt(e.clientX,e.clientY); }
+  dragging=false; TOWN_UI.mousePointer=null; dom.style.cursor=''; document.body.style.cursor=''; });
+dom.addEventListener('wheel',e=>{ if(!townInputBlocked()) camDist=Math.min(28,Math.max(6,camDist+e.deltaY*0.012)); },{passive:true});
 
 /* ===== Roblox-style touch controls =====
    Left half: a floating thumbstick spawns wherever you first touch (drives stickVec — camera-relative move).
@@ -9421,7 +9742,7 @@ let moveTid=null, joyOX=0, joyOY=0, moveMoved=false; const JOYR=54;
 let lookTid=null, lookLX=0, lookLY=0, lookMoved=false;
 function setNub(dx,dy){ joyNub.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }
 dom.addEventListener('pointerdown',e=>{
-  if(e.pointerType!=='touch') return;
+  if(e.pointerType!=='touch'||townInputBlocked()) return;
   if(e.clientX < innerWidth*0.5 && moveTid===null){
     moveTid=e.pointerId; joyOX=e.clientX; joyOY=e.clientY; moveMoved=false;
     joy.style.left=joyOX+'px'; joy.style.top=joyOY+'px'; joy.style.display='block'; setNub(0,0);
@@ -9432,7 +9753,7 @@ dom.addEventListener('pointerdown',e=>{
   }
 });
 dom.addEventListener('pointermove',e=>{
-  if(e.pointerType!=='touch') return;
+  if(e.pointerType!=='touch'||townInputBlocked()) return;
   if(e.pointerId===moveTid){
     let dx=e.clientX-joyOX, dy=e.clientY-joyOY; const d=Math.hypot(dx,dy);
     if(d>12) moveMoved=true;
@@ -9450,16 +9771,16 @@ function endTouch(e){
   if(e.pointerId===moveTid){
     // a tap on the move half (no joystick drag) opens the building you're standing at,
     // mirroring the look half — so tapping the house works wherever it renders on screen
-    if(!moveMoved && !modalOpen){ tapAt(e.clientX,e.clientY); }
+    if(e.type==='pointerup'&&!moveMoved && !townInputBlocked()){ tapAt(e.clientX,e.clientY); }
     moveTid=null; stickVec={x:0,y:0}; joy.style.display='none';
   }
-  else if(e.pointerId===lookTid){ if(!lookMoved&&!modalOpen){ tapAt(e.clientX,e.clientY); } lookTid=null; }
+  else if(e.pointerId===lookTid){ if(e.type==='pointerup'&&!lookMoved&&!townInputBlocked()){ tapAt(e.clientX,e.clientY); } lookTid=null; }
 }
 dom.addEventListener('pointerup',endTouch);
 dom.addEventListener('pointercancel',endTouch);
 /* round action button (bottom-right): open the repo you're standing at (mobile substitute for Enter) */
 const actBtn=document.getElementById('actBtn');
-actBtn.addEventListener('click',()=>{ if(modalOpen) return; doAct(actBtn); });
+actBtn.addEventListener('click',()=>{ if(townInputBlocked()) return; doAct(actBtn); });
 
 /* ====================== UI ====================== */
 document.getElementById('totalCount').textContent=REPOS.length;
@@ -9809,6 +10130,71 @@ function onCourseProgress(){ if(!REPOS.length) return; if(!passportEl.classList.
 document.getElementById('passBtn').onclick=()=>{ const hidden=passportEl.classList.toggle('hidden'); if(!hidden){ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); renderPassport(); } };
 document.getElementById('menuBtn').addEventListener('click',()=> passportEl.classList.add('hidden'));
 const repoList=document.getElementById('repoList');
+/*FIRST_REPO_CORE:START*/
+const FIRST_REPO_PAGE_SIZE=6;
+function firstRepoPage(catalog,owner,query,page,resolveTarget){
+  const seen=new Set(),q=String(query||'').trim().toLowerCase();
+  const rows=[];
+  for(const repo of catalog){
+    if(!repo||repo._isLibrary||repo.private===true) continue;
+    const target=resolveTarget(repo),url=typeof repo.url==='string'?parseRepoPortalInput(repo.url):null;
+    if(!target||target.owner.toLowerCase()!==owner.toLowerCase()||!url?.ok||url.kind!=='repo'||url.slug.toLowerCase()!==target.slug.toLowerCase()) continue;
+    const key=target.slug.toLowerCase(); if(seen.has(key)) continue; seen.add(key);
+    const description=typeof repo.desc==='string'?repo.desc.trim():'';
+    const facts=[repo.lang&&repo.lang!=='—'?repo.lang:'',...(Array.isArray(repo.topics)?repo.topics.filter(x=>typeof x==='string'):[])].filter(Boolean);
+    if(q&&![target.slug,description,...facts].join(' ').toLowerCase().includes(q)) continue;
+    rows.push({repo,target,description,facts});
+  }
+  const index=Math.min(Math.max(0,Math.trunc(page)||0),Math.max(0,Math.ceil(rows.length/FIRST_REPO_PAGE_SIZE)-1));
+  return {rows:rows.slice(index*FIRST_REPO_PAGE_SIZE,(index+1)*FIRST_REPO_PAGE_SIZE),total:rows.length,page:index};
+}
+/*FIRST_REPO_CORE:END*/
+/*FIRST_REPO_RUNTIME:START*/
+const FIRST_REPO={active:false,page:0,previousQuery:'',previousScroll:0};
+const firstRepoPicker=document.getElementById('firstRepoPicker'),firstRepoPager=document.getElementById('firstRepoPager'),
+  firstRepoStatus=document.getElementById('firstRepoStatus'),repoSearch=document.getElementById('repoSearch');
+function renderFirstRepoList(query){
+  const result=firstRepoPage(REPOS,currentUser,query,FIRST_REPO.page,_repositoryPortalTarget);
+  FIRST_REPO.page=result.page; repoList.replaceChildren();
+  firstRepoStatus.textContent=result.total
+    ?tf('firstRepoCount',{total:result.total,from:result.page*FIRST_REPO_PAGE_SIZE+1,to:Math.min(result.total,(result.page+1)*FIRST_REPO_PAGE_SIZE)})
+    :(query.trim()?t('noResults'):t('firstRepoEmpty'));
+  if(PUBLIC_TOWN_COVERAGE.partial) firstRepoStatus.textContent+=' '+t('firstRepoPartial');
+  for(const item of result.rows){
+    const button=document.createElement('button'); button.type='button'; button.className='firstRepoRow'; button.dataset.repo=item.target.slug;
+    const name=document.createElement('strong'),description=document.createElement('span'),facts=document.createElement('span');
+    name.textContent=item.target.slug; description.className='firstRepoDescription'; description.textContent=item.description||t('firstRepoNoDesc');
+    facts.className='firstRepoFacts'; facts.textContent=[...item.facts,item.repo.archived?t('firstRepoArchived'):''].filter(Boolean).join(' · ');
+    button.append(name,description,facts);
+    button.addEventListener('click',()=>{
+      const current=REPOS.includes(item.repo)&&firstRepoPage([item.repo],currentUser,'',0,_repositoryPortalTarget).rows.find(row=>row.target.slug.toLowerCase()===item.target.slug.toLowerCase());
+      if(!current){ firstRepoStatus.textContent=t('firstRepoUnavailable'); return; }
+      if(enterRepositoryAtelier(current.repo,{autoChat:false})){ closeIntentLensWayfinding(); closeFirstRepoPicker(false); }
+      else firstRepoStatus.textContent=t('atelierChatWait');
+    });
+    repoList.appendChild(button);
+  }
+  firstRepoPager.hidden=result.total<=FIRST_REPO_PAGE_SIZE;
+  document.getElementById('firstRepoPrev').disabled=result.page===0;
+  document.getElementById('firstRepoNext').disabled=(result.page+1)*FIRST_REPO_PAGE_SIZE>=result.total;
+}
+function openFirstRepoPicker(){
+  if(!FIRST_REPO.active){ FIRST_REPO.previousQuery=repoSearch.value; FIRST_REPO.previousScroll=panel.scrollTop; }
+  FIRST_REPO.active=true; FIRST_REPO.page=0; panel.classList.add('firstRepoMode'); firstRepoPicker.hidden=false;
+  repoSearch.value=''; renderList(); panel.scrollTop=0; repoSearch.focus({preventScroll:true});
+}
+function closeFirstRepoPicker(focus=true){
+  if(!FIRST_REPO.active) return;
+  FIRST_REPO.active=false; panel.classList.remove('firstRepoMode'); firstRepoPicker.hidden=true; firstRepoPager.hidden=true;
+  repoSearch.value=FIRST_REPO.previousQuery; renderList(repoSearch.value); panel.scrollTop=FIRST_REPO.previousScroll;
+  if(focus&&!panel.classList.contains('hidden')) panel.querySelector('[data-intent="understand"]').focus({preventScroll:true});
+}
+document.getElementById('firstRepoBack').onclick=()=>closeFirstRepoPicker();
+document.getElementById('firstRepoCancel').onclick=()=>{ closeIntentLensWayfinding(); closeFirstRepoPicker(false); };
+for(const [id,offset] of [['firstRepoPrev',-1],['firstRepoNext',1]]) document.getElementById(id).onclick=()=>{
+  FIRST_REPO.page+=offset; renderList(repoSearch.value); panel.scrollTop=0; repoSearch.focus({preventScroll:true});
+};
+/*FIRST_REPO_RUNTIME:END*/
 function buildRow(repo){
   const row=document.createElement('div'); row.className='repoRow'; repo._row=row;
   if(repo._visited) row.classList.add('visited');
@@ -9821,6 +10207,7 @@ function buildRow(repo){
   return row;
 }
 function renderList(q=''){
+  if(FIRST_REPO.active){ renderFirstRepoList(q); return; }
   q=q.trim().toLowerCase();
   const hit=repo=> !q || (repo.repo+' '+repo.label+' '+(repo.lang||'')+' '+(repo.desc||'')+' '+((repo.topics||[]).join(' '))).toLowerCase().includes(q);
   const down=REPOS.filter(r=>r._downtown && hit(r));
@@ -9835,7 +10222,7 @@ function renderList(q=''){
 }
 renderList();
 restorePassport();
-document.getElementById('repoSearch').addEventListener('input',e=>renderList(e.target.value));
+document.getElementById('repoSearch').addEventListener('input',e=>{ FIRST_REPO.page=0; renderList(e.target.value); });
 const langBtn=document.getElementById('langBtn');
 function setLang(l){ if(l!==LANG){ LANG=l; localStorage.setItem('repolisLang',LANG); }
   applyLang();
@@ -10759,6 +11146,57 @@ function flushStarNudge(){ if(!_starNudgePending) return; const reason=_starNudg
   if(x) x.onclick=()=>{ track('star_nudge_dismiss'); _starNudgeClose('dismissed'); };
   if(go) go.onclick=()=>{ if(repoPortalRequested) trackPortal('project_star_click',{entry:'earned',device:_repoPortalDevice(),lang:LANG,channel:'github'});
     else track('project_star_click'); _starNudgeClose('clicked'); }; })();
+/*ARRIVAL_CORE:START*/
+function createArrivalState(){
+  return {initialized:false,frames:0,firstFrameAt:0,entered:false,enteredAt:0,direct:false,target:null,startRequested:false,complete:false,actions:[]};
+}
+function claimArrivalEntry(state,now){
+  if(!state.initialized||state.frames<2||state.entered) return false;
+  state.entered=true; state.enteredAt=now; return true;
+}
+function stepArrival(state,frame,limits){
+  if(!state.initialized||state.complete||frame.blocked||frame.contextLost) return null;
+  if(!state.frames) state.firstFrameAt=frame.now;
+  state.frames++;
+  if(state.frames<2) return null;
+  if(!state.direct){ state.complete=true; return 'reveal'; }
+  if(!state.entered){
+    if(!state.startRequested&&frame.now-state.firstFrameAt>=limits.initializationDelayMs){ state.startRequested=true; return 'enter'; }
+    return null;
+  }
+  const destinationReady=state.target?frame.kind==='atelier'&&frame.inside&&frame.target?.toLowerCase()===state.target.toLowerCase():frame.kind==='town';
+  if(destinationReady&&frame.now-state.enteredAt>=limits.coverReleaseMs){ state.complete=true; return 'reveal'; }
+  return null;
+}
+function takeArrivalAction(state,now,blocked){
+  if(blocked||!state.actions.length||state.actions[0].at>now) return null;
+  return state.actions.shift().run;
+}
+/*ARRIVAL_CORE:END*/
+const FIRST_ARRIVAL=createArrivalState();
+function _queueArrivalAction(delay,run){ FIRST_ARRIVAL.actions.push({at:performance.now()+delay,run}); }
+function _arrivalRendered(kind){
+  const recovery=window.REPOLIS_ARRIVAL;
+  if(arrivalContextLost) return;
+  if(recovery.recovering){ recovery.rendered(); return; }
+  if(recovery.blocked) return;
+  if(FIRST_ARRIVAL.complete&&!FIRST_ARRIVAL.actions.length) return;
+  const now=performance.now(),pending=takeArrivalAction(FIRST_ARRIVAL,now,false);
+  if(pending){ try{ pending(); }catch(error){ console.error('Arrival action failed',error); recovery.fail('initialization'); } }
+  if(FIRST_ARRIVAL.complete||recovery.blocked) return;
+  const A=kind==='atelier'?REPOSITORY_ATELIER:null;
+  const action=stepArrival(FIRST_ARRIVAL,{now,kind,inside:A?.state==='inside',target:A?.portal?.slug,
+    blocked:!!cityError,contextLost:arrivalContextLost},DIRECT_ENTRY_LIMITS);
+  if(action==='enter'){ introStartBtn.click(); return; }
+  if(action==='reveal'&&recovery.ready()){
+    const loading=document.getElementById('loading'),intro=document.getElementById('intro');
+    loading.style.display='none'; loading.dataset.ready='true';
+    if(!intro.classList.contains('hidden')){ intro.inert=false; if(_QUERY.has('launch')) document.getElementById('introUser').focus({preventScroll:true}); }
+  }
+}
+function _claimTownEntry(){
+  return !cityError&&!window.REPOLIS_ARRIVAL.blocked&&claimArrivalEntry(FIRST_ARRIVAL,performance.now());
+}
 function blueprintDeepLinkRepo(){
   if(!BLUEPRINT_DEEP_LINK.ok||cityMode!=='portal'||!repoPortalTarget
     ||BLUEPRINT_DEEP_LINK.target.slug.toLowerCase()!==repoPortalTarget.slug.toLowerCase()) return null;
@@ -10771,7 +11209,8 @@ function repositoryAtelierDirectLinkRepo(){
   const repo=repoByKey(repoPortalTarget.repo),target=repo&&_repositoryPortalTarget(repo);
   return target&&target.slug.toLowerCase()===ATELIER_DIRECT_LINK.target.slug.toLowerCase()?repo:null;
 }
-document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro').classList.add('hidden');
+document.getElementById('startBtn').onclick=()=>{ if(!_claimTownEntry()) return;
+  document.getElementById('intro').classList.add('hidden');
   track('town_enter', { returning: !!VISITOR.returning });
   const rb=VISITOR.returning, news=hasFreshness(),blueprintPath=!blueprintDeepLinkBypass&&blueprintDeepLinkRepo()?BLUEPRINT_DEEP_LINK.path:null;
   if(cityMode==='public'){
@@ -10781,14 +11220,19 @@ document.getElementById('startBtn').onclick=()=>{ document.getElementById('intro
   try{ if(cityMode!=='portal'&&!_reqFocus&&REPOS.length){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
-  setTimeout(()=>{ try{
+  _queueArrivalAction(480,()=>{
+    if(BLUEPRINT_DEEP_LINK.ok&&blueprintDeepLinkBypass) return;
     if(cityMode==='portal'&&repoPortalTarget){ const repo=repoByKey(repoPortalTarget.repo);
-      if(repo) enterRepositoryAtelier(repo,blueprintPath?{autoChat:false,blueprintPath}:(repositoryAtelierDirectLinkRepo()?{autoChat:false}:{})); }
-    else if(_reqFocus){ const repo=repoByKey(_reqFocus.repo); if(repo) enterRepositoryAtelier(repo); else openRepoFromHash(); }
+      const target=repo&&_repositoryPortalTarget(repo);
+      if(!target||target.slug.toLowerCase()!==repoPortalTarget.slug.toLowerCase()
+        ||!enterRepositoryAtelier(repo,blueprintPath?{autoChat:false,blueprintPath}:(repositoryAtelierDirectLinkRepo()?{autoChat:false}:{}))) window.REPOLIS_ARRIVAL.fail('target'); }
+    else if(_reqFocus){ const repo=repoByKey(_reqFocus.repo),target=repo&&_repositoryPortalTarget(repo);
+      if(target?.slug.toLowerCase()===_reqFocus.slug.toLowerCase()){ if(!enterRepositoryAtelier(repo)) window.REPOLIS_ARRIVAL.fail('target'); }
+      else window.REPOLIS_ARRIVAL.fail('target'); }
     else openRepoFromHash();
-  }catch(e){} }, 480);
-  if(REPO_ROUTE_REQUEST.valid&&cityMode!=='portal') setTimeout(()=>{ try{ startRepoRoute('link'); }catch(e){} },620);
-  else if(_reqGrowth&&cityMode!=='portal') setTimeout(()=>{ try{ startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false}); }catch(e){} },620); };
+  });
+  if(REPO_ROUTE_REQUEST.valid&&cityMode!=='portal') _queueArrivalAction(620,()=>startRepoRoute('link'));
+  else if(_reqGrowth&&cityMode!=='portal') _queueArrivalAction(620,()=>startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false})); };
 const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introLaunch.querySelector('.launchLabel'),
   introLaunchForm=document.getElementById('introLaunchForm'),introLaunchHint=document.getElementById('introLaunchHint'),
   introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
@@ -10854,7 +11298,8 @@ async function copyIntroProfileReadme(){
 }
 window.__publicIntroRefresh=renderPublicIntro;
 introPinProfile.onclick=copyIntroProfileReadme;
-introGrowth.onclick=()=>{ introStartBtn.click(); setTimeout(()=>startTownGrowthReplay({entry:'intro',autoplay:true}),620); };
+introGrowth.onclick=()=>{ if(FIRST_ARRIVAL.entered) return; introStartBtn.click();
+  if(FIRST_ARRIVAL.entered) _queueArrivalAction(620,()=>startTownGrowthReplay({entry:'intro',autoplay:true})); };
 introCompare.onclick=()=>openTwinTowns('intro');
 introBlueprintLoad.onclick=()=>introStartBtn.click();
 introBlueprintTown.onclick=()=>{ blueprintDeepLinkBypass=true; introStartBtn.click(); };
@@ -10870,33 +11315,28 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
     const user=target.user; track('intro_personal_preview',{targetUser:user});
     const url=location.origin+location.pathname+(user.toLowerCase()===OWNER.toLowerCase()?'':'?user='+encodeURIComponent(user));
     location.href=url; }; renderPublicIntro(); })();
-(function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ document.getElementById('intro').classList.add('hidden');
-    document.getElementById('loading').style.display='none'; setTimeout(()=>{ try{ startTour(); }catch(e){} }, 650); };
+(function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ if(!_claimTownEntry()) return; document.getElementById('intro').classList.add('hidden');
+    document.getElementById('loading').style.display='none'; _queueArrivalAction(650,()=>startTour()); };
   const replay=document.getElementById('tourReplayBtn'); if(replay) replay.onclick=()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); startTour(); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
 document.addEventListener('keydown',event=>{ if(event.key==='Escape'&&tour&&tour.active){ event.preventDefault(); event.stopImmediatePropagation(); endTour(false); } },true);
-function _scheduleCoveredDirectEntry(message,alreadyEntered){
+function _scheduleCoveredDirectEntry(message,target=null){
   const loading=document.getElementById('loading'),intro=document.getElementById('intro');
   if(!loading||!intro||cityError) return false;
+  FIRST_ARRIVAL.direct=true; FIRST_ARRIVAL.target=target;
   loading.style.display='flex'; loading.classList.add('direct-entry');
   document.getElementById('loadingText').textContent=message;
-  const enter=()=>setTimeout(()=>{
-      if(intro.classList.contains('hidden')||alreadyEntered()){ loading.style.display='none'; return; }
-      introStartBtn.click();
-      setTimeout(()=>{ loading.style.display='none'; },DIRECT_ENTRY_LIMITS.coverReleaseMs);
-    },DIRECT_ENTRY_LIMITS.initializationDelayMs);
-  if(typeof requestAnimationFrame==='function') requestAnimationFrame(()=>requestAnimationFrame(enter)); else enter();
   return true;
 }
 function _schedulePlazaDirectEntry(){
   if(!PLAZA_DIRECT_LINK.ok||cityMode!=='owner') return false;
-  return _scheduleCoveredDirectEntry(t('plazaDirectOpening'),()=>false);
+  return _scheduleCoveredDirectEntry(t('plazaDirectOpening'));
 }
 function _scheduleRepositoryAtelierDirectEntry(){
   if(!repositoryAtelierDirectLinkRepo()) return false;
-  return _scheduleCoveredDirectEntry(tf('atelierDirectOpening',{repo:ATELIER_DIRECT_LINK.target.slug}),()=>repositoryAtelierActive());
+  return _scheduleCoveredDirectEntry(tf('atelierDirectOpening',{repo:ATELIER_DIRECT_LINK.target.slug}),ATELIER_DIRECT_LINK.target.slug);
 }
-if(!_schedulePlazaDirectEntry()&&!_scheduleRepositoryAtelierDirectEntry()) document.getElementById('loading').style.display='none';
+if(!_schedulePlazaDirectEntry()) _scheduleRepositoryAtelierDirectEntry();
 
 /* ====================== ↔ TWIN TOWNS (two-person referral bridge) ====================== */
 const twinModal=document.getElementById('twinModal'),twinStudio=twinModal.querySelector('.twinStudio'),
@@ -11108,13 +11548,7 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
     else if(effErr==='network'){ title=t('publicNotFound'); msg=t('publicNetMsg'); }
     else if(effErr==='not_found'){ title=t('publicNotFound'); msg=tf('publicNotFoundMsg',{user:currentUser}); }
     else { title=t('publicNotFound'); msg=t('publicNetMsg'); }
-    document.getElementById('ceTitle').textContent=title; document.getElementById('ceMsg').textContent=msg;
-    const a=document.getElementById('ceActions'); a.innerHTML='';
-    const retry=document.createElement('button'); retry.textContent=t('stationRetry'); retry.onclick=()=>{ errEl.classList.add('hidden'); openStation(); }; a.appendChild(retry);
-    const home=document.createElement('button'); home.className='alt'; home.textContent=repoPortalFallback?t('portalContinue'):tf('goOwnerCity',{user:OWNER});
-    home.onclick=()=>{ if(repoPortalFallback){ errEl.classList.add('hidden'); try{ history.replaceState(null,'',baseUrl()); }catch(e){} } else goHome(); }; a.appendChild(home);
-    const intro=document.getElementById('intro'); if(intro) intro.classList.add('hidden');
-    errEl.classList.remove('hidden');
+    window.REPOLIS_ARRIVAL.fail(effErr,{title,message:msg});
   }
 
   window.__cityLangRefresh=()=>{
@@ -11124,7 +11558,8 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
       const isub=document.querySelector('#intro .sub'); if(isub) isub.innerHTML=t('introSubPortal'); }
     else townLabel.style.display='none';
     if(!stationEl.classList.contains('hidden')) renderStation();
-    if(!errEl.classList.contains('hidden')) showCityError();
+    if(effErr&&!errEl.classList.contains('hidden')) showCityError();
+    window.REPOLIS_ARRIVAL.refresh();
   };
   window.__station=()=>({ mode:cityMode, user:currentUser, source:dataSource, error:effErr, repoCount:REPOS.length, open:!stationEl.classList.contains('hidden') });
   window.__city=()=>({ mode:cityMode, user:currentUser, source:dataSource, projection:TOWN_PROJECTION.kind, repoCount:REPOS.length, error:cityError,
@@ -11770,7 +12205,7 @@ function fallbackCopy(url, ok){ try{ const ta=document.createElement('textarea')
 const chatHeadTtl=document.querySelector('#chat .chatHead .ttl');
 function scholarPersona(kind, slot){ const sc=window.scholarByKind&&window.scholarByKind(kind); if(sc&&sc.active&&sc.persona){ const p=sc.persona[LANG]||sc.persona.ko; if(p&&p[slot]) return p[slot]; } return null; }
 function npcGreet(n){ if(_isGroupChat(n)) return groupGreet(n); if(n&&n.resident) return residentGreet(n.res); const k=(n&&n.kind)||'taxi'; return scholarPersona(k,'greet') || (k==='msdocs'? t('engGreet') : t('greeterHtml')); }
-function applyNpcChrome(n){ const resident=!!(n&&n.resident); chatEl.classList.toggle('residentChat',resident); document.body.classList.toggle('resident-chat-open',resident); chatEl.setAttribute('aria-modal',resident?'true':'false');
+function applyNpcChrome(n){ const resident=!!(n&&n.resident); chatEl.classList.toggle('residentChat',resident); document.body.classList.toggle('resident-chat-open',resident); chatEl.setAttribute('aria-modal','true');
   residentStatusEl.hidden=!resident; chatText.maxLength=resident?320:2000; chatCloseBtn.setAttribute('aria-label',resident?t('residentChatClose'):'Close'); chatSendBtn.setAttribute('aria-label',resident?t('residentChatSend'):'Send');
   if(_isGroupChat(n)){ if(chatHeadTtl) chatHeadTtl.innerHTML=_groupNames(n.live||[])+' \u00b7 '+(LANG==='ko'?'\uBAA8\uC784':'circle'); modeSel.style.display='none'; chatText.placeholder=(LANG==='ko'?'\uBAA8\uC784\uC5D0 \uB9D0 \uAC78\uAE30\u2026':'Say something to the circle\u2026'); setResidentChatStatus(n.res&&n.res._profileState||'local',n.res); return; }
   if(resident){ if(chatHeadTtl) chatHeadTtl.innerHTML=residentTitle(n.res); modeSel.style.display='none'; chatText.placeholder=residentPh(n.res); setResidentChatStatus(n.res&&n.res._profileState||'loading',n.res); return; }
@@ -11788,16 +12223,16 @@ function openChat(npc){ npc=npc||activeNpc||NPCS.find(n=>n.kind==='taxi');
   if(npc&&npc.resident) prepareResidentChat(npc);
   trackChatEvent('chat_open', { npc:npcKindOf(npc) });
   setTimeout(()=>{ if((!repositoryAtelierActive()||repositoryAtelierChatActive())&&!chatEl.classList.contains('hidden')) chatText.focus(); },60); return true; }
-function closeChat(){ cancelMarketRequest(); queuedChatQuestions.length=0; pendingChatNpc=null; chatEl.classList.add('hidden'); chatEl.classList.remove('atelierChat');
+function closeChat(restoreFocus=true){ cancelMarketRequest(); queuedChatQuestions.length=0; pendingChatNpc=null; chatEl.classList.add('hidden'); chatEl.classList.remove('atelierChat');
   chatEl.classList.remove('residentChat'); document.body.classList.remove('resident-chat-open'); chatEl.setAttribute('aria-hidden','true'); chatEl.setAttribute('aria-modal','false'); residentStatusEl.hidden=true;
   document.body.classList.remove('atelier-chat-open'); if(REPOSITORY_ATELIER){ REPOSITORY_ATELIER.inRoomChat=false; setRepositoryAtelierChatPanel(REPOSITORY_ATELIER.chat,false); }
   if(!repositoryAtelierActive()) _releaseGroup(); trackChatEvent('chat_close');
   const previous=chatPreviousFocus; chatPreviousFocus=null; if(chatEl.contains(document.activeElement)) document.activeElement.blur();
-  setTimeout(()=>{ if(!chatEl.classList.contains('hidden')) return; const visible=element=>element&&element.isConnected&&element!==document.body&&getComputedStyle(element).display!=='none'&&getComputedStyle(element).visibility!=='hidden';
+  if(restoreFocus) setTimeout(()=>{ if(TOWN_UI.active||!chatEl.classList.contains('hidden')) return; const visible=element=>element&&element.isConnected&&element!==document.body&&!element.closest('[inert]')&&element.getClientRects().length&&getComputedStyle(element).visibility!=='hidden';
     const target=visible(previous)?previous:(visible(actBtn)&&actBtn.classList.contains('avail')?actBtn:taxiBtn); try{ target.focus(); }catch(e){} },80); }
 chatEl.addEventListener('keydown',event=>{ if(chatEl.classList.contains('hidden')) return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeChat(); return; }
-  if(event.key!=='Tab'||!(activeNpc&&activeNpc.resident)) return; const items=[...chatEl.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')]
+  if(event.defaultPrevented||event.key!=='Tab'||!(activeNpc&&activeNpc.resident)) return; const items=[...chatEl.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')]
     .filter(element=>!element.hidden&&getComputedStyle(element).display!=='none');
   if(!items.length) return; const first=items[0],last=items[items.length-1]; if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
   else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); } },true);
@@ -12337,7 +12772,7 @@ function drawMinimap(){
   ctx.fillStyle='#ff3b6e'; ctx.strokeStyle='#fff'; ctx.lineWidth=1.6; ctx.fill(); ctx.stroke();
 }
 function buildMapLegend(){ if(!mapLegend) return; mapLegend.innerHTML='';
-  for(const z of ZONES){ const b=document.createElement('div'); b.className='mz';
+  for(const z of ZONES){ const b=document.createElement('button'); b.type='button'; b.className='mz';
     b.innerHTML=`<i style="background:${_mhex(z.tone)}"></i>${z.icon} ${esc(LANG==='ko'?z.ko:z.en)} <span class="mzc">${z.repos.length}</span>`;
     b.onclick=()=>{ gotoZone(z.id); }; mapLegend.appendChild(b); }
 }
@@ -12361,6 +12796,78 @@ if(mapCanvas) mapCanvas.onclick=(e)=>{ const r=mapCanvas.getBoundingClientRect()
   if(hit) gotoZone(hit.id); };
 _mapReady=true; syncMapChrome();                                     // initialise the map-button label now that the DOM refs exist
 
+/*TOWN_UI_RUNTIME:START*/
+const townTools=document.getElementById('townTools'),townPanelBackdrop=document.getElementById('townPanelBackdrop');
+const townPanels=[
+  {element:panel,trigger:menuBtn,close:()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); }},
+  {element:passportEl,trigger:townTools.querySelector('summary'),close:()=>passportEl.classList.add('hidden')},
+  {element:document.getElementById('station'),trigger:document.getElementById('stationBtn'),close:()=>document.getElementById('station').classList.add('hidden')},
+  {element:chatEl,trigger:taxiBtn,close:()=>closeChat(false)},
+  {element:mapWrap,trigger:mapBtn,close:closeMap},
+];
+function closeTownPanels(except=null){
+  for(const item of townPanels){ if(item.element!==except&&!item.element.classList.contains('hidden')) item.close(); }
+  if(except!==townTools) townTools.open=false;
+}
+function townFocusables(element){
+  return [...element.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex="0"]')]
+    .filter(el=>!el.hidden&&!el.closest('[inert]')&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');
+}
+function syncTownPanels(records=[]){
+  const opening=records.filter(record=>record.type==='attributes'&&record.attributeName==='class'&&(record.oldValue||'').split(/\s+/).includes('hidden')
+    &&!record.target.classList.contains('hidden')).map(record=>townPanels.find(p=>p.element===record.target)).filter(Boolean).pop();
+  if(opening) closeTownPanels(opening.element);
+  if(window.REPOLIS_ARRIVAL.blocked){ for(const item of townPanels) item.element.inert=true; return; }
+  const current=townPanels.find(item=>!item.element.classList.contains('hidden'))||null,previous=TOWN_UI.active;
+  if(FIRST_REPO.active&&panel.classList.contains('hidden')) closeFirstRepoPicker(false);
+  if(current!==previous){
+    clearTownInput(); TOWN_UI.active=current;
+    if(current){
+      TOWN_UI.previousFocus=document.activeElement;
+      current.element.inert=false; current.element.setAttribute('aria-hidden','false');
+      const target=current.element===panel?panel.querySelector('[data-intent]'):townFocusables(current.element)[0];
+      if(target&&!current.element.contains(document.activeElement)) target.focus({preventScroll:true});
+    }else if(previous){
+      const saved=TOWN_UI.previousFocus; TOWN_UI.previousFocus=null;
+      const target=saved&&saved!==document.body&&!saved.closest('[inert]')&&saved.getClientRects().length?saved:previous.trigger;
+      requestAnimationFrame(()=>{ if(!TOWN_UI.active&&!modalOpen&&(document.activeElement===document.body||previous.element.contains(document.activeElement))) target?.focus({preventScroll:true}); });
+    }
+  }
+  for(const item of townPanels){ const hidden=item.element.classList.contains('hidden'); item.element.inert=hidden||modalOpen; item.element.setAttribute('aria-hidden',String(hidden));
+    item.element.setAttribute('role','dialog'); item.element.setAttribute('aria-modal',String(!hidden&&!modalOpen)); }
+  if(current&&!modalOpen&&document.activeElement.closest('[aria-hidden="true"],.hidden')) townFocusables(current.element)[0]?.focus({preventScroll:true});
+  const open=!!current||townTools.open;
+  townPanelBackdrop.hidden=!open; document.body.classList.toggle('town-panel-open',open);
+}
+const townPanelObserver=new MutationObserver(syncTownPanels);
+for(const item of townPanels) townPanelObserver.observe(item.element,{attributes:true,attributeFilter:['class'],attributeOldValue:true});
+for(const element of document.querySelectorAll('[role="dialog"],#modal,#chronoModal,#obsModal,#libModal')){
+  if(!townPanels.some(item=>item.element===element)) townPanelObserver.observe(element,{attributes:true,attributeFilter:['class'],attributeOldValue:true});
+}
+document.querySelectorAll('[data-town-close]').forEach(button=>button.addEventListener('click',()=>townPanels.find(p=>p.element.id===button.dataset.townClose)?.close()));
+townTools.addEventListener('toggle',()=>{ if(townTools.open){ closeTownPanels(townTools); clearTownInput(); } syncTownPanels(); });
+townPanelBackdrop.addEventListener('click',event=>{ event.stopPropagation(); closeTownPanels(); });
+document.addEventListener('keydown',event=>{
+  const element=TOWN_UI.active?.element||(townTools.open?townTools:null); if(!element||modalOpen) return;
+  if(event.key==='Escape'){ event.preventDefault(); event.stopImmediatePropagation();
+    if(TOWN_UI.active) TOWN_UI.active.close(); else { townTools.open=false; townTools.querySelector('summary').focus(); } return; }
+  if(event.key!=='Tab') return;
+  const items=townFocusables(element),first=items[0],last=items[items.length-1]; if(!first) return;
+  if(!element.contains(document.activeElement)||(event.shiftKey&&document.activeElement===first)){ event.preventDefault(); (event.shiftKey?last:first).focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+},true);
+function syncTownViewport(){
+  const viewport=window.visualViewport;
+  document.documentElement.style.setProperty('--town-ui-height',(viewport?.height||innerHeight)+'px');
+  document.documentElement.style.setProperty('--town-ui-top',(viewport?.offsetTop||0)+'px');
+}
+window.visualViewport?.addEventListener('resize',syncTownViewport);
+window.visualViewport?.addEventListener('scroll',syncTownViewport);
+addEventListener('resize',syncTownViewport); syncTownViewport(); syncTownPanels();
+window.REPOLIS_ARRIVAL.onBlock=clearTownInput;
+window.REPOLIS_ARRIVAL.onResume=()=>syncTownPanels(townPanelObserver.takeRecords());
+/*TOWN_UI_RUNTIME:END*/
+
 /*INTENT_LENS:START*/
 function intentLensTargetRepo(){
   if(cityMode!=='portal'||!repoPortalTarget) return null;
@@ -12371,7 +12878,7 @@ function closeIntentLensWayfinding(){ panel.classList.add('hidden'); menuBtn.set
 function dispatchIntentLens(intent){
   if(intent==='understand'){
     const repo=intentLensTargetRepo();
-    if(!repo){ openStationModal(); return true; }
+    if(!repo){ openFirstRepoPicker(); return true; }
     const entered=enterRepositoryAtelier(repo,{autoChat:false}); if(entered) closeIntentLensWayfinding(); return entered;
   }
   if(intent==='explore'){ closeIntentLensWayfinding(); openMap(); return true; }
@@ -12664,6 +13171,7 @@ function _renderUndercroft(){
   renderer.shadowMap.needsUpdate=false; renderer.info.reset(); renderer.clear(); renderer.render(A.scene,camera);
   A.lastInterior={calls:renderer.info.render.calls,triangles:renderer.info.render.triangles}; A.peakInterior.calls=Math.max(A.peakInterior.calls,A.lastInterior.calls); A.peakInterior.triangles=Math.max(A.peakInterior.triangles,A.lastInterior.triangles);
   renderer.toneMapping=savedTone; renderer.outputColorSpace=savedSpace; renderer.shadowMap.needsUpdate=savedShadow;
+  _arrivalRendered('undercroft');
 }
 function _undercroftFrame(dt){
   const mode=_undercroftTransition(dt); if(!mode) return false; _updateSessionFootprints(dt,false,true);
@@ -13346,26 +13854,29 @@ function _showRepositoryAtelierLimit(visit){
 async function _askRepositoryAtelier(visit,question,call,url){
   const aiStarted=nowMs(),payload=aiRequestPayload(repositoryAtelierChatPayload(visit,question,LANG));
   const sb=showTyping(addMsg('bot',tf('atelierChatSearching',{repo:visit.repoName}),{noHist:true}));
-  const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),9500); visit.controller=ctrl;
+  const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),REPOSITORY_ATELIER_CHAT_TIMEOUT_MS); visit.controller=ctrl;
+  const fail=(kind,error)=>{
+    visit.lastFailure=kind;
+    const key={timeout:'atelierChatTimeout',network_error:'atelierChatNetworkError',invalid_response:'atelierChatInvalidResponse',
+      scope_mismatch:'atelierChatInvalidResponse',access_denied:'atelierChatAccessDenied',rate_limited:'atelierChatRateLimited',
+      unconfigured:'atelierChatNotConfigured',http_error:'atelierChatServiceError'}[kind]||'atelierChatUnavailable';
+    trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:kind,...(error?{err:errName(error)}:{})});
+    addMsg('bot',tf(key,{repo:esc(visit.repoName)}),{noHist:true});
+  };
+  let res,data;
   try{
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal});
-    clearTimeout(to); const data=await res.json().catch(()=>({}));
-    if(visit.cancelled||visit.sequence!==call.sequence){ sb.remove(); return; }
-    sb.remove();
-    if(!res.ok){ trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:data.error||'http_error'});
-      addMsg('bot',esc(data.message||tf('atelierChatUnavailable',{repo:visit.repoName})),{noHist:true}); return; }
-    if(String(data.repoName||'').toLowerCase()!==visit.repoName.toLowerCase()){
-      trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'scope_mismatch'});
-      addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true}); return; }
-    if(data.message){ const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
-      trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:!data.fallback&&!data.notFound,refs:traceRefCount(data.trace),fallback:data.fallback?'worker_fallback':data.notFound?'not_found':undefined});
-      addMsg('bot',msg,{trace:data.trace}); return; }
-    trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'empty_result'});
-    addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true});
-  }catch(e){ clearTimeout(to); sb.remove(); if(visit.cancelled) return;
-    trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:false,fallback:'fetch_fail',err:errName(e)});
-    addMsg('bot',tf('atelierChatUnavailable',{repo:esc(visit.repoName)}),{noHist:true});
-  }finally{ if(visit.controller===ctrl) visit.controller=null; }
+    res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal});
+    data=await res.json();
+  }catch(e){ sb.remove(); if(visit.cancelled||visit.sequence!==call.sequence) return;
+    fail(ctrl.signal.aborted?'timeout':res&&!res.ok?repositoryAtelierChatResponseFailure(res.status,null,visit.repoName):
+      e?.name==='SyntaxError'?'invalid_response':'network_error',e); return;
+  }finally{ clearTimeout(to); if(visit.controller===ctrl) visit.controller=null; }
+  sb.remove(); if(visit.cancelled||visit.sequence!==call.sequence) return;
+  const failure=repositoryAtelierChatResponseFailure(res.status,data,visit.repoName);
+  if(failure){ fail(failure); return; }
+  const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
+  trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:!data.notFound,refs:traceRefCount(data.trace),fallback:data.notFound?'not_found':undefined});
+  addMsg('bot',msg,{trace:data.trace});
 }
 async function _sendRepositoryAtelierChat(question,automatic=false){
   const A=REPOSITORY_ATELIER,visit=A&&A.chat,q=String(question||'').trim(); if(!visit||visit.cancelled||!q||busy) return false;
@@ -13514,6 +14025,7 @@ function _updateRepositoryAtelierTerminalHighlight(index){
   A.terminalScreens.instanceMatrix.needsUpdate=true;
 }
 function _updateRepositoryAtelier(dt){
+  if(townInputBlocked()) clearTownInput();
   const A=REPOSITORY_ATELIER;if(repositoryBlueprintOpen()) return; A.moveForward.subVectors(player.position,camera.position); A.moveForward.y=0;
   if(A.moveForward.lengthSq()<.001) A.moveForward.set(0,0,-1); else A.moveForward.normalize();
   A.moveRight.crossVectors(A.moveForward,A.up).normalize(); A.moveDelta.set(0,0,0);
@@ -13550,6 +14062,7 @@ function _renderRepositoryAtelier(){
   A.lastInterior={calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};
   A.peakInterior.calls=Math.max(A.peakInterior.calls,A.lastInterior.calls); A.peakInterior.triangles=Math.max(A.peakInterior.triangles,A.lastInterior.triangles);
   renderer.toneMapping=savedTone; renderer.outputColorSpace=savedSpace; renderer.shadowMap.needsUpdate=savedShadow;
+  _arrivalRendered('atelier');
 }
 function _repositoryAtelierFrame(dt){
   const mode=_repositoryAtelierTransition(dt); if(!mode) return false;
@@ -13605,7 +14118,7 @@ function _repositoryAtelierDebug(){
     render:{calls:interior.calls,triangles:interior.triangles,peakCalls:peak.calls,peakTriangles:peak.triangles,exteriorCalls:A.renderInterior?0:null},
     style:A.created?{roomId:A.group.uuid.slice(0,8),seed:A.hash,shape:A.hash%3,language:A.materials.core.color.getHexString(),district:A.materials.ring.color.getHexString()}:null,
     bindings:A.bindings||null,portal:A.portal||null,near:A.near&&A.near.kind||null,lastAction:A.lastAction,inRoomChat:!!A.inRoomChat,roomPanel:A.roomPanel,
-    blueprint:{status:A.blueprint.status,panelOpen:A.blueprint.panelOpen,target:A.blueprint.target&&A.blueprint.target.repoName||null,
+    blueprint:A.blueprint?{status:A.blueprint.status,panelOpen:A.blueprint.panelOpen,target:A.blueprint.target&&A.blueprint.target.repoName||null,
       requestsStarted:A.blueprint.requestsStarted,retries:A.blueprint.lastResult?.retries||0,decodedBytes:A.blueprint.decodedBytes,
       nodes:A.blueprint.projection?.counts.nodes||0,edges:A.blueprint.projection?.counts.edges||0,maxDepth:A.blueprint.projection?.counts.maxDepth||0,
       omittedNodes:A.blueprint.projection?.counts.omittedNodes||0,selectedPath:A.blueprint.projection?.nodes[A.blueprint.selected]?.path||null,
@@ -13614,7 +14127,7 @@ function _repositoryAtelierDebug(){
       scout:A.blueprint.scout?{ok:A.blueprint.scout.ok,reason:A.blueprint.scout.reason,issueNumber:A.blueprint.scout.issueNumber||null,
         candidates:A.blueprint.scout.candidates.map(candidate=>candidate.path),limit:ISSUE_CODE_SCOUT_LIMITS.maxCandidates}:null,
       limits:{nodeCap:A.blueprint.nodeCap,edgeCap:A.blueprint.edgeCap,decodedBytes:REPOSITORY_BLUEPRINT_LIMITS.maxDecodedBytes,
-        timeoutMs:REPOSITORY_BLUEPRINT_LIMITS.timeoutMs,drawCalls:REPOSITORY_BLUEPRINT_LIMITS.additionalDrawCalls,atlases:REPOSITORY_BLUEPRINT_LIMITS.canvasAtlases}},
+        timeoutMs:REPOSITORY_BLUEPRINT_LIMITS.timeoutMs,drawCalls:REPOSITORY_BLUEPRINT_LIMITS.additionalDrawCalls,atlases:REPOSITORY_BLUEPRINT_LIMITS.canvasAtlases}}:null,
     chat:repositoryAtelierChatSnapshot(A.chat),
     exhibits:A.created?{architecture:A.architecture.count,path:A.pathTiles.count,signals:A.metricSignals||[],signalCards:A.textLayout?.signalCards||0}:null,
     saved:A.lastSaved,restored:A.lastRestored,
@@ -13756,6 +14269,16 @@ _applyVisualGovernorTier('initial');
 function animate(){
   requestAnimationFrame(animate);
   frame++;
+  const contextLost=arrivalContextLost||renderer.getContext().isContextLost();
+  if(contextLost||window.REPOLIS_ARRIVAL.recovering){
+    clearTownInput(); clock.getDelta();
+    if(!contextLost){
+      if(REPOSITORY_ATELIER?.renderInterior) _renderRepositoryAtelier();
+      else if(UNDERCROFT.renderInterior) _renderUndercroft();
+      else { _beginRenderMetrics(true); _renderWorldTreeFrame(); _endRenderMetrics(); }
+    }
+    return;
+  }
   const _now=performance.now();
   const _idle=_effectiveIdle(_now);   // perf matrix can toggle cadence without synthetic input
   const _idleCapped=_idle && !undercroftActive() && !repositoryAtelierActive() && !GROWTH_REPLAY.active && !(tour&&tour.active) && !ferris && !carousel && !canalFerryRide && FW.length===0 && _fwQueue===0 && VISIT_FX.length===0 && BOBS.length===0;
@@ -13771,6 +14294,7 @@ function animate(){
   tF.subVectors(player.position,camera.position); tF.y=0; tF.normalize();
   tR.crossVectors(tF,up).normalize();
   mv.set(0,0,0);
+  if(townInputBlocked()) clearTownInput();
   const userInput = keys['Space']||keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD']||keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight']||Math.abs(stickVec.x)>0.02||Math.abs(stickVec.y)>0.02;
   if(tour&&tour.active&&!tour.waiting&&!ride&&userInput){ endTour(false); }
   const cameraOwner=_cameraOwnerAtFrameStart();
@@ -13960,6 +14484,7 @@ function animate(){
   updateNpcs(dt);
   updateResidents(dt);
   updateRainGarden(dt);
+  updateTownSpeech();
   updateHearth(clock.elapsedTime);
   rtTick(dt);
   if(userInput||moving||ride||canalFerryRide||dragging||navTarget||GROWTH_REPLAY.playing||GROWTH_REPLAY.reveals.length) lastAct=_now;   // dynamic state keeps interaction responsive; shadow invalidation is independent
@@ -13967,6 +14492,7 @@ function animate(){
   _updateBuildingLodPrototype(renderedFrame);
   _beginRenderMetrics(_idle); _renderWorldTreeFrame(); _endRenderMetrics();
 }
+FIRST_ARRIVAL.initialized=true;
 requestAnimationFrame(animate);
 function _resizeViewportQuality(){ const previousDesktopGuard=_renderQualityDesktopGuard;
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(_rendererDpr()); renderer.setSize(innerWidth,innerHeight);
@@ -14881,6 +15407,11 @@ if(_DIAGNOSTICS){ const _debugVec=v=>[+v.x.toFixed(5),+v.y.toFixed(5),+v.z.toFix
     return chrome; };
 }
 _finalizeStaticInstances();
+}catch(error){
+  window.REPOLIS_ARRIVAL.fail('initialization');
+  throw error;
+}
+/*TOWN_INITIALIZATION:END*/
 </script>
 </body>
 </html>
