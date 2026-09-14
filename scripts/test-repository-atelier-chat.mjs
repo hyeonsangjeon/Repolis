@@ -64,7 +64,7 @@ function requestFixture({ headersAfter = 0, bodyAfter = 0, status = 200, respons
     trackAiTurn: (...args) => events.push(args.at(-1)), traceRefCount: () => 0,
     errName: error => error.name,
     addMsg: (role, text, options = {}) => {
-      const message = { role, text, noHist: !!options.noHist, removed: false };
+      const message = { role, text, noHist: !!options.noHist, trace: options.trace || null, removed: false };
       messages.push(message);
       if (!options.noHist) appendRepositoryAtelierChatTurn(visit, role === 'me' ? 'user' : 'assistant', text);
       return { remove() { message.removed = true; } };
@@ -225,6 +225,19 @@ export async function runRepositoryAtelierChatTests(check) {
   check(failures.every(([status, data, expected]) => repositoryAtelierChatResponseFailure(status, data, repoName) === expected)
     && repositoryAtelierChatResponseFailure(200, { repoName: '', message: 'Unscoped' }, '') === 'scope_mismatch',
   'response classification preserves exact scope and distinguishes HTTP, service, malformed and empty failures without raw details');
+
+  const notFound = requestFixture({ send: true, response: {
+    repoName, notFound: true, message: 'RAW_UNVERIFIED_REPLY_MUST_NOT_REACH_UI',
+    trace: { scoped: true, refs: [], tools: [] },
+  } });
+  await notFound.advance(0);
+  check(notFound.finished && !notFound.busy && notFound.visit.calls === 1 && notFound.requests.length === 1
+    && notFound.visit.lastFailure === 'not_found'
+    && notFound.messages.at(-1).text === 'atelierChatNotFound' && notFound.messages.at(-1).trace === null
+    && notFound.messages.at(-1).noHist && notFound.visit.history.every(turn => turn.role === 'user')
+    && notFound.events.at(-1).ok === false && notFound.events.at(-1).fallback === 'not_found',
+  'an HTTP-success no-source response is an explicit failed answer, not general knowledge or assistant history, and still spends one call');
+  await notFound.close();
 
   const invalid = requestFixture({ malformed: true });
   await invalid.advance(0);
@@ -387,6 +400,51 @@ export async function runRepositoryAtelierChatTests(check) {
     && mixedSearch.rejected === 1
     && repositoryAtelierKnowledgeSource('github-repos-mcp-ks,other-ks') === 'github-repos-mcp-ks',
   'Atelier grounding accepts exact Foundry MCP references, rejects cross-repo activity, and selects only the GitHub source');
+
+  const directory = fileReference(5);
+  directory.sourceData.content = JSON.stringify([{ name: 'README.md', path: 'README.md', type: 'file' }]);
+  const commits = {
+    toolName: 'list_commits', activitySource: 6,
+    sourceData: { content: JSON.stringify([{ sha: 'a'.repeat(40), commit: { message: 'Public fixture' } }]) },
+  };
+  const directoryActivity = fileActivity(5, 'hyeonsangjeon', 'Dataplatformfrm');
+  const commitActivity = {
+    type: 'mcpServer', id: 6,
+    mcpServerArguments: { toolName: 'list_commits', toolArguments: { owner: 'hyeonsangjeon', repo: 'Dataplatformfrm' } },
+  };
+  const contexts = projectRepositoryAtelierReferences(
+    [searchReference(['hyeonsangjeon/Dataplatformfrm']), directory, commits],
+    'hyeonsangjeon/Dataplatformfrm', [directoryActivity, commitActivity],
+  );
+  check(contexts.exact && contexts.refs.length === 1 && contexts.rejected === 0,
+    'proven same-repository directory and commit context cannot invalidate an exact repository metadata reference');
+  const withoutMetadata = projectRepositoryAtelierReferences([directory, commits],
+    'hyeonsangjeon/Dataplatformfrm', [directoryActivity, commitActivity]);
+  const withoutActivity = projectRepositoryAtelierReferences(
+    [searchReference(['hyeonsangjeon/Dataplatformfrm']), directory, commits], 'hyeonsangjeon/Dataplatformfrm');
+  const wrongCommit = { ...commitActivity, mcpServerArguments: {
+    toolName: 'list_commits', toolArguments: { owner: 'another-owner', repo: 'Dataplatformfrm' },
+  } };
+  const crossContext = projectRepositoryAtelierReferences(
+    [searchReference(['hyeonsangjeon/Dataplatformfrm']), directory, commits],
+    'hyeonsangjeon/Dataplatformfrm', [directoryActivity, wrongCommit]);
+  const mismatchedTool = projectRepositoryAtelierReferences(
+    [searchReference(['hyeonsangjeon/Dataplatformfrm']), { ...directory, toolName: 'list_commits' }],
+    'hyeonsangjeon/Dataplatformfrm', [directoryActivity]);
+  const invalidCorrelations = [undefined, null, '', false, {}, -1].map(id => projectRepositoryAtelierReferences(
+    [searchReference(['hyeonsangjeon/Dataplatformfrm']), { ...directory, activitySource: id }],
+    'hyeonsangjeon/Dataplatformfrm', [{ ...directoryActivity, id }]));
+  const zeroActivity = projectRepositoryAtelierReferences(
+    [searchReference(['hyeonsangjeon/Dataplatformfrm']), { ...directory, activitySource: '0' }],
+    'hyeonsangjeon/Dataplatformfrm', [{ ...directoryActivity, id: 0 }]);
+  const duplicateActivity = projectRepositoryAtelierReferences(
+    [searchReference(['hyeonsangjeon/Dataplatformfrm']), directory],
+    'hyeonsangjeon/Dataplatformfrm', [fileActivity(5, 'another-owner', 'Dataplatformfrm'), directoryActivity]);
+  check(!withoutMetadata.exact && !withoutActivity.exact && withoutActivity.rejected === 2
+    && !crossContext.exact && crossContext.rejected === 1 && !mismatchedTool.exact
+    && invalidCorrelations.every(result => !result.exact && result.rejected === 1)
+    && zeroActivity.exact && !duplicateActivity.exact,
+  'context still requires exact repository metadata, matching activity/tool correlation, and same-owner/repository proof');
 
   check(repositoryAtelierMessage('not_found', 'hyeonsangjeon/Dataplatformfrm', 'ko').includes('현재 공개 정보를 찾지 못')
     && repositoryAtelierMessage('not_found', 'hyeonsangjeon/Dataplatformfrm', 'en').includes("couldn't find current public information")

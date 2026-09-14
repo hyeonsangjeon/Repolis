@@ -299,3 +299,116 @@ node scripts/test-first-visit-browser.mjs
 ```
 
 The ordinary review remains at `http://127.0.0.1:8043/?view=plaza&lang=ko` while its task-owned server runs, with AI/RT/analytics disabled. Actual live AI success, the screenshot's upstream cause, physical mobile/native keyboards, Safari/Firefox and hardware GPU failure remain unverified. No Worker deployment, merge, main push or branch-protection change is part of this repair; the exact final-head CI record belongs in PR #123 and the issue review record.
+
+## Approved release and live Atelier follow-up: 2026-09-13
+
+**PR #123 is merged and published; live grounding is only partially confirmed.**
+The approved merge is `f7adafda62f5e078b7e29d20ae77d5a4fbcc8b79`, merged at
+`2026-09-13T04:56:58Z`. The [Pages run](https://github.com/hyeonsangjeon/Repolis/actions/runs/34739091421)
+built that exact revision at `2026-09-13T04:57:21Z`. Downloaded production HTML and
+the Atelier helper matched the merge's Git blobs; production browser scripts were not executed.
+This release did **not** deploy the Taxi Worker.
+
+### Live conditions and observations
+
+Conditions: 2026-09-13 UTC, installed Chrome **152.0.7977.84** on macOS, isolated
+headless contexts, KO at 1440 x 900 and EN at 390 x 844 with touch/LOW_END emulation.
+The ordinary repository card entered the exact `hyeonsangjeon/Repolis` Atelier and
+triggered its existing automatic explanation. The Intent Lens picker still uses
+`autoChat:false`; it was not changed to obtain these results.
+
+A loopback-only overlay explicitly enabled the existing Atelier Worker connection
+while disabling other AI, NPC AI, realtime and browser analytics. Native browser
+requests went directly to the existing Worker through its existing CORS path.
+There was no model-response mock, proxy, new credential, automatic retry or service
+configuration change. Existing Worker-internal accounting was left unchanged.
+The local admission gate allowed one request at a time, at most eight; it was stopped
+after **seven**. Internal model-operation counts, model names, cache state and billing
+were not exposed, so seven browser requests must not be reported as seven billed model calls.
+
+The observed Worker version was `d3823cb5-ddce-4836-9d80-02aab8e81335`, serving 100%
+of traffic, deployed at `2026-09-04T12:31:52.668Z`. Its 25,000 ms fetch timeout and
+30-second retrieval runtime were unchanged. This is deployment metadata observed
+during the run, not a per-response Git revision.
+
+| Request / UI | Question or lifecycle step | Browser response time | Result |
+|---|---|---:|---|
+| 1 / KO desktop | Automatic repository explanation | 15,627 ms | No source |
+| 2 / KO desktop | English metadata-first diagnostic follow-up | 6,900 ms | No source |
+| 3 / EN mobile emulation | Automatic repository explanation | 8,153 ms | Exact repository reference |
+| 4 / EN mobile emulation | Local run instructions, citing README | 11,996 ms | No source |
+| 5 / EN mobile emulation | Fresh archive status and license | 12,138 ms | Archive status grounded; license unconfirmed |
+| 6 / EN mobile emulation | Automatic explanation after room re-entry | 7,850 ms | Exact repository reference |
+| 7 / KO desktop | Fresh automatic explanation, corrected error UI | 9,549 ms | No source |
+
+These are heterogeneous diagnostic/lifecycle cases, not an accuracy-rate or latency
+benchmark. Browser time covers native fetch through the application's single JSON
+read, after local admission; it is not model inference time. All seven POST responses
+completed with HTTP 200. Four carried `notFound:true` with no references and are
+**not** grounded-answer successes. No live POST timeout or transport failure was captured.
+Separate raw `ERR_ABORTED` observations on consumed bootstrap JSON still occurred;
+the earlier strict-network **14/16** result is not being relabeled.
+
+The three grounded replies cited only
+[`hyeonsangjeon/Repolis`](https://github.com/hyeonsangjeon/Repolis). They described
+the repository's walkable 3D town and reported `archived:false`. The license question
+was not fully answered: the Worker explicitly said the retrieved metadata did not
+contain a license. A separate public API check in the evidence is not substituted
+for the Worker's missing evidence. No other repository was recommended.
+
+Panel reopening preserved the current 3/5 budget and five history turns without a
+request. Room exit cleared the visit. Re-entry sent empty history and started at
+1/5 while reusing the same room: 25 geometries, 16 materials and three canvas textures;
+exterior rendering stayed paused.
+
+### Reproduced corrections and remaining uncertainty
+
+**Observed defects.** A no-source reply was incorrectly attributed to general knowledge
+and retained as assistant history. Closing chat could focus the hidden exterior taxi
+control instead of a visible in-room control. The Worker projector also rejected
+exact-repository directory/commit context despite matching MCP activity.
+
+The follow-up treats no-source replies as explicit failures without false attribution
+or assistant error history, restores focus to the visible Atelier exit when necessary,
+and accepts directory/file/commit context only with a unique valid activity ID,
+matching tool and exact owner/repo. Missing, duplicate, invalid or mismatched activity
+proof still fails closed. Context alone never replaces the required repository metadata
+reference. Five started calls, the 30-second whole-response deadline, visit isolation,
+and fork/foreign-town closure are unchanged.
+
+**Possible explanation, not confirmed cause.** Directory/commit rejection is reproducible
+with local fixtures and could account for some no-source outcomes after those tools
+ran. The live Worker did not expose its raw retrieval references/activity, so that
+payload shape, an upstream missing record, source configuration and tool-specific
+access cannot be separated from the recorded replies. Successful search-backed
+replies establish a working connection, not that every retrieval path is healthy.
+The original screenshot's URL/response is still unavailable; its cause remains unconfirmed.
+
+Requests 1-2 used the merged client. Requests 3-7 used the local no-source correction.
+The focus and Worker-context corrections were added afterward. The proposed Worker
+change is **not deployed or live-verified**; a follow-up PR, explicit deployment
+approval and a separately authorized bounded live check remain necessary.
+
+### Final local regression evidence
+
+Conditions: the same installed Chrome, KO/EN at 1440 x 900 and 390 x 844, including
+LOW_END/reduced-motion cases; **local native HTTP fixtures, not additional live AI**.
+All **24 hermetic commands** passed, with **1,568 Smoke checks**, including **69
+first-visit checks** and **19 Atelier groups** (not additive totals).
+The full Atelier browser group passed **16/16** with zero captured console and browser
+Log resource errors. It covers no-source guidance/history, pending and no-source focus
+restoration, reopen/re-entry, five-call limits, body deadlines, cancellation and disabled
+services. The strengthened activity-correlation guards also reject missing, invalid
+and duplicate identifiers while retaining valid numeric/string zero correlation.
+
+[Compact release, live receipts and case evidence](approved-live-ai.json) ·
+[Actual English grounded response, mobile emulation](live-ai-en-mobile.jpg) ·
+[Actual Korean no-source response, desktop](live-ai-no-source-ko.jpg) ·
+[Local fixture regression, explicitly not live AI](no-source-regression-en-mobile.jpg).
+
+The normal review remains `http://127.0.0.1:8043/?view=plaza&lang=ko`, with AI/RT/analytics
+off after the bounded live run; use `lang=en` for English. Physical mobile, native
+keyboards, Safari/Firefox, hardware GPU failure and extreme-proximity world-space
+text overlap remain unverified or unresolved. A rollback, if requested, should use a
+reviewed revert PR and the same gate, then confirm its Pages revision; neither a
+force-push nor a Worker rollback is implied by this static-site release.

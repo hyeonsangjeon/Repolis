@@ -110,7 +110,7 @@ async function atelierTransportFixture(){
         const authorized=authorizeRepositoryAtelierRequest(payload);
         assert(authorized.ok,authorized.reason); assert.equal(authorized.repoName,atelierRepoName);
         const mode=payload.question.split(' ').at(-1);
-        assert(['slow','body','valid','malformed','mismatch','rate','denied','unconfigured'].includes(mode),'known fixture question');
+        assert(['slow','body','valid','malformed','mismatch','rate','denied','unconfigured','missing'].includes(mode),'known fixture question');
         const call={mode,payload:{surface:payload.surface,repoName:payload.repoName,question:payload.question,history:payload.history,lang:payload.lang},
           headersSent:false,completed:false,cancelled:false};
         calls.push(call); const started=performance.now();
@@ -122,6 +122,10 @@ async function atelierTransportFixture(){
         if(['rate','denied','unconfigured'].includes(mode)){
           data.fallback=true; data.reason=mode==='rate'?'kb 429':mode==='denied'?'kb 403':'grounding not configured';
           data.message='RAW_DETAIL_MUST_NOT_REACH_UI';
+        }
+        if(mode==='missing'){
+          data.notFound=true; data.message='RAW_UNVERIFIED_REPLY_MUST_NOT_REACH_UI';
+          data.trace={scoped:true,refs:[],tools:[]};
         }
         if(mode==='body'){
           const full=JSON.stringify(data);
@@ -480,7 +484,9 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
   if(test.reduced) assert.equal(await page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"),true);
   const before=await chatState(page);
   await submitChat(page,'slow'); await click(page,'chatSend');
-  await click(page,'chatClose'); await page.evaluate("__atelierAction('ask')");
+  await click(page,'chatClose');
+  await page.until("document.activeElement.id==='atelierExit'");
+  await page.evaluate("__atelierAction('ask')");
   assert.equal((await chatState(page)).atelier.chat.calls,1,'reopening a pending conversation cannot start another call');
   await click(page,'chatClose');
   await page.until("document.querySelector('#chatLog')?.textContent.includes('This is not a live AI answer.')",16000);
@@ -521,6 +527,38 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
   await click(page,'atelierExit'); await page.until(outside);
   return {slow:{calls:slow.atelier.chat.calls,elapsedMs:s.fixture.calls[0].elapsedMs},turns,resources:before.atelier.resources,
     exhausted:{counter:exhausted.counter,inputDisabled:exhausted.inputDisabled,sendDisabled:exhausted.sendDisabled},reentryCalls:1};
+});
+for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
+  name:`atelier-chat-no-source-${lang}-${mobile?'mobile':'desktop'}`,group:'atelier-chat',query:'?dbg=1',
+  lang,mobile,lowEnd:mobile,reduced:mobile,atelierTransport:true
+},async(s,test)=>{
+  const {page}=s; await openAtelierChat(page);
+  const resources=(await chatState(page)).atelier.resources;
+  await submitChat(page,'missing');
+  await page.until("__repositoryAtelier().chat.lastFailure==='not_found'");
+  const missing=await chatState(page); assertChatLayout(missing,mobile);
+  assert.equal(missing.atelier.chat.calls,1); assert.equal(missing.atelier.chat.historyTurns,1);
+  assert.equal(missing.focus,'chatText'); assert(!missing.inputDisabled&&!missing.sendDisabled);
+  assert(missing.bots.at(-1).includes(lang==='ko'?'공개 근거를 확인하지 못했어요':'could not verify public sources'));
+  assert(!missing.bots.join(' ').includes('RAW_UNVERIFIED_REPLY_MUST_NOT_REACH_UI'));
+  assert.equal(await page.evaluate("document.querySelectorAll('#chatLog .traceWrap').length"),0,'a failed answer has no general-knowledge attribution');
+  await screenshot(page,test.name);
+  await click(page,'chatClose');
+  await page.until("document.activeElement.id==='atelierExit'");
+  await page.evaluate("__atelierAction('ask')");
+  await page.until("document.activeElement.id==='chatText'");
+  const reopened=await chatState(page);
+  assert.equal(reopened.atelier.chat.calls,1); assert.equal(reopened.atelier.chat.historyTurns,1);
+  assert.equal(s.fixture.calls.length,1,'reopening a no-source reply does not retry it');
+  await submitChat(page,'valid');
+  await page.until("document.querySelector('#chatLog')?.textContent.includes('This is not a live AI answer.')");
+  const recovered=await chatState(page); assertChatLayout(recovered,mobile);
+  assert.equal(recovered.atelier.chat.calls,2); assert.equal(recovered.atelier.chat.historyTurns,3);
+  assert.equal(recovered.atelier.chat.lastFailure,null);
+  assert.deepEqual(recovered.atelier.resources,resources);
+  await click(page,'atelierExit'); await page.until(outside);
+  return {missing:{calls:missing.atelier.chat.calls,historyTurns:missing.atelier.chat.historyTurns,message:missing.bots.at(-1)},
+    reopenedCalls:reopened.atelier.chat.calls,recovered:{calls:recovered.atelier.chat.calls,historyTurns:recovered.atelier.chat.historyTurns},resources};
 });
 for(const mode of ['timeout','exit']) for(const lang of ['en','ko']) await run({
   name:`atelier-chat-${mode}-${lang}`,group:'atelier-chat',query:'?dbg=1',lang,mobile:lang==='ko',
