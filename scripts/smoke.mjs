@@ -2650,7 +2650,9 @@ ok(/authorizeRepositoryAtelierRequest\(body\)/.test(atelierWorkerSrc)
   'the Atelier Worker path validates owner/repo, queries one required GitHub MCP source, and rejects non-exact references');
 ok(/if \(out\.fallback\)/.test(atelierWorkerSrc)
   && /repositoryAtelierMessage\("unavailable"/.test(atelierWorkerSrc)
-  && /if \(!scoped\.exact \|\| !out\.answer \|\| isNotFound\(out\.answer\)\)/.test(atelierWorkerSrc)
+  && /const answerFailure = repositoryAtelierAnswerFailure\(out\.answer, scoped\)/.test(atelierWorkerSrc)
+  && /if \(answerFailure\)/.test(atelierWorkerSrc)
+  && /reason: answerFailure/.test(atelierWorkerSrc)
   && /repositoryAtelierMessage\("not_found"/.test(atelierWorkerSrc)
   && !/chatLLM\(|mcpAsk\(|pickRepo\(/.test(atelierWorkerSrc),
   'Atelier failures and empty evidence return factual current-repo responses without general search, recommendations, or another MCP fallback');

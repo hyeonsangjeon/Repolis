@@ -66,6 +66,7 @@ import {
   authorizeRepositoryAtelierRequest,
   buildRepositoryAtelierMessages,
   projectRepositoryAtelierReferences,
+  repositoryAtelierAnswerFailure,
   repositoryAtelierKnowledgeSource,
   repositoryAtelierMessage,
 } from "./repository-atelier.js";
@@ -927,12 +928,6 @@ function groundedPersonaPrompt(who, lang) {
     + `Answer the user's question in the user's language using only claims directly supported by the results. `
     + `Do not invent facts. Summarize the key names, versions, and use cases in 3-6 sentences or a short list, `
     + `and say clearly when the evidence is insufficient.`;
-}
-
-// A KB "couldn't find it" answer is a dead end for the user. Detect those so we can hand
-// off to the general-knowledge model instead of showing the apology.
-function isNotFound(a) {
-  return /못 ?찾|찾을 수 ?없|찾지 못|확인(?:하지 못|할 수 ?없|되지 ?않)|해당[^.]{0,12}(문서|내용|정보)[^.]{0,8}없|관련[^.]{0,16}(문서|내용|정보)[^.]{0,10}없|정보가 ?없|(?:설명|답변|답)[^.]{0,8}어렵|couldn'?t find|could not find|no (?:relevant|matching|related)|not found|not covered|no information (?:about|on|regarding)|unable to (?:find|locate|provide)|don'?t have (?:any )?(?:info|docs|information)|can'?t (?:find|locate|provide|answer)/i.test(String(a || ""));
 }
 
 // Entra ID service-principal token (client-credentials), cached until ~1 min before expiry.
@@ -1933,7 +1928,8 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
     authorized.repoName,
     out.data?.activity,
   );
-  if (!scoped.exact || !out.answer || isNotFound(out.answer)) {
+  const answerFailure = repositoryAtelierAnswerFailure(out.answer, scoped);
+  if (answerFailure) {
     emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
       groundingPath: "grounded_via_kb",
       pathRole: "primary",
@@ -1946,6 +1942,11 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
       repoName: authorized.repoName,
       message: repositoryAtelierMessage("not_found", authorized.repoName, authorized.lang),
       trace: {
+        reason: answerFailure,
+        evidence: {
+          repositoryReferences: scoped.refs.length,
+          rejectedReferences: scoped.rejected,
+        },
         ks: cfg.ks,
         tools: out.tools,
         refs: [],

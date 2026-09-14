@@ -1,4 +1,5 @@
 export const REPOSITORY_ATELIER_SURFACE = 'repository_atelier';
+export const REPOSITORY_ATELIER_NOT_FOUND = 'REPOLIS_REPOSITORY_NOT_FOUND';
 
 const REQUEST_BYTES = 16384;
 const QUESTION_CHARS = 2000;
@@ -102,7 +103,12 @@ function content(text) {
 function scopeInstruction(repoName) {
   return `MANDATORY REPOSITORY SCOPE: ${repoName}. Use the GitHub repository MCP only for exactly "${repoName}". `
     + 'Do not search, compare, recommend, or answer from another repository. '
-    + `If public information for exactly "${repoName}" is unavailable, say that no information was found for this repository.`;
+    + `Retrieve public repository metadata for exactly "${repoName}" as well as the evidence needed for the current question. `
+    + 'For local-run commands, read the actual README.md file contents with get_file_contents; for a license question, read LICENSE or an explicit public license field. '
+    + `Pin every file call to the owner and repo in "${repoName}" and the requested file path, not just a root directory listing. `
+    + 'File names, directory entries, repository descriptions, and excerpts missing the requested section cannot establish those file facts. '
+    + `If the retrieved evidence does not answer the current question, return only ${REPOSITORY_ATELIER_NOT_FOUND}. `
+    + 'Do not replace missing file evidence with unrelated repository metadata or instructions to paste the missing file.';
 }
 
 export function buildRepositoryAtelierMessages(history, question, repoName) {
@@ -222,6 +228,16 @@ export function projectRepositoryAtelierReferences(references, repoName, activit
     }
   }
   return { refs, rejected, exact: refs.length > 0 && rejected === 0 };
+}
+
+export function repositoryAtelierAnswerFailure(answer, projection) {
+  if (projection?.rejected > 0) return 'rejected_references';
+  if (!projection?.exact) return 'missing_repository_reference';
+  const text = typeof answer === 'string' ? answer.normalize('NFKC').replace(/[\u2018\u2019\u02bc]/g, "'").trim() : '';
+  if (!text) return 'empty_answer';
+  // Exact metadata can accompany an explicit refusal to answer the requested file facts.
+  const unavailable = /못 ?찾|찾을 수 ?없|찾지 못|(?:확인|검증|확정)(?:하지 못|할 수(?:는|가)? ?없|되지 ?않)|해당[^.]{0,12}(문서|내용|정보)[^.]{0,8}없|관련[^.]{0,16}(문서|내용|정보)[^.]{0,10}없|정보가 ?없|(?:설명|답변|답)[^.]{0,8}어렵|couldn'?t find|could not find|no (?:relevant|matching|related)|not found|not covered|no information (?:about|on|regarding)|unable to (?:find|locate|provide)|don'?t have (?:any )?(?:info|docs|information)|can'?t (?:find|locate|provide|answer)|(?:can(?:not| not|'t)|could(?: not|n't)|unable to) (?:quote|verify|confirm)|(?:^|[.!?]\s*)no [^.!?\n]{0,60}(?:information|contents?|details) (?:was|were) found/i;
+  return text.includes(REPOSITORY_ATELIER_NOT_FOUND) || unavailable.test(text) ? 'answer_unavailable' : null;
 }
 
 export function repositoryAtelierMessage(kind, repoName, lang) {

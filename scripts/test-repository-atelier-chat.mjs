@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import * as atelierChat from '../assets/repository-atelier-chat.js';
 import {
+  REPOSITORY_ATELIER_NOT_FOUND,
   authorizeRepositoryAtelierRequest,
   buildRepositoryAtelierMessages,
   projectRepositoryAtelierReferences,
+  repositoryAtelierAnswerFailure,
   repositoryAtelierKnowledgeSource,
   repositoryAtelierMessage,
 } from '../cloudflare-taxi/src/repository-atelier.js';
@@ -25,6 +27,36 @@ const requestStart = html.indexOf('function _showRepositoryAtelierLimit(');
 const requestEnd = html.indexOf('function _startRepositoryAtelierChatVisit(', requestStart);
 if (requestStart < 0 || requestEnd < requestStart) throw new Error('Atelier request boundary missing');
 const requestSource = html.slice(requestStart, requestEnd);
+const worker = readFileSync(new URL('../cloudflare-taxi/src/grounded.js', import.meta.url), 'utf8');
+const workerHandlerSource = worker.match(/async function repositoryAtelierHandler\([\s\S]*?(?=\nexport default)/)?.[0];
+if (!workerHandlerSource) throw new Error('Atelier Worker handler missing');
+
+async function workerFixture(answer, references = [reference('hyeonsangjeon/Repolis')], activity = []) {
+  const calls = [], outcomes = [], delivered = [];
+  const context = {
+    authorizeRepositoryAtelierRequest, buildRepositoryAtelierMessages, projectRepositoryAtelierReferences,
+    repositoryAtelierAnswerFailure, repositoryAtelierKnowledgeSource, repositoryAtelierMessage,
+    scholarConfig: () => ({ kb: 'local-fixture', ks: 'github-repos-mcp-ks' }),
+    metricContext: () => ({}),
+    emitKbQuery() {}, emitProviderUsage() {},
+    emitGroundingOutcome: (...args) => outcomes.push(args.at(-2)),
+    emitDeliveredAnswer: (...args) => delivered.push(args.at(-1)),
+    groundedRetrieve: async (config, messages) => {
+      calls.push({ config, messages });
+      return {
+        ok: true, attempted: true, status: 200, answer, data: { references, activity },
+        tools: ['search_repositories'], modelActivities: [], totalMs: 1, mcpMs: 1,
+      };
+    },
+    json: (body, status) => ({ body, status }),
+  };
+  runInNewContext(`${workerHandlerSource}\nglobalThis.handle = repositoryAtelierHandler;`, context);
+  const response = await context.handle({
+    surface: 'repository_atelier', repoName: 'hyeonsangjeon/Repolis', lang: 'en',
+    question: 'What does the README say about running this repository?', history: [],
+  }, {}, {}, {});
+  return { ...response, calls, outcomes, delivered };
+}
 
 function requestFixture({ headersAfter = 0, bodyAfter = 0, status = 200, response,
   networkFailure = false, malformed = false, backend = 'http://127.0.0.1/atelier-fixture', send = false } = {}) {
@@ -356,6 +388,13 @@ export async function runRepositoryAtelierChatTests(check) {
     && messages.at(-1).content[0].text.includes('hyeonsangjeon/Dataplatformfrm')
     && messageText.includes('Do not search, compare, recommend, or answer from another repository'),
   'the Worker boundary accepts only a valid scoped owner/repo and repeats the no-cross-repo instruction on every question');
+  check(messages[0].content[0].text.includes(REPOSITORY_ATELIER_NOT_FOUND)
+    && messages.at(-1).content[0].text.includes(REPOSITORY_ATELIER_NOT_FOUND)
+    && messageText.includes('actual README.md file contents')
+    && messageText.includes('read LICENSE or an explicit public license field')
+    && messageText.includes('not just a root directory listing')
+    && messageText.includes('does not answer the current question'),
+  'the bounded request asks for actual requested file evidence and an explicit missing-answer marker, not unrelated metadata');
 
   const exact = projectRepositoryAtelierReferences(
     [reference('hyeonsangjeon/Dataplatformfrm')],
@@ -445,6 +484,56 @@ export async function runRepositoryAtelierChatTests(check) {
     && invalidCorrelations.every(result => !result.exact && result.rejected === 1)
     && zeroActivity.exact && !duplicateActivity.exact,
   'context still requires exact repository metadata, matching activity/tool correlation, and same-owner/repository proof');
+
+  const refusalExcerpts = [
+    'README 본문과 실행 명령은 가져오지 못해 로컬 실행 방법을 검증할 수 없습니다.',
+    'I couldn’t find the README contents for `hyeonsangjeon/Repolis` in the retrieved repository information, so I can’t quote the local run commands.',
+    'No public license information was found for `hyeonsangjeon/Repolis` in the retrieved repository metadata, and I couldn’t verify a LICENSE file from the available repository information.',
+    'I found the README for `Repolis`, but the retrieved content does not include the local-run section or any commands for starting it, so I can’t quote the exact run steps from the README.',
+  ];
+  const refused = [];
+  for (const reply of [...refusalExcerpts, REPOSITORY_ATELIER_NOT_FOUND]) refused.push(await workerFixture(reply));
+  check(refused.every(result => result.status === 200 && result.body.notFound
+    && result.body.trace.reason === 'answer_unavailable'
+    && result.body.trace.evidence.repositoryReferences === 1
+    && result.body.trace.evidence.rejectedReferences === 0
+    && result.body.trace.refs.length === 0 && result.calls.length === 1
+    && result.outcomes.length === 1 && result.outcomes[0].ok === false && result.delivered.length === 0),
+  'actual Worker replay rejects the four observed KO/EN refusal excerpts and marker despite valid exact metadata, without retries or delivered-answer events');
+
+  const scopeFailures = [
+    await workerFixture('Plausible answer', []),
+    await workerFixture('Plausible answer', [reference('hyeonsangjeon/Repolis'), reference('another/repository')]),
+    await workerFixture(' '),
+  ];
+  check(scopeFailures.map(result => result.body.trace.reason).join(',')
+    === 'missing_repository_reference,rejected_references,empty_answer'
+    && scopeFailures.every(result => result.body.notFound && result.delivered.length === 0
+      && result.body.trace.refs.length === 0 && result.calls.length === 1)
+    && !JSON.stringify(scopeFailures.map(result => result.body)).includes('another/repository')
+    && Object.keys(scopeFailures[1].body.trace.evidence).sort().join(',') === 'rejectedReferences,repositoryReferences',
+  'safe failure diagnostics distinguish absent or rejected repository evidence from an empty answer without disclosing raw references');
+
+  const usefulReplies = [
+    'Run `python3 -m http.server 8000`. No installation or build step is required. The license is MIT.',
+    'python3 -m http.server 8000으로 실행합니다. npm install이나 빌드는 필요하지 않습니다. MIT 라이선스입니다.',
+  ];
+  const useful = [];
+  for (const reply of usefulReplies) useful.push(await workerFixture(reply));
+  check(useful.every((result, index) => result.body.message === usefulReplies[index]
+    && !result.body.notFound && result.body.trace.refs.length === 1 && result.delivered.length === 1
+    && result.outcomes[0].ok === true && result.calls.length === 1)
+    && repositoryAtelierAnswerFailure("I couldn't find that information.", exact) === 'answer_unavailable'
+    && repositoryAtelierAnswerFailure('정보가 없어요.', exact) === 'answer_unavailable',
+  'useful sourced KO/EN replies still succeed while existing missing-information refusals stay fail-closed');
+
+  const refusedClient = requestFixture({ send: true, response: refused[0].body });
+  await refusedClient.advance(0);
+  check(refusedClient.finished && refusedClient.visit.calls === 1 && refusedClient.visit.history.length === 1
+    && refusedClient.visit.lastFailure === 'not_found' && refusedClient.messages.at(-1).noHist
+    && refusedClient.messages.at(-1).trace === null && refusedClient.events.at(-1).ok === false,
+  'the actual Worker refusal reaches the existing client as a counted failed turn without assistant history or an evidence trace');
+  await refusedClient.close();
 
   check(repositoryAtelierMessage('not_found', 'hyeonsangjeon/Dataplatformfrm', 'ko').includes('현재 공개 정보를 찾지 못')
     && repositoryAtelierMessage('not_found', 'hyeonsangjeon/Dataplatformfrm', 'en').includes("couldn't find current public information")
