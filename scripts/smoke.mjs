@@ -2640,13 +2640,17 @@ ok(/if \(body && body\.npc_action\) return npcHandler\(body, request, env, ctx\)
 ok(/async function npcHandler\(/.test(WORKER), 'npcHandler() exists');
 ok(/grounded_mcp_mslearn/.test(WORKER) && /grounded_mcp_deepwiki/.test(WORKER) && /grounded_kb_taxi/.test(WORKER), 'grounded AI routes use the report taxonomy');
 const atelierWorkerSrc=(WORKER.match(/async function repositoryAtelierHandler\([\s\S]*?(?=\nexport default)/)||[''])[0];
+const atelierGroundingSrc=readFileSync(join(ROOT,'cloudflare-taxi/src/repository-atelier-grounding.js'),'utf8');
 ok(/body\.surface === REPOSITORY_ATELIER_SURFACE[\s\S]*?repositoryAtelierHandler\(body, request, env, ctx\)[\s\S]*?if \(!question\)/.test(WORKER),
   'the Worker dispatches Repository Atelier requests before the general taxi boundary');
 ok(/authorizeRepositoryAtelierRequest\(body\)/.test(atelierWorkerSrc)
-  && /buildRepositoryAtelierMessages\(/.test(atelierWorkerSrc)
+  && /retrieveRepositoryAtelier\(authorized, cfg, env,/.test(atelierWorkerSrc)
+  && /buildRepositoryAtelierMessages\(/.test(atelierGroundingSrc)
   && /repositoryAtelierKnowledgeSource\(base\.ks\)/.test(atelierWorkerSrc)
   && /failOnError: true/.test(atelierWorkerSrc)
-  && /projectRepositoryAtelierReferences\([\s\S]*?out\.data\?\.references,[\s\S]*?authorized\.repoName,[\s\S]*?out\.data\?\.activity,[\s\S]*?\)/.test(atelierWorkerSrc),
+  && /projectRepositoryAtelierReferences\(out\.data\?\.references, authorized\.repoName, out\.data\?\.activity\)/.test(atelierGroundingSrc)
+  && /if \(out\.scoped\.rejected\) return out/.test(atelierGroundingSrc)
+  && /projectRepositoryAtelierPublicMetadata\(metadata, authorized\.repoName\)/.test(atelierGroundingSrc),
   'the Atelier Worker path validates owner/repo, queries one required GitHub MCP source, and rejects non-exact references');
 ok(/if \(out\.fallback\)/.test(atelierWorkerSrc)
   && /repositoryAtelierMessage\("unavailable"/.test(atelierWorkerSrc)

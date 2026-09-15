@@ -1,0 +1,893 @@
+{
+  "schema": "repolis-atelier-documents-candidate-v1",
+  "stage": "pre-release candidate; production confirmation is not included in this file",
+  "dateBasis": "UTC. Browser elapsed time ends after complete JSON consumption; the unobserved harness request has no browser elapsed time.",
+  "baseline": {
+    "revision": "0abacaef0a3286c9c6c5211eb3c4752c11dee195",
+    "priorWorker": "2f7cc207-71bb-40ef-8060-019d83ebaf96",
+    "deployedWorker": "1ddde1ca-d368-4a0a-afd0-387542ab9243",
+    "deployment": "5e2a717b-aefe-495f-87ee-fc73dc6124d2",
+    "deployedAt": "2026-09-15T05:10:15.153566Z",
+    "trafficPercent": 100,
+    "bindingsAndRuntimeUnchanged": true
+  },
+  "workerBlobsAtSuccessfulCandidate": {
+    "cloudflare-taxi/src/grounded.js": "d9f80a8cb6b40bba980514d7218e6ae1cd9025f0",
+    "cloudflare-taxi/src/repository-atelier.js": "f464ea8a9e30e0ccb81fb82230d0293e07d9228a",
+    "cloudflare-taxi/src/repository-atelier-grounding.js": "434be71d1a011b96f02f38b809cdcf53bd1c85e1",
+    "cloudflare-taxi/wrangler.toml": "b192056e82efeb4c4883b79945e573ee37998b08"
+  },
+  "laterChanges": "Scoped code rendering and a name/URL consistency guard were added after the content-valid request. Their regressions are local, not additional live requests.",
+  "realRequestConditions": {
+    "transport": "Native browser to loopback Worker; real existing GitHub/Foundry services, not mocked model answers or production Worker transport.",
+    "maximum": 8,
+    "started": 6,
+    "reservedForProduction": 2,
+    "automaticExplanations": 0,
+    "unintentionalCountedRequests": 1,
+    "sequential": true,
+    "automaticRetries": 0,
+    "otherAi": false,
+    "realtime": false,
+    "browserAnalytics": false,
+    "browserCredentials": false,
+    "note": "These heterogeneous debugging calls are not a success-rate or latency benchmark. API usage is not an invoice or a count of browser requests."
+  },
+  "grading": {
+    "method": "Manual comparison of the delivered answer with the public README commands and installation/build requirement.",
+    "independentGrader": false,
+    "contentPasses": [
+      6
+    ],
+    "unobservedAnswers": [
+      2
+    ]
+  },
+  "source": {
+    "readmeUrl": "https://github.com/hyeonsangjeon/Repolis/blob/0abacaef0a3286c9c6c5211eb3c4752c11dee195/README.md#run-in-60-seconds",
+    "readmeSha": "ed31bdb801d30e0bed30ae18baeacd136e40f24d",
+    "fullReadmeBytes": 21724,
+    "mcpReferenceCharacters": 1782,
+    "mcpReferenceContainedExactRunCommand": false,
+    "note": "The successful candidate internal metadata lookup returned an exact README activity but only a short reference without the expected command. This does not identify the missing step in every earlier failed request."
+  },
+  "calls": [
+    {
+      "number": 1,
+      "candidate": "local-main-0abacaef",
+      "question": "로컬에서 어떻게 실행해?",
+      "language": "ko",
+      "viewport": "1440x900",
+      "startedAt": "2026-09-15T05:18:04.295Z",
+      "browserElapsedMs": 13381,
+      "httpStatus": 200,
+      "note": "Baseline code: the current natural local-run question produced repository searches but no file call.",
+      "response": {
+        "notFound": true,
+        "repoName": "hyeonsangjeon/Repolis",
+        "message": "hyeonsangjeon/Repolis의 현재 공개 정보를 찾지 못했어요. 비공개이거나 삭제되었거나 GitHub MCP에 근거가 없을 수 있어요.",
+        "trace": {
+          "reason": "answer_unavailable",
+          "evidence": {
+            "repositoryReferences": 1,
+            "rejectedReferences": 0
+          },
+          "ks": "github-repos-mcp-ks",
+          "tools": [
+            "search_repositories"
+          ],
+          "refs": [],
+          "mcpMs": 1619,
+          "totalMs": 13358,
+          "scoped": true
+        },
+        "localDiagnostic": [
+          {
+            "status": 200,
+            "references": [
+              {
+                "toolName": "search_repositories",
+                "activitySource": 3,
+                "sourceData": {
+                  "type": "object",
+                  "keys": [
+                    "title",
+                    "content"
+                  ],
+                  "content": {
+                    "encodedJson": {
+                      "type": "object",
+                      "keys": [
+                        "total_count",
+                        "incomplete_results",
+                        "items"
+                      ]
+                    }
+                  }
+                }
+              }
+            ],
+            "activities": [
+              {
+                "type": "modelQueryPlanning",
+                "id": 0,
+                "elapsedMs": 3412,
+                "argumentKeys": [],
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "mcpServer",
+                "id": 1,
+                "elapsedMs": 837,
+                "toolName": "search_repositories",
+                "argumentKeys": [
+                  "query",
+                  "minimal_output",
+                  "sort",
+                  "order",
+                  "perPage",
+                  "page"
+                ],
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "modelQueryPlanning",
+                "id": 2,
+                "elapsedMs": 2304,
+                "argumentKeys": [],
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "mcpServer",
+                "id": 3,
+                "elapsedMs": 782,
+                "toolName": "search_repositories",
+                "argumentKeys": [
+                  "query",
+                  "minimal_output",
+                  "sort",
+                  "order",
+                  "perPage",
+                  "page"
+                ],
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "modelAnswerSynthesis",
+                "id": 4,
+                "elapsedMs": 2605,
+                "argumentKeys": [],
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "agenticReasoning",
+                "id": 5,
+                "argumentKeys": [],
+                "exactRepositoryArguments": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "number": 2,
+      "candidate": "local-candidate-v1",
+      "question": "Local fixture: valid",
+      "language": "en",
+      "viewport": "1440x900",
+      "startedAt": "2026-09-15T05:41:32.266Z",
+      "browserElapsedMs": null,
+      "httpStatus": null,
+      "workerLogElapsedMs": 5799,
+      "workerLogStatus": 200,
+      "note": "Harness incident: the disabled-service fixture inherited the live backend. Counted conservatively; no answer was captured. The live lane now requires exact one-shot question arming and the fixtures use a separate AI-off server.",
+      "response": null
+    },
+    {
+      "number": 3,
+      "candidate": "local-candidate-v1",
+      "question": "Explain this repository and how I can run it locally.",
+      "language": "en",
+      "viewport": "390x844",
+      "startedAt": "2026-09-15T05:49:20.080Z",
+      "browserElapsedMs": 4787,
+      "httpStatus": 200,
+      "note": "Discarded candidate used extractive output and low retrieval effort; no repository reference was returned. These overrides were removed. Their individual effects were not isolated.",
+      "response": {
+        "notFound": true,
+        "repoName": "hyeonsangjeon/Repolis",
+        "message": "I couldn't find current public information for hyeonsangjeon/Repolis. It may be private, deleted, or unavailable from the GitHub MCP source.",
+        "trace": {
+          "reason": "missing_repository_reference",
+          "evidence": {
+            "repositoryReferences": 0,
+            "rejectedReferences": 0
+          },
+          "ks": "github-repos-mcp-ks",
+          "tools": [],
+          "refs": [],
+          "mcpMs": 756,
+          "totalMs": 4775,
+          "scoped": true
+        },
+        "localDiagnostic": [
+          {
+            "status": 200,
+            "references": [],
+            "activities": [
+              {
+                "type": "modelQueryPlanning",
+                "id": 0,
+                "elapsedMs": 2691,
+                "argumentKeys": [],
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "mcpServer",
+                "id": 1,
+                "elapsedMs": 756,
+                "toolName": "search_repositories",
+                "argumentKeys": [
+                  "query",
+                  "minimal_output",
+                  "perPage",
+                  "page",
+                  "sort",
+                  "order"
+                ],
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "agenticReasoning",
+                "id": 2,
+                "argumentKeys": [],
+                "exactRepositoryArguments": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "number": 4,
+      "candidate": "local-candidate-v2-existing-kb-defaults",
+      "question": "Explain this repository and how I can run it locally.",
+      "language": "en",
+      "viewport": "390x844",
+      "startedAt": "2026-09-15T05:55:39.115Z",
+      "browserElapsedMs": 10260,
+      "httpStatus": 200,
+      "note": "The original KB defaults returned exact metadata, but workerd rejected redirect:error before public document retrieval. A separate no-model runtime probe confirmed manual redirects work.",
+      "response": {
+        "fallback": true,
+        "repoName": "hyeonsangjeon/Repolis",
+        "reason": "repository_document_network",
+        "message": "Public information for hyeonsangjeon/Repolis is unavailable right now. I will not substitute another repository.",
+        "localDiagnostic": [
+          {
+            "status": 200,
+            "references": [
+              {
+                "toolName": "search_repositories",
+                "activitySource": 1,
+                "sourceData": {
+                  "type": "object",
+                  "keys": [
+                    "title",
+                    "content"
+                  ],
+                  "content": {
+                    "encodedJson": {
+                      "type": "object",
+                      "keys": [
+                        "total_count",
+                        "incomplete_results",
+                        "items"
+                      ]
+                    }
+                  }
+                }
+              }
+            ],
+            "activities": [
+              {
+                "type": "modelQueryPlanning",
+                "id": 0,
+                "elapsedMs": 3534,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "mcpServer",
+                "id": 1,
+                "elapsedMs": 945,
+                "count": 1,
+                "toolName": "search_repositories",
+                "argumentKeys": [
+                  "query",
+                  "minimal_output",
+                  "sort",
+                  "order",
+                  "perPage",
+                  "page"
+                ],
+                "queryMentionsTarget": true,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "modelAnswerSynthesis",
+                "id": 2,
+                "elapsedMs": 4384,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "agenticReasoning",
+                "id": 3,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "number": 5,
+      "candidate": "local-candidate-v3-worker-manual-redirect",
+      "question": "Explain this repository and how I can run it locally.",
+      "language": "en",
+      "viewport": "390x844",
+      "startedAt": "2026-09-15T06:01:20.827Z",
+      "browserElapsedMs": 11635,
+      "httpStatus": 200,
+      "note": "With manual redirects, the MCP response again had no repository references. A successful-but-empty MCP response can now use one exact anonymous public identity check; rejected references still fail closed.",
+      "response": {
+        "notFound": true,
+        "repoName": "hyeonsangjeon/Repolis",
+        "message": "I couldn't find current public information for hyeonsangjeon/Repolis. It may be private, deleted, or unavailable from the GitHub MCP source.",
+        "trace": {
+          "reason": "missing_repository_reference",
+          "evidence": {
+            "repositoryReferences": 0,
+            "rejectedReferences": 0
+          },
+          "ks": "github-repos-mcp-ks",
+          "tools": [],
+          "refs": [],
+          "mcpMs": 1875,
+          "totalMs": 11617,
+          "scoped": true
+        },
+        "localDiagnostic": [
+          {
+            "status": 200,
+            "references": [],
+            "activities": [
+              {
+                "type": "modelQueryPlanning",
+                "id": 0,
+                "elapsedMs": 3296,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "mcpServer",
+                "id": 1,
+                "elapsedMs": 802,
+                "count": 0,
+                "toolName": "search_repositories",
+                "argumentKeys": [
+                  "query",
+                  "minimal_output",
+                  "perPage",
+                  "sort",
+                  "order"
+                ],
+                "queryMentionsTarget": true,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "modelQueryPlanning",
+                "id": 2,
+                "elapsedMs": 2135,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "mcpServer",
+                "id": 3,
+                "elapsedMs": 1073,
+                "count": 0,
+                "toolName": "search_repositories",
+                "argumentKeys": [
+                  "query",
+                  "minimal_output",
+                  "perPage",
+                  "sort",
+                  "order"
+                ],
+                "queryMentionsTarget": true,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "modelAnswerSynthesis",
+                "id": 4,
+                "elapsedMs": 2923,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "agenticReasoning",
+                "id": 5,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "number": 6,
+      "candidate": "local-candidate-v4-exact-public-documents",
+      "question": "How do I run this locally?",
+      "language": "en",
+      "viewport": "390x844",
+      "startedAt": "2026-09-15T06:14:25.833Z",
+      "browserElapsedMs": 20416,
+      "httpStatus": 200,
+      "note": "Content pass: the returned commands and no-install/no-build statement match the public README. The initial mobile presentation overflowed; the separate code replay validates the later presentation repair.",
+      "response": {
+        "repoName": "hyeonsangjeon/Repolis",
+        "message": "Clone the repo and serve it as a static site:  \n```bash\ngit clone https://github.com/hyeonsangjeon/Repolis\ncd Repolis\npython3 -m http.server 8000\n# open http://localhost:8000\n```  \nNo installation or build step is required; Three.js is loaded from a CDN import map, and the app runs from local static files.",
+        "usage": {
+          "prompt_tokens": 16888,
+          "cached_tokens": 0,
+          "completion_tokens": 593
+        },
+        "trace": {
+          "ks": "github-repos-mcp-ks",
+          "tools": [
+            "search_repositories",
+            "get_file_contents"
+          ],
+          "refs": [
+            {
+              "name": "hyeonsangjeon/Repolis",
+              "url": "https://github.com/hyeonsangjeon/Repolis",
+              "snippet": "🏙️ Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.",
+              "stars": 41,
+              "lang": "HTML",
+              "tool": "search_repositories"
+            },
+            {
+              "name": "hyeonsangjeon/Repolis/README.md",
+              "url": "https://github.com/hyeonsangjeon/Repolis/blob/main/README.md",
+              "snippet": "README.md (21724 bytes)",
+              "tool": "github_public_readme"
+            }
+          ],
+          "mcpMs": 2798,
+          "totalMs": 20383,
+          "partial": false,
+          "document": {
+            "kind": "readme",
+            "path": "README.md",
+            "sha": "ed31bdb801d30e0bed30ae18baeacd136e40f24d",
+            "bytes": 21724,
+            "source": "github_public_rest"
+          },
+          "identitySource": "github_mcp",
+          "scoped": true
+        },
+        "localDiagnostic": [
+          {
+            "status": 200,
+            "references": [
+              {
+                "toolName": "search_repositories",
+                "activitySource": 1,
+                "sourceData": {
+                  "type": "object",
+                  "keys": [
+                    "title",
+                    "content"
+                  ],
+                  "content": {
+                    "encodedJson": {
+                      "type": "object",
+                      "keys": [
+                        "total_count",
+                        "incomplete_results",
+                        "items"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "toolName": "get_file_contents",
+                "activitySource": 3,
+                "sourceData": {
+                  "type": "object",
+                  "keys": [
+                    "title",
+                    "content"
+                  ],
+                  "content": {
+                    "type": "string",
+                    "chars": 1782,
+                    "downloadAcknowledgement": false,
+                    "runCommandPresent": false,
+                    "mitPresent": false
+                  }
+                }
+              }
+            ],
+            "activities": [
+              {
+                "type": "modelQueryPlanning",
+                "id": 0,
+                "elapsedMs": 3426,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "mcpServer",
+                "id": 1,
+                "elapsedMs": 854,
+                "count": 1,
+                "toolName": "search_repositories",
+                "argumentKeys": [
+                  "query",
+                  "minimal_output",
+                  "sort",
+                  "order",
+                  "perPage",
+                  "page"
+                ],
+                "queryMentionsTarget": true,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "modelQueryPlanning",
+                "id": 2,
+                "elapsedMs": 3457,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "mcpServer",
+                "id": 3,
+                "elapsedMs": 1944,
+                "count": 1,
+                "toolName": "get_file_contents",
+                "argumentKeys": [
+                  "owner",
+                  "repo",
+                  "path"
+                ],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": true,
+                "path": "README.md"
+              },
+              {
+                "type": "modelAnswerSynthesis",
+                "id": 4,
+                "elapsedMs": 4566,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              },
+              {
+                "type": "agenticReasoning",
+                "id": 5,
+                "argumentKeys": [],
+                "queryMentionsTarget": false,
+                "exactRepositoryArguments": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "browserReplay": {
+    "browser": "Chrome/152.0.7977.84",
+    "completedAt": "2026-09-15T06:37:55.973Z",
+    "kind": "Local HTTP fixtures, not additional live AI",
+    "cases": [
+      {
+        "name": "atelier-chat-code-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "evidence": {
+          "displayed": {
+            "code": "git clone https://github.com/hyeonsangjeon/Repolis\ncd Repolis\npython3 -m http.server 8000\n# open http://localhost:8000\n",
+            "literal": "<unsafe>",
+            "unsafe": false,
+            "links": [
+              "https://github.com/hyeonsangjeon/Repolis/blob/main/README.md"
+            ]
+          },
+          "overflow": false,
+          "calls": 1
+        }
+      },
+      {
+        "name": "atelier-chat-code-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "evidence": {
+          "displayed": {
+            "code": "git clone https://github.com/hyeonsangjeon/Repolis\ncd Repolis\npython3 -m http.server 8000\n# open http://localhost:8000\n",
+            "literal": "<unsafe>",
+            "unsafe": false,
+            "links": [
+              "https://github.com/hyeonsangjeon/Repolis/blob/main/README.md"
+            ]
+          },
+          "overflow": false,
+          "calls": 1
+        }
+      },
+      {
+        "name": "atelier-chat-code-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "evidence": {
+          "displayed": {
+            "code": "git clone https://github.com/hyeonsangjeon/Repolis\ncd Repolis\npython3 -m http.server 8000\n# open http://localhost:8000\n",
+            "literal": "<unsafe>",
+            "unsafe": false,
+            "links": [
+              "https://github.com/hyeonsangjeon/Repolis/blob/main/README.md"
+            ]
+          },
+          "overflow": false,
+          "calls": 1
+        }
+      },
+      {
+        "name": "atelier-chat-code-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "evidence": {
+          "displayed": {
+            "code": "git clone https://github.com/hyeonsangjeon/Repolis\ncd Repolis\npython3 -m http.server 8000\n# open http://localhost:8000\n",
+            "literal": "<unsafe>",
+            "unsafe": false,
+            "links": [
+              "https://github.com/hyeonsangjeon/Repolis/blob/main/README.md"
+            ]
+          },
+          "overflow": false,
+          "calls": 1
+        }
+      },
+      {
+        "name": "atelier-chat-flow-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-flow-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-flow-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-flow-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-no-source-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-no-source-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-no-source-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-no-source-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-timeout-en",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-timeout-ko",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-exit-en",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-exit-ko",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-disabled-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-disabled-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-disabled-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-disabled-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      }
+    ],
+    "preserves": [
+      "five started calls per visit",
+      "panel-reopen continuity",
+      "exit/re-entry reset",
+      "30-second complete-response deadline"
+    ]
+  },
+  "nonClaims": [
+    "No production answer confirmation yet in this candidate record.",
+    "No controlled inference about the cause of every empty MCP search or original excerpt omission.",
+    "No physical mobile, native keyboard, Safari/Firefox or hardware WebGL recovery coverage.",
+    "No completion claim for #120 world-space text overlap or exterior-card accessibility gaps."
+  ]
+}

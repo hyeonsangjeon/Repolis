@@ -110,14 +110,24 @@ async function atelierTransportFixture(){
         const authorized=authorizeRepositoryAtelierRequest(payload);
         assert(authorized.ok,authorized.reason); assert.equal(authorized.repoName,atelierRepoName);
         const mode=payload.question.split(' ').at(-1);
-        assert(['slow','body','valid','malformed','mismatch','rate','denied','unconfigured','missing'].includes(mode),'known fixture question');
+        assert(['slow','body','valid','malformed','mismatch','rate','denied','unconfigured','missing','code'].includes(mode),'known fixture question');
         const call={mode,payload:{surface:payload.surface,repoName:payload.repoName,question:payload.question,history:payload.history,lang:payload.lang},
           headersSent:false,completed:false,cancelled:false};
         calls.push(call); const started=performance.now();
         response.once('finish',()=>{ call.completed=true; call.elapsedMs=Math.round(performance.now()-started); });
         response.once('close',()=>{ if(!response.writableFinished){call.cancelled=true;call.elapsedMs=Math.round(performance.now()-started);} });
-        if(mode==='slow') await delay(10200);
+        if(mode==='slow'){
+          const readyAt=performance.now()+10200;
+          // A timer can wake early; the fixture must really exceed the old ten-second cutoff.
+          while(performance.now()<readyAt) await delay(Math.ceil(readyAt-performance.now()));
+        }
         const data={repoName:atelierRepoName,message:`Local fixture response for ${atelierRepoName}. This is not a live AI answer.`};
+        if(mode==='code'){
+          data.message='Clone the repo and serve it as a static site:\n```bash\ngit clone '+ownerRepo.url+'\ncd '+ownerRepo.repo
+            +'\npython3 -m http.server 8000\n# open http://localhost:8000\n```\nNo installation or build step is required.\n`<unsafe>` is literal fixture text.';
+          data.trace={scoped:true,ks:'local-fixture-only',tools:[],refs:[{name:atelierRepoName+'/README.md',
+            url:ownerRepo.url+'/blob/main/README.md',snippet:'Local presentation replay, not a live model response.'}]};
+        }
         if(mode==='mismatch'){data.repoName='another/repository';data.message='WRONG_REPO_MUST_NOT_REACH_UI';}
         if(['rate','denied','unconfigured'].includes(mode)){
           data.fallback=true; data.reason=mode==='rate'?'kb 429':mode==='denied'?'kb 403':'grounding not configured';
@@ -476,6 +486,26 @@ function assertChatLayout(state,mobile){
   assert.equal(state.atelier.render.exteriorCalls,0,'chat keeps the exterior paused');
 }
 for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
+  name:`atelier-chat-code-${lang}-${mobile?'mobile':'desktop'}`,group:'atelier-chat',query:'?dbg=1',
+  lang,mobile,lowEnd:mobile,reduced:mobile,atelierTransport:true
+},async s=>{
+  const {page}=s; await openAtelierChat(page); await submitChat(page,'code');
+  await page.until("document.querySelector('#chatLog .atelierCode code')?.textContent.includes('python3 -m http.server 8000')");
+  const displayed=await page.evaluate(`(()=>{
+    const code=document.querySelector('#chatLog .atelierCode code'),refs=document.querySelector('#chatLog .refsBlock');
+    refs.open=true;
+    return {code:code.textContent,literal:document.querySelector('#chatLog .atelierInlineCode')?.textContent,
+      unsafe:!!document.querySelector('#chatLog unsafe'),links:[...refs.querySelectorAll('a')].map(a=>a.href)};
+  })()`);
+  assert(displayed.code.includes('git clone '+ownerRepo.url+'\ncd '+ownerRepo.repo+'\n'));
+  assert.equal(displayed.literal,'<unsafe>'); assert.equal(displayed.unsafe,false);
+  assert.deepEqual(displayed.links,[ownerRepo.url+'/blob/main/README.md']);
+  const state=await chatState(page); assertChatLayout(state,mobile);
+  assert.equal(s.fixture.calls.length,1); assert.equal(state.atelier.chat.calls,1);
+  return {displayed,overflow:state.overflow,calls:state.atelier.chat.calls};
+});
+
+for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
   name:`atelier-chat-flow-${lang}-${mobile?'mobile':'desktop'}`,group:'atelier-chat',query:'?dbg=1',
   lang,mobile,lowEnd:mobile,reduced:mobile,atelierTransport:true
 },async(s,test)=>{
@@ -495,7 +525,9 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
   await page.evaluate("__atelierAction('ask')"); await page.until("document.activeElement.id==='chatText'");
   const slow=await chatState(page);
   assert.equal(slow.atelier.chat.calls,1); assert.equal(slow.atelier.chat.lastFailure,null);
-  assert.equal(s.fixture.calls.length,1); assert(s.fixture.calls[0].completed&&s.fixture.calls[0].elapsedMs>=10200);
+  assert.equal(s.fixture.calls.length,1);
+  assert(s.fixture.calls[0].completed&&s.fixture.calls[0].elapsedMs>=10200,
+    JSON.stringify({completed:s.fixture.calls[0].completed,elapsedMs:s.fixture.calls[0].elapsedMs}));
   assert.equal(slow.focus,'chatText','completion returns focus to the active input');
   const turns=[];
   for(const [mode,failure] of [['malformed','invalid_response'],[lang==='ko'?'denied':'rate',lang==='ko'?'access_denied':'rate_limited'],
