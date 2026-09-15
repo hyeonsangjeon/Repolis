@@ -1,0 +1,559 @@
+{
+  "schema": "repolis-atelier-postdeploy-evidence-v1",
+  "dateBasis": "UTC; elapsed times are native browser request through complete JSON consumption, not internal model-call counts.",
+  "release": {
+    "pr": 126,
+    "head": "18d2efcd6e89f6c32f4613c3264a59322026a488",
+    "merge_commit_sha": "84e8b3056746a72eef9710c8460dde7b36a74c7f",
+    "merged": true,
+    "merged_at": "2026-09-14T14:28:40Z",
+    "merged_by": "hyeonsangjeon",
+    "state": "closed",
+    "url": "https://github.com/hyeonsangjeon/Repolis/pull/126",
+    "pages": {
+      "commit": "84e8b3056746a72eef9710c8460dde7b36a74c7f",
+      "created_at": "2026-09-14T14:28:42Z",
+      "status": "built",
+      "updated_at": "2026-09-14T14:29:12Z",
+      "run": "https://github.com/hyeonsangjeon/Repolis/actions/runs/34855862621",
+      "htmlMatchedMergeBlob": true
+    }
+  },
+  "worker": {
+    "previousVersion": "d3823cb5-ddce-4836-9d80-02aab8e81335",
+    "version": "2f7cc207-71bb-40ef-8060-019d83ebaf96",
+    "sourceRevision": "84e8b3056746a72eef9710c8460dde7b36a74c7f",
+    "deploymentId": "6e04a502-c11e-4598-8fae-1f4bd7fc2d7a",
+    "deployedAt": "2026-09-14T14:32:03.952755Z",
+    "trafficPercentage": 100,
+    "committedConfigUnchanged": true,
+    "remoteBindingDescriptorsUnchanged": true,
+    "runtimeUnchanged": true,
+    "secretUpdatesRequested": false,
+    "secretValuesRead": false,
+    "otherServicesDeployed": false
+  },
+  "environment": {
+    "browser": "Chrome/152.0.7977.84",
+    "installedBrowser": true,
+    "host": "macOS",
+    "initialContexts": [
+      "ko 1440x900 desktop",
+      "en 390x844 mobile emulation"
+    ],
+    "additionalUi": "The existing KO context was resized to 390x844 and the EN context to 1440x900 without extra requests. These are not four independent cold starts.",
+    "liveReview": "Loopback-only 127.0.0.1:8046; exact native Atelier POST only; stopped after the eight-call phase.",
+    "ordinaryReview": "http://127.0.0.1:8043/?view=plaza&lang=ko",
+    "ordinaryReviewServices": "AI, RT and browser analytics OFF",
+    "otherNpcAi": false,
+    "ambientAi": false,
+    "realtime": false,
+    "browserAnalytics": false,
+    "credentialsInBrowser": false,
+    "retries": 0,
+    "proxy": false
+  },
+  "budget": {
+    "maximumBrowserWorkerRequests": 8,
+    "startedBrowserWorkerRequests": 8,
+    "completedJsonResponses": 8,
+    "sequential": true,
+    "automaticExplanations": 2,
+    "ordinaryFollowupQuestions": 4,
+    "explicitPathDiagnostics": 2,
+    "internalModelCallCount": null,
+    "internalModelCallCountNote": "Not exposed by these responses; eight is not a count of internal Foundry model calls."
+  },
+  "outcome": {
+    "requestedFactsAnswered": 3,
+    "totalRequests": 8,
+    "ordinaryQuestionsAnswered": 2,
+    "ordinaryQuestions": 6,
+    "explicitPathDiagnosticsAnswered": 1,
+    "explicitPathDiagnostics": 2,
+    "metadataReferencedReplies": 7,
+    "unansweredRepliesIncorrectlyReportedSuccessful": [
+      2,
+      5,
+      6,
+      7
+    ],
+    "workerNotFound": [
+      3
+    ],
+    "completeNormalization": false
+  },
+  "publicSources": {
+    "metadata": {
+      "archived": false,
+      "default_branch": "main",
+      "full_name": "hyeonsangjeon/Repolis",
+      "html_url": "https://github.com/hyeonsangjeon/Repolis",
+      "language": "HTML",
+      "license": "MIT",
+      "private": false,
+      "pushed_at": "2026-09-14T14:28:40Z",
+      "stargazers_count": 41
+    },
+    "readme": {
+      "blob": "ed31bdb801d30e0bed30ae18baeacd136e40f24d",
+      "url": "https://github.com/hyeonsangjeon/Repolis/blob/84e8b3056746a72eef9710c8460dde7b36a74c7f/README.md#run-in-60-seconds",
+      "commands": [
+        "git clone https://github.com/hyeonsangjeon/Repolis",
+        "cd Repolis",
+        "python3 -m http.server 8000"
+      ],
+      "installRequired": false,
+      "buildRequired": false
+    },
+    "license": {
+      "blob": "127c4643a61d5c0a7369162b8fc82a85c3596ea8",
+      "spdx": "MIT",
+      "url": "https://github.com/hyeonsangjeon/Repolis/blob/84e8b3056746a72eef9710c8460dde7b36a74c7f/LICENSE"
+    }
+  },
+  "cases": [
+    {
+      "id": 1,
+      "label": "KO overview",
+      "question": "이 레포를 설명해 주세요.",
+      "language": "ko",
+      "viewport": "1440x900",
+      "historyTurnsSent": 0,
+      "startedAt": "2026-09-14T14:33:45.785736+00:00",
+      "finishedAt": "2026-09-14T14:33:57.968237+00:00",
+      "browserElapsedMs": 12179,
+      "httpStatus": 200,
+      "workerReportedOutcome": "grounded_answer",
+      "requestedFactsAnswered": true,
+      "answerSummary": "Public GitHub repositories become a walkable 3D town; HTML, 41 stars, recent public update.",
+      "deliveredMessage": "`Repolis`는 공개 GitHub 저장소를 걸어 다닐 수 있는 3D 마을로 바꿔 보여 주는 프로젝트예요. HTML로 만들어졌고, 별 41개를 받았으며, 최근에도 2026-09-14에 업데이트된 활발한 레포입니다. 이 레포로 안내해 드릴까요?",
+      "references": [
+        {
+          "url": "https://github.com/hyeonsangjeon/Repolis"
+        }
+      ],
+      "tools": [
+        "search_repositories"
+      ],
+      "workerTotalMs": 11962,
+      "mcpMs": 1005,
+      "modelActivityCount": null
+    },
+    {
+      "id": 2,
+      "label": "KO local run",
+      "question": "이 hyeonsangjeon/Repolis를 로컬에서 실행하는 방법을 알려주세요. README의 명령어와 npm install·빌드 필요 여부를 확인하고 이 저장소만 출처로 달아주세요.",
+      "language": "ko",
+      "viewport": "1440x900",
+      "historyTurnsSent": 2,
+      "startedAt": "2026-09-14T14:34:14.798318+00:00",
+      "finishedAt": "2026-09-14T14:34:29.909582+00:00",
+      "browserElapsedMs": 15109,
+      "httpStatus": 200,
+      "workerReportedOutcome": "grounded_answer",
+      "requestedFactsAnswered": false,
+      "answerSummary": "Could not retrieve README body/run commands; did not establish setup or build requirements.",
+      "deliveredMessage": "현재 확인된 공개 정보로는 `hyeonsangjeon/Repolis`의 저장소 설명, 언어, 별 수, 최근 업데이트 시점은 알 수 있지만, README 본문과 실행 명령은 가져오지 못해 로컬 실행 방법을 검증할 수 없습니다.  \n확인된 README 파일은 `README.md`와 `README.ko.md`가 존재하지만, 이번에 받은 내용에는 파일 메타데이터만 있고 실제 명령어 내용은 포함되어 있지 않았습니다.\n\n따라서 이 저장소만을 출처로 해서 `npm install`이나 빌드 필요 여부, 실행 명령을 확정해 안내할 수는 없습니다.  \nREADME 본문이 제공되면 그 안의 명령어만 근거로 로컬 실행 절차를 정리해 드릴게요.",
+      "references": [
+        {
+          "url": "https://github.com/hyeonsangjeon/Repolis"
+        }
+      ],
+      "tools": [
+        "search_repositories",
+        "get_file_contents"
+      ],
+      "workerTotalMs": 14920,
+      "mcpMs": 2289,
+      "modelActivityCount": null
+    },
+    {
+      "id": 3,
+      "label": "KO license",
+      "question": "hyeonsangjeon/Repolis의 라이선스는 무엇인가요? LICENSE 파일 또는 공개 라이선스 메타데이터로 확인하고 이 저장소만 출처로 달아주세요.",
+      "language": "ko",
+      "viewport": "1440x900",
+      "historyTurnsSent": 4,
+      "startedAt": "2026-09-14T14:34:41.533425+00:00",
+      "finishedAt": "2026-09-14T14:34:54.307185+00:00",
+      "browserElapsedMs": 12760,
+      "httpStatus": 200,
+      "workerReportedOutcome": "not_found",
+      "requestedFactsAnswered": false,
+      "answerSummary": "Worker returned notFound; its response did not expose which evidence/answer predicate failed.",
+      "deliveredMessage": null,
+      "references": [],
+      "tools": [
+        "get_file_contents",
+        "search_repositories"
+      ],
+      "workerTotalMs": 12400,
+      "mcpMs": 1818,
+      "modelActivityCount": null
+    },
+    {
+      "id": 4,
+      "label": "EN overview",
+      "question": "Explain this repository.",
+      "language": "en",
+      "viewport": "390x844",
+      "historyTurnsSent": 0,
+      "startedAt": "2026-09-14T14:35:50.232936+00:00",
+      "finishedAt": "2026-09-14T14:35:59.120886+00:00",
+      "browserElapsedMs": 8885,
+      "httpStatus": 200,
+      "workerReportedOutcome": "grounded_answer",
+      "requestedFactsAnswered": true,
+      "answerSummary": "Walkable 3D town, metric-shaped buildings, residents and Gitber; HTML and 41 stars.",
+      "deliveredMessage": "`Repolis` is a public GitHub project that turns public GitHub repos into a walkable 3D town, where traffic shapes the buildings, residents live there, and Gitber drives you to the right project. It’s written in HTML, has 41 stars, and was recently updated on 2026-09-14T14:28:45Z — would you like a ride through it?",
+      "references": [
+        {
+          "url": "https://github.com/hyeonsangjeon/Repolis"
+        }
+      ],
+      "tools": [
+        "search_repositories"
+      ],
+      "workerTotalMs": 8637,
+      "mcpMs": 917,
+      "modelActivityCount": null
+    },
+    {
+      "id": 5,
+      "label": "EN local run",
+      "question": "For hyeonsangjeon/Repolis, how do I run it locally? Give the commands from its README and say whether npm install or a build step is required. Cite this repository only.",
+      "language": "en",
+      "viewport": "390x844",
+      "historyTurnsSent": 2,
+      "startedAt": "2026-09-14T14:36:25.122246+00:00",
+      "finishedAt": "2026-09-14T14:36:38.077694+00:00",
+      "browserElapsedMs": 12947,
+      "httpStatus": 200,
+      "workerReportedOutcome": "grounded_answer",
+      "requestedFactsAnswered": false,
+      "answerSummary": "Could not retrieve README contents or establish commands, npm install, or build requirements.",
+      "deliveredMessage": "I couldn’t find the README contents for `hyeonsangjeon/Repolis` in the retrieved repository information, so I can’t quote the local run commands or confirm whether `npm install` or a build step is required from the README. The only public repository details retrieved were that `hyeonsangjeon/Repolis` exists, is an HTML project, and has the description “🏙️ Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.”",
+      "references": [
+        {
+          "url": "https://github.com/hyeonsangjeon/Repolis"
+        }
+      ],
+      "tools": [
+        "search_repositories"
+      ],
+      "workerTotalMs": 12859,
+      "mcpMs": 1988,
+      "modelActivityCount": null
+    },
+    {
+      "id": 6,
+      "label": "EN license",
+      "question": "What license does hyeonsangjeon/Repolis use? Verify its LICENSE file or public license metadata and cite this repository only.",
+      "language": "en",
+      "viewport": "390x844",
+      "historyTurnsSent": 4,
+      "startedAt": "2026-09-14T14:37:10.505167+00:00",
+      "finishedAt": "2026-09-14T14:37:24.746736+00:00",
+      "browserElapsedMs": 14236,
+      "httpStatus": 200,
+      "workerReportedOutcome": "grounded_answer",
+      "requestedFactsAnswered": false,
+      "answerSummary": "Could not verify public license information or a LICENSE file.",
+      "deliveredMessage": "No public license information was found for `hyeonsangjeon/Repolis` in the retrieved repository metadata, and I couldn’t verify a LICENSE file from the available repository information.",
+      "references": [
+        {
+          "url": "https://github.com/hyeonsangjeon/Repolis"
+        }
+      ],
+      "tools": [
+        "search_repositories"
+      ],
+      "workerTotalMs": 14089,
+      "mcpMs": 1968,
+      "modelActivityCount": null
+    },
+    {
+      "id": 7,
+      "label": "EN explicit README.md diagnostic",
+      "question": "For exactly hyeonsangjeon/Repolis, retrieve exact repository metadata, then call get_file_contents with owner=\"hyeonsangjeon\", repo=\"Repolis\", path=\"README.md\". Read the file body, not the root directory listing. Give the README local-run commands and whether npm install/build is required. Use only this repository; if file content is unavailable, state that limitation.",
+      "language": "en",
+      "viewport": "390x844",
+      "historyTurnsSent": 6,
+      "startedAt": "2026-09-14T14:38:07.450834+00:00",
+      "finishedAt": "2026-09-14T14:38:20.095083+00:00",
+      "browserElapsedMs": 12635,
+      "httpStatus": 200,
+      "workerReportedOutcome": "grounded_answer",
+      "requestedFactsAnswered": false,
+      "answerSummary": "Said the retrieved README omitted the local-run section; did not provide commands.",
+      "deliveredMessage": "I found the README for `Repolis`, but the retrieved content does not include the local-run section or any commands for starting it, so I can’t quote the exact run steps from the README.\n\nWhat I could verify is that the README says the project uses MIT license, but it does not show whether `npm install` or a build step is required for local setup in the retrieved text.\n\nIf you want, I can help you interpret any additional README lines you paste here.",
+      "references": [
+        {
+          "url": "https://github.com/hyeonsangjeon/Repolis"
+        }
+      ],
+      "tools": [
+        "search_repositories",
+        "get_file_contents"
+      ],
+      "workerTotalMs": 12546,
+      "mcpMs": 2523,
+      "modelActivityCount": null
+    },
+    {
+      "id": 8,
+      "label": "EN explicit LICENSE diagnostic",
+      "question": "For exactly hyeonsangjeon/Repolis, retrieve exact repository metadata, then call get_file_contents with owner=\"hyeonsangjeon\", repo=\"Repolis\", path=\"LICENSE\". Read the file body, not a directory listing. Identify the license using that file and cite this repository only; if file content is unavailable, state that limitation.",
+      "language": "en",
+      "viewport": "390x844",
+      "historyTurnsSent": 7,
+      "startedAt": "2026-09-14T14:38:54.064847+00:00",
+      "finishedAt": "2026-09-14T14:39:07.242177+00:00",
+      "browserElapsedMs": 13169,
+      "httpStatus": 200,
+      "workerReportedOutcome": "grounded_answer",
+      "requestedFactsAnswered": true,
+      "answerSummary": "Identified MIT from LICENSE, matching the committed license and public metadata.",
+      "deliveredMessage": "The LICENSE file for hyeonsangjeon/Repolis identifies the project as using the MIT License. The repository metadata also confirms this is the public repo `hyeonsangjeon/Repolis`.",
+      "references": [
+        {
+          "url": "https://github.com/hyeonsangjeon/Repolis"
+        }
+      ],
+      "tools": [
+        "search_repositories",
+        "get_file_contents"
+      ],
+      "workerTotalMs": 13078,
+      "mcpMs": 3311,
+      "modelActivityCount": null
+    }
+  ],
+  "lifecycle": {
+    "koReopen": {
+      "repoName": "hyeonsangjeon/Repolis",
+      "calls": 3,
+      "limit": 5,
+      "historyTurns": 5,
+      "panelOpen": true,
+      "autoStarted": true,
+      "exhausted": false,
+      "cancelled": false,
+      "lastFailure": "not_found"
+    },
+    "enExhaustedReopen": {
+      "repoName": "hyeonsangjeon/Repolis",
+      "calls": 5,
+      "limit": 5,
+      "historyTurns": 10,
+      "panelOpen": true,
+      "autoStarted": true,
+      "exhausted": true,
+      "cancelled": false,
+      "lastFailure": null
+    },
+    "exhaustedReopenFocus": "chatClose; disabled input is intentionally not focusable",
+    "koAfterPickerReentry": {
+      "repoName": "hyeonsangjeon/Repolis",
+      "calls": 0,
+      "limit": 5,
+      "historyTurns": 0,
+      "panelOpen": true,
+      "autoStarted": true,
+      "exhausted": false,
+      "cancelled": false,
+      "lastFailure": null
+    },
+    "enAfterPickerReentry": {
+      "repoName": "hyeonsangjeon/Repolis",
+      "calls": 0,
+      "limit": 5,
+      "historyTurns": 0,
+      "panelOpen": true,
+      "autoStarted": true,
+      "exhausted": false,
+      "cancelled": false,
+      "lastFailure": null
+    },
+    "reentry": "Actual Intent Lens current-catalog selection; autoChat:false consumes no request. autoStarted:true is the existing latch suppressing automatic startup.",
+    "roomReused": true,
+    "roomResources": {
+      "geometries": 25,
+      "materials": 16,
+      "canvasTextures": 3
+    },
+    "callCountAfterLifecycle": 8,
+    "residualUi": "After the EN context was resized from mobile to desktop and exited, the restored repo-card Close button could not be hit and Escape from outside the card did not dismiss it. Backdrop dismissal worked. #120 remains unresolved; this run does not claim all controls are accessible."
+  },
+  "transport": {
+    "workerPostNetworkFailures": 0,
+    "liveConsoleErrors": 0,
+    "startupStaticNetworkFailures": [
+      {
+        "context": "ko-desktop",
+        "url": "http://127.0.0.1:8046/council/council.config.json",
+        "error": "net::ERR_ABORTED",
+        "cancelled": true
+      },
+      {
+        "context": "en-mobile",
+        "url": "http://127.0.0.1:8046/data/city-state.json",
+        "error": "net::ERR_ABORTED",
+        "cancelled": true
+      },
+      {
+        "context": "en-mobile",
+        "url": "http://127.0.0.1:8046/council/council.config.json",
+        "error": "net::ERR_ABORTED",
+        "cancelled": true
+      }
+    ],
+    "strictNetworkClean": false
+  },
+  "followup": {
+    "deployed": false,
+    "sourceBlobs": {
+      "worker": "b0037caa996649ed9219cb61d2412098800e97c8",
+      "atelier": "5d2946f55202d17686dc89ad12081c74cce46da1",
+      "client": "51fb6c4792cf11b80d3ec1302ecb5b0ef8fe29d0"
+    },
+    "replayBefore": {
+      "scope": "Actual delivered reply strings; synthetic exact metadata, not original KB references; zero network",
+      "results": [
+        {
+          "liveCallId": 2,
+          "httpStatus": 200,
+          "notFound": false,
+          "reason": null,
+          "delivered": 1,
+          "localRetrievals": 1
+        },
+        {
+          "liveCallId": 5,
+          "httpStatus": 200,
+          "notFound": false,
+          "reason": null,
+          "delivered": 1,
+          "localRetrievals": 1
+        },
+        {
+          "liveCallId": 6,
+          "httpStatus": 200,
+          "notFound": false,
+          "reason": null,
+          "delivered": 1,
+          "localRetrievals": 1
+        },
+        {
+          "liveCallId": 7,
+          "httpStatus": 200,
+          "notFound": false,
+          "reason": null,
+          "delivered": 1,
+          "localRetrievals": 1
+        }
+      ]
+    },
+    "replayAfter": {
+      "scope": "Actual delivered reply strings; synthetic exact metadata, not original KB references; zero network",
+      "results": [
+        {
+          "liveCallId": 2,
+          "httpStatus": 200,
+          "notFound": true,
+          "reason": "answer_unavailable",
+          "delivered": 0,
+          "localRetrievals": 1
+        },
+        {
+          "liveCallId": 5,
+          "httpStatus": 200,
+          "notFound": true,
+          "reason": "answer_unavailable",
+          "delivered": 0,
+          "localRetrievals": 1
+        },
+        {
+          "liveCallId": 6,
+          "httpStatus": 200,
+          "notFound": true,
+          "reason": "answer_unavailable",
+          "delivered": 0,
+          "localRetrievals": 1
+        },
+        {
+          "liveCallId": 7,
+          "httpStatus": 200,
+          "notFound": true,
+          "reason": "answer_unavailable",
+          "delivered": 0,
+          "localRetrievals": 1
+        }
+      ]
+    },
+    "hermeticCommand": "bash scripts/check-hermetic.sh",
+    "hermeticCommandsPassed": 24,
+    "smokeChecks": 1573,
+    "smokeIncludes": {
+      "atelierGroups": 24,
+      "firstVisitChecks": 69
+    },
+    "localBrowserCases": [
+      {
+        "name": "atelier-chat-no-source-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "fixture": "Native loopback HTTP fixture, not a live Worker/model request"
+      },
+      {
+        "name": "atelier-chat-no-source-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "fixture": "Native loopback HTTP fixture, not a live Worker/model request"
+      },
+      {
+        "name": "atelier-chat-no-source-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "fixture": "Native loopback HTTP fixture, not a live Worker/model request"
+      },
+      {
+        "name": "atelier-chat-no-source-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0,
+        "fixture": "Native loopback HTTP fixture, not a live Worker/model request"
+      }
+    ]
+  },
+  "limitations": [
+    "No raw KB references, file payloads, retrieval truncation settings, or synthesis input were exposed. The directory/commit fixture is not proof of an operational root cause.",
+    "The successful explicit LICENSE diagnostic is one observation, not a controlled comparison; prompt, history, and tool choices differ from the earlier license question.",
+    "The new marker, file-evidence instructions, failure classifier and bounded diagnostic counters are only locally verified. Their deployment and a new bounded live phase require approval.",
+    "Real mobile hardware, native keyboard, Safari, Firefox and hardware GPU recovery remain unverified. Existing #120/#122 acceptance gaps stay unchecked."
+  ]
+}

@@ -412,3 +412,112 @@ keyboards, Safari/Firefox, hardware GPU failure and extreme-proximity world-spac
 text overlap remain unverified or unresolved. A rollback, if requested, should use a
 reviewed revert PR and the same gate, then confirm its Pages revision; neither a
 force-push nor a Worker rollback is implied by this static-site release.
+
+## Taxi deployment and bounded live follow-up: 2026-09-14 UTC
+
+**Deployment succeeded; complete Atelier answer normalization did not.** Of eight
+sequential browser requests, three answered the requested facts: KO/EN repository
+overviews and one explicit `LICENSE`-path diagnostic. A valid repository reference
+or HTTP 200 is not an answer-quality pass.
+
+PR #126 merged as `84e8b3056746a72eef9710c8460dde7b36a74c7f`.
+[Pages run 34855862621](https://github.com/hyeonsangjeon/Repolis/actions/runs/34855862621)
+published that revision at `2026-09-14T14:29:12Z`; downloaded HTML matched the merge
+blob. All 24 hermetic commands passed on the clean merge before Taxi deployment.
+Worker version `d3823cb5-ddce-4836-9d80-02aab8e81335` was replaced by
+`2f7cc207-71bb-40ef-8060-019d83ebaf96` at 100% traffic. Its source annotation identifies
+the merge above; deployment completed at `2026-09-14T14:32:03.952755Z`.
+Committed configuration, remote binding descriptors and runtime settings matched
+before/after. No secret update, permission change, model/budget adjustment or other
+service deployment was requested.
+
+### Live conditions and content verdicts
+
+Installed Chrome `152.0.7977.84` on macOS, native browser-to-Worker POSTs from a
+loopback-only review. Two isolated contexts started as KO desktop (1440 x 900) and
+EN mobile emulation (390 x 844). They were later resized to the opposite viewport
+without more calls; this is not four independent cold starts or real-device QA.
+Only exact `hyeonsangjeon/Repolis` Atelier calls were enabled. Other NPC AI,
+ambient AI, RT and browser analytics stayed off. No browser credential, proxy or
+automatic retry was used. The eight-call cap included both automatic explanations.
+
+Times below run from the browser request through complete JSON consumption. They
+are not internal model-call counts; those counts were not exposed by these
+responses. Every POST completed with HTTP 200, but only **3/8** answered its question.
+All seven reference-bearing responses cited exactly
+`https://github.com/hyeonsangjeon/Repolis`; the remaining response had no references.
+
+| Call | Question | Browser time | Content result |
+|---|---|---:|---|
+| 1 | KO automatic overview | 12,179 ms | Answered: public repos as a walkable 3D town. |
+| 2 | KO README local-run commands | 15,109 ms | Unanswered: reply said README body/commands were unavailable. |
+| 3 | KO license | 12,760 ms | `notFound`; the existing response did not identify the rejected predicate. |
+| 4 | EN automatic overview | 8,885 ms | Answered: 3D town, repo-shaped buildings, residents and Gitber. |
+| 5 | EN README local-run commands | 12,947 ms | Unanswered: no commands or install/build conclusion. |
+| 6 | EN license | 14,236 ms | Unanswered: reply could not verify license information. |
+| 7 | Explicit `get_file_contents`, `README.md` path | 12,635 ms | Unanswered: reply said the retrieved excerpt omitted the run section. |
+| 8 | Explicit `get_file_contents`, `LICENSE` path | 13,169 ms | Answered: MIT, matching committed LICENSE and public metadata. |
+
+The ordinary six questions therefore passed **2/6**, and the two explicit-path
+diagnostics passed **1/2**. The successful LICENSE diagnostic is not proof that the
+path instruction caused success: prompt, history and tool choices also differed.
+README's actual instructions are `git clone`, `cd Repolis`, and
+`python3 -m http.server 8000`, with no installation or build step. No live reply
+provided those commands in this phase.
+
+### Confirmed correction versus remaining source uncertainty
+
+Calls 2, 5, 6 and 7 explicitly declined to answer the requested facts but were still
+returned as successful, reference-bearing replies. Replaying their actual delivered
+strings through the Worker handler with synthetic valid repository metadata
+reproduced all four misclassifications. This replay uses **no network** and is not a
+reconstruction of the original KB payload.
+
+The follow-up moves the existing refusal guard into the pure Atelier module,
+handles observed KO wording and typographic English apostrophes, and retains all
+exact-repository/activity/tool checks. It requests actual file evidence and an
+explicit missing-answer marker. Safe failure reasons and two reference counts
+distinguish rejected/absent repository evidence from empty/unavailable answers;
+raw file content, prompts and credentials are not added to diagnostics. Failed
+answers keep the existing counted-turn/no-assistant-history client path.
+
+The corrected local replay rejects **4/4** of those strings, emits no delivered-answer
+events and makes one fixture retrieval per case. All **24 hermetic commands** passed,
+with **1,573 Smoke checks**, including **24 Atelier groups** and **69 first-visit
+checks** (not additive totals). The four affected KO/EN desktop/mobile no-source
+HTTP-fixture cases passed with zero captured console or browser Log resource errors.
+Existing limit, deadline, cancellation and context-correlation fixtures remain in
+the shared gate. **This follow-up has not been deployed or live-tested.**
+
+The live replies show missing requested facts in synthesis, not a client timeout:
+all eight POST bodies completed before the unchanged 30-second client deadline.
+They do not establish whether MCP source output, excerpt selection or synthesis
+lost the README section. Raw KB references/activity arguments and file payloads
+were not exposed; the original cause of call 3 remains undetermined.
+
+### Lifecycle and remaining review boundaries
+
+Panel reopen retained history and counters without requests. EN reached 5/5 and
+disabled submission; reopening focused the accessible Close button rather than
+the disabled input. Exit released chat state. Reentry through the existing Intent
+Lens picker reset both visits to 0 calls/0 history and reused the one room
+(25 geometries, 16 materials, three canvas textures), without a ninth request.
+The existing `autoStarted:true` latch suppresses automatic calls for that picker.
+
+There were zero captured live console errors or Worker POST transport failures.
+Startup still recorded three static-response `ERR_ABORTED` events across the two
+contexts (`city-state.json` and/or `council.config.json`); **strict network cleanliness
+is not claimed**. After EN mobile-to-desktop resizing and room exit, the restored
+repo-card Close button could not be hit and Escape from outside the card did not
+dismiss it; backdrop dismissal worked. This is not an accessibility pass for #120.
+Real mobile/native keyboard, Safari/Firefox and hardware GPU recovery remain
+unverified, and the existing #120/#122 gaps stay open.
+
+[Compact actual responses, source comparison and local replay](atelier-postdeploy-ai.json) ·
+[Actual KO overview](atelier-postdeploy-ko-desktop.jpg) ·
+[Actual EN LICENSE diagnostic, mobile emulation](atelier-postdeploy-en-mobile.jpg).
+
+The live-call server was stopped after eight requests. Ordinary review remains
+`http://127.0.0.1:8043/?view=plaza&lang=ko` (`lang=en` for English), with AI/RT/browser
+analytics off. A further Worker release and a fresh bounded live phase require
+approval; no additional call, rollback or configuration expansion was performed.
