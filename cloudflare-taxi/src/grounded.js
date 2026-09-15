@@ -64,12 +64,11 @@ import {
 import {
   REPOSITORY_ATELIER_SURFACE,
   authorizeRepositoryAtelierRequest,
-  buildRepositoryAtelierMessages,
-  projectRepositoryAtelierReferences,
   repositoryAtelierAnswerFailure,
   repositoryAtelierKnowledgeSource,
   repositoryAtelierMessage,
 } from "./repository-atelier.js";
+import { retrieveRepositoryAtelier } from "./repository-atelier-grounding.js";
 
 export { NpcBudgetGovernor };
 
@@ -1022,6 +1021,9 @@ async function groundedRetrieve(cfg, messages, env) {
   };
 
   const ctrl = new AbortController();
+  const abort = () => ctrl.abort();
+  if (cfg.signal?.aborted) ctrl.abort();
+  else cfg.signal?.addEventListener("abort", abort, { once: true });
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   const started = Date.now();
   const headers = { "Content-Type": "application/json", "api-key": key };
@@ -1038,7 +1040,6 @@ async function groundedRetrieve(cfg, messages, env) {
       body: JSON.stringify(payload),
       signal: ctrl.signal,
     });
-    clearTimeout(timer);
     // 200 OK or 206 Partial (ran the budget but returned usable refs) are both fine.
     if (r.status !== 200 && r.status !== 206) {
       const detail = (await r.text().catch(() => "")).slice(0, 200);
@@ -1067,9 +1068,11 @@ async function groundedRetrieve(cfg, messages, env) {
     }));
     return { ok: true, attempted: true, status: r.status, data, answer, tools, mcpMs, modelActivities, totalMs: Date.now() - started };
   } catch (e) {
-    clearTimeout(timer);
     const reason = e.name === "AbortError" ? "timeout " + timeoutMs + "ms" : String(e).slice(0, 160);
     return { fallback: true, attempted: true, reason, totalMs: Date.now() - started };
+  } finally {
+    clearTimeout(timer);
+    cfg.signal?.removeEventListener("abort", abort);
   }
 }
 
@@ -1889,18 +1892,15 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
     ride: false,
     failOnError: true,
   };
-  const messages = buildRepositoryAtelierMessages(
-    authorized.history,
-    authorized.question,
-    authorized.repoName,
-  );
   const requestMeta = metricContext(body, request);
   const route = "grounded_kb_repository_atelier";
-  const out = await groundedRetrieve(cfg, messages, env);
-  emitKbQuery(env, ctx, route, cfg, "taxi", out, requestMeta);
+  const out = await retrieveRepositoryAtelier(authorized, cfg, env, {
+    retrieve: groundedRetrieve, getToken: aadToken, normalizeUsage: normalizeModelUsage,
+  });
+  emitKbQuery(env, ctx, route, cfg, "taxi", out.retrieval || out, requestMeta);
   for (const activity of out.modelActivities || []) {
     emitProviderUsage(env, ctx, route, cfg.ks, "taxi", activity, {
-      refs: Array.isArray(out.data?.references) ? out.data.references.length : 0,
+      refs: Number.isSafeInteger(activity.refs) ? activity.refs : (Array.isArray(out.data?.references) ? out.data.references.length : 0),
       ...requestMeta,
     });
   }
@@ -1923,11 +1923,7 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
     }, 200, env);
   }
 
-  const scoped = projectRepositoryAtelierReferences(
-    out.data?.references,
-    authorized.repoName,
-    out.data?.activity,
-  );
+  const scoped = out.scoped;
   const answerFailure = repositoryAtelierAnswerFailure(out.answer, scoped);
   if (answerFailure) {
     emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
@@ -1964,17 +1960,18 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
     sum.completion_tokens += normalized.completion_tokens;
     return sum;
   }, { prompt_tokens: 0, cached_tokens: 0, completion_tokens: 0 });
+  const refs = out.refs;
   emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
     groundingPath: "grounded_via_kb",
     pathRole: "primary",
     ok: true,
     ms: out.totalMs,
-    refs: scoped.refs.length,
+    refs: refs.length,
   }, requestMeta);
   emitDeliveredAnswer(env, ctx, route, cfg.ks, "taxi", {
     model: (out.modelActivities || []).at(-1)?.model || "unknown",
     ms: out.totalMs,
-    refs: scoped.refs.length,
+    refs: refs.length,
     ...requestMeta,
   });
   return json({
@@ -1984,10 +1981,12 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
     trace: {
       ks: cfg.ks,
       tools: out.tools,
-      refs: scoped.refs,
+      refs,
       mcpMs: out.mcpMs,
       totalMs: out.totalMs,
       partial: out.status === 206,
+      document: out.document,
+      identitySource: out.identitySource,
       scoped: true,
     },
   }, 200, env);

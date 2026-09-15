@@ -712,6 +712,13 @@
   #chat.atelierChat #chatLog { height:min(38vh,330px); background:linear-gradient(180deg,rgba(17,32,37,.98),rgba(12,24,29,.98)); }
   #chat.atelierChat .msg.bot { color:#dbe9e8; background:#233a3f; }
   #chat.atelierChat .msg.me { color:#102629; background:#8bd2ca; }
+  #chat.atelierChat .msg { min-width:0; overflow-wrap:anywhere; }
+  #chat.atelierChat .atelierCode { max-width:100%; margin:8px 0; padding:9px; border-radius:8px;
+    background:#142b30; color:#e8f4f3; white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.5 ui-monospace,Consolas,monospace; }
+  #chat.atelierChat .atelierCode code { font:inherit; white-space:inherit; overflow-wrap:inherit; }
+  #chat.atelierChat .atelierInlineCode { color:#f1cb7f; }
+  #chat.atelierChat .traceRef { min-width:0; flex-wrap:wrap; }
+  #chat.atelierChat .traceRef code { min-width:0; overflow-wrap:anywhere; }
   #chat.atelierChat .msg.bot b { color:#f1cb7f; }
   #chat.atelierChat .msg.bot span[style*="#ab8a66"] { color:#dbcba8 !important; }
   #chat.atelierChat .msg .alt { color:#244d7b; background:#edf4ff; }
@@ -2350,7 +2357,7 @@ import { allocateElderFragments, createLoreDeliveryState, loadLoreFragments } fr
 import { taxiHouseholdHandoff, taxiRideObservation, taxiSharedResponse } from './assets/taxi-voice.js?v=world-tree-phase4-v1';
 import { clearSessionFootprints, createSessionFootprintState, sessionFootprintScale, sessionFootprintSnapshot, stepSessionFootprints, teardownSessionFootprints } from './assets/session-footprints.js?v=world-tree-phase5-footprints-v1';
 import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
-import { REPOSITORY_ATELIER_CHAT_LIMIT, REPOSITORY_ATELIER_CHAT_TIMEOUT_MS, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, repositoryAtelierChatPayload, repositoryAtelierChatResponseFailure, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-scoped-chat-v2';
+import { REPOSITORY_ATELIER_CHAT_LIMIT, REPOSITORY_ATELIER_CHAT_TIMEOUT_MS, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, formatRepositoryAtelierChatMessage, repositoryAtelierChatPayload, repositoryAtelierChatResponseFailure, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-documents-v3';
 import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, resolveRepositoryBlueprintFocus, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v2';
 import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from './assets/issue-code-scout.js?v=issue-code-scout-v1';
 import { PROCEDURAL_SURFACE_FAMILIES, PROCEDURAL_SURFACE_LIMITS, PROCEDURAL_SURFACE_VERSION, createSurfaceRng, disposeBoundedSurfaceCache, getOrCreateBoundedSurface, normalizeSurfaceFamily, surfacePixelHash, surfaceTextureKey, surfaceUvTransform, surfaceVariant, surfaceWallRepeat } from './assets/procedural-surfaces.js?v=procedural-surface-v2-3';
@@ -13877,7 +13884,7 @@ async function _askRepositoryAtelier(visit,question,call,url){
   sb.remove(); if(visit.cancelled||visit.sequence!==call.sequence) return;
   const failure=repositoryAtelierChatResponseFailure(res.status,data,visit.repoName)||(data.notFound?'not_found':null);
   if(failure){ fail(failure); return; }
-  const msg=esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>');
+  const msg=formatRepositoryAtelierChatMessage(data.message);
   trackAiTurn('repository_atelier','taxi',question,aiStarted,{ok:true,refs:traceRefCount(data.trace)});
   addMsg('bot',msg,{trace:data.trace});
 }

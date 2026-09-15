@@ -103,3 +103,16 @@ export function repositoryAtelierChatSnapshot(visit) {
     lastFailure: visit.lastFailure,
   };
 }
+
+export function formatRepositoryAtelierChatMessage(value) {
+  const text = String(value ?? '').replace(/\r\n?/g, '\n')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = part => part.replace(/`([^`\n]+)`/g, '<code class="atelierInlineCode">$1</code>').replace(/\n/g, '<br>');
+  const fences = /^```[^\n`]*\n([\s\S]*?)^```[ \t]*(?:\n|$)/gm;
+  let html = '', offset = 0;
+  for (const match of text.matchAll(fences)) {
+    html += inline(text.slice(offset, match.index)) + '<pre class="atelierCode"><code>' + match[1] + '</code></pre>';
+    offset = match.index + match[0].length;
+  }
+  return html + inline(text.slice(offset));
+}

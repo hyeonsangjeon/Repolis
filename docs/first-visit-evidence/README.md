@@ -521,3 +521,69 @@ The live-call server was stopped after eight requests. Ordinary review remains
 `http://127.0.0.1:8043/?view=plaza&lang=ko` (`lang=en` for English), with AI/RT/browser
 analytics off. A further Worker release and a fresh bounded live phase require
 approval; no additional call, rollback or configuration expansion was performed.
+
+## Complete document candidate: 2026-09-15 UTC
+
+**One local Worker answer now provides the actual README run commands. Production
+confirmation is still pending at this checkpoint.** The answer says to clone the
+repository, enter `Repolis`, run `python3 -m http.server 8000`, and open
+`http://localhost:8000`; it correctly states that installation and a build are not
+required. The source is the current public `hyeonsangjeon/Repolis` README, not a
+different repository or a visitor-supplied file path.
+
+Before modifying the candidate, the full hermetic gate passed on
+`0abacaef0a3286c9c6c5211eb3c4752c11dee195`. The approved pending #127 Worker code was
+deployed from that revision: `2f7cc207-71bb-40ef-8060-019d83ebaf96` became
+`1ddde1ca-d368-4a0a-afd0-387542ab9243` at 100% traffic. Deployment time was
+`2026-09-15T05:10:15.153566Z`; binding descriptors, runtime settings and configured
+budgets were unchanged. This deployment is not a deployment of the later candidate.
+
+### What the recorded requests establish
+
+Six browser-to-local-Worker requests used real providers. They are heterogeneous
+debugging samples, not a controlled success-rate or latency benchmark. The
+eight-request allowance includes an unintended fixture-origin request whose
+answer was not captured. That request was counted, not discarded. Two requests
+remain reserved for the merged production deployment.
+
+| Request | Observed outcome | Browser elapsed time |
+|---|---|---:|
+| 1, baseline KO local run | Two repository searches, no file call; one exact metadata reference passed and none were rejected. No answer. | 13,381 ms |
+| 2, harness incident | A service-off fixture inherited the live endpoint. Response unobserved; not a content pass. The fixture and live servers are now separate, and the live lane requires one-shot question arming. | Not captured |
+| 3, discarded candidate | No repository reference with extractive output and low retrieval effort. Both overrides were removed; their effects were not isolated. | 4,787 ms |
+| 4, restored KB defaults | Exact metadata arrived; workerd rejected `redirect: "error"` before the document fetch. A no-model runtime probe confirmed `manual` works without following redirects. | 10,260 ms |
+| 5, manual redirects | Both MCP search activities reported zero returned documents. No answer. | 11,635 ms |
+| 6, complete-document candidate | Actual clone, directory and static-server commands, with the correct no-install/no-build statement and exact repository/README references. | 20,416 ms |
+
+For request 6, the internal metadata lookup called `get_file_contents` for the
+exact `README.md`, but the returned reference contained 1,782 characters and
+lacked the exact local-run command. The separate public read supplied the complete
+21,724-byte README to the existing Entra-authenticated model. Characters, bytes and
+API-reported tokens are different quantities. This observation does not establish
+which MCP parsing or excerpt-selection step affected every earlier failure.
+Content acceptance was a manual comparison with the public source, not an
+independent model-quality evaluation.
+
+### Repair and remaining boundary
+
+MCP and its existing authentication remain the first lookup. Rejected/private
+references still fail closed. A successful-but-empty lookup may obtain one exact
+anonymous public repository proof before reading the README or license. Complete
+file evidence, not a metadata-only answer, reaches synthesis. The existing model,
+configuration and budgets remain unchanged; no automatic retry was added.
+
+The first valid answer exposed a separate presentation defect: fenced commands
+were rendered as bold text and a long URL exceeded the mobile bubble. The scoped
+Atelier formatter now escapes markup, preserves code line breaks, and wraps long
+commands and file links. Twenty local HTTP-fixture browser cases passed in KO/EN
+at 1440 x 900 and 390 x 844, with zero captured console/resource errors. These are
+replays, not additional real model calls. They retain the five-started-call limit,
+panel-reopen continuity, exit/re-entry reset, and 30-second response-body deadline.
+
+The candidate's complete hermetic gate also passed. None of these results closes
+#120's near-camera world-space text or exterior-card accessibility gaps. Physical
+mobile devices, native keyboards, Safari/Firefox and hardware WebGL recovery
+remain unverified. Final merge, Pages and production-Worker evidence belongs in
+the subsequent release record on [#122](https://github.com/hyeonsangjeon/Repolis/issues/122).
+
+[Captured responses, source fingerprints and the compact browser matrix](atelier-documents-candidate.json).

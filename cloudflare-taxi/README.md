@@ -252,6 +252,39 @@ Responses:
 { "fallback": true, "reason": "timeout 25000ms" }
 ```
 
+## Repository Atelier document answers
+
+`surface: "repository_atelier"` keeps one exact public `repoName` (`owner/repo`).
+The Worker first uses the existing GitHub MCP knowledge source and authentication.
+Rejected or private references stop the request. If a successful MCP response has
+no repository identity, one anonymous `GET /repos/{owner}/{repo}` must establish
+`private: false`, the exact full name, and its canonical GitHub URL.
+
+The Worker then reads that repository's public README, or its license document
+for a licensing question. It uses GitHub's `/readme` and `/license` endpoints, so
+the visitor does not need to name a file. JSON responses are bounded to 64 KiB;
+decoded documents must be complete UTF-8 files of at most 32 KiB. The Worker
+checks the file path, same-repository URL, size, encoding and SHA shape. Redirects
+are not followed. Unavailable, oversized or invalid evidence produces a factual
+failure, not a substituted repository or invented commands.
+
+The existing Entra-authenticated model receives the verified metadata and whole
+document as untrusted data, with no tools or access to other repositories. The
+additional synthesis has a 400-token completion bound. KB retrieval, identity
+completion, document reading, token acquisition and synthesis share the existing
+25-second Worker deadline; the client retains its 30-second complete-response
+deadline and five started calls per visit. No credentials, models, infrastructure
+or deployment budgets are added. API-reported usage includes both KB model work
+and the separate synthesis; it is not a billing record.
+
+Successful responses include a same-repository file reference, `trace.document`
+(kind, path, SHA, byte count and `github_public_rest` source), and
+`trace.identitySource` (`github_mcp` or `github_public_rest`). The client preserves
+command line breaks in escaped code blocks and keeps them within the chat panel.
+This source boundary covers repository metadata, README and license facts, not a
+complete source-code or commit-history analysis. It checks source scope and file
+completeness, not the correctness of every model-generated claim.
+
 ## Read-only crypto MCP endpoint
 
 `POST /mcp/crypto` implements stateless Streamable HTTP JSON-RPC for Azure AI Search. It

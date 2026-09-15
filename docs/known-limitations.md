@@ -103,6 +103,12 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   not eliminate it. Free-topic Council verdicts are AI inference and are explicitly marked `⚡ unverified`.
 - **Starlit (general) chat is intentionally unsourced.** Off-topic / small-talk replies carry no references
   by design and are labeled as general knowledge.
+- **Atelier document answers are bounded.** The existing MCP lookup is followed by a complete public
+  README or license read; an empty, non-rejected MCP result may first require exact anonymous public
+  repository metadata. The public GitHub API can rate-limit these reads. Documents larger than 32 KiB,
+  invalid responses and redirects are rejected rather than silently truncated. The existing
+  Entra-authenticated model is required, and all stages share the 25-second Worker deadline inside the
+  client's 30-second limit. These sources do not cover every code or commit-history question.
 
 ## Realtime / multiplayer
 
