@@ -1,14 +1,14 @@
 {
   "era": {
-    "as_of": "2026-09-18",
+    "as_of": "2026-09-19",
     "basis": "Oldest creation date among the public repositories included in repos.json.",
-    "city_age_days": 3525,
+    "city_age_days": 3526,
     "city_age_years": 9.65,
     "city_year": 10,
     "founded_on": "2017-01-23",
     "oldest_repository": "vertx-embedded-springboot"
   },
-  "last_sap_flow": "2026-09-18T00:00:00Z",
+  "last_sap_flow": "2026-09-19T00:00:00Z",
   "roots": [],
   "sap_ledger": {
     "entries": [
@@ -724,6 +724,37 @@
           "repositories_without_value": 0,
           "total": 603
         }
+      },
+      {
+        "forks": {
+          "repositories_with_value": 71,
+          "repositories_without_value": 0,
+          "total": 153
+        },
+        "reference_date": "2026-09-19",
+        "repositories": {
+          "archived": 0,
+          "latest_push_with_date": 71,
+          "latest_push_without_date": 0,
+          "public": 71,
+          "recent_active_30d": 18
+        },
+        "season": {
+          "fallback_used": false,
+          "value": "spring"
+        },
+        "silence": {
+          "at_least_365_days": 38,
+          "at_least_730_days": 32,
+          "unarchived": 71,
+          "with_push_date": 71,
+          "without_push_date": 0
+        },
+        "stars": {
+          "repositories_with_value": 71,
+          "repositories_without_value": 0,
+          "total": 604
+        }
       }
     ],
     "gap_policy": "actual_entries_only",
@@ -765,7 +796,7 @@
       "recent_active_repositories": 18,
       "recent_to_historical_ratio": 8.308,
       "recent_window_days": 30,
-      "reference_date": "2026-09-18",
+      "reference_date": "2026-09-19",
       "repositories_with_push_date": 71
     },
     "reason": "Recent latest-push count is 8.31x the average of the prior 6 30-day buckets.",
@@ -777,12 +808,12 @@
       "at_least_365_days": 38,
       "at_least_730_days": 32,
       "longest": {
-        "elapsed_days": 3020,
+        "elapsed_days": 3021,
         "last_public_push": "2018-06-12",
         "repo": "jenkins-dind"
       }
     },
-    "reference_date": "2026-09-18",
+    "reference_date": "2026-09-19",
     "repositories": {
       "total": 71,
       "with_push_date": 71,
@@ -854,10 +885,10 @@
       "recent_30d_repositories": 18,
       "repositories_with_push_date": 71
     },
-    "public_repository_stars": 618,
+    "public_repository_stars": 619,
     "repository_count": 71,
     "total_forks": 153,
-    "total_stars": 603
+    "total_stars": 604
   },
   "version": 1
 }
