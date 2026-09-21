@@ -1,0 +1,537 @@
+{
+  "schema": "repolis-atelier-authenticated-documents-v1",
+  "status": "document_transport_verified_in_cloudflare_preview; final production dialogue pending",
+  "baseline": {
+    "source": "d5069c2c35c23a757f346339c8f9d56c2741a724",
+    "activeWorker": "1ddde1ca-d368-4a0a-afd0-387542ab9243",
+    "productionTrafficUnchanged": true
+  },
+  "intervention": {
+    "description": "Reuse the existing owner-authorized GitHub OAuth credential on exact api.github.com public metadata and document GETs.",
+    "newTokenCreated": false,
+    "newGitHubPermissions": false,
+    "differentHostOrProxy": false,
+    "serverSecret": "ATELIER_GITHUB_TOKEN",
+    "publicBoundary": "Fresh exact canonical repository metadata with private:false is required before every authenticated document read; rejected MCP references stop before any public GET.",
+    "sharedDeadlineMs": 25000,
+    "clientDeadlineMs": 30000,
+    "startedCallsPerVisit": 5,
+    "modelConfigurationChanged": false,
+    "budgetsChanged": false,
+    "productionHelperBlob": "51177f727e3d0349e228df541c60a9705943fcbe"
+  },
+  "conditions": {
+    "dates": [
+      "2026-09-15 UTC",
+      "2026-09-21 UTC"
+    ],
+    "execution": "Authenticated wrangler dev --remote for the existing Taxi Worker; same 2025-04-01 compatibility date. No production bindings, MCP invocation, token acquisition, model synthesis or public debug endpoint.",
+    "credentialHandling": "Owner consent precedes reuse. Temporary transfer is mode0600, secret values are not emitted, and the transfer file is deleted after preview exit.",
+    "measurement": "Status and allowlisted response headers; validated complete-file bytes and Git blob identifiers, not token estimates or billing.",
+    "safety": "At most six sequential upstream GETs total, including metadata. No automatic retries. The first reset deadline was honored.",
+    "caveat": "Anonymous and authenticated probes ran on different days. This is a bounded functional verification, not an isolated latency, throughput or reliability benchmark. Existing authenticated-account quota can have unrelated traffic."
+  },
+  "probes": [
+    {
+      "id": "probe-1",
+      "kind": "readme",
+      "startedAt": "2026-09-15T12:03:46.004Z",
+      "previewStatus": 200,
+      "result": {
+        "id": "probe-1",
+        "kind": "readme",
+        "variant": "unchanged-128-request",
+        "request": {
+          "host": "api.github.com",
+          "path": "/repos/hyeonsangjeon/Repolis/readme",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "Repolis-Repository-Atelier"
+          },
+          "redirect": "manual"
+        },
+        "execution": {
+          "authenticatedCloudflareRemotePreview": true,
+          "hasCfContext": true
+        },
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "x-github-request-id": "2B2E:15BE6F:34EC933:36F6876:6AA93422",
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": "1789476561",
+          "x-ratelimit-resource": "core"
+        },
+        "bodyOversized": false,
+        "error": {
+          "message": "API rate limit exceeded for [redacted-address]. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)",
+          "documentation_url": "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+        },
+        "elapsedMs": 163
+      },
+      "finishedAt": "2026-09-15T12:03:46.635Z"
+    },
+    {
+      "id": "probe-2",
+      "kind": "readme",
+      "startedAt": "2026-09-15T12:49:22.903Z",
+      "previewStatus": 200,
+      "result": {
+        "id": "probe-2",
+        "kind": "readme",
+        "variant": "unchanged-128-request",
+        "request": {
+          "host": "api.github.com",
+          "path": "/repos/hyeonsangjeon/Repolis/readme",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "Repolis-Repository-Atelier"
+          },
+          "redirect": "manual"
+        },
+        "execution": {
+          "authenticatedCloudflareRemotePreview": true,
+          "hasCfContext": true
+        },
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "x-github-request-id": "29E3:15BE6F:369DC83:38B8854:6AA93ED3",
+          "x-ratelimit-remaining": "7",
+          "x-ratelimit-reset": "1789479388",
+          "x-ratelimit-resource": "core"
+        },
+        "bodyOversized": false,
+        "document": {
+          "valid": true,
+          "kind": "readme",
+          "path": "README.md",
+          "sha": "ed31bdb801d30e0bed30ae18baeacd136e40f24d",
+          "bytes": 21724
+        },
+        "elapsedMs": 522
+      },
+      "finishedAt": "2026-09-15T12:49:23.802Z"
+    },
+    {
+      "id": "probe-3",
+      "kind": "license",
+      "startedAt": "2026-09-15T12:49:45.934Z",
+      "previewStatus": 200,
+      "result": {
+        "id": "probe-3",
+        "kind": "license",
+        "variant": "unchanged-128-request",
+        "request": {
+          "host": "api.github.com",
+          "path": "/repos/hyeonsangjeon/Repolis/license",
+          "method": "GET",
+          "headers": {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "Repolis-Repository-Atelier"
+          },
+          "redirect": "manual"
+        },
+        "execution": {
+          "authenticatedCloudflareRemotePreview": true,
+          "hasCfContext": true
+        },
+        "status": 403,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "x-github-request-id": "2CDC:3B0B55:B78E66:E119C3:6AA93EEA",
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": "1789477239",
+          "x-ratelimit-resource": "core"
+        },
+        "bodyOversized": false,
+        "error": {
+          "message": "API rate limit exceeded for [redacted-address]. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)",
+          "documentation_url": "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+        },
+        "elapsedMs": 78
+      },
+      "finishedAt": "2026-09-15T12:49:46.345Z"
+    },
+    {
+      "id": "probe-4",
+      "kind": "metadata",
+      "startedAt": "2026-09-21T13:29:46.379Z",
+      "previewStatus": 200,
+      "result": {
+        "id": "probe-4",
+        "kind": "metadata",
+        "variant": "existing-owner-credential-same-host",
+        "request": {
+          "host": "api.github.com",
+          "path": "/repos/hyeonsangjeon/Repolis",
+          "method": "GET",
+          "redirect": "manual",
+          "headers": {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "Repolis-Repository-Atelier"
+          },
+          "authorizationPresent": true
+        },
+        "execution": {
+          "authenticatedCloudflareRemotePreview": true,
+          "hasCfContext": true,
+          "modelCalls": 0
+        },
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "x-github-request-id": "2699:2CF17D:10103E2:10B3555:6AB1314A",
+          "x-ratelimit-remaining": "14913",
+          "x-ratelimit-reset": "1789999863",
+          "x-ratelimit-resource": "core"
+        },
+        "bodyOversized": false,
+        "metadata": {
+          "exactPublicRepository": true
+        },
+        "elapsedMs": 524
+      },
+      "finishedAt": "2026-09-21T13:29:47.086Z"
+    },
+    {
+      "id": "probe-5",
+      "kind": "readme",
+      "startedAt": "2026-09-21T13:29:52.826Z",
+      "previewStatus": 200,
+      "result": {
+        "id": "probe-5",
+        "kind": "readme",
+        "variant": "existing-owner-credential-same-host",
+        "request": {
+          "host": "api.github.com",
+          "path": "/repos/hyeonsangjeon/Repolis/readme",
+          "method": "GET",
+          "redirect": "manual",
+          "headers": {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "Repolis-Repository-Atelier"
+          },
+          "authorizationPresent": true
+        },
+        "execution": {
+          "authenticatedCloudflareRemotePreview": true,
+          "hasCfContext": true,
+          "modelCalls": 0
+        },
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "x-github-request-id": "26EF:346A36:1089C97:112D7DD:6AB13151",
+          "x-ratelimit-remaining": "14911",
+          "x-ratelimit-reset": "1789999863",
+          "x-ratelimit-resource": "core"
+        },
+        "bodyOversized": false,
+        "document": {
+          "valid": true,
+          "kind": "readme",
+          "path": "README.md",
+          "sha": "ed31bdb801d30e0bed30ae18baeacd136e40f24d",
+          "bytes": 21724
+        },
+        "elapsedMs": 1079
+      },
+      "finishedAt": "2026-09-21T13:29:54.133Z"
+    },
+    {
+      "id": "probe-6",
+      "kind": "license",
+      "startedAt": "2026-09-21T13:29:58.745Z",
+      "previewStatus": 200,
+      "result": {
+        "id": "probe-6",
+        "kind": "license",
+        "variant": "existing-owner-credential-same-host",
+        "request": {
+          "host": "api.github.com",
+          "path": "/repos/hyeonsangjeon/Repolis/license",
+          "method": "GET",
+          "redirect": "manual",
+          "headers": {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "Repolis-Repository-Atelier"
+          },
+          "authorizationPresent": true
+        },
+        "execution": {
+          "authenticatedCloudflareRemotePreview": true,
+          "hasCfContext": true,
+          "modelCalls": 0
+        },
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8",
+          "x-github-request-id": "2699:2CF17D:10118BB:10B4B7C:6AB1314B",
+          "x-ratelimit-remaining": "14909",
+          "x-ratelimit-reset": "1789999863",
+          "x-ratelimit-resource": "core"
+        },
+        "bodyOversized": false,
+        "document": {
+          "valid": true,
+          "kind": "license",
+          "path": "LICENSE",
+          "sha": "127c4643a61d5c0a7369162b8fc82a85c3596ea8",
+          "bytes": 1083
+        },
+        "elapsedMs": 381
+      },
+      "finishedAt": "2026-09-21T13:29:59.263Z"
+    }
+  ],
+  "browser": {
+    "browser": "Chrome/153.0.8010.48",
+    "completedAt": "2026-09-21T13:33:48.630Z",
+    "kind": "AI/RT/analytics-off native HTTP fixtures, not actual model responses or physical-device verification",
+    "cases": [
+      {
+        "name": "atelier-chat-code-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-code-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-code-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-code-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-flow-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-flow-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-flow-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-flow-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-no-source-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-no-source-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-no-source-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-no-source-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-timeout-en",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-timeout-ko",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-exit-en",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-exit-ko",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-disabled-en-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-disabled-ko-desktop",
+        "ok": true,
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-disabled-en-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      },
+      {
+        "name": "atelier-chat-disabled-ko-mobile",
+        "ok": true,
+        "emulation": {
+          "mobile": true,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "consoleErrors": 0,
+        "resourceErrors": 0
+      }
+    ]
+  },
+  "productionDialogue": {
+    "approved": 3,
+    "used": 0,
+    "reservedQuestions": [
+      "Korean local run",
+      "English local run",
+      "Natural license"
+    ]
+  },
+  "notClaimed": [
+    "An authenticated request cannot establish the original unrecorded 403 response; the recorded anonymous probes independently showed primary core quota exhaustion.",
+    "Preview GET success is not a production answer-quality pass.",
+    "No completion of unrelated issue120 or issue122 visual, accessibility or physical-device criteria."
+  ]
+}
