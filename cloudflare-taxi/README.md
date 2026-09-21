@@ -271,6 +271,8 @@ A credential cannot authorize
 private content, a mismatched repository, or a redirect. Invalid or expired
 credentials fail explicitly without retrying anonymously. The credential never
 enters browser requests, model messages, response traces, or telemetry.
+Private or invalid repository metadata uses the same unavailable response as a
+missing repository, so the credential does not disclose private existence.
 
 Provision the secret through the existing deployment secret mechanism; never
 put it in tracked configuration or browser settings. No new token or permission

@@ -44,6 +44,9 @@ async function boundedJson(fetcher, url, options, limit, source) {
   }
   if (!response.ok || response.redirected) {
     await response.body?.cancel();
+    if (source === 'repository_metadata' && response.status === 404) {
+      throw new EvidenceError('repository_metadata_unavailable');
+    }
     throw new EvidenceError(`${source}_http_${response.status}`);
   }
   if (Number(response.headers.get('content-length')) > limit) {
@@ -120,7 +123,7 @@ export async function retrieveRepositoryAtelier(authorized, cfg, env, { retrieve
       if (!metadataUrl) throw new EvidenceError('repository_metadata_scope_invalid');
       const metadata = await boundedJson(fetcher, metadataUrl, publicRequest, JSON_BYTES, 'repository_metadata');
       const publicScope = projectRepositoryAtelierPublicMetadata(metadata, authorized.repoName);
-      if (!publicScope) throw new EvidenceError('repository_metadata_invalid');
+      if (!publicScope) throw new EvidenceError('repository_metadata_unavailable');
       out.scoped = publicScope;
       out.identitySource = 'github_public_rest';
     }

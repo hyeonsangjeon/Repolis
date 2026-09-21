@@ -597,7 +597,7 @@ export async function runRepositoryAtelierChatTests(check) {
     await workerFixture(' '),
   ];
   check(scopeFailures.map(result => result.body.trace?.reason || result.body.reason).join(',')
-    === 'repository_metadata_http_404,rejected_references,empty_answer'
+    === 'repository_metadata_unavailable,rejected_references,empty_answer'
     && scopeFailures.every(result => (result.body.notFound || result.body.fallback) && result.delivered.length === 0
       && !result.body.trace?.refs.length && result.calls.length === 1)
     && !JSON.stringify(scopeFailures.map(result => result.body)).includes('another/repository')
@@ -717,7 +717,7 @@ export async function runRepositoryAtelierChatTests(check) {
   check(invalidPublicMetadata.every(value => projectRepositoryAtelierPublicMetadata(value, 'hyeonsangjeon/Repolis') === null),
     'the public identity completion requires explicit private:false and matching full name and canonical URL');
   const invalidIdentity = await workerFixture('MUST_NOT_BE_GENERATED', [], [], { metadata: invalidPublicMetadata[0] });
-  check(invalidIdentity.body.fallback && invalidIdentity.body.reason === 'repository_metadata_invalid'
+  check(invalidIdentity.body.fallback && invalidIdentity.body.reason === 'repository_metadata_unavailable'
     && invalidIdentity.providerCalls.length === 1 && invalidIdentity.tokenSignals.length === 0,
   'failed anonymous identity proof stops before file and model access');
 
@@ -747,7 +747,7 @@ export async function runRepositoryAtelierChatTests(check) {
   'authenticated answers use two exact public GETs and one synthesis, with no KB dependency, planner, intermediate answer or fictitious MCP/KB event');
   for (const metadata of invalidPublicMetadata) {
     const privateAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], { ...authenticatedOptions, metadata });
-    check(privateAuthenticated.body.fallback && privateAuthenticated.body.reason === 'repository_metadata_invalid'
+    check(privateAuthenticated.body.fallback && privateAuthenticated.body.reason === 'repository_metadata_unavailable'
       && privateAuthenticated.providerCalls.length === 1 && privateAuthenticated.tokenSignals.length === 0
       && privateAuthenticated.delivered.length === 0,
     'authenticated reads require fresh private:false and canonical repository identity without relying on an MCP planner');
@@ -755,16 +755,24 @@ export async function runRepositoryAtelierChatTests(check) {
   const privateAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', [], [], {
     ...authenticatedOptions, metadata: { ...publicMetadata, private: true },
   });
-  check(privateAuthenticated.body.fallback && privateAuthenticated.body.reason === 'repository_metadata_invalid'
+  check(privateAuthenticated.body.fallback && privateAuthenticated.body.reason === 'repository_metadata_unavailable'
     && privateAuthenticated.providerCalls.length === 1 && privateAuthenticated.calls.length === 0
     && privateAuthenticated.delivered.length === 0,
   'a direct authenticated path refuses private metadata before reading files or generating an answer');
   for (const status of [301, 403, 404]) {
     const failedMetadata = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], { ...authenticatedOptions, metadataStatus: status });
-    check(failedMetadata.body.fallback && failedMetadata.body.reason === `repository_metadata_http_${status}`
+    check(failedMetadata.body.fallback && failedMetadata.body.reason === (status === 404 ? 'repository_metadata_unavailable' : `repository_metadata_http_${status}`)
       && failedMetadata.providerCalls.length === 1 && failedMetadata.tokenSignals.length === 0,
     'failed or redirected authenticated metadata cannot be replaced with MCP metadata or an anonymous retry');
   }
+  const missingAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], {
+    ...authenticatedOptions, metadataStatus: 404,
+  });
+  check(missingAuthenticated.body.reason === privateAuthenticated.body.reason
+    && missingAuthenticated.body.message === privateAuthenticated.body.message
+    && missingAuthenticated.body.trace.phase === privateAuthenticated.body.trace.phase
+    && missingAuthenticated.providerCalls.length === privateAuthenticated.providerCalls.length,
+  'the authenticated public boundary does not reveal private-repository existence through a distinct missing-versus-private failure');
   const exhaustedAnonymous = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], {
     documentStatus: 403, documentHeaders: { 'X-RateLimit-Remaining': '0', 'X-RateLimit-Resource': 'core' },
   });
