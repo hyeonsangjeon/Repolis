@@ -640,3 +640,41 @@ fixtures, not additional live model calls or physical-device coverage.
 Final production version, questions and release verdict belong in the subsequent
 [#122 record](https://github.com/hyeonsangjeon/Repolis/issues/122). Unrelated #120
 and #122 acceptance criteria remain open.
+
+## Single-pass document answers: 2026-09-21 UTC
+
+The authenticated document repair in #129 passed its Cloudflare GET probes, but
+its first production question returned `timeout 25000ms` in 25,317 ms of browser
+time. The response did not identify the expired stage. Production was restored
+to `1ddde1ca-d368-4a0a-afd0-387542ab9243`, and the other two questions were not sent.
+
+The next change removes unnecessary work from the authenticated path rather than
+extending the deadline. Exact authenticated public metadata, then one complete
+README or license, feeds a single existing Entra-authenticated synthesis. No MCP
+query planner or intermediate KB answer is invoked in that path. The existing
+MCP-first route remains for installations without the GitHub credential.
+
+This does not relax the public boundary: explicit `private: false`, exact
+canonical identity, bounded complete documents and manual redirects are still
+required. The model, 400-token completion cap, shared 25-second Worker deadline,
+30-second client deadline and five-started-call visit budget are unchanged.
+Failures carry a bounded stage identifier, without provider bodies or secrets.
+Direct answers identify their public REST/document source and emit no KB-query
+event; the UI does not label a nonexistent MCP call.
+
+Hermetic fixtures supply a KB dependency that throws if the authenticated path
+invokes it. They verify exactly two public GETs and one synthesis, unchanged
+private/mismatch/redirect refusal, complete long documents and deadlines through
+metadata, document, token and model bodies. This establishes the implemented
+call graph, not the measured cause of the earlier timeout or production speed.
+The KO/EN browser matrix also checks the direct-document source label alongside
+the existing chat lifecycle and wrapping cases.
+
+No extra document diagnostic or model comparison was run. After the user's
+continued all-approved objective, final acceptance is limited to three fresh
+production questions (the two previously remaining calls plus one additional
+call): Korean local run, English local run and license. Their actual answers,
+sources, timing and deployment verdict belong in the release record on
+[#122](https://github.com/hyeonsangjeon/Repolis/issues/122); local fixtures alone
+do not establish that result. Unrelated accessibility and physical-device
+criteria remain open.

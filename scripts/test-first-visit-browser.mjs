@@ -125,7 +125,7 @@ async function atelierTransportFixture(){
         if(mode==='code'){
           data.message='Clone the repo and serve it as a static site:\n```bash\ngit clone '+ownerRepo.url+'\ncd '+ownerRepo.repo
             +'\npython3 -m http.server 8000\n# open http://localhost:8000\n```\nNo installation or build step is required.\n`<unsafe>` is literal fixture text.';
-          data.trace={scoped:true,ks:'local-fixture-only',tools:[],refs:[{name:atelierRepoName+'/README.md',
+          data.trace={scoped:true,ks:'GitHub public REST',sourceKind:'repository_public_documents',document:{path:'README.md'},tools:[],refs:[{name:atelierRepoName+'/README.md',
             url:ownerRepo.url+'/blob/main/README.md',snippet:'Local presentation replay, not a live model response.'}]};
         }
         if(mode==='mismatch'){data.repoName='another/repository';data.message='WRONG_REPO_MUST_NOT_REACH_UI';}
@@ -495,11 +495,14 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
     const code=document.querySelector('#chatLog .atelierCode code'),refs=document.querySelector('#chatLog .refsBlock');
     refs.open=true;
     return {code:code.textContent,literal:document.querySelector('#chatLog .atelierInlineCode')?.textContent,
+      provenance:document.querySelector('#chatLog .traceBody')?.textContent,
       unsafe:!!document.querySelector('#chatLog unsafe'),links:[...refs.querySelectorAll('a')].map(a=>a.href)};
   })()`);
   assert(displayed.code.includes('git clone '+ownerRepo.url+'\ncd '+ownerRepo.repo+'\n'));
   assert.equal(displayed.literal,'<unsafe>'); assert.equal(displayed.unsafe,false);
   assert.deepEqual(displayed.links,[ownerRepo.url+'/blob/main/README.md']);
+  assert(displayed.provenance.includes((lang==='ko'?'공개 문서':'Public document')+': README.md'));
+  assert(!/MCP/.test(displayed.provenance),'direct document provenance does not claim an MCP call');
   const state=await chatState(page); assertChatLayout(state,mobile);
   assert.equal(s.fixture.calls.length,1); assert.equal(state.atelier.chat.calls,1);
   return {displayed,overflow:state.overflow,calls:state.atelier.chat.calls};

@@ -255,16 +255,19 @@ Responses:
 ## Repository Atelier document answers
 
 `surface: "repository_atelier"` keeps one exact public `repoName` (`owner/repo`).
-The Worker first uses the existing GitHub MCP knowledge source and authentication.
-Rejected or private references stop the request. `GET /repos/{owner}/{repo}` must
-establish `private: false`, the exact full name, and its canonical GitHub URL when
-MCP supplies no identity or the document request uses a credential.
+With an existing GitHub credential configured, the Worker directly verifies
+`GET /repos/{owner}/{repo}` for `private: false`, the exact full name and canonical
+GitHub URL, reads the requested document, then makes one answer-synthesis call.
+It does not spend the shared deadline on an MCP planner or intermediate KB answer
+before reading the same public source. Without the credential, the existing
+MCP-first lookup remains; rejected/private references stop the request, and a
+successful lookup without identity requires exact anonymous public metadata.
 
 The optional server secret `ATELIER_GITHUB_TOKEN` reuses an operator-authorized
 GitHub credential for these read-only requests to `api.github.com`. This avoids
 the shared-IP anonymous quota; authenticated GitHub quotas still apply. A fresh
-public metadata check is mandatory before every authenticated document read,
-even when MCP already returned an exact repository. A credential cannot authorize
+public metadata check is mandatory before every authenticated document read.
+A credential cannot authorize
 private content, a mismatched repository, or a redirect. Invalid or expired
 credentials fail explicitly without retrying anonymously. The credential never
 enters browser requests, model messages, response traces, or telemetry.
@@ -289,13 +292,19 @@ additional synthesis has a 400-token completion bound. KB retrieval, identity
 completion, document reading, token acquisition and synthesis share the existing
 25-second Worker deadline; the client retains its 30-second complete-response
 deadline and five started calls per visit. Models, infrastructure and deployment
-budgets are unchanged. API-reported usage includes both KB model work
-and the separate synthesis; it is not a billing record.
+budgets are unchanged. API-reported usage counts the model operations actually
+performed: one synthesis in the authenticated path, plus KB work only when the
+unconfigured MCP path runs. It is not a billing record.
 
 Successful responses include a same-repository file reference, `trace.document`
 (kind, path, SHA, byte count and `github_public_rest` source), and
 `trace.identitySource` (`github_mcp` or `github_public_rest`). The client preserves
 command line breaks in escaped code blocks and keeps them within the chat panel.
+The direct path identifies `sourceKind: "repository_public_documents"` and labels
+the actual public document instead of claiming an MCP call. It emits no KB-query
+event and uses `grounded_via_public_documents` for grounding provenance; the legacy
+Atelier route identifier is retained for compatibility. Failures expose only the
+bounded stage name and elapsed time, not provider bodies or credentials.
 This source boundary covers repository metadata, README and license facts, not a
 complete source-code or commit-history analysis. It checks source scope and file
 completeness, not the correctness of every model-generated claim.

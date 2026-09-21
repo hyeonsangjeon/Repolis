@@ -3085,7 +3085,7 @@ const I18N = {
     groundedSearching:'MS Foundry MCP KS로 GitHub 찾아볼게요 🔍',
     taxiThinking:'별빛에 비춰 잠깐 헤아려볼게요 ✦',
     groundedPromptUrl:'AI Foundry Live API URL을 입력하세요 (없으면 비워두세요 → 키 없이 로컬검색으로 동작)\n예: https://repolis-taxi.<you>.workers.dev/ (권장 · Cloudflare Worker)  또는  https://your-app.vercel.app/api/taxi-grounded',
-    traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceRefs:'참조',
+    traceTitle:'🔎 어떻게 찾았나', traceKs:'지식 소스', traceTool:'MCP 도구', traceDocument:'공개 문서', traceRefs:'참조',
     traceCopy:'링크 복사', traceCopied:'복사됨', traceOpen:'열기', traceSnippet:'발췌',
     traceGenTitle:'✦ 어떻게 답했나', traceGeneral:'별빛에 깃든 일반 지식에서 답했어요',
     refsTitle:'📚 참고한 문서', refsNone:'참고 문서 없음 · 일반 지식으로 답했어요',
@@ -3480,7 +3480,7 @@ const I18N = {
     groundedSearching:'Searching GitHub via the MS Foundry MCP KS 🔍',
     taxiThinking:'Let me reckon by the starlight ✦',
     groundedPromptUrl:'Enter your AI Foundry Live API URL (or leave blank → keyless Local search)\ne.g. https://repolis-taxi.<you>.workers.dev/ (recommended · Cloudflare Worker)  or  https://your-app.vercel.app/api/taxi-grounded',
-    traceTitle:'🔎 How I found this', traceKs:'Knowledge source', traceTool:'MCP tool', traceRefs:'References',
+    traceTitle:'🔎 How I found this', traceKs:'Knowledge source', traceTool:'MCP tool', traceDocument:'Public document', traceRefs:'References',
     traceCopy:'Copy link', traceCopied:'Copied', traceOpen:'Open', traceSnippet:'Excerpt',
     traceGenTitle:'✦ How I answered', traceGeneral:'Answered from general starlit knowledge',
     refsTitle:'📚 Sources', refsNone:'No source docs · answered from general knowledge',
@@ -12195,7 +12195,8 @@ function buildTracePanel(tr){
   const body=document.createElement('div'); body.className='traceBody';
   const ks=document.createElement('div'); ks.innerHTML='<b>'+t('traceKs')+':</b> '+esc(tr.ks||'-');
   const tool=document.createElement('div');
-  tool.innerHTML='<b>'+t('traceTool')+':</b> '+esc((tr.tools||[]).join(', ')||'-')+(tr.partial?' ⚠️':'')+(tr.mcpMs?(' · '+tr.mcpMs+'ms'):'');
+  if(tr.sourceKind==='repository_public_documents') tool.textContent=t('traceDocument')+': '+String(tr.document?.path||'-');
+  else tool.innerHTML='<b>'+t('traceTool')+':</b> '+esc((tr.tools||[]).join(', ')||'-')+(tr.partial?' ⚠️':'')+(tr.mcpMs?(' · '+tr.mcpMs+'ms'):'');
   body.appendChild(ks); body.appendChild(tool); d.appendChild(body); wrap.appendChild(d);
   return wrap;
 }
