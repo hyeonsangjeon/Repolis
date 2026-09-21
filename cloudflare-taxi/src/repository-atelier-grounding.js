@@ -20,6 +20,22 @@ class EvidenceError extends Error {
   }
 }
 
+export function repositoryAtelierGitHubRequest(env, signal) {
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'Repolis-Repository-Atelier',
+  };
+  const token = env.ATELIER_GITHUB_TOKEN;
+  if (token !== undefined) {
+    if (typeof token !== 'string' || !/^[\x21-\x7e]{1,4096}$/.test(token)) {
+      throw new EvidenceError('repository_auth_invalid');
+    }
+    headers.Authorization = 'Bearer ' + token;
+  }
+  return { method: 'GET', redirect: 'manual', signal, headers };
+}
+
 async function boundedJson(fetcher, url, options, limit, source) {
   let response;
   try { response = await fetcher(url, options); } catch (error) {
@@ -88,12 +104,12 @@ export async function retrieveRepositoryAtelier(authorized, cfg, env, { retrieve
     out.scoped = projectRepositoryAtelierReferences(out.data?.references, authorized.repoName, out.data?.activity);
     out.answer = '';
     if (out.scoped.rejected) return out;
-    const publicRequest = {
-      method: 'GET', redirect: 'manual', signal: controller.signal,
-      headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'Repolis-Repository-Atelier' },
-    };
+    const publicRequest = repositoryAtelierGitHubRequest(env, controller.signal);
+    const authenticated = !!publicRequest.headers.Authorization;
     out.identitySource = 'github_mcp';
-    if (!out.scoped.exact) {
+    // A credential can see private repositories: require fresh explicit public
+    // metadata even when MCP already supplied a matching repository reference.
+    if (authenticated || !out.scoped.exact) {
       const metadataUrl = repositoryAtelierMetadataUrl(authorized.repoName);
       if (!metadataUrl) throw new EvidenceError('repository_metadata_scope_invalid');
       const metadata = await boundedJson(fetcher, metadataUrl, publicRequest, JSON_BYTES, 'repository_metadata');
@@ -109,7 +125,10 @@ export async function retrieveRepositoryAtelier(authorized, cfg, env, { retrieve
     const file = await boundedJson(fetcher, url, publicRequest, JSON_BYTES, 'repository_document');
     const document = projectRepositoryAtelierDocument(file, authorized.repoName, kind);
     if (!document) throw new EvidenceError('repository_document_invalid');
-    out.document = { kind, path: document.path, sha: document.sha, bytes: document.bytes, source: 'github_public_rest' };
+    out.document = {
+      kind, path: document.path, sha: document.sha, bytes: document.bytes,
+      source: 'github_public_rest', authentication: authenticated ? 'authenticated' : 'anonymous',
+    };
 
     const modelStarted = Date.now();
     let token;

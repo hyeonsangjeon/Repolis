@@ -587,3 +587,56 @@ remain unverified. Final merge, Pages and production-Worker evidence belongs in
 the subsequent release record on [#122](https://github.com/hyeonsangjeon/Repolis/issues/122).
 
 [Captured responses, source fingerprints and the compact browser matrix](atelier-documents-candidate.json).
+
+## Authenticated document transport: 2026-09-21 UTC
+
+**The same Cloudflare document path now reads the complete public README and
+LICENSE with the owner's existing, explicitly authorized GitHub credential.**
+These are document-only preview checks; final production dialogue remains pending
+in this pre-release record.
+
+The preceding anonymous probes established GitHub `core` quota exhaustion:
+HTTP 403, `x-ratelimit-remaining: 0`, and an explicit rate-limit message. Waiting
+until the provider's reset allowed one README read, but the subsequent LICENSE
+read again exhausted the anonymous quota. That sequence did not justify
+redeploying the unchanged #128 Worker.
+
+The repair adds the optional server secret `ATELIER_GITHUB_TOKEN`, reusing the
+existing owner-authorized credential without creating a token or adding GitHub
+permissions. Requests stay on `api.github.com` with manual redirects and the same
+byte and time limits. Every authenticated document read first requires fresh
+exact-repository metadata with `private: false`, even if MCP already supplied a
+matching reference. Private, rejected or conflicting evidence cannot be rescued
+by the credential. No secret enters the client, model messages or response trace.
+
+Authenticated `wrangler dev --remote` ran the actual request-header helper on the
+Cloudflare network using the existing Worker identity and compatibility date.
+The preview had no production bindings or model calls and did not change live
+traffic. The temporary mode-0600 credential transfer file was removed on exit.
+
+| Probe | Exact-repository GET | GitHub status | Result |
+|---|---|---:|---|
+| 4 | Repository metadata | 200 | Canonical identity and explicit public visibility verified. |
+| 5 | README | 200 | Complete 21,724-byte `README.md`; blob `ed31bdb801d30e0bed30ae18baeacd136e40f24d`. |
+| 6 | License | 200 | Complete 1,083-byte `LICENSE`; blob `127c4643a61d5c0a7369162b8fc82a85c3596ea8`. |
+
+The blobs match the committed public source. Both document bodies passed the
+production projection's path, encoding, size and same-repository URL checks.
+All six diagnostic GET slots are now used, including the three earlier anonymous
+probes and the new metadata request. The three approved final dialogue calls
+remain unused. There was no retry loop, new proxy, host change or model change.
+The two groups ran on different days; these observations are functional evidence,
+not a latency or population-level reliability comparison.
+
+Focused fixtures cover the quota failure, authenticated metadata visibility,
+private and mismatched references, malformed or expired credentials, redirects,
+secret separation and whole-response deadlines. The full hermetic gate passed.
+Twenty KO/EN browser fixtures at 1440 x 900 and 390 x 844 also passed with zero
+captured console/resource errors, including command blocks, expanded source links,
+five started calls, reopen continuity and re-entry reset. Those are local HTTP
+fixtures, not additional live model calls or physical-device coverage.
+
+[Sanitized GET records, source fingerprints and browser results](atelier-authenticated-documents.json).
+Final production version, questions and release verdict belong in the subsequent
+[#122 record](https://github.com/hyeonsangjeon/Repolis/issues/122). Unrelated #120
+and #122 acceptance criteria remain open.

@@ -16,7 +16,7 @@ import {
   repositoryAtelierKnowledgeSource,
   repositoryAtelierMessage,
 } from '../cloudflare-taxi/src/repository-atelier.js';
-import { retrieveRepositoryAtelier } from '../cloudflare-taxi/src/repository-atelier-grounding.js';
+import { repositoryAtelierGitHubRequest, retrieveRepositoryAtelier } from '../cloudflare-taxi/src/repository-atelier-grounding.js';
 
 const {
   REPOSITORY_ATELIER_CHAT_LIMIT,
@@ -80,6 +80,7 @@ async function workerFixture(answer, references = [reference('hyeonsangjeon/Repo
         providerCalls.push({ url, request });
         if (new URL(url).hostname === 'api.github.com') {
           if (url === 'https://api.github.com/repos/hyeonsangjeon/Repolis') {
+            if (options.stall === 'metadata') return stall(request.signal);
             return new Response(JSON.stringify(options.metadata || {}), {
               status: options.metadataStatus || (options.metadata ? 200 : 404), headers: { 'Content-Type': 'application/json' },
             });
@@ -718,6 +719,72 @@ export async function runRepositoryAtelierChatTests(check) {
   check(invalidIdentity.body.fallback && invalidIdentity.body.reason === 'repository_metadata_invalid'
     && invalidIdentity.providerCalls.length === 1 && invalidIdentity.tokenSignals.length === 0,
   'failed anonymous identity proof stops before file and model access');
+
+  const credential = 'test_existing_github_credential';
+  const authenticatedOptions = { metadata: publicMetadata, env: { ATELIER_GITHUB_TOKEN: credential } };
+  const authenticated = await workerFixture('Run `python3 -m http.server 8000`.', undefined, [], authenticatedOptions);
+  const authenticatedCalls = authenticated.providerCalls;
+  check(!authenticated.body.fallback && !authenticated.body.notFound && authenticatedCalls.length === 3
+    && authenticatedCalls[0].url === 'https://api.github.com/repos/hyeonsangjeon/Repolis'
+    && authenticatedCalls[1].url === 'https://api.github.com/repos/hyeonsangjeon/Repolis/readme'
+    && authenticatedCalls.slice(0, 2).every(call => call.request.headers.Authorization === 'Bearer ' + credential
+      && call.request.method === 'GET' && call.request.redirect === 'manual'
+      && call.request.signal === authenticated.calls[0].config.signal)
+    && authenticatedCalls[2].request.headers.Authorization === 'Bearer fixture-token-not-a-credential'
+    && authenticated.body.trace.document.authentication === 'authenticated'
+    && authenticated.body.trace.identitySource === 'github_public_rest'
+    && !JSON.stringify([authenticated.body, authenticated.calls, authenticated.providerEvents,
+      authenticatedCalls[2].request.body]).includes(credential),
+  'an existing server-side GitHub credential is used only for exact-host public metadata and document GETs, never model evidence, traces, or provider telemetry');
+  for (const metadata of invalidPublicMetadata) {
+    const privateAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], { ...authenticatedOptions, metadata });
+    check(privateAuthenticated.body.fallback && privateAuthenticated.body.reason === 'repository_metadata_invalid'
+      && privateAuthenticated.providerCalls.length === 1 && privateAuthenticated.tokenSignals.length === 0
+      && privateAuthenticated.delivered.length === 0,
+    'authenticated reads require fresh private:false and canonical repository identity even after exact MCP metadata');
+  }
+  const rejectedAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', [privateReference], [], authenticatedOptions);
+  check(rejectedAuthenticated.body.notFound && rejectedAuthenticated.providerCalls.length === 0,
+    'an available GitHub credential cannot rescue an explicitly private or rejected MCP reference');
+  for (const status of [301, 403, 404]) {
+    const failedMetadata = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], { ...authenticatedOptions, metadataStatus: status });
+    check(failedMetadata.body.fallback && failedMetadata.body.reason === `repository_metadata_http_${status}`
+      && failedMetadata.providerCalls.length === 1 && failedMetadata.tokenSignals.length === 0,
+    'failed or redirected authenticated metadata cannot be replaced with MCP metadata or an anonymous retry');
+  }
+  const exhaustedAnonymous = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], {
+    documentStatus: 403, documentHeaders: { 'X-RateLimit-Remaining': '0', 'X-RateLimit-Resource': 'core' },
+  });
+  const deniedAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], {
+    ...authenticatedOptions, documentStatus: 401,
+  });
+  check(exhaustedAnonymous.body.reason === 'repository_document_http_403'
+    && exhaustedAnonymous.delivered.length === 0 && exhaustedAnonymous.providerCalls.length === 1
+    && deniedAuthenticated.body.reason === 'repository_document_http_401'
+    && deniedAuthenticated.providerCalls.length === 2 && deniedAuthenticated.tokenSignals.length === 0
+    && !JSON.stringify(deniedAuthenticated.body).includes(credential),
+  'the reproduced anonymous core-quota failure stays factual; rejected credentials do not trigger retries or an anonymous downgrade');
+  for (const token of ['', 'token\ninjected', 'token with spaces', null, 7]) {
+    const invalidCredential = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], { env: { ATELIER_GITHUB_TOKEN: token } });
+    check(invalidCredential.body.reason === 'repository_auth_invalid'
+      && invalidCredential.providerCalls.length === 0 && invalidCredential.tokenSignals.length === 0,
+    'malformed configured credentials fail before any public request, without echoing their value');
+  }
+  check(!('Authorization' in repositoryAtelierGitHubRequest({}, new AbortController().signal).headers),
+    'unconfigured forks retain the anonymous public-document path without requiring a new credential');
+  const metadataTimeout = await workerFixture('MUST_NOT_FINISH', undefined, [], {
+    ...authenticatedOptions, env: { ...authenticatedOptions.env, GROUNDED_TIMEOUT_MS: '10' }, stall: 'metadata',
+  });
+  check(metadataTimeout.body.reason === 'timeout 10ms' && metadataTimeout.providerCalls.length === 1
+    && metadataTimeout.calls[0].config.signal.aborted && metadataTimeout.tokenSignals.length === 0,
+  'authenticated metadata body completion shares the unchanged whole-Worker deadline');
+  const authenticatedLicense = await workerFixture('The license is MIT.', undefined, [], {
+    ...authenticatedOptions, question: '라이선스가 뭐야?',
+  });
+  check(!authenticatedLicense.body.fallback && authenticatedLicense.providerCalls[1].url.endsWith('/license')
+    && authenticatedLicense.body.trace.refs[1].url.endsWith('/LICENSE')
+    && authenticatedLicense.body.trace.document.authentication === 'authenticated',
+  'a natural license question uses the same authenticated, public-only document boundary');
 
   const documentFailures = [
     [{ documentStatus: 404 }, 'repository_document_http_404'],

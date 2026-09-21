@@ -256,9 +256,24 @@ Responses:
 
 `surface: "repository_atelier"` keeps one exact public `repoName` (`owner/repo`).
 The Worker first uses the existing GitHub MCP knowledge source and authentication.
-Rejected or private references stop the request. If a successful MCP response has
-no repository identity, one anonymous `GET /repos/{owner}/{repo}` must establish
-`private: false`, the exact full name, and its canonical GitHub URL.
+Rejected or private references stop the request. `GET /repos/{owner}/{repo}` must
+establish `private: false`, the exact full name, and its canonical GitHub URL when
+MCP supplies no identity or the document request uses a credential.
+
+The optional server secret `ATELIER_GITHUB_TOKEN` reuses an operator-authorized
+GitHub credential for these read-only requests to `api.github.com`. This avoids
+the shared-IP anonymous quota; authenticated GitHub quotas still apply. A fresh
+public metadata check is mandatory before every authenticated document read,
+even when MCP already returned an exact repository. A credential cannot authorize
+private content, a mismatched repository, or a redirect. Invalid or expired
+credentials fail explicitly without retrying anonymously. The credential never
+enters browser requests, model messages, response traces, or telemetry.
+
+Provision the secret through the existing deployment secret mechanism; never
+put it in tracked configuration or browser settings. No new token or permission
+is required by the implementation. The operator owns its scope, expiry and
+rotation, and must update this binding when the reused credential changes.
+Without the secret, forks retain the anonymous public-read path and its quota.
 
 The Worker then reads that repository's public README, or its license document
 for a licensing question. It uses GitHub's `/readme` and `/license` endpoints, so
@@ -273,8 +288,8 @@ document as untrusted data, with no tools or access to other repositories. The
 additional synthesis has a 400-token completion bound. KB retrieval, identity
 completion, document reading, token acquisition and synthesis share the existing
 25-second Worker deadline; the client retains its 30-second complete-response
-deadline and five started calls per visit. No credentials, models, infrastructure
-or deployment budgets are added. API-reported usage includes both KB model work
+deadline and five started calls per visit. Models, infrastructure and deployment
+budgets are unchanged. API-reported usage includes both KB model work
 and the separate synthesis; it is not a billing record.
 
 Successful responses include a same-repository file reference, `trace.document`
