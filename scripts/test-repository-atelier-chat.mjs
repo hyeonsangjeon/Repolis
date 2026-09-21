@@ -42,6 +42,8 @@ const usageSource = worker.match(/function normalizeModelUsage\([\s\S]*?(?=\nfun
 if (!usageSource) throw new Error('Worker usage normalizer missing');
 const usageContext = {};
 runInNewContext(`${usageSource}\nglobalThis.normalize = normalizeModelUsage;`, usageContext);
+const tokenSource = worker.match(/let _aad = \{ token: "", exp: 0 \};\nasync function aadToken\(env, signal\) \{[\s\S]*?\n\}(?=\n\n\/\/ In-character)/)?.[0];
+if (!tokenSource) throw new Error('Production Entra token helper missing');
 
 function documentFixture(path = 'README.md', text = '# Local fixture\nRun `python3 -m http.server 8000`. No installation or build step is required.\n') {
   return {
@@ -279,6 +281,32 @@ function fileActivity(id, owner, repo) {
 }
 
 export async function runRepositoryAtelierChatTests(check) {
+  const authRequests = [], authSignal = new AbortController().signal;
+  const tokenContext = {
+    URLSearchParams,
+    fetch: async (url, options) => {
+      authRequests.push({ url, options });
+      return { ok: true, json: async () => ({ access_token: 'fixture-aad-access', expires_in: 3600 }) };
+    },
+  };
+  runInNewContext(`${tokenSource}\nglobalThis.getToken = aadToken;`, tokenContext);
+  const tokenEnv = { AAD_TENANT: 'fixture-tenant', AAD_CLIENT_ID: 'fixture-client', AAD_CLIENT_SECRET: 'fixture+secret&=' };
+  const firstToken = await tokenContext.getToken(tokenEnv, authSignal);
+  const cachedToken = await tokenContext.getToken(tokenEnv, authSignal);
+  check(firstToken === 'fixture-aad-access' && cachedToken === firstToken && authRequests.length === 1
+    && authRequests[0].url === 'https://login.microsoftonline.com/fixture-tenant/oauth2/v2.0/token'
+    && authRequests[0].options.method === 'POST' && authRequests[0].options.redirect === 'manual'
+    && authRequests[0].options.signal === authSignal && typeof authRequests[0].options.body === 'string'
+    && new URLSearchParams(authRequests[0].options.body).get('client_secret') === tokenEnv.AAD_CLIENT_SECRET
+    && new URLSearchParams(authRequests[0].options.body).get('scope') === 'https://cognitiveservices.azure.com/.default'
+    && new URLSearchParams(authRequests[0].options.body).get('grant_type') === 'client_credentials',
+  'the actual Entra helper sends an explicitly serialized, correctly escaped form without redirects or changing credentials, scope, cache or cancellation');
+  const deniedTokenContext = { URLSearchParams, fetch: async () => ({ ok: false, status: 302 }) };
+  runInNewContext(`${tokenSource}\nglobalThis.getToken = aadToken;`, deniedTokenContext);
+  let redirectRejected = false;
+  try { await deniedTokenContext.getToken(tokenEnv, authSignal); } catch (error) { redirectRejected = error.message === 'aad token 302'; }
+  check(redirectRejected, 'the token helper refuses a redirect instead of forwarding a service-principal credential');
+
   const codeText = 'Run it:\n```bash\ngit clone https://github.com/example/long-repository-name\nprintf "<unsafe>"\n```\nUse `localhost`.';
   const codeMarkup = formatRepositoryAtelierChatMessage(codeText);
   check(codeMarkup.includes('<pre class="atelierCode"><code>git clone https://github.com/example/long-repository-name\nprintf "&lt;unsafe&gt;"\n</code></pre>')
