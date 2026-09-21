@@ -109,6 +109,7 @@ async function workerFixture(answer, references = [reference('hyeonsangjeon/Repo
     emitDeliveredAnswer: (...args) => delivered.push(args.at(-1)),
     groundedRetrieve: async (config, messages) => {
       calls.push({ config, messages });
+      if (options.forbidKb) throw new Error('Authenticated document answers must not invoke KB planning or synthesis');
       return {
         ok: true, attempted: true, status: 200, answer, data: { references, activity },
         tools: ['search_repositories'], modelActivities: [], totalMs: 1, mcpMs: 1,
@@ -596,7 +597,7 @@ export async function runRepositoryAtelierChatTests(check) {
     await workerFixture(' '),
   ];
   check(scopeFailures.map(result => result.body.trace?.reason || result.body.reason).join(',')
-    === 'repository_metadata_http_404,rejected_references,empty_answer'
+    === 'repository_metadata_unavailable,rejected_references,empty_answer'
     && scopeFailures.every(result => (result.body.notFound || result.body.fallback) && result.delivered.length === 0
       && !result.body.trace?.refs.length && result.calls.length === 1)
     && !JSON.stringify(scopeFailures.map(result => result.body)).includes('another/repository')
@@ -716,12 +717,12 @@ export async function runRepositoryAtelierChatTests(check) {
   check(invalidPublicMetadata.every(value => projectRepositoryAtelierPublicMetadata(value, 'hyeonsangjeon/Repolis') === null),
     'the public identity completion requires explicit private:false and matching full name and canonical URL');
   const invalidIdentity = await workerFixture('MUST_NOT_BE_GENERATED', [], [], { metadata: invalidPublicMetadata[0] });
-  check(invalidIdentity.body.fallback && invalidIdentity.body.reason === 'repository_metadata_invalid'
+  check(invalidIdentity.body.fallback && invalidIdentity.body.reason === 'repository_metadata_unavailable'
     && invalidIdentity.providerCalls.length === 1 && invalidIdentity.tokenSignals.length === 0,
   'failed anonymous identity proof stops before file and model access');
 
   const credential = 'test_existing_github_credential';
-  const authenticatedOptions = { metadata: publicMetadata, env: { ATELIER_GITHUB_TOKEN: credential } };
+  const authenticatedOptions = { metadata: publicMetadata, env: { ATELIER_GITHUB_TOKEN: credential }, forbidKb: true };
   const authenticated = await workerFixture('Run `python3 -m http.server 8000`.', undefined, [], authenticatedOptions);
   const authenticatedCalls = authenticated.providerCalls;
   check(!authenticated.body.fallback && !authenticated.body.notFound && authenticatedCalls.length === 3
@@ -729,29 +730,49 @@ export async function runRepositoryAtelierChatTests(check) {
     && authenticatedCalls[1].url === 'https://api.github.com/repos/hyeonsangjeon/Repolis/readme'
     && authenticatedCalls.slice(0, 2).every(call => call.request.headers.Authorization === 'Bearer ' + credential
       && call.request.method === 'GET' && call.request.redirect === 'manual'
-      && call.request.signal === authenticated.calls[0].config.signal)
+      && call.request.signal === authenticated.tokenSignals[0])
     && authenticatedCalls[2].request.headers.Authorization === 'Bearer fixture-token-not-a-credential'
     && authenticated.body.trace.document.authentication === 'authenticated'
     && authenticated.body.trace.identitySource === 'github_public_rest'
     && !JSON.stringify([authenticated.body, authenticated.calls, authenticated.providerEvents,
       authenticatedCalls[2].request.body]).includes(credential),
   'an existing server-side GitHub credential is used only for exact-host public metadata and document GETs, never model evidence, traces, or provider telemetry');
+  check(authenticated.calls.length === 0 && authenticated.kbEvents.length === 0
+    && authenticated.providerEvents.length === 1 && authenticated.providerEvents[0].phase === 'answer_synthesis'
+    && authenticated.body.trace.sourceKind === 'repository_public_documents'
+    && authenticated.body.trace.ks === 'GitHub public REST'
+    && authenticated.body.trace.tools.length === 0 && authenticated.body.trace.mcpMs === 0
+    && authenticated.outcomes[0].groundingPath === 'grounded_via_public_documents'
+    && authenticated.delivered.length === 1,
+  'authenticated answers use two exact public GETs and one synthesis, with no KB dependency, planner, intermediate answer or fictitious MCP/KB event');
   for (const metadata of invalidPublicMetadata) {
     const privateAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], { ...authenticatedOptions, metadata });
-    check(privateAuthenticated.body.fallback && privateAuthenticated.body.reason === 'repository_metadata_invalid'
+    check(privateAuthenticated.body.fallback && privateAuthenticated.body.reason === 'repository_metadata_unavailable'
       && privateAuthenticated.providerCalls.length === 1 && privateAuthenticated.tokenSignals.length === 0
       && privateAuthenticated.delivered.length === 0,
-    'authenticated reads require fresh private:false and canonical repository identity even after exact MCP metadata');
+    'authenticated reads require fresh private:false and canonical repository identity without relying on an MCP planner');
   }
-  const rejectedAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', [privateReference], [], authenticatedOptions);
-  check(rejectedAuthenticated.body.notFound && rejectedAuthenticated.providerCalls.length === 0,
-    'an available GitHub credential cannot rescue an explicitly private or rejected MCP reference');
+  const privateAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', [], [], {
+    ...authenticatedOptions, metadata: { ...publicMetadata, private: true },
+  });
+  check(privateAuthenticated.body.fallback && privateAuthenticated.body.reason === 'repository_metadata_unavailable'
+    && privateAuthenticated.providerCalls.length === 1 && privateAuthenticated.calls.length === 0
+    && privateAuthenticated.delivered.length === 0,
+  'a direct authenticated path refuses private metadata before reading files or generating an answer');
   for (const status of [301, 403, 404]) {
     const failedMetadata = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], { ...authenticatedOptions, metadataStatus: status });
-    check(failedMetadata.body.fallback && failedMetadata.body.reason === `repository_metadata_http_${status}`
+    check(failedMetadata.body.fallback && failedMetadata.body.reason === (status === 404 ? 'repository_metadata_unavailable' : `repository_metadata_http_${status}`)
       && failedMetadata.providerCalls.length === 1 && failedMetadata.tokenSignals.length === 0,
     'failed or redirected authenticated metadata cannot be replaced with MCP metadata or an anonymous retry');
   }
+  const missingAuthenticated = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], {
+    ...authenticatedOptions, metadataStatus: 404,
+  });
+  check(missingAuthenticated.body.reason === privateAuthenticated.body.reason
+    && missingAuthenticated.body.message === privateAuthenticated.body.message
+    && missingAuthenticated.body.trace.phase === privateAuthenticated.body.trace.phase
+    && missingAuthenticated.providerCalls.length === privateAuthenticated.providerCalls.length,
+  'the authenticated public boundary does not reveal private-repository existence through a distinct missing-versus-private failure');
   const exhaustedAnonymous = await workerFixture('MUST_NOT_BE_GENERATED', undefined, [], {
     documentStatus: 403, documentHeaders: { 'X-RateLimit-Remaining': '0', 'X-RateLimit-Resource': 'core' },
   });
@@ -776,7 +797,8 @@ export async function runRepositoryAtelierChatTests(check) {
     ...authenticatedOptions, env: { ...authenticatedOptions.env, GROUNDED_TIMEOUT_MS: '10' }, stall: 'metadata',
   });
   check(metadataTimeout.body.reason === 'timeout 10ms' && metadataTimeout.providerCalls.length === 1
-    && metadataTimeout.calls[0].config.signal.aborted && metadataTimeout.tokenSignals.length === 0,
+    && metadataTimeout.providerCalls[0].request.signal.aborted && metadataTimeout.tokenSignals.length === 0
+    && metadataTimeout.calls.length === 0 && metadataTimeout.body.trace.phase === 'public_metadata',
   'authenticated metadata body completion shares the unchanged whole-Worker deadline');
   const authenticatedLicense = await workerFixture('The license is MIT.', undefined, [], {
     ...authenticatedOptions, question: '라이선스가 뭐야?',
@@ -785,6 +807,21 @@ export async function runRepositoryAtelierChatTests(check) {
     && authenticatedLicense.body.trace.refs[1].url.endsWith('/LICENSE')
     && authenticatedLicense.body.trace.document.authentication === 'authenticated',
   'a natural license question uses the same authenticated, public-only document boundary');
+  for (const stage of ['document', 'token', 'model']) {
+    const timedDirect = await workerFixture('MUST_NOT_FINISH', undefined, [], {
+      ...authenticatedOptions, env: { ...authenticatedOptions.env, GROUNDED_TIMEOUT_MS: '10' }, stall: stage,
+    });
+    check(timedDirect.body.reason === 'timeout 10ms' && timedDirect.calls.length === 0
+      && timedDirect.kbEvents.length === 0 && timedDirect.delivered.length === 0
+      && timedDirect.body.trace.phase === { document: 'public_document', token: 'model_authentication', model: 'answer_synthesis' }[stage],
+    'single-pass timeout identifies only the bounded failing stage without starting another provider or extending the deadline');
+  }
+  const longDirect = await workerFixture('Run the documented commands.', undefined, [], {
+    ...authenticatedOptions, document: completeFile,
+  });
+  check(JSON.parse(JSON.parse(longDirect.providerCalls[2].request.body).messages[1].content).document.text === longReadme
+    && longDirect.calls.length === 0 && JSON.parse(longDirect.providerCalls[2].request.body).max_completion_tokens === 400,
+  'single-pass synthesis retains the entire bounded README, untrusted-data prompt and unchanged output-token cap');
 
   const documentFailures = [
     [{ documentStatus: 404 }, 'repository_document_http_404'],

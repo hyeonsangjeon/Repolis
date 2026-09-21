@@ -1897,18 +1897,20 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
   const out = await retrieveRepositoryAtelier(authorized, cfg, env, {
     retrieve: groundedRetrieve, getToken: aadToken, normalizeUsage: normalizeModelUsage,
   });
-  emitKbQuery(env, ctx, route, cfg, "taxi", out.retrieval || out, requestMeta);
+  const source = out.direct ? { kb: "", ks: "GitHub public REST" } : cfg;
+  const groundingPath = out.direct ? "grounded_via_public_documents" : "grounded_via_kb";
+  if (out.retrieval) emitKbQuery(env, ctx, route, cfg, "taxi", out.retrieval, requestMeta);
   for (const activity of out.modelActivities || []) {
-    emitProviderUsage(env, ctx, route, cfg.ks, "taxi", activity, {
+    emitProviderUsage(env, ctx, route, source.ks, "taxi", activity, {
       refs: Number.isSafeInteger(activity.refs) ? activity.refs : (Array.isArray(out.data?.references) ? out.data.references.length : 0),
       ...requestMeta,
     });
   }
 
   if (out.fallback) {
-    if (out.attempted) {
-      emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
-        groundingPath: "grounded_via_kb",
+    if (out.attempted || out.direct) {
+      emitGroundingOutcome(env, ctx, route, source, "taxi", {
+        groundingPath,
         pathRole: "primary",
         ok: false,
         ms: out.totalMs,
@@ -1920,14 +1922,15 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
       repoName: authorized.repoName,
       reason: out.reason || "repository grounding unavailable",
       message: repositoryAtelierMessage("unavailable", authorized.repoName, authorized.lang),
+      trace: { phase: out.phase, totalMs: out.totalMs, refs: [], scoped: true },
     }, 200, env);
   }
 
   const scoped = out.scoped;
   const answerFailure = repositoryAtelierAnswerFailure(out.answer, scoped);
   if (answerFailure) {
-    emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
-      groundingPath: "grounded_via_kb",
+    emitGroundingOutcome(env, ctx, route, source, "taxi", {
+      groundingPath,
       pathRole: "primary",
       ok: false,
       ms: out.totalMs,
@@ -1943,7 +1946,7 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
           repositoryReferences: scoped.refs.length,
           rejectedReferences: scoped.rejected,
         },
-        ks: cfg.ks,
+        ks: source.ks,
         tools: out.tools,
         refs: [],
         mcpMs: out.mcpMs,
@@ -1961,14 +1964,14 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
     return sum;
   }, { prompt_tokens: 0, cached_tokens: 0, completion_tokens: 0 });
   const refs = out.refs;
-  emitGroundingOutcome(env, ctx, route, cfg, "taxi", {
-    groundingPath: "grounded_via_kb",
+  emitGroundingOutcome(env, ctx, route, source, "taxi", {
+    groundingPath,
     pathRole: "primary",
     ok: true,
     ms: out.totalMs,
     refs: refs.length,
   }, requestMeta);
-  emitDeliveredAnswer(env, ctx, route, cfg.ks, "taxi", {
+  emitDeliveredAnswer(env, ctx, route, source.ks, "taxi", {
     model: (out.modelActivities || []).at(-1)?.model || "unknown",
     ms: out.totalMs,
     refs: refs.length,
@@ -1979,7 +1982,8 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
     message: out.answer,
     usage,
     trace: {
-      ks: cfg.ks,
+      ks: source.ks,
+      ...(out.direct ? { sourceKind: "repository_public_documents" } : {}),
       tools: out.tools,
       refs,
       mcpMs: out.mcpMs,
