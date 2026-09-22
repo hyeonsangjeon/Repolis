@@ -55,6 +55,7 @@ function documentFixture(path = 'README.md', text = '# Local fixture\nRun `pytho
 
 async function workerFixture(answer, references = [reference('hyeonsangjeon/Repolis')], activity = [], options = {}) {
   const calls = [], outcomes = [], delivered = [], providerCalls = [], kbEvents = [], providerEvents = [], tokenSignals = [];
+  let modelStreamCancelled = false;
   const env = {
     AAD_CLIENT_ID: 'fixture', AAD_CLIENT_SECRET: 'fixture', AAD_TENANT: 'fixture',
     AOAI_ENDPOINT: 'https://model.invalid', GROUNDED_TIMEOUT_MS: '25000', ...options.env,
@@ -98,7 +99,11 @@ async function workerFixture(answer, references = [reference('hyeonsangjeon/Repo
         }
         if (options.stall === 'model') return stall(request.signal, options.modelHeaders?.['Content-Type']);
         const modelBody = options.modelChunks ? new ReadableStream({
-          start(controller) { for (const chunk of options.modelChunks) controller.enqueue(chunk); controller.close(); },
+          start(controller) {
+            for (const chunk of options.modelChunks) controller.enqueue(chunk);
+            if (!options.keepModelStreamOpen) controller.close();
+          },
+          cancel() { modelStreamCancelled = true; },
         }) : options.modelBody ?? JSON.stringify({
           choices: [{ finish_reason: options.finishReason || 'stop', message: { content: answer } }],
           usage: { prompt_tokens: 80, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 10 } },
@@ -127,7 +132,7 @@ async function workerFixture(answer, references = [reference('hyeonsangjeon/Repo
     surface: 'repository_atelier', repoName: 'hyeonsangjeon/Repolis', lang: 'en',
     question: options.question || 'What does the README say about running this repository?', history: [],
   }, {}, env, {});
-  return { ...response, calls, outcomes, delivered, providerCalls, kbEvents, providerEvents, tokenSignals };
+  return { ...response, calls, outcomes, delivered, providerCalls, kbEvents, providerEvents, tokenSignals, modelStreamCancelled };
 }
 
 function requestFixture({ headersAfter = 0, bodyAfter = 0, status = 200, response,
@@ -888,6 +893,13 @@ export async function runRepositoryAtelierChatTests(check) {
   });
   check(azureStream.body.message === streamedText && azureStream.delivered.length === 1,
     'Azure metadata-only annotation chunks and a nullable final delta preserve the complete answer without fabricating content');
+  const doneWithoutClose = await workerFixture('UNUSED', undefined, [], {
+    ...streamingOptions, modelChunks: [streamBytes], keepModelStreamOpen: true,
+    env: { ...authenticatedOptions.env, GROUNDED_TIMEOUT_MS: '100' },
+  });
+  check(doneWithoutClose.body.message === streamedText && doneWithoutClose.modelStreamCancelled
+    && doneWithoutClose.delivered.length === 1 && !doneWithoutClose.body.fallback,
+  'a validated terminal marker releases the provider stream without waiting for socket closure or extending the deadline');
   const stalledStream = await workerFixture('UNUSED', undefined, [], {
     ...streamingOptions, stall: 'model', env: { ...authenticatedOptions.env, GROUNDED_TIMEOUT_MS: '10' },
   });

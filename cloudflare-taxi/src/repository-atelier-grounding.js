@@ -101,7 +101,7 @@ async function boundedJson(fetcher, url, options, limit, source) {
   }
   if (!response.body) throw new EvidenceError(`${source}_empty`);
   const reader = response.body.getReader(), chunks = [];
-  let size = 0;
+  let size = 0, streamTail = '';
   try {
     for (;;) {
       const { done, value } = await reader.read();
@@ -112,6 +112,13 @@ async function boundedJson(fetcher, url, options, limit, source) {
         throw new EvidenceError(`${source}_oversized`);
       }
       chunks.push(value);
+      if (streaming) {
+        streamTail = (streamTail + new TextDecoder().decode(value)).slice(-64);
+        if (/(?:^|\n)data: ?\[DONE\]\r?\n\r?\n/.test(streamTail)) {
+          await reader.cancel();
+          break;
+        }
+      }
     }
   } catch (error) {
     if (error instanceof TypeError) throw new EvidenceError(`${source}_network`);
