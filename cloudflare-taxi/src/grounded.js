@@ -941,7 +941,8 @@ async function aadToken(env, signal) {
     grant_type: "client_credentials",
   });
   const r = await fetch(`https://login.microsoftonline.com/${env.AAD_TENANT}/oauth2/v2.0/token`, {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body,
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString(),
+    redirect: "manual",
     signal,
   });
   if (!r.ok) throw new Error("aad token " + r.status);

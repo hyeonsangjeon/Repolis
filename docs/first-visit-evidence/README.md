@@ -678,3 +678,39 @@ sources, timing and deployment verdict belong in the release record on
 [#122](https://github.com/hyeonsangjeon/Repolis/issues/122); local fixtures alone
 do not establish that result. Unrelated accessibility and physical-device
 criteria remain open.
+
+## Entra token request follow-up: 2026-09-21 UTC
+
+The first single-pass production request reached `model_authentication` before
+the shared 25-second timer expired. This establishes that public metadata and
+document validation had finished, but not how much of the deadline they used.
+The production Worker was restored before further diagnosis; no second dialogue
+was sent against that failed candidate.
+
+An authenticated Cloudflare remote preview then ran only the production Entra
+token helper, with an eight-second bound and no document, MCP or model request.
+Wrangler 4.131.2 inherits deployed secrets server-side in remote previews; no
+secret value or tenant/client identifier was read into the agent's output.
+Earlier descriptions of previews as having no secrets refer to their explicit
+configuration and unused credential paths, not an assertion that Wrangler
+disables inherited bindings.
+
+| Token-only probe | Body representation | Result |
+|---|---|---|
+| Baseline | `URLSearchParams` | No headers before the eight-second diagnostic timeout. |
+| Explicit serialization | String form body | HTTP 200 and a token in 662 ms. |
+| Reversion, cache cleared | `URLSearchParams` | HTTP 200 and a token in 458 ms. |
+| Exact candidate helper | String form body, manual redirects | HTTP 200 and a token in 670 ms. |
+
+Because the reversion also succeeded, these probes do **not** prove that the body
+object alone caused the original stall. Cold or transient provider behavior
+remains a possible confound. The minimal hardening explicitly serializes the
+OAuth form and refuses redirects, while preserving the existing credentials,
+scope, token cache and cancellation signal. The exact helper's encoded fields,
+cache reuse and redirect refusal are covered by hermetic tests.
+
+Token bodies were never returned or persisted. The probe output contains only
+configuration-shape booleans, request/response type, status, elapsed time and
+token-availability boolean. This is authentication verification, not an inference
+success or proof that a production answer finishes on time. Final dialogue
+acceptance is recorded separately on [#122](https://github.com/hyeonsangjeon/Repolis/issues/122).

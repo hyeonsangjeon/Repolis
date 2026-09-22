@@ -290,6 +290,8 @@ failure, not a substituted repository or invented commands.
 
 The existing Entra-authenticated model receives the verified metadata and whole
 document as untrusted data, with no tools or access to other repositories. The
+token request uses an explicitly serialized form body and refuses redirects;
+its credentials, OAuth scope, token cache and cancellation signal are unchanged. The
 additional synthesis has a 400-token completion bound. KB retrieval, identity
 completion, document reading, token acquisition and synthesis share the existing
 25-second Worker deadline; the client retains its 30-second complete-response
