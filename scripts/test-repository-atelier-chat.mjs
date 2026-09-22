@@ -881,6 +881,13 @@ export async function runRepositoryAtelierChatTests(check) {
   check(splitStream.body.message === streamedText && splitStream.body.usage.completion_tokens === 20
     && splitStream.delivered.length === 1,
   'split UTF-8 characters, JSON records and CRLF event boundaries reconstruct exactly without early or partial delivery');
+  const annotations = 'data: ' + JSON.stringify({ choices: [{ index: 0, content_filter_results: {} }] }) + '\n\n';
+  const nullableFinish = 'data: ' + JSON.stringify({ choices: [{ index: 0, delta: null, finish_reason: 'stop' }] }) + '\n\n';
+  const azureStream = await workerFixture('UNUSED', undefined, [], {
+    ...streamingOptions, modelBody: annotations + validStream.replace(streamChunk(null, 'stop'), nullableFinish),
+  });
+  check(azureStream.body.message === streamedText && azureStream.delivered.length === 1,
+    'Azure metadata-only annotation chunks and a nullable final delta preserve the complete answer without fabricating content');
   const stalledStream = await workerFixture('UNUSED', undefined, [], {
     ...streamingOptions, stall: 'model', env: { ...authenticatedOptions.env, GROUNDED_TIMEOUT_MS: '10' },
   });

@@ -40,6 +40,7 @@ export function repositoryAtelierGitHubRequest(env, signal) {
 function completionFromEvents(text) {
   let content = '', finishReason = null, usage = null, done = false;
   const events = text.replace(/\r\n?/g, '\n').split('\n\n');
+  if (events.at(-1) === '') events.pop();
   if (events.length > 2048) throw new EvidenceError('repository_answer_oversized');
   for (const event of events) {
     const data = event.split('\n').filter(line => line.startsWith('data:'))
@@ -58,8 +59,8 @@ function completionFromEvents(text) {
     if (chunk.usage) usage = chunk.usage;
     if (chunk.choices.length === 0) continue;
     if (chunk.choices.length !== 1 || chunk.choices[0]?.index !== 0) throw new EvidenceError('repository_answer_invalid_stream');
-    const choice = chunk.choices[0], delta = choice.delta;
-    if (!delta || typeof delta !== 'object' || Array.isArray(delta)
+    const choice = chunk.choices[0], delta = choice.delta ?? {};
+    if (typeof delta !== 'object' || Array.isArray(delta)
       || delta.tool_calls || delta.function_call || delta.refusal) throw new EvidenceError('repository_answer_invalid_stream');
     if (delta.content != null) {
       if (typeof delta.content !== 'string' || finishReason !== null) throw new EvidenceError('repository_answer_invalid_stream');
