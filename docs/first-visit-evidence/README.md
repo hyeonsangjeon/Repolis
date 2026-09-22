@@ -714,3 +714,33 @@ configuration-shape booleans, request/response type, status, elapsed time and
 token-availability boolean. This is authentication verification, not an inference
 success or proof that a production answer finishes on time. Final dialogue
 acceptance is recorded separately on [#122](https://github.com/hyeonsangjeon/Repolis/issues/122).
+
+## Bounded streaming transport follow-up: 2026-09-22 UTC
+
+PR #131 merged as `41bd47f99fafa896de2df00556ca213e2057077f` with passing
+exact-head CI, Pages, the full hermetic gate and twenty browser fixture cases.
+Its first production KO run question reached `answer_synthesis`, then returned
+`repository_answer_http_520` after 20,381 ms of Worker time / 20,717 ms of browser
+time. No answer or references were delivered. Production was restored and the
+remaining questions were not sent.
+
+A protected, non-inference Cloudflare preview then obtained an Entra token
+(HTTP 200 headers in 491 ms) and fetched model metadata from the configured Azure
+endpoint (HTTP 200 headers in 2,139 ms). The metadata body exceeded the diagnostic
+64 KiB cap and was cancelled without exposing its contents. This establishes
+authentication and endpoint connectivity, not inference availability, model
+permissions, or the specific cause of the previous 520.
+
+The follow-up changes the existing synthesis request to the provider's supported
+streaming transport, with usage included. The Worker still delivers one complete
+JSON reply to the browser. It requires a successful finish reason, final usage
+and the terminal marker; partial text never enters the chat. Framing is bounded
+to 512 KiB / 2,048 events and assembled text to 128 KiB. The model, 400-token
+completion cap, credentials, endpoint and shared 25-second deadline stay fixed.
+There is no retry, alternate host, proxy or permission change.
+
+Fixtures cover UTF-8 and CRLF split across network chunks, exact reconstructed
+text/usage, missing terminators/usage, truncation, malformed data, unexpected
+choices, oversized framing/text and stalled response bodies. These fixtures are
+not production answer evidence or proof that streaming alone explains the 520.
+Final acceptance remains the three real, same-repository sourced questions.

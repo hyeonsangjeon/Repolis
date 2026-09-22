@@ -300,6 +300,14 @@ budgets are unchanged. API-reported usage counts the model operations actually
 performed: one synthesis in the authenticated path, plus KB work only when the
 unconfigured MCP path runs. It is not a billing record.
 
+The one synthesis request uses the provider's streaming transport with usage
+included. The Worker bounds stream framing to 512 KiB / 2,048 events and assembled
+text to 128 KiB, then returns one ordinary JSON answer only after a complete stream
+terminator and successful finish reason. Partial,
+truncated, malformed, tool-call or oversized streams fail; no partial text reaches
+chat history, and there is no retry or timeout extension. This changes transport,
+not the model or the UI's complete-answer contract.
+
 Successful responses include a same-repository file reference, `trace.document`
 (kind, path, SHA, byte count and `github_public_rest` source), and
 `trace.identitySource` (`github_mcp` or `github_public_rest`). The client preserves
