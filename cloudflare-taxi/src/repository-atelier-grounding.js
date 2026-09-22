@@ -11,6 +11,7 @@ import {
 
 const JSON_BYTES = 65536;
 const MODEL_JSON_BYTES = 131072;
+const MODEL_STREAM_BYTES = 524288;
 const DEADLINE_MS = 25000;
 
 class EvidenceError extends Error {
@@ -36,6 +37,48 @@ export function repositoryAtelierGitHubRequest(env, signal) {
   return { method: 'GET', redirect: 'manual', signal, headers };
 }
 
+function completionFromEvents(text) {
+  let content = '', finishReason = null, usage = null, done = false;
+  const events = text.replace(/\r\n?/g, '\n').split('\n\n');
+  if (events.at(-1) === '') events.pop();
+  if (events.length > 2048) throw new EvidenceError('repository_answer_oversized');
+  for (const event of events) {
+    const data = event.split('\n').filter(line => line.startsWith('data:'))
+      .map(line => line.slice(5).replace(/^ /, '')).join('\n');
+    if (!data) continue;
+    if (done) throw new EvidenceError('repository_answer_invalid_stream');
+    if (data === '[DONE]') { done = true; continue; }
+    let chunk;
+    try { chunk = JSON.parse(data); } catch (error) {
+      if (error instanceof SyntaxError) throw new EvidenceError('repository_answer_invalid_stream');
+      throw error;
+    }
+    if (!chunk || typeof chunk !== 'object' || chunk.error || !Array.isArray(chunk.choices)) {
+      throw new EvidenceError('repository_answer_invalid_stream');
+    }
+    if (chunk.usage) usage = chunk.usage;
+    if (chunk.choices.length === 0) continue;
+    if (chunk.choices.length !== 1 || chunk.choices[0]?.index !== 0) throw new EvidenceError('repository_answer_invalid_stream');
+    const choice = chunk.choices[0], delta = choice.delta ?? {};
+    if (typeof delta !== 'object' || Array.isArray(delta)
+      || delta.tool_calls || delta.function_call || delta.refusal) throw new EvidenceError('repository_answer_invalid_stream');
+    if (delta.content != null) {
+      if (typeof delta.content !== 'string' || finishReason !== null) throw new EvidenceError('repository_answer_invalid_stream');
+      content += delta.content;
+    }
+    if (choice.finish_reason != null) {
+      if (typeof choice.finish_reason !== 'string' || finishReason !== null) throw new EvidenceError('repository_answer_invalid_stream');
+      finishReason = choice.finish_reason;
+    }
+  }
+  if (!done || finishReason === null || !usage
+    || ![usage.prompt_tokens, usage.completion_tokens].every(value => Number.isSafeInteger(value) && value >= 0)) {
+    throw new EvidenceError('repository_answer_incomplete_stream');
+  }
+  if (new TextEncoder().encode(content).byteLength > MODEL_JSON_BYTES) throw new EvidenceError('repository_answer_oversized');
+  return { choices: [{ finish_reason: finishReason, message: { content } }], usage };
+}
+
 async function boundedJson(fetcher, url, options, limit, source) {
   let response;
   try { response = await fetcher(url, options); } catch (error) {
@@ -49,13 +92,16 @@ async function boundedJson(fetcher, url, options, limit, source) {
     }
     throw new EvidenceError(`${source}_http_${response.status}`);
   }
+  const streaming = source === 'repository_answer'
+    && /^text\/event-stream(?:;|$)/i.test(response.headers.get('content-type') || '');
+  if (streaming) limit = MODEL_STREAM_BYTES;
   if (Number(response.headers.get('content-length')) > limit) {
     await response.body?.cancel();
     throw new EvidenceError(`${source}_oversized`);
   }
   if (!response.body) throw new EvidenceError(`${source}_empty`);
   const reader = response.body.getReader(), chunks = [];
-  let size = 0;
+  let size = 0, streamTail = '';
   try {
     for (;;) {
       const { done, value } = await reader.read();
@@ -66,6 +112,13 @@ async function boundedJson(fetcher, url, options, limit, source) {
         throw new EvidenceError(`${source}_oversized`);
       }
       chunks.push(value);
+      if (streaming) {
+        streamTail = (streamTail + new TextDecoder().decode(value)).slice(-64);
+        if (/(?:^|\n)data: ?\[DONE\]\r?\n\r?\n/.test(streamTail)) {
+          await reader.cancel();
+          break;
+        }
+      }
     }
   } catch (error) {
     if (error instanceof TypeError) throw new EvidenceError(`${source}_network`);
@@ -77,8 +130,11 @@ async function boundedJson(fetcher, url, options, limit, source) {
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
   try {
-    const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+    const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    if (streaming) return { ...completionFromEvents(text), transport: 'sse' };
+    const value = JSON.parse(text);
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new EvidenceError(`${source}_invalid_json`);
+    if (source === 'repository_answer') value.transport = 'json';
     return value;
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof TypeError) throw new EvidenceError(`${source}_invalid_json`);
@@ -155,12 +211,16 @@ export async function retrieveRepositoryAtelier(authorized, cfg, env, { retrieve
     const completion = await boundedJson(fetcher, endpoint, {
       method: 'POST', redirect: 'manual', signal: controller.signal,
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ messages: buildRepositoryAtelierAnswerMessages(authorized, out.scoped.refs, document), max_completion_tokens: 400 }),
+      body: JSON.stringify({
+        messages: buildRepositoryAtelierAnswerMessages(authorized, out.scoped.refs, document),
+        max_completion_tokens: 400, stream: true, stream_options: { include_usage: true },
+      }),
     }, MODEL_JSON_BYTES, 'repository_answer');
     out.modelActivities = [...(out.modelActivities || []), {
       phase: 'answer_synthesis', model, ms: Date.now() - modelStarted,
       refs: out.scoped.refs.length + 1, usage: normalizeUsage(completion.usage),
     }];
+    out.modelTransport = completion.transport;
     if (!Array.isArray(completion.choices) || completion.choices.length !== 1
       || completion.choices[0]?.finish_reason !== 'stop' || typeof completion.choices[0]?.message?.content !== 'string') {
       throw new EvidenceError('repository_answer_incomplete');

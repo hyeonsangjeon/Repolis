@@ -55,16 +55,17 @@ function documentFixture(path = 'README.md', text = '# Local fixture\nRun `pytho
 
 async function workerFixture(answer, references = [reference('hyeonsangjeon/Repolis')], activity = [], options = {}) {
   const calls = [], outcomes = [], delivered = [], providerCalls = [], kbEvents = [], providerEvents = [], tokenSignals = [];
+  let modelStreamCancelled = false;
   const env = {
     AAD_CLIENT_ID: 'fixture', AAD_CLIENT_SECRET: 'fixture', AAD_TENANT: 'fixture',
     AOAI_ENDPOINT: 'https://model.invalid', GROUNDED_TIMEOUT_MS: '25000', ...options.env,
   };
-  const stall = signal => new Response(new ReadableStream({
+  const stall = (signal, contentType = 'application/json') => new Response(new ReadableStream({
     start(controller) {
       controller.enqueue(new TextEncoder().encode('{"partial":'));
       signal.addEventListener('abort', () => controller.error(new DOMException('Fixture abort', 'AbortError')), { once: true });
     },
-  }), { headers: { 'Content-Type': 'application/json' } });
+  }), { headers: { 'Content-Type': contentType } });
   const context = {
     authorizeRepositoryAtelierRequest, buildRepositoryAtelierMessages, projectRepositoryAtelierReferences,
     repositoryAtelierAnswerFailure, repositoryAtelierKnowledgeSource, repositoryAtelierMessage,
@@ -96,11 +97,18 @@ async function workerFixture(answer, references = [reference('hyeonsangjeon/Repo
             status: options.documentStatus || 200, headers: { 'Content-Type': 'application/json', ...options.documentHeaders },
           });
         }
-        if (options.stall === 'model') return stall(request.signal);
-        return new Response(options.modelBody ?? JSON.stringify({
+        if (options.stall === 'model') return stall(request.signal, options.modelHeaders?.['Content-Type']);
+        const modelBody = options.modelChunks ? new ReadableStream({
+          start(controller) {
+            for (const chunk of options.modelChunks) controller.enqueue(chunk);
+            if (!options.keepModelStreamOpen) controller.close();
+          },
+          cancel() { modelStreamCancelled = true; },
+        }) : options.modelBody ?? JSON.stringify({
           choices: [{ finish_reason: options.finishReason || 'stop', message: { content: answer } }],
           usage: { prompt_tokens: 80, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 10 } },
-        }), { status: options.modelStatus || 200, headers: { 'Content-Type': 'application/json' } });
+        });
+        return new Response(modelBody, { status: options.modelStatus || 200, headers: { 'Content-Type': 'application/json', ...options.modelHeaders } });
       },
     }),
     scholarConfig: () => ({ kb: 'local-fixture', ks: 'github-repos-mcp-ks' }),
@@ -124,7 +132,7 @@ async function workerFixture(answer, references = [reference('hyeonsangjeon/Repo
     surface: 'repository_atelier', repoName: 'hyeonsangjeon/Repolis', lang: 'en',
     question: options.question || 'What does the README say about running this repository?', history: [],
   }, {}, env, {});
-  return { ...response, calls, outcomes, delivered, providerCalls, kbEvents, providerEvents, tokenSignals };
+  return { ...response, calls, outcomes, delivered, providerCalls, kbEvents, providerEvents, tokenSignals, modelStreamCancelled };
 }
 
 function requestFixture({ headersAfter = 0, bodyAfter = 0, status = 200, response,
@@ -850,6 +858,74 @@ export async function runRepositoryAtelierChatTests(check) {
   check(JSON.parse(JSON.parse(longDirect.providerCalls[2].request.body).messages[1].content).document.text === longReadme
     && longDirect.calls.length === 0 && JSON.parse(longDirect.providerCalls[2].request.body).max_completion_tokens === 400,
   'single-pass synthesis retains the entire bounded README, untrusted-data prompt and unchanged output-token cap');
+  const streamChunk = (content, finish_reason = null) => 'data: ' + JSON.stringify({
+    choices: [{ index: 0, delta: { content }, finish_reason }],
+  }) + '\n\n';
+  const usageChunk = 'data: ' + JSON.stringify({
+    choices: [], usage: { prompt_tokens: 80, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 10 } },
+  }) + '\n\n';
+  const streamedText = 'README에 따라 `python3 -m http.server 8000`으로 실행합니다.';
+  const validStream = ': heartbeat\n\n' + streamChunk('README에 따라 ')
+    + streamChunk('`python3 -m http.server 8000`으로 실행합니다.')
+    + streamChunk(null, 'stop') + usageChunk + 'data: [DONE]\n\n';
+  const streamingOptions = { ...authenticatedOptions, modelHeaders: { 'Content-Type': 'text/event-stream; charset=utf-8' } };
+  const streamed = await workerFixture('UNUSED', undefined, [], { ...streamingOptions, modelBody: validStream });
+  const streamedRequest = JSON.parse(streamed.providerCalls[2].request.body);
+  check(streamed.body.message === streamedText && !streamed.body.fallback
+    && streamed.body.trace.synthesisTransport === 'sse' && authenticated.body.trace.synthesisTransport === 'json'
+    && streamedRequest.stream === true && streamedRequest.stream_options.include_usage === true
+    && streamedRequest.max_completion_tokens === 400
+    && streamed.body.usage.prompt_tokens === 80 && streamed.body.usage.cached_tokens === 10
+    && streamed.body.usage.completion_tokens === 20 && streamed.providerEvents.length === 1
+    && streamed.delivered.length === 1 && streamed.calls.length === 0,
+  'native streaming transport is collected into one complete sourced reply with exact content/usage, no extra model call, and the unchanged output cap');
+  const streamBytes = new TextEncoder().encode(validStream.replace(/\n/g, '\r\n'));
+  const splitStream = await workerFixture('UNUSED', undefined, [], {
+    ...streamingOptions, modelChunks: Array.from({ length: Math.ceil(streamBytes.length / 7) }, (_, index) => streamBytes.slice(index * 7, index * 7 + 7)),
+  });
+  check(splitStream.body.message === streamedText && splitStream.body.usage.completion_tokens === 20
+    && splitStream.delivered.length === 1,
+  'split UTF-8 characters, JSON records and CRLF event boundaries reconstruct exactly without early or partial delivery');
+  const annotations = 'data: ' + JSON.stringify({ choices: [{ index: 0, content_filter_results: {} }] }) + '\n\n';
+  const nullableFinish = 'data: ' + JSON.stringify({ choices: [{ index: 0, delta: null, finish_reason: 'stop' }] }) + '\n\n';
+  const azureStream = await workerFixture('UNUSED', undefined, [], {
+    ...streamingOptions, modelBody: annotations + validStream.replace(streamChunk(null, 'stop'), nullableFinish),
+  });
+  check(azureStream.body.message === streamedText && azureStream.delivered.length === 1,
+    'Azure metadata-only annotation chunks and a nullable final delta preserve the complete answer without fabricating content');
+  const doneWithoutClose = await workerFixture('UNUSED', undefined, [], {
+    ...streamingOptions, modelChunks: [streamBytes], keepModelStreamOpen: true,
+    env: { ...authenticatedOptions.env, GROUNDED_TIMEOUT_MS: '100' },
+  });
+  check(doneWithoutClose.body.message === streamedText && doneWithoutClose.modelStreamCancelled
+    && doneWithoutClose.delivered.length === 1 && !doneWithoutClose.body.fallback,
+  'a validated terminal marker releases the provider stream without waiting for socket closure or extending the deadline');
+  const stalledStream = await workerFixture('UNUSED', undefined, [], {
+    ...streamingOptions, stall: 'model', env: { ...authenticatedOptions.env, GROUNDED_TIMEOUT_MS: '10' },
+  });
+  check(stalledStream.body.reason === 'timeout 10ms' && stalledStream.delivered.length === 0
+    && stalledStream.providerCalls.length === 3 && stalledStream.calls.length === 0,
+  'SSE headers cannot clear the whole-response deadline or turn an unfinished stream into a successful answer');
+  const invalidStreams = [
+    validStream.replace('data: [DONE]\n\n', ''),
+    validStream.replace(usageChunk, ''),
+    streamChunk('partial') + 'data: [DONE]\n\n',
+    streamChunk('partial', 'length') + usageChunk + 'data: [DONE]\n\n',
+    'data: {"error":{"code":"provider_failure"}}\n\ndata: [DONE]\n\n',
+    'data: {broken}\n\ndata: [DONE]\n\n',
+    validStream + streamChunk('unexpected trailing answer'),
+    validStream.replace('"index":0', '"index":1'),
+    ': heartbeat\n\n'.repeat(10000),
+    streamChunk('x'.repeat(131073), 'stop') + 'data: [DONE]\n\n',
+    ' '.repeat(524289),
+  ];
+  for (const modelBody of invalidStreams) {
+    const invalidStream = await workerFixture('UNUSED', undefined, [], { ...streamingOptions, modelBody });
+    check(invalidStream.body.fallback && invalidStream.delivered.length === 0
+      && invalidStream.body.trace.phase === 'answer_synthesis' && invalidStream.calls.length === 0
+      && invalidStream.providerCalls.length === 3,
+    'incomplete, truncated, malformed, multiple-choice or oversized stream output cannot become an answer or trigger retries');
+  }
 
   const documentFailures = [
     [{ documentStatus: 404 }, 'repository_document_http_404'],
