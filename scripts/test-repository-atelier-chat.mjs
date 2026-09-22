@@ -867,6 +867,7 @@ export async function runRepositoryAtelierChatTests(check) {
   const streamed = await workerFixture('UNUSED', undefined, [], { ...streamingOptions, modelBody: validStream });
   const streamedRequest = JSON.parse(streamed.providerCalls[2].request.body);
   check(streamed.body.message === streamedText && !streamed.body.fallback
+    && streamed.body.trace.synthesisTransport === 'sse' && authenticated.body.trace.synthesisTransport === 'json'
     && streamedRequest.stream === true && streamedRequest.stream_options.include_usage === true
     && streamedRequest.max_completion_tokens === 400
     && streamed.body.usage.prompt_tokens === 80 && streamed.body.usage.cached_tokens === 10

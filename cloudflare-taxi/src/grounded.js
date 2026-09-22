@@ -1991,6 +1991,7 @@ async function repositoryAtelierHandler(body, request, env, ctx) {
       totalMs: out.totalMs,
       partial: out.status === 206,
       document: out.document,
+      synthesisTransport: out.modelTransport,
       identitySource: out.identitySource,
       scoped: true,
     },

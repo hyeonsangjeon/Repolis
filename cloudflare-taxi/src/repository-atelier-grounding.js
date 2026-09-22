@@ -123,9 +123,10 @@ async function boundedJson(fetcher, url, options, limit, source) {
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
   try {
     const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-    if (streaming) return completionFromEvents(text);
+    if (streaming) return { ...completionFromEvents(text), transport: 'sse' };
     const value = JSON.parse(text);
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new EvidenceError(`${source}_invalid_json`);
+    if (source === 'repository_answer') value.transport = 'json';
     return value;
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof TypeError) throw new EvidenceError(`${source}_invalid_json`);
@@ -211,6 +212,7 @@ export async function retrieveRepositoryAtelier(authorized, cfg, env, { retrieve
       phase: 'answer_synthesis', model, ms: Date.now() - modelStarted,
       refs: out.scoped.refs.length + 1, usage: normalizeUsage(completion.usage),
     }];
+    out.modelTransport = completion.transport;
     if (!Array.isArray(completion.choices) || completion.choices.length !== 1
       || completion.choices[0]?.finish_reason !== 'stop' || typeof completion.choices[0]?.message?.content !== 'string') {
       throw new EvidenceError('repository_answer_incomplete');

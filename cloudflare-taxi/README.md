@@ -307,6 +307,8 @@ terminator and successful finish reason. Partial,
 truncated, malformed, tool-call or oversized streams fail; no partial text reaches
 chat history, and there is no retry or timeout extension. This changes transport,
 not the model or the UI's complete-answer contract.
+`trace.synthesisTransport` records the response format actually received (`sse`
+or `json`), rather than treating a request option as proof of streaming.
 
 Successful responses include a same-repository file reference, `trace.document`
 (kind, path, SHA, byte count and `github_public_rest` source), and
