@@ -35,6 +35,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`assets/city-time.js`** | Pure wear (`recent` / `faded` / `mossed`), ruin, reference-date, and seasonal palette rules. | Changing how public time metadata affects the city. |
 | **`data/lore/fragments.json` + `assets/lore-fragments.js`** | Hand-authored KO/EN elder fragments plus strict validation, deterministic active-roster allocation, and session-bounded delivery. | Changing The Silence fragments or their rarity/allocation contract. Never generate or overwrite the JSON. |
 | **`assets/taxi-voice.js`** | Pure local taxi Shared-state answers, household redirect, and once-per-ride seasonal/district observations. | Changing travel voice without adding a backend call. |
+| **`assets/town-labels.js`** | Pure bounded nameplate layout, stable nearby-target priority and single-owner panel keys. | Changing near-camera label budgets, safe-area/overlap behavior or keyboard dismissal. Keep existing speech priority, depth tests, scene detail and visit state. |
 | **`assets/session-footprints.js`** | Pure bounded current-tab footprint ring: movement threshold, lifetime, LOW_END/reduced-motion policy, and teardown. | Changing the local player's ephemeral walking trace. |
 | **`assets/procedural-surfaces.js`** | Pure facade/roof seed, UV phase, family, and bounded-cache contract for the shared procedural maps. | Changing repository-house material identity, tiling, or texture budgets. |
 | **`scripts/fork_lineage.py` + `assets/fork-lineage.js`** | Public-only fork source sanitizer plus deterministic six-color crest projection. | Changing generated fork source truth, lineage cards, or the shared crest batch. |
@@ -56,6 +57,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 | **`scripts/smoke.mjs`** | Hermetic static and behavioral regression guards for the city runtime. | Any client feature, navigation, or generated-module integration change. |
 | **`scripts/check-hermetic.sh` + `.github/workflows/pr-quality.yml`** | Shared local/PR hermetic command list and read-only exact-head GitHub check. | Changing the regression gate; keep one command list and preserve failure propagation. |
 | **`scripts/test-first-visit.mjs` + `scripts/test-first-visit-browser.mjs`** | Hermetic first-visit guards plus a separate local-only browser matrix. | Changing speech/panel focus, repository selection, arrival, or recovery. Browser execution is not part of hermetic CI. |
+| **`scripts/test-readable-town.mjs` + `scripts/readable-town-browser-cases.mjs`** | Name/obstacle/IME/key fixtures and the `readable-town` browser group: crowd projection, native controls and resized card/Atelier return. | Changing world-name presentation or panel ownership; compare real projected rectangles and preserve source-backed before/after evidence. |
 | **`scripts/test-visual-governor.mjs`** | Extracts and deterministically replays the inline adaptive visual-governor core. | Changing warm-up, thresholds, hysteresis, dwell, LOW_END/reduced-motion bounds, or recovery. |
 | **`scripts/test-procedural-surfaces.mjs`** | Hermetic seed, UV, family, bounded-cache, pixel-hash, and disposal fixtures. | Changing procedural facade/roof helpers or cache limits. |
 | **`scripts/test-portable-town.mjs`** | Deterministic fixtures for canonical, foreign, empty/archive-only, partial, missing-date, leakage, resident-cap, and zero-request portable towns. | Changing public-town projection or local resident derivation. |
@@ -138,7 +140,7 @@ bash scripts/check-hermetic.sh
 ```
 
 The list retains all 22 original checks and explicitly runs the first-visit suite (also included in
-Smoke) and the browser runner's syntax check. The **PR quality gate / Hermetic regression** job uses
+Smoke), readable-town fixtures, and both browser-runner syntax checks. The **PR quality gate / Hermetic regression** job uses
 one `ubuntu-24.04` runner, Node `24.7.0`, and Python `3.12.11`. It checks out and asserts the exact
 PR head SHA, has a 10-minute timeout, and cancels superseded runs for the same PR. Checkout has only
 `contents: read` and does not retain credentials. Action/runtime setup may download public tools;

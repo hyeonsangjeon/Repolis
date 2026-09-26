@@ -1,6 +1,6 @@
 /* Local-only browser gate. Requires an existing static server and isolated Chrome CDP endpoint.
  * REPOLIS_TEST_URL=http://127.0.0.1:8000/ BROWSER_CDP_URL=http://127.0.0.1:9222 node scripts/test-first-visit-browser.mjs
- * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat and FIRST_VISIT_CASE=<substring> select a smaller run.
+ * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat,readable-town and FIRST_VISIT_CASE=<comma-separated substrings> select a smaller run.
  * FIRST_VISIT_REFERENCE=<commit SHA> replays only viewport observations against historical HTML.
  */
 import assert from 'node:assert/strict';
@@ -13,6 +13,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { createRepositoryBlueprintDeepLink, parseRepoPortalInput } from '../assets/repo-portal.js';
 import { createRepoRouteUrl } from '../assets/repo-route.js';
 import { authorizeRepositoryAtelierRequest } from '../cloudflare-taxi/src/repository-atelier.js';
+import { runReadableTownBrowserCases } from './readable-town-browser-cases.mjs';
 
 const base=new URL(process.env.REPOLIS_TEST_URL||'http://127.0.0.1:8000/');
 const endpoint=new URL(process.env.BROWSER_CDP_URL||'http://127.0.0.1:9222/');
@@ -21,8 +22,9 @@ const output=process.env.FIRST_VISIT_OUTPUT||await mkdtemp(join(tmpdir(),'repoli
 await mkdir(output,{recursive:true});
 const results=[],groups=(process.env.FIRST_VISIT_GROUP||'').split(',').filter(Boolean),only=process.env.FIRST_VISIT_CASE||'';
 const reference=process.env.FIRST_VISIT_REFERENCE||'';
-assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat'].includes(group)),'Unknown browser gate group');
-if(reference) assert(groups.length===1&&groups[0]==='viewport'&&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and the viewport group');
+assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat','readable-town'].includes(group)),'Unknown browser gate group');
+if(reference) assert(groups.length===1&&(groups[0]==='viewport'||(groups[0]==='readable-town'&&process.env.READABLE_BASELINE==='1'))
+  &&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and an explicit observation group');
 const referenceHtml=reference?execFileSync('git',['show',`${reference}:index.html`],{encoding:'utf8',maxBuffer:5*1024*1024}):null;
 const currentHtml=await readFile(new URL('../index.html',import.meta.url),'utf8');
 const version=await (await fetch(new URL('/json/version',endpoint))).json();
@@ -284,7 +286,7 @@ async function assertOneEntry(page){
   assert.equal(await page.evaluate("__events().filter(event=>event.ev==='page_load').length"),1,'one page load per document');
 }
 async function run(test,work){
-  if((groups.length&&!groups.includes(test.group))||(only&&!test.name.includes(only))) return;
+  if((groups.length&&!groups.includes(test.group))||(only&&!only.split(',').some(selector=>test.name.includes(selector.trim())))) return;
   const s=await session(test); let result;
   try{
     await s.page.send('Page.navigate',{url:new URL(test.query||'',s.fixture?s.fixture.origin+base.pathname:base).href});
@@ -885,5 +887,6 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
   }
   return {population,observations,transitions,historicalObservation:!!reference};
 });
+await runReadableTownBrowserCases({run,ready,click,screenshot,delay,inside,outside,output});
 assert(results.length>0,'No browser scenarios matched the requested selector');
 console.log(`First-visit browser gate: ${results.length} passed; evidence: ${output}`);

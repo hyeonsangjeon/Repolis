@@ -1,5 +1,10 @@
 # First-visit review evidence: #120, #121, #122
 
+The latest frontend readability/control work has its own
+[Readable & Controllable Town evidence and physical-device checklist](readable-town.md).
+It preserves the completed Atelier answer validation below and makes no Worker
+or model call.
+
 One goal: a first visitor can see the town, select a current public repository, and arrive in its existing Atelier without an implicit AI request or a wrong-target fallback.
 
 Implementation order: unchanged #122 baseline, #120 viewport, #121 repository path, #122 arrival, integrated gates. This document distinguishes issue evidence from release gates. Merge and production deployment require separate approval.

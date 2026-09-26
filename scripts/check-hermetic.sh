@@ -27,4 +27,6 @@ node --check assets/repo-route.js
 node --check assets/contribution-quests.js
 node --check assets/issue-code-scout.js
 node scripts/test-first-visit.mjs
+node scripts/test-readable-town.mjs
 node --check scripts/test-first-visit-browser.mjs
+node --check scripts/readable-town-browser-cases.mjs

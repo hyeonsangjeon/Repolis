@@ -85,7 +85,8 @@ export async function runFirstVisitTests(check){
   const panelState={window:{REPOLIS_ARRIVAL:{blocked:true}},document,townPanels:panels,
     panel:menu,townTools:{open:false},townPanelBackdrop:{hidden:false},
     TOWN_UI:{active:panels[2],previousFocus:trigger.control},FIRST_REPO:{active:false},modalOpen:false,
-    clearTownInput:()=>{},getComputedStyle:()=>({visibility:'visible'}),requestAnimationFrame:callback=>callback()};
+    clearTownInput:()=>{},refreshNearbyPeople:()=>{},_cacheTownLabelViewport:()=>{},
+    getComputedStyle:()=>({visibility:'visible'}),requestAnimationFrame:callback=>callback()};
   runInNewContext(ui.slice(ui.indexOf('function closeTownPanels'),ui.indexOf('const townPanelObserver'))
     +'\nglobalThis.sync=syncTownPanels;',panelState);
   passport.classList.remove('hidden');
