@@ -131,6 +131,13 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 - **No full browser automation suite.** `scripts/smoke.mjs` guards many static and extracted behavioral
   contracts, but visual and interaction changes still require serving locally and driving the page in
   Chrome DevTools with 0 console errors on mobile + desktop.
+- **World names are intentionally selective.** At most six desktop or four mobile/LOW_END names are
+  admitted, with a screen-size ceiling, safe-area gutters and stable engaged-person priority. Existing
+  speech and UI space win overlaps; behind-camera/near-plane labels are not drawn. Roles remain in
+  **Choose someone nearby** and chat rather than a second world-text row. Physical sign planes retain
+  their texture/depth test but are capped near the camera; no character, house or tree geometry is simplified.
+  The new browser group covers Chrome emulation and IME event ownership, not physical touch hardware,
+  native composition keyboards, Safari/Firefox or hardware GPU loss. See the [manual release checklist](first-visit-evidence/readable-town.md).
 - **Facade relief is intentionally lightweight.** Eight facade families and the roof use nine shared seeded
   color maps plus per-geometry UV phases, not downloaded materials or a photorealistic PBR stack. LOW_END keeps
   the same material identities with fewer micro-marks and lower anisotropy. No bump, normal, or roughness map

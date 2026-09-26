@@ -1,0 +1,2345 @@
+{
+  "schema": "repolis-readable-town-evidence-v1",
+  "baselineRevision": "ebdf5d3df83d82546c507c260051a6302710d82f",
+  "testedSourceBlobs": {
+    "index.html": "2010a90a8ec857eb53e9243e1799bcc7d80adba2",
+    "assets/town-labels.js": "26195e9c3b0750bc75941e6f670310369d7676b7",
+    "scripts/readable-town-browser-cases.mjs": "50f14f01f3d59ceeb45cb2e74ba0a206803f165a",
+    "scripts/test-first-visit-browser.mjs": "a39a2dc3bc8bf7becae63ebc2290cee8c794af74",
+    "repos.json": "7c1056c5bc21397909a93e89bd46f4349daba68a"
+  },
+  "browser": "Chrome/154.0.8037.57",
+  "completedAt": "2026-09-26T13:17:30.145Z",
+  "conditions": {
+    "seed": 120121122,
+    "applicationDate": "2026-09-08T14:00:00Z",
+    "baselineKind": "Historical HTML replay against the same current catalog; expected defects asserted, not a quality pass.",
+    "currentKind": "Real installed Chrome driven by the existing local CDP runner; every final case passed.",
+    "notes": "Repeated scripted greetings, frame scheduling and the shared host are not controlled performance variables. Render medians are observations, not proof of a general FPS improvement.",
+    "backend": "Blocked production Workers, AI, realtime and browser analytics. Any backend response is a named local HTTP fixture.",
+    "realModelCalls": 0,
+    "workerDeployments": 0,
+    "generatedDataEdited": false,
+    "resourceUnits": "Label RGBA canvas backing bytes; not GPU VRAM. Controller timing covers name/sign updates, not the whole frame."
+  },
+  "comparisons": [
+    {
+      "language": "ko",
+      "initialViewport": "1440x900",
+      "baseline": {
+        "enabledNameSprites": 14,
+        "offscreenOrClippedRectangles": 5,
+        "projectedRectangleCollisions": 15,
+        "widestProjectedName": 744.3650684999119,
+        "labelCanvasRgbaBytes": 2662400,
+        "labelCanvasPixels": [
+          {
+            "id": "scholar-0",
+            "width": 512,
+            "height": 170,
+            "hash": "9559bdc3"
+          },
+          {
+            "id": "scholar-1",
+            "width": 512,
+            "height": 170,
+            "hash": "6257bbec"
+          },
+          {
+            "id": "scholar-2",
+            "width": 512,
+            "height": 170,
+            "hash": "96c0a79a"
+          },
+          {
+            "id": "scholar-3",
+            "width": 512,
+            "height": 170,
+            "hash": "cb325587"
+          },
+          {
+            "id": "scholar-4",
+            "width": 512,
+            "height": 170,
+            "hash": "3a38df22"
+          },
+          {
+            "id": "sol",
+            "width": 256,
+            "height": 100,
+            "hash": "7e8d4d0"
+          },
+          {
+            "id": "jun",
+            "width": 256,
+            "height": 100,
+            "hash": "8d06c953"
+          },
+          {
+            "id": "nari",
+            "width": 256,
+            "height": 100,
+            "hash": "1f9d1daf"
+          },
+          {
+            "id": "tae",
+            "width": 256,
+            "height": 100,
+            "hash": "e428b958"
+          },
+          {
+            "id": "rin",
+            "width": 256,
+            "height": 100,
+            "hash": "759b8da6"
+          },
+          {
+            "id": "mira",
+            "width": 256,
+            "height": 100,
+            "hash": "ee7f40e6"
+          },
+          {
+            "id": "kai",
+            "width": 256,
+            "height": 100,
+            "hash": "8cb222fb"
+          },
+          {
+            "id": "noa",
+            "width": 256,
+            "height": 100,
+            "hash": "4d6da794"
+          },
+          {
+            "id": "auri",
+            "width": 256,
+            "height": 100,
+            "hash": "8d7fd35e"
+          }
+        ],
+        "renderMedianMs": 10.800000071525574,
+        "frameSamples": 30,
+        "cardAfterResize": {
+          "open": true,
+          "focus": "",
+          "close": {
+            "left": 293.765625,
+            "right": 346,
+            "top": 892.46875,
+            "bottom": 934.46875,
+            "width": 52.234375,
+            "height": 42,
+            "hit": false
+          },
+          "card": {
+            "top": -112.453125,
+            "bottom": 956.46875
+          },
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        "cardEscape": {
+          "open": true,
+          "inside": false,
+          "focus": "menuBtn"
+        }
+      },
+      "after": {
+        "admittedNames": 6,
+        "clipped": 0,
+        "collisions": 0,
+        "widestProjectedName": 128.00000000000003,
+        "labelCanvasRgbaBytes": 1900544,
+        "labelCanvasPixels": [
+          {
+            "id": "scholar-0",
+            "width": 512,
+            "height": 128,
+            "hash": "f9cb39b"
+          },
+          {
+            "id": "scholar-1",
+            "width": 512,
+            "height": 128,
+            "hash": "44a6b358"
+          },
+          {
+            "id": "scholar-2",
+            "width": 512,
+            "height": 128,
+            "hash": "3fa26a3f"
+          },
+          {
+            "id": "scholar-3",
+            "width": 512,
+            "height": 128,
+            "hash": "6617305d"
+          },
+          {
+            "id": "scholar-4",
+            "width": 512,
+            "height": 128,
+            "hash": "928014b"
+          },
+          {
+            "id": "sol",
+            "width": 256,
+            "height": 64,
+            "hash": "2d65e07"
+          },
+          {
+            "id": "jun",
+            "width": 256,
+            "height": 64,
+            "hash": "f063c8c3"
+          },
+          {
+            "id": "nari",
+            "width": 256,
+            "height": 64,
+            "hash": "28a69a12"
+          },
+          {
+            "id": "tae",
+            "width": 256,
+            "height": 64,
+            "hash": "e7d4b57c"
+          },
+          {
+            "id": "rin",
+            "width": 256,
+            "height": 64,
+            "hash": "72a61c44"
+          },
+          {
+            "id": "mira",
+            "width": 256,
+            "height": 64,
+            "hash": "195b85a0"
+          },
+          {
+            "id": "kai",
+            "width": 256,
+            "height": 64,
+            "hash": "e140f626"
+          },
+          {
+            "id": "noa",
+            "width": 256,
+            "height": 64,
+            "hash": "ed3c8df5"
+          },
+          {
+            "id": "auri",
+            "width": 256,
+            "height": 64,
+            "hash": "633a34ea"
+          }
+        ],
+        "renderMedianMs": 9.100000023841858,
+        "frameSamples": 30,
+        "labelControllerMeanMs": 0.08958332240581512,
+        "controllerFrameSamples": 48,
+        "controllerResources": {
+          "addedTextures": 0,
+          "addedMaterials": 0,
+          "addedGeometry": 0,
+          "buttons": 14,
+          "textureBytes": 1900544
+        },
+        "priority": [
+          {
+            "id": "deepwiki",
+            "visible": true,
+            "priority": 3,
+            "depth": 9.966286325905152,
+            "distance": 3.640054944640259,
+            "left": 655.9999996670097,
+            "top": 322.4188857099435,
+            "width": 127.99999999999999,
+            "height": 31.999999999999996
+          }
+        ],
+        "stableCameraJitterIds": [
+          "deepwiki",
+          "deepwiki",
+          "deepwiki",
+          "deepwiki"
+        ],
+        "clipping": [
+          {
+            "name": "edge",
+            "entry": {
+              "id": "deepwiki",
+              "visible": true,
+              "priority": 0,
+              "depth": 8.012538802093768,
+              "distance": 9.5371807269725,
+              "left": 12,
+              "top": 179.00000016295107,
+              "width": 128,
+              "height": 32
+            }
+          },
+          {
+            "name": "near-plane",
+            "entry": {
+              "id": "deepwiki",
+              "visible": false,
+              "priority": 0,
+              "depth": 0.06426267536372166,
+              "distance": 13.104471609940996,
+              "left": 12,
+              "top": 179.00000016295107,
+              "width": 127.99999999999997,
+              "height": 32
+            }
+          },
+          {
+            "name": "behind",
+            "entry": {
+              "id": "deepwiki",
+              "visible": false,
+              "priority": 0,
+              "depth": -0.9880808331782731,
+              "distance": 14.161716020530525,
+              "left": 12,
+              "top": 179.00000016295107,
+              "width": 128,
+              "height": 32
+            }
+          }
+        ],
+        "cardAfterResize": {
+          "open": true,
+          "focus": "closeBtn",
+          "close": {
+            "left": 322,
+            "right": 370,
+            "top": 20,
+            "bottom": 68,
+            "width": 48,
+            "height": 48,
+            "hit": true
+          },
+          "card": {
+            "top": 12,
+            "bottom": 832
+          },
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        "cardEscape": {
+          "open": false,
+          "inside": false,
+          "focus": "menuBtn"
+        },
+        "nativeChip": "Repolis는 무엇을 하는 레포예요?",
+        "relatedChatActions": [],
+        "ime": {
+          "open": true,
+          "text": "보존할 입력",
+          "before": 3,
+          "after": 3
+        }
+      }
+    },
+    {
+      "language": "ko",
+      "initialViewport": "390x844",
+      "baseline": {
+        "enabledNameSprites": 14,
+        "offscreenOrClippedRectangles": 12,
+        "projectedRectangleCollisions": 14,
+        "widestProjectedName": 685.1371956504225,
+        "labelCanvasRgbaBytes": 2662400,
+        "labelCanvasPixels": [
+          {
+            "id": "scholar-0",
+            "width": 512,
+            "height": 170,
+            "hash": "9559bdc3"
+          },
+          {
+            "id": "scholar-1",
+            "width": 512,
+            "height": 170,
+            "hash": "6257bbec"
+          },
+          {
+            "id": "scholar-2",
+            "width": 512,
+            "height": 170,
+            "hash": "96c0a79a"
+          },
+          {
+            "id": "scholar-3",
+            "width": 512,
+            "height": 170,
+            "hash": "cb325587"
+          },
+          {
+            "id": "scholar-4",
+            "width": 512,
+            "height": 170,
+            "hash": "3a38df22"
+          },
+          {
+            "id": "sol",
+            "width": 256,
+            "height": 100,
+            "hash": "7e8d4d0"
+          },
+          {
+            "id": "jun",
+            "width": 256,
+            "height": 100,
+            "hash": "8d06c953"
+          },
+          {
+            "id": "nari",
+            "width": 256,
+            "height": 100,
+            "hash": "1f9d1daf"
+          },
+          {
+            "id": "tae",
+            "width": 256,
+            "height": 100,
+            "hash": "e428b958"
+          },
+          {
+            "id": "rin",
+            "width": 256,
+            "height": 100,
+            "hash": "759b8da6"
+          },
+          {
+            "id": "mira",
+            "width": 256,
+            "height": 100,
+            "hash": "ee7f40e6"
+          },
+          {
+            "id": "kai",
+            "width": 256,
+            "height": 100,
+            "hash": "8cb222fb"
+          },
+          {
+            "id": "noa",
+            "width": 256,
+            "height": 100,
+            "hash": "4d6da794"
+          },
+          {
+            "id": "auri",
+            "width": 256,
+            "height": 100,
+            "hash": "8d7fd35e"
+          }
+        ],
+        "renderMedianMs": 5.300000071525574,
+        "frameSamples": 30,
+        "cardAfterResize": {
+          "open": true,
+          "focus": "",
+          "close": {
+            "left": 853.765625,
+            "right": 906,
+            "top": 887.671875,
+            "bottom": 929.671875,
+            "width": 52.234375,
+            "height": 42,
+            "hit": false
+          },
+          "card": {
+            "top": -51.671875,
+            "bottom": 951.671875
+          },
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        "cardEscape": {
+          "open": true,
+          "inside": false,
+          "focus": "menuBtn"
+        }
+      },
+      "after": {
+        "admittedNames": 3,
+        "clipped": 0,
+        "collisions": 0,
+        "widestProjectedName": 112.00000000000001,
+        "labelCanvasRgbaBytes": 1900544,
+        "labelCanvasPixels": [
+          {
+            "id": "scholar-0",
+            "width": 512,
+            "height": 128,
+            "hash": "f9cb39b"
+          },
+          {
+            "id": "scholar-1",
+            "width": 512,
+            "height": 128,
+            "hash": "44a6b358"
+          },
+          {
+            "id": "scholar-2",
+            "width": 512,
+            "height": 128,
+            "hash": "3fa26a3f"
+          },
+          {
+            "id": "scholar-3",
+            "width": 512,
+            "height": 128,
+            "hash": "6617305d"
+          },
+          {
+            "id": "scholar-4",
+            "width": 512,
+            "height": 128,
+            "hash": "928014b"
+          },
+          {
+            "id": "sol",
+            "width": 256,
+            "height": 64,
+            "hash": "2d65e07"
+          },
+          {
+            "id": "jun",
+            "width": 256,
+            "height": 64,
+            "hash": "f063c8c3"
+          },
+          {
+            "id": "nari",
+            "width": 256,
+            "height": 64,
+            "hash": "28a69a12"
+          },
+          {
+            "id": "tae",
+            "width": 256,
+            "height": 64,
+            "hash": "e7d4b57c"
+          },
+          {
+            "id": "rin",
+            "width": 256,
+            "height": 64,
+            "hash": "72a61c44"
+          },
+          {
+            "id": "mira",
+            "width": 256,
+            "height": 64,
+            "hash": "195b85a0"
+          },
+          {
+            "id": "kai",
+            "width": 256,
+            "height": 64,
+            "hash": "e140f626"
+          },
+          {
+            "id": "noa",
+            "width": 256,
+            "height": 64,
+            "hash": "ed3c8df5"
+          },
+          {
+            "id": "auri",
+            "width": 256,
+            "height": 64,
+            "hash": "633a34ea"
+          }
+        ],
+        "renderMedianMs": 5.399999976158142,
+        "frameSamples": 30,
+        "labelControllerMeanMs": 0.11041666815678279,
+        "controllerFrameSamples": 48,
+        "controllerResources": {
+          "addedTextures": 0,
+          "addedMaterials": 0,
+          "addedGeometry": 0,
+          "buttons": 14,
+          "textureBytes": 1900544
+        },
+        "priority": [
+          {
+            "id": "deepwiki",
+            "visible": true,
+            "priority": 3,
+            "depth": 9.909731165710763,
+            "distance": 3.640054944640259,
+            "left": 138.99999959247072,
+            "top": 302.7622486838558,
+            "width": 111.99999999999999,
+            "height": 27.999999999999996
+          }
+        ],
+        "stableCameraJitterIds": [
+          "deepwiki",
+          "deepwiki",
+          "deepwiki",
+          "deepwiki"
+        ],
+        "clipping": [
+          {
+            "name": "edge",
+            "entry": {
+              "id": "deepwiki",
+              "visible": true,
+              "priority": 0,
+              "depth": 8.015573881816804,
+              "distance": 9.518084550102813,
+              "left": 12,
+              "top": 181.00000027834344,
+              "width": 112.00000000000001,
+              "height": 28.000000000000004
+            }
+          },
+          {
+            "name": "near-plane",
+            "entry": {
+              "id": "deepwiki",
+              "visible": false,
+              "priority": 0,
+              "depth": 0.06301487037978148,
+              "distance": 13.071575366696052,
+              "left": 12,
+              "top": 181.00000027834344,
+              "width": 112,
+              "height": 28
+            }
+          },
+          {
+            "name": "behind",
+            "entry": {
+              "id": "deepwiki",
+              "visible": false,
+              "priority": 0,
+              "depth": -0.9872860330664996,
+              "distance": 14.127545444719305,
+              "left": 12,
+              "top": 181.00000027834344,
+              "width": 112,
+              "height": 28
+            }
+          }
+        ],
+        "cardAfterResize": {
+          "open": true,
+          "focus": "closeBtn",
+          "close": {
+            "left": 874,
+            "right": 922,
+            "top": 20,
+            "bottom": 68,
+            "width": 48,
+            "height": 48,
+            "hit": true
+          },
+          "card": {
+            "top": 12,
+            "bottom": 888
+          },
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        "cardEscape": {
+          "open": false,
+          "inside": false,
+          "focus": "menuBtn"
+        },
+        "nativeChip": "Repolis는 무엇을 하는 레포예요?",
+        "relatedChatActions": [],
+        "ime": {
+          "open": true,
+          "text": "보존할 입력",
+          "before": 3,
+          "after": 3
+        }
+      }
+    },
+    {
+      "language": "en",
+      "initialViewport": "1440x900",
+      "baseline": {
+        "enabledNameSprites": 14,
+        "offscreenOrClippedRectangles": 5,
+        "projectedRectangleCollisions": 15,
+        "widestProjectedName": 744.2740328431415,
+        "labelCanvasRgbaBytes": 2662400,
+        "labelCanvasPixels": [
+          {
+            "id": "scholar-0",
+            "width": 512,
+            "height": 170,
+            "hash": "9559bdc3"
+          },
+          {
+            "id": "scholar-1",
+            "width": 512,
+            "height": 170,
+            "hash": "6257bbec"
+          },
+          {
+            "id": "scholar-2",
+            "width": 512,
+            "height": 170,
+            "hash": "96c0a79a"
+          },
+          {
+            "id": "scholar-3",
+            "width": 512,
+            "height": 170,
+            "hash": "cb325587"
+          },
+          {
+            "id": "scholar-4",
+            "width": 512,
+            "height": 170,
+            "hash": "3a38df22"
+          },
+          {
+            "id": "sol",
+            "width": 256,
+            "height": 100,
+            "hash": "11c527da"
+          },
+          {
+            "id": "jun",
+            "width": 256,
+            "height": 100,
+            "hash": "8d7c4e58"
+          },
+          {
+            "id": "nari",
+            "width": 256,
+            "height": 100,
+            "hash": "89a610da"
+          },
+          {
+            "id": "tae",
+            "width": 256,
+            "height": 100,
+            "hash": "da65fc24"
+          },
+          {
+            "id": "rin",
+            "width": 256,
+            "height": 100,
+            "hash": "730e428e"
+          },
+          {
+            "id": "mira",
+            "width": 256,
+            "height": 100,
+            "hash": "5bd5d22c"
+          },
+          {
+            "id": "kai",
+            "width": 256,
+            "height": 100,
+            "hash": "fa14dbb1"
+          },
+          {
+            "id": "noa",
+            "width": 256,
+            "height": 100,
+            "hash": "765ceea9"
+          },
+          {
+            "id": "auri",
+            "width": 256,
+            "height": 100,
+            "hash": "d4b42f4"
+          }
+        ],
+        "renderMedianMs": 11.399999976158142,
+        "frameSamples": 30,
+        "cardAfterResize": {
+          "open": true,
+          "focus": "",
+          "close": {
+            "left": 279.875,
+            "right": 346,
+            "top": 906.96875,
+            "bottom": 947.96875,
+            "width": 66.125,
+            "height": 41,
+            "hit": false
+          },
+          "card": {
+            "top": -125.953125,
+            "bottom": 969.96875
+          },
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        "cardEscape": {
+          "open": true,
+          "inside": false,
+          "focus": "menuBtn"
+        }
+      },
+      "after": {
+        "admittedNames": 6,
+        "clipped": 0,
+        "collisions": 0,
+        "widestProjectedName": 128.00000000000003,
+        "labelCanvasRgbaBytes": 1900544,
+        "labelCanvasPixels": [
+          {
+            "id": "scholar-0",
+            "width": 512,
+            "height": 128,
+            "hash": "f9cb39b"
+          },
+          {
+            "id": "scholar-1",
+            "width": 512,
+            "height": 128,
+            "hash": "44a6b358"
+          },
+          {
+            "id": "scholar-2",
+            "width": 512,
+            "height": 128,
+            "hash": "3fa26a3f"
+          },
+          {
+            "id": "scholar-3",
+            "width": 512,
+            "height": 128,
+            "hash": "6617305d"
+          },
+          {
+            "id": "scholar-4",
+            "width": 512,
+            "height": 128,
+            "hash": "928014b"
+          },
+          {
+            "id": "sol",
+            "width": 256,
+            "height": 64,
+            "hash": "9476d8b5"
+          },
+          {
+            "id": "jun",
+            "width": 256,
+            "height": 64,
+            "hash": "5e7d1517"
+          },
+          {
+            "id": "nari",
+            "width": 256,
+            "height": 64,
+            "hash": "c9f652c8"
+          },
+          {
+            "id": "tae",
+            "width": 256,
+            "height": 64,
+            "hash": "b3f669ad"
+          },
+          {
+            "id": "rin",
+            "width": 256,
+            "height": 64,
+            "hash": "7f7893db"
+          },
+          {
+            "id": "mira",
+            "width": 256,
+            "height": 64,
+            "hash": "7e99ab9a"
+          },
+          {
+            "id": "kai",
+            "width": 256,
+            "height": 64,
+            "hash": "5fb437c7"
+          },
+          {
+            "id": "noa",
+            "width": 256,
+            "height": 64,
+            "hash": "5974e7df"
+          },
+          {
+            "id": "auri",
+            "width": 256,
+            "height": 64,
+            "hash": "bcd668cc"
+          }
+        ],
+        "renderMedianMs": 10,
+        "frameSamples": 30,
+        "labelControllerMeanMs": 0.1040816355724724,
+        "controllerFrameSamples": 49,
+        "controllerResources": {
+          "addedTextures": 0,
+          "addedMaterials": 0,
+          "addedGeometry": 0,
+          "buttons": 14,
+          "textureBytes": 1900544
+        },
+        "priority": [
+          {
+            "id": "deepwiki",
+            "visible": true,
+            "priority": 3,
+            "depth": 9.548969346385894,
+            "distance": 3.640054944640259,
+            "left": 655.9999993168236,
+            "top": 317.5249940567228,
+            "width": 128,
+            "height": 32
+          }
+        ],
+        "stableCameraJitterIds": [
+          "deepwiki",
+          "deepwiki",
+          "deepwiki",
+          "deepwiki"
+        ],
+        "clipping": [
+          {
+            "name": "edge",
+            "entry": {
+              "id": "deepwiki",
+              "visible": true,
+              "priority": 0,
+              "depth": 8.01354284421981,
+              "distance": 9.514262212617892,
+              "left": 12,
+              "top": 179.00000022757393,
+              "width": 128,
+              "height": 32
+            }
+          },
+          {
+            "name": "near-plane",
+            "entry": {
+              "id": "deepwiki",
+              "visible": false,
+              "priority": 0,
+              "depth": 0.06540472112439488,
+              "distance": 13.062348815088665,
+              "left": 12,
+              "top": 179.00000022757393,
+              "width": 128,
+              "height": 32
+            }
+          },
+          {
+            "name": "behind",
+            "entry": {
+              "id": "deepwiki",
+              "visible": false,
+              "priority": 0,
+              "depth": -0.9871264520803109,
+              "distance": 14.120684456462543,
+              "left": 12,
+              "top": 179.00000022757393,
+              "width": 128,
+              "height": 32
+            }
+          }
+        ],
+        "cardAfterResize": {
+          "open": true,
+          "focus": "closeBtn",
+          "close": {
+            "left": 322,
+            "right": 370,
+            "top": 20,
+            "bottom": 68,
+            "width": 48,
+            "height": 48,
+            "hit": true
+          },
+          "card": {
+            "top": 12,
+            "bottom": 832
+          },
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        "cardEscape": {
+          "open": false,
+          "inside": false,
+          "focus": "menuBtn"
+        },
+        "nativeChip": "What does Repolis do?",
+        "relatedChatActions": [
+          {
+            "tag": "BUTTON",
+            "name": "🚕 I'll drive you there",
+            "tabIndex": 0
+          },
+          {
+            "tag": "BUTTON",
+            "name": "Channel Vault Nas",
+            "tabIndex": 0
+          },
+          {
+            "tag": "BUTTON",
+            "name": "Youtube Dl Nas",
+            "tabIndex": 0
+          },
+          {
+            "tag": "BUTTON",
+            "name": "Gdpval Realworks",
+            "tabIndex": 0
+          }
+        ],
+        "ime": {
+          "open": true,
+          "text": "보존할 입력",
+          "before": 3,
+          "after": 3
+        }
+      }
+    },
+    {
+      "language": "en",
+      "initialViewport": "390x844",
+      "baseline": {
+        "enabledNameSprites": 14,
+        "offscreenOrClippedRectangles": 12,
+        "projectedRectangleCollisions": 14,
+        "widestProjectedName": 685.2632619755403,
+        "labelCanvasRgbaBytes": 2662400,
+        "labelCanvasPixels": [
+          {
+            "id": "scholar-0",
+            "width": 512,
+            "height": 170,
+            "hash": "9559bdc3"
+          },
+          {
+            "id": "scholar-1",
+            "width": 512,
+            "height": 170,
+            "hash": "6257bbec"
+          },
+          {
+            "id": "scholar-2",
+            "width": 512,
+            "height": 170,
+            "hash": "96c0a79a"
+          },
+          {
+            "id": "scholar-3",
+            "width": 512,
+            "height": 170,
+            "hash": "cb325587"
+          },
+          {
+            "id": "scholar-4",
+            "width": 512,
+            "height": 170,
+            "hash": "3a38df22"
+          },
+          {
+            "id": "sol",
+            "width": 256,
+            "height": 100,
+            "hash": "11c527da"
+          },
+          {
+            "id": "jun",
+            "width": 256,
+            "height": 100,
+            "hash": "8d7c4e58"
+          },
+          {
+            "id": "nari",
+            "width": 256,
+            "height": 100,
+            "hash": "89a610da"
+          },
+          {
+            "id": "tae",
+            "width": 256,
+            "height": 100,
+            "hash": "da65fc24"
+          },
+          {
+            "id": "rin",
+            "width": 256,
+            "height": 100,
+            "hash": "730e428e"
+          },
+          {
+            "id": "mira",
+            "width": 256,
+            "height": 100,
+            "hash": "5bd5d22c"
+          },
+          {
+            "id": "kai",
+            "width": 256,
+            "height": 100,
+            "hash": "fa14dbb1"
+          },
+          {
+            "id": "noa",
+            "width": 256,
+            "height": 100,
+            "hash": "765ceea9"
+          },
+          {
+            "id": "auri",
+            "width": 256,
+            "height": 100,
+            "hash": "d4b42f4"
+          }
+        ],
+        "renderMedianMs": 5.5,
+        "frameSamples": 30,
+        "cardAfterResize": {
+          "open": true,
+          "focus": "",
+          "close": {
+            "left": 839.875,
+            "right": 906,
+            "top": 902.625,
+            "bottom": 943.625,
+            "width": 66.125,
+            "height": 41,
+            "hit": false
+          },
+          "card": {
+            "top": -65.609375,
+            "bottom": 965.625
+          },
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        "cardEscape": {
+          "open": true,
+          "inside": false,
+          "focus": "menuBtn"
+        }
+      },
+      "after": {
+        "admittedNames": 3,
+        "clipped": 0,
+        "collisions": 0,
+        "widestProjectedName": 112.00000000000001,
+        "labelCanvasRgbaBytes": 1900544,
+        "labelCanvasPixels": [
+          {
+            "id": "scholar-0",
+            "width": 512,
+            "height": 128,
+            "hash": "f9cb39b"
+          },
+          {
+            "id": "scholar-1",
+            "width": 512,
+            "height": 128,
+            "hash": "44a6b358"
+          },
+          {
+            "id": "scholar-2",
+            "width": 512,
+            "height": 128,
+            "hash": "3fa26a3f"
+          },
+          {
+            "id": "scholar-3",
+            "width": 512,
+            "height": 128,
+            "hash": "6617305d"
+          },
+          {
+            "id": "scholar-4",
+            "width": 512,
+            "height": 128,
+            "hash": "928014b"
+          },
+          {
+            "id": "sol",
+            "width": 256,
+            "height": 64,
+            "hash": "9476d8b5"
+          },
+          {
+            "id": "jun",
+            "width": 256,
+            "height": 64,
+            "hash": "5e7d1517"
+          },
+          {
+            "id": "nari",
+            "width": 256,
+            "height": 64,
+            "hash": "c9f652c8"
+          },
+          {
+            "id": "tae",
+            "width": 256,
+            "height": 64,
+            "hash": "b3f669ad"
+          },
+          {
+            "id": "rin",
+            "width": 256,
+            "height": 64,
+            "hash": "7f7893db"
+          },
+          {
+            "id": "mira",
+            "width": 256,
+            "height": 64,
+            "hash": "7e99ab9a"
+          },
+          {
+            "id": "kai",
+            "width": 256,
+            "height": 64,
+            "hash": "5fb437c7"
+          },
+          {
+            "id": "noa",
+            "width": 256,
+            "height": 64,
+            "hash": "5974e7df"
+          },
+          {
+            "id": "auri",
+            "width": 256,
+            "height": 64,
+            "hash": "bcd668cc"
+          }
+        ],
+        "renderMedianMs": 5.699999928474426,
+        "frameSamples": 30,
+        "labelControllerMeanMs": 0.12291666368643443,
+        "controllerFrameSamples": 48,
+        "controllerResources": {
+          "addedTextures": 0,
+          "addedMaterials": 0,
+          "addedGeometry": 0,
+          "buttons": 14,
+          "textureBytes": 1900544
+        },
+        "priority": [
+          {
+            "id": "deepwiki",
+            "visible": true,
+            "priority": 3,
+            "depth": 9.897425147181668,
+            "distance": 3.640054944640259,
+            "left": 138.9999995915284,
+            "top": 302.6313810665051,
+            "width": 112,
+            "height": 28
+          }
+        ],
+        "stableCameraJitterIds": [
+          "deepwiki",
+          "deepwiki",
+          "deepwiki",
+          "deepwiki"
+        ],
+        "clipping": [
+          {
+            "name": "edge",
+            "entry": {
+              "id": "deepwiki",
+              "visible": true,
+              "priority": 0,
+              "depth": 8.015720258367244,
+              "distance": 9.515221878203285,
+              "left": 12,
+              "top": 181.00000041417803,
+              "width": 112,
+              "height": 28
+            }
+          },
+          {
+            "name": "near-plane",
+            "entry": {
+              "id": "deepwiki",
+              "visible": false,
+              "priority": 0,
+              "depth": 0.06313720072760987,
+              "distance": 13.066321543283088,
+              "left": 12,
+              "top": 181.00000041417803,
+              "width": 111.99999999999997,
+              "height": 28
+            }
+          },
+          {
+            "name": "behind",
+            "entry": {
+              "id": "deepwiki",
+              "visible": false,
+              "priority": 0,
+              "depth": -0.9871665309418685,
+              "distance": 14.122407725505596,
+              "left": 12,
+              "top": 181.00000041417803,
+              "width": 112,
+              "height": 28
+            }
+          }
+        ],
+        "cardAfterResize": {
+          "open": true,
+          "focus": "closeBtn",
+          "close": {
+            "left": 874,
+            "right": 922,
+            "top": 20,
+            "bottom": 68,
+            "width": 48,
+            "height": 48,
+            "hit": true
+          },
+          "card": {
+            "top": 12,
+            "bottom": 888
+          },
+          "viewport": [
+            1440,
+            900
+          ]
+        },
+        "cardEscape": {
+          "open": false,
+          "inside": false,
+          "focus": "menuBtn"
+        },
+        "nativeChip": "What does Repolis do?",
+        "relatedChatActions": [
+          {
+            "tag": "BUTTON",
+            "name": "🚕 I'll drive you there",
+            "tabIndex": 0
+          },
+          {
+            "tag": "BUTTON",
+            "name": "Channel Vault Nas",
+            "tabIndex": 0
+          },
+          {
+            "tag": "BUTTON",
+            "name": "Youtube Dl Nas",
+            "tabIndex": 0
+          },
+          {
+            "tag": "BUTTON",
+            "name": "Gdpval Realworks",
+            "tabIndex": 0
+          }
+        ],
+        "ime": {
+          "open": true,
+          "text": "보존할 입력",
+          "before": 3,
+          "after": 3
+        }
+      }
+    }
+  ],
+  "finalCases": [
+    {
+      "name": "plaza-en-desktop",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-en-desktop",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "blueprint-en-desktop",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "blueprint-cancel-en-desktop",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "plaza-ko-desktop",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-ko-desktop",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "blueprint-ko-desktop",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "blueprint-cancel-ko-desktop",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "plaza-en-mobile",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-en-mobile",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "blueprint-en-mobile",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "blueprint-cancel-en-mobile",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "plaza-ko-mobile",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-ko-mobile",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "blueprint-ko-mobile",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "blueprint-cancel-ko-mobile",
+      "group": "matrix",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "webgl-unavailable",
+      "group": "failures",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 2,
+      "resourceErrors": 0,
+      "injectedFailure": true
+    },
+    {
+      "name": "explicit-retry",
+      "group": "failures",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 1,
+      "injectedFailure": true
+    },
+    {
+      "name": "mismatched-owner",
+      "group": "failures",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-code-en-desktop",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-code-ko-desktop",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-code-en-mobile",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-code-ko-mobile",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-flow-en-desktop",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-flow-ko-desktop",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-flow-en-mobile",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-flow-ko-mobile",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-no-source-en-desktop",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-no-source-ko-desktop",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-no-source-en-mobile",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-no-source-ko-mobile",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-timeout-en",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-timeout-ko",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-exit-en",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-exit-ko",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-disabled-en-desktop",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-disabled-ko-desktop",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-disabled-en-mobile",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "atelier-chat-disabled-ko-mobile",
+      "group": "atelier-chat",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "host-rejection-en-desktop",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 1,
+      "resourceErrors": 0,
+      "injectedFailure": true
+    },
+    {
+      "name": "host-rejection-ko-desktop",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 1,
+      "resourceErrors": 0,
+      "injectedFailure": true
+    },
+    {
+      "name": "host-rejection-en-mobile",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 1,
+      "resourceErrors": 0,
+      "injectedFailure": true
+    },
+    {
+      "name": "host-rejection-ko-mobile",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 1,
+      "resourceErrors": 0,
+      "injectedFailure": true
+    },
+    {
+      "name": "disclosure-keys-en-desktop",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "context-tour-panel-en-desktop",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "context-closed-chat-en-desktop",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "disclosure-keys-ko-desktop",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "context-tour-panel-ko-desktop",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "context-closed-chat-ko-desktop",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "disclosure-keys-en-mobile",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "context-tour-panel-en-mobile",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "context-closed-chat-en-mobile",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "disclosure-keys-ko-mobile",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "context-tour-panel-ko-mobile",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "context-closed-chat-ko-mobile",
+      "group": "regressions",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "mixed-speech-en-desktop",
+      "group": "viewport",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "mixed-speech-ko-desktop",
+      "group": "viewport",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "mixed-speech-en-mobile",
+      "group": "viewport",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "mixed-speech-ko-mobile",
+      "group": "viewport",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-labels-ko-desktop",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-panels-ko-desktop",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-fast-return-ko-desktop",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-labels-en-desktop",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-panels-en-desktop",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-fast-return-en-desktop",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": false,
+        "lowEnd": false,
+        "reduced": false
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-labels-ko-mobile",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-panels-ko-mobile",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-fast-return-ko-mobile",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-labels-en-mobile",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-panels-en-mobile",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    },
+    {
+      "name": "readable-fast-return-en-mobile",
+      "group": "readable-town",
+      "passed": true,
+      "emulation": {
+        "mobile": true,
+        "lowEnd": true,
+        "reduced": true
+      },
+      "consoleErrors": 0,
+      "resourceErrors": 0,
+      "injectedFailure": false
+    }
+  ],
+  "lighthouse": {
+    "scope": "Snapshot of an opened repository card, not an app-wide or physical-device certificate.",
+    "beforeAccessibility": 0.96,
+    "afterAccessibility": 1,
+    "correctedAudit": "color-contrast"
+  },
+  "preservedUserFiles": [
+    "cloudflare-taxi/src/grounded.js",
+    "cloudflare-taxi/src/npc-budget-governor.js",
+    "scripts/smoke.mjs",
+    "scripts/test-npc-budget-governor.mjs"
+  ],
+  "protectedUserBytesVerified": true,
+  "addedSceneTextures": 0,
+  "addedSceneMaterials": 0,
+  "addedSceneGeometry": 0,
+  "images": [
+    "readable-town/before-readable-labels-ko-desktop-near.jpg",
+    "readable-town/after-readable-labels-ko-desktop-near.jpg",
+    "readable-town/before-readable-labels-ko-desktop-rotated.jpg",
+    "readable-town/after-readable-labels-ko-desktop-rotated.jpg",
+    "readable-town/before-readable-card-ko-desktop-resized.jpg",
+    "readable-town/after-readable-card-ko-desktop-resized.jpg",
+    "readable-town/after-readable-priority-ko-desktop.jpg",
+    "readable-town/before-readable-labels-ko-mobile-near.jpg",
+    "readable-town/after-readable-labels-ko-mobile-near.jpg",
+    "readable-town/before-readable-labels-ko-mobile-rotated.jpg",
+    "readable-town/after-readable-labels-ko-mobile-rotated.jpg",
+    "readable-town/before-readable-card-ko-mobile-resized.jpg",
+    "readable-town/after-readable-card-ko-mobile-resized.jpg",
+    "readable-town/after-readable-priority-ko-mobile.jpg",
+    "readable-town/before-readable-labels-en-desktop-near.jpg",
+    "readable-town/after-readable-labels-en-desktop-near.jpg",
+    "readable-town/before-readable-labels-en-desktop-rotated.jpg",
+    "readable-town/after-readable-labels-en-desktop-rotated.jpg",
+    "readable-town/before-readable-card-en-desktop-resized.jpg",
+    "readable-town/after-readable-card-en-desktop-resized.jpg",
+    "readable-town/after-readable-priority-en-desktop.jpg",
+    "readable-town/before-readable-labels-en-mobile-near.jpg",
+    "readable-town/after-readable-labels-en-mobile-near.jpg",
+    "readable-town/before-readable-labels-en-mobile-rotated.jpg",
+    "readable-town/after-readable-labels-en-mobile-rotated.jpg",
+    "readable-town/before-readable-card-en-mobile-resized.jpg",
+    "readable-town/after-readable-card-en-mobile-resized.jpg",
+    "readable-town/after-readable-priority-en-mobile.jpg"
+  ],
+  "manualCoverage": "See readable-town.md: physical safe areas/touch, native IME and screen reader, Safari/Firefox and hardware GPU failure remain manual owner/reviewer checks."
+}

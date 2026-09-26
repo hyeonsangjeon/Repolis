@@ -98,8 +98,15 @@
   #nearbySpeech { margin: 10px 0; padding: 10px; background: #f6ecdb; border-radius: 12px; }
   #nearbySpeech summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 12px; font-weight: 700; }
   #nearbySpeechText { font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+  #nearbyPeople { margin:10px 0; padding:10px; background:#f6ecdb; border-radius:12px; }
+  #nearbyPeople > summary { min-height:44px; display:flex; align-items:center; cursor:pointer; font-size:12px; font-weight:700; }
+  #nearbyPeopleList { display:flex; flex-direction:column; gap:6px; }
+  #nearbyPeopleList button { min-height:44px; padding:8px 10px; border:1px solid #d8c7ad; border-radius:9px;
+    background:#fffaf2; color:#493726; font:600 12px/1.5 system-ui,sans-serif; text-align:left; overflow-wrap:anywhere; cursor:pointer; }
+  #nearbyPeopleList button[hidden] { display:none; }
+  #townLabelSafeArea { position:fixed; inset:0; visibility:hidden; pointer-events:none; padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px); }
   #firstRepoPicker[hidden], #firstRepoPager[hidden] { display: none; }
-  #panel.firstRepoMode > :is(#intentLens,#tourReplayBtn,#questMenuBtn,#creatorMenuBtn,#repoRouteMenuBtn,#growthMenuBtn,#twinMenuBtn,#postcardMenuBtn,#nearbySpeech) { display: none; }
+  #panel.firstRepoMode > :is(#intentLens,#tourReplayBtn,#questMenuBtn,#creatorMenuBtn,#repoRouteMenuBtn,#growthMenuBtn,#twinMenuBtn,#postcardMenuBtn,#nearbySpeech,#nearbyPeople) { display: none; }
   #firstRepoPicker h4 { margin: 0 0 6px; font-size: 16px; line-height: 1.35; }
   #firstRepoPicker p, #firstRepoStatus { margin: 6px 0 10px; color: #806444; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
   #firstRepoPicker button, #firstRepoPager button { min-height: 44px; padding: 8px 12px; border: 1px solid #d8c7ad;
@@ -337,11 +344,18 @@
   #prompt.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #prompt .key { background: #fff; color: #4a2f1e; border-radius: 7px; padding: 2px 9px; font-weight: 800; font-size: 12px; }
 
-  #modal { position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center;
-    background: rgba(30,18,8,.45); backdrop-filter: blur(4px); padding: 20px; }
+  #modal { position: fixed; inset: 0; z-index: 80; display: none; align-items: center; justify-content: center;
+    top:var(--town-ui-top,0px); bottom:auto; height:var(--town-ui-height,100dvh);
+    background: rgba(30,18,8,.45); backdrop-filter: blur(4px);
+    padding:calc(12px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px)); }
   #modal.show { display: flex; }
   .card { background: #fffaf2; border-radius: 22px; width: 420px; max-width: 100%; overflow: hidden; position: relative;
+    display:flex; flex-direction:column; max-height:calc(var(--town-ui-height,100dvh) - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
     box-shadow: 0 24px 70px rgba(40,22,8,.4); animation: pop .22s cubic-bezier(.2,.9,.3,1.3); }
+  .cardScroll { min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+  #closeBtn { position:absolute; top:8px; right:8px; z-index:4; width:48px; height:48px; border:1px solid #d8c7ad;
+    border-radius:50%; background:#fffaf2; color:#493726; font:700 22px/1 system-ui,sans-serif; cursor:pointer; }
+  #closeBtn:focus-visible, .caChip:focus-visible { outline:3px solid #356856; outline-offset:2px; }
   .card:focus { outline: 3px solid rgba(111,143,102,.55); outline-offset: 3px; }
   .timeTrace { margin: 0 18px 12px; padding: 9px 11px; border-radius: 11px; background: #edf2e6; color: #486044;
     font-size: 12px; line-height: 1.45; font-weight: 700; }
@@ -349,12 +363,12 @@
     overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
   @keyframes pop { from { transform: scale(.9) translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
   .card .top { padding: 22px 24px; color: #fff; }
-  .card .top .lang { font-size: 12px; font-weight: 700; opacity: .92; letter-spacing: .03em; }
+  .card .top .lang { font-size: 12px; font-weight: 700; letter-spacing: .03em; }
   .card .top h2 { font-size: 21px; margin: 4px 0 2px; word-break: break-all; }
-  .card .top .stars { font-size: 13px; font-weight: 600; opacity: .92; }
+  .card .top .stars { font-size: 13px; font-weight: 600; }
   .card .body { padding: 18px 24px 8px; }
   .card .body p { font-size: 14px; line-height: 1.55; color: #5a4636; }
-  .card .body p.empty { color: #b39f8c; font-style: italic; }
+  .card .body p.empty { color: #796044; font-style: italic; }
   .cardLineage { margin: 0 24px 4px; padding: 10px 12px; border-radius: 11px; background: #f0eee2;
     color: #53604c; font-size: 11.5px; line-height: 1.45; display: flex; align-items: center; gap: 8px; }
   .cardLineage[hidden] { display: none; }
@@ -848,9 +862,10 @@
     backdrop-filter: blur(5px); box-shadow: 0 3px 12px rgba(0,0,0,.3); }
   .card .chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 14px 24px 2px; }
   .chip { font-size: 12px; font-weight: 700; color: #6a523d; background: #f4ead8; border-radius: 999px; padding: 5px 11px; }
-  .card .since { width: 100%; font-size: 11px; color: #ab8a66; padding: 8px 24px 0; line-height: 1.5; }
+  .card .since { width: 100%; font-size: 11px; color: #796044; padding: 8px 24px 0; line-height: 1.5; }
   .chip b { color: #d2622f; }
-  .card .metricnote { font-size: 11px; color: #b39f8c; padding: 8px 24px 0; line-height: 1.4; }
+  .card .chip b { color:#95421c; }
+  .card .metricnote { font-size: 11px; color: #796044; padding: 8px 24px 0; line-height: 1.4; }
   .card .cardAsk { padding: 12px 24px 0; }
   .cardAsk .caTitle { font-size: 12.5px; font-weight: 800; color: #8a6a3e; margin: 0 0 9px; }
   .cardAsk .caRow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
@@ -858,10 +873,10 @@
     background: #fbf3e2; color: #6a523d; font-family: inherit; font-size: 12px; font-weight: 700; border-radius: 10px; padding: 9px 10px;
     transition: background .14s ease, transform .12s ease; }
   .cardAsk .caBtn:hover { background: #f3e6cd; transform: translateY(-1px); }
-  .cardAsk .caHint { font-size: 10.5px; font-weight: 700; color: #b39f8c; margin: 2px 0 6px; text-transform: uppercase; letter-spacing: .02em; }
+  .cardAsk .caHint { font-size: 10.5px; font-weight: 700; color: #796044; margin: 2px 0 6px; text-transform: uppercase; letter-spacing: .02em; }
   .cardAsk .caChips { display: flex; gap: 6px; flex-wrap: wrap; }
   .cardAsk .caChip { cursor: pointer; font-size: 11.5px; font-weight: 600; color: #6a4f86; background: #f1ecf8;
-    border: 1px solid #ddd0ec; border-radius: 999px; padding: 6px 11px; transition: background .14s ease, transform .12s ease; }
+    min-height:44px; font-family:inherit; text-align:left; border: 1px solid #ddd0ec; border-radius: 999px; padding: 6px 11px; transition: background .14s ease, transform .12s ease; }
   .cardAsk .caChip:hover { background: #e7ddf7; transform: translateY(-1px); }
 
   /* ---- Contribution Library panel ---- */
@@ -1335,6 +1350,7 @@
   .msg .ride { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; cursor: pointer;
     background: #ffd23f; color: #6a4a22; font-weight: 800; font-size: 12px; padding: 7px 12px; border-radius: 10px; }
   .msg .ride:hover { filter: brightness(1.05); }
+  .msg .ride, .msg .alt { min-height:44px; border:0; font-family:inherit; }
   .msg .ride.handoff { background: linear-gradient(135deg,#cfe0ff,#ffd8b8); color: #49365f; }
   .msg .alt { display: inline-block; margin: 4px 5px 0 0; font-size: 11px; font-weight: 700; color: #3a6fb0;
     background: #e7eef8; padding: 4px 9px; border-radius: 8px; cursor: pointer; }
@@ -1623,10 +1639,14 @@
 </div>
 <button id="menuBtn" type="button" aria-controls="panel" aria-expanded="false" data-i18n-aria="wayfinding">☰<span class="dot"></span></button>
 <div id="townPanelBackdrop" hidden aria-hidden="true"></div>
+<div id="townLabelSafeArea" aria-hidden="true"></div>
 
 <div id="panel" class="hidden" role="dialog" aria-modal="true" data-i18n-aria="wayfinding" inert>
   <button class="townPanelClose" type="button" data-town-close="panel" data-i18n-aria="close">✕</button>
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <details id="nearbyPeople"><summary data-i18n="nearbyPeople">가까운 인물 선택</summary>
+    <p id="nearbyPeopleEmpty" data-i18n="nearbyPeopleEmpty">가까운 인물에게 다가가 보세요.</p><div id="nearbyPeopleList"></div>
+  </details>
   <section id="intentLens" aria-labelledby="intentLensTitle">
     <div id="intentLensTitle" data-i18n="intentLensTitle">무엇을 하러 왔나요?</div>
     <div class="intentLensChoices">
@@ -1993,6 +2013,8 @@
 
 <div id="modal" role="dialog" aria-modal="true" aria-labelledby="cardName" aria-describedby="cardDesc cardTimeTrace cardLineage" aria-hidden="true">
   <div class="card" tabindex="-1">
+    <button id="closeBtn" type="button" data-i18n-aria="close" aria-label="닫기">✕</button>
+    <div class="cardScroll" id="cardScroll">
     <img id="cardImg" class="hero" alt="repo social preview" />
     <div class="sociallabel" id="cardSocialTag">🎨 <span data-i18n="socialPreview">소셜 프리뷰</span></div>
     <div class="top" id="cardTop">
@@ -2008,6 +2030,7 @@
     <div class="metricnote" id="cardMetricNote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).</div>
     <div class="cardAsk" id="cardAsk"></div>
     <div class="actions" id="cardActions"></div>
+    </div>
   </div>
 </div>
 
@@ -2360,6 +2383,7 @@ import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.
 import { REPOSITORY_ATELIER_CHAT_LIMIT, REPOSITORY_ATELIER_CHAT_TIMEOUT_MS, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, formatRepositoryAtelierChatMessage, repositoryAtelierChatPayload, repositoryAtelierChatResponseFailure, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-documents-v3';
 import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, resolveRepositoryBlueprintFocus, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v2';
 import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from './assets/issue-code-scout.js?v=issue-code-scout-v1';
+import { TOWN_LABEL_LIMITS, createTownLabelLayout, handleTownPanelKey, layoutTownLabels, readableCardForeground, stableTownLabelFocus } from './assets/town-labels.js?v=readable-town-v1';
 import { PROCEDURAL_SURFACE_FAMILIES, PROCEDURAL_SURFACE_LIMITS, PROCEDURAL_SURFACE_VERSION, createSurfaceRng, disposeBoundedSurfaceCache, getOrCreateBoundedSurface, normalizeSurfaceFamily, surfacePixelHash, surfaceTextureKey, surfaceUvTransform, surfaceVariant, surfaceWallRepeat } from './assets/procedural-surfaces.js?v=procedural-surface-v2-3';
 
 // Own rejected startup awaits without treating unrelated host promises as town failures.
@@ -2728,6 +2752,7 @@ const I18N = {
     loading:'레포 도시를 짓는 중…',
     visited:'탐험', wayfinding:'길찾기', searchPh:'레포·언어·주제 검색…', todayWord:'오늘', totalWord:'누적',
     townTools:'마을 · 방문', nearbySpeech:'주변 대화 읽기', nearbySpeechEmpty:'지금 가까이에서 들리는 대화가 없어요.',
+    nearbyPeople:'가까운 인물 선택', nearbyPeopleEmpty:'가까운 인물에게 다가가 보세요.', nearbyPersonTalk:'{name} · {role} — 대화하기',
     firstRepoTitle:'이 마을의 레포 하나 고르기', firstRepoBasis:'현재 불러온 공개 목록 순서입니다. 선택하면 자동 질문 없이 전시실에 들어가요.',
     firstRepoBack:'목적 선택으로', firstRepoCancel:'마을로 돌아가기', firstRepoPrev:'이전 6개', firstRepoNext:'다음 6개',
     firstRepoCount:'{total}개 중 {from}–{to} · 다른 레포는 검색해 보세요.', firstRepoPartial:'불러온 일부 공개 레포만 표시합니다.',
@@ -3123,6 +3148,7 @@ const I18N = {
     loading:'Building Repolis…',
     visited:'Explored', wayfinding:'Wayfinding', searchPh:'Search repo · language · topic…', todayWord:'today', totalWord:'total',
     townTools:'Town · visits', nearbySpeech:'Read nearby dialogue', nearbySpeechEmpty:'No nearby dialogue right now.',
+    nearbyPeople:'Choose someone nearby', nearbyPeopleEmpty:'Walk closer to someone to talk.', nearbyPersonTalk:'{name} · {role} — talk',
     firstRepoTitle:'Choose a repository in this town', firstRepoBasis:'Current loaded public-catalog order. Select a repository to enter its Atelier without an automatic question.',
     firstRepoBack:'Back to purposes', firstRepoCancel:'Back to town', firstRepoPrev:'Previous 6', firstRepoNext:'Next 6',
     firstRepoCount:'{from}–{to} of {total} · Search for another repository.', firstRepoPartial:'Only the loaded portion of the public catalog is shown.',
@@ -4949,7 +4975,7 @@ function signTexture(text, accent){
     ctx.fillStyle='#241405'; ctx.fillText(l,170,y,300); });
   const t=new THREE.CanvasTexture(cv);
   t.anisotropy=MAXANISO; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
-  t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
+  t.colorSpace=THREE.SRGBColorSpace; t.userData.townSign=true; t.needsUpdate=true; return t;
 }
 function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
   ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
@@ -8254,18 +8280,16 @@ const auraPulse=[];
 (function dressScholars(){
   function _round(x,X,Y,w,h,r){ x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+w,Y,X+w,Y+h,r); x.arcTo(X+w,Y+h,X,Y+h,r); x.arcTo(X,Y+h,X,Y,r); x.arcTo(X,Y,X+w,Y,r); x.closePath(); }
   function nameplate(sc){
-    const W=512,H=170, c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+    const W=512,H=128, c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
     const hex='#'+(sc.color>>>0).toString(16).padStart(6,'0');
-    _round(x,24,30,W-48,H-58,46); x.fillStyle='rgba(10,12,24,0.58)'; x.fill();
-    x.lineWidth=3; x.strokeStyle=hex; x.globalAlpha=0.85; _round(x,24,30,W-48,H-58,46); x.stroke(); x.globalAlpha=1;
+    _round(x,12,10,W-24,H-20,38); x.fillStyle='rgba(10,12,24,0.88)'; x.fill();
+    x.lineWidth=3; x.strokeStyle=hex; _round(x,12,10,W-24,H-20,38); x.stroke();
     x.textAlign='center'; x.textBaseline='middle';
-    x.shadowColor=hex; x.shadowBlur=22; x.fillStyle='#ffffff'; x.font='700 56px system-ui,"Segoe UI",Arial';
-    x.fillText('\u2726 '+sc.star, W/2, 80);
-    x.shadowBlur=8; x.fillStyle=hex; x.font='600 27px system-ui,"Segoe UI",Arial';
-    x.fillText('\u00b7 '+sc.epithetEn+' \u00b7', W/2, 126);
+    x.fillStyle='#ffffff'; x.font='700 64px system-ui,"Segoe UI",Arial';
+    x.fillText('\u2726 '+sc.star, W/2, H/2, W-52);
     const t=new THREE.CanvasTexture(c); t.anisotropy=8;
     const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,fog:false}));
-    s.scale.set(3.5,1.16,1); s.renderOrder=5; return s;
+    s.scale.set(3.5,.875,1); s.renderOrder=5; return s;
   }
   function aura(color,size,op){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color,transparent:true,opacity:op,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); s.scale.set(size,size,1); return s; }
   NPCS.forEach(n=>{ const sc=window.scholarByKind&&window.scholarByKind(n.kind); if(!sc||!sc.active) return;
@@ -8588,15 +8612,14 @@ function buildResident(res){ const g=new THREE.Group(); const SK=0xf0c79a, HR=0x
   { const tok=new THREE.Sprite(new THREE.SpriteMaterial({map:STAR_TEX,color:res.accent||res.color,transparent:true,opacity:0.9,depthWrite:false,fog:false,blending:THREE.AdditiveBlending})); tok.scale.set(0.4,0.4,1); tok.position.set(0,2.52,0.12); g.add(tok); }
   { const prop=residentJobProp(res); if(prop){ g.add(prop); g._jobProp=prop; } }
   g._head=hd; g._armL=al; g._armR=ar; g._legL=ll; g._legR=lr; npcFaces.add(hd.material); return g; }
-function residentTag(res){ const W=256,H=100,c=document.createElement('canvas'); c.width=W;c.height=H; const x=c.getContext('2d'); const hex=_hex(res.color);
+function residentTag(res){ const W=256,H=64,c=document.createElement('canvas'); c.width=W;c.height=H; const x=c.getContext('2d'); const hex=_hex(res.color);
   function rr(X,Y,w,h,r){ x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+w,Y,X+w,Y+h,r); x.arcTo(X+w,Y+h,X,Y+h,r); x.arcTo(X,Y+h,X,Y,r); x.arcTo(X,Y,X+w,Y,r); x.closePath(); }
-  rr(10,14,W-20,H-40,26); x.fillStyle='rgba(10,12,24,0.55)'; x.fill();
-  x.lineWidth=3; x.strokeStyle=hex; x.globalAlpha=0.85; rr(10,14,W-20,H-40,26); x.stroke(); x.globalAlpha=1;
-  x.textAlign='center'; x.textBaseline='middle'; const L=res[LANG]||res.ko;
-  x.fillStyle='#fff'; x.font='700 34px system-ui,Arial'; x.fillText(L.name, W/2, 40);
-  x.fillStyle=hex; x.font='600 19px system-ui,Arial'; x.fillText('\u00b7 '+L.role+' \u00b7', W/2, 74);
   const tx=new THREE.CanvasTexture(c); tx.anisotropy=4;
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false,fog:false})); s.scale.set(2.9,1.13,1); s.position.y=3.06; s.renderOrder=6; s._res=res; return s; }
+  const draw=()=>{ x.clearRect(0,0,W,H); rr(6,5,W-12,H-10,18); x.fillStyle='rgba(10,12,24,0.88)'; x.fill();
+    x.lineWidth=2; x.strokeStyle=hex; x.stroke(); x.textAlign='center'; x.textBaseline='middle';
+    x.fillStyle='#fff'; x.font='700 32px system-ui,Arial'; x.fillText((res[LANG]||res.ko).name,W/2,H/2,W-26); tx.needsUpdate=true; };
+  draw();
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false,fog:false})); s.scale.set(2.9,.725,1); s.position.y=3.06; s.renderOrder=6; s._res=res; s.userData.redrawName=draw; return s; }
 function makeResBubble(){ const W=448,H=252, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const c=cv.getContext('2d');
   const tex=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false,depthTest:false,fog:false})); sp.scale.set(7.47,4.2,1); sp.renderOrder=19; let life=0;
   const ML=5, FS=28, LH=34;
@@ -8851,7 +8874,7 @@ function _residentSpot(res){
 function placeResident(res){ const g=buildResident(res), work=_residentSpot(res), homeRec=_residentHomeById(res.id), atHome=!!(homeRec&&_partOfDay()==='night');
   _RES_WORK_SPOTS.push({x:work.x,z:work.z}); const sp=atHome?homeRec.porch:work;
   g.position.set(sp.x,0,sp.z); g.rotation.y=Math.atan2(-sp.x,-sp.z);
-  const tag=residentTag(res); if(atHome) tag.scale.set(2.35,0.92,1); g.add(tag); const bub=makeResBubble(); bub.sprite.position.set(0,4.55,0); g.add(bub.sprite); disableDynamicShadowCasters(g); scene.add(g);
+  const tag=residentTag(res); if(atHome) tag.scale.set(2.35,.5875,1); g.add(tag); const bub=makeResBubble(); bub.sprite.position.set(0,4.55,0); g.add(bub.sprite); disableDynamicShadowCasters(g); scene.add(g);
   const live={ res, group:g, tag, bub, _baseRot:g.rotation.y, _ph:Math.random()*6.28, _gt:0, lastLine:-1,
     home:homeRec?{x:homeRec.porch.x,z:homeRec.porch.z}:{x:work.x,z:work.z}, work:{x:work.x,z:work.z}, boundHome:res.bound?{repo:res.bound.repo,x:work.x,z:work.z}:null, house:homeRec||null, _atHome:atHome, _commute:null,
     _routineAt:2+RESIDENTS_LIVE.length*1.3, _routineLock:0, _rt:null, _rest:null, _rp:Math.random()*4, _wk:Math.random()*6.28, _wspd:RES_MOVE.wanderSpd*(0.85+Math.random()*0.3),
@@ -8868,7 +8891,7 @@ const _RES_COMMUTE_LINES={
 };
 let _residentRoutinePart=_partOfDay();
 function _residentCommuteLine(kind){ const b=_RES_COMMUTE_LINES[kind]&&(_RES_COMMUTE_LINES[kind][LANG]||_RES_COMMUTE_LINES[kind].ko); return b[(Math.random()*b.length)|0]; }
-function _setResidentAtHome(L,home){ L._atHome=!!home; if(L.tag) L.tag.scale.set(home?2.35:2.9,home?0.92:1.13,1); if(L.house) L.house.occupied=!!home; _refreshResidentHomeLights(isNight); }
+function _setResidentAtHome(L,home){ L._atHome=!!home; if(L.house) L.house.occupied=!!home; _refreshResidentHomeLights(isNight); }
 function _syncResidentRoutine(tt){ const p=_partOfDay(); if(p===_residentRoutinePart) return; const prev=_residentRoutinePart; _residentRoutinePart=p;
   if(p==='night'||prev==='night') RESIDENTS_LIVE.forEach((L,i)=>{ L._routineAt=tt+2+i*(LOW_END?2.0:1.25); }); }
 function _residentCommuteTarget(L,tt){ if(!L.home||!L.work||L._commute||tt<(L._routineAt||0)||tt<(L._routineLock||0)) return null;
@@ -8886,7 +8909,7 @@ _refreshResidentHomeLights(isNight);
 placeGlowFlowers();   // 🌼 luminous roadside blossoms around the plaza + avenues (needs buildings + _hubGap, so run here)
 placeHearth();        // 🔥 the residents' cosy campfire nook (needs buildings + _hubGap)
 window.RESIDENTS_LIVE=RESIDENTS_LIVE;
-function refreshResidentTags(){ for(const L of RESIDENTS_LIVE){ const m=L.tag.material; if(m&&m.map){ m.map.dispose(); } const ns=residentTag(L.res); L.tag.material.map=ns.material.map; L.tag.material.needsUpdate=true; } }
+function refreshResidentTags(){ for(const L of RESIDENTS_LIVE) L.tag.userData.redrawName(); }
 
 // ---- budget mirror (worker is source of truth when reachable; else a local sim for testing degradation) ----
 const _npcBudget={ enabled:false, source:'local-sim', dayCapUsd:10, spentUsd:0, remainingUsd:10, blocked:false, turnsToday:0, dailyTurnMax:0, aiTurns:0, fallbackTurns:0 };
@@ -9580,7 +9603,8 @@ function clearTownInput(){
 }
 const isTyping=()=>{ const a=document.activeElement; return a&&(a.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)); };
 const isUiKeyTarget=e=>{ const target=e&&e.target; return !!(target&&(target.isContentEditable||/^(BUTTON|A|INPUT|SELECT|TEXTAREA|SUMMARY)$/.test(target.tagName)||target.closest?.('summary,[role="button"]'))); };
-addEventListener('keydown',e=>{ if(isTyping()||isUiKeyTarget(e)||townInputBlocked()) return;
+addEventListener('keydown',e=>{ if(e.defaultPrevented||e.isComposing||e.keyCode===229) return;
+  if(isTyping()||isUiKeyTarget(e)||townInputBlocked()) return;
   if(e.code==='Escape'&&undercroftActive()){ e.preventDefault(); exitUndercroft(); return; }
   if(undercroftTransitioning()){ if(MOVE.has(e.code)) e.preventDefault(); clearKeys(); return; }
   if(e.code==='Enter'&&undercroftActive()){ e.preventDefault(); if(!e.repeat) undercroftAct(); return; }
@@ -9724,6 +9748,7 @@ function _settleClearSightArrival(destination){
 }
 /*CLEAR_SIGHT_CAMERA:END*/
 const dom=renderer.domElement;
+dom.setAttribute('aria-hidden','true');
 addEventListener('contextmenu',e=>{ e.preventDefault(); clearKeys(); },true);   // WoW: suppress browser right-click menu globally (capture phase, any target). Also drop held keys so a misfired right-click never leaves you walking.
 dom.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch'||townInputBlocked()) return; if(e.button!==0&&e.button!==2) return;
   TOWN_UI.mousePointer=e.pointerId;
@@ -10384,7 +10409,7 @@ worldTreeClose.onclick=closeWorldTreeChronicle;
 worldTreeUndercroft.onclick=()=>{ closeWorldTreeChronicle(false); enterUndercroft(); };
 worldTreeModal.addEventListener('click',event=>{ if(event.target===worldTreeModal) closeWorldTreeChronicle(); });
 worldTreeRootSearch.addEventListener('input',event=>renderWorldTreeRoots(event.target.value));
-worldTreeModal.addEventListener('keydown',event=>{ if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeWorldTreeChronicle(); return; }
+worldTreeModal.addEventListener('keydown',event=>{ if(event.key==='Escape'){ if(event.isComposing||event.keyCode===229)return; event.preventDefault(); event.stopPropagation(); closeWorldTreeChronicle(); return; }
   if(event.key!=='Tab') return; const items=_worldTreeFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
   if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
   else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); } });
@@ -10580,6 +10605,7 @@ repoRouteMenuBtn.onclick=()=>openRepoRouteStudio('menu');
 repoRouteClose.onclick=closeRepoRouteStudio;
 repoRouteModal.addEventListener('click',event=>{ if(event.target===repoRouteModal) closeRepoRouteStudio(); });
 repoRouteModal.addEventListener('keydown',event=>{
+  if(event.isComposing||event.keyCode===229)return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeRepoRouteStudio(); return; }
   if(event.key!=='Tab') return; const items=_repoRouteFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
   if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
@@ -10757,6 +10783,7 @@ function _questFocusables(){ return [...questStudio.querySelectorAll('button:not
 questMenuBtn.onclick=()=>openContributionQuestBoard('menu'); questClose.onclick=closeContributionQuestBoard; questScan.onclick=loadContributionQuests;
 questModal.addEventListener('click',event=>{ if(event.target===questModal) closeContributionQuestBoard(); });
 questModal.addEventListener('keydown',event=>{
+  if(event.isComposing||event.keyCode===229)return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeContributionQuestBoard(); return; }
   if(event.key!=='Tab') return; const items=_questFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
   if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
@@ -10795,7 +10822,7 @@ function setRepoHash(repo){ if(_repoHashGuard||!repo||!repo.repo) return; _repoH
 function clearRepoHash(){ if(_repoHashGuard||!repoHashKey()) return; _repoHashGuard=true;
   try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
   _repoHashGuard=false; }
-function openRepoFromHash(){ const r=repoByKey(repoHashKey()); if(r){ openCard(r); return true; } return false; }
+function openRepoFromHash(){ if(repositoryAtelierActive()) return false; const r=repoByKey(repoHashKey()); if(r){ openCard(r); return true; } return false; }
 window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=repoHashKey();
   if(repositoryAtelierActive()){ REPOSITORY_ATELIER.pendingHash=true; exitRepositoryAtelier(); return; }
   if(!k){ if(modalOpen && modal._repoKey) closeCard(); return; }
@@ -10804,9 +10831,11 @@ window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=re
 function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   starTrailVisit(repo); lanternWatchVisit(repo); courseMark('repo',repo.repo);
   if(!modal.classList.contains('show')) modal._previousFocus=document.activeElement;
-  modalOpen=true; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal._repoKey=repo.repo||null; setRepoHash(repo);
+  clearTownInput(); modalOpen=true; modal.inert=false; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal._repoKey=repo.repo||null; setRepoHash(repo);
+  document.getElementById('cardScroll').scrollTop=0;
   repoRouteVisit(repo);
   document.getElementById('cardTop').style.background=repo.color;
+  document.getElementById('cardTop').style.color=readableCardForeground(repo.color);
   document.getElementById('cardLang').textContent=repo.lang.toUpperCase();
   document.getElementById('cardName').textContent=repo.label;
   document.getElementById('cardStars').textContent='★ '+repo.stars+'  ·  '+repo.repo;
@@ -10849,12 +10878,13 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
     +`<button class="btn route" id="repoRouteCardBtn" type="button" aria-pressed="false"></button>`
     +`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">${t('openGithub')}</a>`
     +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'')
-    +`<button class="btn close" id="closeBtn">${t('close')}</button>`;
+    +`<button class="btn close" id="cardCloseAction" type="button">${t('close')}</button>`;
   syncContributionQuestCardAction(repo,act);
   const atelierBtn=document.getElementById('atelierBtn'); if(atelierBtn&&!inAtelier) atelierBtn.onclick=()=>enterRepositoryAtelier(repo);
   const routeBtn=document.getElementById('repoRouteCardBtn'); syncRepoRouteCardButton(repo);
   if(routeBtn) routeBtn.onclick=()=>{ toggleRepoRoute(repo,'card'); syncRepoRouteCardButton(repo); };
   document.getElementById('closeBtn').onclick=closeCard;
+  document.getElementById('cardCloseAction').onclick=closeCard;
   const ghBtn=act.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>{ if(cityMode==='portal') trackPortal('github_repo_opened',{entry:'card',device:_repoPortalDevice(),lang:LANG,channel:'github'});
     else track('github_click',{repo:repo.repo}); };
   const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
@@ -10871,8 +10901,11 @@ function refreshRepoCardLineage(repo){
   const link=document.createElement('a'); link.href=lineage.url; link.target='_blank'; link.rel='noopener'; link.textContent=t('lineageOpen'); copy.append(link);
   box.append(crest,copy); box.hidden=false;
 }
-function closeCard(){ const previous=modal._previousFocus; modalOpen=false; modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); modal._repoKey=null; modal._previousFocus=null; clearRepoHash(); flushStarNudge();
-  if(previous&&previous.isConnected&&typeof previous.focus==='function') previous.focus(); }
+function closeCard(){ if(!modal.classList.contains('show')) return; const previous=modal._previousFocus;
+  modalOpen=false; modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); modal.inert=true;
+  modal._repoKey=null; modal._previousFocus=null; clearTownInput(); clearRepoHash(); flushStarNudge();
+  const target=previous&&previous.isConnected&&!previous.closest('[inert],.hidden')&&previous.getClientRects().length?previous:menuBtn;
+  target.focus({preventScroll:true}); }
 /* ───────── 🚕 Repo-card actions — reuse the existing taxi/chat flow (no new backend) ───────── */
 function _taxiNpc(){ return (typeof NPCS!=='undefined'&&NPCS)?(NPCS.find(n=>n.kind==='taxi')||activeNpc||NPCS[0]):activeNpc; }
 function askInChat(q){ if(!q) return; const npc=_taxiNpc(); closeCard();   // routes through taxi → localIntent/grounded, same as typing it
@@ -10932,15 +10965,15 @@ function renderCardAsk(repo){ const box=document.getElementById('cardAsk'); if(!
   html+=`<button type="button" class="caBtn" data-ca="similar">🔍 ${esc(t('cardSimilar'))}</button></div>`;
   const qs=repoSuggestedQs(repo);
   if(qs.length){ html+=`<div class="caHint">${esc(t('cardSuggestHint'))}</div><div class="caChips">`;
-    qs.forEach(q=>{ html+=`<span class="caChip" data-caq="${esc(q)}">${esc(q)}</span>`; }); html+='</div>'; }
+    qs.forEach(q=>{ html+=`<button type="button" class="caChip">${esc(q)}</button>`; }); html+='</div>'; }
   box.innerHTML=html;
   const firstQ=qs[0]||(LANG==='ko'?`${repo.label}는 무엇을 하는 레포예요?`:`What does ${repo.label} do?`);
   const ab=box.querySelector('[data-ca="ask"]'); if(ab) ab.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'ask'}); askInChat(firstQ); };
   const wb=box.querySelector('[data-ca="why"]'); if(wb) wb.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'why'}); cardWhyZone(repo); };
   const sb=box.querySelector('[data-ca="similar"]'); if(sb) sb.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'similar'}); cardSimilar(repo); };
-  box.querySelectorAll('.caChip').forEach(el=>{ el.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'chip'}); askInChat(el.dataset.caq); }; }); }
-modal.addEventListener('click',e=>{ if(e.target===modal) closeCard(); });
-modal.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); closeCard(); return; } if(e.key!=='Tab') return;
+  box.querySelectorAll('.caChip').forEach((el,index)=>{ el.dataset.caq=qs[index]; el.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'chip'}); askInChat(el.dataset.caq); }; }); }
+modal.addEventListener('click',e=>{ e.stopPropagation(); if(e.target===modal) closeCard(); });
+modal.addEventListener('keydown',e=>{ if(e.isComposing||e.keyCode===229) return; if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeCard(); return; } if(e.key!=='Tab') return;
   const items=[...modal.querySelectorAll('button:not([disabled]),a[href]')].filter(item=>!item.hidden); if(!items.length) return;
   const first=items[0],last=items[items.length-1]; if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
   else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } });
@@ -11095,6 +11128,7 @@ function closeCreatorHall(){
 }
 function _creatorFocusables(){ return [...creatorCard.querySelectorAll('button:not([disabled]),a[href]')].filter(el=>!el.hidden); }
 creatorModal.addEventListener('keydown',event=>{
+  if(event.isComposing||event.keyCode===229)return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeCreatorHall(); return; }
   if(event.key!=='Tab') return; const items=_creatorFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
   if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
@@ -11328,7 +11362,7 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
     document.getElementById('loading').style.display='none'; _queueArrivalAction(650,()=>startTour()); };
   const replay=document.getElementById('tourReplayBtn'); if(replay) replay.onclick=()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); startTour(); };
   const sk=document.getElementById('tourSkip'); if(sk) sk.onclick=()=>{ try{ endTour(false); }catch(e){} }; })();
-document.addEventListener('keydown',event=>{ if(event.key==='Escape'&&tour&&tour.active){ event.preventDefault(); event.stopImmediatePropagation(); endTour(false); } },true);
+document.addEventListener('keydown',event=>{ if(event.key==='Escape'&&tour&&tour.active){ if(event.isComposing||event.keyCode===229)return; event.preventDefault(); event.stopImmediatePropagation(); if(!event.repeat)endTour(false); } },true);
 function _scheduleCoveredDirectEntry(message,target=null){
   const loading=document.getElementById('loading'),intro=document.getElementById('intro');
   if(!loading||!intro||cityError) return false;
@@ -11447,6 +11481,7 @@ twinForm.onsubmit=event=>{ event.preventDefault(); compareTwinTowns(twinInput.va
 twinInput.addEventListener('keydown',event=>event.stopPropagation());
 twinClose.onclick=closeTwinTowns; twinModal.addEventListener('click',event=>{ if(event.target===twinModal) closeTwinTowns(); });
 twinModal.addEventListener('keydown',event=>{
+  if(event.isComposing||event.keyCode===229)return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeTwinTowns(); return; }
   if(event.key!=='Tab') return; const items=_twinFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
   if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
@@ -11840,6 +11875,7 @@ async function copyPostcardReadme(){
 }
 function _postcardFocusables(){ return [...postcardStudio.querySelectorAll('button:not([disabled])')].filter(button=>!button.hidden); }
 postcardModal.addEventListener('keydown',event=>{
+  if(event.isComposing||event.keyCode===229)return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closePostcardStudio(); return; }
   if(event.key!=='Tab') return; const items=_postcardFocusables(); if(!items.length) return;
   const first=items[0],last=items[items.length-1];
@@ -12048,7 +12084,7 @@ growthPresent.onclick=()=>{ GROWTH_REPLAY.playing=false; GROWTH_REPLAY.completed
 growthShare.onclick=shareTownGrowth;
 growthPostcard.onclick=()=>{ GROWTH_REPLAY.playing=false; _renderTownGrowthReplay(); openPostcardStudio('growth'); };
 growthClose.onclick=closeTownGrowthReplay; growthReplay.querySelector('.growthBackdrop').onclick=closeTownGrowthReplay;
-growthReplay.addEventListener('keydown',event=>{ if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeTownGrowthReplay(); return; }
+growthReplay.addEventListener('keydown',event=>{ if(event.isComposing||event.keyCode===229)return; if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeTownGrowthReplay(); return; }
   if(event.key!=='Tab') return; const items=_growthFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
   if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
   else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); } });
@@ -12130,14 +12166,14 @@ function recentHist(){ return activeChatHistory().slice(-8); }
 function priorHist(){ const h=recentHist(); return (h.length&&h[h.length-1].role==='user')? h.slice(0,-1):h; }   // history minus the current question (the worker appends it)
 function addMsg(who,html,opts){
   const m=document.createElement('div'); m.className='msg '+who; m.innerHTML=html;
-  if(opts&&opts.repo&&!repositoryAtelierActive()){ const r=document.createElement('div'); r.className='ride'; r.innerHTML=t('rideThere');
+  if(opts&&opts.repo&&!repositoryAtelierActive()){ const r=document.createElement('button'); r.type='button'; r.className='ride'; r.innerHTML=t('rideThere');
     r.onclick=()=>taxiTo(opts.repo); m.appendChild(document.createElement('br')); m.appendChild(r); }
   if(opts&&opts.alts&&opts.alts.length){ const wrap=document.createElement('div');
-    opts.alts.forEach(a=>{ const c=document.createElement('span'); c.className='alt'; c.textContent=a.label;
+    opts.alts.forEach(a=>{ const c=document.createElement('button'); c.type='button'; c.className='alt'; c.textContent=a.label;
       c.onclick=()=>{ addMsg('me',a.label); replyFor(a,t('soLead')); }; wrap.appendChild(c); });
     m.appendChild(wrap); }
   if(opts&&opts.handoff&&!repositoryAtelierActive()){ const kind=typeof opts.handoff==='string'?opts.handoff:opts.handoff.kind, sc=window.scholarByKind&&window.scholarByKind(kind);
-    if(sc){ const h=document.createElement('div'); h.className='ride handoff'; h.textContent=tf('handoffGo',{name:sc.star});
+    if(sc){ const h=document.createElement('button'); h.type='button'; h.className='ride handoff'; h.textContent=tf('handoffGo',{name:sc.star});
       h.onclick=()=>startScholarHandoff(kind); m.appendChild(document.createElement('br')); m.appendChild(h); } }
   if(opts&&opts.trace){ m.appendChild(buildTracePanel(opts.trace)); }
   chatLog.appendChild(m); scrollChat();
@@ -12238,10 +12274,10 @@ function closeChat(restoreFocus=true){ cancelMarketRequest(); queuedChatQuestion
   document.body.classList.remove('atelier-chat-open'); if(REPOSITORY_ATELIER){ REPOSITORY_ATELIER.inRoomChat=false; setRepositoryAtelierChatPanel(REPOSITORY_ATELIER.chat,false); }
   if(!repositoryAtelierActive()) _releaseGroup(); trackChatEvent('chat_close');
   const previous=chatPreviousFocus; chatPreviousFocus=null; if(chatEl.contains(document.activeElement)) document.activeElement.blur();
-  if(restoreFocus) setTimeout(()=>{ if(TOWN_UI.active||!chatEl.classList.contains('hidden')) return; const visible=element=>element&&element.isConnected&&element!==document.body&&!element.closest('[inert]')&&element.getClientRects().length&&getComputedStyle(element).visibility!=='hidden';
+  if(restoreFocus) setTimeout(()=>{ if(modalOpen||TOWN_UI.active||!chatEl.classList.contains('hidden')) return; const visible=element=>element&&element.isConnected&&element!==document.body&&!element.closest('[inert]')&&element.getClientRects().length&&getComputedStyle(element).visibility!=='hidden';
     const target=visible(previous)?previous:(visible(actBtn)&&actBtn.classList.contains('avail')?actBtn:
       repositoryAtelierActive()&&visible(atelierExit)?atelierExit:taxiBtn); try{ target.focus(); }catch(e){} },80); }
-chatEl.addEventListener('keydown',event=>{ if(chatEl.classList.contains('hidden')) return;
+chatEl.addEventListener('keydown',event=>{ if(event.isComposing||event.keyCode===229||chatEl.classList.contains('hidden')) return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeChat(); return; }
   if(event.defaultPrevented||event.key!=='Tab'||!(activeNpc&&activeNpc.resident)) return; const items=[...chatEl.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')]
     .filter(element=>!element.hidden&&getComputedStyle(element).display!=='none');
@@ -12807,6 +12843,131 @@ if(mapCanvas) mapCanvas.onclick=(e)=>{ const r=mapCanvas.getBoundingClientRect()
   if(hit) gotoZone(hit.id); };
 _mapReady=true; syncMapChrome();                                     // initialise the map-button label now that the DOM refs exist
 
+/*TOWN_LABEL_RUNTIME:START*/
+const TOWN_LABEL_LAYOUT=createTownLabelLayout(),TOWN_LABEL_ENTRIES=[],TOWN_SIGN_CAPS=[];
+const TOWN_LABEL_WORLD=new THREE.Vector3(),TOWN_LABEL_VIEW=new THREE.Vector3(),TOWN_LABEL_SCALE=new THREE.Vector3();
+const TOWN_LABEL_OBSTACLES=[],TOWN_LABEL_SPEECH_BOXES=[{},{},{}],TOWN_LABEL_PANEL_BOXES=[];
+const TOWN_LABEL_CONTROL_BOX={left:0,top:0,width:88,height:280};
+const TOWN_LABEL_VIEWPORT={width:innerWidth,height:innerHeight,near:camera.near,mobile:IS_MOBILE,lowEnd:LOW_END,left:12,right:12,top:84,bottom:120};
+const TOWN_LABEL_STATS={frames:0,totalMs:0,maxMs:0,lastMs:0,visible:0,signsCapped:0,viewportReads:0};
+function _registerTownName(sprite,npc,group,name,role){
+  if(TOWN_LABEL_ENTRIES.length>=TOWN_LABEL_LIMITS.maxCandidates) return;
+  const entry={sprite,npc,group,name,role,id:npc.id||npc.kind,order:TOWN_LABEL_ENTRIES.length,
+    baseWidth:npc.resident?2.9:sprite.scale.x,baseHeight:npc.resident?.725:sprite.scale.y,selected:false,visible:false,lastVisibleAt:0,priority:0,
+    depth:0,distance:0,x:0,y:0,naturalWidth:0,naturalHeight:0,width:0,height:0,left:0,top:0,eligible:false};
+  sprite.userData.townLabelId=entry.id; TOWN_LABEL_ENTRIES.push(entry);
+  const button=document.createElement('button'); button.type='button'; button.hidden=true;
+  button.dataset.nearbyPerson=entry.id; entry.button=button;
+  button.onclick=()=>{
+    if(entry.group.position.distanceTo(player.position)>(npc.reach||RES_REACH)) { refreshNearbyPeople(); return; }
+    closeTownPanels(); openChat(npc);
+  };
+  document.getElementById('nearbyPeopleList').appendChild(button);
+}
+for(const npc of NPCS) if(npc.plate) _registerTownName(npc.plate,npc,npc.group,()=>npc.scholar.star,()=>LANG==='ko'?npc.scholar.epithetKo:npc.scholar.epithetEn);
+for(const live of RESIDENTS_LIVE) _registerTownName(live.tag,live._npc,live.group,()=>(live.res[LANG]||live.res.ko).name,()=>(live.res[LANG]||live.res.ko).role);
+scene.traverse(object=>{
+  if(!object.isMesh||!object.material?.map?.userData.townSign||object.geometry.type!=='PlaneGeometry') return;
+  TOWN_SIGN_CAPS.push({object,width:object.geometry.parameters.width,height:object.geometry.parameters.height,
+    scaleX:object.scale.x,scaleY:object.scale.y});
+});
+function refreshNearbyPeople(){
+  let count=0;
+  for(const entry of TOWN_LABEL_ENTRIES){
+    const available=entry.group.visible&&entry.group.position.distanceTo(player.position)<=(entry.npc.reach||RES_REACH);
+    entry.button.hidden=!available;
+    if(available){ count++; entry.button.textContent=tf('nearbyPersonTalk',{name:entry.name(),role:entry.role()}); }
+  }
+  document.getElementById('nearbyPeopleEmpty').hidden=count>0;
+}
+document.getElementById('nearbyPeople').addEventListener('toggle',()=>{ if(document.getElementById('nearbyPeople').open) refreshNearbyPeople(); });
+function _cacheTownLabelViewport(){
+  TOWN_LABEL_STATS.viewportReads++;
+  const style=getComputedStyle(document.getElementById('townLabelSafeArea')),v=TOWN_LABEL_VIEWPORT,viewport=window.visualViewport;
+  v.width=innerWidth;v.height=innerHeight;v.near=camera.near;
+  v.left=12+(parseFloat(style.paddingLeft)||0)+(viewport?.offsetLeft||0);
+  v.right=12+(parseFloat(style.paddingRight)||0)+Math.max(0,innerWidth-(viewport?.width||innerWidth)-(viewport?.offsetLeft||0));
+  v.top=84+(parseFloat(style.paddingTop)||0)+(viewport?.offsetTop||0);
+  v.bottom=120+(parseFloat(style.paddingBottom)||0)+Math.max(0,innerHeight-(viewport?.height||innerHeight)-(viewport?.offsetTop||0));
+  TOWN_LABEL_CONTROL_BOX.left=v.width-v.right-TOWN_LABEL_CONTROL_BOX.width;
+  TOWN_LABEL_CONTROL_BOX.top=v.height-(v.bottom-120)-TOWN_LABEL_CONTROL_BOX.height;
+  TOWN_LABEL_PANEL_BOXES.length=0;
+  for(const element of [chatEl,panel,passportEl,mapWrap]){
+    if(element.classList.contains('hidden')) continue;
+    const r=element.getBoundingClientRect();
+    TOWN_LABEL_PANEL_BOXES.push({left:r.left,top:r.top,width:r.width,height:r.height});
+  }
+}
+function updateTownLabels(){
+  const started=performance.now(),focal=camera.projectionMatrix.elements[5]*innerHeight/2;
+  const focus=stableTownLabelFocus(TOWN_LABEL_LAYOUT,nearNpc||nearResident,started);
+  const chatOpen=!chatEl.classList.contains('hidden'),blocked=townInputBlocked();
+  TOWN_LABEL_OBSTACLES.length=0;
+  TOWN_LABEL_OBSTACLES.push(TOWN_LABEL_CONTROL_BOX);
+  for(const box of TOWN_LABEL_PANEL_BOXES) TOWN_LABEL_OBSTACLES.push(box);
+  let speechIndex=0;
+  for(const entry of TOWN_SPEECH){
+    const sprite=entry.bubble.sprite;if(!sprite.visible||sprite.material.opacity<=.08||speechIndex>=TOWN_LABEL_SPEECH_BOXES.length) continue;
+    sprite.getWorldPosition(TOWN_LABEL_WORLD);TOWN_LABEL_VIEW.copy(TOWN_LABEL_WORLD).applyMatrix4(camera.matrixWorldInverse);
+    const depth=-TOWN_LABEL_VIEW.z;if(depth<=camera.near)continue;
+    TOWN_LABEL_WORLD.project(camera);sprite.getWorldScale(TOWN_LABEL_SCALE);
+    const box=TOWN_LABEL_SPEECH_BOXES[speechIndex++],width=TOWN_LABEL_SCALE.x*focal/depth,height=TOWN_LABEL_SCALE.y*focal/depth;
+    box.left=(TOWN_LABEL_WORLD.x+1)*innerWidth/2-sprite.center.x*width;
+    box.top=(1-TOWN_LABEL_WORLD.y)*innerHeight/2-(1-sprite.center.y)*height;box.width=width;box.height=height;
+    TOWN_LABEL_OBSTACLES.push(box);
+  }
+  for(const entry of TOWN_LABEL_ENTRIES){
+    const sprite=entry.sprite;sprite.updateWorldMatrix(true,false);sprite.getWorldPosition(TOWN_LABEL_WORLD);
+    TOWN_LABEL_VIEW.copy(TOWN_LABEL_WORLD).applyMatrix4(camera.matrixWorldInverse);
+    entry.depth=-TOWN_LABEL_VIEW.z;entry.distance=TOWN_LABEL_WORLD.distanceTo(player.position);
+    TOWN_LABEL_WORLD.project(camera);entry.x=(TOWN_LABEL_WORLD.x+1)*innerWidth/2;entry.y=(1-TOWN_LABEL_WORLD.y)*innerHeight/2;
+    entry.group.getWorldScale(TOWN_LABEL_SCALE);
+    const units=focal/Math.max(.01,entry.depth),atHome=entry.npc.resident&&entry.npc.res._live._atHome;
+    entry.naturalWidth=(atHome?2.35:entry.baseWidth)*TOWN_LABEL_SCALE.x*units;
+    entry.naturalHeight=(atHome?.5875:entry.baseHeight)*TOWN_LABEL_SCALE.y*units;
+    let engaged=chatOpen&&activeNpc===entry.npc;
+    if(chatOpen&&activeGroupMembers)for(const member of activeGroupMembers)if(member._npc===entry.npc)engaged=true;
+    entry.priority=engaged?3:focus===entry.npc?2:0;
+    entry.eligible=entry.group.visible&&TOWN_LABEL_WORLD.z>=-1&&TOWN_LABEL_WORLD.z<=1&&(!blocked||(engaged&&!modalOpen));
+  }
+  const chosen=layoutTownLabels(TOWN_LABEL_ENTRIES,TOWN_LABEL_VIEWPORT,started,TOWN_LABEL_OBSTACLES,TOWN_LABEL_LAYOUT);
+  for(const entry of TOWN_LABEL_ENTRIES){
+    const sprite=entry.sprite;sprite.visible=entry.visible;if(!entry.visible)continue;
+    entry.group.getWorldScale(TOWN_LABEL_SCALE);const units=entry.depth/focal;
+    sprite.scale.set(entry.width*units/TOWN_LABEL_SCALE.x,entry.height*units/TOWN_LABEL_SCALE.y,1);
+    sprite.center.set((entry.x-entry.left)/entry.width,1-(entry.y-entry.top)/entry.height);
+  }
+  let signsCapped=0;
+  for(const entry of TOWN_SIGN_CAPS){
+    const object=entry.object;let root=object,visible=true;
+    while(root&&root!==scene){if(!root.visible){visible=false;break;}root=root.parent;}
+    if(!visible||root!==scene){object.scale.x=entry.scaleX;object.scale.y=entry.scaleY;continue;}
+    object.scale.x=entry.scaleX;object.scale.y=entry.scaleY;
+    object.updateWorldMatrix(true,false);object.getWorldPosition(TOWN_LABEL_WORLD);
+    TOWN_LABEL_VIEW.copy(TOWN_LABEL_WORLD).applyMatrix4(camera.matrixWorldInverse);
+    const depth=-TOWN_LABEL_VIEW.z;if(depth<=camera.near){object.scale.x=0;object.scale.y=0;continue;}
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,nearPlane=false;
+    for(let i=0;i<4;i++){
+      TOWN_LABEL_WORLD.set((i&1?1:-1)*entry.width/2,(i&2?1:-1)*entry.height/2,0).applyMatrix4(object.matrixWorld);
+      TOWN_LABEL_VIEW.copy(TOWN_LABEL_WORLD).applyMatrix4(camera.matrixWorldInverse);
+      if(-TOWN_LABEL_VIEW.z<=camera.near){nearPlane=true;break;}
+      TOWN_LABEL_WORLD.project(camera);
+      const x=TOWN_LABEL_WORLD.x*innerWidth/2,y=TOWN_LABEL_WORLD.y*innerHeight/2;
+      minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
+    }
+    const scale=nearPlane?0:Math.min(1,TOWN_LABEL_LIMITS.signWidth/(maxX-minX),TOWN_LABEL_LIMITS.signHeight/(maxY-minY));
+    object.scale.x=entry.scaleX*scale;object.scale.y=entry.scaleY*scale;if(scale<1)signsCapped++;
+  }
+  TOWN_LABEL_STATS.visible=chosen.length;TOWN_LABEL_STATS.signsCapped=signsCapped;
+  TOWN_LABEL_STATS.frames++;TOWN_LABEL_STATS.lastMs=performance.now()-started;
+  TOWN_LABEL_STATS.totalMs+=TOWN_LABEL_STATS.lastMs;TOWN_LABEL_STATS.maxMs=Math.max(TOWN_LABEL_STATS.maxMs,TOWN_LABEL_STATS.lastMs);
+}
+if(_DBG) window.__townLabels=()=>({limits:TOWN_LABEL_LIMITS,stats:{...TOWN_LABEL_STATS},registered:TOWN_LABEL_ENTRIES.length,signs:TOWN_SIGN_CAPS.length,
+  entries:TOWN_LABEL_ENTRIES.map(e=>({id:e.id,visible:e.visible,priority:e.priority,depth:e.depth,distance:e.distance,left:e.left,top:e.top,width:e.width,height:e.height})),
+  viewport:{...TOWN_LABEL_VIEWPORT},resources:{addedTextures:0,addedMaterials:0,addedGeometry:0,buttons:TOWN_LABEL_ENTRIES.length,
+    textureBytes:TOWN_LABEL_ENTRIES.reduce((sum,e)=>sum+e.sprite.material.map.image.width*e.sprite.material.map.image.height*4,0)}});
+/*TOWN_LABEL_RUNTIME:END*/
+
 /*TOWN_UI_RUNTIME:START*/
 const townTools=document.getElementById('townTools'),townPanelBackdrop=document.getElementById('townPanelBackdrop');
 const townPanels=[
@@ -12816,6 +12977,38 @@ const townPanels=[
   {element:chatEl,trigger:taxiBtn,close:()=>closeChat(false)},
   {element:mapWrap,trigger:mapBtn,close:closeMap},
 ];
+const townModalClosers={
+  modal:closeCard,worldTreeModal:closeWorldTreeChronicle,creatorModal:closeCreatorHall,
+  twinModal:closeTwinTowns,postcardModal:closePostcardStudio,repoRouteModal:closeRepoRouteStudio,
+  questModal:closeContributionQuestBoard,chronoModal:closeChrono,obsModal:closeObservatory,
+  libModal:closeLibrary,zoneBoard:closeZoneBoard,growthReplay:closeTownGrowthReplay,
+};
+function townKeyboardOwner(){
+  let owner=null,layer=-1;
+  for(const [id,close] of Object.entries(townModalClosers)){
+    const element=document.getElementById(id);if(!element||element.hidden||element.closest('[inert]')||!element.getClientRects().length)continue;
+    const style=getComputedStyle(element);if(style.visibility==='hidden'||style.display==='none')continue;
+    const z=Number(style.zIndex)||0;if(z>=layer){owner={element,close};layer=z;}
+  }
+  if(owner) return owner;
+  if(repositoryBlueprintOpen()) return {element:atelierBlueprintPanel,close:_closeRepositoryBlueprint};
+  if(TOWN_UI.active&&!TOWN_UI.active.element.inert) return TOWN_UI.active.element===chatEl?{element:chatEl,close:closeChat}:TOWN_UI.active;
+  if(townTools.open) return {element:townTools,close:()=>{townTools.open=false;townTools.querySelector('summary').focus();}};
+  return null;
+}
+// Capture before world controls and per-panel listeners: one key has one owner,
+// even when browser focus was moved outside the visible panel.
+window.addEventListener('keydown',event=>{
+  if(event.isComposing||event.keyCode===229||event.defaultPrevented||window.REPOLIS_ARRIVAL.blocked) return;
+  if(event.key==='Escape'&&tour&&tour.active)return;
+  if(event.key!=='Escape'&&event.key!=='Tab')return;
+  if(handleTownPanelKey(event,townKeyboardOwner(),townFocusables,document.activeElement))return;
+  if(event.key!=='Escape')return;
+  if(repositoryAtelierActive()||undercroftActive()){
+    event.preventDefault();event.stopImmediatePropagation();
+    if(!event.repeat){if(repositoryAtelierActive())exitRepositoryAtelier();else exitUndercroft();}
+  }
+},true);
 function closeTownPanels(except=null){
   for(const item of townPanels){ if(item.element!==except&&!item.element.classList.contains('hidden')) item.close(); }
   if(except!==townTools) townTools.open=false;
@@ -12849,6 +13042,8 @@ function syncTownPanels(records=[]){
   if(current&&!modalOpen&&document.activeElement.closest('[aria-hidden="true"],.hidden')) townFocusables(current.element)[0]?.focus({preventScroll:true});
   const open=!!current||townTools.open;
   townPanelBackdrop.hidden=!open; document.body.classList.toggle('town-panel-open',open);
+  if(current?.element===panel) refreshNearbyPeople();
+  _cacheTownLabelViewport();
 }
 const townPanelObserver=new MutationObserver(syncTownPanels);
 for(const item of townPanels) townPanelObserver.observe(item.element,{attributes:true,attributeFilter:['class'],attributeOldValue:true});
@@ -12859,6 +13054,7 @@ document.querySelectorAll('[data-town-close]').forEach(button=>button.addEventLi
 townTools.addEventListener('toggle',()=>{ if(townTools.open){ closeTownPanels(townTools); clearTownInput(); } syncTownPanels(); });
 townPanelBackdrop.addEventListener('click',event=>{ event.stopPropagation(); closeTownPanels(); });
 document.addEventListener('keydown',event=>{
+  if(event.isComposing||event.keyCode===229)return;
   const element=TOWN_UI.active?.element||(townTools.open?townTools:null); if(!element||modalOpen) return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopImmediatePropagation();
     if(TOWN_UI.active) TOWN_UI.active.close(); else { townTools.open=false; townTools.querySelector('summary').focus(); } return; }
@@ -12871,6 +13067,7 @@ function syncTownViewport(){
   const viewport=window.visualViewport;
   document.documentElement.style.setProperty('--town-ui-height',(viewport?.height||innerHeight)+'px');
   document.documentElement.style.setProperty('--town-ui-top',(viewport?.offsetTop||0)+'px');
+  _cacheTownLabelViewport();
 }
 window.visualViewport?.addEventListener('resize',syncTownViewport);
 window.visualViewport?.addEventListener('scroll',syncTownViewport);
@@ -13924,11 +14121,13 @@ function _snapshotRepositoryAtelier(repo){
     cameraLayerMask:camera.layers.mask,camYaw,camPitch,camDist,freeLook,dragging,dragBtn,walk,
     navTarget,navVisible:navHolder.visible,navBadgeDisplay:document.getElementById('navBadge').style.display,
     sitting,ride,ferris,carousel,modalOpen,modalShown:modal.classList.contains('show'),modalKey:modal._repoKey||null,
+    modalScroll:document.getElementById('cardScroll').scrollTop,entryFocus:document.activeElement,
     chatHidden:chatEl.classList.contains('hidden'),introInert:document.getElementById('intro').inert,hash:location.hash,tourPause:_pauseTourForAtelier()};
   A.snapshotId=snapshot.id; A.snapshot=snapshot; A.lastSaved=_repositoryAtelierPose();
   A.lastExterior={calls:RENDER_METRICS.latest?.total?.calls??renderer.info.render.calls,triangles:RENDER_METRICS.latest?.total?.triangles??renderer.info.render.triangles};
 }
 function _resetRepositoryAtelierInput(){
+  clearTownInput();
   clearKeys(); stickVec={x:0,y:0}; moveTid=null; lookTid=null; moveMoved=false; lookMoved=false; joy.style.display='none'; setNub(0,0);
   dragging=false; dragMoved=false; dom.style.cursor=''; document.body.style.cursor='';
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
@@ -13948,7 +14147,7 @@ function enterRepositoryAtelier(repo,options={}){
 function _activateRepositoryAtelier(){
   const A=_createRepositoryAtelier(),snapshot=A.snapshot; _bindRepositoryAtelier(A.repo);
   _captureRepositoryAtelierChatThread();
-  modal.classList.remove('show'); modalOpen=false; chatEl.classList.add('hidden'); chatEl.classList.remove('atelierChat');
+  modal.classList.remove('show'); modal.inert=true;modal.setAttribute('aria-hidden','true');modalOpen=false; chatEl.classList.add('hidden'); chatEl.classList.remove('atelierChat');
   document.body.classList.remove('atelier-chat-open'); A.inRoomChat=false; A.roomPanel=null;
   document.getElementById('intro').inert=true;
   if(document.activeElement===chatText) chatText.blur(); A.group.visible=true;
@@ -13981,10 +14180,12 @@ function _restoreRepositoryAtelier(){
   document.getElementById('intro').inert=s.introInert;
   atelierHud.classList.add('hidden'); promptEl.classList.remove('show'); actBtn.classList.remove('avail'); actBtn.textContent='🚪';
   if(!A.afterExit&&!A.pendingHash){ modalOpen=s.modalOpen; modal.classList.toggle('show',s.modalShown); modal._repoKey=s.modalKey;
+    modal.inert=!s.modalShown;modal.setAttribute('aria-hidden',String(!s.modalShown));document.getElementById('cardScroll').scrollTop=s.modalScroll;
     chatEl.classList.toggle('hidden',s.chatHidden);
     const target=location.pathname+location.search+(s.hash||''); if(location.pathname+location.search+location.hash!==target) history.replaceState(null,'',target);
   } else { modalOpen=false; modal.classList.remove('show'); modal._repoKey=null; chatEl.classList.toggle('hidden',A.afterExit?true:s.chatHidden); }
   A.resumeTour=s.tourPause; s.restored=true; A.restoreCount++; A.renderInterior=false; A.lastRestored=_repositoryAtelierPose(); _resetRepositoryAtelierInput();
+  A.returnFocus=s.entryFocus;
 }
 function _runRepositoryAtelierAfterExit(){
   const A=REPOSITORY_ATELIER,action=A.afterExit; A.afterExit=null; if(!action) return;
@@ -14018,6 +14219,14 @@ function _repositoryAtelierTransition(dt){
     if(pendingHash&&tour&&tour.active) endTour(false); else _resumeTourAfterAtelier(pausedTour);
     if(pendingHash){ A.afterExit=null; const key=repoHashKey(),repo=repoByKey(key); if(repo) openCard(repo); else { modalOpen=false; modal.classList.remove('show'); modal._repoKey=null; } }
     _runRepositoryAtelierAfterExit();
+    const returnFocus=A.returnFocus;A.returnFocus=null;
+    requestAnimationFrame(()=>{
+      const owner=townKeyboardOwner();
+      if(owner){if(!owner.element.contains(document.activeElement)){
+        const target=owner.element===modal?document.getElementById('closeBtn'):townFocusables(owner.element)[0];target?.focus({preventScroll:true});
+      }}else if(returnFocus?.isConnected&&!returnFocus.closest('[inert],.hidden')&&returnFocus.getClientRects().length) returnFocus.focus({preventScroll:true});
+      else if(document.activeElement===document.body) menuBtn.focus({preventScroll:true});
+    });
     flushStarNudge();
     if(typeof _drainQueuedChat==='function'&&!_drainQueuedChat()&&typeof _resumePendingChatNpc==='function') _resumePendingChatNpc(); }
   return 'exterior';
@@ -14111,6 +14320,7 @@ atelierBlueprintOutline.addEventListener('focusin',event=>{ const button=event.t
 atelierBlueprintOutline.addEventListener('click',event=>{ const button=event.target.closest?.('[data-blueprint-index]');
   if(button) _focusRepositoryBlueprintNode(Number(button.dataset.blueprintIndex),false); });
 atelierBlueprintPanel.addEventListener('keydown',event=>{
+  if(event.isComposing||event.keyCode===229)return;
   if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); _closeRepositoryBlueprint(); return; }
   if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key)||!atelierBlueprintOutline.contains(event.target)) return;
   const buttons=[...atelierBlueprintOutline.querySelectorAll('[data-blueprint-index]')]; if(!buttons.length) return;
@@ -14501,6 +14711,7 @@ function animate(){
   if(userInput||moving||ride||canalFerryRide||dragging||navTarget||GROWTH_REPLAY.playing||GROWTH_REPLAY.reveals.length) lastAct=_now;   // dynamic state keeps interaction responsive; shadow invalidation is independent
   _updateVisualLod(renderedFrame);
   _updateBuildingLodPrototype(renderedFrame);
+  updateTownLabels();
   _beginRenderMetrics(_idle); _renderWorldTreeFrame(); _endRenderMetrics();
 }
 FIRST_ARRIVAL.initialized=true;
