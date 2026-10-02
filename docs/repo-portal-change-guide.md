@@ -169,8 +169,12 @@ text, `cityUser`, and the persistent anonymous instance ID.
 - Portal code stays below 30 KiB uncompressed, and the complete local runtime stays below 5 MiB.
 - Target arrival adds no steady-state town draw and no Portal-specific Three.js object.
 - Intro and Station use one labelled 320-character field, visible alert text, and shared validation.
-- Proof and copy results use live regions. Atelier actions use 44 px mobile targets and hide while its chat
-  owns the screen.
+- Proof and copy results use live regions. Atelier actions use at least 44 px mobile targets and hide
+  while its chat, Blueprint, or README reader owns the screen.
+- Repository Exhibit entry uses the already loaded public description. Its separate explicit README
+  action has one anonymous request per visit, an eight-second deadline, 128 KiB JSON / 64 KiB document
+  caps, and no media, model call, or storage. It does not change the Portal request/cache or deep-link
+  contracts; [the excerpt limitations](known-limitations.md) remain visible.
 - Reduced-motion visitors keep the same flow with the existing shortened Atelier fade.
 
 ## Files to change

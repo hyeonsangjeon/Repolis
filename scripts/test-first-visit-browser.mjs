@@ -1,6 +1,6 @@
 /* Local-only browser gate. Requires an existing static server and isolated Chrome CDP endpoint.
  * REPOLIS_TEST_URL=http://127.0.0.1:8000/ BROWSER_CDP_URL=http://127.0.0.1:9222 node scripts/test-first-visit-browser.mjs
- * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat,readable-town and FIRST_VISIT_CASE=<comma-separated substrings> select a smaller run.
+ * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat,readable-town,exhibit and FIRST_VISIT_CASE=<comma-separated substrings> select a smaller run.
  * FIRST_VISIT_REFERENCE=<commit SHA> replays only viewport observations against historical HTML.
  */
 import assert from 'node:assert/strict';
@@ -14,6 +14,8 @@ import { createRepositoryBlueprintDeepLink, parseRepoPortalInput } from '../asse
 import { createRepoRouteUrl } from '../assets/repo-route.js';
 import { authorizeRepositoryAtelierRequest } from '../cloudflare-taxi/src/repository-atelier.js';
 import { runReadableTownBrowserCases } from './readable-town-browser-cases.mjs';
+import { runRepositoryExhibitBrowserCases } from './repository-exhibit-browser-cases.mjs';
+import { exhibitDocumentFixture } from './repository-exhibit-fixtures.mjs';
 
 const base=new URL(process.env.REPOLIS_TEST_URL||'http://127.0.0.1:8000/');
 const endpoint=new URL(process.env.BROWSER_CDP_URL||'http://127.0.0.1:9222/');
@@ -22,8 +24,9 @@ const output=process.env.FIRST_VISIT_OUTPUT||await mkdtemp(join(tmpdir(),'repoli
 await mkdir(output,{recursive:true});
 const results=[],groups=(process.env.FIRST_VISIT_GROUP||'').split(',').filter(Boolean),only=process.env.FIRST_VISIT_CASE||'';
 const reference=process.env.FIRST_VISIT_REFERENCE||'';
-assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat','readable-town'].includes(group)),'Unknown browser gate group');
-if(reference) assert(groups.length===1&&(groups[0]==='viewport'||(groups[0]==='readable-town'&&process.env.READABLE_BASELINE==='1'))
+assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat','readable-town','exhibit'].includes(group)),'Unknown browser gate group');
+if(reference) assert(groups.length===1&&(groups[0]==='viewport'||(groups[0]==='readable-town'&&process.env.READABLE_BASELINE==='1')
+  ||(groups[0]==='exhibit'&&process.env.EXHIBIT_BASELINE==='1'))
   &&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and an explicit observation group');
 const referenceHtml=reference?execFileSync('git',['show',`${reference}:index.html`],{encoding:'utf8',maxBuffer:5*1024*1024}):null;
 const currentHtml=await readFile(new URL('../index.html',import.meta.url),'utf8');
@@ -45,13 +48,19 @@ const probe=`(${function(){
   Math.random=()=>{ seed=(Math.imul(seed,1664525)+1013904223)>>>0; return seed/4294967296; };
   const NativeDate=Date,fixed=Date.parse('2026-09-08T14:00:00Z');
   window.Date=class extends NativeDate{ constructor(...args){super(...(args.length?args:[fixed]));} static now(){return fixed;} };
-  window.__browserGate={draws:0,firstDraw:null};
+  window.__browserGate={draws:0,firstDraw:null,roomCpu:[],roomIntervals:[],lastRoomFrame:null};
   window.__THREE_DEVTOOLS__=new EventTarget();
   __THREE_DEVTOOLS__.addEventListener('observe',event=>{
     const renderer=event.detail; if(!renderer.isWebGLRenderer) return;
     __browserGate.renderer=renderer; const render=renderer.render;
     renderer.render=function(scene,camera){
+      const started=performance.now();
       const result=render.call(this,scene,camera);
+      if(scene.children.some(child=>child.name==='RepositoryAtelier_Room')){
+        if(__browserGate.roomCpu.length<180)__browserGate.roomCpu.push(performance.now()-started);
+        if(__browserGate.lastRoomFrame!==null&&__browserGate.roomIntervals.length<180)__browserGate.roomIntervals.push(started-__browserGate.lastRoomFrame);
+        __browserGate.lastRoomFrame=started;
+      }else __browserGate.lastRoomFrame=null;
       if(scene.isScene&&camera.isPerspectiveCamera){ __browserGate.draws++; __browserGate.firstDraw??=performance.now(); __browserGate.scene=scene; __browserGate.camera=camera; }
       return result;
     };
@@ -171,21 +180,26 @@ async function session(test){
   const tab=await browser.send('Target.createTarget',{url:'about:blank',browserContextId:context.browserContextId});
   const tabs=await (await fetch(new URL('/json/list',endpoint))).json();
   const page=new CDP(tabs.find(item=>item.id===tab.targetId).webSocketDebuggerUrl);
+  if(test.exhibitReadme==='deferred')page.exhibitPaused=new Promise(resolve=>{page.exhibitOnPause=resolve;});
   const errors=[],networkErrors=[],requests=[],requestInfo=[],interceptionErrors=[],fixtureFailures=[],requestUrls=new Map(); let failedRequests=0;
   await page.send('Page.enable'); await page.send('Runtime.enable'); await page.send('Network.enable'); await page.send('Log.enable');
   page.on('Runtime.exceptionThrown',event=>errors.push(event.exceptionDetails.exception?.description||event.exceptionDetails.exception?.value||event.exceptionDetails.text));
   page.on('Runtime.consoleAPICalled',event=>{ if(event.type==='error') errors.push(event.args.map(arg=>arg.description||arg.value).join(' ')); });
-  page.on('Log.entryAdded',event=>{ if(event.entry.level==='error') networkErrors.push({source:event.entry.source,text:event.entry.text}); });
+  page.on('Log.entryAdded',event=>{ if(event.entry.level==='error') networkErrors.push({source:event.entry.source,text:event.entry.text,url:event.entry.url||null}); });
   page.on('Network.requestWillBeSent',event=>{ requests.push(event.request.url); requestInfo.push({url:event.request.url,method:event.request.method}); requestUrls.set(event.requestId,event.request.url); });
   page.on('Network.loadingFailed',event=>{
     if(fixture&&requestUrls.get(event.requestId)===fixture.origin+'/__atelier_chat_fixture') fixtureFailures.push({error:event.errorText,cancelled:!!event.canceled});
   });
-  const fulfill=(event,status,body,contentType='application/json')=>page.send('Fetch.fulfillRequest',{requestId:event.requestId,responseCode:status,
+  const fulfill=(event,status,body,contentType='application/json',extraHeaders=[])=>page.send('Fetch.fulfillRequest',{requestId:event.requestId,responseCode:status,
     responseHeaders:[{name:'Content-Type',value:contentType},{name:'Access-Control-Allow-Origin',value:'*'},
-      {name:'Access-Control-Allow-Headers',value:'accept,x-github-api-version'},{name:'Access-Control-Allow-Methods',value:'GET,OPTIONS'}],
-    body:Buffer.from(typeof body==='string'?body:JSON.stringify(body)).toString('base64')});
+      {name:'Access-Control-Allow-Headers',value:'accept,x-github-api-version'},{name:'Access-Control-Allow-Methods',value:'GET,OPTIONS'},...extraHeaders],
+    body:(Buffer.isBuffer(body)?body:Buffer.from(typeof body==='string'?body:JSON.stringify(body))).toString('base64')});
   const intercept=async event=>{
     const url=new URL(event.request.url),fail=test.failure;
+    if(['opengraph.githubassets.com','avatars.githubusercontent.com'].includes(url.hostname)){
+      const pixel=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7ioAAAAASUVORK5CYII=','base64');
+      return fulfill(event,200,pixel,'image/png');
+    }
     if(referenceHtml&&url.origin===base.origin&&url.pathname===base.pathname) return fulfill(event,200,referenceHtml,'text/html');
     if(test.bootstrapReject&&url.origin===base.origin&&url.pathname===base.pathname){
       const anchor="const OWNER = window.REPOLIS_CONFIG?.town?.owner || 'hyeonsangjeon';";
@@ -201,6 +215,24 @@ async function session(test){
     }
     if(url.hostname==='api.github.com'){
       if(event.request.method==='OPTIONS') return fulfill(event,204,'');
+      if(url.pathname.endsWith('/readme')){
+        assert(test.exhibitReadme,'README access requires an explicit document fixture');
+        assert(!Object.keys(event.request.headers).some(name=>/authorization|cookie/i.test(name)),'README requests are anonymous, never credential-bearing');
+        const kind=test.exhibitReadme,repoName=url.pathname.slice('/repos/'.length,-'/readme'.length),ref=url.searchParams.get('ref');
+        if(kind==='timeout'||kind==='pending') return;
+        if(kind==='deferred'){
+          page.exhibitRelease=()=>fulfill(event,200,exhibitDocumentFixture(repoName,ref));
+          page.exhibitOnPause();
+          return;
+        }
+        if(kind==='redirect') return fulfill(event,302,'','application/json',[{name:'Location',value:'https://blocked.invalid/repolis-document'}]);
+        if(/^(404|403|429)$/.test(kind)) return fulfill(event,Number(kind),{message:'Injected public README failure'});
+        if(kind==='malformed') return fulfill(event,200,'{');
+        if(kind==='oversized') return fulfill(event,200,' '.repeat(128*1024+1));
+        const data=exhibitDocumentFixture(repoName,ref,kind);
+        if(kind==='mismatch') data.html_url='https://github.com/another/repository/blob/main/README.md';
+        return fulfill(event,200,data);
+      }
       if(fail&&fail.startsWith('api-')&&(!test.retry||failedRequests===0)){
         failedRequests++;
         if(fail==='api-hung') return;
@@ -213,16 +245,17 @@ async function session(test){
       if(url.pathname.includes('/git/trees/')) return fulfill(event,200,tree);
       if(url.pathname.startsWith('/users/')) return fulfill(event,200,test.empty?[]:publicCatalog);
       if(test.mismatched) return fulfill(event,200,{...publicRepo('alpha'),full_name:'wrong-owner/alpha',owner:{login:'wrong-owner'}});
-      return fulfill(event,200,publicRepo('alpha'));
+      return fulfill(event,200,{...publicRepo('alpha'),...test.repoOverrides});
     }
     return page.send('Fetch.continueRequest',{requestId:event.requestId});
   };
   page.on('Fetch.requestPaused',event=>{ intercept(event).catch(error=>interceptionErrors.push(String(error))); });
-  await page.send('Fetch.enable',{patterns:[{urlPattern:'*api.github.com/*'},...(test.failPath?[{urlPattern:'*'+test.failPath+'*'}]:[]),
+  await page.send('Fetch.enable',{patterns:[{urlPattern:'*api.github.com/*'},{urlPattern:'*opengraph.githubassets.com/*'},{urlPattern:'*avatars.githubusercontent.com/*'},...(test.failPath?[{urlPattern:'*'+test.failPath+'*'}]:[]),
     ...(referenceHtml||test.bootstrapReject?[{urlPattern:base.origin+base.pathname+'*',resourceType:'Document'}]:[])]});
   await page.send('Network.setBlockedURLs',{urls:['*workers.dev*']});
   await page.send('Emulation.setDeviceMetricsOverride',{width:test.mobile?390:1440,height:test.mobile?844:900,deviceScaleFactor:1,mobile:!!test.mobile});
   await page.send('Emulation.setTouchEmulationEnabled',{enabled:!!test.mobile});
+  if(test.exhibitReadme) await browser.send('Browser.grantPermissions',{browserContextId:context.browserContextId,origin:base.origin,permissions:['clipboardReadWrite','clipboardSanitizedWrite']});
   if(test.reduced) await page.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   if(test.atelierTransport) fixture=await atelierTransportFixture();
   const stored=test.direct?(test.lang==='ko'?'en':'ko'):test.lang;
@@ -888,5 +921,6 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
   return {population,observations,transitions,historicalObservation:!!reference};
 });
 await runReadableTownBrowserCases({run,ready,click,screenshot,delay,inside,outside,output});
+await runRepositoryExhibitBrowserCases({run,ready,click,screenshot,delay,inside,outside,output});
 assert(results.length>0,'No browser scenarios matched the requested selector');
 console.log(`First-visit browser gate: ${results.length} passed; evidence: ${output}`);
