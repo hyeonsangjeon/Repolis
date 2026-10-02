@@ -18,6 +18,7 @@ node scripts/test-procedural-surfaces.mjs
 node scripts/test-fork-lineage.mjs
 node scripts/test-repository-atelier-chat.mjs
 node scripts/test-repository-blueprint.mjs
+node scripts/test-repository-exhibit.mjs
 node scripts/test-issue-code-scout.mjs
 node scripts/validate-lore-fragments.mjs
 node --check scholars.js
@@ -30,3 +31,5 @@ node scripts/test-first-visit.mjs
 node scripts/test-readable-town.mjs
 node --check scripts/test-first-visit-browser.mjs
 node --check scripts/readable-town-browser-cases.mjs
+node --check scripts/repository-exhibit-browser-cases.mjs
+node --check scripts/repository-exhibit-fixtures.mjs

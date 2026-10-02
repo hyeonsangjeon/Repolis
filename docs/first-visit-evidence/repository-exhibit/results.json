@@ -1,0 +1,2049 @@
+{
+  "schema": 1,
+  "base": "4697b29f200895be537234c97382071dad99e81a",
+  "implementation": "378a24e8bb7ef164ec24ff35792a488b38da13df",
+  "browser": "Chrome/154.0.8037.93",
+  "node": "v24.7.0",
+  "platform": "macOS; headless Chrome CDP, not physical devices",
+  "conditions": {
+    "appClock": "2026-09-08T14:00:00Z",
+    "seed": 120121122,
+    "desktop": [
+      1440,
+      900
+    ],
+    "mobile": [
+      390,
+      844
+    ],
+    "landscape": [
+      844,
+      390
+    ],
+    "mobileProfile": "LOW_END/reduced motion on owner entry and source cases; explicit touch/keyboard emulation",
+    "requests": "Public API and thumbnail fixtures; optional production AI/RT/analytics disabled. Local HTTP chat fixtures are not model calls.",
+    "frame": "One observation per language/viewport per revision; CPU renderer submission and inter-frame intervals; first 20 samples excluded; no GPU timing or statistical speed claim"
+  },
+  "measuredBefore": {
+    "at": "2026-10-02T07:54:06.006Z",
+    "observations": [
+      {
+        "name": "exhibit-arrival-ko-desktop",
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "render": {
+          "calls": 61,
+          "triangles": 21846,
+          "peakCalls": 61,
+          "peakTriangles": 21846,
+          "exteriorCalls": 0
+        },
+        "atlases": [
+          {
+            "name": "history",
+            "width": 1536,
+            "height": 960,
+            "pixelHash": "fea87f04"
+          },
+          {
+            "name": "signals",
+            "width": 1536,
+            "height": 960,
+            "pixelHash": "dd3b6141"
+          },
+          {
+            "name": "actions",
+            "width": 1536,
+            "height": 576,
+            "pixelHash": "40c80201"
+          }
+        ],
+        "frame": {
+          "cpuSubmissionMs": {
+            "samples": 80,
+            "p50": 1.0999999940395355,
+            "p95": 1.5
+          },
+          "intervalMs": {
+            "samples": 79,
+            "p50": 16.69999998807907,
+            "p95": 17.599999994039536
+          }
+        },
+        "requests": 49,
+        "apiRequests": [],
+        "description": null,
+        "repoName": "Repolis"
+      },
+      {
+        "name": "exhibit-arrival-en-desktop",
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "render": {
+          "calls": 61,
+          "triangles": 21846,
+          "peakCalls": 61,
+          "peakTriangles": 21846,
+          "exteriorCalls": 0
+        },
+        "atlases": [
+          {
+            "name": "history",
+            "width": 1536,
+            "height": 960,
+            "pixelHash": "95954c8c"
+          },
+          {
+            "name": "signals",
+            "width": 1536,
+            "height": 960,
+            "pixelHash": "3e89a2ca"
+          },
+          {
+            "name": "actions",
+            "width": 1536,
+            "height": 576,
+            "pixelHash": "a6016ba2"
+          }
+        ],
+        "frame": {
+          "cpuSubmissionMs": {
+            "samples": 80,
+            "p50": 0.7999999821186066,
+            "p95": 1.0999999940395355
+          },
+          "intervalMs": {
+            "samples": 79,
+            "p50": 16.69999998807907,
+            "p95": 17.69999998807907
+          }
+        },
+        "requests": 49,
+        "apiRequests": [],
+        "description": null,
+        "repoName": "Repolis"
+      },
+      {
+        "name": "exhibit-arrival-ko-mobile",
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "render": {
+          "calls": 61,
+          "triangles": 19804,
+          "peakCalls": 61,
+          "peakTriangles": 19804,
+          "exteriorCalls": 0
+        },
+        "atlases": [
+          {
+            "name": "history",
+            "width": 1024,
+            "height": 640,
+            "pixelHash": "57813378"
+          },
+          {
+            "name": "signals",
+            "width": 1024,
+            "height": 640,
+            "pixelHash": "43e9b42c"
+          },
+          {
+            "name": "actions",
+            "width": 1024,
+            "height": 384,
+            "pixelHash": "d8cbfce2"
+          }
+        ],
+        "frame": {
+          "cpuSubmissionMs": {
+            "samples": 81,
+            "p50": 1.4000000059604645,
+            "p95": 1.699999988079071
+          },
+          "intervalMs": {
+            "samples": 80,
+            "p50": 16.69999998807907,
+            "p95": 17.5
+          }
+        },
+        "requests": 49,
+        "apiRequests": [],
+        "description": null,
+        "repoName": "Repolis"
+      },
+      {
+        "name": "exhibit-arrival-en-mobile",
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "render": {
+          "calls": 61,
+          "triangles": 19804,
+          "peakCalls": 61,
+          "peakTriangles": 19804,
+          "exteriorCalls": 0
+        },
+        "atlases": [
+          {
+            "name": "history",
+            "width": 1024,
+            "height": 640,
+            "pixelHash": "8aa75bd3"
+          },
+          {
+            "name": "signals",
+            "width": 1024,
+            "height": 640,
+            "pixelHash": "9fb51fec"
+          },
+          {
+            "name": "actions",
+            "width": 1024,
+            "height": 384,
+            "pixelHash": "4dba9e1d"
+          }
+        ],
+        "frame": {
+          "cpuSubmissionMs": {
+            "samples": 81,
+            "p50": 1.2000000178813934,
+            "p95": 1.600000023841858
+          },
+          "intervalMs": {
+            "samples": 80,
+            "p50": 16.700000017881393,
+            "p95": 17.5
+          }
+        },
+        "requests": 49,
+        "apiRequests": [],
+        "description": null,
+        "repoName": "Repolis"
+      }
+    ]
+  },
+  "measuredAfter": {
+    "at": "2026-10-02T07:56:49.797Z",
+    "observations": [
+      {
+        "name": "exhibit-arrival-ko-desktop",
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "render": {
+          "calls": 61,
+          "triangles": 21846,
+          "peakCalls": 61,
+          "peakTriangles": 21846,
+          "exteriorCalls": 0
+        },
+        "atlases": [
+          {
+            "name": "history",
+            "width": 1536,
+            "height": 960,
+            "pixelHash": "fea87f04"
+          },
+          {
+            "name": "signals",
+            "width": 1536,
+            "height": 960,
+            "pixelHash": "dd3b6141"
+          },
+          {
+            "name": "actions",
+            "width": 1536,
+            "height": 576,
+            "pixelHash": "555a8fb4"
+          }
+        ],
+        "frame": {
+          "cpuSubmissionMs": {
+            "samples": 83,
+            "p50": 0.7000000178813934,
+            "p95": 1.5
+          },
+          "intervalMs": {
+            "samples": 82,
+            "p50": 16.700000017881393,
+            "p95": 17.599999994039536
+          }
+        },
+        "requests": 50,
+        "apiRequests": [],
+        "description": "🏙️ Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.",
+        "repoName": "hyeonsangjeon/Repolis"
+      },
+      {
+        "name": "exhibit-arrival-en-desktop",
+        "emulation": {
+          "mobile": false,
+          "lowEnd": false,
+          "reduced": false
+        },
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "render": {
+          "calls": 61,
+          "triangles": 21846,
+          "peakCalls": 61,
+          "peakTriangles": 21846,
+          "exteriorCalls": 0
+        },
+        "atlases": [
+          {
+            "name": "history",
+            "width": 1536,
+            "height": 960,
+            "pixelHash": "95954c8c"
+          },
+          {
+            "name": "signals",
+            "width": 1536,
+            "height": 960,
+            "pixelHash": "3e89a2ca"
+          },
+          {
+            "name": "actions",
+            "width": 1536,
+            "height": 576,
+            "pixelHash": "b70871e5"
+          }
+        ],
+        "frame": {
+          "cpuSubmissionMs": {
+            "samples": 81,
+            "p50": 1.199999988079071,
+            "p95": 1.4000000059604645
+          },
+          "intervalMs": {
+            "samples": 80,
+            "p50": 16.69999998807907,
+            "p95": 17.299999982118607
+          }
+        },
+        "requests": 50,
+        "apiRequests": [],
+        "description": "🏙️ Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.",
+        "repoName": "hyeonsangjeon/Repolis"
+      },
+      {
+        "name": "exhibit-arrival-ko-mobile",
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "render": {
+          "calls": 54,
+          "triangles": 19050,
+          "peakCalls": 55,
+          "peakTriangles": 19130,
+          "exteriorCalls": 0
+        },
+        "atlases": [
+          {
+            "name": "history",
+            "width": 1024,
+            "height": 640,
+            "pixelHash": "57813378"
+          },
+          {
+            "name": "signals",
+            "width": 1024,
+            "height": 640,
+            "pixelHash": "43e9b42c"
+          },
+          {
+            "name": "actions",
+            "width": 1024,
+            "height": 384,
+            "pixelHash": "217ad44b"
+          }
+        ],
+        "frame": {
+          "cpuSubmissionMs": {
+            "samples": 81,
+            "p50": 1,
+            "p95": 1.4000000059604645
+          },
+          "intervalMs": {
+            "samples": 80,
+            "p50": 16.69999998807907,
+            "p95": 17.599999994039536
+          }
+        },
+        "requests": 50,
+        "apiRequests": [],
+        "description": "🏙️ Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.",
+        "repoName": "hyeonsangjeon/Repolis"
+      },
+      {
+        "name": "exhibit-arrival-en-mobile",
+        "emulation": {
+          "mobile": true,
+          "lowEnd": true,
+          "reduced": true
+        },
+        "resources": {
+          "rooms": 1,
+          "geometries": 25,
+          "materials": 16,
+          "canvasTextures": 3,
+          "sharedAvatarDraws": 44,
+          "exhibitBatches": 5
+        },
+        "render": {
+          "calls": 54,
+          "triangles": 19050,
+          "peakCalls": 55,
+          "peakTriangles": 19130,
+          "exteriorCalls": 0
+        },
+        "atlases": [
+          {
+            "name": "history",
+            "width": 1024,
+            "height": 640,
+            "pixelHash": "8aa75bd3"
+          },
+          {
+            "name": "signals",
+            "width": 1024,
+            "height": 640,
+            "pixelHash": "9fb51fec"
+          },
+          {
+            "name": "actions",
+            "width": 1024,
+            "height": 384,
+            "pixelHash": "8dfdb7a2"
+          }
+        ],
+        "frame": {
+          "cpuSubmissionMs": {
+            "samples": 80,
+            "p50": 0.699999988079071,
+            "p95": 1.300000011920929
+          },
+          "intervalMs": {
+            "samples": 79,
+            "p50": 16.69999998807907,
+            "p95": 17
+          }
+        },
+        "requests": 50,
+        "apiRequests": [],
+        "description": "🏙️ Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.",
+        "repoName": "hyeonsangjeon/Repolis"
+      }
+    ]
+  },
+  "sourceReceipts": [
+    {
+      "file": "repolis.md",
+      "repoName": "hyeonsangjeon/Repolis",
+      "path": "README.md",
+      "sha": "c46888b2abceb622716034e9bef99f31b4a5edbd",
+      "bytes": 22110,
+      "sourceUrl": "https://github.com/hyeonsangjeon/Repolis/blob/main/README.md",
+      "ref": "main",
+      "note": "Public original README fetched 2026-10-02; unchanged bytes, no image fetching or generated instructions."
+    },
+    {
+      "file": "youtube-dl-nas.md",
+      "repoName": "hyeonsangjeon/youtube-dl-nas",
+      "path": "README.md",
+      "sha": "a9f86d1041b00b37bdd81840e12c85b09fa9c464",
+      "bytes": 29849,
+      "sourceUrl": "https://github.com/hyeonsangjeon/youtube-dl-nas/blob/master/README.md",
+      "ref": "master",
+      "note": "Public original README fetched 2026-10-02; unchanged bytes, no image fetching or generated instructions."
+    }
+  ],
+  "validation": {
+    "hermeticCommands": 29,
+    "exhibitHermeticChecks": 72,
+    "exhibitCases": 34,
+    "finalExistingCases": 24,
+    "earlierExploratoryExistingCases": 127,
+    "suites": [
+      {
+        "at": "2026-10-02T07:56:49.797Z",
+        "cases": [
+          {
+            "name": "exhibit-arrival-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-arrival-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-arrival-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-arrival-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-source-Repolis-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "clipboardExact": true,
+            "source": {
+              "repoName": "hyeonsangjeon/Repolis",
+              "sha": "c46888b2abceb622716034e9bef99f31b4a5edbd",
+              "bytes": 22110,
+              "ref": "main"
+            },
+            "displayedCodeBlocks": 2,
+            "accessibility": {
+              "dialog": "README 시작 안내 hyeonsangjeon/Repolis",
+              "controls": [
+                {
+                  "role": "button",
+                  "name": "깃버에게 질문"
+                },
+                {
+                  "role": "button",
+                  "name": "🗺 Repository Blueprint"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 121–140행"
+                },
+                {
+                  "role": "link",
+                  "name": "전체 README 열기"
+                },
+                {
+                  "role": "button",
+                  "name": "시작 안내 닫기"
+                }
+              ],
+              "documentLive": null
+            }
+          },
+          {
+            "name": "exhibit-source-Repolis-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "clipboardExact": true,
+            "source": {
+              "repoName": "hyeonsangjeon/Repolis",
+              "sha": "c46888b2abceb622716034e9bef99f31b4a5edbd",
+              "bytes": 22110,
+              "ref": "main"
+            },
+            "displayedCodeBlocks": 2,
+            "accessibility": {
+              "dialog": "README getting started hyeonsangjeon/Repolis",
+              "controls": [
+                {
+                  "role": "button",
+                  "name": "Ask Gitber"
+                },
+                {
+                  "role": "button",
+                  "name": "🗺 Repository Blueprint"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 121–140"
+                },
+                {
+                  "role": "link",
+                  "name": "Open full README"
+                },
+                {
+                  "role": "button",
+                  "name": "Close getting started"
+                }
+              ],
+              "documentLive": null
+            }
+          },
+          {
+            "name": "exhibit-source-Repolis-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "clipboardExact": true,
+            "source": {
+              "repoName": "hyeonsangjeon/Repolis",
+              "sha": "c46888b2abceb622716034e9bef99f31b4a5edbd",
+              "bytes": 22110,
+              "ref": "main"
+            },
+            "displayedCodeBlocks": 2,
+            "accessibility": {
+              "dialog": "README 시작 안내 hyeonsangjeon/Repolis",
+              "controls": [
+                {
+                  "role": "button",
+                  "name": "깃버에게 질문"
+                },
+                {
+                  "role": "button",
+                  "name": "🗺 Repository Blueprint"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 121–140행"
+                },
+                {
+                  "role": "link",
+                  "name": "전체 README 열기"
+                },
+                {
+                  "role": "button",
+                  "name": "시작 안내 닫기"
+                }
+              ],
+              "documentLive": null
+            }
+          },
+          {
+            "name": "exhibit-source-Repolis-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "clipboardExact": true,
+            "source": {
+              "repoName": "hyeonsangjeon/Repolis",
+              "sha": "c46888b2abceb622716034e9bef99f31b4a5edbd",
+              "bytes": 22110,
+              "ref": "main"
+            },
+            "displayedCodeBlocks": 2,
+            "accessibility": {
+              "dialog": "README getting started hyeonsangjeon/Repolis",
+              "controls": [
+                {
+                  "role": "button",
+                  "name": "Ask Gitber"
+                },
+                {
+                  "role": "button",
+                  "name": "🗺 Repository Blueprint"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 121–140"
+                },
+                {
+                  "role": "link",
+                  "name": "Open full README"
+                },
+                {
+                  "role": "button",
+                  "name": "Close getting started"
+                }
+              ],
+              "documentLive": null
+            }
+          },
+          {
+            "name": "exhibit-source-youtube-dl-nas-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/youtube-dl-nas/readme?ref=master"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "clipboardExact": true,
+            "source": {
+              "repoName": "hyeonsangjeon/youtube-dl-nas",
+              "sha": "a9f86d1041b00b37bdd81840e12c85b09fa9c464",
+              "bytes": 29849,
+              "ref": "master"
+            },
+            "displayedCodeBlocks": 8,
+            "accessibility": {
+              "dialog": "README 시작 안내 hyeonsangjeon/youtube-dl-nas",
+              "controls": [
+                {
+                  "role": "button",
+                  "name": "깃버에게 질문"
+                },
+                {
+                  "role": "button",
+                  "name": "🗺 Repository Blueprint"
+                },
+                {
+                  "role": "link",
+                  "name": "Channel Vault NAS"
+                },
+                {
+                  "role": "link",
+                  "name": "Issue form"
+                },
+                {
+                  "role": "link",
+                  "name": "Latest release"
+                },
+                {
+                  "role": "link",
+                  "name": "MCP Collections guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Mobile sharing guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Operations guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Deployment paths"
+                },
+                {
+                  "role": "link",
+                  "name": "Docker Compose Quick Start"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 372–399행"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 222–284행"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 165–221행"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 25–46행"
+                },
+                {
+                  "role": "link",
+                  "name": "전체 README 열기"
+                },
+                {
+                  "role": "button",
+                  "name": "시작 안내 닫기"
+                }
+              ],
+              "documentLive": null
+            }
+          },
+          {
+            "name": "exhibit-source-youtube-dl-nas-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/youtube-dl-nas/readme?ref=master"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "clipboardExact": true,
+            "source": {
+              "repoName": "hyeonsangjeon/youtube-dl-nas",
+              "sha": "a9f86d1041b00b37bdd81840e12c85b09fa9c464",
+              "bytes": 29849,
+              "ref": "master"
+            },
+            "displayedCodeBlocks": 8,
+            "accessibility": {
+              "dialog": "README getting started hyeonsangjeon/youtube-dl-nas",
+              "controls": [
+                {
+                  "role": "button",
+                  "name": "Ask Gitber"
+                },
+                {
+                  "role": "button",
+                  "name": "🗺 Repository Blueprint"
+                },
+                {
+                  "role": "link",
+                  "name": "Channel Vault NAS"
+                },
+                {
+                  "role": "link",
+                  "name": "Issue form"
+                },
+                {
+                  "role": "link",
+                  "name": "Latest release"
+                },
+                {
+                  "role": "link",
+                  "name": "MCP Collections guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Mobile sharing guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Operations guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Deployment paths"
+                },
+                {
+                  "role": "link",
+                  "name": "Docker Compose Quick Start"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 372–399"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 222–284"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 165–221"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 25–46"
+                },
+                {
+                  "role": "link",
+                  "name": "Open full README"
+                },
+                {
+                  "role": "button",
+                  "name": "Close getting started"
+                }
+              ],
+              "documentLive": null
+            }
+          },
+          {
+            "name": "exhibit-source-youtube-dl-nas-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/youtube-dl-nas/readme?ref=master"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "clipboardExact": true,
+            "source": {
+              "repoName": "hyeonsangjeon/youtube-dl-nas",
+              "sha": "a9f86d1041b00b37bdd81840e12c85b09fa9c464",
+              "bytes": 29849,
+              "ref": "master"
+            },
+            "displayedCodeBlocks": 8,
+            "accessibility": {
+              "dialog": "README 시작 안내 hyeonsangjeon/youtube-dl-nas",
+              "controls": [
+                {
+                  "role": "button",
+                  "name": "깃버에게 질문"
+                },
+                {
+                  "role": "button",
+                  "name": "🗺 Repository Blueprint"
+                },
+                {
+                  "role": "link",
+                  "name": "Channel Vault NAS"
+                },
+                {
+                  "role": "link",
+                  "name": "Issue form"
+                },
+                {
+                  "role": "link",
+                  "name": "Latest release"
+                },
+                {
+                  "role": "link",
+                  "name": "MCP Collections guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Mobile sharing guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Operations guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Deployment paths"
+                },
+                {
+                  "role": "link",
+                  "name": "Docker Compose Quick Start"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 372–399행"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 222–284행"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "button",
+                  "name": "코드 복사"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 165–221행"
+                },
+                {
+                  "role": "link",
+                  "name": "원문 25–46행"
+                },
+                {
+                  "role": "link",
+                  "name": "전체 README 열기"
+                },
+                {
+                  "role": "button",
+                  "name": "시작 안내 닫기"
+                }
+              ],
+              "documentLive": null
+            }
+          },
+          {
+            "name": "exhibit-source-youtube-dl-nas-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/youtube-dl-nas/readme?ref=master"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "clipboardExact": true,
+            "source": {
+              "repoName": "hyeonsangjeon/youtube-dl-nas",
+              "sha": "a9f86d1041b00b37bdd81840e12c85b09fa9c464",
+              "bytes": 29849,
+              "ref": "master"
+            },
+            "displayedCodeBlocks": 8,
+            "accessibility": {
+              "dialog": "README getting started hyeonsangjeon/youtube-dl-nas",
+              "controls": [
+                {
+                  "role": "button",
+                  "name": "Ask Gitber"
+                },
+                {
+                  "role": "button",
+                  "name": "🗺 Repository Blueprint"
+                },
+                {
+                  "role": "link",
+                  "name": "Channel Vault NAS"
+                },
+                {
+                  "role": "link",
+                  "name": "Issue form"
+                },
+                {
+                  "role": "link",
+                  "name": "Latest release"
+                },
+                {
+                  "role": "link",
+                  "name": "MCP Collections guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Mobile sharing guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Operations guide"
+                },
+                {
+                  "role": "link",
+                  "name": "Deployment paths"
+                },
+                {
+                  "role": "link",
+                  "name": "Docker Compose Quick Start"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 372–399"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 222–284"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "button",
+                  "name": "Copy code"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 165–221"
+                },
+                {
+                  "role": "link",
+                  "name": "Source lines 25–46"
+                },
+                {
+                  "role": "link",
+                  "name": "Open full README"
+                },
+                {
+                  "role": "button",
+                  "name": "Close getting started"
+                }
+              ],
+              "documentLive": null
+            }
+          },
+          {
+            "name": "exhibit-controls-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-controls-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-controls-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-controls-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-document-missing",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-document-ko",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-document-hostile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-document-404",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [
+              {
+                "source": "network",
+                "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+                "url": "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+              }
+            ]
+          },
+          {
+            "name": "exhibit-document-403",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [
+              {
+                "source": "network",
+                "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+                "url": "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+              }
+            ]
+          },
+          {
+            "name": "exhibit-document-429",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [
+              {
+                "source": "network",
+                "text": "Failed to load resource: the server responded with a status of 429 (Too Many Requests)",
+                "url": "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+              }
+            ]
+          },
+          {
+            "name": "exhibit-document-timeout",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-document-oversized",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-document-malformed",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-document-mismatch",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-document-redirect",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [
+              {
+                "source": "network",
+                "text": "Failed to load resource: net::ERR_FAILED",
+                "url": "https://blocked.invalid/repolis-document"
+              }
+            ]
+          },
+          {
+            "name": "exhibit-strict-direct-atelier",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-archived-repository",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-empty-repository",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [
+              {
+                "source": "network",
+                "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+                "url": "https://api.github.com/repos/fixture-town/alpha/readme?ref=main"
+              }
+            ]
+          },
+          {
+            "name": "exhibit-long-identity",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/long-public-repository-name-long-public-repository-name-long-public-repository-name-example",
+              "https://api.github.com/repos/fixture-town/long-public-repository-name-long-public-repository-name-long-public-repository-name-example/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-async-focus-and-copy",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-cancel-rebind",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "exhibit-no-automatic-inference",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/hyeonsangjeon/Repolis/readme?ref=main"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "localChatFixtureCalls": 0
+          }
+        ]
+      },
+      {
+        "at": "2026-10-02T08:00:35.234Z",
+        "cases": [
+          {
+            "name": "atelier-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "blueprint-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/git/trees/main?recursive=1"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "blueprint-cancel-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "atelier-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "blueprint-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/git/trees/main?recursive=1"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "blueprint-cancel-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "atelier-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "blueprint-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/git/trees/main?recursive=1"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "blueprint-cancel-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "atelier-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "blueprint-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha",
+              "https://api.github.com/repos/fixture-town/alpha/git/trees/main?recursive=1"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "blueprint-cancel-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "atelier-chat-flow-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "localChatFixtureCalls": 6
+          },
+          {
+            "name": "atelier-chat-flow-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "localChatFixtureCalls": 6
+          },
+          {
+            "name": "atelier-chat-timeout-en",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": [],
+            "localChatFixtureCalls": 2
+          },
+          {
+            "name": "readable-panels-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "readable-fast-return-ko-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "readable-panels-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "readable-fast-return-en-desktop",
+            "ok": true,
+            "emulation": {
+              "mobile": false,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "readable-panels-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "readable-fast-return-ko-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "readable-panels-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          },
+          {
+            "name": "readable-fast-return-en-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": true,
+              "reduced": true
+            },
+            "apiRequests": [],
+            "consoleErrors": [],
+            "resourceErrors": []
+          }
+        ]
+      },
+      {
+        "at": "2026-10-02T08:07:36.527Z",
+        "cases": [
+          {
+            "name": "context-atelier-mobile",
+            "ok": true,
+            "emulation": {
+              "mobile": true,
+              "lowEnd": false,
+              "reduced": false
+            },
+            "apiRequests": [
+              "https://api.github.com/repos/fixture-town/alpha"
+            ],
+            "consoleErrors": [],
+            "resourceErrors": []
+          }
+        ]
+      }
+    ]
+  },
+  "runtimeBudgets": {
+    "requestsPerVisit": 1,
+    "retries": 0,
+    "timeoutMs": 8000,
+    "responseJsonBytes": 131072,
+    "decodedUtf8Bytes": 65536,
+    "excerptBytes": 24576,
+    "sectionBytes": 12288,
+    "codeBytes": 8192,
+    "sections": 6,
+    "codeBlocks": 12,
+    "blocks": 96,
+    "lines": 4096,
+    "mediaBytes": 0,
+    "newScenes": 0,
+    "newGeometries": 0,
+    "newMaterials": 0,
+    "newAtlases": 0,
+    "moduleBytes": 13944
+  },
+  "boundaries": {
+    "liveModelCalls": 0,
+    "workerDeployments": 0,
+    "independentSemanticReviewer": false,
+    "preservedDirtyFiles": [
+      "cloudflare-taxi/src/grounded.js",
+      "cloudflare-taxi/src/npc-budget-governor.js",
+      "scripts/smoke.mjs",
+      "scripts/test-npc-budget-governor.mjs"
+    ],
+    "excluded": [
+      "physical devices",
+      "native IME",
+      "screen-reader interaction",
+      "Safari/Firefox",
+      "hardware GPU failure"
+    ]
+  },
+  "sha256": {
+    "index.html": "565f48924df4abfc206c3704aa46d290cd6789e147d1fe965b52f8d2c9e49265",
+    "assets/repository-exhibit.js": "a771a4f8c5b1fa49584636861dc1f2f5c96de3d132b7229f95621496264daf86",
+    "assets/repository-blueprint.js": "082474bff2140808c27981dd321c88f13a12bb6fc5a33f97d8ab5c4226861e80",
+    "assets/repository-atelier-chat.js": "608cd8672b17cf1d12c063b6cc84afda1954cb6765ab9615b1b52496cf5b729c",
+    "assets/repo-portal.js": "53f9e2c6155e333337b7412aee3fe34f3b3e6d07a4ae6aa01f7fd18f8512d5b8",
+    "repolis.config.js": "0748eb8fab6aaccd487790b5bd7c93b1a7f3619621c5e384a357579630f4771d",
+    "scripts/test-repository-exhibit.mjs": "3897131817c1704d41a4264679e3ed0ecb1b6e7b14be75f4cd7831ebcfb75608",
+    "scripts/test-first-visit-browser.mjs": "8f2257955dc45280f63cc77cf683b82fe21eab1468dba4a6e247113c819f2093",
+    "scripts/repository-exhibit-browser-cases.mjs": "c52e3a04fd9ee2085f63d51f9c701a23afa376a5cea0615435777cf835165bdd",
+    "scripts/repository-exhibit-fixtures.mjs": "d4a110d9a8b932b2f032545a5d0959674dc3ca6c3dd0df95fb4c00fbe4bfafb4",
+    "scripts/check-hermetic.sh": "245c966e2333edb7d73153bff5ac65c6af311d1b26129cb38dfbcdb23b838786"
+  }
+}

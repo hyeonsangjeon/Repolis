@@ -624,19 +624,21 @@
   #atelierHud { position: fixed; inset: 0; z-index: 13; pointer-events: none; color: #f4f0e7; }
   #atelierHud.hidden { display: none; }
   #atelierIdentity { position: absolute; top: calc(14px + env(safe-area-inset-top,0px)); left: 50%;
-    transform: translateX(-50%); width: min(560px,calc(100vw - 150px)); padding: 9px 16px 10px;
+    transform: translateX(-50%); width: min(700px,calc(100vw - 150px)); padding: 9px 16px 10px;
     border: 1px solid rgba(255,255,255,.2); border-radius: 14px; background: rgba(16,24,27,.82);
     box-shadow: 0 8px 28px rgba(0,0,0,.28); text-align: center; backdrop-filter: blur(8px); }
   #atelierIdentity .k { display: block; color: #b9cdd1; font-size: 10px; font-weight: 900; letter-spacing: .14em; }
   #atelierIdentity .repo { display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis;
-    white-space: nowrap; font-size: 15px; font-weight: 800; }
+    white-space: normal; overflow-wrap:anywhere; font-size: 15px; font-weight: 800; }
   #atelierIdentity .sub { display:block; margin-top:3px; color:#8fb7bc; font-size:10px; font-weight:700; letter-spacing:.02em; }
+  #atelierPurposeText { margin:8px 0 0; color:#e4edeb; font:400 13px/1.5 system-ui,sans-serif;
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:5; overflow:hidden; overflow-wrap:anywhere; }
   #atelierExit { position: absolute; top: calc(14px + env(safe-area-inset-top,0px));
     left: calc(14px + env(safe-area-inset-left,0px)); width: 48px; height: 48px; border: 1px solid rgba(255,255,255,.24);
     border-radius: 50%; background: rgba(16,24,27,.88); color: #fff; font-size: 23px; cursor: pointer;
     box-shadow: 0 8px 26px rgba(0,0,0,.3); pointer-events: auto; }
-  #atelierPortalActions { position:absolute; top:calc(86px + env(safe-area-inset-top,0px)); right:14px;
-    display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; width:min(610px,calc(100vw - 28px)); pointer-events:auto; }
+  #atelierPortalActions { position:absolute; bottom:calc(88px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%);
+    display:flex; flex-wrap:wrap; justify-content:center; gap:6px; width:min(900px,calc(100vw - 28px)); pointer-events:auto; }
   #atelierPortalActions[hidden] { display:none; }
   #atelierPortalActions [hidden] { display:none; }
   #atelierPortalActions button, #atelierPortalActions a { display:inline-flex; min-height:40px; align-items:center; justify-content:center;
@@ -644,6 +646,31 @@
     background:rgba(16,31,35,.9); font:800 11px/1.2 system-ui,sans-serif; text-decoration:none; cursor:pointer;
     box-shadow:0 6px 20px rgba(0,0,0,.24); backdrop-filter:blur(8px); }
   #atelierPortalActions button:hover, #atelierPortalActions a:hover { border-color:#8fd6dd; background:#233f45; }
+  #atelierPortalActions #atelierExhibitRead { min-height:48px; background:#e4bd68; border-color:#e4bd68; color:#182b2c; }
+  #atelierExhibitPanel { position:absolute; top:calc(88px + env(safe-area-inset-top,0px)); bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    right:24px; width:min(650px,calc(100vw - 48px)); display:flex; flex-direction:column; overflow:hidden;
+    pointer-events:auto; color:#e8f0ed; background:#13272b; border:1px solid #6f9b9d; border-radius:16px; box-shadow:0 16px 50px #0007; }
+  #atelierExhibitPanel[hidden] { display:none; }
+  .atelierExhibitHead { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #456163; gap:16px; }
+  .atelierExhibitHead > div { min-width:0; }
+  .atelierExhibitHead h2 { font:750 20px/1.3 system-ui,sans-serif; margin:0; color:#f5efdf; }
+  #atelierExhibitRepo { margin:5px 0 0; color:#bdd5d1; font:600 12px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; }
+  #atelierExhibitClose { flex:0 0 48px; width:48px; height:48px; border:1px solid #739798; border-radius:50%; background:transparent; color:#fff; cursor:pointer; font-size:24px; }
+  #atelierExhibitContent { flex:1; overflow:auto; overscroll-behavior:contain; padding:4px 20px 20px; min-height:0; }
+  #atelierExhibitContent h3 { margin:24px 0 10px; font:750 19px/1.4 system-ui,sans-serif; color:#f5d491; overflow-wrap:anywhere; }
+  #atelierExhibitContent h4 { margin:20px 0 8px; font:750 16px/1.4 system-ui,sans-serif; overflow-wrap:anywhere; }
+  #atelierExhibitContent p, #atelierExhibitContent .exhibitText { margin:12px 0; font:400 14px/1.65 system-ui,sans-serif; white-space:pre-wrap; overflow-wrap:anywhere; }
+  #atelierExhibitContent .exhibitSource, #atelierExhibitContent .exhibitBoundary { color:#b5cecc; font-size:12px; line-height:1.55; }
+  #atelierExhibitContent a { color:#a7e6ee; text-underline-offset:3px; overflow-wrap:anywhere; }
+  .exhibitCode { margin:16px 0; border:1px solid #416166; border-radius:10px; background:#0c1b20; overflow:hidden; }
+  .exhibitCodeHead { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:3px 10px; color:#b5cecc; font-size:11px; }
+  .exhibitCode button, .atelierExhibitFoot button { min-height:48px; border:1px solid #6c9597; padding:8px 12px; border-radius:8px; cursor:pointer; background:#244248; color:#eef5f3; font:700 12px/1.35 system-ui,sans-serif; }
+  .exhibitCode pre { margin:0; padding:12px; max-height:360px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; tab-size:4; font:12.5px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; }
+  .exhibitCode code { font:inherit; }
+  .atelierExhibitFoot { border-top:1px solid #456163; padding:8px 12px; display:flex; gap:8px; flex-wrap:wrap; }
+  #atelierExhibitStatus { flex:1 0 100%; margin:0; min-height:17px; color:#cce1d9; font:500 12px/1.4 system-ui,sans-serif; }
+  body.atelier-exhibit-open #atelierPortalActions, body.atelier-exhibit-open #prompt, body.atelier-exhibit-open #actBtn,
+  body.atelier-exhibit-open #atelierIdentity, body.atelier-chat-open #atelierPurposeText, body.atelier-blueprint-open #atelierPurposeText { display:none !important; }
   #atelierPortalStatus { flex:1 0 100%; min-height:14px; color:#b8d5d5; font-size:10px; text-align:right; }
   #atelierPortalStatus[data-tone="success"] { color:#9fe0bf; }
   #atelierPortalStatus[data-tone="error"] { color:#ffc0ae; }
@@ -709,6 +736,7 @@
   body.atelier-active #topbar, body.atelier-active #menuBtn, body.atelier-active #panel,
   body.atelier-active #passport, body.atelier-active #mapWrap, body.atelier-active #station,
   body.atelier-active #taxiBtn, body.atelier-active #emoteBtn, body.atelier-active #emoteBar,
+  body.atelier-active #greetToast, body.atelier-active #worldTreeTrigger,
   body.atelier-active #drivebar, body.atelier-active #starTrailHud, body.atelier-active #lanternWatchHud, body.atelier-active #repoRouteHud, body.atelier-active #starNudge,
   body.atelier-active #tourCap, body.atelier-active .hint { display: none !important; }
   body.atelier-active #prompt { bottom: calc(26px + env(safe-area-inset-bottom,0px)); max-width: min(660px,calc(100vw - 120px));
@@ -746,11 +774,13 @@
   #chat.atelierChat .chatIn button { color:#102629; background:#8bd2ca; }
   #chat.atelierChat .chatIn button:disabled { opacity:.48; cursor:not-allowed; }
   @media (max-width: 520px) {
-    #atelierIdentity { top: calc(10px + env(safe-area-inset-top,0px)); width: calc(100vw - 132px); padding: 7px 10px 8px; }
+    #atelierIdentity { top: calc(10px + env(safe-area-inset-top,0px)); left:74px; transform:none; width:calc(100vw - 96px); padding:7px 10px 8px; }
     #atelierIdentity .repo { font-size: 13px; }
     #atelierExit { top: calc(10px + env(safe-area-inset-top,0px)); left: calc(10px + env(safe-area-inset-left,0px)); }
-    #atelierPortalActions { top:calc(90px + env(safe-area-inset-top,0px)); left:10px; right:10px; width:auto; justify-content:stretch; }
-    #atelierPortalActions button, #atelierPortalActions a { flex:1 1 105px; min-height:44px; padding:7px 8px; font-size:10.5px; }
+    #atelierPortalActions { bottom:calc(84px + env(safe-area-inset-bottom,0px)); left:10px; right:10px; transform:none; width:auto; justify-content:stretch; }
+    #atelierPortalActions button, #atelierPortalActions a { flex:1 1 100px; min-height:44px; padding:7px 8px; font-size:10.5px; }
+    #atelierExhibitPanel { top:calc(82px + env(safe-area-inset-top,0px)); right:10px; width:calc(100vw - 20px); bottom:calc(10px + env(safe-area-inset-bottom,0px)); }
+    #atelierExhibitContent { padding:4px 14px 16px; }
     #atelierPortalStatus { text-align:center; }
     #atelierBlueprintPanel { top:auto; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom,0px)); width:auto; max-height:58dvh; }
     .atelierBlueprintHead { padding:12px 12px 9px; }
@@ -771,6 +801,11 @@
   }
   @media (prefers-reduced-motion:reduce) {
     #atelierBlueprintPanel, #atelierBlueprintOutline button { scroll-behavior:auto; transition:none !important; }
+  }
+  @media (max-height:520px) and (min-width:521px) {
+    #atelierPurposeText { -webkit-line-clamp:2; font-size:12px; }
+    #atelierExhibitPanel { top:12px; bottom:12px; width:65vw; }
+    #atelierPortalActions { bottom:62px; }
   }
   /* The Undercroft — a bounded, quiet archive below the World Tree roots */
   #undercroftFade { position:fixed; inset:0; z-index:91; pointer-events:none; opacity:0; background:#101719; will-change:opacity; }
@@ -1929,20 +1964,35 @@
 
 <div id="prompt"></div>
 <div id="atelierFade" aria-hidden="true"></div>
-<div id="atelierHud" class="hidden" aria-live="polite">
+<div id="atelierHud" class="hidden">
   <button id="atelierExit" type="button" data-i18n-aria="atelierExit" aria-label="마을로 나가기">↩</button>
   <div id="atelierIdentity">
     <span class="k" data-i18n="atelierTitle">REPOSITORY ATELIER</span>
     <span class="repo" id="atelierRepoName"></span>
-    <span class="sub" data-i18n="atelierRoomHint">데이터 전시 · 실내 깃버 · 구역 해설</span>
+    <p id="atelierPurposeText"></p>
   </div>
   <div id="atelierPortalActions" hidden role="group" data-i18n-aria="portalActionsAria" aria-label="Repository Portal actions">
+    <button id="atelierExhibitRead" type="button" aria-expanded="false" aria-controls="atelierExhibitPanel" data-i18n="exhibitRead">README 시작 안내</button>
+    <a id="atelierExhibitHomepage" target="_blank" rel="noopener noreferrer" hidden data-i18n="exhibitHomepage">홈페이지</a>
     <button id="atelierPortalCopy" type="button" data-i18n="portalCopy">🔗 Repo Portal 복사</button>
     <a id="atelierPortalGithub" target="_blank" rel="noopener" data-i18n="atelierGithub">GitHub 열기</a>
-    <button id="atelierPortalExplore" type="button"></button>
+    <button id="atelierExhibitAsk" type="button" data-i18n="exhibitAsk">깃버에게 질문</button>
     <button id="atelierBlueprintToggle" type="button" aria-expanded="false" aria-controls="atelierBlueprintPanel" data-i18n="atelierBlueprintToggle">🗺 Repository Blueprint</button>
+    <button id="atelierPortalExplore" type="button"></button>
     <span id="atelierPortalStatus" role="status" aria-live="polite" aria-atomic="true"></span>
   </div>
+  <section id="atelierExhibitPanel" hidden role="dialog" aria-modal="true" aria-labelledby="atelierExhibitTitle atelierExhibitRepo">
+    <div class="atelierExhibitHead">
+      <div><h2 id="atelierExhibitTitle" data-i18n="exhibitRead">README 시작 안내</h2><p id="atelierExhibitRepo"></p></div>
+      <button id="atelierExhibitClose" type="button" data-i18n-aria="exhibitClose" aria-label="시작 안내 닫기">×</button>
+    </div>
+    <div id="atelierExhibitContent" tabindex="0" data-i18n-aria="exhibitContent" aria-label="README 원문 발췌"></div>
+    <div class="atelierExhibitFoot">
+      <button id="atelierExhibitBlueprint" type="button" data-i18n="atelierBlueprintToggle">🗺 Repository Blueprint</button>
+      <button id="atelierExhibitQuestion" type="button" data-i18n="exhibitAsk">깃버에게 질문</button>
+      <p id="atelierExhibitStatus" role="status" aria-live="polite" aria-atomic="true"></p>
+    </div>
+  </section>
   <section id="atelierBlueprintPanel" hidden aria-labelledby="atelierBlueprintTitle">
     <div class="atelierBlueprintHead">
       <div>
@@ -2382,6 +2432,7 @@ import { clearSessionFootprints, createSessionFootprintState, sessionFootprintSc
 import { FORK_LINEAGE_PALETTE, projectForkLineage } from './assets/fork-lineage.js?v=world-tree-phase5-lineage-v1';
 import { REPOSITORY_ATELIER_CHAT_LIMIT, REPOSITORY_ATELIER_CHAT_TIMEOUT_MS, appendRepositoryAtelierChatTurn, beginRepositoryAtelierChatCall, createRepositoryAtelierChatVisit, formatRepositoryAtelierChatMessage, repositoryAtelierChatPayload, repositoryAtelierChatResponseFailure, repositoryAtelierChatSnapshot, setRepositoryAtelierChatPanel } from './assets/repository-atelier-chat.js?v=atelier-documents-v3';
 import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, createRepositoryBlueprintPathUrl, projectRepositoryBlueprint, resolveRepositoryBlueprintFocus, scanRepositoryBlueprint, validateRepositoryBlueprintTarget } from './assets/repository-blueprint.js?v=repository-blueprint-v2';
+import { REPOSITORY_EXHIBIT_LIMITS, projectRepositoryExhibit, repositoryExhibitLink, createRepositoryExhibitVisit, loadRepositoryExhibitVisit, cancelRepositoryExhibitVisit } from './assets/repository-exhibit.js?v=repository-exhibit-v1';
 import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from './assets/issue-code-scout.js?v=issue-code-scout-v1';
 import { TOWN_LABEL_LIMITS, createTownLabelLayout, handleTownPanelKey, layoutTownLabels, readableCardForeground, stableTownLabelFocus } from './assets/town-labels.js?v=readable-town-v1';
 import { PROCEDURAL_SURFACE_FAMILIES, PROCEDURAL_SURFACE_LIMITS, PROCEDURAL_SURFACE_VERSION, createSurfaceRng, disposeBoundedSurfaceCache, getOrCreateBoundedSurface, normalizeSurfaceFamily, surfacePixelHash, surfaceTextureKey, surfaceUvTransform, surfaceVariant, surfaceWallRepeat } from './assets/procedural-surfaces.js?v=procedural-surface-v2-3';
@@ -3027,6 +3078,24 @@ const I18N = {
     atelierExit:'마을로 나가기', atelierCore:'REPOSITORY CORE', atelierHistory:'HISTORY / DATA WALL', atelierSignals:'IMPACT / SIGNALS WALL', atelierActions:'ACTION TERMINALS',
     atelierGithub:'GitHub 열기', atelierAsk:'깃버에게 이 레포 질문', atelierWhy:'왜 이 구역인가',
     atelierRoomHint:'데이터 전시 · 실내 깃버 · 구역 해설', atelierChatTitle:'전시실 깃버', atelierChatPh:'이 전시 레포에 이어서 질문…', atelierChatCount:'대화 {n}/5', atelierSignalsNow:'현재 공개 메타데이터 기준',
+    exhibitPurpose:'공개 설명', exhibitRead:'README 시작 안내', exhibitHomepage:'홈페이지', exhibitAsk:'깃버에게 질문',
+    exhibitExplore:'더 살펴보기', exhibitClose:'시작 안내 닫기', exhibitContent:'README 원문 발췌',
+    exhibitNoDescription:'등록된 공개 설명이 없습니다.', exhibitArchived:'보관된 저장소',
+    exhibitBoundary:'시작 관련 제목으로 고른 README 원문 발췌입니다. 전체 실행 절차나 지원 환경을 검증한 안내가 아닙니다. 언어와 명령은 원문 그대로이며 이미지·외부 콘텐츠는 불러오지 않습니다.',
+    exhibitLoading:'현재 레포의 공개 README를 한 번 읽는 중…',
+    exhibitReady:'원문을 읽었습니다. 명령은 실행하지 않으며 복사만 할 수 있습니다.',
+    exhibitMissing:'시작 관련 section을 찾지 못했습니다. README에서 전체 내용을 확인하세요.',
+    exhibitLimited:'일부 section은 크기·개수 제한이나 불완전한 코드 때문에 생략했습니다. 전체 README를 확인하세요.',
+    exhibitNotFound:'공개 README를 읽을 수 없습니다. 파일이 없거나 레포가 삭제·비공개로 바뀌었을 수 있습니다.',
+    exhibitForbidden:'GitHub가 README 조회를 허용하지 않았습니다. 자동 재시도하지 않습니다.',
+    exhibitRateLimited:'GitHub 조회 한도에 걸렸습니다. 자동 재시도하지 않습니다.',
+    exhibitTimeout:'8초 안에 README를 받지 못했습니다. 자동 재시도하지 않습니다.',
+    exhibitOversized:'README가 읽기 한도를 넘었습니다. 원문 링크로 확인하세요.',
+    exhibitInvalid:'현재 레포와 일치하는 유효한 README 응답을 확인하지 못했습니다.',
+    exhibitUnavailable:'README를 불러오지 못했습니다. 아래 원문 링크로 확인하세요.',
+    exhibitOpenReadme:'전체 README 열기', exhibitSourceLines:'원문 {from}–{to}행', exhibitSource:'ref {ref} · 문서 blob {sha} · 읽은 시각 {time}',
+    exhibitCopy:'코드 복사', exhibitCopied:'원문 코드를 복사했습니다.', exhibitCopyFailed:'복사하지 못했습니다. 코드에서 직접 선택해 복사하세요.',
+    exhibitLinks:'발췌에 나온 링크', exhibitMetadata:'공개 메타데이터 · 원문 설명',
     atelierChatAuto:'이 레포를 설명해 주세요.', atelierChatSearching:'{repo} 공개 정보를 GitHub MCP에서 찾고 있어요 🔍',
     atelierDirectOpening:'{repo} 전시실로 이동하는 중…', plazaDirectOpening:'Repolis 광장으로 이동하는 중…',
     atelierChatLimit:'이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요.',
@@ -3423,6 +3492,24 @@ const I18N = {
     atelierExit:'Return to town', atelierCore:'REPOSITORY CORE', atelierHistory:'HISTORY / DATA WALL', atelierSignals:'IMPACT / SIGNALS WALL', atelierActions:'ACTION TERMINALS',
     atelierGithub:'Open GitHub', atelierAsk:'Ask Gitber about this repo', atelierWhy:'Why this district?',
     atelierRoomHint:'Data exhibits · in-room Gitber · district context', atelierChatTitle:'Atelier Gitber', atelierChatPh:'Ask a follow-up about this exhibit…', atelierChatCount:'Chat {n}/5', atelierSignalsNow:"Using today's public metadata",
+    exhibitPurpose:'Public description', exhibitRead:'README getting started', exhibitHomepage:'Homepage', exhibitAsk:'Ask Gitber',
+    exhibitExplore:'Explore further', exhibitClose:'Close getting started', exhibitContent:'Original README excerpts',
+    exhibitNoDescription:'No public description has been provided.', exhibitArchived:'Archived repository',
+    exhibitBoundary:'Original README excerpts selected by getting-started headings, not a verified complete procedure or support matrix. Language and commands are unchanged. Images and external content are not loaded.',
+    exhibitLoading:'Reading this repository’s public README once…',
+    exhibitReady:'Original text loaded. Commands can be copied, but are never executed here.',
+    exhibitMissing:'No getting-started section found. Open the README for the full document.',
+    exhibitLimited:'Some sections were omitted because of size/count limits or incomplete code. Consult the full README.',
+    exhibitNotFound:'The public README is unavailable. It may be missing, or the repository may have been deleted or made private.',
+    exhibitForbidden:'GitHub refused the README request. There is no automatic retry.',
+    exhibitRateLimited:'GitHub’s request limit was reached. There is no automatic retry.',
+    exhibitTimeout:'The README did not arrive within 8 seconds. There is no automatic retry.',
+    exhibitOversized:'The README exceeds the reading limit. Use the original source link.',
+    exhibitInvalid:'A valid README response for this exact repository could not be verified.',
+    exhibitUnavailable:'The README could not be loaded. Use the original source link below.',
+    exhibitOpenReadme:'Open full README', exhibitSourceLines:'Source lines {from}–{to}', exhibitSource:'ref {ref} · document blob {sha} · read {time}',
+    exhibitCopy:'Copy code', exhibitCopied:'Original code copied.', exhibitCopyFailed:'Copy failed. Select and copy the code directly.',
+    exhibitLinks:'Links in these excerpts', exhibitMetadata:'Public metadata · original description',
     atelierChatAuto:'Explain this repository.', atelierChatSearching:'Searching GitHub MCP for public information about {repo} 🔍',
     atelierDirectOpening:'Entering the {repo} exhibition…', plazaDirectOpening:'Entering the Repolis plaza…',
     atelierChatLimit:'You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation.',
@@ -9591,7 +9678,7 @@ const MOVE=new Set(['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft
 const clearKeys=()=>{ for(const k in keys) keys[k]=false; };   /* drop every held key — stops walking instantly when focus/keyup is lost */
 const TOWN_UI={active:null,previousFocus:null,mousePointer:null};
 function townInputBlocked(){
-  return !!TOWN_UI.active||modalOpen||document.getElementById('townTools').open
+  return !!TOWN_UI.active||modalOpen||repositoryExhibitOpen()||document.getElementById('townTools').open
     ||!document.getElementById('intro').classList.contains('hidden')
     ||!document.getElementById('cityError').classList.contains('hidden')
     ||document.getElementById('loading').style.display!=='none';
@@ -12991,6 +13078,7 @@ function townKeyboardOwner(){
     const z=Number(style.zIndex)||0;if(z>=layer){owner={element,close};layer=z;}
   }
   if(owner) return owner;
+  if(repositoryExhibitOpen()) return {element:atelierExhibitPanel,close:_closeRepositoryExhibit};
   if(repositoryBlueprintOpen()) return {element:atelierBlueprintPanel,close:_closeRepositoryBlueprint};
   if(TOWN_UI.active&&!TOWN_UI.active.element.inert) return TOWN_UI.active.element===chatEl?{element:chatEl,close:closeChat}:TOWN_UI.active;
   if(townTools.open) return {element:townTools,close:()=>{townTools.open=false;townTools.querySelector('summary').focus();}};
@@ -13427,10 +13515,15 @@ const atelierFade=document.getElementById('atelierFade'),atelierHud=document.get
   atelierBlueprintOutline=document.getElementById('atelierBlueprintOutline'),atelierBlueprintBudget=document.getElementById('atelierBlueprintBudget'),
   issueCodeScout=document.getElementById('issueCodeScout'),issueCodeScoutIssue=document.getElementById('issueCodeScoutIssue'),
   issueCodeScoutStatus=document.getElementById('issueCodeScoutStatus'),issueCodeScoutList=document.getElementById('issueCodeScoutList');
+const atelierExhibitRead=document.getElementById('atelierExhibitRead'),atelierExhibitPanel=document.getElementById('atelierExhibitPanel'),
+  atelierExhibitContent=document.getElementById('atelierExhibitContent'),atelierExhibitStatus=document.getElementById('atelierExhibitStatus'),
+  atelierExhibitClose=document.getElementById('atelierExhibitClose'),atelierExhibitHomepage=document.getElementById('atelierExhibitHomepage'),
+  atelierPurposeText=document.getElementById('atelierPurposeText');
 
 function repositoryAtelierActive(){ return !!REPOSITORY_ATELIER&&REPOSITORY_ATELIER.state!=='outside'; }
 function repositoryAtelierTransitioning(){ return !!REPOSITORY_ATELIER&&(REPOSITORY_ATELIER.state==='entering'||REPOSITORY_ATELIER.state==='exiting'); }
 function repositoryAtelierChatActive(){ return !!REPOSITORY_ATELIER&&REPOSITORY_ATELIER.state==='inside'&&REPOSITORY_ATELIER.inRoomChat===true; }
+function repositoryExhibitOpen(){ return !!REPOSITORY_ATELIER?.exhibit?.panelOpen; }
 function _atelierHex(value){ return '#'+((value>>>0)&0xffffff).toString(16).padStart(6,'0'); }
 function _atelierHash(value){ let h=2166136261; for(const c of String(value||'')){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
 function _atelierDate(value){ return value?String(value).slice(0,10):'—'; }
@@ -13562,7 +13655,7 @@ function _createRepositoryAtelier(){
   const exitBar=_atelierMesh(new THREE.BoxGeometry(2.35,.12,.12),A.materials.ring); exitBar.position.set(0,4.65,10.62); A.group.add(exitBar);
   A.exitPosition=new THREE.Vector3(0,0,9.05);
 
-  A.core=new THREE.Group(); A.core.name='RepositoryCore'; A.core.position.set(0,1.05,0); A.group.add(A.core);
+  A.core=new THREE.Group(); A.core.name='RepositoryCore'; A.core.position.set(4.3,1.05,5.25); A.group.add(A.core);
   const pedestal=_atelierMesh(new THREE.CylinderGeometry(2.05,2.35,.55,LOW_END?12:20),A.materials.dark); pedestal.position.y=-.78; A.core.add(pedestal);
   A.coreShapes=[
     _atelierMesh(new THREE.IcosahedronGeometry(1.15,LOW_END?0:1),A.materials.core),
@@ -13676,14 +13769,16 @@ function _drawRepositoryAtelierActions(repo){
   const A=REPOSITORY_ATELIER,s=A.actionsCanvas,ctx=s.ctx,zone=zoneCatById(repo._zone),tone=zone?zone.tone:(repo.accent||0x7ea4aa),W=s.canvas.width,H=s.canvas.height;
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,W,H); ctx.setTransform(W/1536,0,0,H/576,0,0);
   ctx.fillStyle='#10191c'; ctx.fillRect(0,0,1536,576); ctx.fillStyle=_atelierHex(tone); ctx.fillRect(0,0,1536,18); ctx.textBaseline='top'; ctx.textAlign='center';
-  ctx.fillStyle='#9fb7bb'; ctx.font='800 24px system-ui,sans-serif'; ctx.fillText(t('atelierActions'),768,48);
-  ctx.fillStyle='#f5f0e7'; _atelierFitText(ctx,repo.repo,768,88,1370,45,28,'center');
-  const labels=[t('atelierGithub'),t('atelierAsk'),t('atelierWhy')],icons=['〈/〉','?','⌖'];
-  for(let i=0;i<3;i++){ const cx=256+i*512; ctx.fillStyle='rgba(255,255,255,.055)'; ctx.fillRect(cx-222,170,444,330);
-    ctx.fillStyle=_atelierHex(A.terminalColors[i].getHex()); ctx.font='900 68px system-ui,sans-serif'; ctx.fillText(icons[i],cx,214);
-    ctx.fillStyle='#f3efe8'; _atelierFitText(ctx,labels[i],cx,330,390,31,20,'center');
-    ctx.fillStyle='#91a7aa'; ctx.font='650 18px system-ui,sans-serif'; ctx.fillText('ENTER',cx,405); }
-  A.textLayout=A.textLayout||{}; A.textLayout.actionWithinCanvas=true; s.texture.needsUpdate=true;
+  ctx.fillStyle='#a6c3c2'; ctx.font='700 24px system-ui,sans-serif'; ctx.fillText(t('exhibitMetadata'),768,46);
+  ctx.fillStyle='#f5f0e7'; ctx.font='800 48px system-ui,sans-serif';
+  _atelierWrapText(ctx,_repositoryPortalTarget(repo)?.slug||repo.repo,768,98,1370,54,2);
+  const compact=innerWidth<600;
+  ctx.fillStyle='#dcebe5'; ctx.font=`500 ${compact?38:34}px system-ui,sans-serif`;
+  const bottom=_atelierWrapText(ctx,repo.desc||t('exhibitNoDescription'),768,236,compact?980:1320,43,compact?5:4);
+  const labels=[t('atelierGithub'),t('atelierAsk'),t('atelierWhy')];
+  for(let i=0;i<3;i++){const cx=256+i*512;ctx.fillStyle='#b0cecc';ctx.font='700 21px system-ui,sans-serif';
+    _atelierWrapText(ctx,labels[i],cx,500,420,26,2);}
+  A.textLayout=A.textLayout||{}; A.textLayout.actionWithinCanvas=bottom<472; A.textLayout.purposeLines=Math.round((bottom-236)/43); s.texture.needsUpdate=true;
 }
 function _repositoryBlueprintTarget(repo){
   const parsed=_repositoryPortalTarget(repo);
@@ -13890,7 +13985,9 @@ function _repositoryBlueprintCameraSnapshot(){
 function repositoryBlueprintOpen(){ return !!REPOSITORY_ATELIER?.blueprint?.panelOpen; }
 function _openRepositoryBlueprint(focusSelected=false){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!A||A.state!=='inside'||!B||repositoryAtelierChatActive()) return false;
-  if(!B.panelOpen){ B.panelOpen=true; B.previousFocus=document.activeElement; B.cameraOnOpen=_repositoryBlueprintCameraSnapshot();
+  const fromExhibit=repositoryExhibitOpen();
+  _closeRepositoryExhibit(false);
+  if(!B.panelOpen){ B.panelOpen=true; B.previousFocus=fromExhibit?atelierBlueprintToggle:document.activeElement; B.cameraOnOpen=_repositoryBlueprintCameraSnapshot();
     document.body.classList.add('atelier-blueprint-open'); atelierBlueprintPanel.hidden=false; atelierBlueprintToggle.setAttribute('aria-expanded','true'); clearKeys(); }
   _renderRepositoryBlueprintChrome(true);
   requestAnimationFrame(()=>{ if(focusSelected&&B.selected>=0) _syncRepositoryBlueprintSelection(true); else atelierBlueprintScan.focus(); });
@@ -13953,6 +14050,122 @@ function _repositoryBlueprintAtScreen(cx,cy){
   const indexes=hit.object===A.blueprintFolders?B.folderNodeIndexes:B.fileNodeIndexes,index=indexes[hit.instanceId];
   if(!Number.isInteger(index)) return false; _openRepositoryBlueprint(false); _focusRepositoryBlueprintNode(index,true); return true;
 }
+function _exhibitStatusKey(status){
+  return {loading:'exhibitLoading',ready:'exhibitReady',not_found:'exhibitNotFound',private:'exhibitNotFound',deleted:'exhibitNotFound',
+    forbidden:'exhibitForbidden',rate_limited:'exhibitRateLimited',timeout:'exhibitTimeout',oversized:'exhibitOversized',
+    malformed:'exhibitInvalid',scope_mismatch:'exhibitInvalid',branch:'exhibitInvalid',repository:'exhibitInvalid'}[status]||'exhibitUnavailable';
+}
+function _exhibitElement(tag,text,className=''){
+  const element=document.createElement(tag); element.textContent=text; if(className) element.className=className; return element;
+}
+function _exhibitAnchor(text,url){
+  const link=_exhibitElement('a',text); link.href=url; link.target='_blank'; link.rel='noopener noreferrer'; return link;
+}
+function _renderRepositoryExhibitIdentity(){
+  const A=REPOSITORY_ATELIER,E=A?.exhibit;if(!E) return;
+  atelierRepoName.textContent=_repositoryPortalTarget(A.repo)?.slug||A.repo.repo;
+  atelierRepoName.title=atelierRepoName.textContent;
+  document.getElementById('atelierExhibitRepo').textContent=atelierRepoName.textContent;
+  atelierPurposeText.textContent=E.metadata.description||t('exhibitNoDescription');
+  atelierPurposeText.title=atelierPurposeText.textContent;
+  atelierExhibitHomepage.hidden=!E.metadata.homepage;
+  if(E.metadata.homepage) atelierExhibitHomepage.href=E.metadata.homepage; else atelierExhibitHomepage.removeAttribute('href');
+}
+function _bindRepositoryExhibit(repo){
+  const A=REPOSITORY_ATELIER;_closeRepositoryExhibit(false);cancelRepositoryExhibitVisit(A.exhibit);
+  const target=_repositoryBlueprintTarget(repo);
+  A.exhibit=createRepositoryExhibitVisit(target);
+  A.exhibit.metadata=projectRepositoryExhibit({...target,description:repo.desc,homepage:repo.home,archived:repo.archived});
+  atelierExhibitContent.replaceChildren();atelierExhibitStatus.textContent='';_renderRepositoryExhibitIdentity();
+}
+function _renderRepositoryExhibit(){
+  const A=REPOSITORY_ATELIER,E=A?.exhibit;if(!E?.panelOpen) return;
+  const focus=document.activeElement,contentFocused=atelierExhibitContent.contains(focus);
+  const fragment=document.createDocumentFragment(),documentResult=E.result?.document;
+  fragment.append(_exhibitElement('p',E.metadata.description||t('exhibitNoDescription')));
+  if(E.metadata.archived) fragment.append(_exhibitElement('p',t('exhibitArchived'),'exhibitBoundary'));
+  const fallback=`${A.repo.url}#readme`;
+  const readmeLink=_exhibitAnchor(t('exhibitOpenReadme'),documentResult?.source.url||fallback);
+  readmeLink.dataset.exhibitReadme='true';fragment.append(readmeLink);
+  if(documentResult){
+    const source=documentResult.source;
+    fragment.append(_exhibitElement('p',tf('exhibitSource',{ref:source.ref,sha:source.blobSha,time:source.readAt}),'exhibitSource'),
+      _exhibitElement('p',t('exhibitBoundary'),'exhibitBoundary'));
+    if(!documentResult.sections.length) fragment.append(_exhibitElement('p',t('exhibitMissing')));
+    if(documentResult.limited) fragment.append(_exhibitElement('p',t('exhibitLimited'),'exhibitBoundary'));
+    const links=new Map();
+    for(const section of documentResult.sections){
+      fragment.append(_exhibitElement('h3',section.heading),
+        _exhibitAnchor(tf('exhibitSourceLines',{from:section.startLine,to:section.endLine}),`${source.url}?plain=1#L${section.startLine}-L${section.endLine}`));
+      for(const block of section.blocks){
+        if(block.type==='code'){
+          const wrapper=_exhibitElement('div','','exhibitCode'),head=_exhibitElement('div','','exhibitCodeHead');
+          const copy=_exhibitElement('button',t('exhibitCopy'));copy.type='button';
+          copy.addEventListener('click',async()=>{
+            copy.disabled=true;
+            const ok=await _copyPostcardText(block.text);
+            copy.disabled=false;
+            if(A.exhibit===E&&E.panelOpen){
+              atelierExhibitStatus.textContent=t(ok?'exhibitCopied':'exhibitCopyFailed');
+              if(document.activeElement===document.body)copy.focus({preventScroll:true});
+            }
+          });
+          head.append(_exhibitElement('span',block.language||'code'),copy);
+          const pre=_exhibitElement('pre',''),code=_exhibitElement('code',block.text);pre.tabIndex=0;pre.append(code);
+          wrapper.append(head,pre);fragment.append(wrapper);
+        }else{
+          fragment.append(_exhibitElement(block.type==='heading'?'h4':'div',block.text,block.type==='text'?'exhibitText':''));
+          for(const match of block.text.matchAll(/(?<!!)\[([^\]\n]{1,160})\]\(([^()\s]+)\)/g)){
+            const url=repositoryExhibitLink(match[2],source.url);
+            if(url&&links.size<8&&!links.has(url))links.set(url,match[1]);
+          }
+        }
+      }
+    }
+    if(links.size){
+      fragment.append(_exhibitElement('h3',t('exhibitLinks')));
+      for(const [url,label] of links){const p=_exhibitElement('p','');p.append(_exhibitAnchor(label,url));fragment.append(p);}
+    }
+  }else fragment.append(_exhibitElement('p',t(_exhibitStatusKey(E.status)),'exhibitBoundary'));
+  atelierExhibitContent.replaceChildren(fragment);
+  atelierExhibitContent.setAttribute('aria-busy',String(E.status==='loading'));
+  if(contentFocused&&focus!==atelierExhibitContent&&!focus.isConnected){
+    (focus.dataset.exhibitReadme?readmeLink:atelierExhibitContent).focus({preventScroll:true});
+  }
+  atelierExhibitStatus.textContent=t(documentResult&&!documentResult.sections.length?'exhibitMissing':_exhibitStatusKey(E.status));
+}
+function _openRepositoryExhibit(){
+  const A=REPOSITORY_ATELIER,E=A?.exhibit;if(!A||A.state!=='inside'||!E||E.cancelled) return false;
+  if(E.panelOpen) return true;
+  E.previousFocus=document.activeElement;
+  if(repositoryAtelierChatActive()) closeChat(false);
+  _closeRepositoryBlueprint(false);
+  E.panelOpen=true;atelierExhibitPanel.hidden=false;atelierExhibitRead.setAttribute('aria-expanded','true');
+  document.body.classList.add('atelier-exhibit-open');clearTownInput();
+  const pending=loadRepositoryExhibitVisit(E);
+  _renderRepositoryExhibit();atelierExhibitContent.scrollTop=0;
+  requestAnimationFrame(()=>{if(E.panelOpen)atelierExhibitClose.focus({preventScroll:true});});
+  pending.then(()=>{if(A.exhibit===E&&!E.cancelled&&A.state==='inside'&&E.panelOpen)_renderRepositoryExhibit();});
+  return true;
+}
+function _closeRepositoryExhibit(restoreFocus=true){
+  const A=REPOSITORY_ATELIER,E=A?.exhibit;if(!E?.panelOpen) return false;
+  E.panelOpen=false;atelierExhibitPanel.hidden=true;atelierExhibitRead.setAttribute('aria-expanded','false');
+  document.body.classList.remove('atelier-exhibit-open');clearTownInput();
+  const previous=E.previousFocus;E.previousFocus=null;
+  if(restoreFocus) requestAnimationFrame(()=>{
+    if(A.exhibit===E&&A.state==='inside'&&!repositoryExhibitOpen()&&!repositoryBlueprintOpen()&&!repositoryAtelierChatActive()){
+      const target=previous?.isConnected&&!previous.closest('[hidden],.hidden,[inert]')?previous:atelierExhibitRead;
+      target.focus({preventScroll:true});
+    }
+  });
+  return true;
+}
+function _resetRepositoryExhibit(){
+  const A=REPOSITORY_ATELIER;if(!A) return;
+  _closeRepositoryExhibit(false);cancelRepositoryExhibitVisit(A.exhibit);A.exhibit=null;
+  atelierExhibitContent.replaceChildren();atelierExhibitStatus.textContent='';document.getElementById('atelierExhibitRepo').textContent='';
+}
 function _bindRepositoryAtelier(repo){
   const A=_createRepositoryAtelier(),canonical=repoByKey(repo.repo)||repo,zone=zoneCatById(canonical._zone),
     langPalette=pal(canonical.lang),langColor=langPalette.accent,zoneColor=zone?zone.tone:0x6e8b8f,
@@ -13996,12 +14209,14 @@ function _bindRepositoryAtelier(repo){
   atelierRepoName.textContent=canonical.repo;
   _bindRepositoryPortalActions(canonical);
   _bindRepositoryBlueprint(canonical);
+  _bindRepositoryExhibit(canonical);
 }
 function _refreshRepositoryAtelierLanguage(){
   if(!REPOSITORY_ATELIER||!REPOSITORY_ATELIER.created||!REPOSITORY_ATELIER.repo) return;
   _drawRepositoryAtelierHistory(REPOSITORY_ATELIER.repo); _drawRepositoryAtelierSignals(REPOSITORY_ATELIER.repo); _drawRepositoryAtelierActions(REPOSITORY_ATELIER.repo);
   _bindRepositoryPortalActions(REPOSITORY_ATELIER.repo,true);
   _renderRepositoryBlueprintChrome(true);
+  _renderRepositoryExhibitIdentity();_renderRepositoryExhibit();
   if(repositoryAtelierChatActive()) _syncRepositoryAtelierChatChrome();
 }
 function _repositoryPortalTarget(repo){
@@ -14050,8 +14265,10 @@ function _restoreRepositoryAtelierChatThread(){
 }
 function _showRepositoryAtelierChat(){
   const A=REPOSITORY_ATELIER;if(!A||A.state!=='inside'||!A.chat) return false;
+  const fromExhibit=repositoryExhibitOpen();
+  _closeRepositoryExhibit(false);
   if(repositoryBlueprintOpen()) _closeRepositoryBlueprint(false);
-  if(chatEl.classList.contains('hidden')) chatPreviousFocus=document.activeElement;
+  if(chatEl.classList.contains('hidden')) chatPreviousFocus=fromExhibit?document.getElementById('atelierExhibitAsk'):document.activeElement;
   A.inRoomChat=true; setRepositoryAtelierChatPanel(A.chat,true); activeNpc=_taxiNpc(); chatGreeted=true; applyNpcChrome(activeNpc);
   chatEl.classList.remove('hidden'); chatEl.setAttribute('aria-hidden','false'); _syncRepositoryAtelierChatChrome();
   setTimeout(()=>{ if(repositoryAtelierChatActive()&&!chatText.disabled) chatText.focus(); },60); return true;
@@ -14152,10 +14369,10 @@ function _activateRepositoryAtelier(){
   document.getElementById('intro').inert=true;
   if(document.activeElement===chatText) chatText.blur(); A.group.visible=true;
   document.body.classList.add('atelier-active'); atelierHud.classList.remove('hidden');
-  player.position.set(0,0,3.65); model.position.set(0,0,0); model.rotation.set(0,Math.PI,0); model.visible=snapshot.modelVisible;
-  camYaw=.1; camPitch=IS_MOBILE?.34:.38; camDist=IS_MOBILE?6.8:6.5; freeLook=false;
+  player.position.set(0,0,1.8); model.position.set(0,0,0); model.rotation.set(0,Math.PI,0); model.visible=snapshot.modelVisible;
+  camYaw=0; camPitch=.12; camDist=IS_MOBILE?8.8:9; freeLook=false;
   const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist,oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist,oy=Math.sin(camPitch)*camDist;
-  camera.position.set(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz); camera.lookAt(player.position.x,player.position.y+1.7,player.position.z);
+  camera.position.set(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz); camera.lookAt(player.position.x,player.position.y+2.6,player.position.z);
   camera.layers.set(REPOSITORY_ATELIER_LAYER); navHolder.visible=false; A.renderInterior=true; A.near=null; A.walk=0;
 }
 function exitRepositoryAtelier(action=null){
@@ -14163,6 +14380,7 @@ function exitRepositoryAtelier(action=null){
   if(action) A.afterExit=action;
   if(A.state==='entering'){ A.pendingExit=true; return true; }
   if(A.state==='exiting') return true;
+  _resetRepositoryExhibit();
   _resetRepositoryBlueprintVisit();
   if(A.chat){ A.chat.cancelled=true; if(A.chat.controller) A.chat.controller.abort(); }
   A.state='exiting'; A.phase='cover'; A.t=0; _resetRepositoryAtelierInput();
@@ -14204,7 +14422,6 @@ function _repositoryAtelierTransition(dt){
     if(A.t>=REPOSITORY_ATELIER_FADE){ A.state='inside'; A.phase=null; A.t=0; atelierFade.style.opacity='0'; atelierFade.classList.remove('blocking');
       if(!A.pendingExit&&A.blueprintDeepLinkPath){ const path=A.blueprintDeepLinkPath; A.blueprintDeepLinkPath=null;
         _openRepositoryBlueprint(false); _scanRepositoryBlueprint(path); }
-      else if(!A.pendingExit) _startRepositoryAtelierChatVisit();
       if(repoPortalRequested&&!A.ahaTracked){ A.ahaTracked=true;
         trackPortal('aha_completed',{entry:'link',device:_repoPortalDevice(),lang:LANG,result:repoPortalResult?.result||'local',
           latency:repoPortalLatencyBucket((typeof performance!=='undefined'?performance.now():Date.now())-repoPortalStartedAt)});
@@ -14246,7 +14463,8 @@ function _updateRepositoryAtelierTerminalHighlight(index){
 }
 function _updateRepositoryAtelier(dt){
   if(townInputBlocked()) clearTownInput();
-  const A=REPOSITORY_ATELIER;if(repositoryBlueprintOpen()) return; A.moveForward.subVectors(player.position,camera.position); A.moveForward.y=0;
+  const A=REPOSITORY_ATELIER;if(repositoryBlueprintOpen()) return; if(repositoryExhibitOpen()) return;
+  A.moveForward.subVectors(player.position,camera.position); A.moveForward.y=0;
   if(A.moveForward.lengthSq()<.001) A.moveForward.set(0,0,-1); else A.moveForward.normalize();
   A.moveRight.crossVectors(A.moveForward,A.up).normalize(); A.moveDelta.set(0,0,0);
   if(keys['KeyW']||keys['ArrowUp']) A.moveDelta.add(A.moveForward);
@@ -14256,20 +14474,21 @@ function _updateRepositoryAtelier(dt){
   if(stickVec.x||stickVec.y){ A.moveDelta.addScaledVector(A.moveForward,-stickVec.y); A.moveDelta.addScaledVector(A.moveRight,stickVec.x); }
   const moving=A.moveDelta.lengthSq()>.0001;
   if(moving){ A.moveDelta.normalize(); player.position.addScaledVector(A.moveDelta,7.2*dt); player.position.x=THREE.MathUtils.clamp(player.position.x,-7.15,7.15); player.position.z=THREE.MathUtils.clamp(player.position.z,-9.75,9.75);
-    const coreDistance=Math.hypot(player.position.x,player.position.z),coreRadius=2.35; if(coreDistance<coreRadius){ const inv=coreRadius/Math.max(.001,coreDistance); player.position.x*=inv; player.position.z*=inv; }
+    const dx=player.position.x-A.core.position.x,dz=player.position.z-A.core.position.z,coreDistance=Math.hypot(dx,dz),coreRadius=2.35;
+    if(coreDistance<coreRadius){ const inv=coreRadius/Math.max(.001,coreDistance); player.position.x=A.core.position.x+dx*inv; player.position.z=A.core.position.z+dz*inv; }
     _resolveRepositoryBlueprintTableCollision(player.position);
     model.rotation.y=lerpA(model.rotation.y,Math.atan2(A.moveDelta.x,A.moveDelta.z),.22); if(!dragging&&!freeLook) camYaw=lerpA(camYaw,model.rotation.y+Math.PI,.055); }
   _updateRepositoryAtelierAvatar(dt,moving);
   const ox=Math.sin(camYaw)*Math.cos(camPitch)*camDist,oz=Math.cos(camYaw)*Math.cos(camPitch)*camDist,oy=Math.sin(camPitch)*camDist;
   A.cameraTarget.set(player.position.x+ox,player.position.y+oy+1.5,player.position.z+oz);
   A.cameraTarget.x=THREE.MathUtils.clamp(A.cameraTarget.x,-7.45,7.45); A.cameraTarget.y=THREE.MathUtils.clamp(A.cameraTarget.y,.6,7.5); A.cameraTarget.z=THREE.MathUtils.clamp(A.cameraTarget.z,-10.25,10.25);
-  camera.position.lerp(A.cameraTarget,.16); camera.lookAt(player.position.x,player.position.y+1.55,player.position.z);
+  camera.position.lerp(A.cameraTarget,.16); camera.lookAt(player.position.x,player.position.y+2.6,player.position.z);
   A.core.rotation.y+=dt*(.22+A.activity*.38); A.coreLight.intensity=(7+A.activity*12+A.score*5)*(1+Math.sin(performance.now()*.0025)*.08);
   let near=null,distance=2.15; const exitDistance=player.position.distanceTo(A.exitPosition); if(exitDistance<distance){ near={kind:'exit',label:t('atelierDoor'),icon:'↩'}; distance=exitDistance; }
   A.terminalPositions.forEach((position,index)=>{ const d=player.position.distanceTo(position); if(d<distance){ const kind=A.terminalKinds[index]; near={kind,label:t(kind==='github'?'atelierGithub':kind==='ask'?'atelierAsk':'atelierWhy'),icon:kind==='github'?'〈/〉':kind==='ask'?'?':'⌖',index}; distance=d; } });
   const blueprintDistance=player.position.distanceTo(A.blueprintTablePosition); if(blueprintDistance<2.4&&blueprintDistance<distance){
     near={kind:'blueprint',label:t('atelierBlueprintTable'),icon:'▦'}; distance=blueprintDistance; }
-  if(!near&&Math.hypot(player.position.x,player.position.z)<3.85) near={kind:'core',label:`${t('atelierCore')} · ${t('atelierCoreHint')}`,passive:true};
+  if(!near&&Math.hypot(player.position.x-A.core.position.x,player.position.z-A.core.position.z)<3.2) near={kind:'core',label:`${t('atelierCore')} · ${t('atelierCoreHint')}`,passive:true};
   A.near=near; _updateRepositoryAtelierTerminalHighlight(near&&near.index!=null?near.index:-1);
   if(near&&!near.passive){ promptEl.innerHTML=tf('atelierUse',{action:`<b>${near.label}</b>`}); promptEl.classList.add('show'); actBtn.classList.add('avail'); actBtn.textContent=near.icon; }
   else if(near){ promptEl.innerHTML=`<b>${near.label}</b>`; promptEl.classList.add('show'); actBtn.classList.remove('avail'); actBtn.textContent='✦'; }
@@ -14294,6 +14513,7 @@ function _repositoryAtelierFrame(dt){
 function _performRepositoryAtelierAction(kind){
   const A=REPOSITORY_ATELIER,repo=A&&A.repo;if(!A||A.state!=='inside'||!repo) return false;
   if(kind==='exit') return exitRepositoryAtelier();
+  if(kind==='readme') return _openRepositoryExhibit();
   if(kind==='blueprint') return _openRepositoryBlueprint();
   if(kind!=='github'&&kind!=='ask'&&kind!=='why') return false;
   A.lastAction={kind,repo:repo.repo}; track('atelier_terminal',{repo:repo.repo,kind});
@@ -14305,6 +14525,11 @@ function _performRepositoryAtelierAction(kind){
 function repositoryAtelierAct(){ const near=REPOSITORY_ATELIER&&REPOSITORY_ATELIER.near; return near?_performRepositoryAtelierAction(near.kind):false; }
 function _repositoryAtelierContextRestored(){ const A=REPOSITORY_ATELIER;if(!A||!A.created) return; A.contextRestores++; A.resources.textures.forEach(texture=>{ texture.needsUpdate=true; }); }
 atelierExit.addEventListener('click',event=>{ event.stopPropagation(); exitRepositoryAtelier(); });
+atelierExhibitRead.addEventListener('click',()=>_openRepositoryExhibit());
+atelierExhibitClose.addEventListener('click',()=>_closeRepositoryExhibit());
+document.getElementById('atelierExhibitAsk').addEventListener('click',()=>_performRepositoryAtelierAction('ask'));
+document.getElementById('atelierExhibitQuestion').addEventListener('click',()=>_performRepositoryAtelierAction('ask'));
+document.getElementById('atelierExhibitBlueprint').addEventListener('click',()=>_openRepositoryBlueprint());
 atelierPortalCopy.addEventListener('click',event=>{ event.stopPropagation(); _copyRepositoryPortal(); });
 atelierPortalGithub.addEventListener('click',()=>trackPortal('github_repo_opened',{entry:'atelier',device:_repoPortalDevice(),lang:LANG,channel:'github'}));
 atelierPortalExplore.addEventListener('click',event=>{ event.stopPropagation(); const A=REPOSITORY_ATELIER,target=A&&A.repo&&_repositoryPortalTarget(A.repo);
@@ -14349,6 +14574,10 @@ function _repositoryAtelierDebug(){
         candidates:A.blueprint.scout.candidates.map(candidate=>candidate.path),limit:ISSUE_CODE_SCOUT_LIMITS.maxCandidates}:null,
       limits:{nodeCap:A.blueprint.nodeCap,edgeCap:A.blueprint.edgeCap,decodedBytes:REPOSITORY_BLUEPRINT_LIMITS.maxDecodedBytes,
         timeoutMs:REPOSITORY_BLUEPRINT_LIMITS.timeoutMs,drawCalls:REPOSITORY_BLUEPRINT_LIMITS.additionalDrawCalls,atlases:REPOSITORY_BLUEPRINT_LIMITS.canvasAtlases}}:null,
+    exhibit:A.exhibit?{status:A.exhibit.status,panelOpen:A.exhibit.panelOpen,requestsStarted:A.exhibit.requestsStarted,
+      source:A.exhibit.result?.document?.source||null,sections:A.exhibit.result?.document?.sections.map(s=>s.heading)||[],
+      responseBytes:A.exhibit.result?.responseBytes||0,documentBytes:A.exhibit.result?.document?.documentBytes||0,
+      excerptBytes:A.exhibit.result?.document?.excerptBytes||0,limits:REPOSITORY_EXHIBIT_LIMITS}:null,
     chat:repositoryAtelierChatSnapshot(A.chat),
     exhibits:A.created?{architecture:A.architecture.count,path:A.pathTiles.count,signals:A.metricSignals||[],signalCards:A.textLayout?.signalCards||0}:null,
     saved:A.lastSaved,restored:A.lastRestored,
@@ -14718,6 +14947,7 @@ FIRST_ARRIVAL.initialized=true;
 requestAnimationFrame(animate);
 function _resizeViewportQuality(){ const previousDesktopGuard=_renderQualityDesktopGuard;
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(_rendererDpr()); renderer.setSize(innerWidth,innerHeight);
+  if(REPOSITORY_ATELIER?.created&&REPOSITORY_ATELIER.repo) _drawRepositoryAtelierActions(REPOSITORY_ATELIER.repo);
   baseTargetDpr=_cappedTargetDpr(1.25,3200000); treeEmissiveDpr=_treeEmissiveTargetDpr(); treeBloomDpr=_treeBloomTargetDpr(); finalCompositeDpr=_cappedTargetDpr(1.25,3200000);
   baseTarget.setSize(Math.round(innerWidth*baseTargetDpr),Math.round(innerHeight*baseTargetDpr)); emissiveTarget.setSize(Math.round(innerWidth*treeEmissiveDpr),Math.round(innerHeight*treeEmissiveDpr));
   treeComposer.setSize(Math.round(innerWidth*treeBloomDpr),Math.round(innerHeight*treeBloomDpr)); finalComposer.setPixelRatio(finalCompositeDpr); finalComposer.setSize(innerWidth,innerHeight);

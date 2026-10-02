@@ -159,6 +159,19 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   past Star, fork, traffic, topic, or language snapshots, so a visible house keeps its current architecture
   and language label and the UI says so explicitly. Repos without a valid creation date appear only in the
   present step. Replay state lives in the URL and is not persisted.
+- **Repository Exhibit excerpts are not a verified setup guide.** Metadata appears without a request.
+  Choosing README getting started makes one anonymous `api.github.com` README request per visit, with an
+  eight-second whole-response deadline, 128 KiB JSON and 64 KiB UTF-8 limits. English/Korean heading rules
+  select at most six complete sections, twelve complete code blocks, and 24 KiB of excerpts; a section
+  exceeding 12 KiB or containing code over 8 KiB is omitted, not cut into partial commands. Nested
+  installation headings retain their containing section, but instructions elsewhere in the document or
+  linked files may not be included. Read the full README for all requirements and platform conditions.
+  Source text is not translated, summarized by a model, executed, or rendered as raw HTML. Images,
+  badges, SVG, embeds, and remote previews are not loaded. A homepage is not a verified live demo.
+  The recorded ref can move; the displayed SHA identifies the returned document blob, not a commit.
+  Missing, inaccessible, rate-limited, malformed, oversized, or redirected documents stay unavailable
+  without retry. Closing the panel keeps the result; leaving/rebinding the room cancels and clears it.
+  Entry and document reading do not send an AI question; optional scoped chat remains separately limited.
 - **Repository Atelier is an exhibition, not a source-code IDE.** One reusable room redraws the current repo
   description, topics, public metrics, lifecycle dates, and available traffic. Its Repository Blueprint makes
   one explicit anonymous GitHub Tree request only after the visitor chooses Scan, stops after 8 seconds or
