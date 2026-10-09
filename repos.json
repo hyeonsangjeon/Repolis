@@ -30,9 +30,9 @@
 "stars": 200,
 "forks": 49,
 "fork": false,
-"views": 3821,
-"visitors": 2057,
-"clones": 1584,
+"views": 3831,
+"visitors": 2062,
+"clones": 1638,
 "size": 3092,
 "open_issues": 3,
 "license": "MIT",
@@ -46,7 +46,7 @@
 "first_seen": "2025-07-02",
 "social": "https://repository-images.githubusercontent.com/149748615/d9b76edc-f71d-4ef2-954a-5d2615b6c315",
 "social_custom": true,
-"score": 17.786,
+"score": 17.812,
 "rank": 0
 },
 {
@@ -72,10 +72,10 @@
 "stars": 28,
 "forks": 4,
 "fork": false,
-"views": 4379,
-"visitors": 967,
-"clones": 21607,
-"size": 70368,
+"views": 4385,
+"visitors": 969,
+"clones": 22299,
+"size": 72505,
 "open_issues": 1,
 "license": "MIT",
 "archived": false,
@@ -88,7 +88,7 @@
 "first_seen": "2026-02-26",
 "social": "https://repository-images.githubusercontent.com/1165924985/01ea1813-25a2-4604-87dd-f71bf795447a",
 "social_custom": true,
-"score": 16.511,
+"score": 16.535,
 "rank": 1
 },
 {
@@ -165,10 +165,10 @@
 "stars": 47,
 "forks": 18,
 "fork": false,
-"views": 695,
-"visitors": 343,
-"clones": 4036,
-"size": 58583,
+"views": 696,
+"visitors": 344,
+"clones": 4056,
+"size": 58676,
 "open_issues": 2,
 "license": "MIT",
 "archived": false,
@@ -176,13 +176,42 @@
 "release_tag": "v1.96.0",
 "release_date": "2026-09-03",
 "created": "2026-06-21",
-"pushed": "2026-10-07",
+"pushed": "2026-10-08",
 "tracked": true,
 "first_seen": "2026-06-21",
 "social": "https://repository-images.githubusercontent.com/1276174879/869f53a2-9c23-4b94-a319-62efd9e19316",
 "social_custom": true,
-"score": 15.355,
+"score": 15.362,
 "rank": 3
+},
+{
+"repo": "foundry-iq-demo-suite",
+"desc": "",
+"lang": "TypeScript",
+"topics": [],
+"url": "https://github.com/hyeonsangjeon/foundry-iq-demo-suite",
+"home": "https://foundry-iq-demo-suite.vercel.app/",
+"stars": 6,
+"forks": 4,
+"fork": false,
+"views": 197,
+"visitors": 102,
+"clones": 3501,
+"size": 5716,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": "",
+"created": "2026-03-09",
+"pushed": "2026-07-10",
+"tracked": true,
+"first_seen": "2026-05-09",
+"social": "https://repository-images.githubusercontent.com/1176412666/40a9785e-78a6-4ce3-b389-765d98ebfbf6",
+"social_custom": true,
+"score": 12.286,
+"rank": 4
 },
 {
 "repo": "PDF2LLM-Tuning-Studio",
@@ -217,7 +246,7 @@
 "fork": false,
 "views": 742,
 "visitors": 312,
-"clones": 625,
+"clones": 626,
 "size": 2612,
 "open_issues": 0,
 "license": "",
@@ -231,36 +260,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/69f8f4963db9ca1ebe5e243cbbfa2c3ace3bcea705e56feca4e287977b553468/hyeonsangjeon/PDF2LLM-Tuning-Studio",
 "social_custom": false,
-"score": 12.284,
-"rank": 4
-},
-{
-"repo": "foundry-iq-demo-suite",
-"desc": "",
-"lang": "TypeScript",
-"topics": [],
-"url": "https://github.com/hyeonsangjeon/foundry-iq-demo-suite",
-"home": "https://foundry-iq-demo-suite.vercel.app/",
-"stars": 6,
-"forks": 4,
-"fork": false,
-"views": 195,
-"visitors": 101,
-"clones": 3500,
-"size": 5716,
-"open_issues": 0,
-"license": "",
-"archived": false,
-"default_branch": "main",
-"release_tag": "",
-"release_date": "",
-"created": "2026-03-09",
-"pushed": "2026-07-10",
-"tracked": true,
-"first_seen": "2026-05-09",
-"social": "https://repository-images.githubusercontent.com/1176412666/40a9785e-78a6-4ce3-b389-765d98ebfbf6",
-"social_custom": true,
-"score": 12.276,
+"score": 12.286,
 "rank": 5
 },
 {
@@ -338,8 +338,8 @@
 "stars": 20,
 "forks": 29,
 "fork": false,
-"views": 111,
-"visitors": 69,
+"views": 113,
+"visitors": 70,
 "clones": 361,
 "size": 788,
 "open_issues": 1,
@@ -354,7 +354,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/deb0c8ea391873bb3e09ecb789e7e8f8cda60e25f4176d7df26d21dddb2d167a/hyeonsangjeon/gotty-docker",
 "social_custom": false,
-"score": 11.936,
+"score": 11.95,
 "rank": 7
 },
 {
@@ -388,7 +388,7 @@
 "fork": false,
 "views": 394,
 "visitors": 187,
-"clones": 886,
+"clones": 889,
 "size": 37141,
 "open_issues": 2,
 "license": "MIT",
@@ -402,7 +402,7 @@
 "first_seen": "2026-06-13",
 "social": "https://repository-images.githubusercontent.com/1254165127/30e8c2e8-7e4e-4639-9649-e199cfa9eb94",
 "social_custom": true,
-"score": 11.603,
+"score": 11.605,
 "rank": 8
 },
 {
@@ -430,7 +430,7 @@
 "fork": false,
 "views": 181,
 "visitors": 74,
-"clones": 3504,
+"clones": 3507,
 "size": 11193,
 "open_issues": 0,
 "license": "MIT",
@@ -474,9 +474,9 @@
 "stars": 25,
 "forks": 10,
 "fork": false,
-"views": 199,
-"visitors": 50,
-"clones": 260,
+"views": 200,
+"visitors": 51,
+"clones": 263,
 "size": 4502,
 "open_issues": 2,
 "license": "Apache-2.0",
@@ -490,7 +490,7 @@
 "first_seen": "2026-06-19",
 "social": "https://repository-images.githubusercontent.com/79776003/3be0b451-3b6f-4ed3-a127-ccdf6a19fbeb",
 "social_custom": true,
-"score": 10.895,
+"score": 10.922,
 "rank": 10
 },
 {
@@ -526,7 +526,7 @@
 "fork": false,
 "views": 161,
 "visitors": 114,
-"clones": 1279,
+"clones": 1284,
 "size": 1644,
 "open_issues": 1,
 "license": "MIT",
@@ -540,7 +540,7 @@
 "first_seen": "2026-06-18",
 "social": "https://repository-images.githubusercontent.com/1087109477/988980f9-0e15-45bd-baaa-68f903bc4212",
 "social_custom": true,
-"score": 10.446,
+"score": 10.449,
 "rank": 11
 },
 {
@@ -567,9 +567,9 @@
 "stars": 15,
 "forks": 0,
 "fork": false,
-"views": 95,
-"visitors": 64,
-"clones": 928,
+"views": 96,
+"visitors": 65,
+"clones": 929,
 "size": 24749,
 "open_issues": 1,
 "license": "MIT",
@@ -583,7 +583,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/634d341e6162941213728b92da90fa08bd8be23644bf0d27093be33a912969a5/hyeonsangjeon/AIsketcher",
 "social_custom": false,
-"score": 10.345,
+"score": 10.361,
 "rank": 12
 },
 {
@@ -692,7 +692,7 @@
 "fork": false,
 "views": 119,
 "visitors": 74,
-"clones": 414,
+"clones": 415,
 "size": 265,
 "open_issues": 1,
 "license": "MIT",
@@ -706,7 +706,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/9a66837759af056f8cebc5bd1c44fd941ce6a6ab3837ef63075be9ef8a60ed44/hyeonsangjeon/pronunciation-mapper",
 "social_custom": false,
-"score": 9.51,
+"score": 9.512,
 "rank": 15
 },
 {
@@ -740,8 +740,8 @@
 "stars": 18,
 "forks": 0,
 "fork": false,
-"views": 106,
-"visitors": 55,
+"views": 108,
+"visitors": 56,
 "clones": 282,
 "size": 46922,
 "open_issues": 0,
@@ -756,7 +756,7 @@
 "first_seen": "2026-06-19",
 "social": "https://opengraph.githubassets.com/0b830c0291f678d6741de8a733cacffd4810e62286c9670dcb1dab2a495e7bd5/hyeonsangjeon/disparity-based-space-vagriant-image-deblurring",
 "social_custom": false,
-"score": 9.449,
+"score": 9.467,
 "rank": 16
 },
 {
@@ -888,7 +888,7 @@
 "fork": false,
 "views": 356,
 "visitors": 41,
-"clones": 1589,
+"clones": 1594,
 "size": 3707,
 "open_issues": 0,
 "license": "MIT",
@@ -902,7 +902,7 @@
 "first_seen": "2026-09-11",
 "social": "https://opengraph.githubassets.com/e35246ea9f88c22c293ca82fa5286bca069e295e9776af957799429a895ff11f/hyeonsangjeon/prompt-compression-billing-bench",
 "social_custom": false,
-"score": 8.898,
+"score": 8.9,
 "rank": 20
 },
 {
@@ -928,7 +928,7 @@
 "fork": false,
 "views": 92,
 "visitors": 72,
-"clones": 71,
+"clones": 73,
 "size": 289,
 "open_issues": 1,
 "license": "MIT",
@@ -942,7 +942,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/fcd4d5e5b4228bbe8fa5cd1b1945d7cbbae0b6afbd3e7b1e58c0237bf55fa5ce/hyeonsangjeon/strands-bedrock-agents-cookbook",
 "social_custom": false,
-"score": 8.74,
+"score": 8.759,
 "rank": 21
 },
 {
@@ -999,7 +999,7 @@
 "fork": false,
 "views": 205,
 "visitors": 61,
-"clones": 186,
+"clones": 187,
 "size": 13033,
 "open_issues": 0,
 "license": "",
@@ -1013,7 +1013,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/5b19c001db9c39569696300df803b52c1efbf3877eee200432343b7a1b2c4677/hyeonsangjeon/Hyeonsang-AI-Contributions",
 "social_custom": false,
-"score": 7.789,
+"score": 7.793,
 "rank": 23
 },
 {
@@ -1026,8 +1026,8 @@
 "stars": 5,
 "forks": 2,
 "fork": false,
-"views": 47,
-"visitors": 24,
+"views": 48,
+"visitors": 25,
 "clones": 55,
 "size": 7,
 "open_issues": 0,
@@ -1042,7 +1042,7 @@
 "first_seen": "2026-06-19",
 "social": "https://opengraph.githubassets.com/395cfb4be50f578c64250923b455cff79faf810dade5b7e3bcdeba612e78c046/hyeonsangjeon/mariadb-galera-cluster",
 "social_custom": false,
-"score": 7.592,
+"score": 7.631,
 "rank": 24
 },
 {
@@ -1065,7 +1065,7 @@
 "fork": false,
 "views": 51,
 "visitors": 27,
-"clones": 120,
+"clones": 122,
 "size": 4786,
 "open_issues": 0,
 "license": "",
@@ -1079,7 +1079,7 @@
 "first_seen": "2026-07-25",
 "social": "https://opengraph.githubassets.com/f398d6632ef38e3d33e5b78e6e689b9376893a2cac0f3e291e82d04e98ac9803/hyeonsangjeon/multilingual-oss-map",
 "social_custom": false,
-"score": 7.239,
+"score": 7.25,
 "rank": 25
 },
 {
@@ -1183,7 +1183,7 @@
 "fork": false,
 "views": 14,
 "visitors": 13,
-"clones": 58,
+"clones": 59,
 "size": 8,
 "open_issues": 0,
 "license": "",
@@ -1197,7 +1197,7 @@
 "first_seen": "2026-06-19",
 "social": "https://opengraph.githubassets.com/d4258ad65d8274da2f6333d4c6be9aeec878711ab9d8ab8406ad6ece8a5fd62d/hyeonsangjeon/springboot-properties-docker",
 "social_custom": false,
-"score": 7.048,
+"score": 7.06,
 "rank": 28
 },
 {
@@ -1308,7 +1308,7 @@
 "fork": false,
 "views": 19,
 "visitors": 12,
-"clones": 87,
+"clones": 88,
 "size": 159,
 "open_issues": 0,
 "license": "",
@@ -1322,7 +1322,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/c518e0506f861f232bdb7775f0d485ca92385ca420fef65ff990548b3c2eea35/hyeonsangjeon/PEFT-Huggingface-LoRA-Korean-Data",
 "social_custom": false,
-"score": 6.672,
+"score": 6.68,
 "rank": 32
 },
 {
@@ -1337,7 +1337,7 @@
 "fork": false,
 "views": 38,
 "visitors": 10,
-"clones": 228,
+"clones": 229,
 "size": 1930,
 "open_issues": 0,
 "license": "MIT",
@@ -1351,7 +1351,7 @@
 "first_seen": "2026-06-24",
 "social": "https://repository-images.githubusercontent.com/1276576416/4e1478c3-d225-4965-b423-c2e4ec4b4a2c",
 "social_custom": true,
-"score": 6.548,
+"score": 6.551,
 "rank": 33
 },
 {
@@ -1485,7 +1485,7 @@
 "fork": false,
 "views": 10,
 "visitors": 10,
-"clones": 49,
+"clones": 50,
 "size": 6,
 "open_issues": 0,
 "license": "",
@@ -1499,7 +1499,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/dcd9e8e92fce2a93cfa09ff0db6fc20db0e81d4a9d31d3dce932c18d49bb6fc5/hyeonsangjeon/kubernetes-dashboard-nodeport",
 "social_custom": false,
-"score": 6.102,
+"score": 6.115,
 "rank": 37
 },
 {
@@ -1522,8 +1522,8 @@
 "stars": 3,
 "forks": 0,
 "fork": false,
-"views": 10,
-"visitors": 9,
+"views": 11,
+"visitors": 10,
 "clones": 51,
 "size": 25453,
 "open_issues": 0,
@@ -1538,7 +1538,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/e490f6b3f3de1d2509f31757ef21950f2a2cfe7857b01e1ac965bbd14ec7da38/hyeonsangjeon/yesno",
 "social_custom": false,
-"score": 5.762,
+"score": 5.857,
 "rank": 38
 },
 {
@@ -1626,7 +1626,7 @@
 "fork": false,
 "views": 11,
 "visitors": 5,
-"clones": 226,
+"clones": 228,
 "size": 90,
 "open_issues": 0,
 "license": "MIT",
@@ -1640,7 +1640,7 @@
 "first_seen": "2026-08-09",
 "social": "https://opengraph.githubassets.com/6d378de6e4a791c43b9eef5c1a75e8f0ebc4ddb434661a0eacf535d66cb31cd2/hyeonsangjeon/im-not-ai-en",
 "social_custom": false,
-"score": 5.589,
+"score": 5.595,
 "rank": 41
 },
 {
@@ -1830,7 +1830,7 @@
 "fork": false,
 "views": 2,
 "visitors": 2,
-"clones": 51,
+"clones": 52,
 "size": 5,
 "open_issues": 0,
 "license": "",
@@ -1844,7 +1844,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/0940fb087ffdd225223a561a68abab45c4ba7464c48c4f33c4d11573717f2579/hyeonsangjeon/python-xmas-tree",
 "social_custom": false,
-"score": 4.414,
+"score": 4.427,
 "rank": 47
 },
 {
@@ -1877,6 +1877,35 @@
 "rank": 48
 },
 {
+"repo": "General-Immersion-Day",
+"desc": "AWS General-Immersion-Day",
+"lang": "PHP",
+"topics": [],
+"url": "https://github.com/hyeonsangjeon/General-Immersion-Day",
+"home": "",
+"stars": 0,
+"forks": 0,
+"fork": false,
+"views": 3,
+"visitors": 3,
+"clones": 47,
+"size": 8,
+"open_issues": 0,
+"license": "",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": "",
+"created": "2022-04-19",
+"pushed": "2022-04-19",
+"tracked": true,
+"first_seen": "2026-06-20",
+"social": "https://opengraph.githubassets.com/9ce2bf37765519a58f09be77f87133c4703f462a74441e274582c86d02cf584b/hyeonsangjeon/General-Immersion-Day",
+"social_custom": false,
+"score": 4.096,
+"rank": 49
+},
+{
 "repo": "multi-agent-orchestration-observability",
 "desc": "",
 "lang": "Jupyter Notebook",
@@ -1903,7 +1932,7 @@
 "social": "https://repository-images.githubusercontent.com/1209250476/f7a400df-cb32-4050-a35d-ff861e50c84a",
 "social_custom": true,
 "score": 4.062,
-"rank": 49
+"rank": 50
 },
 {
 "repo": "ChatGPT-API-JS",
@@ -1932,7 +1961,7 @@
 "social": "https://opengraph.githubassets.com/a947dc6abbf801e8b470cb4c9316c73622a23bc9754c15957bf576462894eabb/hyeonsangjeon/ChatGPT-API-JS",
 "social_custom": false,
 "score": 3.858,
-"rank": 50
+"rank": 51
 },
 {
 "repo": "ubuntu-dind",
@@ -1965,7 +1994,7 @@
 "social": "https://opengraph.githubassets.com/6490564cf8de30b395b5377a853c070342614c74bc06f50e667e50fa84d516a2/hyeonsangjeon/ubuntu-dind",
 "social_custom": false,
 "score": 3.66,
-"rank": 51
+"rank": 52
 },
 {
 "repo": "competition",
@@ -1994,7 +2023,7 @@
 "social": "https://opengraph.githubassets.com/1c740d4060d699f9432d6bf03af8f96bfcb96b2a54c0e38b68a2c4216552dda0/hyeonsangjeon/competition",
 "social_custom": false,
 "score": 3.269,
-"rank": 52
+"rank": 53
 },
 {
 "repo": "morgan-winston-dailylog",
@@ -2031,7 +2060,7 @@
 "social": "https://opengraph.githubassets.com/0940fb087ffdd225223a561a68abab45c4ba7464c48c4f33c4d11573717f2579/hyeonsangjeon/morgan-winston-dailylog",
 "social_custom": false,
 "score": 3.126,
-"rank": 53
+"rank": 54
 },
 {
 "repo": "minikube-dev-env",
@@ -2060,7 +2089,7 @@
 "social": "https://opengraph.githubassets.com/c66bbf39d07b73ebbc852f0f3445760b7738944a124683be9dffe8ce7e16d56f/hyeonsangjeon/minikube-dev-env",
 "social_custom": false,
 "score": 3.056,
-"rank": 54
+"rank": 55
 },
 {
 "repo": "flask-sentiment-detector",
@@ -2089,7 +2118,7 @@
 "social": "https://opengraph.githubassets.com/0aff9527b5d338fbfaf395640df664982299abb2b0ecd88ee763f69b75e566aa/hyeonsangjeon/flask-sentiment-detector",
 "social_custom": false,
 "score": 2.933,
-"rank": 55
+"rank": 56
 },
 {
 "repo": "EMRSparkNotebook",
@@ -2118,7 +2147,7 @@
 "social": "https://opengraph.githubassets.com/a2d3d4c1a9ccbb50301ddee2816f46e69ce24d53f6ca61d8a5767632db2e584c/hyeonsangjeon/EMRSparkNotebook",
 "social_custom": false,
 "score": 2.911,
-"rank": 56
+"rank": 57
 },
 {
 "repo": "ent-boost-aiml-b05-ch08",
@@ -2147,7 +2176,7 @@
 "social": "https://opengraph.githubassets.com/b67060880023e192fd867075b36fd7b9b70beb1ac691380b1ab852e83fba7325/hyeonsangjeon/ent-boost-aiml-b05-ch08",
 "social_custom": false,
 "score": 2.878,
-"rank": 57
+"rank": 58
 },
 {
 "repo": "myipynb",
@@ -2161,7 +2190,7 @@
 "fork": false,
 "views": 0,
 "visitors": 0,
-"clones": 54,
+"clones": 56,
 "size": 23121,
 "open_issues": 0,
 "license": "",
@@ -2175,8 +2204,8 @@
 "first_seen": "2026-06-20",
 "social": "https://opengraph.githubassets.com/33a34ae1a7e42b7e960b03a8a2263a620891141e5f2197d4ff6f42c52411dece/hyeonsangjeon/myipynb",
 "social_custom": false,
-"score": 2.805,
-"rank": 58
+"score": 2.83,
+"rank": 59
 },
 {
 "repo": "my-ai-video-cut",
@@ -2205,35 +2234,6 @@
 "social": "https://opengraph.githubassets.com/d4d91e93a30e02942dae5105ddeee4fe3db2890821fa8cf39569c01152426f5a/hyeonsangjeon/my-ai-video-cut",
 "social_custom": false,
 "score": 2.79,
-"rank": 59
-},
-{
-"repo": "General-Immersion-Day",
-"desc": "AWS General-Immersion-Day",
-"lang": "PHP",
-"topics": [],
-"url": "https://github.com/hyeonsangjeon/General-Immersion-Day",
-"home": "",
-"stars": 0,
-"forks": 0,
-"fork": false,
-"views": 0,
-"visitors": 0,
-"clones": 46,
-"size": 8,
-"open_issues": 0,
-"license": "",
-"archived": false,
-"default_branch": "main",
-"release_tag": "",
-"release_date": "",
-"created": "2022-04-19",
-"pushed": "2022-04-19",
-"tracked": true,
-"first_seen": "2026-06-20",
-"social": "https://opengraph.githubassets.com/9ce2bf37765519a58f09be77f87133c4703f462a74441e274582c86d02cf584b/hyeonsangjeon/General-Immersion-Day",
-"social_custom": false,
-"score": 2.695,
 "rank": 60
 },
 {
