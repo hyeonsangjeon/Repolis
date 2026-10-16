@@ -1,6 +1,6 @@
 /* Local-only browser gate. Requires an existing static server and isolated Chrome CDP endpoint.
  * REPOLIS_TEST_URL=http://127.0.0.1:8000/ BROWSER_CDP_URL=http://127.0.0.1:9222 node scripts/test-first-visit-browser.mjs
- * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat,readable-town,exhibit and FIRST_VISIT_CASE=<comma-separated substrings> select a smaller run.
+ * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat,readable-town,exhibit,discovery and FIRST_VISIT_CASE=<comma-separated substrings> select a smaller run.
  * FIRST_VISIT_REFERENCE=<commit SHA> replays only viewport observations against historical HTML.
  */
 import assert from 'node:assert/strict';
@@ -15,6 +15,7 @@ import { createRepoRouteUrl } from '../assets/repo-route.js';
 import { authorizeRepositoryAtelierRequest } from '../cloudflare-taxi/src/repository-atelier.js';
 import { runReadableTownBrowserCases } from './readable-town-browser-cases.mjs';
 import { runRepositoryExhibitBrowserCases } from './repository-exhibit-browser-cases.mjs';
+import { runDiscoveryBrowserCases } from './discovery-browser-cases.mjs';
 import { exhibitDocumentFixture } from './repository-exhibit-fixtures.mjs';
 
 const base=new URL(process.env.REPOLIS_TEST_URL||'http://127.0.0.1:8000/');
@@ -24,9 +25,9 @@ const output=process.env.FIRST_VISIT_OUTPUT||await mkdtemp(join(tmpdir(),'repoli
 await mkdir(output,{recursive:true});
 const results=[],groups=(process.env.FIRST_VISIT_GROUP||'').split(',').filter(Boolean),only=process.env.FIRST_VISIT_CASE||'';
 const reference=process.env.FIRST_VISIT_REFERENCE||'';
-assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat','readable-town','exhibit'].includes(group)),'Unknown browser gate group');
+assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat','readable-town','exhibit','discovery'].includes(group)),'Unknown browser gate group');
 if(reference) assert(groups.length===1&&(groups[0]==='viewport'||(groups[0]==='readable-town'&&process.env.READABLE_BASELINE==='1')
-  ||(groups[0]==='exhibit'&&process.env.EXHIBIT_BASELINE==='1'))
+  ||(groups[0]==='exhibit'&&process.env.EXHIBIT_BASELINE==='1')||(groups[0]==='discovery'&&process.env.DISCOVERY_BASELINE==='1'))
   &&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and an explicit observation group');
 const referenceHtml=reference?execFileSync('git',['show',`${reference}:index.html`],{encoding:'utf8',maxBuffer:5*1024*1024}):null;
 const currentHtml=await readFile(new URL('../index.html',import.meta.url),'utf8');
@@ -242,7 +243,15 @@ async function session(test){
         return fulfill(event,Number(fail.slice(4)),{message:'Local test: public API failure'});
       }
       if(test.slow&&!failedRequests){ failedRequests++; await delay(1800); }
-      if(url.pathname.includes('/git/trees/')) return fulfill(event,200,tree);
+      if(url.pathname.includes('/git/trees/')){
+        if(test.group==='discovery'){
+          const repoRoot=url.pathname.split('/git/trees/')[0];
+          const items=[treeItem('src','tree'),...Array.from({length:12},(_,i)=>[treeItem(`src/area-${i}`,'tree'),...Array.from({length:8},(_,j)=>treeItem(`src/area-${i}/module-${j}.js`))]).flat()];
+          return fulfill(event,200,{...tree,url:`https://api.github.com${repoRoot}/git/trees/${tree.sha}`,
+            tree:items.map(item=>({...item,...(item.type==='blob'?{size:20}:{}),url:`https://api.github.com${repoRoot}/git/${item.type==='tree'?'trees':'blobs'}/${item.sha}`}))});
+        }
+        return fulfill(event,200,tree);
+      }
       if(url.pathname.startsWith('/users/')) return fulfill(event,200,test.empty?[]:publicCatalog);
       if(test.mismatched) return fulfill(event,200,{...publicRepo('alpha'),full_name:'wrong-owner/alpha',owner:{login:'wrong-owner'}});
       return fulfill(event,200,{...publicRepo('alpha'),...test.repoOverrides});
@@ -891,7 +900,7 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
   if(!reference){
     const readable=observations.at(-1).boxes.find(box=>box.line)?.line;
     assert(readable&&observations.some(state=>state.boxes.some(box=>box.kind==='resident')),'nearby resident dialogue is actually displayed');
-    await click(page,'menuBtn'); await page.evaluate("document.getElementById('nearbySpeech').open=true");
+    await click(page,'menuBtn'); await page.evaluate("document.querySelector('#wayfindingTools > summary')?.click();document.getElementById('nearbySpeech').open=true");
     const ax=await page.send('Accessibility.getFullAXTree');
     assert(ax.nodes.some(node=>!node.ignored&&node.name?.value?.includes(readable)),'complete dialogue is exposed in the accessibility tree');
     await page.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape'});
@@ -922,5 +931,6 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
 });
 await runReadableTownBrowserCases({run,ready,click,screenshot,delay,inside,outside,output});
 await runRepositoryExhibitBrowserCases({run,ready,click,screenshot,delay,inside,outside,output});
+await runDiscoveryBrowserCases({run,ready,click,screenshot,delay,inside,outside});
 assert(results.length>0,'No browser scenarios matched the requested selector');
 console.log(`First-visit browser gate: ${results.length} passed; evidence: ${output}`);

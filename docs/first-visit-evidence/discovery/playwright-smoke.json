@@ -1,0 +1,28 @@
+[
+  {
+    "mobile": false,
+    "before": {
+      "x": 2.6,
+      "z": -3.2
+    },
+    "after": {
+      "x": 2.62,
+      "z": -0.8
+    },
+    "colors": 3122,
+    "errors": []
+  },
+  {
+    "mobile": true,
+    "before": {
+      "x": 2.6,
+      "z": -3.2
+    },
+    "after": {
+      "x": 2.65,
+      "z": -0.95
+    },
+    "colors": 2932,
+    "errors": []
+  }
+]

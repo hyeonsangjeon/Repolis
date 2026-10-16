@@ -28,8 +28,11 @@ node --check assets/repo-route.js
 node --check assets/contribution-quests.js
 node --check assets/issue-code-scout.js
 node scripts/test-first-visit.mjs
+node scripts/test-gitber-search.mjs
+node scripts/test-discovery-ui.mjs
 node scripts/test-readable-town.mjs
 node --check scripts/test-first-visit-browser.mjs
 node --check scripts/readable-town-browser-cases.mjs
 node --check scripts/repository-exhibit-browser-cases.mjs
 node --check scripts/repository-exhibit-fixtures.mjs
+node --check scripts/discovery-browser-cases.mjs

@@ -106,6 +106,9 @@
   #nearbyPeopleList button[hidden] { display:none; }
   #townLabelSafeArea { position:fixed; inset:0; visibility:hidden; pointer-events:none; padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px); }
   #firstRepoPicker[hidden], #firstRepoPager[hidden] { display: none; }
+  #wayfindingTools { margin:8px 0; border-top:1px solid #dfd9ce; border-bottom:1px solid #dfd9ce; }
+  #wayfindingTools > summary { min-height:44px; padding:12px 4px; cursor:pointer; font-size:13px; font-weight:700; }
+  #panel.firstRepoMode > #wayfindingTools { display:none; }
   #panel.firstRepoMode > :is(#intentLens,#tourReplayBtn,#questMenuBtn,#creatorMenuBtn,#repoRouteMenuBtn,#growthMenuBtn,#twinMenuBtn,#postcardMenuBtn,#nearbySpeech,#nearbyPeople) { display: none; }
   #firstRepoPicker h4 { margin: 0 0 6px; font-size: 16px; line-height: 1.35; }
   #firstRepoPicker p, #firstRepoStatus { margin: 6px 0 10px; color: #806444; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
@@ -344,9 +347,9 @@
   #prompt.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #prompt .key { background: #fff; color: #4a2f1e; border-radius: 7px; padding: 2px 9px; font-weight: 800; font-size: 12px; }
 
-  #modal { position: fixed; inset: 0; z-index: 80; display: none; align-items: center; justify-content: center;
+  #modal { position: fixed; inset: 0; z-index: 80; display: none; align-items: flex-end; justify-content: flex-end;
     top:var(--town-ui-top,0px); bottom:auto; height:var(--town-ui-height,100dvh);
-    background: rgba(30,18,8,.45); backdrop-filter: blur(4px);
+    background: rgba(20,28,27,.16);
     padding:calc(12px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px)); }
   #modal.show { display: flex; }
   .card { background: #fffaf2; border-radius: 22px; width: 420px; max-width: 100%; overflow: hidden; position: relative;
@@ -362,13 +365,18 @@
   .srOnly { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important;
     overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
   @keyframes pop { from { transform: scale(.9) translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
-  .card .top { padding: 22px 24px; color: #fff; }
+  .card .top { padding: 16px 66px 14px 20px; color: #fff; }
   .card .top .lang { font-size: 12px; font-weight: 700; letter-spacing: .03em; }
-  .card .top h2 { font-size: 21px; margin: 4px 0 2px; word-break: break-all; }
-  .card .top .stars { font-size: 13px; font-weight: 600; }
+  .card .top h2 { font-size: 20px; margin: 4px 0 2px; overflow-wrap:anywhere; max-height:96px; overflow:auto; }
+  .card .top .stars { font-size:13px; font-weight:600; overflow-wrap:anywhere; max-height:3em; overflow:auto; }
   .card .body { padding: 18px 24px 8px; }
   .card .body p { font-size: 14px; line-height: 1.55; color: #5a4636; }
   .card .body p.empty { color: #796044; font-style: italic; }
+  #cardDesc { max-height:6.2em; overflow:auto; overflow-wrap:anywhere; }
+  #cardActions .btn { min-height:48px; border-radius:8px; }
+  #cardDetails { border-top:1px solid #ded9ce; padding-bottom:8px; }
+  #cardDetails > summary { min-height:48px; padding:14px 24px; color:#455950; cursor:pointer; font-size:13px; font-weight:700; }
+  #cardDetails .sociallabel { position:static; margin:8px 18px; }
   .cardLineage { margin: 0 24px 4px; padding: 10px 12px; border-radius: 11px; background: #f0eee2;
     color: #53604c; font-size: 11.5px; line-height: 1.45; display: flex; align-items: center; gap: 8px; }
   .cardLineage[hidden] { display: none; }
@@ -675,10 +683,14 @@
   #atelierPortalStatus[data-tone="success"] { color:#9fe0bf; }
   #atelierPortalStatus[data-tone="error"] { color:#ffc0ae; }
   #atelierBlueprintPanel { position:absolute; top:calc(84px + env(safe-area-inset-top,0px)); right:14px; bottom:14px;
-    display:flex; width:min(430px,calc(100vw - 28px)); flex-direction:column; overflow:hidden; border:1px solid rgba(143,214,221,.4);
+    display:flex; width:min(340px,calc(100vw - 28px)); flex-direction:column; overflow:hidden; border:1px solid rgba(143,214,221,.4);
     border-radius:18px; color:#e8f4f3; background:rgba(11,24,28,.97); box-shadow:0 18px 56px rgba(0,0,0,.48);
     backdrop-filter:blur(10px); pointer-events:auto; }
   #atelierBlueprintPanel[hidden] { display:none; }
+  #atelierBlueprintFiles { min-height:0; display:flex; flex-direction:column; flex:1; overflow:hidden; }
+  #atelierBlueprintFiles:not([open]) { flex:0 0 auto; }
+  #atelierBlueprintFiles > summary { cursor:pointer; min-height:44px; padding:12px 14px; font-size:12px; font-weight:700; }
+  #atelierBlueprintFiles:not([open]) > :not(summary) { display:none; }
   .atelierBlueprintHead { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:14px 14px 10px;
     border-bottom:1px solid rgba(143,214,221,.2); }
   .atelierBlueprintHead h2 { margin:0; color:#f6efe2; font:800 18px/1.2 Georgia,serif; }
@@ -782,7 +794,7 @@
     #atelierExhibitPanel { top:calc(82px + env(safe-area-inset-top,0px)); right:10px; width:calc(100vw - 20px); bottom:calc(10px + env(safe-area-inset-bottom,0px)); }
     #atelierExhibitContent { padding:4px 14px 16px; }
     #atelierPortalStatus { text-align:center; }
-    #atelierBlueprintPanel { top:auto; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom,0px)); width:auto; max-height:58dvh; }
+    #atelierBlueprintPanel { top:auto; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom,0px)); width:auto; max-height:48dvh; }
     .atelierBlueprintHead { padding:12px 12px 9px; }
     .atelierBlueprintControls { grid-template-columns:1fr; padding:9px 12px; }
     #atelierBlueprintScan, #atelierBlueprintCopy, #atelierBlueprintPath { min-height:44px; }
@@ -1215,9 +1227,16 @@
     padding: 12px 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; }
   .libfoot a.gh { background: #2b2420; color: #fff; }
   .libfoot button.close { flex: 0 0 auto; min-width: 0; background: #f1e6d6; color: #6a523d; }
-  #intro { position: fixed; inset: 0; z-index: 30; background: linear-gradient(165deg,#7fcdc4 0%,#e8b87a 100%);
+  #intro { position: fixed; inset: 0; z-index: 30; background:#233c37;
     display: flex; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 24px; }
   #intro .inner { width: 100%; max-width: 480px; max-height: calc(100vh - 32px); overflow-y: auto; padding: 2px 8px 12px; }
+  #intro.scene-ready { background:rgba(11,24,22,.58); }
+  #intro.scene-ready .inner { text-shadow:0 1px 4px #10201c; }
+  #intro #introTour { color:#fff; background:rgba(12,30,27,.7); }
+  #intro #introTour:hover { color:#173d35; background:#fff; text-shadow:none; }
+  #introControls { margin:14px 0; }
+  #introControls > summary { min-height:44px; padding:12px; cursor:pointer; font-size:13px; }
+  #intro #startBtn { display:block; width:100%; min-height:52px; margin:0 0 24px; border-radius:8px; }
   #intro .langsel { display: inline-flex; margin-bottom: 20px; background: rgba(255,255,255,.16);
     border: 1px solid rgba(255,255,255,.4); border-radius: 999px; padding: 3px; }
   #intro .langsel button { border: none; background: transparent; color: #fff; font-weight: 800;
@@ -1230,8 +1249,7 @@
   #intro .ctrls { display: flex; gap: 14px; justify-content: center; margin-bottom: 26px; flex-wrap: wrap; }
   #intro .ctrls div { background: rgba(255,255,255,.18); border-radius: 12px; padding: 12px 16px; font-size: 13px; }
   #intro .ctrls b { display: block; font-size: 16px; margin-bottom: 3px; }
-  #introLaunch { margin: -5px auto 20px; padding: 12px; border: 1px solid rgba(255,255,255,.46); border-radius: 16px;
-    background: rgba(35,73,73,.16); box-shadow: 0 8px 22px rgba(41,45,35,.12); }
+  #introLaunch { margin:0 auto 12px; padding:12px 0; border-top:1px solid rgba(255,255,255,.35); }
   #introLaunch .launchLabel { margin-bottom: 8px; font-size: 12px; font-weight: 800; letter-spacing: .02em; }
   #introLaunch.ready { background: rgba(25,63,60,.25); }
   #introLaunchForm { display: flex; gap: 7px; align-items: stretch; }
@@ -1532,7 +1550,7 @@
   #growthReplay .growthKicker { color:#a9cfff; font-size:10px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
   #growthReplay h2 { margin:3px 42px 0 0; font-size:21px; line-height:1.18; color:#fff; }
   #growthReplay .growthSummary { margin-top:6px; color:#cbd8f2; font-size:12px; line-height:1.45; }
-  #growthReplay .growthNames { min-height:18px; margin-top:6px; color:#ffdc91; font-size:11px; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #growthReplay .growthNames { min-height:18px; max-height:4.2em; margin-top:6px; color:#ffdc91; font-size:11px; line-height:1.4; overflow:auto; overflow-wrap:anywhere; }
   #growthReplay .growthTruth { margin-top:3px; color:#9eafd1; font-size:9.5px; line-height:1.35; }
   #growthReplay .growthRangeLabel { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;
     color:#b8c8e7; font-size:10.5px; font-weight:750; }
@@ -1546,12 +1564,20 @@
   body.growth-replay-active #prompt, body.growth-replay-active #actBtn, body.growth-replay-active #taxiBtn,
   body.growth-replay-active #emoteBtn, body.growth-replay-active #emoteBar, body.growth-replay-active #drivebar,
   body.growth-replay-active #starTrailHud, body.growth-replay-active #lanternWatchHud, body.growth-replay-active #repoRouteHud, body.growth-replay-active #starNudge { display:none !important; }
+  body.growth-replay-active #chat, body.growth-replay-active #greetToast, body.growth-replay-active .hint { display:none !important; }
   @media (max-width:520px) {
     #growthReplay { padding:0; }
     #growthReplay .growthPanel { width:100%; max-height:min(62vh,520px); border-radius:20px 20px 0 0; padding:15px 14px calc(14px + env(safe-area-inset-bottom,0px)); }
     #growthReplay h2 { font-size:18px; }
     #growthReplay .growthActions button, #growthReplay .growthClose { min-height:44px; }
     #growthReplay .growthClose { width:44px; height:44px; top:6px; right:7px; }
+  }
+  @media (max-height:520px) and (min-width:621px) {
+    #growthReplay { justify-content:flex-end; padding:70px 10px 10px; }
+    #growthReplay .growthPanel { width:min(340px,44vw); max-height:100%; padding:12px; border-radius:8px; }
+    #growthReplay h2 { font-size:18px; }
+    #growthReplay .growthActions button { min-height:44px; }
+    #growthReplay .growthClose { width:44px; height:44px; top:4px; right:4px; }
   }
   @media (prefers-reduced-motion:reduce) {
     #growthReplay, #growthReplay .growthPanel { transition:none !important; }
@@ -1679,9 +1705,7 @@
 <div id="panel" class="hidden" role="dialog" aria-modal="true" data-i18n-aria="wayfinding" inert>
   <button class="townPanelClose" type="button" data-town-close="panel" data-i18n-aria="close">✕</button>
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
-  <details id="nearbyPeople"><summary data-i18n="nearbyPeople">가까운 인물 선택</summary>
-    <p id="nearbyPeopleEmpty" data-i18n="nearbyPeopleEmpty">가까운 인물에게 다가가 보세요.</p><div id="nearbyPeopleList"></div>
-  </details>
+  <input id="repoSearch" type="text" name="repository" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" data-i18n-aria="searchPh" autocomplete="off" />
   <section id="intentLens" aria-labelledby="intentLensTitle">
     <div id="intentLensTitle" data-i18n="intentLensTitle">무엇을 하러 왔나요?</div>
     <div class="intentLensChoices">
@@ -1690,6 +1714,10 @@
       <button class="intentLensChoice" type="button" data-intent="contribute"><span class="intentLensIcon" aria-hidden="true">🧩</span><span data-i18n="intentContribute">기여할 일 찾기</span></button>
     </div>
   </section>
+  <details id="wayfindingTools"><summary data-i18n="wayfindingTools">마을 · 사람 · 공유</summary>
+  <details id="nearbyPeople"><summary data-i18n="nearbyPeople">가까운 인물 선택</summary>
+    <p id="nearbyPeopleEmpty" data-i18n="nearbyPeopleEmpty">가까운 인물에게 다가가 보세요.</p><div id="nearbyPeopleList"></div>
+  </details>
   <button id="tourReplayBtn" type="button">
     <span class="pmIcon" aria-hidden="true">🎬</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="tourReplay">가이드 투어 다시 보기</span><span class="pmSub" data-i18n="tourReplaySub">세계수 · 주민 · 레포 집 · 기존 명소</span></span>
@@ -1720,6 +1748,7 @@
     <span class="pmCopy"><span class="pmTitle" data-i18n="postcardMenu">타운 엽서 만들기</span><span class="pmSub" data-i18n="postcardMenuSub">지금 보이는 마을을 PNG로</span></span>
   </button>
   <details id="nearbySpeech"><summary data-i18n="nearbySpeech">주변 대화 읽기</summary><div id="nearbySpeechText"></div></details>
+  </details>
   <section id="firstRepoPicker" hidden aria-labelledby="firstRepoTitle">
     <h4 id="firstRepoTitle" data-i18n="firstRepoTitle">이 마을의 레포 하나 고르기</h4>
     <p data-i18n="firstRepoBasis">현재 불러온 공개 목록 순서입니다. 선택하면 자동 질문 없이 전시실에 들어가요.</p>
@@ -1727,7 +1756,6 @@
     <button id="firstRepoCancel" type="button" data-i18n="firstRepoCancel">마을로 돌아가기</button>
     <p id="firstRepoStatus" role="status" aria-live="polite"></p>
   </section>
-  <input id="repoSearch" type="text" name="repository" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" data-i18n-aria="searchPh" autocomplete="off" />
   <div id="repoList"></div>
   <div id="firstRepoPager" hidden>
     <button id="firstRepoPrev" type="button" data-i18n="firstRepoPrev">이전 6개</button>
@@ -2010,6 +2038,7 @@
     </div>
     <p id="atelierBlueprintStatus" role="status" aria-live="polite" aria-atomic="true"></p>
     <p id="atelierBlueprintSelected" aria-live="polite"></p>
+    <details id="atelierBlueprintFiles" open><summary data-i18n="atelierBlueprintFiles">Files and folders</summary>
     <section id="issueCodeScout" hidden aria-labelledby="issueCodeScoutTitle">
       <h3 id="issueCodeScoutTitle" data-i18n="issueCodeScoutTitle">먼저 살펴볼 후보 경로</h3>
       <p id="issueCodeScoutIssue"></p>
@@ -2017,6 +2046,7 @@
       <ol id="issueCodeScoutList" role="list" data-i18n-aria="issueCodeScoutListAria" aria-label="먼저 살펴볼 후보 경로"></ol>
     </section>
     <ol id="atelierBlueprintOutline" role="tree" data-i18n-aria="atelierBlueprintOutlineAria" aria-label="Projected public source tree"></ol>
+    </details>
     <p id="atelierBlueprintBudget" class="atelierBlueprintBudget"></p>
   </section>
 </div>
@@ -2065,21 +2095,24 @@
   <div class="card" tabindex="-1">
     <button id="closeBtn" type="button" data-i18n-aria="close" aria-label="닫기">✕</button>
     <div class="cardScroll" id="cardScroll">
-    <img id="cardImg" class="hero" alt="repo social preview" />
-    <div class="sociallabel" id="cardSocialTag">🎨 <span data-i18n="socialPreview">소셜 프리뷰</span></div>
     <div class="top" id="cardTop">
       <div class="lang" id="cardLang"></div>
       <h2 id="cardName"></h2>
       <div class="stars" id="cardStars"></div>
     </div>
+    <div class="body"><p id="cardDesc"></p></div>
+    <div class="actions" id="cardActions"></div>
+    <details id="cardDetails"><summary data-i18n="cardDetails">지표와 더 보기</summary>
+    <img id="cardImg" class="hero" alt="repo social preview" />
+    <div class="sociallabel" id="cardSocialTag">🎨 <span data-i18n="socialPreview">소셜 프리뷰</span></div>
     <div class="chips" id="cardChips"></div>
     <div class="timeTrace" id="cardTimeTrace" role="status"></div>
     <div class="since" id="cardSince"></div>
-    <div class="body"><p id="cardDesc"></p></div>
     <div class="cardLineage" id="cardLineage" hidden></div>
     <div class="metricnote" id="cardMetricNote" data-i18n="metricNote">🏠 건물은 지표로 자라요 — 👁 방문자 = 높이 · ⑂ fork = 너비 · ⬇ clone = 화려함 · 📈 조회수 = 마당 · ★ = 금별 · 🌙 밤엔 창문 밝기 = 작업량(활동).</div>
     <div class="cardAsk" id="cardAsk"></div>
-    <div class="actions" id="cardActions"></div>
+    <div class="actions" id="cardExtraActions"></div>
+    </details>
     </div>
   </div>
 </div>
@@ -2213,7 +2246,8 @@
       <button data-lang="ko">한국어</button><button data-lang="en">English</button>
     </div>
     <h1>🏙️ Repolis — <span data-i18n="cityOfRepos">레포들의 도시</span></h1>
-    <div class="sub" data-i18n-html="introSub">핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>깃버에게 물어보면 그 레포까지 데려다줘요.</div>
+    <div class="sub" data-i18n-html="introSub">레포 하나가 집 한 채.<br>어떤 일을 하는 곳인지, 문을 열어 보세요.</div>
+    <button id="startBtn" data-i18n="enterTown">마을 입장 →</button>
     <div id="introLaunch">
       <div class="launchLabel" data-i18n="introLaunchLabel">내 공개 레포로 바로 보기</div>
       <form id="introLaunchForm">
@@ -2238,13 +2272,12 @@
       <div class="launchHint" id="introLaunchHint" data-i18n="introLaunchHint">공개 레포만 사용 · 로그인 없음 · 포크 없음</div>
       <div id="introLaunchErr" role="alert"></div>
     </div>
-    <div class="ctrls">
+    <details id="introControls"><summary data-i18n="introControls">조작</summary><div class="ctrls">
       <div><b>WASD / ←↑↓→</b><span data-i18n="ctrlWalk">걷기</span></div>
       <div><b>좌클릭 / Left</b><span data-i18n="ctrlLookL">시점 회전(자유 시점)</span></div>
       <div><b>우클릭 / Right</b><span data-i18n="ctrlAimR">캐릭터 조준 · WoW식 · 휠 줌</span></div>
       <div><b>Enter / 클릭</b><span data-i18n="ctrlOpen">레포 열기</span></div>
-    </div>
-    <button id="startBtn" data-i18n="enterTown">마을 입장 →</button>
+    </div></details>
     <button id="introTour" data-i18n="tourStart">🎬 가이드 투어로 둘러보기</button>
     <div class="priv hidden" id="privacyNote" data-i18n="privacyNote">익명 집계 통계만 측정해요 · 개인정보·계정·검색어는 저장하지 않아요.</div>
   </div>
@@ -2822,7 +2855,7 @@ const I18N = {
     growthMenu:'도시 성장 리플레이', growthMenuSub:'첫 레포부터 지금까지 마을이 자라는 장면',
     growthPassportTitle:'도시 성장 기록', growthPassportSummary:'{first} → {last} · 레포 탄생 연도 {steps}개', growthPassportOpen:'⏳ 도시가 자라는 장면 보기',
     growthKicker:'REPOLIS TIME MACHINE', growthTitle:'{year}년 · 도시의 {step}번째 장면', growthTitlePresent:'{year}년 · 현재의 마을',
-    growthSummary:'이때까지 공개 레포 집 {repos}채 · 사용 언어 {languages}개', growthAdded:'이 해에 생긴 집 · {repos}',
+    growthSummary:'이때까지 공개 레포 집 {repos}채 · 사용 언어 {languages}개', growthAdded:'새 집 {count}채 · {repos}',
     growthAddedNone:'이 해에 새로 생긴 집이 없어요.', growthTruth:'현재 공개 레포의 생성일 기준 · 건물과 언어는 현재 메타데이터', growthRange:'레포 탄생 연도', growthStep:'{step}/{total}',
     growthPlay:'▶ 성장 재생', growthPause:'⏸ 일시정지', growthPresent:'현재로 이동', growthShare:'이 연도 링크 공유',
     growthPostcard:'이 시대 엽서 만들기', growthClose:'도시 성장 리플레이 닫기',
@@ -2930,7 +2963,8 @@ const I18N = {
     ruinStatus:'들꽃이 핀 온화한 폐허', ruinNote:'이 공개 레포는 아카이브되어 잠들었지만, 건물의 실루엣과 이름 명패는 도시의 기억으로 남아 있어요.',
     ruinListAria:'아카이브 레포 이름 명패',
     cityOfRepos:'레포들의 도시',
-    introSub:'핀 6개 제한은 잊으세요.<br>내 모든 레포가 사는 도시를 걸으며,<br>깃버에게 물어보면 그 레포까지 데려다줘요.',
+    introSub:'레포 하나가 집 한 채.<br>어떤 일을 하는 곳인지, 문을 열어 보세요.',
+    introControls:'조작', wayfindingTools:'마을 · 사람 · 공유',
     introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
     introSubPortal:'공개 레포 하나를 먼저 불러왔어요.<br>3D 전시실에서 이 레포를 확인한 뒤,<br>원할 때 소유자의 마을 전체로 넓혀 보세요.',
     introLaunchLabel:'GitHub 사용자나 레포를 도시로 열기', introUserPh:'username · owner/repo · GitHub URL', introLaunchGo:'Repolis에서 열기 →',
@@ -2949,7 +2983,7 @@ const I18N = {
     enterTown:'마을 입장 →',
     // --- GitHub Station · 다른 마을로 기차 여행 ---
     modeOwnerLabel:'풀 트래픽 시티', modePublicLabel:'공개 GitHub 마을', modePortalLabel:'레포 포털',
-    townOf:'{user} 님의 마을', repoPortalOf:'{repo} 포털', myCity:'내 도시',
+    townOf:'{user} 님의 마을', repoPortalOf:'{repo} 전시실', myCity:'내 도시',
     stationBtn:'🚉 역', stationLm:'GitHub 역',
     intentLensTitle:'무엇을 하러 왔나요?', intentUnderstand:'레포 하나 이해하기',
     intentExplore:'이 개발자의 도시 둘러보기', intentContribute:'기여할 일 찾기',
@@ -3001,7 +3035,7 @@ const I18N = {
     questOpen:'GitHub 이슈 열기 ↗', questOpenAria:'GitHub에서 {repo} 퀘스트 #{number} 열기', questCardOpen:'🧩 퀘스트 #{number} 열기 ↗',
     questGuiding:'🧩 {repo} 집으로 가요. 도착하면 퀘스트 #{number}를 열 수 있어요.', questHandoff:'GitHub에서 퀘스트 #{number}를 열었어요. 기여 여부는 Repolis가 추적하지 않아요.',
     questUnavailable:'이 레포 집은 현재 마을에서 찾을 수 없어요.', questPrivacy:'로그인·토큰·새 백엔드 없이 현재 마을 주인의 공개 이슈만 읽으며, 이슈나 레포 이름을 분석 이벤트로 보내지 않아요.',
-    routeMenu:'Repo Route', routeMenuSub:'직접 본 레포 2~3곳을 코스로 공유',
+    routeMenu:'둘러본 레포 길 공유', routeMenuSub:'직접 본 레포 2~3곳을 코스로 공유',
     routeTitle:'내가 발견한 레포 길 만들기', routeSub:'직접 열어 본 집 2~3곳을 고른 순서대로 이어, 친구가 그대로 걸어보게 하세요.',
     routeClose:'Repo Route 닫기', routeEmpty:'레포 집 카드를 열고 ‘Repo Route에 담기’를 누르세요. 두 곳부터 길을 시작하고 공유할 수 있어요.',
     routeStopsAria:'선택한 Repo Route 정류장', routeSuggestions:'방금 둘러본 집에서 더 담기',
@@ -3112,9 +3146,9 @@ const I18N = {
     atelierChatWait:'진행 중인 대화가 끝난 뒤 전시실에 입장해 주세요.',
     atelierDoor:'출구 · 마을로 돌아가기', atelierWalk:'WASD / 터치로 전시실을 걸어 보세요',
     atelierUse:'Enter / 버튼으로 {action}', atelierCoreHint:'★ 크기 · 활동 빛 · score 구조',
-    atelierBlueprintToggle:'🗺 Repository Blueprint', atelierBlueprintTitle:'Repository Blueprint',
+    atelierBlueprintToggle:'🗺 소스 지도', atelierBlueprintTitle:'소스 지도', atelierBlueprintFiles:'파일과 폴더',
     atelierBlueprintBoundary:'현재 공개 소스 트리 · 호출 그래프나 런타임 아키텍처가 아닙니다.',
-    atelierBlueprintClose:'Repository Blueprint 닫기', atelierBlueprintScan:'공개 소스 지도 스캔',
+    atelierBlueprintClose:'소스 지도 닫기', atelierBlueprintScan:'공개 소스 지도 보기',
     atelierBlueprintOpenPath:'GitHub에서 정확한 경로 열기', atelierBlueprintOutlineAria:'투영된 공개 소스 트리',
     atelierBlueprintIdle:'요청하지 않았습니다. 이 버튼을 눌러 현재 레포의 공개 트리만 한 번 읽습니다.',
     atelierBlueprintScanning:'현재 레포의 공개 트리를 읽는 중…', atelierBlueprintReady:'공개 소스 지도를 불러왔습니다.',
@@ -3128,21 +3162,21 @@ const I18N = {
     atelierBlueprintMalformed:'응답의 범위나 경로를 검증할 수 없어 표시하지 않습니다.',
     atelierBlueprintUnavailable:'공개 소스 트리를 불러오지 못했습니다. 자동 재시도하지 않습니다.',
     atelierBlueprintEmpty:'표시할 수 있는 폴더나 소스·문서 랜드마크가 없습니다.',
-    blueprintLinkTitle:'Repository Blueprint', blueprintLinkFocus:'초점 · {path}',
+    blueprintLinkTitle:'레포 소스 지도', blueprintLinkFocus:'초점 · {path}',
     blueprintLinkPublic:'이 링크에는 공개 저장소 경로만 들어 있습니다.',
-    blueprintLinkLoad:'공개 Blueprint 불러오기', blueprintLinkOpenGithub:'GitHub에서 열기', blueprintLinkEnterTown:'대신 마을 입장',
-    blueprintLinkInvalid:'Blueprint 링크의 경로나 형식이 올바르지 않습니다. 일반 레포 전시실로 계속할 수 있습니다.',
-    blueprintLinkMissing:'공유된 경로를 제한된 공개 Blueprint에서 찾지 못했습니다. 다른 경로를 선택하지 않았습니다.',
-    blueprintLinkCopy:'Blueprint 링크 복사', blueprintLinkCopied:'Blueprint 링크를 복사했습니다.',
-    blueprintLinkCopyFailed:'복사하지 못했습니다. 아래 URL을 선택해 직접 복사하세요.', blueprintLinkFallbackAria:'선택 가능한 Blueprint 링크',
+    blueprintLinkLoad:'공개 소스 지도 불러오기', blueprintLinkOpenGithub:'GitHub에서 열기', blueprintLinkEnterTown:'대신 마을 입장',
+    blueprintLinkInvalid:'소스 지도 링크의 경로나 형식이 올바르지 않습니다. 일반 레포 전시실로 계속할 수 있습니다.',
+    blueprintLinkMissing:'공유된 경로를 제한된 공개 소스 지도에서 찾지 못했습니다. 다른 경로를 선택하지 않았습니다.',
+    blueprintLinkCopy:'이 경로 공유', blueprintLinkCopied:'소스 지도 링크를 복사했습니다.',
+    blueprintLinkCopyFailed:'복사하지 못했습니다. 아래 URL을 선택해 직접 복사하세요.', blueprintLinkFallbackAria:'선택 가능한 소스 지도 링크',
     issueCodeScoutTitle:'먼저 살펴볼 후보 경로', issueCodeScoutListAria:'먼저 살펴볼 후보 경로',
     issueCodeScoutReady:'제목·라벨과 실제 경로 메타데이터의 보수적 어휘 일치 {count}개입니다. 먼저 확인할 후보일 뿐입니다.',
     issueCodeScoutNone:'현재 Blueprint에서 보수적으로 일치하는 후보가 없습니다. Scout는 경로를 선택하지 않았습니다.',
     issueCodeScoutCandidateAria:'후보 경로에 초점 이동: {path}',
     atelierBlueprintFolder:'폴더', atelierBlueprintFile:'파일',
     atelierBlueprintSelected:'{type} · {path}', atelierBlueprintCounts:'노드 {nodes}/{nodeCap} · 엣지 {edges}/{edgeCap} · 깊이 {depth}/4 · {bytes}',
-    atelierBlueprintOmitted:' · 한도 밖 노드 {count}개', atelierBlueprintTable:'Blueprint Table · 공개 소스 지도',
-    portalActionsAria:'Repo Portal 작업', portalCopy:'🔗 Repo Portal 복사', portalCopied:'Repo Portal 주소를 복사했어요.',
+    atelierBlueprintOmitted:' · 한도 밖 노드 {count}개', atelierBlueprintTable:'공개 소스 지도',
+    portalActionsAria:'레포 전시실 작업', portalCopy:'🔗 전시실 링크 복사', portalCopied:'전시실 링크를 복사했어요.',
     portalCopyFailed:'주소를 복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.', portalExplore:'@{user}의 마을 전체 보기',
     atelierTrafficUnavailable:'트래픽 비공개 · 공개 stars, forks, 최근 업데이트로 건축',
     rideThere:'🚕 그 집까지 데려다줄게요', soLead:'그럼 ',
@@ -3163,6 +3197,9 @@ const I18N = {
     stOfftopic:'하하, 그건 저도 잘 모르겠어요 😅',
     leadPopular:'요즘 제일 인기 많은 ', leadRandom:'음~ 그럼 이건 어때요? ', leadStar:'⭐ 스타가 제일 많은 ',
     leadRecent:'가장 최근에 손본 ', leadMatch:'말씀하신 것엔 ', leadFallback:'딱 맞는 건 못 찾았지만, 인기 많은 ',
+    leadUsage:'사용 방법은 전시실의 README에서 확인할 수 있어요. 공개 설명이 맞는 후보는 ',
+    cardDetails:'지표 · 관련 질문 · GitHub',
+    searchNoMatch:'현재 마을에서 맞는 레포를 찾지 못했어요. 레포 이름이나 필요한 기능을 조금 더 알려주세요.',
     leadVisitors:'👁 방문자가 제일 많은 ', leadClones:'⬇ 클론(다운로드)이 제일 많은 ', leadForks:'⑂ 포크가 제일 많은 ', leadViews:'📈 조회수가 제일 많은 ',
     howAbout:'은 어떠세요?', recommend:' 추천이요!', thisOne:'이건 어때요?',
     modeLocalMsg:'🔎 로컬검색 모드예요. 키 없이 바로 안내해요!',
@@ -3236,7 +3273,7 @@ const I18N = {
     growthMenu:'Town Growth Replay', growthMenuSub:'Watch the town grow from its first repo to now',
     growthPassportTitle:'Town growth record', growthPassportSummary:'{first} → {last} · {steps} repo-birth years', growthPassportOpen:'⏳ Watch this town grow',
     growthKicker:'REPOLIS TIME MACHINE', growthTitle:'{year} · scene {step} of this city', growthTitlePresent:'{year} · the town today',
-    growthSummary:'{repos} public repo houses existed · {languages} languages', growthAdded:'Houses born this year · {repos}',
+    growthSummary:'{repos} public repo houses existed · {languages} languages', growthAdded:'{count} new houses · {repos}',
     growthAddedNone:'No new house was born this year.', growthTruth:"Current public repos by creation date · appearance and languages use today's metadata", growthRange:'Repository birth year', growthStep:'{step}/{total}',
     growthPlay:'▶ Play growth', growthPause:'⏸ Pause', growthPresent:'Jump to present', growthShare:'Share this year',
     growthPostcard:'Make an era postcard', growthClose:'Close Town Growth Replay',
@@ -3344,7 +3381,8 @@ const I18N = {
     ruinStatus:'Gentle ruin with wildflowers', ruinNote:'This public repository is archived and resting, while its original silhouette and accessible nameplate remain part of the city memory.',
     ruinListAria:'Archived repository nameplates',
     cityOfRepos:'the city of repos',
-    introSub:"Forget the 6-pin limit.<br>Stroll a living city where all my repos live —<br>ask Gitber and it'll drive you right to any repo.",
+    introSub:'Every house is a repository.<br>Open a door. Find out what lives inside.',
+    introControls:'Controls', wayfindingTools:'Town · people · sharing',
     introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
     introSubPortal:"One public repo loaded first.<br>Enter its 3D exhibition,<br>then expand into the owner's town when you choose.",
     introLaunchLabel:'Open a GitHub user or repository as a town', introUserPh:'username · owner/repo · GitHub URL', introLaunchGo:'Open in Repolis →',
@@ -3363,7 +3401,7 @@ const I18N = {
     enterTown:'Enter the town →',
     // --- GitHub Station · train travel to other towns ---
     modeOwnerLabel:'Full Traffic City', modePublicLabel:'Public GitHub Town', modePortalLabel:'Repo Portal',
-    townOf:"{user}'s town", repoPortalOf:'{repo} portal', myCity:'My city',
+    townOf:"{user}'s town", repoPortalOf:'{repo} exhibition', myCity:'My city',
     stationBtn:'🚉 Station', stationLm:'GitHub Station',
     intentLensTitle:'What brings you here?', intentUnderstand:'Understand a repository',
     intentExplore:"Explore this developer's town", intentContribute:'Find something to contribute',
@@ -3415,7 +3453,7 @@ const I18N = {
     questOpen:'Open GitHub issue ↗', questOpenAria:'Open {repo} quest #{number} on GitHub', questCardOpen:'🧩 Open quest #{number} ↗',
     questGuiding:"🧩 Heading to the {repo} house. Quest #{number} will be waiting when you arrive.", questHandoff:'Opened quest #{number} on GitHub. Repolis does not track whether you contribute.',
     questUnavailable:'That repository house is no longer available in this town.', questPrivacy:'Reads only the current town owner’s public issues without login, a token, or a new backend; issue and repository names never enter analytics.',
-    routeMenu:'Repo Route', routeMenuSub:'Share a 2–3 house path you actually explored',
+    routeMenu:'Share a repository trail', routeMenuSub:'Share a 2–3 house path you actually explored',
     routeTitle:'Build a route from what you found', routeSub:'Choose 2–3 houses you opened. A friend can walk them in the same order.',
     routeClose:'Close Repo Route', routeEmpty:'Open a repository house card and choose “Add to Repo Route.” Two stops unlock following and sharing.',
     routeStopsAria:'Selected Repo Route stops', routeSuggestions:'Add from houses you just explored',
@@ -3526,9 +3564,9 @@ const I18N = {
     atelierChatWait:'Wait for the current conversation to finish before entering the Atelier.',
     atelierDoor:'Exit · return to town', atelierWalk:'Walk the exhibition with WASD / touch',
     atelierUse:'Enter / button to {action}', atelierCoreHint:'★ size · activity light · score structure',
-    atelierBlueprintToggle:'🗺 Repository Blueprint', atelierBlueprintTitle:'Repository Blueprint',
+    atelierBlueprintToggle:'🗺 Source map', atelierBlueprintTitle:'Source map', atelierBlueprintFiles:'Files and folders',
     atelierBlueprintBoundary:'Current public source tree — not a call graph or runtime architecture.',
-    atelierBlueprintClose:'Close Repository Blueprint', atelierBlueprintScan:'Scan public source map',
+    atelierBlueprintClose:'Close source map', atelierBlueprintScan:'View public source map',
     atelierBlueprintOpenPath:'Open exact path on GitHub', atelierBlueprintOutlineAria:'Projected public source tree',
     atelierBlueprintIdle:'No request yet. Use this button to read this repository’s public tree once.',
     atelierBlueprintScanning:'Reading this repository’s public tree…', atelierBlueprintReady:'Public source map loaded.',
@@ -3542,21 +3580,21 @@ const I18N = {
     atelierBlueprintMalformed:'The response scope or paths could not be verified, so nothing was displayed.',
     atelierBlueprintUnavailable:'The public source tree could not be loaded. It was not retried automatically.',
     atelierBlueprintEmpty:'No eligible folders or source/document landmarks were found.',
-    blueprintLinkTitle:'Repository Blueprint', blueprintLinkFocus:'Focus: {path}',
+    blueprintLinkTitle:'Repository source map', blueprintLinkFocus:'Focus: {path}',
     blueprintLinkPublic:'This link contains a public repository path.',
-    blueprintLinkLoad:'Load public Blueprint', blueprintLinkOpenGithub:'Open on GitHub', blueprintLinkEnterTown:'Enter town instead',
-    blueprintLinkInvalid:'The Blueprint link path or format is invalid. You can continue to the ordinary repository exhibition.',
-    blueprintLinkMissing:'The shared path was not found in the bounded public Blueprint. No nearby path was selected.',
-    blueprintLinkCopy:'Copy Blueprint Link', blueprintLinkCopied:'Blueprint link copied.',
-    blueprintLinkCopyFailed:'Copy failed. Select the URL below and copy it directly.', blueprintLinkFallbackAria:'Selectable Blueprint link',
+    blueprintLinkLoad:'Load public source map', blueprintLinkOpenGithub:'Open on GitHub', blueprintLinkEnterTown:'Enter town instead',
+    blueprintLinkInvalid:'The source map link path or format is invalid. You can continue to the ordinary repository exhibition.',
+    blueprintLinkMissing:'The shared path was not found in the bounded public source map. No nearby path was selected.',
+    blueprintLinkCopy:'Share this path', blueprintLinkCopied:'Source map link copied.',
+    blueprintLinkCopyFailed:'Copy failed. Select the URL below and copy it directly.', blueprintLinkFallbackAria:'Selectable source map link',
     issueCodeScoutTitle:'Candidate paths to inspect first', issueCodeScoutListAria:'Candidate paths to inspect first',
     issueCodeScoutReady:'{count} conservative lexical matches from the title, labels, and actual path metadata. Inspect these candidates first.',
     issueCodeScoutNone:'No conservative match was found in this Blueprint. Scout did not select a path.',
     issueCodeScoutCandidateAria:'Focus candidate path: {path}',
     atelierBlueprintFolder:'Folder', atelierBlueprintFile:'File',
     atelierBlueprintSelected:'{type} · {path}', atelierBlueprintCounts:'Nodes {nodes}/{nodeCap} · edges {edges}/{edgeCap} · depth {depth}/4 · {bytes}',
-    atelierBlueprintOmitted:' · {count} nodes outside the cap', atelierBlueprintTable:'Blueprint Table · public source map',
-    portalActionsAria:'Repo Portal actions', portalCopy:'🔗 Copy Repo Portal', portalCopied:'Repo Portal address copied.',
+    atelierBlueprintOmitted:' · {count} nodes outside the cap', atelierBlueprintTable:'Public source map',
+    portalActionsAria:'Repository exhibition actions', portalCopy:'🔗 Copy exhibition link', portalCopied:'Exhibition link copied.',
     portalCopyFailed:"Couldn't copy the address. Check this browser's clipboard permission.", portalExplore:"Explore @{user}'s full town",
     atelierTrafficUnavailable:'Traffic unavailable · architecture uses public stars, forks, and recent updates',
     rideThere:"🚕 I'll drive you there", soLead:'Then ',
@@ -3577,6 +3615,9 @@ const I18N = {
     stOfftopic:"Haha, not sure about that one 😅",
     leadPopular:'The most popular right now is ', leadRandom:'Hmm, how about this one? ', leadStar:'⭐ The most-starred is ',
     leadRecent:'The most recently updated is ', leadMatch:'For what you asked, ', leadFallback:"Couldn't find an exact match, but a popular one is ",
+    leadUsage:'Read the README in the exhibit for usage instructions. A matching public description is ',
+    cardDetails:'Metrics · questions · GitHub',
+    searchNoMatch:'I could not find a matching repo in this town. Which repository or capability do you have in mind?',
     leadVisitors:'👁 The most-visited is ', leadClones:'⬇ The most-cloned is ', leadForks:'⑂ The most-forked is ', leadViews:'📈 The most-viewed is ',
     howAbout:' — how about it?', recommend:' — recommended!', thisOne:'How about this one?',
     modeLocalMsg:'🔎 Local-search mode. No key needed — instant!',
@@ -10920,6 +10961,7 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   if(!modal.classList.contains('show')) modal._previousFocus=document.activeElement;
   clearTownInput(); modalOpen=true; modal.inert=false; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal._repoKey=repo.repo||null; setRepoHash(repo);
   document.getElementById('cardScroll').scrollTop=0;
+  document.getElementById('cardDetails').open=false;
   repoRouteVisit(repo);
   document.getElementById('cardTop').style.background=repo.color;
   document.getElementById('cardTop').style.color=readableCardForeground(repo.color);
@@ -10956,15 +10998,19 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   const desc=document.getElementById('cardDesc');
   if(repo.desc){ desc.textContent=repo.desc; desc.className=''; }
   else { desc.textContent=t('noDesc'); desc.className='empty'; }
+  for(const element of [desc,document.getElementById('cardName'),document.getElementById('cardStars')]){
+    element.tabIndex=element.scrollHeight>element.clientHeight?0:-1;
+  }
   refreshRepoCardLineage(repo);
   const act=document.getElementById('cardActions');
   // 레포 카드에서는 '관련 토론 보기'(크로노폴리스 이동) 버튼을 노출하지 않는다 —
   // 집(레포)에서 갑자기 토론장으로 튕기는 흐름을 없애기 위함. chronoMatch는 검색/디버그용으로만 유지.
   const inAtelier=repositoryAtelierActive();
   act.innerHTML=`<button class="btn atelier" id="atelierBtn"${inAtelier?' disabled':''}>${t(inAtelier?'atelierInside':'atelierEnter')}</button>`
-    +`<button class="btn route" id="repoRouteCardBtn" type="button" aria-pressed="false"></button>`
+    +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'');
+  const extra=document.getElementById('cardExtraActions');
+  extra.innerHTML=`<button class="btn route" id="repoRouteCardBtn" type="button" aria-pressed="false"></button>`
     +`<a class="btn gh" href="${repo.url}" target="_blank" rel="noopener">${t('openGithub')}</a>`
-    +(repo.live?`<a class="btn live" href="${repo.live}" target="_blank" rel="noopener">${t('liveDemo')}</a>`:'')
     +`<button class="btn close" id="cardCloseAction" type="button">${t('close')}</button>`;
   syncContributionQuestCardAction(repo,act);
   const atelierBtn=document.getElementById('atelierBtn'); if(atelierBtn&&!inAtelier) atelierBtn.onclick=()=>enterRepositoryAtelier(repo);
@@ -10972,7 +11018,7 @@ function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   if(routeBtn) routeBtn.onclick=()=>{ toggleRepoRoute(repo,'card'); syncRepoRouteCardButton(repo); };
   document.getElementById('closeBtn').onclick=closeCard;
   document.getElementById('cardCloseAction').onclick=closeCard;
-  const ghBtn=act.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>{ if(cityMode==='portal') trackPortal('github_repo_opened',{entry:'card',device:_repoPortalDevice(),lang:LANG,channel:'github'});
+  const ghBtn=extra.querySelector('a.gh'); if(ghBtn) ghBtn.onclick=()=>{ if(cityMode==='portal') trackPortal('github_repo_opened',{entry:'card',device:_repoPortalDevice(),lang:LANG,channel:'github'});
     else track('github_click',{repo:repo.repo}); };
   const liveBtn=act.querySelector('a.live'); if(liveBtn) liveBtn.onclick=()=>track('live_demo_click',{repo:repo.repo});
   track('repo_card_open',{repo:repo.repo});
@@ -11061,7 +11107,7 @@ function renderCardAsk(repo){ const box=document.getElementById('cardAsk'); if(!
   box.querySelectorAll('.caChip').forEach((el,index)=>{ el.dataset.caq=qs[index]; el.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'chip'}); askInChat(el.dataset.caq); }; }); }
 modal.addEventListener('click',e=>{ e.stopPropagation(); if(e.target===modal) closeCard(); });
 modal.addEventListener('keydown',e=>{ if(e.isComposing||e.keyCode===229) return; if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeCard(); return; } if(e.key!=='Tab') return;
-  const items=[...modal.querySelectorAll('button:not([disabled]),a[href]')].filter(item=>!item.hidden); if(!items.length) return;
+  const items=townFocusables(modal); if(!items.length) return;
   const first=items[0],last=items[items.length-1]; if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
   else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } });
 
@@ -11320,7 +11366,7 @@ function _arrivalRendered(kind){
   if(action==='enter'){ introStartBtn.click(); return; }
   if(action==='reveal'&&recovery.ready()){
     const loading=document.getElementById('loading'),intro=document.getElementById('intro');
-    loading.style.display='none'; loading.dataset.ready='true';
+    loading.style.display='none'; loading.dataset.ready='true'; intro.classList.add('scene-ready');
     if(!intro.classList.contains('hidden')){ intro.inert=false; if(_QUERY.has('launch')) document.getElementById('introUser').focus({preventScroll:true}); }
   }
 }
@@ -11988,7 +12034,7 @@ const growthReplay=document.getElementById('growthReplay'),growthPanel=growthRep
 const GROWTH_REPLAY={
   active:false,playing:false,index:0,elapsed:0,entry:'menu',completed:false,statusKey:'',
   yearByRepo:new Map(TOWN_GROWTH.entries.map(entry=>[entry.repo,entry.year])),reveals:[],
-  focus:new THREE.Vector3(),focusTarget:new THREE.Vector3(),cameraTarget:new THREE.Vector3(),
+  focus:new THREE.Vector3(),focusTarget:new THREE.Vector3(),cameraTarget:new THREE.Vector3(),fitPoint:new THREE.Vector3(),
   distance:180,targetDistance:180,pitch:1.02,targetPitch:1.02,yaw:-Math.PI*.72,aspect:0,
   saved:null,previousFocus:null
 };
@@ -12049,6 +12095,23 @@ function _growthPositionCamera(dt=0,immediate=false){
     GROWTH_REPLAY.focus.z+Math.cos(GROWTH_REPLAY.yaw)*horizontal
   );
   camera.position.lerp(GROWTH_REPLAY.cameraTarget,factor); camera.lookAt(GROWTH_REPLAY.focus);
+  const rect=growthPanel.getBoundingClientRect(),side=rect.top<innerHeight*.3&&rect.left>innerWidth*.4,
+    free={x:20,y:76,width:side?rect.left-40:innerWidth-40,height:Math.max(100,(side?innerHeight-16:rect.top-24)-76)};
+  camera.zoom=1; camera.clearViewOffset(); camera.updateMatrixWorld(true);
+  let halfWidth=1,halfHeight=1;
+  for(const repo of REPOS){ if(!repo._group.visible)continue;
+    const radius=Math.max(3,repo._cw||3);
+    for(let corner=0;corner<8;corner++){
+      const point=GROWTH_REPLAY.fitPoint.set(repo._x+(corner&1?radius:-radius),corner&2?repo._h||6:0,repo._z+(corner&4?radius:-radius)).project(camera);
+      halfWidth=Math.max(halfWidth,Math.abs(point.x)*innerWidth/2);halfHeight=Math.max(halfHeight,Math.abs(point.y)*innerHeight/2);
+    }
+  }
+  camera.zoom=Math.min(1,free.width/(halfWidth*2),free.height/(halfHeight*2));
+  camera.setViewOffset(innerWidth,innerHeight,innerWidth/2-(free.x+free.width/2),innerHeight/2-(free.y+free.height/2),innerWidth,innerHeight);
+}
+function growthMilestoneSeconds(snapshot){
+  const names=(snapshot?.added||[]).slice(0,5).map(_growthRepoLabel);
+  return Math.min(6,2.8+names.length*.45+Math.min(100,names.join(' ').length)*.008);
 }
 function _renderTownGrowthReplay(){
   const snapshot=_growthSnapshot(); if(!snapshot) return;
@@ -12056,7 +12119,7 @@ function _renderTownGrowthReplay(){
   document.getElementById('growthSummary').textContent=tf('growthSummary',{repos:snapshot.visibleCount,languages:snapshot.languageCount});
   document.getElementById('growthTruth').textContent=t('growthTruth');
   const names=snapshot.added.map(_growthRepoLabel),shown=names.slice(0,5).join(' · '),more=Math.max(0,names.length-5);
-  document.getElementById('growthNames').textContent=names.length?tf('growthAdded',{repos:shown+(more?` · +${more}`:'')}):t('growthAddedNone');
+  document.getElementById('growthNames').textContent=names.length?tf('growthAdded',{repos:shown+(more?` · +${more}`:''),count:names.length}):t('growthAddedNone');
   document.getElementById('growthStep').textContent=tf('growthStep',{step:snapshot.index+1,total:snapshot.steps});
   growthRange.max=String(Math.max(0,snapshot.steps-1)); growthRange.value=String(snapshot.index);
   growthPlay.textContent=t(GROWTH_REPLAY.playing?'growthPause':'growthPlay');
@@ -12090,7 +12153,7 @@ function _updateTownGrowthReplay(dt){
   if(!GROWTH_REPLAY.active) return;
   if(GROWTH_REPLAY.aspect!==camera.aspect){ GROWTH_REPLAY.aspect=camera.aspect; _growthFitCamera(); }
   if(GROWTH_REPLAY.playing){ GROWTH_REPLAY.elapsed+=dt;
-    if(GROWTH_REPLAY.elapsed>=1.35){ GROWTH_REPLAY.elapsed=0;
+    if(GROWTH_REPLAY.elapsed>=growthMilestoneSeconds(_growthSnapshot())){ GROWTH_REPLAY.elapsed=0;
       if(GROWTH_REPLAY.index>=TOWN_GROWTH.milestones.length-1) _finishTownGrowthReplay();
       else { const snapshot=_applyTownGrowthIndex(GROWTH_REPLAY.index+1,true,'play');
         if(snapshot&&snapshot.isPresent) _finishTownGrowthReplay(); } } }
@@ -12098,7 +12161,7 @@ function _updateTownGrowthReplay(dt){
     repo._growthReveal=Math.min(1,(repo._growthReveal||0)+dt/0.72);
     const eased=1-Math.pow(1-repo._growthReveal,3); repo._group.scale.y=Math.max(.025,eased);
     if(repo._growthReveal>=1){ repo._group.scale.y=1; GROWTH_REPLAY.reveals.splice(index,1); } }
-  _growthPositionCamera(dt,false);
+  _growthPositionCamera(dt,REDUCED);
 }
 function _growthFocusables(){ return [...growthPanel.querySelectorAll('button:not([disabled]),input:not([disabled])')]; }
 function startTownGrowthReplay(options={}){
@@ -12109,6 +12172,7 @@ function startTownGrowthReplay(options={}){
   if(tour&&tour.active) endTour(false); if(sitting) standUp(); clearKeys();
   const requested=options.year==null?0:townGrowthIndexForYear(TOWN_GROWTH,options.year),entry=options.entry||'menu';
   GROWTH_REPLAY.saved={cameraPosition:camera.position.clone(),cameraQuaternion:camera.quaternion.clone(),cameraFar:camera.far,
+    cameraNear:camera.near,cameraZoom:camera.zoom,cameraView:camera.view?{...camera.view}:null,
     playerVisible:player.visible,navVisible:navHolder.visible,camYaw,camPitch,camDist,freeLook,modalOpen,
     skyT,skyTarget,skyAuto,skyPhaseIdx,isNight,fogNear:scene.fog.near,fogFar:scene.fog.far,
     lod:BUILDING_LOD_PROTO.entries.map(entry=>({entry,forced:entry.forcedTier,tier:entry.tier,activeVisible:entry.active.visible}))};
@@ -12122,7 +12186,8 @@ function startTownGrowthReplay(options={}){
   modalOpen=true; player.visible=false; navHolder.visible=false; document.body.classList.add('growth-replay-active');
   growthReplay.classList.remove('hidden'); growthReplay.setAttribute('aria-hidden','false');
   for(const state of GROWTH_REPLAY.saved.lod){ state.entry.forcedTier='far'; state.entry.active.visible=false; _buildingLodAttach(state.entry,'far',true); }
-  camera.far=1100; camera.updateProjectionMatrix(); scene.fog.near=600; scene.fog.far=1100;
+  // At aerial distances the street layers need more depth precision than the walking camera's .1 near plane.
+  camera.near=5; camera.far=1100; camera.updateProjectionMatrix(); scene.fog.near=600; scene.fog.far=1100;
   _applyTownGrowthIndex(requested<0?0:requested,false,entry); GROWTH_REPLAY.focus.copy(GROWTH_REPLAY.focusTarget);
   _growthSuspendScenery(GROWTH_REPLAY.saved);
   GROWTH_REPLAY.distance=GROWTH_REPLAY.targetDistance; GROWTH_REPLAY.pitch=GROWTH_REPLAY.targetPitch; _growthPositionCamera(0,true);
@@ -12135,7 +12200,8 @@ function closeTownGrowthReplay(){
   for(const repo of REPOS){ repo._growthHidden=false; repo._growthReveal=1; repo._group.visible=true; repo._group.scale.set(1,1,1); }
   document.body.classList.remove('growth-replay-active'); growthReplay.classList.add('hidden'); growthReplay.setAttribute('aria-hidden','true');
   if(saved){ player.visible=saved.playerVisible; navHolder.visible=saved.navVisible; camYaw=saved.camYaw; camPitch=saved.camPitch; camDist=saved.camDist; freeLook=saved.freeLook;
-    camera.far=saved.cameraFar; camera.updateProjectionMatrix(); camera.position.copy(saved.cameraPosition); camera.quaternion.copy(saved.cameraQuaternion); modalOpen=saved.modalOpen; }
+    camera.near=saved.cameraNear; camera.far=saved.cameraFar; camera.zoom=saved.cameraZoom; camera.view=saved.cameraView?{...saved.cameraView}:null;
+    camera.updateProjectionMatrix(); camera.position.copy(saved.cameraPosition); camera.quaternion.copy(saved.cameraQuaternion); modalOpen=saved.modalOpen; }
   if(saved) for(const state of saved.lod){ state.entry.forcedTier=state.forced; state.entry.active.visible=state.activeVisible; _buildingLodAttach(state.entry,state.tier,true); }
   _setForkLineageCrestsVisible(true);
   if(saved){ skyT=saved.skyT; skyTarget=saved.skyTarget; skyAuto=saved.skyAuto; skyPhaseIdx=saved.skyPhaseIdx;
@@ -12377,10 +12443,12 @@ const SYN={ rag:['rag','retrieval','faq','vector','embedding','검색증강','�
   번역:['translate','translation','번역','nmt'], agent:['agent','agentic','orchestration','multi-agent','autonomous','에이전트'],
   데이터:['data','dataset','etl','pipeline','spark','emr','pandas','데이터'], 크롤:['crawl','scrape','scraper','crawler','수집'],
   유튜브:['youtube','yt','dl','nas','media','download'], nas:['nas','download','youtube','media','dl'],
+  동영상:['video','media'], 영상:['video','media'], 다운로드:['download','downloader','yt-dlp'], 내려받:['download','downloader'],
+  받아쓰기:['speech','transcription','transcribe'],
   감정:['sentiment','emotion','감정','classification'], aws:['aws','sagemaker','emr','s3','bedrock','cloud'],
   시각화:['visualization','dashboard','streamlit','chart','plot','시각화'], 웹:['web','flask','streamlit','app','frontend','javascript'],
   추천:['recommend','recommendation','추천'], 모니터:['monitor','traffic','insight','dashboard','모니터'] };
-const STOP=new Set(['관련','레포','repo','보여줘','알려줘','찾아줘','가줘','가자','으로','로','좀','그','이','저','것','거','해줘','있어','뭐','무슨','어떤','about','show','me','the','a','to','go','find','repo','please']);
+const STOP=new Set(['관련','레포','repo','보여줘','알려줘','찾아줘','가줘','가자','으로','로','좀','그','이','저','것','거','해줘','있어','뭐','무슨','어떤','도구','설치','방법','사용법','about','show','me','the','a','to','go','find','please','tool','tools','how','use','install','repository','repositories']);
 function tokens(q){ return (q.toLowerCase().match(/[a-z0-9]+|[가-힣]+/g)||[]).filter(t=>t.length>1&&!STOP.has(t)); }
 function expand(toks){ const set=new Set(); toks.forEach(t=>{ set.add(t); for(const k in SYN){ if(t.includes(k)||k.includes(t)) SYN[k].forEach(x=>set.add(x)); if(SYN[k].some(s=>s.includes(t)&&t.length>2)) SYN[k].forEach(x=>set.add(x)); } }); return [...set]; }
 function hay(r){ return (r.repo+' '+r.label+' '+(r.lang||'')+' '+(r.desc||'')+' '+((r.topics||[]).join(' '))).toLowerCase(); }
@@ -12402,10 +12470,25 @@ function scoreRepo(r,terms,raw){ const nm=r._name||new Set(), tk=r._tok||new Set
 function searchCandidates(q,n=8){ buildSearchIndex(); const raw=tokens(q); const terms=expand(raw); const cand=new Set();
   terms.forEach(t=>{ const s=INVIDX.get(t); if(s) s.forEach(i=>cand.add(i)); });
   const pool=cand.size?[...cand].map(i=>REPOS[i]):REPOS;
-  const ranked=pool.map(r=>({r,s:scoreRepo(r,terms,raw)+Math.log1p(r.score||0)*0.15})).sort((a,b)=>b.s-a.s);
+  const ranked=pool.map(r=>({r,s:scoreRepo(r,terms,raw)})).sort((a,b)=>b.s-a.s||(a.r.rank||0)-(b.r.rank||0));
   const hits=ranked.filter(x=>x.s>=3);
-  return { list:(hits.length?hits:ranked).slice(0,n).map(x=>x.r), strong:hits.length>0, terms }; }
-const M=o=>{ if(o) o._metric=true; return o; };   // tag generic metric-sort intents (topic match may override)
+  return { list:hits.slice(0,n).map(x=>x.r), strong:hits.length>0, terms }; }
+function gitberQueryKind(q){
+  const s=String(q||'').toLowerCase();
+  if(/설치|사용 ?법|실행 ?방법|어떻게.{0,15}(쓰|써|사용|시작)|\b(how (to|do)|install|setup|getting started)\b/.test(s)) return {kind:'usage'};
+  const compare=/가장|제일|최다|많[은이]|높[은이]|순위|랭킹|개수|\b(most|highest|top|rank|ranking|count|number of|how many)\b/.test(s);
+  if(compare){
+    if(/클론|다운로드\s*(수|횟수|된|한)|\b(clones?|cloned|downloads|downloaded)\b|\bdownload\s+count\b/.test(s)) return {kind:'metric',field:'clones'};
+    if(/스타|별|\bstars?\b/.test(s)) return {kind:'metric',field:'stars'};
+    if(/포크|파생|\bforks?\b/.test(s)) return {kind:'metric',field:'forks'};
+    if(/방문|왕래|트래픽|\b(visitors?|traffic)\b/.test(s)) return {kind:'metric',field:'visitors'};
+    if(/조회|페이지뷰|\bviews?\b/.test(s)) return {kind:'metric',field:'views'};
+  }
+  if(/인기|\bpopular\b/.test(s)&&(/레포|저장소|repo|project/.test(s)||/^(가장 |제일 |most )?(인기|popular)/.test(s))) return {kind:'metric',field:'rank'};
+  if(/최근|요즘 만든|\b(recent|newest|latest)\b/.test(s)&&/레포|저장소|푸시|업데이트|만든|repo|project|push|updat/.test(s)) return {kind:'metric',field:'pushed'};
+  return {kind:'search'};
+}
+const M=o=>{ if(o) o._metric=true; return o; };   // explicit metric requests bypass semantic retrieval
 /* small talk → instant in-character reply, never the KS. Greeting/thanks/bye match the
    whole phrase (safe); the ambiguous ones (how/who/help/compliment) only fire when no repo matched. */
 function smalltalk(q){
@@ -12415,7 +12498,7 @@ function smalltalk(q){
   if(/^(고+마+워?요?|고맙[습다]\S*|감사\S*|ㄳ\S*|ㄱㅅ|thank ?(you|u)?\S*|thanks\S*|thx|ty|appreciate\S*)( ?(so ?much|very ?much|it|this|기사님?|driver))?$/i.test(g)) return 'stThanks';
   if(/^(잘 ?가\S*|잘 ?있어\S*|안녕히 ?(가|계)\S*|또 ?(봐\S*|와\S*|만나\S*|올게\S*|뵈\S*)|들어가\S*|수고\S*|이만.*|bye+|goodbye\S*|see ?(you|ya)\S*|cya|later|gotta ?go|그만\S*|끝)( ?(기사님?|driver))?$/i.test(g)) return 'stBye';
   if(/^.*((너|넌|당신|네|니|자네) ?(는 )?누구|누구(세요|야|니|냐|예요|에요)|정체 ?(가 )?(뭐|무엇)|(너|넌|당신) ?(는 )?뭐(야|니|예요|에요)|이름 ?(이 )?(뭐|무엇)|네 ?이름).*$|^((너|네) ?소개\S*|소개 ?좀\S*|who ?are ?you\S*|what ?are ?you\S*|your ?name\S*|introduce ?yourself\S*)$/i.test(g)) return 'stWho';   // identity — before the search gate so "who are you" isn't eaten by a repo token (you→youtube)
-  if(/^.*((뭘?|무엇을?) ?할 ?수 ?있|뭐 ?(해줄|할 ?줄 ?알|하는 ?거)|어떻게 ?(써|쓰|사용)|사용 ?법|쓰는 ?법|기능 ?(이 )?(뭐|무엇)).*$|^(도움말|도와줘\S*|help\S*|what ?can ?you ?do\S*|how ?(do|to) ?(i )?use\S*|how ?does ?(this|it) ?work\S*|명령어\S*)$/i.test(g)) return 'stHelp';   // help — also before the search gate
+  if(!searchCandidates(q,8).strong&&/^(도움말|도와줘|help|what can you do|how do i use this|어떻게 써|사용법|명령어)$/i.test(g)) return 'stHelp';
   if(searchCandidates(q,8).strong) return null;   // a real repo matched → not small talk; let it search
   if(/^.*(어떻게 ?지내|잘 ?지내|잘 ?지냈|잘 ?있었|별일 ?없|요즘 ?어때|오늘 ?어때|기분 ?어때|컨디션 ?어때).*$|^(뭐\s*해\S*|뭐\s*하(고\s*있|니|는|냐)\S*|how ?are ?you\S*|how'?s? ?(it ?going|things|your ?day|life)\S*|hru|wyd)$/i.test(g)) return 'stHow';
   if(/^(멋[지져]+\S*|좋[다네아][요]?\S*|최고\S*|짱\S*|굿\S*|귀[엽여]\S*|대단\S*|훌륭\S*|nice\S*|cool\S*|awesome\S*|great\S*|amazing\S*|wonderful\S*|love ?(it|this|you)\S*|good ?(job|work|boy)\S*|lol|lmao|haha+|hehe+|ㅋㅋ+\S*|ㅎㅎ+\S*|👍+)$/i.test(g)) return 'stNice';
@@ -12423,6 +12506,7 @@ function smalltalk(q){
 }
 /* does this query actually call for a repo search (→ the KS), or is it general chat? */
 function needsSearch(q){
+  if(gitberQueryKind(q).kind==='usage'||/도구|다운로드|내려받|\b(download|tool)\b/i.test(q)) return true;
   if(searchCandidates(q,8).strong) return true;
   return /레포|repo|저장소|프로젝트|project|코드|커밋|commit|푸시|push|이슈|issue|readme|라이브러리|library|도서관|fork|포크|clone|클론|데모|demo|github|깃헙|깃허브|스타\b|\bstars?\b|만든|개발|최근|recent|latest|업데이트|update|보여|show|데려다|소개|introduce|알려줘|tell me|버전|version|토픽|topic/i.test(q);
 }
@@ -12543,7 +12627,7 @@ function _coreIntent(q){
   if(shared) return {repo:null,message:esc(shared.text),alts:[],_taxiBoundary:shared.intent};
   const lore=townLore(q,'taxi'); if(lore) return { repo:null, message:lore, alts:[] };
   const st=smalltalk(q); if(st){ const p=(st==='stWho'?scholarPersona('taxi','who'):st==='stHelp'?scholarPersona('taxi','help'):null); return { repo:null, message:p||t(st), alts:[] }; }
-  const meta=townMeta(q); if(meta) return { repo:null, message:meta, alts:[] };
+  const meta=gitberQueryKind(q).kind==='metric'?null:townMeta(q); if(meta) return { repo:null, message:meta, alts:[] };
   const lm=landmarkNav(q); if(lm) return lm;
   const dz=districtNav(q); if(dz) return dz;             // 🧭 repo-district ride (after landmarks, before the Library landmark)
   if(LIB && /도서관|라이브러리|library|기고|논문|publication|paper|발표|talk|강연|lecture|기여|contribution|이력|커리어|career|portfolio|포트폴리오|수상|award/.test(ql)) return { repo:LIB, message:t('libDriver'), alts:[] };
@@ -12553,16 +12637,15 @@ function _coreIntent(q){
   if(/밤하늘|밤 ?하늘|별자리|별빛|별똥|별 ?(보는|보기|볼래|볼까|구경|감상|봐|바라보)|하늘 ?(을 ?)?(보|올려|구경)|반짝이는 ?별|빛나는 ?별|은하수|stargaz|starlight|constellation|milky ?way|night ?sky|cosmos|stars?[^.]{0,14}night|night[^.]{0,14}stars?/i.test(ql)
      && !/레포|repo|저장소|프로젝트|project|깃헙|깃허브|github|스타 ?(수|순|많|제일|개수|랭킹|높)|star ?(count|sort|most|rank)|많은 ?레포|인기 ?(레포|있)/.test(ql))
     return null;
-  if(/인기|제일|최고|핫|\bpopular\b|\bbest\b|\btop\b|\bhot\b/.test(ql)){ const a=byRank(); return M(pick(a[0],t('leadPopular'),a.slice(1,4))); }
   if(/아무|랜덤|골라|추천만|\brandom\b/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
-  if(/스타|별|\bstars?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>y.stars-x.stars); return M(pick(a[0],t('leadStar'),a.slice(1,4))); }
-  if(/최근|새로|요즘 만든|\brecent\b|\bnew\b|\blatest\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>new Date(y.pushed)-new Date(x.pushed)); return M(pick(a[0],t('leadRecent'),a.slice(1,4))); }
-  if(REPOS.every(repo=>repo.trafficKnown===false)&&/방문|왕래|사람 많|트래픽|클론|다운로드|받아|설치|조회|페이지뷰|\bvisitors?\b|\btraffic\b|\bclones?\b|\bdownloads?\b|\bviews?\b/.test(ql))
-    return {repo:null,message:t('publicTrafficUnavailable'),alts:[]};
-  if(/방문|왕래|사람 많|트래픽|\bvisitors?\b|\btraffic\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.visitors||0)-(x.visitors||0)); return M(pick(a[0],t('leadVisitors'),a.slice(1,4))); }
-  if(/클론|다운로드|받아|설치|\bclones?\b|\bdownloads?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.clones||0)-(x.clones||0)); return M(pick(a[0],t('leadClones'),a.slice(1,4))); }
-  if(/포크|파생|갈라|\bforks?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.forks||0)-(x.forks||0)); return M(pick(a[0],t('leadForks'),a.slice(1,4))); }
-  if(/조회|페이지뷰|\bviews?\b/.test(ql)){ const a=[...REPOS].sort((x,y)=>(y.views||0)-(x.views||0)); return M(pick(a[0],t('leadViews'),a.slice(1,4))); }
+  const intent=gitberQueryKind(q);
+  if(intent.kind==='metric'){
+    const field=intent.field,traffic=['visitors','clones','views'].includes(field);
+    if(traffic&&REPOS.some(repo=>repo.trafficKnown===false)) return {repo:null,message:t('publicTrafficUnavailable'),alts:[]};
+    const a=field==='rank'?byRank():[...REPOS].sort((x,y)=>field==='pushed'?new Date(y.pushed)-new Date(x.pushed):(y[field]||0)-(x[field]||0));
+    const lead={rank:'leadPopular',stars:'leadStar',pushed:'leadRecent',visitors:'leadVisitors',clones:'leadClones',forks:'leadForks',views:'leadViews'}[field];
+    return M(pick(a[0],t(lead),a.slice(1,4)));
+  }
   return null;
 }
 const OFFTOPIC_FUNNEL=false;   // this week: off-topic gets a plain reply, NO repo funneling/redirect. set true to restore the 5-step ladder.
@@ -12577,17 +12660,17 @@ function deterministicIntent(q){
 }
 function localIntent(q){
   const det=deterministicIntent(q);
-  if(det && !det._metric) return det;                         // library / random: explicit, win outright
+  if(det) return det;
   const sc=searchCandidates(q,8);
-  if(sc.strong) return pickList(sc.list, t('leadMatch'));     // a real topic match beats generic metric sorting
-  if(det) return det;                                         // metric sort only when no strong topic hit
-  return pick(byRank()[0], t('leadFallback'), padAlts(byRank()[0], byRank().slice(1,4)), true);
+  if(sc.strong) return pickList(sc.list,t(gitberQueryKind(q).kind==='usage'?'leadUsage':'leadMatch'));
+  return {repo:null,message:t('searchNoMatch'),alts:[]};
 }
 function byRank(){ return [...REPOS].sort((a,b)=>(a.rank||0)-(b.rank||0)); }
-function pickList(list, lead){ const main=list[0]; return pick(main, lead, padAlts(main, list.slice(1,4))); }
-function padAlts(main, alts){ const out=(alts||[]).filter(Boolean); const seen=new Set([main&&main.repo, ...out.map(a=>a.repo)]);
-  for(const r of byRank()){ if(out.length>=3) break; if(!seen.has(r.repo)){ out.push(r); seen.add(r.repo); } } return out; }
+function pickList(list, lead){ return pick(list[0],lead,list.slice(1,4)); }
+function padAlts(main, alts){ const seen=new Set([main&&main.repo]);
+  return (alts||[]).filter(repo=>{ if(!repo||seen.has(repo.repo))return false;seen.add(repo.repo);return true; }).slice(0,3); }
 function pick(repo,lead,alts,weak){
+  if(!repo) return {repo:null,message:t('searchNoMatch'),alts:[]};
   const d=repo.desc?repo.desc.replace(/\s+/g,' ').slice(0,70):'';
   const metricLine=repo.trafficKnown===false?`★${repo.stars} · ⑂${repo.forks} · ${repo.lang}`:`★${repo.stars} · 👁${repo.visitors} · ⬇${repo.clones||0} · ⑂${repo.forks} · ${repo.lang}`;
   const msg=`${lead}‘<b>${repo.label}</b>’${weak?t('howAbout'):t('recommend')}${d?'<br>“'+d+(repo.desc.length>70?'…':'')+'”':''}<br><span style="color:#ab8a66">${metricLine}</span>`;
@@ -12600,6 +12683,7 @@ let webllmEngine=null;
 async function webllmAsk(q){
   const det=deterministicIntent(q); if(det){ det._route='local_intent'; return det; }             // intent filter: library/metric → no LLM, deterministic
   const sc=searchCandidates(q,8); const cand=sc.list;               // retrieval: narrow to index top-K (RAG)
+  if(!sc.strong) return localIntent(q);
   const aiStarted=nowMs();
   if(!navigator.gpu){ trackAiTurn('webllm', 'taxi', q, aiStarted, { ok:false, fallback:'no_gpu' }); addMsg('bot',t('noGpu'));
     const r=localIntent(q); r._route='local_fallback'; return r; }
@@ -12632,12 +12716,13 @@ async function webllmAsk(q){
 function proxyUrl(){ return localStorage.getItem('taxiProxyUrl')||''; }
 async function proxyAsk(q){
   const det=deterministicIntent(q); if(det){ det._route='local_intent'; return det; }             // intent filter: library/metric → no remote call
+  const sc=searchCandidates(q,8); const cand=sc.list;
+  if(!sc.strong) return localIntent(q);
   const aiStarted=nowMs();
   let url=proxyUrl();
   if(!url){ url=(prompt(t('proxyPromptUrl'))||'').trim(); if(url) localStorage.setItem('taxiProxyUrl',url); }
   if(!url){ trackAiTurn('proxy', 'taxi', q, aiStarted, { ok:false, fallback:'no_url' }); addMsg('bot',t('proxyNoUrl'));
     const r=localIntent(q); r._route='local_fallback'; return r; }
-  const sc=searchCandidates(q,8); const cand=sc.list;               // retrieval: send only index top-K candidates (RAG)
   const catalog=cand.map(r=>({repo:r.repo,label:r.label,lang:r.lang,stars:r.stars,visitors:r.visitors,clones:r.clones,forks:r.forks,topics:(r.topics||[]).slice(0,5),desc:(r.desc||'').slice(0,80)}));
   try{
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,repos:catalog})});
@@ -13103,7 +13188,13 @@ function closeTownPanels(except=null){
 }
 function townFocusables(element){
   return [...element.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex="0"]')]
-    .filter(el=>!el.hidden&&!el.closest('[inert]')&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');
+    .filter(el=>{
+      if(el.hidden||el.closest('[inert]')||!el.getClientRects().length||getComputedStyle(el).visibility==='hidden')return false;
+      for(let parent=el.parentElement;parent&&parent!==element;parent=parent.parentElement){
+        if(parent.tagName==='DETAILS'&&!parent.open&&!parent.querySelector(':scope > summary')?.contains(el))return false;
+      }
+      return true;
+    });
 }
 function syncTownPanels(records=[]){
   const opening=records.filter(record=>record.type==='attributes'&&record.attributeName==='class'&&(record.oldValue||'').split(/\s+/).includes('hidden')
@@ -13555,7 +13646,7 @@ function _atelierTrackMaterial(material){ REPOSITORY_ATELIER.resources.materials
 function _atelierMesh(geometry,material){ return new THREE.Mesh(_atelierTrackGeometry(geometry),_atelierTrackMaterial(material)); }
 function _repositoryBlueprintState(){
   return {cache:createRepositoryBlueprintMemoryCache(),target:null,status:'idle',projection:null,selected:-1,panelOpen:false,
-    previousFocus:null,controller:null,scanId:0,requestsStarted:0,decodedBytes:0,lastResult:null,cameraOnOpen:null,cameraUnchanged:null,
+    previousFocus:null,controller:null,scanId:0,requestsStarted:0,decodedBytes:0,lastResult:null,cameraOnOpen:null,cameraUnchanged:null,framingKey:null,
     deepLink:null,shareUrl:'',shareStatus:null,scout:null};
 }
 function _atelierCanvas(width,height,name){
@@ -13594,7 +13685,8 @@ function _createRepositoryAtelier(){
     core:_atelierTrackMaterial(new THREE.MeshStandardMaterial({color:0x76bfc9,emissive:0x234b52,emissiveIntensity:.5,roughness:.28,metalness:.64})),
     ring:_atelierTrackMaterial(new THREE.MeshStandardMaterial({color:0xe4bd68,emissive:0x5c4114,emissiveIntensity:.45,roughness:.36,metalness:.7})),
     dark:_atelierTrackMaterial(new THREE.MeshStandardMaterial({color:0x182226,roughness:.7,metalness:.22})),
-    terminal:_atelierTrackMaterial(new THREE.MeshStandardMaterial({color:0xffffff,emissive:0x172326,emissiveIntensity:.72,roughness:.55,metalness:.2,vertexColors:true})),
+    // These meshes have instance colors, not a per-vertex color attribute.
+    terminal:_atelierTrackMaterial(new THREE.MeshStandardMaterial({color:0xffffff,emissive:0x172326,emissiveIntensity:.72,roughness:.55,metalness:.2})),
     screen:_atelierTrackMaterial(new THREE.MeshBasicMaterial({color:0xffffff,vertexColors:true})),
     door:_atelierTrackMaterial(new THREE.MeshStandardMaterial({color:0x49656a,emissive:0x183238,emissiveIntensity:.38,roughness:.55,metalness:.25})),
     exhibit:_atelierTrackMaterial(new THREE.MeshStandardMaterial({color:0xffffff,emissive:0x132a2f,emissiveIntensity:.32,roughness:.5,metalness:.42,vertexColors:true})),
@@ -13675,7 +13767,7 @@ function _createRepositoryAtelier(){
     blueprintNodeCapacity=blueprintCapacityCompact?REPOSITORY_BLUEPRINT_LIMITS.compactNodes:REPOSITORY_BLUEPRINT_LIMITS.desktopNodes,
     blueprintEdgeCapacity=blueprintCapacityCompact?REPOSITORY_BLUEPRINT_LIMITS.compactEdges:REPOSITORY_BLUEPRINT_LIMITS.desktopEdges;
   A.blueprintGroup=new THREE.Group(); A.blueprintGroup.name='RepositoryBlueprintTable'; A.group.add(A.blueprintGroup);
-  A.blueprintFolders=new THREE.InstancedMesh(_atelierTrackGeometry(new THREE.BoxGeometry(1,1,1)),A.materials.exhibit,blueprintNodeCapacity);
+  A.blueprintFolders=new THREE.InstancedMesh(_atelierTrackGeometry(new THREE.BoxGeometry(1,1,1)),A.materials.terminal,blueprintNodeCapacity);
   A.blueprintFiles=new THREE.InstancedMesh(_atelierTrackGeometry(new THREE.OctahedronGeometry(1,0)),A.materials.terminal,blueprintNodeCapacity);
   A.blueprintFolders.instanceMatrix.setUsage(THREE.DynamicDrawUsage); A.blueprintFiles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   A.blueprintFolders.count=0; A.blueprintFiles.count=0; A.blueprintFolders.name='RepositoryBlueprintFolders'; A.blueprintFiles.name='RepositoryBlueprintFiles';
@@ -13859,7 +13951,8 @@ function _syncRepositoryBlueprintSelection(focusDom=false){
   });
   _syncIssueCodeScoutSelection(node.path);
   if(focusDom){ requestAnimationFrame(()=>{ const button=atelierBlueprintOutline.querySelector(`[data-blueprint-index="${index}"]`);
-    if(button){ button.focus({preventScroll:true}); button.scrollIntoView({block:'nearest'}); } }); }
+    if(!document.getElementById('atelierBlueprintFiles').open){ atelierBlueprintSelected.tabIndex=-1; atelierBlueprintSelected.focus({preventScroll:true}); }
+    else if(button){ button.focus({preventScroll:true}); button.scrollIntoView({block:'nearest'}); } }); }
 }
 function _focusRepositoryBlueprintNode(index,focusDom=false){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint,projection=B&&B.projection;
@@ -13980,7 +14073,31 @@ function _clearRepositoryBlueprintVisuals(){
   _resetIssueCodeScout();
 }
 function _repositoryBlueprintCameraSnapshot(){
-  return {position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),yaw:camYaw,pitch:camPitch,distance:camDist};
+  return {position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),yaw:camYaw,pitch:camPitch,distance:camDist,
+    zoom:camera.zoom,view:camera.view?{...camera.view}:null};
+}
+function _frameRepositoryBlueprint(){
+  const B=REPOSITORY_ATELIER?.blueprint;
+  if(!B?.panelOpen||!B.projection?.nodes.length) return;
+  const rect=atelierBlueprintPanel.getBoundingClientRect(),portrait=rect.width>innerWidth*.7,
+    free={x:16,y:90,width:portrait?innerWidth-32:Math.max(100,rect.left-32),height:Math.max(100,(portrait?rect.top:innerHeight-16)-90)};
+  const key=[innerWidth,innerHeight,rect.x,rect.y,rect.height,B.scanId].join(':');
+  if(B.framingKey===key) return; B.framingKey=key;
+  // This camera stays below the room ceiling. Projection zoom fits the table into the unobscured viewport.
+  camera.position.set(-4.75,6.8,5.7); camera.lookAt(-4.75,.85,1.45); camera.zoom=1; camera.clearViewOffset(); camera.updateMatrixWorld(true);
+  let halfWidth=1,halfHeight=1;
+  for(const v of B.visuals) for(const x of [v.x-v.sx,v.x+v.sx]) for(const z of [v.z-v.sz,v.z+v.sz]){
+    const p=new THREE.Vector3(x,v.y+v.sy,z).project(camera);
+    halfWidth=Math.max(halfWidth,Math.abs(p.x)*innerWidth/2); halfHeight=Math.max(halfHeight,Math.abs(p.y)*innerHeight/2);
+  }
+  camera.zoom=Math.min(1,(free.width-40)/(2*halfWidth),(free.height-40)/(2*halfHeight));
+  camera.setViewOffset(innerWidth,innerHeight,innerWidth/2-(free.x+free.width/2),innerHeight/2-(free.y+free.height/2),innerWidth,innerHeight);
+  camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+}
+function _restoreRepositoryBlueprintCamera(){
+  const B=REPOSITORY_ATELIER?.blueprint,saved=B?.cameraOnOpen;if(!saved)return;
+  camera.position.fromArray(saved.position); camera.quaternion.fromArray(saved.quaternion); camera.zoom=saved.zoom; camera.view=saved.view?{...saved.view}:null;
+  camYaw=saved.yaw; camPitch=saved.pitch; camDist=saved.distance; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true); B.framingKey=null;
 }
 function repositoryBlueprintOpen(){ return !!REPOSITORY_ATELIER?.blueprint?.panelOpen; }
 function _openRepositoryBlueprint(focusSelected=false){
@@ -13988,6 +14105,7 @@ function _openRepositoryBlueprint(focusSelected=false){
   const fromExhibit=repositoryExhibitOpen();
   _closeRepositoryExhibit(false);
   if(!B.panelOpen){ B.panelOpen=true; B.previousFocus=fromExhibit?atelierBlueprintToggle:document.activeElement; B.cameraOnOpen=_repositoryBlueprintCameraSnapshot();
+    document.getElementById('atelierBlueprintFiles').open=innerWidth>620;
     document.body.classList.add('atelier-blueprint-open'); atelierBlueprintPanel.hidden=false; atelierBlueprintToggle.setAttribute('aria-expanded','true'); clearKeys(); }
   _renderRepositoryBlueprintChrome(true);
   requestAnimationFrame(()=>{ if(focusSelected&&B.selected>=0) _syncRepositoryBlueprintSelection(true); else atelierBlueprintScan.focus(); });
@@ -13995,6 +14113,7 @@ function _openRepositoryBlueprint(focusSelected=false){
 }
 function _closeRepositoryBlueprint(restoreFocus=true){
   const A=REPOSITORY_ATELIER,B=A&&A.blueprint;if(!B||!B.panelOpen) return false;
+  _restoreRepositoryBlueprintCamera();
   B.panelOpen=false; B.cameraUnchanged=JSON.stringify(B.cameraOnOpen)===JSON.stringify(_repositoryBlueprintCameraSnapshot());
   document.body.classList.remove('atelier-blueprint-open'); atelierBlueprintPanel.hidden=true; atelierBlueprintToggle.setAttribute('aria-expanded','false'); clearKeys();
   const previous=B.previousFocus; B.previousFocus=null;
@@ -14496,6 +14615,7 @@ function _updateRepositoryAtelier(dt){
 }
 function _renderRepositoryAtelier(){
   const A=REPOSITORY_ATELIER,savedTone=renderer.toneMapping,savedSpace=renderer.outputColorSpace,savedShadow=renderer.shadowMap.needsUpdate;
+  _frameRepositoryBlueprint();
   camera.layers.set(REPOSITORY_ATELIER_LAYER); renderer.setRenderTarget(null); renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.shadowMap.needsUpdate=false; renderer.info.reset(); renderer.clear(); renderer.render(A.scene,camera);
   A.lastInterior={calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};

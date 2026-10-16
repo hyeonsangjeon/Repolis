@@ -805,7 +805,7 @@ ok(/return projectPublicRepos\(raw,user\)/.test(HTML)
   &&!/derived "liveliness"|derived → yard size|never a real clone count/.test(HTML)
   &&/if\(repo\.trafficKnown===false\)\{[\s\S]*?starSignal[\s\S]*?forkSignal/.test(HTML),
   'all public towns share truthful unknown traffic and map only stars, forks, and recency to architecture');
-ok(/REPOS\.every\(repo=>repo\.trafficKnown===false\)[\s\S]*?publicTrafficUnavailable/.test(HTML)
+ok(/traffic&&REPOS\.some\(repo=>repo\.trafficKnown===false\)[\s\S]*?publicTrafficUnavailable/.test(HTML)
   &&/repo\.trafficKnown===false\?`★\$\{repo\.stars\}/.test(HTML),
   'search answers and repo facts never print unavailable traffic as observed zero');
 ok(/const freshnessTrackable=cityMode!=='portal'&&REPOS\.length>0&&!cityError/.test(HTML)
@@ -1225,7 +1225,7 @@ ok(/if\(GROWTH_REPLAY\.active\) return 'town-growth-replay'/.test(HTML)
   && /else if\(GROWTH_REPLAY\.active\)\{\s*clearKeys\(\)/.test(HTML),
   'Growth Replay owns camera and movement without competing with ClearSight or the player');
 ok(growthFrame.length>0&&!/new\s+|REPOS|scene\.traverse|\.map\(|\.filter\(|fetch\(|setTimeout|setInterval/.test(growthFrame)
-  && /GROWTH_REPLAY\.reveals/.test(growthFrame)&&/_growthPositionCamera\(dt,false\)/.test(growthFrame),
+  && /GROWTH_REPLAY\.reveals/.test(growthFrame)&&/_growthPositionCamera\(dt,REDUCED\)/.test(growthFrame),
   'steady playback only advances a bounded reveal list and reusable camera vectors');
 ok(!/new THREE\.(?:Mesh|InstancedMesh|Line|LineSegments|Points)|PointLight|SpotLight|DirectionalLight|fetch\(|WebSocket|setInterval/.test(townGrowthBlock)
   && /resources:\{draws:0,textures:0,lights:0,network:0,timers:0\}/.test(townGrowthBlock),

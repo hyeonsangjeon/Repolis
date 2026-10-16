@@ -122,7 +122,7 @@ export async function runReadableTownBrowserCases({ run, ready, click, screensho
       }
       assert(stableIds.every(value => value === stableIds[0]), 'small camera jitter does not alternate a speaking label');
       await press(page, 'Escape'); await page.until("document.getElementById('chat').classList.contains('hidden')");
-      await click(page, 'menuBtn'); await page.evaluate("document.getElementById('nearbyPeople').open=true");
+      await click(page, 'menuBtn'); await page.evaluate("document.querySelector('#wayfindingTools > summary')?.click();document.getElementById('nearbyPeople').open=true");
       await page.until("document.querySelectorAll('#nearbyPeopleList button:not([hidden])').length>1");
       const accessible = await page.evaluate(`(()=>{
         const buttons=[...document.querySelectorAll('#nearbyPeopleList button:not([hidden])')];
@@ -209,6 +209,11 @@ export async function runReadableTownBrowserCases({ run, ready, click, screensho
       assert(escaped.focus, 'card dismissal restores focus to a meaningful control');
       await page.evaluate("__card('Repolis')"); await page.until("document.activeElement.id==='closeBtn'");
       await press(page, 'Tab', 'Tab', 8); // CDP modifier 8 is Shift.
+      assert.equal(await page.evaluate("document.activeElement.matches('#cardDetails > summary')"),true,'collapsed details do not expose hidden controls to Tab');
+      await press(page,'Enter');
+      assert.equal(await page.evaluate("document.getElementById('cardDetails').open"),true,'native Enter reveals additional card actions');
+      await page.evaluate("document.getElementById('closeBtn').focus()");
+      await press(page,'Tab','Tab',8);
       assert.equal(await page.evaluate('document.activeElement.id'), 'cardCloseAction', 'Shift+Tab wraps to the last card action');
       await press(page, 'Tab');
       assert.equal(await page.evaluate('document.activeElement.id'), 'closeBtn', 'Tab wraps to the fixed close control');
@@ -222,7 +227,7 @@ export async function runReadableTownBrowserCases({ run, ready, click, screensho
       const stopped = await page.evaluate('__pos()'); await delay(180);
       assert.deepEqual(await page.evaluate('__pos()'), stopped, 'opening a card clears already-held movement');
       await page.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'w', code: 'KeyW' });
-      await page.evaluate("document.querySelector('.caChip').focus()");
+      await page.evaluate("document.querySelector('#cardDetails > summary').click();document.querySelector('.caChip').focus()");
       const chipName = await page.evaluate('document.activeElement.textContent');
       await press(page, 'Enter'); await page.until("!document.getElementById('chat').classList.contains('hidden')");
       assert(!await page.evaluate('__modal()'), 'chip activation hands ownership to existing chat');
@@ -239,7 +244,7 @@ export async function runReadableTownBrowserCases({ run, ready, click, screensho
       assert(ime.open && ime.text === '보존할 입력' && ime.before === ime.after, 'IME Escape/Enter must not close or submit');
       await press(page, 'Escape'); await page.until("document.getElementById('chat').classList.contains('hidden')");
       await page.evaluate("__card('Repolis')"); await page.until("document.activeElement.id==='closeBtn'");
-      await page.evaluate("document.querySelector('.caChip').focus()");
+      await page.evaluate("document.querySelector('#cardDetails > summary').click();document.querySelector('.caChip').focus()");
       await press(page, ' ', 'Space'); await page.until("!document.getElementById('chat').classList.contains('hidden')");
       await press(page, 'Escape'); await delay(120);
       await click(page, 'menuBtn'); await delay(120);
