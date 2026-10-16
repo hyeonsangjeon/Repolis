@@ -1,0 +1,906 @@
+{
+  "indexSha256": "8ed707c17eadcb8da4cff4bd9d161d96f74ab1e5b64f2550833fc4c6bae0b399",
+  "baseline": "644d164250de54eb732079cb7e0288c7c889e722",
+  "browser": "Chrome/155.0.8059.80",
+  "runs": [
+    {
+      "suite": "release",
+      "at": "2026-10-16T22:02:08.108Z",
+      "passed": 57,
+      "total": 58
+    },
+    {
+      "suite": "final",
+      "at": "2026-10-16T21:58:12.850Z",
+      "passed": 42,
+      "total": 42
+    },
+    {
+      "suite": "edge",
+      "at": "2026-10-16T22:03:16.535Z",
+      "passed": 3,
+      "total": 3
+    },
+    {
+      "suite": "verified",
+      "at": "2026-10-16T22:05:00.866Z",
+      "passed": 6,
+      "total": 6
+    }
+  ],
+  "results": [
+    {
+      "name": "default-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "launch-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "plaza-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "public-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "portal-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "atelier-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "blueprint-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 49,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "route-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "focus-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "growth-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "blueprint-cancel-en-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "default-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "launch-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "plaza-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "public-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "portal-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "atelier-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "blueprint-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 49,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "route-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "focus-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "growth-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "blueprint-cancel-ko-desktop",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "default-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "launch-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "plaza-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "public-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "portal-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "atelier-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "blueprint-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 49,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "route-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "focus-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "growth-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "blueprint-cancel-en-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "default-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "launch-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "plaza-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "public-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "portal-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "atelier-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "blueprint-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 49,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "route-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "focus-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "growth-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "blueprint-cancel-ko-mobile",
+      "group": "matrix",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "public-403",
+      "group": "failures",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "portal-403",
+      "group": "failures",
+      "ok": true,
+      "requests": 51,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "public-429",
+      "group": "failures",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "portal-429",
+      "group": "failures",
+      "ok": true,
+      "requests": 51,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "public-404",
+      "group": "failures",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "portal-404",
+      "group": "failures",
+      "ok": true,
+      "requests": 101,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "explicit-retry",
+      "group": "failures",
+      "ok": true,
+      "requests": 98,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "empty-public",
+      "group": "failures",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "context-atelier-mobile",
+      "group": "policy",
+      "ok": true,
+      "requests": 47,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "discovery-ko-desktop",
+      "group": "discovery",
+      "ok": true,
+      "requests": 103,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "discovery-en-desktop",
+      "group": "discovery",
+      "ok": true,
+      "requests": 103,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "discovery-ko-mobile",
+      "group": "discovery",
+      "ok": true,
+      "requests": 103,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "discovery-en-mobile",
+      "group": "discovery",
+      "ok": true,
+      "requests": 103,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "discovery-long-archived-desktop",
+      "group": "discovery",
+      "ok": true,
+      "requests": 48,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "readable-panels-ko-desktop",
+      "group": "readable-town",
+      "ok": true,
+      "requests": 51,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "readable-panels-en-desktop",
+      "group": "readable-town",
+      "ok": true,
+      "requests": 51,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "readable-panels-ko-mobile",
+      "group": "readable-town",
+      "ok": true,
+      "requests": 51,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "readable-panels-en-mobile",
+      "group": "readable-town",
+      "ok": true,
+      "requests": 51,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-arrival-ko-desktop",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-arrival-en-desktop",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-arrival-ko-mobile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-arrival-en-mobile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 0,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-source-Repolis-ko-desktop",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-source-Repolis-en-desktop",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-source-Repolis-ko-mobile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-source-Repolis-en-mobile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-source-youtube-dl-nas-ko-desktop",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-source-youtube-dl-nas-en-desktop",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-source-youtube-dl-nas-ko-mobile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-source-youtube-dl-nas-en-mobile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-controls-ko-desktop",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-controls-en-desktop",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-controls-ko-mobile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-controls-en-mobile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-document-missing",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-document-ko",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-document-hostile",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-document-404",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "exhibit-document-403",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "exhibit-document-429",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "exhibit-document-timeout",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-document-oversized",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-document-malformed",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-document-mismatch",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-document-redirect",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "exhibit-strict-direct-atelier",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 49,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-archived-repository",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-empty-repository",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 1
+    },
+    {
+      "name": "exhibit-long-identity",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 50,
+      "apiRequests": 2,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-async-focus-and-copy",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 54,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-cancel-rebind",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 54,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "exhibit-no-automatic-inference",
+      "group": "exhibit",
+      "ok": true,
+      "requests": 53,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    },
+    {
+      "name": "discovery-long-archived-mobile",
+      "group": "discovery",
+      "ok": true,
+      "requests": 48,
+      "apiRequests": 1,
+      "consoleErrors": [],
+      "expectedResourceErrors": 0
+    }
+  ]
+}
