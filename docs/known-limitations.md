@@ -122,6 +122,15 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 
 ## Client / rendering
 
+- **Homecoming is a first-visit guide, not a recommender.** The canonical landing leads with the login form only on the
+  canonical town; forks keep their owner's town first. A public town plays its arrival timelapse once per browser session
+  and login, so a new session replays it. The timelapse budget (8–24 s) is measured in rendered frame time like the rest of
+  Growth Replay, so a very slow device can take longer in wall-clock time. The intent card appears once per session, never
+  over an open panel, room, ride, tour, or chat, and not for returning owner-town visitors, who keep the existing welcome-back
+  and Gazette path. The three explore stops use only current catalog fields: unknown public traffic becomes "most stars", and
+  a town without a tended, forked, rare-district, or tagged house tours fewer than three houses rather than inventing one.
+  Look/Share unlocks follow the existing browser-wide Explorer Passport visits, so same-named houses visited in another town
+  count. Funnel events carry no login, repository name, session, or instance identifier.
 - **Zero-build static runtime, on purpose.** `index.html` remains the primary runtime and imports a few
   local modules/assets directly. There is no bundler, `package.json`, or `node_modules` requirement for
   the site. Don't add a build step — it is a feature.
