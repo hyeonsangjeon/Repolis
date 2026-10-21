@@ -245,6 +245,30 @@ class ResidentProfileTests(unittest.TestCase):
         with self.assertRaises(ResidentArtifactError):
             build_resident_profile(REPOSITORIES[0], HISTORIES["alpha-lab"], "example", CITY_STATE, "")
 
+    def test_scheduled_refresh_commits_are_not_bound_memories(self):
+        def commit(oid, message):
+            return {
+                "oid": oid * 40,
+                "message": message,
+                "url": "https://github.com/example/alpha-lab/commit/" + oid * 40,
+                "committed_at": "2026-08-23T21:00:00Z",
+            }
+
+        history = HISTORIES["alpha-lab"]
+        refreshed = dict(history, commits=[
+            commit("c", "chore: refresh Repolis traffic + data (2026-08-23)"),
+            commit("d", "chore: refresh contribution library (2026-08-22)"),
+            *history["commits"],
+        ])
+        clock = "2026-08-24T00:00:00Z"
+        self.assertEqual(
+            build_resident_profile(REPOSITORIES[0], refreshed, "example", CITY_STATE, clock),
+            build_resident_profile(REPOSITORIES[0], history, "example", CITY_STATE, clock),
+        )
+        lookalike = dict(history, commits=[commit("f", "chore: refresh Repolis docs")])
+        kept = build_resident_profile(REPOSITORIES[0], lookalike, "example", CITY_STATE, clock)
+        self.assertIn("chore: refresh Repolis docs", [item["title"] for item in kept["bound_memories"]])
+
     def test_profile_rules_and_untrusted_text_guards(self):
         profile = build_resident_profile(
             REPOSITORIES[0], HISTORIES["alpha-lab"], "example", CITY_STATE,
@@ -325,16 +349,18 @@ def github_repo(name, created, pushed):
     }
 
 
+def history_for(histories):
+    return lambda full_name: histories.get(full_name.split("/", 1)[1], {"available": False})
+
+
 class DailyRefreshTests(unittest.TestCase):
-    def test_next_day_refresh_rewrites_only_dated_city_artifacts(self):
-        repositories = [
-            github_repo("alpha-lab", "2020-08-24", "2026-08-20"),
-            github_repo("young-house", "2026-07-01", "2026-08-23"),
-        ]
+    REPOSITORIES = [
+        github_repo("alpha-lab", "2020-08-24", "2026-08-20"),
+        github_repo("young-house", "2026-07-01", "2026-08-23"),
+    ]
 
-        def history(full_name):
-            return HISTORIES.get(full_name.split("/", 1)[1], {"available": False})
-
+    def refresh_twice(self, next_repositories=None, next_histories=None):
+        """Run build() for 2026-08-24, then for 2026-08-25, and snapshot both outputs."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             settings = {
@@ -347,19 +373,23 @@ class DailyRefreshTests(unittest.TestCase):
                 "CITY_STATE_AS_OF": "2026-08-24T00:00:00Z",
             }
             with mock.patch.multiple(build_repos, **settings), \
-                    mock.patch.object(build_repos, "gh_api", return_value=repositories), \
+                    mock.patch.object(build_repos, "gh_api", return_value=self.REPOSITORIES) as gh_api, \
                     mock.patch.object(build_repos, "social_map", return_value={}), \
                     mock.patch.object(build_repos, "latest_release", return_value=None), \
-                    mock.patch.object(build_repos, "resident_history", side_effect=history), \
+                    mock.patch.object(build_repos, "resident_history", side_effect=history_for(HISTORIES)) as history, \
                     mock.patch.object(build_repos, "i_committed", return_value=True), \
                     mock.patch.object(build_repos, "public_fork_lineage", return_value=None), \
                     mock.patch("builtins.print"):
                 build_repos.build()
                 first = snapshot(root)
+                gh_api.return_value = next_repositories or self.REPOSITORIES
+                history.side_effect = history_for(next_histories or HISTORIES)
                 build_repos.CITY_STATE_AS_OF = "2026-08-25T00:00:00Z"
                 build_repos.build()
-                second = snapshot(root)
+                return first, snapshot(root)
 
+    def test_next_day_refresh_rewrites_only_dated_city_artifacts(self):
+        first, second = self.refresh_twice()
         self.assertEqual(
             changed_paths(first, second),
             {"data/city-state.json", "data/residents/index.json"},
@@ -368,6 +398,23 @@ class DailyRefreshTests(unittest.TestCase):
         after = json.loads(second["data/residents/index.json"])
         self.assertEqual(without_dated_reference(before), without_dated_reference(after))
         self.assertEqual(after["shared"]["city_state"]["as_of"], "2026-08-25")
+
+    def test_refresh_bot_commit_does_not_rewrite_its_own_resident(self):
+        # The workflow pushes its own data commit every day; the next run must not treat that
+        # push as new Bound memory or a new profile.
+        bot_commit = {
+            "oid": "e" * 40,
+            "message": "chore: refresh Repolis traffic + data (2026-08-24)",
+            "url": "https://github.com/example/alpha-lab/commit/" + "e" * 40,
+            "committed_at": "2026-08-24T21:40:00Z",
+        }
+        alpha = dict(HISTORIES["alpha-lab"], commits=[bot_commit, *HISTORIES["alpha-lab"]["commits"]])
+        pushed = [dict(self.REPOSITORIES[0], pushed_at="2026-08-24T21:40:05Z"), self.REPOSITORIES[1]]
+        first, second = self.refresh_twice(pushed, dict(HISTORIES, **{"alpha-lab": alpha}))
+        self.assertEqual(
+            changed_paths(first, second),
+            {"repos.json", "data/city-state.json", "data/residents/index.json"},
+        )
 
 
 if __name__ == "__main__":

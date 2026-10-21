@@ -17,6 +17,9 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
   (`era.as_of`, then `last_sap_flow`) without reading the wall clock; older profiles with `age.days` still work.
 - Personality signals record whether the latest push and release fall inside the 30- and 90-day windows instead
   of day counts, so authority digests change only when a resident's public standing or Bound evidence changes.
+- The city's own scheduled `chore: refresh …` commits no longer become the Repolis resident's Bound memories, so
+  the bot's daily commit cannot rewrite that profile and the Worker registry. The history query reads 30 commit
+  candidates, so the repository's own latest commits are still found.
 
 ### Homecoming (v1.97) — your city first, an arrival timelapse, three paths, and Wayfinding that opens as you visit
 

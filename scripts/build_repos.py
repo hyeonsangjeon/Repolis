@@ -90,7 +90,11 @@ def latest_release(full_name):
 
 
 def resident_history(full_name):
-    """Bounded public issue/PR/release/commit evidence for one public repo."""
+    """Bounded public issue/PR/release/commit evidence for one public repo.
+
+    Thirty commit candidates let the profile step skip about a month of daily scheduled refresh
+    commits and still find the repository's own latest commits.
+    """
     owner, name = full_name.split("/", 1)
     query = """
 query($owner:String!,$name:String!){
@@ -113,7 +117,7 @@ query($owner:String!,$name:String!){
     defaultBranchRef{
       target{
         ... on Commit{
-          history(first:3){nodes{oid messageHeadline committedDate url}}
+          history(first:30){nodes{oid messageHeadline committedDate url}}
         }
       }
     }

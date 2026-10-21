@@ -198,7 +198,8 @@ The same daily public-data build emits one compact, schema-versioned profile per
 Profiles keep only the public creation day; readers measure age against the city reference day that the
 manifest alone carries. Job and personality come from bounded rules over language, topics, public
 activity recency, releases, and the reported open-work count. At most three current public issue/PR titles
-and four release/commit/issue/PR memories survive strict sanitization and byte caps. Missing public history
+and four release/commit/issue/PR memories survive strict sanitization and byte caps; the city's own scheduled
+refresh commits are never memories. Missing public history
 stays empty with provenance rather than being invented. Archived profiles remain in data and the World Tree
 Roots, but `dialogue_available=false` keeps them out of the active 3D roster.
 

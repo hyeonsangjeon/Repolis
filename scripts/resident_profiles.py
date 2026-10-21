@@ -119,6 +119,12 @@ _HTML_RE = re.compile(r"<[^>]{0,512}>")
 _SPACE_RE = re.compile(r"\s+")
 _SAFE_SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{0,98}[a-z0-9])?$")
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)?$")
+# Commits made by the city's own scheduled refresh workflows (refresh.yml and
+# update-contribution-library.yml) are generated output, not repository memory; keeping them would
+# rewrite that repository's resident and the Worker registry after every daily run.
+_SCHEDULED_REFRESH_RE = re.compile(
+    r"^chore: refresh (?:Repolis traffic \+ data|contribution library) \(\d{4}-\d{2}-\d{2}\)$"
+)
 _PROMPT_RE = re.compile(
     r"(?i)\b(?:ignore|disregard|override|forget)\b.{0,32}\b(?:instruction|prompt|system|developer)\b"
     r"|\b(?:system|developer|assistant)\s*(?:message|prompt)?\s*:"
@@ -362,6 +368,10 @@ def _recent_concerns(history, owner, repo_name):
     return items[:MAX_CONCERNS], dropped
 
 
+def _is_scheduled_refresh(commit):
+    return isinstance(commit, dict) and bool(_SCHEDULED_REFRESH_RE.match(str(commit.get("message") or "")))
+
+
 def _bound_memories(history, owner, repo_name):
     memories = []
     dropped = 0
@@ -374,6 +384,8 @@ def _bound_memories(history, owner, repo_name):
     for kind, key, title_key, date_key, limit in plans:
         added = 0
         for raw in history.get(key) or []:
+            if kind == "commit" and _is_scheduled_refresh(raw):
+                continue
             candidate = dict(raw) if isinstance(raw, dict) else raw
             if kind == "release" and isinstance(candidate, dict) and not candidate.get("name"):
                 candidate["name"] = candidate.get("tag_name")
