@@ -1,0 +1,21 @@
+{
+  "name": "repolis-card",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Repolis city card Worker: share pages and city card images for public GitHub towns.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test:local": "node test/render-png.local.mjs",
+    "measure:cpu": "node scripts/measure-cpu.mjs",
+    "build:generic-card": "node scripts/build-generic-card.mjs"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2"
+  },
+  "devDependencies": {
+    "wrangler": "4.147.0"
+  }
+}

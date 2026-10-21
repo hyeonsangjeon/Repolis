@@ -386,8 +386,10 @@ function skylineMarkup(frame, skyline) {
   return paths.join('');
 }
 
-/* The card as a standalone SVG document. `size` is 'og' (1200×630) or 'readme' (600×300); `lang` is 'en' or 'ko'. */
-export function cityCardSvg(summary, cityName, { size = 'og', lang = 'en' } = {}) {
+/* The card as a standalone SVG document. `size` is 'og' (1200×630) or 'readme' (600×300); `lang` is 'en' or 'ko'.
+ * `drawText` turns the placed runs into markup; the default writes <text> elements, and the city-card Worker passes
+ * a glyph-path writer so its PNG renderer needs no font. */
+export function cityCardSvg(summary, cityName, { size = 'og', lang = 'en', drawText = textMarkup } = {}) {
   const id = CITY_CARD_SIZES[size] ? size : 'og';
   const frame = FRAMES[id], shown = CITY_CARD_SIZES[id];
   const copy = COPY[lang] || COPY.en;
@@ -419,6 +421,6 @@ export function cityCardSvg(summary, cityName, { size = 'og', lang = 'en' } = {}
     + 'stroke-opacity="0.35" stroke-width="2"/>'
     + (s.zones.length ? `<rect x="${frame.pad}" y="${barY}" width="${barW}" height="${barH}" rx="${num(barH / 2)}" fill="${INK.track}"/>`
       + `<g clip-path="url(#${clip})">${bar}</g>` : '')
-    + swatches + bullets + textMarkup(runs)
+    + swatches + bullets + drawText(runs)
     + '</svg>';
 }

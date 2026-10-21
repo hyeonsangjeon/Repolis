@@ -62,13 +62,14 @@
 
 - [cloudflare-taxi/README.md](cloudflare-taxi/README.md): grounded AI and optional resident dialogue Worker.
 - [cloudflare/README.md](cloudflare/README.md): realtime presence Worker.
+- [cloudflare-card/README.md](cloudflare-card/README.md): city card Worker (`repolis-card`): `/u/<login>` share previews and 1200×630 PNG / 600×300 SVG town cards from one daily public GitHub request; not wired into the site yet.
 - [council/](council/): deterministic debate/verdict engine and live guards.
 - [COUNCIL_PATTERN.md](COUNCIL_PATTERN.md): debate-to-judge design.
 - [examples/](examples/): worker requests, embeds, and share links.
 
 ## Verify
 
-Run `node council/test.mjs`, `node council/test-live.mjs`, `node scripts/smoke.mjs`, `node --check scholars.js`, and `node --check cloudflare-taxi/src/grounded.js`. For rendered UI changes, serve locally and exercise desktop plus 390x844 mobile in Chrome DevTools with no console errors.
+Run `node council/test.mjs`, `node council/test-live.mjs`, `node scripts/smoke.mjs`, `node --check scholars.js`, `node --check cloudflare-taxi/src/grounded.js`, and `node scripts/test-city-card-worker.mjs` (or the whole list in `scripts/check-hermetic.sh`). For rendered UI changes, serve locally and exercise desktop plus 390x844 mobile in Chrome DevTools with no console errors.
 
 ## Release history
 
