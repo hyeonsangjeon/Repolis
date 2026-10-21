@@ -15,7 +15,7 @@ Run the city itself with **no build**:
 
 ```bash
 git clone https://github.com/hyeonsangjeon/Repolis && cd Repolis
-python3 -m http.server 8000      # → http://localhost:8000
+python3 -m http.server 8000 --protocol HTTP/1.1      # → http://localhost:8000
 ```
 
 See [`../AGENTS.md`](../AGENTS.md) for the full operating manual and [`../docs/domain-model.md`](../docs/domain-model.md) for the model.

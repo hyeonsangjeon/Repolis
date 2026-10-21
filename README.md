@@ -58,7 +58,7 @@ If you find this useful for presenting repositories, **[star Repolis](https://gi
 | preview my public repos | use the live username field | a shareable town built from metadata in seconds |
 | share one repository as an experience | paste `owner/repo` or a GitHub repository URL, then use **Copy Repo Portal** in its Atelier | a canonical confirmation link, plus `?repo=owner/repo&view=atelier&lang=en` when the exhibition should be the first screen |
 | hand another developer the best path I found | add 2–3 opened repo cards to **Repo Route**, then follow or share it | one ordered deep link that guides the recipient through those real houses before the earned Star invitation |
-| find a current open-source task | open **Open Source Quests** in Wayfinding, then explicitly search | three current public issues ranked for approachability, each connected to its real repo house and exact GitHub issue |
+| find a current open-source task | choose **Find something to contribute** in Wayfinding (Open Source Quests), then explicitly search | three current public issues ranked for approachability, each connected to its real repo house and exact GitHub issue |
 | introduce who built the town | visit **Town Creator Hall** or open **Meet the town creator** in the city menu | public bio, followers, GitHub tenure, top languages, badges, and signature projects tied to the current town owner |
 | watch my open-source history unfold | open **Town Growth Replay** from Wayfinding, the Passport, or my completed public-town preview | a creation-date timeline where repo houses rise year by year, with a shareable year link and era postcard |
 | connect with another developer | click **Connect with a friend** after a preview, or open **Twin Towns** in the city menu | a two-person link that opens both towns and their shared languages or topics |
@@ -86,6 +86,7 @@ At ordinary walking distances, a one-draw architectural LOD keeps each repo hous
 
 ## A village that lives
 
+- **Your city comes first.** The canonical first screen asks for a GitHub login before offering the sample town. A public town's first entry plays its Growth Replay once (8–24 seconds, or only the present frame with reduced motion) and ends on a deterministic city plaque such as *Python Lab City of you*. A dismissible card then asks what brought you: understand one repository, explore the town, or find something to contribute. Exploring takes Gitber's taxi to three houses chosen from the catalog — the tallest, the oldest (or quietest), and a surprising one — and each district's resident guide says why, using only catalog numbers. Wayfinding is grouped into Go, Look, and Share; Look opens after one visited house and Share after two. Nothing new is requested or stored beyond one session-scoped list of towns that already played.
 - **Names stay readable when you walk closer.** Nearby nameplates have a screen-size limit and do not overlap; the person you are talking to takes priority. **Choose someone nearby** in Wayfinding keeps names and roles available even when a world label is hidden. Repository cards keep their close button in view, and Escape closes the active panel without also leaving the exhibition.
 - **Residents follow daily routines.** Named townspeople wander their districts with changing moods, visit cherished haunts, recognize friends, stroll or sit together, gather around the campfire, and sometimes celebrate a recent repository release. At night, they return to warm windows and porch seats. In the morning, they head back to work in their districts. Their cottages form **Starlight Row** on the north-east edge, with resident-coloured gardens, three roof silhouettes, shutters, transoms, selected window boxes, canopies, chimneys, and roof finials. A shared flower bed, lanterns, hedges, broadleaf trees, and cypresses fill the common spaces. Pairs also choose short **Shared Joy** excursions to real flower patches, visible stars at night, or a real repository house, all without a player prompt or AI call. When asked a specialist question, residents introduce the right scholar instead of pretending to know the answer. Follow the compass to find that scholar in the world.
 - **A public town lives from its own record.** The one existing public-repository load deterministically supplies its era, season, Silence Ledger, archived Roots, and up to six desktop/four phone-or-LOW_END residents with local jobs, greetings, and real repo-home bindings. Traffic, owner residents, Shared/Bound memories, realtime, and grounded services stay unknown or off; no second API request or model call is made.
@@ -123,7 +124,7 @@ The town works without a backend. **Local** search is instant and keyless. **Web
 ```bash
 git clone https://github.com/hyeonsangjeon/Repolis
 cd Repolis
-python3 -m http.server 8000
+python3 -m http.server 8000 --protocol HTTP/1.1   # HTTP/1.1 keeps the burst of module loads from being reset
 # open http://localhost:8000
 ```
 

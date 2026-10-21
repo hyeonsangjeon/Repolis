@@ -8,6 +8,59 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Homecoming (v1.97) — your city first, an arrival timelapse, three paths, and Wayfinding that opens as you visit
+
+- The canonical first screen leads with the GitHub login form ("GitHub 아이디 하나면, 당신의 레포들이 도시가 됩니다." /
+  "Type a GitHub login. Your repos become a city you can walk.") and keeps the owner town as a secondary "See the sample
+  city" action. Forks and every ready target (public proof, Repo Portal, Repo Route, Blueprint) keep Enter first.
+- A public town's first plain entry in a browser session plays the existing Growth Replay once with its own pace:
+  min(24 s, birth years × 2 s), at least 8 s; reduced motion and one-year towns show only the present frame. It ends on a
+  deterministic plaque — "{language} {type} of {login}" / "{login}의 {언어} {유형}", where the type is Port, Lab City,
+  Boulevard, or Workshop when that district holds at least 35% of the houses, otherwise Town. A tap skips to the present;
+  a second tap leaves. No Star invitation interrupts the arrival.
+- A non-modal "무엇을 하러 왔나요? / What brings you here?" card follows the timelapse, or the first entry of a new
+  owner-town visitor. It reuses the three existing intents, never appears over an open panel, room, ride, tour, or chat,
+  and disappears as soon as the visitor does something else. Skipping it leaves a "tap 🚕 to start" guide toast.
+- Exploring now starts a three-house path on the existing tour engine: the tallest house (unique visitors, or stars when
+  public traffic is unknown), the oldest house (or the quietest unarchived one when the oldest is already stop one), and a
+  surprising house (unstarred but pushed within 90 days → public fork with a known source → a district of one or two →
+  most topics). Gitber drives without opening the chat; each district's resident guide speaks one line made only from
+  catalog numbers. The classic guided tour stays unchanged.
+- Wayfinding is grouped into Go (search, intents, list), Look (tour replay, Creator Hall, Growth Replay) and Share (Repo
+  Route, Twin Towns, postcard). Look opens after one visited house and Share after two, following the existing Passport
+  visit count. Nearby people and nearby dialogue stay outside every lock. Open Source Quests is reached through the
+  Contribute intent instead of a separate button.
+- Funnel events `city_requested`, `aha_city_built`, `intent_chosen`, `aha_city_speaks`, `trace_left`, and `return_visit`
+  use a `__privacy:'homecoming'` allowlist without login, repository, session, or instance identity. The Repo Portal
+  `aha_completed` event is renamed `portal_entry`; the legacy name is sent alongside it for one release so the private
+  dashboard keeps its funnel. A collector that rejects unknown events is ignored by the client.
+- The campaign plaza link keeps its covered, card-free contract and shows one guide line to new visitors after the entry
+  hint. A public login arrives once per browser session: the timelapse and the card share one session key. A returning
+  visitor whose town has Town Gazette news is greeted by that news instead of the replayed arrival.
+- Pure rules live in `assets/homecoming.js` with 42 hermetic fixtures in `scripts/test-homecoming.mjs` (public API towns,
+  one-house and archive-only towns, duplicate names, tie-breaks, copy, unlocks, bounded session keys); the first-visit
+  suite checks every deep-link and returning-visitor exclusion. One bounded sessionStorage list is the only new state; no
+  request, model call, scene resource, or dependency was added.
+
+### Guide patch (v1.96) — Gitber phrasing coverage, mobile finish, wording, local server command
+
+- Gitber Local search now understands Korean transliterations (도커, 쿠버네티스, 파이썬, 리액트, 에이전트, …) as the
+  words themselves, treats related-concept synonyms as half-weight evidence, and never lets a two-letter name token
+  such as `ai` win a topic query on its own. `most starred`, `most forked`, `recently` and a whole-message `anything`
+  now reach the metric and random intents they describe. Equal lexical evidence breaks ties by town rank, stars, then
+  the latest public push. A miss offers three suggestion chips that always resolve. `scripts/test-gitber-search.mjs`
+  covers every phrase that failed in the 2026-10-20 review.
+- The Town tools dropdown no longer overflows a 390 px viewport: the badge stopped acting as the containing block of
+  its fixed panel. One tap on an open repo card lifts it and still reaches the HUD control underneath, so the card
+  restored after leaving the Repository Atelier is never a floor for the wayfinding panel or passport.
+- The first-steps hint is a readable toast on every viewport, shown once after entry until the first move. The World
+  Tree trigger carries a visible "연대기 / Chronicle" label.
+- Archived houses read "들꽃이 핀 오래된 집 · 아카이브 / Archived old house with wildflowers" and the former
+  "실험·폐허 지구" is the "실험·기록 지구 / Experiment / Archive District"; related resident lines follow.
+- README, AGENTS.md, repolis.yaml and examples use `python3 -m http.server 8000 --protocol HTTP/1.1`; the HTTP/1.0
+  default resets the burst of module loads and leaves the town unopened. The merged scenario spec is checked in as
+  `docs/scenario-redesign-aha-moments.md`. No server, model, request, storage key or scene resource was added.
+
 ### Covered plaza and Repository Atelier direct entry
 
 - `?view=plaza&lang=en` now provides an English-first campaign link that keeps the portal cover up, skips the

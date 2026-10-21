@@ -153,7 +153,7 @@ Repo Portal uses the existing optional analytics sink with a stricter payload:
 |---|---|
 | `feature_seen` | The universal repository entry is visible or a Portal link opens. |
 | `feature_started` | Input is rejected, or a canonical target finishes resolving. |
-| `aha_completed` | The target Atelier reaches its inside state after facts are bound. |
+| `portal_entry` | The target Atelier reaches its inside state after facts are bound (renamed from `aha_completed` in v1.97; the legacy name is sent alongside for one release). |
 | `share_created` | A canonical Portal address is copied. |
 | `github_repo_opened` | The visitor explicitly opens the target on GitHub. |
 | `project_star_click` | The earned upstream Repolis Star link is clicked. |

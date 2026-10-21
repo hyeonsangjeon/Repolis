@@ -21,7 +21,7 @@ runtime:
   build: none
   entrypoint: index.html
   config: repolis.config.js
-  serve: python3 -m http.server 8000
+  serve: python3 -m http.server 8000 --protocol HTTP/1.1
   renderer: three.js@0.160
   module_source: jsdelivr import map
   package_manager: none
@@ -56,6 +56,7 @@ entrypoints:
   scholars: scholars.js
   world_tree: assets/world-tree/createRepolisHero.js
   portable_town_projection: assets/world-tree/world-tree-state.js
+  homecoming: assets/homecoming.js
   town_growth: assets/town-growth.js
   repo_portal: assets/repo-portal.js
   repo_route: assets/repo-route.js
