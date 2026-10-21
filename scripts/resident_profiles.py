@@ -21,6 +21,8 @@ PROFILE_MAX_BYTES = 12_000
 MANIFEST_MAX_BYTES = 64_000
 MAX_CONCERNS = 3
 MAX_BOUND_MEMORIES = 4
+PUSH_WINDOW_DAYS = 30
+RELEASE_WINDOW_DAYS = 90
 
 ACTIVE_RESIDENT_SLOTS = (
     {"resident_id": "sol", "name": {"ko": "\uc194", "en": "Sol"}},
@@ -276,7 +278,13 @@ def _days_between(earlier, later):
     return max(0, (end.date() - start.date()).days)
 
 
+def _within(days, window):
+    return None if days is None else days <= window
+
+
 def _personality_for(repo, history, clock):
+    # The recency windows read the build clock, but only their outcomes are emitted: day counts
+    # and push dates would rewrite every profile (and Repolis on each bot push) every day.
     pushed_days = _days_between(repo.get("pushed"), clock)
     release_dates = [
         item.get("published_at") or item.get("created_at")
@@ -286,11 +294,13 @@ def _personality_for(repo, history, clock):
         (days for value in release_dates if (days := _days_between(value, clock)) is not None),
         default=None,
     )
+    recent_push = _within(pushed_days, PUSH_WINDOW_DAYS)
+    recent_release = _within(release_days, RELEASE_WINDOW_DAYS)
     if repo.get("archived"):
         key = "quiet_keeper"
-    elif release_days is not None and release_days <= 90:
+    elif recent_release:
         key = "release_minded"
-    elif pushed_days is not None and pushed_days <= 30:
+    elif recent_push:
         key = "active_tinkerer"
     elif int(repo.get("open_issues") or 0) >= 10:
         key = "patient_triager"
@@ -304,8 +314,8 @@ def _personality_for(repo, history, clock):
         "labels": definition["labels"],
         "basis": definition["basis"],
         "signals": {
-            "days_since_latest_push": pushed_days,
-            "days_since_latest_release": release_days,
+            "pushed_within_30_days": recent_push,
+            "released_within_90_days": recent_release,
             "open_issue_count": max(0, int(repo.get("open_issues") or 0)),
         },
     }
@@ -384,6 +394,7 @@ def _bound_memories(history, owner, repo_name):
 
 
 def _shared_reference(city_state):
+    """Dated Shared city reference; only the manifest carries it."""
     season = city_state.get("season") or {}
     era = city_state.get("era") or {}
     return {
@@ -397,15 +408,31 @@ def _shared_reference(city_state):
     }
 
 
-def build_resident_profile(repo, history, owner, city_state, generated_at):
+def _profile_shared(city_state):
+    return {
+        "city_state": {
+            "schema": city_state.get("schema"),
+            "version": city_state.get("version"),
+        }
+    }
+
+
+def _registry_shared(city_state):
+    shared = _shared_reference(city_state)["city_state"]
+    return {"city_state": {key: shared[key] for key in ("schema", "version", "season")}}
+
+
+def build_resident_profile(repo, history, owner, city_state, clock):
+    """Build one date-free profile; ``clock`` only drives the personality recency windows."""
     if repo.get("private") is True or str(repo.get("visibility") or "public").lower() == "private":
         raise ResidentArtifactError("private repository rejected")
     repo_name = str(repo.get("repo") or "").strip()
     slug = safe_repo_slug(repo_name)
     created = _safe_date(repo.get("created"))
-    age_days = _days_between(created, generated_at)
-    if not created or age_days is None:
+    if not created:
         raise ResidentArtifactError(f"resident creation date unavailable: {repo_name}")
+    if _parse_time(clock) is None:
+        raise ResidentArtifactError("resident reference clock unavailable")
     summary, summary_reason = sanitize_public_text(repo.get("desc"), 240)
     concerns, concern_dropped = _recent_concerns(history, owner, repo_name)
     memories, memory_dropped = _bound_memories(history, owner, repo_name)
@@ -416,7 +443,6 @@ def build_resident_profile(repo, history, owner, city_state, generated_at):
     profile = {
         "schema": PROFILE_SCHEMA,
         "version": PROFILE_VERSION,
-        "generated_at": generated_at,
         "repo": {
             "owner": owner,
             "name": repo_name,
@@ -429,15 +455,13 @@ def build_resident_profile(repo, history, owner, city_state, generated_at):
         },
         "age": {
             "created_on": created[:10],
-            "days": age_days,
-            "years": round(age_days / 365.2425, 2),
             "basis": "public_repository_created_at",
         },
         "job": _job_for(repo),
-        "personality": _personality_for(repo, history, generated_at),
+        "personality": _personality_for(repo, history, clock),
         "recent_concerns": concerns,
         "bound_memories": memories,
-        "shared": _shared_reference(city_state),
+        "shared": _profile_shared(city_state),
         "archived": bool(repo.get("archived")),
         "dialogue_available": not bool(repo.get("archived")),
         "provenance": {
@@ -470,7 +494,7 @@ def _walk_strings(value):
 def validate_profile(profile):
     errors = []
     required = {
-        "schema", "version", "generated_at", "repo", "age", "job", "personality",
+        "schema", "version", "repo", "age", "job", "personality",
         "recent_concerns", "bound_memories", "shared", "archived",
         "dialogue_available", "provenance",
     }
@@ -490,17 +514,14 @@ def validate_profile(profile):
         errors.append("repo fields invalid")
     if not isinstance(repo.get("topics"), list) or len(repo["topics"]) > 6:
         errors.append("repo topics invalid")
-    if not _DATE_RE.fullmatch(str(profile.get("generated_at") or "")):
-        errors.append("invalid generated_at")
+    # Ages, build clocks, and day counters stay out of profiles; readers measure age against the
+    # manifest's Shared city reference instead.
     age = profile.get("age")
-    if not isinstance(age, dict) or set(age) != {"created_on", "days", "years", "basis"}:
+    if not isinstance(age, dict) or set(age) != {"created_on", "basis"}:
         errors.append("age fields invalid")
     elif (
-        not isinstance(age.get("days"), int)
-        or age["days"] < 0
-        or not isinstance(age.get("years"), (int, float))
-        or age["years"] < 0
-        or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(age.get("created_on") or ""))
+        not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(age.get("created_on") or ""))
+        or age.get("basis") != "public_repository_created_at"
     ):
         errors.append("age values invalid")
     job = profile.get("job")
@@ -509,6 +530,18 @@ def validate_profile(profile):
     personality = profile.get("personality")
     if not isinstance(personality, dict) or set(personality) != {"key", "labels", "basis", "signals"}:
         errors.append("personality fields invalid")
+    else:
+        signals = personality.get("signals")
+        windows = ("pushed_within_30_days", "released_within_90_days")
+        if (
+            not isinstance(signals, dict)
+            or set(signals) != {*windows, "open_issue_count"}
+            or any(signals[key] is not None and not isinstance(signals[key], bool) for key in windows)
+            or not isinstance(signals["open_issue_count"], int)
+            or isinstance(signals["open_issue_count"], bool)
+            or signals["open_issue_count"] < 0
+        ):
+            errors.append("personality signals invalid")
     concerns = profile.get("recent_concerns")
     memories = profile.get("bound_memories")
     if not isinstance(concerns, list) or len(concerns) > MAX_CONCERNS:
@@ -529,7 +562,13 @@ def validate_profile(profile):
         ):
             errors.append("history item invalid")
             break
-    if not isinstance(profile.get("shared"), dict) or not isinstance(profile["shared"].get("city_state"), dict):
+    shared = profile.get("shared")
+    if (
+        not isinstance(shared, dict)
+        or set(shared) != {"city_state"}
+        or not isinstance(shared["city_state"], dict)
+        or set(shared["city_state"]) != {"schema", "version"}
+    ):
         errors.append("shared reference invalid")
     if not isinstance(profile.get("provenance"), dict):
         errors.append("provenance invalid")
@@ -549,7 +588,7 @@ def validate_profile(profile):
 
 
 def profile_authority_digest(profile):
-    """Stable Bound authorization digest; excludes the daily age/shared clock."""
+    """Stable Bound authorization digest; profiles carry no build clock, so a date-only rebuild keeps it."""
     authority = {
         "schema": profile["schema"],
         "version": profile["version"],
@@ -574,7 +613,7 @@ def validate_manifest(manifest):
     required = {
         "schema", "version", "generated_at", "owner", "profile_schema",
         "profile_version", "profile_count", "active_count", "registry_digest",
-        "profiles", "active_roster",
+        "shared", "profiles", "active_roster",
     }
     if not isinstance(manifest, dict) or set(manifest) != required:
         errors.append("manifest fields invalid")
@@ -584,6 +623,16 @@ def validate_manifest(manifest):
         errors.append("invalid manifest owner")
     if not _DATE_RE.fullmatch(str(manifest.get("generated_at") or "")):
         errors.append("invalid manifest generated_at")
+    shared = manifest.get("shared")
+    city = shared.get("city_state") if isinstance(shared, dict) else None
+    if (
+        not isinstance(city, dict)
+        or set(shared) != {"city_state"}
+        or set(city) != {"schema", "version", "as_of", "season", "last_sap_flow"}
+        or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(city.get("as_of") or ""))
+        or not _DATE_RE.fullmatch(str(city.get("last_sap_flow") or ""))
+    ):
+        errors.append("invalid manifest shared reference")
     if not re.fullmatch(r"[a-f0-9]{64}", str(manifest.get("registry_digest") or "")):
         errors.append("invalid registry digest")
     profiles = manifest.get("profiles")
@@ -645,6 +694,14 @@ def _registry_module(shared, homes, residents, digest):
     ).encode("utf-8")
 
 
+def _write_if_changed(path, data):
+    """Leave byte-identical artifacts untouched so a refresh rewrites only real changes."""
+    if path.is_file() and path.read_bytes() == data:
+        return False
+    path.write_bytes(data)
+    return True
+
+
 def write_resident_artifacts(
     repositories,
     histories,
@@ -661,6 +718,7 @@ def write_resident_artifacts(
 
     profiles = []
     seen_slugs = {}
+    rewritten = 0
     for repo in sorted(repositories, key=lambda item: str(item.get("repo") or "").lower()):
         name = str(repo.get("repo") or "")
         profile = build_resident_profile(
@@ -671,8 +729,7 @@ def write_resident_artifacts(
             raise ResidentArtifactError(f"resident slug collision: {seen_slugs[slug]} / {name}")
         seen_slugs[slug] = name
         data = _stable_bytes(profile)
-        path = output_dir / f"{slug}.json"
-        path.write_bytes(data)
+        rewritten += _write_if_changed(output_dir / f"{slug}.json", data)
         profiles.append(
             {
                 "repo": name,
@@ -761,20 +818,21 @@ def write_resident_artifacts(
         }
         for entry in profiles
     }
-    shared = _shared_reference(city_state)
+    # The Worker registry is deployed by hand, so it keeps only date-free Shared facts.
+    shared = _registry_shared(city_state)
     registry_payload = {
         "schema": REGISTRY_SCHEMA,
         "version": REGISTRY_VERSION,
-        "generated_at": generated_at,
         "shared": shared,
         "homes": homes,
         "residents": registry_residents,
     }
     registry_digest = _sha256(_stable_bytes(registry_payload))
-    registry_path.write_bytes(
-        _registry_module(shared, homes, registry_residents, registry_digest)
+    _write_if_changed(
+        registry_path, _registry_module(shared, homes, registry_residents, registry_digest)
     )
 
+    # The manifest is the one resident artifact that moves with the refresh day.
     manifest = {
         "schema": MANIFEST_SCHEMA,
         "version": MANIFEST_VERSION,
@@ -785,15 +843,17 @@ def write_resident_artifacts(
         "profile_count": len(profiles),
         "active_count": len(active_roster),
         "registry_digest": registry_digest,
+        "shared": _shared_reference(city_state),
         "profiles": profiles,
         "active_roster": active_roster,
     }
     validate_manifest(manifest)
-    (output_dir / "index.json").write_bytes(_stable_bytes(manifest))
+    _write_if_changed(output_dir / "index.json", _stable_bytes(manifest))
     validate_artifact_tree(output_dir, registry_path)
     return {
         "generated_at": generated_at,
         "profiles": len(profiles),
+        "rewritten_profiles": rewritten,
         "active": len(active_roster),
         "manifest_bytes": len(_stable_bytes(manifest)),
         "detail_bytes": sum((output_dir / f"{entry['slug']}.json").stat().st_size for entry in profiles),

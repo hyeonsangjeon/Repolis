@@ -8,6 +8,16 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Date-free resident artifacts
+
+- The daily refresh no longer rewrites all resident profiles and the Worker registry. Profiles and the registry
+  carry no build clock, age count, day counter, or dated Shared reference; `generated_at` and the city reference
+  day (`as_of`, `last_sap_flow`) now live only in `data/residents/index.json`, and unchanged files are left as-is.
+- Profiles keep the public creation day. The browser measures newcomer age against the city reference day
+  (`era.as_of`, then `last_sap_flow`) without reading the wall clock; older profiles with `age.days` still work.
+- Personality signals record whether the latest push and release fall inside the 30- and 90-day windows instead
+  of day counts, so authority digests change only when a resident's public standing or Bound evidence changes.
+
 ### Homecoming (v1.97) — your city first, an arrival timelapse, three paths, and Wayfinding that opens as you visit
 
 - The canonical first screen leads with the GitHub login form ("GitHub 아이디 하나면, 당신의 레포들이 도시가 됩니다." /

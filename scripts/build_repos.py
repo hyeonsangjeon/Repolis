@@ -423,6 +423,7 @@ def build():
     )
     print(
         f"wrote {RESIDENTS_OUT} profiles={resident_summary['profiles']} "
+        f"rewritten={resident_summary['rewritten_profiles']} "
         f"active={resident_summary['active']} manifest={resident_summary['manifest_bytes']}B"
     )
     print(f"  downtown(rank<14)={downtown} hometown={len(out) - downtown} tracked={tracked_n}")

@@ -2,26 +2,42 @@
 """Hermetic tests for deterministic resident profile generation."""
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
-from resident_profiles import (
+os.environ.setdefault("REPO_OWNER", "example")
+
+import build_repos  # noqa: E402
+from resident_profiles import (  # noqa: E402
     ResidentArtifactError,
     build_resident_profile,
+    profile_authority_digest,
     safe_repo_slug,
     validate_artifact_tree,
+    validate_profile,
     write_resident_artifacts,
 )
+from validate_city_state import validate as schema_errors  # noqa: E402
+from validate_resident_profiles import artifact_schema_errors  # noqa: E402
+
+SCHEMA_DIR = Path(__file__).resolve().parents[1] / "data" / "residents"
+PROFILE_SCHEMA = json.loads((SCHEMA_DIR / "profile.schema.json").read_text(encoding="utf-8"))
 
 
-CITY_STATE = {
-    "schema": "repolis.city-state",
-    "version": 1,
-    "last_sap_flow": "2026-08-24T00:00:00Z",
-    "era": {"as_of": "2026-08-24"},
-    "season": {"value": "spring", "inputs": {"reference_date": "2026-08-24"}},
-}
+def city_state_on(day):
+    return {
+        "schema": "repolis.city-state",
+        "version": 1,
+        "last_sap_flow": f"{day}T00:00:00Z",
+        "era": {"as_of": day},
+        "season": {"value": "spring", "inputs": {"reference_date": day}},
+    }
+
+
+CITY_STATE = city_state_on("2026-08-24")
 
 REPOSITORIES = [
     {
@@ -104,6 +120,14 @@ def snapshot(root):
     }
 
 
+def changed_paths(first, second):
+    return {path for path in first.keys() | second.keys() if first.get(path) != second.get(path)}
+
+
+def without_dated_reference(manifest):
+    return {key: value for key, value in manifest.items() if key not in {"generated_at", "shared"}}
+
+
 class ResidentProfileTests(unittest.TestCase):
     def test_same_fixture_is_byte_stable_and_schema_valid(self):
         with tempfile.TemporaryDirectory() as first, tempfile.TemporaryDirectory() as second:
@@ -122,6 +146,104 @@ class ResidentProfileTests(unittest.TestCase):
             manifest = validate_artifact_tree(first_out, first_registry)
             self.assertEqual(manifest["profile_count"], 2)
             self.assertEqual(manifest["active_count"], 1)
+            self.assertEqual(artifact_schema_errors(first_out, manifest, SCHEMA_DIR), [])
+
+    def test_date_only_rebuild_keeps_profile_bytes_registry_and_authority(self):
+        with tempfile.TemporaryDirectory() as first, tempfile.TemporaryDirectory() as second:
+            first_root, second_root = Path(first), Path(second)
+            write_resident_artifacts(
+                REPOSITORIES, HISTORIES, "example", CITY_STATE,
+                first_root / "residents", first_root / "registry.js",
+            )
+            write_resident_artifacts(
+                REPOSITORIES, HISTORIES, "example", city_state_on("2026-08-25"),
+                second_root / "residents", second_root / "registry.js",
+            )
+            self.assertEqual(
+                changed_paths(snapshot(first_root), snapshot(second_root)),
+                {"residents/index.json"},
+            )
+            before = json.loads((first_root / "residents" / "index.json").read_text(encoding="utf-8"))
+            after = json.loads((second_root / "residents" / "index.json").read_text(encoding="utf-8"))
+            self.assertEqual(without_dated_reference(before), without_dated_reference(after))
+            self.assertEqual(
+                [entry["authority_digest"] for entry in before["profiles"]],
+                [entry["authority_digest"] for entry in after["profiles"]],
+            )
+            self.assertEqual(
+                (after["generated_at"], after["shared"]["city_state"]["as_of"],
+                 after["shared"]["city_state"]["last_sap_flow"]),
+                ("2026-08-25T00:00:00Z", "2026-08-25", "2026-08-25T00:00:00Z"),
+            )
+            registry = (second_root / "registry.js").read_text(encoding="utf-8")
+            for clock in ("generated_at", "as_of", "last_sap_flow", '"days"', '"years"'):
+                self.assertNotIn(clock, registry)
+            for path in (second_root / "residents").glob("*.json"):
+                if path.name != "index.json":
+                    self.assertNotIn("2026-08-25", path.read_text(encoding="utf-8"))
+
+    def test_unchanged_artifacts_are_not_rewritten(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output, registry = root / "residents", root / "registry.js"
+            write_resident_artifacts(REPOSITORIES, HISTORIES, "example", CITY_STATE, output, registry)
+            stamp = 1_000_000_000
+            for path in [*output.glob("*.json"), registry]:
+                os.utime(path, (stamp, stamp))
+            summary = write_resident_artifacts(
+                REPOSITORIES, HISTORIES, "example", city_state_on("2026-08-25"), output, registry
+            )
+            untouched = {
+                path.name for path in [*output.glob("*.json"), registry]
+                if path.stat().st_mtime == stamp
+            }
+            self.assertEqual(summary["rewritten_profiles"], 0)
+            self.assertEqual(untouched, {"alpha-lab.json", "sleeping_archive.json", "registry.js"})
+
+    def test_recency_windows_are_the_only_clock_input(self):
+        # A long gap may move the personality across its push/release windows, which is a real
+        # change of the resident's public standing. Nothing else in the profile follows the clock.
+        today = build_resident_profile(
+            REPOSITORIES[0], HISTORIES["alpha-lab"], "example", CITY_STATE,
+            "2026-08-24T00:00:00Z",
+        )
+        next_year = build_resident_profile(
+            REPOSITORIES[0], HISTORIES["alpha-lab"], "example", city_state_on("2027-09-28"),
+            "2027-09-28T00:00:00Z",
+        )
+        self.assertEqual(today["personality"]["key"], "release_minded")
+        self.assertEqual(next_year["personality"]["key"], "steady_maintainer")
+        self.assertEqual(
+            next_year["personality"]["signals"],
+            {"pushed_within_30_days": False, "released_within_90_days": False, "open_issue_count": 2},
+        )
+        self.assertEqual(
+            {key: value for key, value in today.items() if key != "personality"},
+            {key: value for key, value in next_year.items() if key != "personality"},
+        )
+        self.assertNotEqual(profile_authority_digest(today), profile_authority_digest(next_year))
+
+    def test_dated_fields_are_rejected_in_profiles(self):
+        profile = build_resident_profile(
+            REPOSITORIES[0], HISTORIES["alpha-lab"], "example", CITY_STATE,
+            "2026-08-24T00:00:00Z",
+        )
+        legacy = [
+            dict(profile, generated_at="2026-08-24T00:00:00Z"),
+            dict(profile, age=dict(profile["age"], days=2191, years=6.0)),
+            dict(profile, personality=dict(
+                profile["personality"],
+                signals=dict(profile["personality"]["signals"], days_since_latest_push=4),
+            )),
+            dict(profile, shared={"city_state": dict(profile["shared"]["city_state"], as_of="2026-08-24")}),
+        ]
+        self.assertEqual(schema_errors(profile, PROFILE_SCHEMA), [])
+        for value in legacy:
+            with self.assertRaises(ResidentArtifactError):
+                validate_profile(value)
+            self.assertTrue(schema_errors(value, PROFILE_SCHEMA))
+        with self.assertRaises(ResidentArtifactError):
+            build_resident_profile(REPOSITORIES[0], HISTORIES["alpha-lab"], "example", CITY_STATE, "")
 
     def test_profile_rules_and_untrusted_text_guards(self):
         profile = build_resident_profile(
@@ -129,7 +251,16 @@ class ResidentProfileTests(unittest.TestCase):
             "2026-08-24T00:00:00Z",
         )
         emitted = json.dumps(profile, ensure_ascii=False)
-        self.assertEqual(profile["age"]["days"], 2191)
+        self.assertEqual(
+            profile["age"],
+            {"created_on": "2020-08-24", "basis": "public_repository_created_at"},
+        )
+        self.assertEqual(
+            profile["personality"]["signals"],
+            {"pushed_within_30_days": True, "released_within_90_days": True, "open_issue_count": 2},
+        )
+        self.assertEqual(profile["shared"], {"city_state": {"schema": "repolis.city-state", "version": 1}})
+        self.assertNotIn("generated_at", profile)
         self.assertEqual(profile["job"]["key"], "model_smith")
         self.assertEqual(profile["personality"]["key"], "release_minded")
         self.assertIn("Improve retry handling", emitted)
@@ -168,6 +299,75 @@ class ResidentProfileTests(unittest.TestCase):
                     collision, {}, "example", CITY_STATE,
                     Path(root) / "residents", Path(root) / "registry.js",
                 )
+
+
+def github_repo(name, created, pushed):
+    return {
+        "name": name,
+        "full_name": f"example/{name}",
+        "private": False,
+        "fork": False,
+        "description": "Public fixture.",
+        "language": "Python",
+        "topics": ["ai"],
+        "html_url": f"https://github.com/example/{name}",
+        "homepage": "",
+        "stargazers_count": 3,
+        "forks_count": 1,
+        "size": 10,
+        "open_issues_count": 1,
+        "license": {"spdx_id": "MIT"},
+        "archived": False,
+        "default_branch": "main",
+        "created_at": f"{created}T00:00:00Z",
+        "pushed_at": f"{pushed}T00:00:00Z",
+        "updated_at": f"{pushed}T00:00:00Z",
+    }
+
+
+class DailyRefreshTests(unittest.TestCase):
+    def test_next_day_refresh_rewrites_only_dated_city_artifacts(self):
+        repositories = [
+            github_repo("alpha-lab", "2020-08-24", "2026-08-20"),
+            github_repo("young-house", "2026-07-01", "2026-08-23"),
+        ]
+
+        def history(full_name):
+            return HISTORIES.get(full_name.split("/", 1)[1], {"available": False})
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            settings = {
+                "OWNER": "example",
+                "OUT": root / "repos.json",
+                "CITY_STATE_OUT": root / "data" / "city-state.json",
+                "RESIDENTS_OUT": root / "data" / "residents",
+                "RESIDENT_REGISTRY_OUT": root / "resident-registry.js",
+                "GTM_DIR": root / "traffic",
+                "CITY_STATE_AS_OF": "2026-08-24T00:00:00Z",
+            }
+            with mock.patch.multiple(build_repos, **settings), \
+                    mock.patch.object(build_repos, "gh_api", return_value=repositories), \
+                    mock.patch.object(build_repos, "social_map", return_value={}), \
+                    mock.patch.object(build_repos, "latest_release", return_value=None), \
+                    mock.patch.object(build_repos, "resident_history", side_effect=history), \
+                    mock.patch.object(build_repos, "i_committed", return_value=True), \
+                    mock.patch.object(build_repos, "public_fork_lineage", return_value=None), \
+                    mock.patch("builtins.print"):
+                build_repos.build()
+                first = snapshot(root)
+                build_repos.CITY_STATE_AS_OF = "2026-08-25T00:00:00Z"
+                build_repos.build()
+                second = snapshot(root)
+
+        self.assertEqual(
+            changed_paths(first, second),
+            {"data/city-state.json", "data/residents/index.json"},
+        )
+        before = json.loads(first["data/residents/index.json"])
+        after = json.loads(second["data/residents/index.json"])
+        self.assertEqual(without_dated_reference(before), without_dated_reference(after))
+        self.assertEqual(after["shared"]["city_state"]["as_of"], "2026-08-25")
 
 
 if __name__ == "__main__":
