@@ -5,6 +5,13 @@ export const REPO_PORTAL_LIMITS = Object.freeze({
   cacheMaxEntries: 30,
 });
 
+export const PUBLIC_TOWN_CACHE_LIMITS = Object.freeze({
+  version: 2,
+  freshTtlMs: 6 * 60 * 60 * 1000,
+  maxTowns: 8,
+  maxTownChars: 128 * 1024,
+});
+
 export const BLUEPRINT_DEEP_LINK_LIMITS = Object.freeze({
   maxDecodedPathBytes: 512,
 });
@@ -380,6 +387,66 @@ export function projectPublicRepos(raw, owner, nowMs) {
   repos.sort((a, b) => (b.score - a.score) || (b.stars - a.stars) || a.repo.localeCompare(b.repo));
   repos.forEach((repo, index) => { repo.rank = index; });
   return repos;
+}
+
+// Every raw field projectPublicRepo reads, besides owner.login and license.spdx_id. A cached public town
+// keeps only these, verbatim, and only for rows the projection accepts.
+export const PUBLIC_TOWN_CACHE_FIELDS = Object.freeze([
+  'name', 'full_name', 'private', 'disabled', 'description', 'language', 'topics', 'homepage',
+  'stargazers_count', 'forks_count', 'fork', 'size', 'open_issues_count', 'archived', 'default_branch',
+  'created_at', 'pushed_at', 'updated_at',
+]);
+export const PUBLIC_TOWN_CACHE_INDEX_KEY = `repolis:public-user-index:v${PUBLIC_TOWN_CACHE_LIMITS.version}`;
+const PUBLIC_TOWN_CACHE_KEY_RE = /^repolis:public-user:([^:]+):v(\d+)$/;
+
+export function publicTownCacheKey(login) {
+  return `repolis:public-user:${String(login).toLowerCase()}:v${PUBLIC_TOWN_CACHE_LIMITS.version}`;
+}
+
+export function parsePublicTownCacheKey(key) {
+  const match = PUBLIC_TOWN_CACHE_KEY_RE.exec(String(key || ''));
+  return match ? Object.freeze({ login: match[1], version: Number(match[2]) }) : null;
+}
+
+function compactPublicRepoRow(raw) {
+  const row = {};
+  for (const field of PUBLIC_TOWN_CACHE_FIELDS) if (raw[field]) row[field] = raw[field];
+  if (raw.owner && raw.owner.login) row.owner = { login: raw.owner.login };
+  if (raw.license && raw.license.spdx_id) row.license = { spdx_id: raw.license.spdx_id };
+  return row;
+}
+
+// Falsy fields are dropped because the projection reads them like absent ones. The page length and the
+// projection reference are kept so the cached rows re-project exactly like the live page.
+export function compactPublicTown(raw, owner, fetchedAt) {
+  const rows = Array.isArray(raw) ? raw : [];
+  const referenceMs = publicProjectionReference(rows);
+  return {
+    fetchedAt: Number(fetchedAt) || 0,
+    pageLength: rows.length,
+    referenceMs,
+    repos: rows.filter(repo => projectPublicRepo(repo, owner, referenceMs)).map(compactPublicRepoRow),
+  };
+}
+
+export function readPublicTownCache(entry, owner) {
+  if (!entry || typeof entry !== 'object' || !Array.isArray(entry.repos)
+    || !Number.isFinite(entry.fetchedAt) || !Number.isFinite(entry.referenceMs)
+    || !Number.isInteger(entry.pageLength) || entry.pageLength < entry.repos.length) return null;
+  return {
+    fetchedAt: entry.fetchedAt,
+    pageLength: entry.pageLength,
+    repos: projectPublicRepos(entry.repos, owner, entry.referenceMs),
+  };
+}
+
+// Most recently used first; stored towns missing from the order count as the oldest.
+export function planPublicTownCache(order, storedLogins, login, maxTowns = PUBLIC_TOWN_CACHE_LIMITS.maxTowns) {
+  const stored = new Set(storedLogins);
+  const known = (Array.isArray(order) ? order : []).filter(item => item !== login && stored.has(item));
+  const unknown = [...stored].filter(item => item !== login && !known.includes(item)).sort();
+  const next = [login, ...new Set([...known, ...unknown])];
+  return Object.freeze({ order: next.slice(0, maxTowns), evict: next.slice(maxTowns) });
 }
 
 export function repoPortalLatencyBucket(milliseconds) {

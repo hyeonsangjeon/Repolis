@@ -219,6 +219,7 @@ verify:
     - node council/test-live.mjs
     - node scripts/smoke.mjs
     - node scripts/test-portable-town.mjs
+    - node scripts/test-public-town-cache.mjs
     - node scripts/test-session-footprints.mjs
     - python3 scripts/test_fork_lineage.py
     - node scripts/test-fork-lineage.mjs

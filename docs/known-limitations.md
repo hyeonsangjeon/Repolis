@@ -56,6 +56,14 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   is absent. The 100-repository unauthenticated list cap is surfaced as partial coverage. Public residents have
   deterministic local jobs and greetings, but no issue titles, owner resident records, Shared/Bound memory,
   daily sap record, realtime identity, or grounded backend.
+- **The public-town cache is small, short-lived, and per browser.** `?user=` and Twin Towns keep, per login,
+  only the raw fields the public projection reads for the repositories it accepts: about 47K characters for a
+  full 100-repository page instead of GitHub's roughly 588K-character raw page. An entry is fresh for six hours;
+  after that, one request refreshes it, and a failed request falls back to it as an explicitly stale town. At
+  most eight towns are kept, least recently used out first, and a town whose entry would exceed 128K characters
+  (near-maximum descriptions and topics on most repositories) renders live without being cached, so the cache
+  never holds much more than 1M characters, a fifth of Chrome's roughly 5.2M-character origin quota. The first
+  visit after this change deletes the older unbounded raw-page entries, so those towns are requested once more.
 - **Repo Portal is one unauthenticated request, not a proxy.** An arbitrary target uses one
   `GET /repos/{owner}/{repo}` request with no retry. A 15-minute LRU cache is limited to 30 entries and 512
   KiB; failed requests may use an explicitly labelled stale entry. Without one, the target error appears
