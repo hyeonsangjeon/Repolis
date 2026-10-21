@@ -123,7 +123,7 @@ The town works without a backend. **Local** search is instant and keyless. **Web
 ```bash
 git clone https://github.com/hyeonsangjeon/Repolis
 cd Repolis
-python3 -m http.server 8000
+python3 -m http.server 8000 --protocol HTTP/1.1   # HTTP/1.1 keeps the burst of module loads from being reset
 # open http://localhost:8000
 ```
 

@@ -21,7 +21,7 @@ runtime:
   build: none
   entrypoint: index.html
   config: repolis.config.js
-  serve: python3 -m http.server 8000
+  serve: python3 -m http.server 8000 --protocol HTTP/1.1
   renderer: three.js@0.160
   module_source: jsdelivr import map
   package_manager: none
