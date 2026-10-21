@@ -8,6 +8,35 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Passport Journey and the public-town Gazette (v1.98, part 4b)
+
+- The Explorer Passport now has two tabs: **여권 / Passport** (Town Gazette, Village Chronicle, growth record, stamps, and
+  district progress, unchanged and still the default) and **여정 / Journey**. Journey shows this page visit in order: the
+  houses opened (recorded at the existing `markVisited` point, with district, a "처음 / New" tag for houses new to the
+  Passport, an archive tag, and a revisit count), the paths walked (Explore, Understand, Contribute, recorded where
+  `intent_chosen` fires), and the traces left (a Repo Route with its stop names, a contribution issue's house and number,
+  postcards, and town, Repo Portal, Twin Towns, Growth Replay, and profile-portal links, recorded where `trace_left` fires).
+  It lists up to 24 houses and 12 traces and counts the rest. A house row walks back to that house; it never calls a taxi.
+- The journey is one in-page object. Closing and reopening the Passport keeps it and the chosen tab; a reload starts a new
+  journey. Its cumulative line only reads the existing `repolisPassport` value and counts just the current town's catalog,
+  so houses opened in another town never inflate this town's number. No storage key, request, telemetry event, model call,
+  scene resource, or dependency was added.
+- The Explore tour's last step now opens the Journey tab ("둘러본 집이 여권의 여정에 순서대로 남았어요." / "The houses you
+  toured are now in your passport’s Journey, in order."); the classic tour keeps the Passport tab.
+- The tabs follow the WAI-ARIA tab pattern: ←/→ and Home/End switch tabs, Tab enters the panel, and Escape and the focus trap
+  stay with the existing Town UI panel owner. Tabs and journey rows keep 44 px touch targets on coarse pointers.
+- The `?user=` Town Gazette was checked in a real browser before any change: a first visit stores a baseline, a later visit
+  with changes shows "📰 지난 방문 이후 레포 N곳에 변화…" and the Gazette, and a sixth town drops the oldest. Two gaps
+  were fixed. The Gazette and its return toast now say "지난번보다 집 N채가 늘었어요" / "N more houses than last time" when
+  the town's house count grew; the count is net of departures, so a renamed repository is never announced as a new house.
+  A revisit now counts as recent, so the town you just came back to is no longer the first baseline dropped. The five-town
+  cap is unchanged: a measured owner snapshot (71 repositories) is about 8.8 K characters and a 100-repository public one
+  about 14.2 K.
+- Pure rules live in `assets/journey.js` with hermetic fixtures in `scripts/test-journey.mjs` (empty visit, same-house
+  revisit, over-cap, public town, archived house, Korean and long names, traces, immutability). The smoke suite guards the
+  three record points, the tab markup and keys, zero storage, network, and telemetry in the Journey runtime, and the Gazette
+  eviction and new-house copy fixtures.
+
 ### Homecoming (v1.97) — your city first, an arrival timelapse, three paths, and Wayfinding that opens as you visit
 
 - The canonical first screen leads with the GitHub login form ("GitHub 아이디 하나면, 당신의 레포들이 도시가 됩니다." /
