@@ -2116,8 +2116,8 @@ const IMPURE_MODULE = /\b(window|document|navigator|location|localStorage|sessio
 ok(!IMPURE_MODULE.test(moduleCode(ZONE_CLASSIFIER_SRC)) && !/^import /m.test(ZONE_CLASSIFIER_SRC) && ZONE_CLASSIFIER_SRC.length < 9000,
   'the zone classifier is small and imports nothing; no browser, network, storage, timer, clock or random dependency');
 ok(!IMPURE_MODULE.test(moduleCode(CITY_CARD_SRC)) && CITY_CARD_SRC.length < 26000
-  && (CITY_CARD_SRC.match(/^import .*$/gm) || []).join('\n') === "import { ZONE_IDS, classifyRepoZone } from './zone-classifier.js';",
-  'the city card imports only the zone classifier; no browser, network, storage, timer, clock or random dependency');
+  && (CITY_CARD_SRC.match(/^import .*$/gm) || []).join('|') === "import { ZONE_IDS, classifyRepoZone } from './zone-classifier.js';|import { homecomingPrimaryLanguage } from './homecoming.js';",
+  'the city card imports only the zone classifier and the city plaque language rule; no browser, network, storage, timer, clock or random dependency');
 ok(!/avatar|email|\.owner\b|\.login\b/i.test(moduleCode(CITY_CARD_SRC)) && /repo\.private === true/.test(CITY_CARD_SRC),
   'the city card reads no avatar, e-mail or owner field and skips private repositories');
 ok(/export function cityCardTextRuns\(/.test(CITY_CARD_SRC) && (CITY_CARD_SRC.match(/<text /g) || []).length === 1,

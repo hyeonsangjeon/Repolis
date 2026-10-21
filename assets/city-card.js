@@ -7,6 +7,7 @@
  * Repository names are drawn as GitHub-style ASCII slugs and every caller string is cut to a UTF-8 byte cap.
  */
 import { ZONE_IDS, classifyRepoZone } from './zone-classifier.js';
+import { homecomingPrimaryLanguage } from './homecoming.js';
 
 export const CITY_CARD_LIMITS = Object.freeze({
   maxRepos: 100,
@@ -150,8 +151,8 @@ const byCodePoint = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 /* Card facts for one town from the first `maxRepos` unique, named, non-private, non-landmark repositories in
  * the caller's order. `referenceTimestamp` is the town's reference time for the district rule, and `partial`
- * marks a list the caller knows is incomplete. The primary language follows the city plaque rule: the most
- * repositories, ties in English collation order. */
+ * marks a list the caller knows is incomplete. The primary language comes from the city plaque's own rule
+ * (homecomingPrimaryLanguage), so a card never names a different language than the plaque. */
 export function summarizeCityCard(repositories = [], { referenceTimestamp = NaN, partial = false } = {}) {
   const seen = new Set();
   const pool = [];
@@ -165,7 +166,6 @@ export function summarizeCityCard(repositories = [], { referenceTimestamp = NaN,
     pool.push(repo);
   }
 
-  const languages = new Map();
   const zoneCounts = new Map(ZONE_IDS.map(id => [id, 0]));
   const houses = [];
   let stars = 0, archived = 0, first = null;
@@ -176,18 +176,11 @@ export function summarizeCityCard(repositories = [], { referenceTimestamp = NaN,
     stars += n;
     if (repo.archived === true) archived++;
     zoneCounts.set(zone, zoneCounts.get(zone) + 1);
-    if (!missingLanguage(repo.lang)) {
-      const lang = cleanLabel(repo.lang, CITY_CARD_LIMITS.languageBytes);
-      languages.set(lang, (languages.get(lang) || 0) + 1);
-    }
     if (Number.isFinite(created) && (first === null || created < first)) first = created;
     houses.push({ key: repo.repo.trim(), name: cityCardRepoSlug(repo.repo), stars: n, zone, archived: repo.archived === true });
   }
 
-  let language = null;
-  for (const [lang, n] of languages) {
-    if (!language || n > language.n || (n === language.n && lang.localeCompare(language.lang, 'en') < 0)) language = { lang, n };
-  }
+  const primary = homecomingPrimaryLanguage(pool);
   const zoneRows = ZONE_IDS.map(id => ({ id, count: zoneCounts.get(id) })).filter(row => row.count > 0);
   const shares = percents(zoneRows, pool.length);
   const top = houses.slice()
@@ -203,7 +196,7 @@ export function summarizeCityCard(repositories = [], { referenceTimestamp = NaN,
     truncated: more || partial === true,
     stars,
     archived,
-    language: language ? language.lang : null,
+    language: (primary && cleanLabel(primary.lang, CITY_CARD_LIMITS.languageBytes)) || null,
     firstYear: first === null ? null : new Date(first).getUTCFullYear(),
     zones: zoneRows.map((row, index) => ({ id: row.id, count: row.count, percent: shares[index] })),
     top,

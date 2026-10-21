@@ -21,7 +21,8 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
   (a non-object, a non-array `topics`) now lands in Commons.
 - New pure `assets/city-card.js`: up to 100 public repositories become a card summary (repositories, stars, primary
   language, district shares, the three most-starred houses, first year, skyline) and a deterministic 1200×630 OG or
-  600×300 README SVG in English or Korean. The caller supplies the city name. Repository names are drawn as
+  600×300 README SVG in English or Korean. The caller supplies the city name, and the primary language comes from
+  the city plaque's own `homecomingPrimaryLanguage`, so card and plaque always agree. Repository names are drawn as
   GitHub-style ASCII slugs, caller strings are cut to UTF-8 byte caps, control, bidi and invisible characters are
   dropped, and one function places every string so a glyph-path layer can later replace the `<text>` writer.
 - `scripts/test-city-card.mjs` covers empty, one-house, 100-cap, archive-only, hostile-name and escaping cases and pins

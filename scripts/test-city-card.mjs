@@ -14,6 +14,7 @@ import {
   summarizeCityCard,
 } from '../assets/city-card.js';
 import { ZONE_IDS, classifyRepoZone } from '../assets/zone-classifier.js';
+import { homecomingPrimaryLanguage } from '../assets/homecoming.js';
 
 const golden = JSON.parse(readFileSync(new URL('./fixtures/zone-classifier-golden.json', import.meta.url), 'utf8'));
 const reference = Date.parse(golden.source.reference);
@@ -198,6 +199,9 @@ check(!/ruins|폐허/i.test(tagged + ogSvg), 'the card never calls a district ru
 // Summary rules and immutability.
 check(summarizeCityCard([{ repo: 'a', lang: 'Rust' }, { repo: 'b', lang: 'Go' }, { repo: 'c', lang: 'Rust' }, { repo: 'd', lang: 'Go' },
   { repo: 'e', lang: 'Other' }, { repo: 'f', lang: '—' }, { repo: 'g', lang: null }]).language === 'Go', 'a language tie goes to English collation order');
+const plaqueCatalogs = [golden.repos, many.slice(0, 100), [{ repo: 'a', lang: 'Rust' }, { repo: 'b', lang: 'Go' }, { repo: 'c', lang: 'Rust' }, { repo: 'd', lang: 'Go' }], []];
+check(plaqueCatalogs.every(list => summarizeCityCard(list).language === (homecomingPrimaryLanguage(list)?.lang ?? null)),
+  'the card names the same primary language as the city plaque');
 check(summarizeCityCard([{ repo: 'llm-a' }, { repo: 'docker-b' }, { repo: 'react-c' }], { referenceTimestamp: reference }).zones.map(zone => zone.percent).join() === '34,33,33',
   'whole-number shares use the largest remainder, ties in catalog order');
 check(summarizeCityCard([{ repo: 'a', created: 'not a date' }, { repo: 'b', created: '2019-12-31T23:30:00-01:00' }, { repo: 'c', created: 20180101 }]).firstYear === 2020,
