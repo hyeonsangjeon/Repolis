@@ -123,7 +123,7 @@ Repolis는 공개 GitHub 메타데이터와 누적 트래픽을 또 하나의 �
 ```bash
 git clone https://github.com/hyeonsangjeon/Repolis
 cd Repolis
-python3 -m http.server 8000
+python3 -m http.server 8000 --protocol HTTP/1.1   # HTTP/1.1이어야 모듈 동시 로드가 끊기지 않아요
 # http://localhost:8000 열기
 ```
 

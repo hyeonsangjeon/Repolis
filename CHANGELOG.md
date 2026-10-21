@@ -8,6 +8,25 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Guide patch (v1.96) — Gitber phrasing coverage, mobile finish, wording, local server command
+
+- Gitber Local search now understands Korean transliterations (도커, 쿠버네티스, 파이썬, 리액트, 에이전트, …) as the
+  words themselves, treats related-concept synonyms as half-weight evidence, and never lets a two-letter name token
+  such as `ai` win a topic query on its own. `most starred`, `most forked`, `recently` and a whole-message `anything`
+  now reach the metric and random intents they describe. Equal lexical evidence breaks ties by town rank, stars, then
+  the latest public push. A miss offers three suggestion chips that always resolve. `scripts/test-gitber-search.mjs`
+  covers every phrase that failed in the 2026-10-20 review.
+- The Town tools dropdown no longer overflows a 390 px viewport: the badge stopped acting as the containing block of
+  its fixed panel. One tap on an open repo card lifts it and still reaches the HUD control underneath, so the card
+  restored after leaving the Repository Atelier is never a floor for the wayfinding panel or passport.
+- The first-steps hint is a readable toast on every viewport, shown once after entry until the first move. The World
+  Tree trigger carries a visible "연대기 / Chronicle" label.
+- Archived houses read "들꽃이 핀 오래된 집 · 아카이브 / Archived old house with wildflowers" and the former
+  "실험·폐허 지구" is the "실험·기록 지구 / Experiment / Archive District"; related resident lines follow.
+- README, AGENTS.md, repolis.yaml and examples use `python3 -m http.server 8000 --protocol HTTP/1.1`; the HTTP/1.0
+  default resets the burst of module loads and leaves the town unopened. The merged scenario spec is checked in as
+  `docs/scenario-redesign-aha-moments.md`. No server, model, request, storage key or scene resource was added.
+
 ### Covered plaza and Repository Atelier direct entry
 
 - `?view=plaza&lang=en` now provides an English-first campaign link that keeps the portal cover up, skips the

@@ -4441,6 +4441,30 @@ ok(/new THREE\.InstancedMesh\(CLOUD_GEO,CLOUD_MAT,cloudPuffs\.length\)/.test(HTM
   && /CLOUD_MAT=new THREE\.MeshBasicMaterial\(\{[^}]*depthWrite:false/.test(HTML)
   && /if\(!force&&cloudStep<0\.05\) return/.test(HTML), 'cloud puffs share one instanced draw and update at 20Hz');
 
+// ── v1.96 guide patch: Gitber phrasing coverage, suggestion chips, mobile finish, wording, entry hint ──
+ok(/const KO2EN=\{ 에이전트:\['agent','agents'\], 도커:\['docker'/.test(HTML) && /function _translit\(t\)/.test(HTML)
+  && /function expandDetailed\(toks\)\{ const direct=new Set\(\), related=new Set\(\);/.test(HTML), 'Korean transliterations map to the word itself while synonym lists stay related');
+ok(/const GENERIC_TOKEN=t=>t\.length<=2;/.test(HTML) && /const w=\(!direct\|\|direct\.has\(t\)\)\?1:0\.5;/.test(HTML)
+  && /if\(!String\(r\.desc\|\|''\)\.trim\(\)&&!\(r\.topics\|\|\[\]\)\.length\) s-=3;/.test(HTML), 'generic two-letter tokens, half-weight synonyms and bare metadata cannot win a search by name alone');
+ok(/\|\|\(b\.r\.stars\|\|0\)-\(a\.r\.stars\|\|0\)\|\|_pushedMs\(b\.r\)-_pushedMs\(a\.r\)\)/.test(HTML), 'equal lexical evidence breaks ties by rank, stars, then latest public push');
+ok(/\\bstar\(s\|red\)\?\\b/.test(HTML) && /\\bfork\(s\|ed\)\?\\b/.test(HTML) && /\\b\(recent\(ly\)\?\|newest\|latest\|lately\)\\b/.test(HTML)
+  && !/\\bstars\?\\b/.test(HTML), 'metric intents accept starred, forked and recently');
+ok(/\^\\s\*\(anything\|any \?\(one\|repo\|house\)\|surprise me\|whatever\)\\s\*\[!\.\?~\]\*\$/.test(HTML), 'a whole-message "anything" is a random pick, a sentence containing it is still a search');
+ok((HTML.match(/alts:r\.alts, suggest:r\.suggest/g)||[]).length===4 && /opts&&opts\.suggest&&!repositoryAtelierActive\(\)/.test(HTML)
+  && /suggestPopularQ:'제일 인기있는 레포'/.test(HTML) && /suggestRandomQ:'anything'/.test(HTML), 'a miss offers three suggestion asks that resolve in both languages');
+ok(/#townTools \{ position: relative; padding: 0; backdrop-filter: none; \}/.test(HTML) && /#townTools > summary \{[^}]*backdrop-filter: blur\(6px\);/.test(HTML),
+  'the Town tools badge is no longer the containing block of its fixed panel');
+ok(/if\(e\.target!==modal\) return; closeCard\(\);[\s\S]{0,400}document\.elementFromPoint\(e\.clientX,e\.clientY\)/.test(HTML)
+  && /menuBtn\.onclick=\(\)=>\{ if\(modalOpen\)\{ closeCard\(\); panel\.classList\.remove\('hidden'\);/.test(HTML)
+  && /if\(townTools\.open\)\{ if\(modalOpen\) closeCard\(\);/.test(HTML), 'one tap lifts an open repo card and reaches the HUD control under it');
+ok(/\.hint\.show \{ opacity: 1; \}/.test(HTML) && /function showEntryHint\(\)/.test(HTML) && /classList\.add\('hidden'\); showEntryHint\(\);/.test(HTML)
+  && !/\.hint \{ display: none; \}/.test(HTML), 'the entry hint is a toast on every viewport that leaves at the first move');
+ok(/<span class="wtLabel" data-i18n="worldTreeLabel">연대기<\/span>/.test(HTML) && /worldTreeLabel:'Chronicle'/.test(HTML), 'the World Tree trigger carries a visible label');
+ok(/ko:'실험·기록 지구',    en:'Experiment \/ Archive District', icon:'📜'/.test(HTML) && (HTML.match(/폐허/g)||[]).length===1
+  && /ruins:   \/\(실험 \?\)\?폐허\|유적\|experiment \?ruins\?\|\\bruins\?\\b\|아카이브 \?\(구역\|지구\)\|기록 \?\(구역\|지구\)/.test(HTML)
+  && !/Gentle ruin/.test(HTML) && !/atmospheric ruins/.test(HTML) && /ruinStatus:'Archived old house with wildflowers'/.test(HTML),
+  'archived houses and the experiment district are not called ruins; the word survives only as visitor input for district rides');
+
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');
 if (fail) { console.log('\nFailures:'); fails.forEach(f => console.log('  - ' + f)); }

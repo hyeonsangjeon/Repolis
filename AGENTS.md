@@ -15,7 +15,7 @@
 
 ```bash
 git clone https://github.com/hyeonsangjeon/Repolis && cd Repolis
-python3 -m http.server 8000          # any static server works (npx serve . etc.)
+python3 -m http.server 8000 --protocol HTTP/1.1   # keep-alive matters: the HTTP/1.0 default resets the burst of ~36 module loads (any static server works)
 # open http://localhost:8000  → walk the city with WASD, click the 🚕 to ask the taxi
 ```
 
@@ -86,7 +86,7 @@ CDN import map (Three.js r0.160 via jsDelivr) plus local data, scripts, and modu
 
 ```bash
 # 1) Run the city (static)
-python3 -m http.server 8000
+python3 -m http.server 8000 --protocol HTTP/1.1
 
 # 2) Rebuild repos.json + data/city-state.json from public repos and committed traffic logs
 gh auth login

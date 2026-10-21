@@ -51,8 +51,8 @@
     box-shadow: 0 4px 14px rgba(80,50,20,.16); }
   .badge b { color: #d2622f; }
   #liveBadge .hudShort { display: none; }
-  #townTools { position: relative; padding: 0; }
-  #townTools > summary { padding: 10px 12px; min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+  #townTools { position: relative; padding: 0; backdrop-filter: none; }   /* a filter here would make this badge the containing block of the fixed panel below */
+  #townTools > summary { padding: 10px 12px; min-height: 44px; display: flex; align-items: center; cursor: pointer; border-radius: 999px; backdrop-filter: blur(6px); }
   #townToolsPanel { position: fixed; top: calc(66px + env(safe-area-inset-top,0px)); left: 14px; width: min(360px,calc(100vw - 28px));
     max-height: calc(var(--town-ui-height,100dvh) - 88px); overflow: auto; overscroll-behavior: contain;
     padding: 14px; border-radius: 16px; background: #fffbf2; box-shadow: 0 12px 40px rgba(70,40,15,.26);
@@ -1332,11 +1332,15 @@
       white-space: normal; line-height: 1.35; text-align: center; justify-content: center;
       transform: translateY(20px); padding: 10px 12px; font-size: 12.5px; }
     #prompt.show { transform: translateY(0); }
-    .hint { display: none; }
+    .hint { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); max-width: calc(100vw - 24px); }
   }
 
-  .hint { position: fixed; z-index: 9; left: 50%; bottom: 6px; transform: translateX(-50%);
-    font-size: 11px; color: rgba(74,47,30,.6); font-weight: 600; }
+  .hint { position: fixed; z-index: 9; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    max-width: min(92vw, 560px); padding: 9px 14px; border-radius: 999px; background: rgba(255,251,242,.9); backdrop-filter: blur(6px);
+    box-shadow: 0 4px 14px rgba(80,50,20,.16); color: #4a2f1e; font-size: 12.5px; font-weight: 700; line-height: 1.35; text-align: center;
+    opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+  .hint.show { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .hint { transition: none; } }
 
   /* ---- LLM taxi chat ---- */
   #taxiBtn { position: fixed; z-index: 13; right: 14px; bottom: 18px; width: 60px; height: 60px;
@@ -1405,6 +1409,8 @@
   .msg .ride:hover { filter: brightness(1.05); }
   .msg .ride, .msg .alt { min-height:44px; border:0; font-family:inherit; }
   .msg .ride.handoff { background: linear-gradient(135deg,#cfe0ff,#ffd8b8); color: #49365f; }
+  .msg .suggestRow { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin-top: 6px; }
+  .msg .suggestLabel { flex: 1 0 100%; font-size: 11px; font-weight: 700; color: #ab8a66; }
   .msg .alt { display: inline-block; margin: 4px 5px 0 0; font-size: 11px; font-weight: 700; color: #3a6fb0;
     background: #e7eef8; padding: 4px 9px; border-radius: 8px; cursor: pointer; }
   .msg .trace { margin-top: 8px; font-size: 11px; }
@@ -1583,9 +1589,10 @@
     #growthReplay, #growthReplay .growthPanel { transition:none !important; }
   }
   /* World Tree Chronicle — a quiet dated ledger, not another chat surface */
-  #worldTreeTrigger { position:fixed; z-index:9; width:48px; height:48px; padding:0; border:1px solid rgba(255,232,178,.72);
-    border-radius:50%; color:#fff4ce; background:rgba(55,37,22,.74); box-shadow:0 5px 18px rgba(34,20,9,.3);
-    font:24px/1 system-ui,sans-serif; cursor:pointer; transform:translate(-50%,-50%); backdrop-filter:blur(5px); }
+  #worldTreeTrigger { position:fixed; z-index:9; min-width:48px; height:48px; padding:0 14px 0 10px; border:1px solid rgba(255,232,178,.72);
+    border-radius:999px; color:#fff4ce; background:rgba(55,37,22,.74); box-shadow:0 5px 18px rgba(34,20,9,.3);
+    display:flex; align-items:center; gap:7px; font:22px/1 system-ui,sans-serif; cursor:pointer; transform:translate(-50%,-50%); backdrop-filter:blur(5px); }
+  #worldTreeTrigger .wtLabel { font:800 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif; letter-spacing:.02em; white-space:nowrap; }
   #worldTreeTrigger:hover { background:rgba(78,51,27,.86); }
   #worldTreeTrigger:focus-visible { outline:3px solid #ffe19a; outline-offset:3px; }
   #worldTreeModal { position:fixed; inset:0; z-index:76; display:none; align-items:center; justify-content:center; padding:18px;
@@ -1788,7 +1795,7 @@
 </div>
 <div id="ruinNameplates" class="srOnly" role="list" data-i18n-aria="ruinListAria" aria-label="아카이브 레포 이름 명패"></div>
 <button id="worldTreeTrigger" type="button" data-i18n-aria="worldTreeOpen" aria-label="세계수 연대기 열기"
-  aria-haspopup="dialog" aria-controls="worldTreeModal" aria-keyshortcuts="Enter Space" hidden><span aria-hidden="true">🌳</span></button>
+  aria-haspopup="dialog" aria-controls="worldTreeModal" aria-keyshortcuts="Enter Space" hidden><span aria-hidden="true">🌳</span><span class="wtLabel" data-i18n="worldTreeLabel">연대기</span></button>
 
 <div id="worldTreeModal" role="dialog" aria-modal="true" aria-labelledby="worldTreeTitle" aria-describedby="worldTreeSilence" aria-hidden="true">
   <section class="worldTreeChronicle" tabindex="-1">
@@ -2863,7 +2870,7 @@ const I18N = {
     growthShared:'이 연도의 도시 장면을 공유했어요.', growthShareFailed:'링크를 공유하지 못했어요. 클립보드 권한을 확인해 주세요.',
     growthComplete:'🏙️ 첫 레포부터 현재까지, 도시의 성장 기록을 모두 봤어요.', growthUnavailable:'성장 리플레이를 만들 서로 다른 레포 탄생 연도가 부족해요.',
     growthShareTitle:'@{user}의 {year}년 Repolis', growthShareText:'첫 레포부터 자라난 GitHub 도시의 한 장면',
-    worldTreeOpen:'세계수 연대기 열기', worldTreeClose:'세계수 연대기 닫기', worldTreeKicker:'CITY CHRONICLE', worldTreeUndercroft:'뿌리 아래 서고 걷기',
+    worldTreeOpen:'세계수 연대기 열기', worldTreeLabel:'연대기', worldTreeClose:'세계수 연대기 닫기', worldTreeKicker:'CITY CHRONICLE', worldTreeUndercroft:'뿌리 아래 서고 걷기',
     worldTreeTitle:'세계수 연대기', worldTreeSilence:'말은 없다. 날짜가 붙은 기록 하나.', worldTreeUnavailable:'이 마을에는 생성된 도시 기록이 없습니다.',
     worldTreeEraLabel:'도시력', worldTreeSeasonLabel:'계절', worldTreeSapLabel:'마지막 수액', worldTreeRootsTitle:'The Roots',
     worldTreeRootsSub:'이름 · 활동한 해 · 공개 설명', worldTreeRootSearch:'뿌리 기록 찾기', worldTreeRootsEmpty:'이 기록에는 아카이브된 공개 레포가 없습니다.',
@@ -2960,7 +2967,7 @@ const I18N = {
     lineageFrom:'🌿 {source}에서 갈라져 나온 공개 fork', lineageOpen:'공개 원본 저장소 열기 ↗',
     seasonSpring:'봄', seasonSummer:'여름', seasonAutumn:'가을', seasonWinter:'겨울', seasonCity:'도시 계절',
     wearRecent:'최근 손길', wearFaded:'빛바랜 흔적', wearMossed:'이끼 낀 시간',
-    ruinStatus:'들꽃이 핀 온화한 폐허', ruinNote:'이 공개 레포는 아카이브되어 잠들었지만, 건물의 실루엣과 이름 명패는 도시의 기억으로 남아 있어요.',
+    ruinStatus:'들꽃이 핀 오래된 집 · 아카이브', ruinNote:'이 공개 레포는 아카이브되어 잠들었지만, 건물의 실루엣과 이름 명패는 도시의 기억으로 남아 있어요.',
     ruinListAria:'아카이브 레포 이름 명패',
     cityOfRepos:'레포들의 도시',
     introSub:'레포 하나가 집 한 채.<br>어떤 일을 하는 곳인지, 문을 열어 보세요.',
@@ -3200,6 +3207,8 @@ const I18N = {
     leadUsage:'사용 방법은 전시실의 README에서 확인할 수 있어요. 공개 설명이 맞는 후보는 ',
     cardDetails:'지표 · 관련 질문 · GitHub',
     searchNoMatch:'현재 마을에서 맞는 레포를 찾지 못했어요. 레포 이름이나 필요한 기능을 조금 더 알려주세요.',
+    suggestLabel:'이렇게 물어볼 수 있어요', suggestPopular:'제일 인기있는 레포', suggestPopularQ:'제일 인기있는 레포',
+    suggestRecent:'최근에 손본 레포', suggestRecentQ:'최근에 푸시한 레포', suggestRandom:'아무거나', suggestRandomQ:'아무거나',
     leadVisitors:'👁 방문자가 제일 많은 ', leadClones:'⬇ 클론(다운로드)이 제일 많은 ', leadForks:'⑂ 포크가 제일 많은 ', leadViews:'📈 조회수가 제일 많은 ',
     howAbout:'은 어떠세요?', recommend:' 추천이요!', thisOne:'이건 어때요?',
     modeLocalMsg:'🔎 로컬검색 모드예요. 키 없이 바로 안내해요!',
@@ -3281,7 +3290,7 @@ const I18N = {
     growthShared:'This year of the town was shared.', growthShareFailed:'Couldn\'t share the link. Check this browser\'s clipboard permission.',
     growthComplete:'🏙️ You watched the city grow from its first repo to the present.', growthUnavailable:'This town needs repos born in at least two different years for a growth replay.',
     growthShareTitle:'@{user}\'s Repolis in {year}', growthShareText:'A moment from a GitHub city growing from its first repository',
-    worldTreeOpen:'Open the World Tree Chronicle', worldTreeClose:'Close the World Tree Chronicle', worldTreeKicker:'CITY CHRONICLE', worldTreeUndercroft:'Walk the archive beneath the roots',
+    worldTreeOpen:'Open the World Tree Chronicle', worldTreeLabel:'Chronicle', worldTreeClose:'Close the World Tree Chronicle', worldTreeKicker:'CITY CHRONICLE', worldTreeUndercroft:'Walk the archive beneath the roots',
     worldTreeTitle:'World Tree Chronicle', worldTreeSilence:'No voice. One dated record.', worldTreeUnavailable:'No generated city record is available for this town.',
     worldTreeEraLabel:'City era', worldTreeSeasonLabel:'Season', worldTreeSapLabel:'Last sap flow', worldTreeRootsTitle:'The Roots',
     worldTreeRootsSub:'Name · active years · public description', worldTreeRootSearch:'Search root records', worldTreeRootsEmpty:'No archived public repository appears in this record.',
@@ -3378,7 +3387,7 @@ const I18N = {
     lineageFrom:'🌿 Public fork branched from {source}', lineageOpen:'Open public source ↗',
     seasonSpring:'Spring', seasonSummer:'Summer', seasonAutumn:'Autumn', seasonWinter:'Winter', seasonCity:'City season',
     wearRecent:'Recently tended', wearFaded:'Faded traces', wearMossed:'Mossed by time',
-    ruinStatus:'Gentle ruin with wildflowers', ruinNote:'This public repository is archived and resting, while its original silhouette and accessible nameplate remain part of the city memory.',
+    ruinStatus:'Archived old house with wildflowers', ruinNote:'This public repository is archived and resting, while its original silhouette and accessible nameplate remain part of the city memory.',
     ruinListAria:'Archived repository nameplates',
     cityOfRepos:'the city of repos',
     introSub:'Every house is a repository.<br>Open a door. Find out what lives inside.',
@@ -3618,6 +3627,8 @@ const I18N = {
     leadUsage:'Read the README in the exhibit for usage instructions. A matching public description is ',
     cardDetails:'Metrics · questions · GitHub',
     searchNoMatch:'I could not find a matching repo in this town. Which repository or capability do you have in mind?',
+    suggestLabel:'Try one of these', suggestPopular:'most popular repo', suggestPopularQ:'most popular repo',
+    suggestRecent:'recently updated repo', suggestRecentQ:'most recently updated repo', suggestRandom:'anything', suggestRandomQ:'anything',
     leadVisitors:'👁 The most-visited is ', leadClones:'⬇ The most-cloned is ', leadForks:'⑂ The most-forked is ', leadViews:'📈 The most-viewed is ',
     howAbout:' — how about it?', recommend:' — recommended!', thisOne:'How about this one?',
     modeLocalMsg:'🔎 Local-search mode. No key needed — instant!',
@@ -5162,7 +5173,7 @@ const ZONE_CAT = [
   {id:'web',     ko:'웹·프론트 거리',    en:'Web / Frontend Street',      icon:'🪟', tone:0xe0a94a, ground:0x4a3a20},
   {id:'data',    ko:'데이터 공방',       en:'Data Workshop',              icon:'📊', tone:0xb072d6, ground:0x3a2648},
   {id:'library', ko:'문서·학습관',       en:'Library / Learning Quarter', icon:'📚', tone:0x66c48a, ground:0x22432f},
-  {id:'ruins',   ko:'실험·폐허 지구',    en:'Archive / Experiment Ruins', icon:'🏚️', tone:0x9a8f7e, ground:0x37332b},
+  {id:'ruins',   ko:'실험·기록 지구',    en:'Experiment / Archive District', icon:'📜', tone:0x9a8f7e, ground:0x37332b},
   {id:'commons', ko:'커먼즈 광장',       en:'Commons',                    icon:'🏛️', tone:0xb6a98f, ground:0x393227},
 ];
 const ZKW = {
@@ -8486,10 +8497,10 @@ const RESIDENTS=[
   { id:'mira', zone:'ruins', color:0xc79a86, accent:0xe6c7b6, tone:'visual·calm',
     topics:['mood','light','weather','time','world'],
     ko:{name:'미라',role:'분위기지기'}, en:{name:'Mira',role:'atmosphere keeper'},
-    greet:{ko:'실험·폐허 지구예요. 천천히 머물러요.',en:'The old experiment ruins. Stay a while.'},
-    blurb:{ko:'저는 미라, 마을의 분위기지기예요. 빛과 시간, 폐허의 결을 살펴요.',en:'I\u2019m Mira, the atmosphere keeper \u2014 I watch the light, the hour, and the ruins\u2019 mood.'},
-    amb:{ko:['해질녘엔 폐허도 부드러워 보여요.','빛이 바뀌면 마을의 표정도 바뀌죠.','낡은 실험지에도 온기가 남아 있어요.','오늘 하늘색은 조금 차분하네요.','고요함도 하나의 풍경이에요.'],
-        en:['At dusk even ruins look soft.','When the light shifts, so does the town\u2019s mood.','Old test-grounds still hold some warmth.','Today\u2019s sky runs a little calm.','Stillness is a landscape too.']} },
+    greet:{ko:'실험·기록 지구예요. 천천히 머물러요.',en:'The old experiment grounds. Stay a while.'},
+    blurb:{ko:'저는 미라, 마을의 분위기지기예요. 빛과 시간, 오래된 집의 결을 살펴요.',en:'I\u2019m Mira, the atmosphere keeper \u2014 I watch the light, the hour, and the old houses\u2019 mood.'},
+    amb:{ko:['해질녘엔 오래된 집도 부드러워 보여요.','빛이 바뀌면 마을의 표정도 바뀌죠.','낡은 실험지에도 온기가 남아 있어요.','오늘 하늘색은 조금 차분하네요.','고요함도 하나의 풍경이에요.'],
+        en:['At dusk even the old houses look soft.','When the light shifts, so does the town\u2019s mood.','Old test-grounds still hold some warmth.','Today\u2019s sky runs a little calm.','Stillness is a landscape too.']} },
   { id:'kai', zone:'plaza', color:0xf0c069, accent:0xffe0a0, tone:'concise·welcoming',
     topics:['guide','district','path','station','plaza'],
     ko:{name:'카이',role:'광장 길잡이'}, en:{name:'Kai',role:'crossing guide'},
@@ -8964,7 +8975,7 @@ function _resComfortLine(L){ const hearth=L._rest&&L._rest.seat&&L._rest.seat._h
 // 🏞️ each resident has a cherished spot — a little haunt (아지트) that fits who they are; now and then they stroll there, linger, and speak of it fondly
 const _RES_FAV={ sol:{ko:'볕 잘 드는 실험 자리',en:'a sunny spot to tinker'}, jun:{ko:'물결 소리 들리는 항구 끝',en:'the harbour edge where the water laps'},
   nari:{ko:'꽃이 제일 많이 핀 골목',en:'the alley where the flowers bloom thickest'}, tae:{ko:'아무도 안 오는 조용한 구석',en:'a quiet corner nobody visits'},
-  rin:{ko:'도서관 계단',en:'the library steps'}, mira:{ko:'노을이 제일 고운 폐허 언덕',en:'the ruin-hill with the best sunset'},
+  rin:{ko:'도서관 계단',en:'the library steps'}, mira:{ko:'노을이 제일 고운 기록 언덕',en:'the archive hill with the best sunset'},
   kai:{ko:'광장 한복판',en:'the heart of the plaza'}, noa:{ko:'별이 잘 보이는 모닥불 곁',en:'the campfire under the stars'},
   auri:{ko:'데이터 공방 뒤의 작은 장부방',en:'the little ledger nook behind the Data workshop'} };
 function _resFavPhase(res){ let h=0; const s=String(res&&res.id||''); for(let i=0;i<s.length;i++) h=(Math.imul(h,31)+s.charCodeAt(i))>>>0; return (h%360)*Math.PI/180; }
@@ -9948,7 +9959,8 @@ actBtn.addEventListener('click',()=>{ if(townInputBlocked()) return; doAct(actBt
 document.getElementById('totalCount').textContent=REPOS.length;
 const panel=document.getElementById('panel');
 const menuBtn=document.getElementById('menuBtn');
-menuBtn.onclick=()=>{ const hidden=panel.classList.toggle('hidden'); menuBtn.setAttribute('aria-expanded',String(!hidden)); };
+menuBtn.onclick=()=>{ if(modalOpen){ closeCard(); panel.classList.remove('hidden'); menuBtn.setAttribute('aria-expanded','true'); return; }   // an open repo card is a lid, never a floor for the panel
+  const hidden=panel.classList.toggle('hidden'); menuBtn.setAttribute('aria-expanded',String(!hidden)); };
 
 /* ───────── 🛂 Explorer Passport — local-only visit stamps (no server, no PII) ───────── */
 const PASSPORT_KEY='repolisPassport';
@@ -10289,7 +10301,7 @@ function renderCourse(){ const box=document.getElementById('courseBox'); if(!box
 function onCourseProgress(){ if(!REPOS.length) return; if(!passportEl.classList.contains('hidden')) renderCourse();
   const pr=courseProgress(); if(pr.total>0&&pr.done>=pr.total&&course&&!course.rewarded){ course.rewarded=true;
     try{ localStorage.setItem(COURSE_KEY,JSON.stringify(course)); }catch(e){} fireworksShow(12); showWave(t('courseReward'),3400); } }
-document.getElementById('passBtn').onclick=()=>{ const hidden=passportEl.classList.toggle('hidden'); if(!hidden){ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); renderPassport(); } };
+document.getElementById('passBtn').onclick=()=>{ if(modalOpen){ closeCard(); passportEl.classList.add('hidden'); } const hidden=passportEl.classList.toggle('hidden'); if(!hidden){ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); renderPassport(); } };
 document.getElementById('menuBtn').addEventListener('click',()=> passportEl.classList.add('hidden'));
 const repoList=document.getElementById('repoList');
 /*FIRST_REPO_CORE:START*/
@@ -10504,6 +10516,9 @@ function renderWorldTreeChronicle(){
 }
 function _worldTreeFocusables(){ return [...worldTreePanel.querySelectorAll('button:not([disabled]),input:not([disabled])')]
   .filter(element=>!element.hidden&&!element.closest('[hidden]')); }
+let _wtTopbarRight=0,_wtHalfW=50,_wtLang='';
+function _wtMeasure(){ const bar=document.getElementById('topbar'); _wtTopbarRight=bar?bar.getBoundingClientRect().right:0; _wtHalfW=((worldTreeTrigger.offsetWidth||88)/2)+6; _wtLang=LANG; }
+addEventListener('resize',()=>{ _wtTopbarRight=0; });
 function _updateWorldTreeTrigger(){
   const intro=document.getElementById('intro');
   if(!MEMORIAL_TREE||!MEMORIAL_TREE.requestedVisible||WORLD_TREE_RENDER_MODE==='tree-off'||modalOpen||GROWTH_REPLAY.active||undercroftActive()||repositoryAtelierActive()||(intro&&!intro.classList.contains('hidden'))){
@@ -10514,8 +10529,11 @@ function _updateWorldTreeTrigger(){
   const visible=WORLD_TREE_TRIGGER_TOWARD.dot(WORLD_TREE_TRIGGER_DIRECTION)>0&&WORLD_TREE_TRIGGER_PROJECTED.z>=-1&&WORLD_TREE_TRIGGER_PROJECTED.z<=1
     &&Math.abs(WORLD_TREE_TRIGGER_PROJECTED.x)<=.94&&Math.abs(WORLD_TREE_TRIGGER_PROJECTED.y)<=.9;
   worldTreeTrigger.hidden=!visible; if(!visible) return false;
-  worldTreeTrigger.style.left=((WORLD_TREE_TRIGGER_PROJECTED.x*.5+.5)*innerWidth)+'px';
-  worldTreeTrigger.style.top=((-WORLD_TREE_TRIGGER_PROJECTED.y*.5+.5)*innerHeight)+'px'; return true;
+  if(!_wtTopbarRight||_wtLang!==LANG) _wtMeasure();   // one layout read per resize or language switch, never per frame
+  let x=(WORLD_TREE_TRIGGER_PROJECTED.x*.5+.5)*innerWidth, y=(-WORLD_TREE_TRIGGER_PROJECTED.y*.5+.5)*innerHeight;
+  x=Math.min(innerWidth-12-_wtHalfW,Math.max(12+_wtHalfW,x));
+  if(x-_wtHalfW<_wtTopbarRight+8) y=Math.max(y,96);   // the labelled pill stays under the top bar when they share columns
+  worldTreeTrigger.style.left=x+'px'; worldTreeTrigger.style.top=y+'px'; return true;
 }
 function openWorldTreeChronicle(entry='landmark',source=null){
   if(WORLD_TREE_UI.open) return true; if(modalOpen||repositoryAtelierActive()||repositoryAtelierTransitioning()||GROWTH_REPLAY.active) return false;
@@ -11061,8 +11079,8 @@ function similarRepos(repo,n){ n=n||3; if(!repo||!repo._zone) return [];
   return scored.slice(0,n).map(x=>x.r); }
 function zoneWhy(repo){ const z=zoneCatById(repo._zone); const name=z?(LANG==='ko'?z.ko:z.en):(repo._zone||'');
   if(repo._zone==='ruins'){ return LANG==='ko'
-      ? `${z?z.icon:'🏚️'} <b>${esc(repo.label)}</b>는 <b>${esc(name)}</b>에 있어요 — 실험적이거나 오래 잠든 레포라, 분위기 있는 폐허 지구에 배치했어요. (LLM 없이 분류기가 판단해요)`
-      : `${z?z.icon:'🏚️'} <b>${esc(repo.label)}</b> rests in the <b>${esc(name)}</b> — it looks experimental or long-dormant, so it sits among the atmospheric ruins. (Classified deterministically, no LLM.)`; }
+      ? `${z?z.icon:'📜'} <b>${esc(repo.label)}</b>는 <b>${esc(name)}</b>에 있어요 — 실험적이거나 오래 잠든 레포라, 조용한 실험·기록 지구에 배치했어요. (LLM 없이 분류기가 판단해요)`
+      : `${z?z.icon:'📜'} <b>${esc(repo.label)}</b> rests in the <b>${esc(name)}</b> — it looks experimental or long-dormant, so it sits in the quiet experiment and archive district. (Classified deterministically, no LLM.)`; }
   const h=(repo.repo+' '+(repo.desc||'')+' '+((repo.topics||[]).join(' '))).toLowerCase();
   const kws=(typeof ZKW!=='undefined'&&ZKW[repo._zone]?ZKW[repo._zone]:[]).filter(k=>h.includes(k[0])).map(k=>k[0]).slice(0,4);
   const langAff=(typeof ZLANG!=='undefined'&&ZLANG[repo.lang])?ZLANG[repo.lang][repo._zone]:0;
@@ -11105,7 +11123,13 @@ function renderCardAsk(repo){ const box=document.getElementById('cardAsk'); if(!
   const wb=box.querySelector('[data-ca="why"]'); if(wb) wb.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'why'}); cardWhyZone(repo); };
   const sb=box.querySelector('[data-ca="similar"]'); if(sb) sb.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'similar'}); cardSimilar(repo); };
   box.querySelectorAll('.caChip').forEach((el,index)=>{ el.dataset.caq=qs[index]; el.onclick=()=>{ track('card_ask',{repo:repo.repo,kind:'chip'}); askInChat(el.dataset.caq); }; }); }
-modal.addEventListener('click',e=>{ e.stopPropagation(); if(e.target===modal) closeCard(); });
+modal.addEventListener('click',e=>{ e.stopPropagation(); if(e.target!==modal) return; closeCard();
+  if(!e.isTrusted||!(e.clientX||e.clientY)) return;                                    // one tap lifts the lid and still reaches the HUD control under it
+  const under=document.elementFromPoint(e.clientX,e.clientY), control=under&&under.closest&&under.closest('#topbar button,#topbar summary,#menuBtn');
+  if(!control) return;
+  const alreadyOpen=control.id==='menuBtn'?!panel.classList.contains('hidden'):control.tagName==='SUMMARY'?document.getElementById('townTools').open
+    :control.id==='passBtn'?!passportEl.classList.contains('hidden'):control.id==='mapBtn'?mapOpen:control.id==='stationBtn'?!document.getElementById('station').classList.contains('hidden'):false;
+  if(!alreadyOpen) control.click(); });   // the control's own panel already open underneath just becomes usable
 modal.addEventListener('keydown',e=>{ if(e.isComposing||e.keyCode===229) return; if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeCard(); return; } if(e.key!=='Tab') return;
   const items=townFocusables(modal); if(!items.length) return;
   const first=items[0],last=items[items.length-1]; if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
@@ -11385,8 +11409,14 @@ function repositoryAtelierDirectLinkRepo(){
   const repo=repoByKey(repoPortalTarget.repo),target=repo&&_repositoryPortalTarget(repo);
   return target&&target.slug.toLowerCase()===ATELIER_DIRECT_LINK.target.slug.toLowerCase()?repo:null;
 }
+/* first-steps toast: shown once after entry on every viewport, gone at the first move or after 9 s */
+function showEntryHint(){ const hint=document.querySelector('.hint'); if(!hint||hint._shown||(tour&&tour.active)) return; hint._shown=true; hint.classList.add('show');
+  const off=()=>{ hint.classList.remove('show'); clearTimeout(timer); removeEventListener('keydown',onKey,true); removeEventListener('pointerdown',onPointer,true); };
+  const onKey=e=>{ if(MOVE.has(e.code)) off(); };
+  const onPointer=e=>{ if(e.target&&e.target.closest&&e.target.closest('#app,#joy')) off(); };
+  const timer=setTimeout(off,9000); addEventListener('keydown',onKey,true); addEventListener('pointerdown',onPointer,true); }
 document.getElementById('startBtn').onclick=()=>{ if(!_claimTownEntry()) return;
-  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('intro').classList.add('hidden'); showEntryHint();
   track('town_enter', { returning: !!VISITOR.returning });
   const rb=VISITOR.returning, news=hasFreshness(),blueprintPath=!blueprintDeepLinkBypass&&blueprintDeepLinkRepo()?BLUEPRINT_DEEP_LINK.path:null;
   if(cityMode==='public'){
@@ -11699,7 +11729,7 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
   function closeStation(){ stationEl.classList.add('hidden'); }
   if(stationClose) stationClose.onclick=closeStation;
   openStationModal=openStation;   // let the spatial station prop (walk-up) open the same ticket office
-  if(stationBtn) stationBtn.onclick=()=>{ if(stationEl.classList.contains('hidden')) openStation(); else closeStation(); };
+  if(stationBtn) stationBtn.onclick=()=>{ if(modalOpen){ closeCard(); if(stationEl.classList.contains('hidden')) openStation(); return; } if(stationEl.classList.contains('hidden')) openStation(); else closeStation(); };
   document.getElementById('menuBtn').addEventListener('click',closeStation);
   goBtn.onclick=()=>depart(inp.value);
   inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){ e.preventDefault(); depart(inp.value); } });
@@ -12325,6 +12355,11 @@ function addMsg(who,html,opts){
     opts.alts.forEach(a=>{ const c=document.createElement('button'); c.type='button'; c.className='alt'; c.textContent=a.label;
       c.onclick=()=>{ addMsg('me',a.label); replyFor(a,t('soLead')); }; wrap.appendChild(c); });
     m.appendChild(wrap); }
+  if(opts&&opts.suggest&&!repositoryAtelierActive()){ const wrap=document.createElement('div'); wrap.className='suggestRow';   // a miss offers three asks that always resolve
+    const label=document.createElement('span'); label.className='suggestLabel'; label.textContent=t('suggestLabel'); wrap.appendChild(label);
+    [['suggestPopular','suggestPopularQ'],['suggestRecent','suggestRecentQ'],['suggestRandom','suggestRandomQ']].forEach(([k,qk])=>{ const c=document.createElement('button'); c.type='button'; c.className='alt'; c.textContent=t(k);
+      c.onclick=()=>{ if(busy) return; chatText.value=t(qk); sendChat(); }; wrap.appendChild(c); });
+    m.appendChild(wrap); }
   if(opts&&opts.handoff&&!repositoryAtelierActive()){ const kind=typeof opts.handoff==='string'?opts.handoff:opts.handoff.kind, sc=window.scholarByKind&&window.scholarByKind(kind);
     if(sc){ const h=document.createElement('button'); h.type='button'; h.className='ride handoff'; h.textContent=tf('handoffGo',{name:sc.star});
       h.onclick=()=>startScholarHandoff(kind); m.appendChild(document.createElement('br')); m.appendChild(h); } }
@@ -12440,7 +12475,7 @@ chatEl.addEventListener('keydown',event=>{ if(event.isComposing||event.keyCode==
 /* ---- Mode A: local intent search (no key, always works) ---- */
 const SYN={ rag:['rag','retrieval','faq','vector','embedding','검색증강','지식'], llm:['llm','gpt','openai','azure','generative','genai','foundry','language model','파운드리'],
   stt:['stt','speech','asr','transcribe','transcription','음성','자막','whisper','wer'], 음성:['stt','speech','음성','asr','whisper'],
-  번역:['translate','translation','번역','nmt'], agent:['agent','agentic','orchestration','multi-agent','autonomous','에이전트'],
+  번역:['translate','translation','번역','nmt'], agent:['agent','agents','agentic','orchestration','multi-agent','autonomous'],
   데이터:['data','dataset','etl','pipeline','spark','emr','pandas','데이터'], 크롤:['crawl','scrape','scraper','crawler','수집'],
   유튜브:['youtube','yt','dl','nas','media','download'], nas:['nas','download','youtube','media','dl'],
   동영상:['video','media'], 영상:['video','media'], 다운로드:['download','downloader','yt-dlp'], 내려받:['download','downloader'],
@@ -12448,9 +12483,27 @@ const SYN={ rag:['rag','retrieval','faq','vector','embedding','검색증강','�
   감정:['sentiment','emotion','감정','classification'], aws:['aws','sagemaker','emr','s3','bedrock','cloud'],
   시각화:['visualization','dashboard','streamlit','chart','plot','시각화'], 웹:['web','flask','streamlit','app','frontend','javascript'],
   추천:['recommend','recommendation','추천'], 모니터:['monitor','traffic','insight','dashboard','모니터'] };
+/* Korean transliterations and plain translations. A visitor's own word in another script is the word itself (full weight),
+   unlike the related-concept synonyms above (half weight). Longest matching key wins, so '자바스크립트' is not also '자바'. */
+const KO2EN={ 에이전트:['agent','agents'], 도커:['docker','container','compose'], 쿠버네티스:['kubernetes','k8s'], 쿠버:['kubernetes','k8s'],
+  파이썬:['python'], 자바스크립트:['javascript'], 자바:['java'], 스프링:['spring','springboot'], 리액트:['react'], 터미널:['terminal','tty','gotty'],
+  챗봇:['chatbot','chat'], 대시보드:['dashboard'], 벤치마크:['benchmark','evaluation'], 임베딩:['embedding','embeddings'], 음성인식:['stt','asr','speech'],
+  자막:['subtitle','subtitles','transcription'], 가드레일:['guardrails'], 라우팅:['routing','router'], 노트북:['notebook','jupyter'], 주피터:['jupyter','notebook'],
+  텐서플로:['tensorflow'], 젠킨스:['jenkins'], 베드락:['bedrock'], 세이지메이커:['sagemaker'], 애저:['azure'], 파운드리:['foundry'], 깃허브:['github'],
+  데이터:['data','dataset'], 크롤링:['crawl','crawler','scrape','scraper'], 유튜브:['youtube'], 동영상:['video'], 영상:['video'], 다운로드:['download','downloader'],
+  번역:['translate','translation'], 음성:['speech','voice','audio'], 감정:['sentiment','emotion'], 시각화:['visualization','visualisation'],
+  추천:['recommend','recommendation'], 모니터:['monitor','monitoring'], 보안:['security'], 개인정보:['pii','privacy'], 비용:['cost','billing'],
+  발음:['pronunciation','phonetic'], 한국어:['korean'], 영어:['english'], 프롬프트:['prompt'], 압축:['compression'], 검색:['search','retrieval'] };
 const STOP=new Set(['관련','레포','repo','보여줘','알려줘','찾아줘','가줘','가자','으로','로','좀','그','이','저','것','거','해줘','있어','뭐','무슨','어떤','도구','설치','방법','사용법','about','show','me','the','a','to','go','find','please','tool','tools','how','use','install','repository','repositories']);
 function tokens(q){ return (q.toLowerCase().match(/[a-z0-9]+|[가-힣]+/g)||[]).filter(t=>t.length>1&&!STOP.has(t)); }
-function expand(toks){ const set=new Set(); toks.forEach(t=>{ set.add(t); for(const k in SYN){ if(t.includes(k)||k.includes(t)) SYN[k].forEach(x=>set.add(x)); if(SYN[k].some(s=>s.includes(t)&&t.length>2)) SYN[k].forEach(x=>set.add(x)); } }); return [...set]; }
+function _translit(t){ let best=''; for(const k in KO2EN){ if(t.includes(k)&&k.length>best.length) best=k; } return best?KO2EN[best]:null; }
+/* direct = the visitor's words, their transliterations and morphological variants of a synonym key; related = the rest of that key's list */
+function expandDetailed(toks){ const direct=new Set(), related=new Set();
+  toks.forEach(t=>{ direct.add(t); const tr=_translit(t); if(tr) tr.forEach(x=>direct.add(x)); });
+  [...direct].forEach(t=>{ for(const k in SYN){ const variant=t.includes(k)||k.includes(t);
+    if(variant||SYN[k].some(x=>x.includes(t)&&t.length>2)){ if(variant) direct.add(k); SYN[k].forEach(x=>{ if(!direct.has(x)) related.add(x); }); } } });
+  return { terms:[...direct,...related], direct }; }
+function expand(toks){ return expandDetailed(toks).terms; }
 function hay(r){ return (r.repo+' '+r.label+' '+(r.lang||'')+' '+(r.desc||'')+' '+((r.topics||[]).join(' '))).toLowerCase(); }
 /* ---- search index: inverted index + per-repo token sets, built once (lazily) ---- */
 let INVIDX=new Map(), _idxBuilt=false;
@@ -12462,15 +12515,21 @@ function buildSearchIndex(){ if(_idxBuilt) return; _idxBuilt=true; INVIDX=new Ma
     r._topics=new Set((r.topics||[]).map(x=>String(x).toLowerCase()));
     r._tok=new Set(expand([...set])); r._hay=hay(r);
     r._tok.forEach(tk=>{ let s=INVIDX.get(tk); if(!s){ s=new Set(); INVIDX.set(tk,s); } s.add(i); }); }); }
-function scoreRepo(r,terms,raw){ const nm=r._name||new Set(), tk=r._tok||new Set(), tp=r._topics||new Set(), h=r._hay||hay(r); let s=0;
-  terms.forEach(t=>{ if(nm.has(t)) s+=7; else if(tk.has(t)) s+=4; else if(h.includes(t)) s+=2; if(tp.has(t)) s+=3; });
-  (raw||[]).forEach(t=>{ if(nm.has(t)) s+=6; });   // the user's own word appearing in the repo name wins
+const GENERIC_TOKEN=t=>t.length<=2;   // 'ai', 'js', 'en': too common for a name hit alone to prove relevance
+function scoreRepo(r,terms,raw,direct){ const nm=r._name||new Set(), tk=r._tok||new Set(), tp=r._topics||new Set(), h=r._hay||hay(r); let s=0;
+  terms.forEach(t=>{ const w=(!direct||direct.has(t))?1:0.5;   // related-concept synonyms are weaker evidence than the visitor's own words
+    if(GENERIC_TOKEN(t)){ if(nm.has(t)||tk.has(t)||h.includes(t)) s+=2; if(tp.has(t)) s+=1; return; }
+    if(nm.has(t)) s+=7*w; else if(tk.has(t)) s+=4*w; else if(h.includes(t)) s+=2*w; if(tp.has(t)) s+=3*w; });
+  (raw||[]).forEach(t=>{ if(!GENERIC_TOKEN(t)&&nm.has(t)) s+=6; });   // the user's own word appearing in the repo name wins
+  if(!String(r.desc||'').trim()&&!(r.topics||[]).length) s-=3;   // bare public metadata: the index knows too little to put it first
   return s; }
+function _pushedMs(r){ const ms=Date.parse((r&&r.pushed)||''); return Number.isFinite(ms)?ms:0; }
 /* index-backed candidate retrieval: collect via inverted index, then rank */
-function searchCandidates(q,n=8){ buildSearchIndex(); const raw=tokens(q); const terms=expand(raw); const cand=new Set();
+function searchCandidates(q,n=8){ buildSearchIndex(); const raw=tokens(q); const ex=expandDetailed(raw), terms=ex.terms; const cand=new Set();
   terms.forEach(t=>{ const s=INVIDX.get(t); if(s) s.forEach(i=>cand.add(i)); });
   const pool=cand.size?[...cand].map(i=>REPOS[i]):REPOS;
-  const ranked=pool.map(r=>({r,s:scoreRepo(r,terms,raw)})).sort((a,b)=>b.s-a.s||(a.r.rank||0)-(b.r.rank||0));
+  // equal lexical evidence: town rank, then ★, then the latest public push (public towns carry no rank)
+  const ranked=pool.map(r=>({r,s:scoreRepo(r,terms,raw,ex.direct)})).sort((a,b)=>b.s-a.s||(a.r.rank||0)-(b.r.rank||0)||(b.r.stars||0)-(a.r.stars||0)||_pushedMs(b.r)-_pushedMs(a.r));
   const hits=ranked.filter(x=>x.s>=3);
   return { list:hits.slice(0,n).map(x=>x.r), strong:hits.length>0, terms }; }
 function gitberQueryKind(q){
@@ -12479,13 +12538,13 @@ function gitberQueryKind(q){
   const compare=/가장|제일|최다|많[은이]|높[은이]|순위|랭킹|개수|\b(most|highest|top|rank|ranking|count|number of|how many)\b/.test(s);
   if(compare){
     if(/클론|다운로드\s*(수|횟수|된|한)|\b(clones?|cloned|downloads|downloaded)\b|\bdownload\s+count\b/.test(s)) return {kind:'metric',field:'clones'};
-    if(/스타|별|\bstars?\b/.test(s)) return {kind:'metric',field:'stars'};
-    if(/포크|파생|\bforks?\b/.test(s)) return {kind:'metric',field:'forks'};
+    if(/스타|별|\bstar(s|red)?\b/.test(s)) return {kind:'metric',field:'stars'};
+    if(/포크|파생|\bfork(s|ed)?\b/.test(s)) return {kind:'metric',field:'forks'};
     if(/방문|왕래|트래픽|\b(visitors?|traffic)\b/.test(s)) return {kind:'metric',field:'visitors'};
-    if(/조회|페이지뷰|\bviews?\b/.test(s)) return {kind:'metric',field:'views'};
+    if(/조회|페이지뷰|\bview(s|ed)?\b/.test(s)) return {kind:'metric',field:'views'};
   }
   if(/인기|\bpopular\b/.test(s)&&(/레포|저장소|repo|project/.test(s)||/^(가장 |제일 |most )?(인기|popular)/.test(s))) return {kind:'metric',field:'rank'};
-  if(/최근|요즘 만든|\b(recent|newest|latest)\b/.test(s)&&/레포|저장소|푸시|업데이트|만든|repo|project|push|updat/.test(s)) return {kind:'metric',field:'pushed'};
+  if(/최근|요즘 만든|\b(recent(ly)?|newest|latest|lately)\b/.test(s)&&/레포|저장소|푸시|업데이트|만든|repo|project|push|updat/.test(s)) return {kind:'metric',field:'pushed'};
   return {kind:'search'};
 }
 const M=o=>{ if(o) o._metric=true; return o; };   // explicit metric requests bypass semantic retrieval
@@ -12508,7 +12567,7 @@ function smalltalk(q){
 function needsSearch(q){
   if(gitberQueryKind(q).kind==='usage'||/도구|다운로드|내려받|\b(download|tool)\b/i.test(q)) return true;
   if(searchCandidates(q,8).strong) return true;
-  return /레포|repo|저장소|프로젝트|project|코드|커밋|commit|푸시|push|이슈|issue|readme|라이브러리|library|도서관|fork|포크|clone|클론|데모|demo|github|깃헙|깃허브|스타\b|\bstars?\b|만든|개발|최근|recent|latest|업데이트|update|보여|show|데려다|소개|introduce|알려줘|tell me|버전|version|토픽|topic/i.test(q);
+  return /레포|repo|저장소|프로젝트|project|코드|커밋|commit|푸시|push|이슈|issue|readme|라이브러리|library|도서관|fork|포크|clone|클론|데모|demo|github|깃헙|깃허브|스타\b|\bstar(s|red)?\b|만든|개발|최근|recent|latest|업데이트|update|보여|show|데려다|소개|introduce|알려줘|tell me|버전|version|토픽|topic/i.test(q);
 }
 /* meta questions about the town itself (how many scholars / repos / who asked) → answer from
    data, never spend a Knowledge-Source call. Bilingual via inline LANG. */
@@ -12605,7 +12664,7 @@ const ZONE_SYN = {
   web:     /웹 ?(거리|구역|스트리트|지구|동네)|프론트 ?(엔드)? ?(거리|구역)|front ?end ?(street|district)|web ?(street|district)|상점가/i,
   data:    /데이터 ?(공방|구역|워크숍|작업장|지구)|\b공방\b|data ?(workshop|district)|워크숍|작업장/i,
   library: /문서 ?(관|구역|학습관|지구)|학습 ?(관|구역)|자료관|라이브러리 ?(구역|지구|쿼터)|library ?(quarter|district)|learning ?quarter/i,
-  ruins:   /(실험 ?)?폐허|유적|experiment ?ruins?|\bruins?\b|아카이브 ?(구역|지구)|실험 ?(구역|지구)/i,
+  ruins:   /(실험 ?)?폐허|유적|experiment ?ruins?|\bruins?\b|아카이브 ?(구역|지구)|기록 ?(구역|지구)|실험 ?(구역|지구)|archive district/i,
   commons: /커먼즈 ?(광장|구역)?|commons/i,
 };
 function zoneResolve(q){ for(const z of ZONES){ const re=ZONE_SYN[z.id]; if(re&&re.test(q)) return z; } return null; }
@@ -12637,7 +12696,7 @@ function _coreIntent(q){
   if(/밤하늘|밤 ?하늘|별자리|별빛|별똥|별 ?(보는|보기|볼래|볼까|구경|감상|봐|바라보)|하늘 ?(을 ?)?(보|올려|구경)|반짝이는 ?별|빛나는 ?별|은하수|stargaz|starlight|constellation|milky ?way|night ?sky|cosmos|stars?[^.]{0,14}night|night[^.]{0,14}stars?/i.test(ql)
      && !/레포|repo|저장소|프로젝트|project|깃헙|깃허브|github|스타 ?(수|순|많|제일|개수|랭킹|높)|star ?(count|sort|most|rank)|많은 ?레포|인기 ?(레포|있)/.test(ql))
     return null;
-  if(/아무|랜덤|골라|추천만|\brandom\b/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
+  if(/아무|랜덤|골라|추천만|\brandom\b|^\s*(anything|any ?(one|repo|house)|surprise me|whatever)\s*[!.?~]*$/.test(ql)){ const r=REPOS[Math.floor(Math.random()*REPOS.length)]; return pick(r,t('leadRandom'),[]); }
   const intent=gitberQueryKind(q);
   if(intent.kind==='metric'){
     const field=intent.field,traffic=['visitors','clones','views'].includes(field);
@@ -12654,7 +12713,7 @@ function deterministicIntent(q){
   const r=_coreIntent(q);
   if(r){ offCount=0; return r; }                     // small talk (greeting) / library / metric → engaged
   if(needsSearch(q)){ offCount=0; return null; }      // a real repo query → let the search run (KS in grounded mode)
-  if(!OFFTOPIC_FUNNEL) return { repo:null, message:t('stOfftopic'), alts:[] };   // off-topic → plain friendly reply, no repo push
+  if(!OFFTOPIC_FUNNEL) return { repo:null, message:t('stOfftopic'), alts:[], suggest:true };   // off-topic → plain friendly reply plus three asks that resolve, no repo push
   offCount++;                                         // (dormant) 1-5 chat along, 6+ gently steer back to repos
   return { repo:null, message:t(offCount>=6?'stOfftopicRedirect':'stOff'+offCount), alts:[] };
 }
@@ -12663,14 +12722,14 @@ function localIntent(q){
   if(det) return det;
   const sc=searchCandidates(q,8);
   if(sc.strong) return pickList(sc.list,t(gitberQueryKind(q).kind==='usage'?'leadUsage':'leadMatch'));
-  return {repo:null,message:t('searchNoMatch'),alts:[]};
+  return {repo:null,message:t('searchNoMatch'),alts:[],suggest:true};
 }
 function byRank(){ return [...REPOS].sort((a,b)=>(a.rank||0)-(b.rank||0)); }
 function pickList(list, lead){ return pick(list[0],lead,list.slice(1,4)); }
 function padAlts(main, alts){ const seen=new Set([main&&main.repo]);
   return (alts||[]).filter(repo=>{ if(!repo||seen.has(repo.repo))return false;seen.add(repo.repo);return true; }).slice(0,3); }
 function pick(repo,lead,alts,weak){
-  if(!repo) return {repo:null,message:t('searchNoMatch'),alts:[]};
+  if(!repo) return {repo:null,message:t('searchNoMatch'),alts:[],suggest:true};
   const d=repo.desc?repo.desc.replace(/\s+/g,' ').slice(0,70):'';
   const metricLine=repo.trafficKnown===false?`★${repo.stars} · ⑂${repo.forks} · ${repo.lang}`:`★${repo.stars} · 👁${repo.visitors} · ⬇${repo.clones||0} · ⑂${repo.forks} · ${repo.lang}`;
   const msg=`${lead}‘<b>${repo.label}</b>’${weak?t('howAbout'):t('recommend')}${d?'<br>“'+d+(repo.desc.length>70?'…':'')+'”':''}<br><span style="color:#ab8a66">${metricLine}</span>`;
@@ -12758,7 +12817,7 @@ async function generalChat(q, npc){
   npc = npc || 'taxi';
   const url=groundedUrl();
   const aiStarted=nowMs();
-  if(!url){ trackAiTurn('general_chat', npc, q, aiStarted, { ok:false, fallback:'no_backend' }); addMsg('bot', t('stOfftopic')); return; }            // no backend → plain friendly reply
+  if(!url){ trackAiTurn('general_chat', npc, q, aiStarted, { ok:false, fallback:'no_backend' }); addMsg('bot', t('stOfftopic'), { suggest:npc==='taxi' }); return; }            // no backend → plain friendly reply
   const sb=showTyping(addMsg('bot', t('taxiThinking'), {noHist:true}));
   const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||20000;
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),tmo);
@@ -12769,8 +12828,8 @@ async function generalChat(q, npc){
     if(data.message){ trackAiTurn('general_chat', npc, q, aiStarted, { ok:true, refs:traceRefCount(data.trace), general:!!(data.trace&&data.trace.general) });
       addMsg('bot', esc(data.message).replace(/`([^`]+)`/g,'<b>$1</b>').replace(/\n/g,'<br>'), { trace:data.trace }); return; }
     trackAiTurn('general_chat', npc, q, aiStarted, { ok:false, fallback:'empty_message' });
-    addMsg('bot', t('stOfftopic'));
-  }catch(e){ clearTimeout(to); sb.remove(); trackAiTurn('general_chat', npc, q, aiStarted, { ok:false, fallback:'fetch_fail', err:errName(e) }); addMsg('bot', t('stOfftopic')); }
+    addMsg('bot', t('stOfftopic'), { suggest:npc==='taxi' });
+  }catch(e){ clearTimeout(to); sb.remove(); trackAiTurn('general_chat', npc, q, aiStarted, { ok:false, fallback:'fetch_fail', err:errName(e) }); addMsg('bot', t('stOfftopic'), { suggest:npc==='taxi' }); }
 }
 const taxiChat=(q)=>generalChat(q,'taxi');   // POLARIS general chat (back-compat alias)
 async function groundedAsk(q){
@@ -12781,7 +12840,7 @@ async function groundedAsk(q){
   let url=groundedUrl();
   const aiStarted=nowMs();
   if(!url){ const r=localIntent(q); trackAiTurn('grounded', 'taxi', q, aiStarted, { ok:false, fallback:'no_backend' });
-    addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); trackChatEvent('chat_response', { route:'local_fallback', npc:'taxi', qLen:qLenBucket(q), ok:true, ai:false, fallback:'no_backend', repo:!!r.repo }); return; }   // no backend configured → silent Local (mode switch already offered to set a URL; no per-message nag)
+    addMsg('bot', r.message, { repo:r.repo, alts:r.alts, suggest:r.suggest }); trackChatEvent('chat_response', { route:'local_fallback', npc:'taxi', qLen:qLenBucket(q), ok:true, ai:false, fallback:'no_backend', repo:!!r.repo }); return; }   // no backend configured → silent Local (mode switch already offered to set a URL; no per-message nag)
   const sb=showTyping(addMsg('bot', t('groundedSearching'), {noHist:true}));   // phase 1: instant "searching" bubble
   const tmo=Number(localStorage.getItem('taxiGroundedTimeoutMs'))||9500;  // configurable (Pro: raise w/ maxDuration)
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), tmo);
@@ -12791,7 +12850,7 @@ async function groundedAsk(q){
     if(!res.ok) throw new Error('http '+res.status);
     const data=await res.json();
     if(data.fallback){ sb.remove(); trackAiTurn('grounded', 'taxi', q, aiStarted, { ok:false, fallback:'worker_fallback' });
-      const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); trackChatEvent('chat_response', { route:'local_fallback', npc:'taxi', qLen:qLenBucket(q), ok:true, ai:false, fallback:'worker_fallback', repo:!!r.repo }); return; }   // silent local fallback
+      const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts, suggest:r.suggest }); trackChatEvent('chat_response', { route:'local_fallback', npc:'taxi', qLen:qLenBucket(q), ok:true, ai:false, fallback:'worker_fallback', repo:!!r.repo }); return; }   // silent local fallback
     sb.classList.remove('typing');                                    // settle the searching line — keep it as a record
     let repo=data.repo?repoByKey(data.repo):null;
     if(!repo){ const ticks=[...String(data.message||'').matchAll(/`([\w.\-]+)`/g)].map(m=>m[1].toLowerCase());   // KB returned no repo (empty refs) → recover from names the answer named
@@ -12802,7 +12861,7 @@ async function groundedAsk(q){
     trackAiTurn('grounded', 'taxi', q, aiStarted, { ok:true, refs:traceRefCount(data.trace), repo:!!main });
     addMsg('bot', msg, { repo:main, alts, trace:data.trace });        // phase 2: grounded answer + trace panel
   }catch(e){ clearTimeout(to); sb.remove(); trackAiTurn('grounded', 'taxi', q, aiStarted, { ok:false, fallback:'fetch_fail', err:errName(e) });
-    const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts }); trackChatEvent('chat_response', { route:'local_fallback', npc:'taxi', qLen:qLenBucket(q), ok:true, ai:false, fallback:'fetch_fail', repo:!!r.repo }); }   // timeout/error → silent local fallback
+    const r=localIntent(q); addMsg('bot', r.message, { repo:r.repo, alts:r.alts, suggest:r.suggest }); trackChatEvent('chat_response', { route:'local_fallback', npc:'taxi', qLen:qLenBucket(q), ok:true, ai:false, fallback:'fetch_fail', repo:!!r.repo }); }   // timeout/error → silent local fallback
 }
 
 const ENG_SM={ greetReply:'engGreet', stThanks:'engThanks', stBye:'engBye', stHow:'engHow', stWho:'engWho', stHelp:'engHelp', stNice:'engNice' };
@@ -12870,7 +12929,7 @@ async function askScholar(q, npc){
 function isGeneralChat(q){
   if(_coreIntent(q)) return false;                                  // greeting / metric / town-meta → handled locally
   if(searchCandidates(q,8).strong) return false;                    // a confident repo hit → it's a search
-  if(/레포|repo\b|저장소|프로젝트|project|코드|커밋|commit|푸시|push|이슈|issue|readme|라이브러리|library|fork|포크|clone|클론|데모|demo|github|깃헙|깃허브|스타\b|\bstars?\b|버전|version|토픽|topic|길찾|데려다|인기|제일|최고|핫\b|\bhot\b|랜덤|\brandom\b|최근|\brecent\b|\blatest\b|\bnew\b|방문|\btraffic\b|forks?\b|popular|best\b|top\b/i.test(q)) return false;
+  if(/레포|repo\b|저장소|프로젝트|project|코드|커밋|commit|푸시|push|이슈|issue|readme|라이브러리|library|fork|포크|clone|클론|데모|demo|github|깃헙|깃허브|스타\b|\bstar(s|red)?\b|버전|version|토픽|topic|길찾|데려다|인기|제일|최고|핫\b|\bhot\b|랜덤|\brandom\b|최근|\brecent\b|\blatest\b|\bnew\b|방문|\btraffic\b|forks?\b|popular|best\b|top\b/i.test(q)) return false;
   const followup = priorHist().length && /다른|또\b|더\b|그건|그거|그게|그럼|그러면|말고|아니|이전|방금|저번|other|another|more|else|instead|what about|how about/i.test(q);
   return !followup;
 }
@@ -12883,7 +12942,7 @@ async function askDriver(q){
   const tb=showTyping(addMsg('bot','',{noHist:true}));   // '…' → '' so only the animated dots show
   let r; try{ r = llmMode==='webllm'?await webllmAsk(q) : llmMode==='proxy'?await proxyAsk(q) : localIntent(q); }
   finally{ tb.remove(); }
-  if(r){ addMsg('bot', r.message, { repo:r.repo, alts:r.alts });
+  if(r){ addMsg('bot', r.message, { repo:r.repo, alts:r.alts, suggest:r.suggest });
     const route=r._route || (llmMode==='local'?'local_search':llmMode);
     trackChatEvent('chat_response', { route, npc:'taxi', qLen:qLenBucket(q), ok:true, ai:(route==='webllm'||route==='proxy'), repo:!!r.repo }); }
 }
@@ -13002,7 +13061,7 @@ function openMap(){ if(!mapWrap) return; buildMapLegend(); syncMapChrome(); draw
   if(_mapTimer) clearInterval(_mapTimer); _mapTimer=setInterval(()=>{ if(mapOpen) drawMinimap(); else if(_mapTimer){ clearInterval(_mapTimer); _mapTimer=null; } },150);
   if(typeof track==='function') track('map_open',{}); }
 function closeMap(){ if(!mapWrap) return; mapWrap.classList.add('hidden'); mapOpen=false; if(_mapTimer){ clearInterval(_mapTimer); _mapTimer=null; } }
-function toggleMap(){ mapOpen?closeMap():openMap(); }
+function toggleMap(){ if(modalOpen){ closeCard(); if(!mapOpen) openMap(); return; } mapOpen?closeMap():openMap(); }
 function gotoZone(id){ const z=ZONES.find(x=>x.id===id); if(!z) return false; closeMap(); taxiTo(zoneDest(z)); return true; }
 if(mapBtn) mapBtn.onclick=toggleMap;
 if(mapCloseBtn) mapCloseBtn.onclick=closeMap;
@@ -13230,7 +13289,7 @@ for(const element of document.querySelectorAll('[role="dialog"],#modal,#chronoMo
   if(!townPanels.some(item=>item.element===element)) townPanelObserver.observe(element,{attributes:true,attributeFilter:['class'],attributeOldValue:true});
 }
 document.querySelectorAll('[data-town-close]').forEach(button=>button.addEventListener('click',()=>townPanels.find(p=>p.element.id===button.dataset.townClose)?.close()));
-townTools.addEventListener('toggle',()=>{ if(townTools.open){ closeTownPanels(townTools); clearTownInput(); } syncTownPanels(); });
+townTools.addEventListener('toggle',()=>{ if(townTools.open){ if(modalOpen) closeCard(); closeTownPanels(townTools); clearTownInput(); } syncTownPanels(); });
 townPanelBackdrop.addEventListener('click',event=>{ event.stopPropagation(); closeTownPanels(); });
 document.addEventListener('keydown',event=>{
   if(event.isComposing||event.keyCode===229)return;
