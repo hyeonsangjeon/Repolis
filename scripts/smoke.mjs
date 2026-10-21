@@ -282,9 +282,9 @@ ok(/introProfileStatus\.textContent=introProfileResult\?t\(introProfileResult\.k
 ok(/\.introProofActions \{[^}]*display: flex[^}]*flex-wrap: wrap/.test(HTML)
   && /\.introProofActions button, \.introProofActions a \{[^}]*flex: 1 1 150px[^}]*min-height: 44px/.test(HTML), 'the ready-state actions stay stable, touch-sized, and wrap instead of overflowing on mobile');
 ok(/document\.getElementById\('startBtn'\)\.onclick=[\s\S]*?showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/.test(HTML)
-  && /if\(!rb&&!_reqFocus\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
+  && /if\(!rb&&!_reqFocus&&!homecoming\.timelapse\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
   && (HTML.match(/showWave\(tf\('arrived',\{user:currentUser\}\),3600\)/g)||[]).length===1,
-  'a public-town arrival toast waits for actual entry and cannot cover the first-screen proof');
+  'a public-town arrival toast waits for actual entry, cannot cover the first-screen proof, and yields to the arrival timelapse');
 ok(/Put this town on my GitHub profile/.test(README_EN) && /GitHub 프로필에 마을 붙이기/.test(README_KO), 'EN/KO adoption tables surface the same profile portal at the moment the preview is ready');
 function launchConfig(hostname) {
   const sandbox = { window: {}, location: { hostname } };
@@ -849,8 +849,8 @@ ok(/id="loadingPortal" aria-hidden="true"/.test(HTML)
   &&!/getElementById\('loading'\)[^;\n]*textContent/.test(HTML)
   &&!/fetch\(|localStorage|sessionStorage|indexedDB|groundedAsk|webllmAsk|proxyAsk/.test(atelierDirectBoot),
   'the direct-entry transition is covered, reduced-motion safe, and adds no request, storage, or model path');
-ok(/if\(!rb&&!_reqFocus\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
-  &&/if\(cityMode!=='portal'&&!_reqFocus&&REPOS\.length\)/.test(HTML),
+ok(/if\(!rb&&!_reqFocus&&!homecoming\.timelapse\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('arrived'/.test(HTML)
+  &&/if\(cityMode!=='portal'&&!_reqFocus&&REPOS\.length&&!homecoming\.card\)/.test(HTML),
   'target arrivals suppress the generic public-town toast, Gazette, and Chronicle until after the focused Aha');
 ok(/id="atelierPortalActions" hidden role="group"[\s\S]*?id="atelierPortalCopy"[\s\S]*?id="atelierPortalGithub"[\s\S]*?id="atelierPortalExplore"/.test(HTML)
   &&/#atelierPortalActions button, #atelierPortalActions a \{[\s\S]*?min-height:40px/.test(HTML)
@@ -880,9 +880,9 @@ ok(/#intro \.langsel button\.active \{[^}]*color: #7a3f12/.test(HTML)
 ok(/const allowed=new Set\(\['ev','sessionId','ts','entry','device','lang','result','latency','channel'\]\)/.test(HTML)
   &&/\['cityUser','targetUser','user','repo','owner','url','query','input','instanceId'\]/.test(HTML),
   'Portal events remove identities, URLs, raw input, query text, and persistent instance IDs');
-['feature_seen','feature_started','aha_completed','share_created','github_repo_opened','project_star_click']
+['feature_seen','feature_started','portal_entry','share_created','github_repo_opened','project_star_click']
   .forEach(event=>ok(HTML.includes(`'${event}'`),`privacy-safe Repo Portal event ${event} is instrumented`));
-ok(/repoPortalRequested&&!A\.ahaTracked[\s\S]*?trackPortal\('aha_completed'/.test(HTML)
+ok(/repoPortalRequested&&!A\.ahaTracked[\s\S]*?trackPortal\('portal_entry',portalEntry\); trackPortal\('aha_completed',portalEntry\);/.test(HTML)
   &&/maybeStarNudge\('repo_portal_aha'\)/.test(HTML)&&/maybeStarNudge\('repo_portal_share'\)/.test(HTML),
   'Aha fires only after the target room is inside, then reuses the earned Star invitation after exit or share');
 ok(/#atelierPortalActions \{[\s\S]*?pointer-events:auto/.test(HTML)
@@ -1417,8 +1417,8 @@ ok(CONTRIBUTION_QUEST_LIMITS.maxItems===50&&CONTRIBUTION_QUEST_LIMITS.maxQuests=
 const contributionQuestBlock=(HTML.match(/\/\*CONTRIBUTION_QUESTS:START\*\/([\s\S]*?)\/\*CONTRIBUTION_QUESTS:END\*\//)||[,''])[1];
 ok(contributionQuestBlock.length>0
   &&/from '\.\/assets\/contribution-quests\.js\?v=open-source-quests-v1'/.test(HTML)
-  &&/id="questMenuBtn"/.test(HTML)&&/id="questModal" role="dialog" aria-modal="true" aria-labelledby="questTitle" aria-describedby="questSub questLead"/.test(HTML),
-  'Wayfinding exposes one labelled Open Source Quests dialog backed by the pure helper');
+  &&!/id="questMenuBtn"/.test(HTML)&&/data-intent="contribute"/.test(HTML)&&/id="questModal" role="dialog" aria-modal="true" aria-labelledby="questTitle" aria-describedby="questSub questLead"/.test(HTML),
+  'Wayfinding reaches one labelled Open Source Quests dialog through the Contribute intent, backed by the pure helper');
 ok(/id="questStatus" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"/.test(HTML)
   &&/id="questList" role="list" data-i18n-aria="questListAria"/.test(HTML)
   &&/function _questFocusables\(\)/.test(contributionQuestBlock)
@@ -1431,7 +1431,7 @@ ok(/id="questStatus" role="status" aria-live="polite" aria-atomic="true" tabinde
   'the modal is live-announced, inert, focus-trapped, keyboard-safe, touch-sized, mobile-stacked, and reduced-motion-safe');
 ok((contributionQuestBlock.match(/fetch\(/g)||[]).length===1
   &&/questScan\.onclick=loadContributionQuests/.test(contributionQuestBlock)
-  &&/questMenuBtn\.onclick=\(\)=>openContributionQuestBoard\('menu'\)/.test(contributionQuestBlock)
+  &&/intent==='contribute'\) return openContributionQuestBoard\('menu'\)/.test(HTML)&&!/questMenuBtn/.test(contributionQuestBlock)
   &&/fetch\(createContributionQuestSearchUrl\(currentUser\)/.test(contributionQuestBlock)
   &&/REPOS\.filter\(repo=>!repo\._isLibrary&&!repo\.archived\)/.test(contributionQuestBlock)
   &&/if\(CONTRIBUTION_QUESTS\.loading\|\|CONTRIBUTION_QUESTS\.loaded\) return false/.test(contributionQuestBlock)
@@ -1536,7 +1536,7 @@ ok((HTML.match(/starNudge:'/g)||[]).length===2 && (HTML.match(/starNudgeGo:'/g)|
 ok(/if\(passport\.repos\.length>=3\) maybeStarNudge\('repos_visited'\)/.test(HTML)
   &&/if\(cityMode==='public'\)\{[\s\S]*?maybeStarNudge\('personal_town'\)/.test(HTML), 'the invitation is earned: three explored repo houses, or time spent in a self-built town');
 ok(/if\(_starNudgeShown\|\|_starNudgeSeen\(\)\) return false/.test(HTML)
-  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\|\|repositoryAtelierActive\(\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
+  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\|\|repositoryAtelierActive\(\)\|\|homecomingCardOpen\(\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
   &&/function flushStarNudge\(\)/.test(HTML)
   &&/clearRepoHash\(\); flushStarNudge\(\);/.test(HTML)
   &&/localStorage\.setItem\(STAR_NUDGE_KEY,how\)/.test(HTML), 'it shows at most once per browser, waits out a modal or the tour, and returns when the visitor steps back out');
@@ -4457,13 +4457,72 @@ ok(/#townTools \{ position: relative; padding: 0; backdrop-filter: none; \}/.tes
 ok(/if\(e\.target!==modal\) return; closeCard\(\);[\s\S]{0,400}document\.elementFromPoint\(e\.clientX,e\.clientY\)/.test(HTML)
   && /menuBtn\.onclick=\(\)=>\{ if\(modalOpen\)\{ closeCard\(\); panel\.classList\.remove\('hidden'\);/.test(HTML)
   && /if\(townTools\.open\)\{ if\(modalOpen\) closeCard\(\);/.test(HTML), 'one tap lifts an open repo card and reaches the HUD control under it');
-ok(/\.hint\.show \{ opacity: 1; \}/.test(HTML) && /function showEntryHint\(\)/.test(HTML) && /classList\.add\('hidden'\); showEntryHint\(\);/.test(HTML)
+ok(/\.hint\.show \{ opacity: 1; \}/.test(HTML) && /function showEntryHint\(\)/.test(HTML) && /classList\.add\('hidden'\); if\(!homecoming\.active\) showEntryHint\(\);/.test(HTML)
   && !/\.hint \{ display: none; \}/.test(HTML), 'the entry hint is a toast on every viewport that leaves at the first move');
 ok(/<span class="wtLabel" data-i18n="worldTreeLabel">연대기<\/span>/.test(HTML) && /worldTreeLabel:'Chronicle'/.test(HTML), 'the World Tree trigger carries a visible label');
 ok(/ko:'실험·기록 지구',    en:'Experiment \/ Archive District', icon:'📜'/.test(HTML) && (HTML.match(/폐허/g)||[]).length===1
   && /ruins:   \/\(실험 \?\)\?폐허\|유적\|experiment \?ruins\?\|\\bruins\?\\b\|아카이브 \?\(구역\|지구\)\|기록 \?\(구역\|지구\)/.test(HTML)
   && !/Gentle ruin/.test(HTML) && !/atmospheric ruins/.test(HTML) && /ruinStatus:'Archived old house with wildflowers'/.test(HTML),
   'archived houses and the experiment district are not called ruins; the word survives only as visitor input for district rides');
+
+group('Homecoming (v1.97) — your city first, a timelapse, three paths, and Wayfinding that opens as you visit');
+const HOMECOMING_SRC=readFileSync(join(ROOT,'assets','homecoming.js'),'utf8');
+const homecomingBlock=(HTML.match(/\/\*HOMECOMING_RUNTIME:START\*\/([\s\S]*?)\/\*HOMECOMING_RUNTIME:END\*\//)||[,''])[1];
+ok(/from '\.\/assets\/homecoming\.js\?v=homecoming-v1'/.test(HTML)&&homecomingBlock.length>0
+  &&!/\bwindow\b|\bdocument\b|fetch\(|localStorage|sessionStorage|Date\.now|Math\.random/.test(HOMECOMING_SRC),
+  'pure Homecoming rules are imported once and stay deterministic and storage-free');
+ok(!/fetch\(|XMLHttpRequest|WebSocket|localStorage|indexedDB|new THREE|groundedAsk|webllmAsk|proxyAsk/.test(homecomingBlock)
+  &&(homecomingBlock.match(/sessionStorage\.(?:getItem|setItem)\(HOMECOMING_SESSION_KEY/g)||[]).length===2
+  &&/const HOMECOMING_SESSION_KEY='repolis:homecoming:v1'/.test(homecomingBlock),
+  'the runtime adds no request, model call, scene resource or persistent storage; one bounded session key remembers what played');
+ok(/function _placeIntroLanding\(on\)/.test(HTML)&&/intro\.classList\.toggle\('homecoming-landing',on\)/.test(HTML)
+  &&/if\(landing\)\{ introLaunchLabel\.textContent=t\('homecomingLaunchLabel'\); introStartBtn\.textContent=tf\('homecomingSampleCity',\{user:OWNER\}\); \}/.test(HTML)
+  &&/#intro\.homecoming-landing #startBtn \{[^}]*min-height:46px/.test(HTML),
+  'the canonical landing leads with the login form and keeps the sample city as a 46px secondary action');
+ok(/GROWTH_REPLAY\.pace=Number\.isFinite\(options\.pace\)&&options\.pace>0\?options\.pace:0/.test(HTML)
+  &&/GROWTH_REPLAY\.elapsed>=\(GROWTH_REPLAY\.pace\|\|growthMilestoneSeconds\(_growthSnapshot\(\)\)\)/.test(HTML)
+  &&/id="growthPlaque" class="growthPlaque" hidden role="status" aria-live="polite"/.test(HTML)
+  &&/id="growthSkip" class="primary" type="button" hidden/.test(HTML)
+  &&/if\(!arrival\) maybeStarNudge\('town_growth_replay'\)/.test(HTML)&&/if\(arrival\) homecomingTimelapseClosed\(\)/.test(HTML),
+  'the arrival timelapse reuses Growth Replay with its own pace, a live plaque, a skip, and no Star request');
+ok(/HOMECOMING_LIMITS\.plaqueMs/.test(homecomingBlock)&&/trackHomecoming\('aha_city_built'/.test(homecomingBlock)
+  &&/function homecomingSkipTimelapse\(\)/.test(homecomingBlock)&&/onclick=\(\)=>\{ if\(!homecomingSkipTimelapse\(\)\) closeTownGrowthReplay\(\); \}/.test(HTML),
+  'the plaque shows for its fixed time, a tap skips to the present, and a second tap leaves');
+ok((HTML.match(/data-card-intent="(?:understand|explore|contribute)"/g)||[]).length===3
+  &&/function _chooseHomecomingIntent\(intent,entry\)\{[\s\S]*?if\(intent==='understand'&&!intentLensTargetRepo\(\)&&panel\.classList\.contains\('hidden'\)\)\{[\s\S]*?dispatchIntentLens\(intent\)/.test(homecomingBlock)
+  &&/intent==='explore'\)\{ closeIntentLensWayfinding\(\); if\(!startExploreTour\('intent'\)\) openMap\(\);/.test(HTML),
+  'the card reuses the three existing intents; Explore starts the guided path and falls back to the map');
+ok(/selectHomecomingStops\(pool,\{referenceTimestamp:_now\}\)/.test(homecomingBlock)
+  &&/startTour\(\{steps,mode:'explore'/.test(homecomingBlock)&&/tour=\{steps:options\.steps\|\|buildTourSteps\(\),mode:options\.mode\|\|'classic'/.test(HTML)
+  &&/const exploreStop=!!\(tour&&tour\.active&&tour\.mode==='explore'\)/.test(HTML)&&/if\(!exploreStop\) openChat\(\);/.test(HTML)
+  &&/if\(s&&s\.arrivalHtml\)\{ tourCap\(s\.arrivalDot\|\|s\.dot,s\.arrivalHtml,true\); homecomingStopReached\(s\); \}/.test(HTML),
+  'three catalog-chosen houses ride the existing tour engine; Gitber drives quietly and the district guide speaks on arrival');
+ok(/item\.zone===zoneId&&!item\.oracle&&!item\.easterEgg/.test(homecomingBlock)&&/return \{name:t\('exploreGitberName'\),icon:'🚕'\}/.test(homecomingBlock),
+  'each stop is narrated by its district resident, or by Gitber when the district has none');
+ok(/<details id="wayfindingTools" class="wayGroup" data-way-group="look">/.test(HTML)&&/<details id="wayShare" class="wayGroup" data-way-group="share">/.test(HTML)
+  &&/id="wayGoTitle" class="wayGroupTitle" data-i18n="wayGo"/.test(HTML)
+  &&['tourReplayBtn','creatorMenuBtn','growthMenuBtn'].every(id=>new RegExp(`id="${id}" type="button" data-way-lock="look"`).test(HTML))
+  &&['repoRouteMenuBtn','twinMenuBtn','postcardMenuBtn'].every(id=>new RegExp(`id="${id}" type="button" data-way-lock="share"`).test(HTML))
+  &&!/id="nearbyPeople"[^>]*data-way-lock/.test(HTML)&&!/id="nearbySpeech"[^>]*data-way-lock/.test(HTML),
+  'Wayfinding is grouped Go / Look / Share and accessibility readers stay outside every lock');
+ok(/#panel\.wayLookLocked \[data-way-lock="look"\], #panel\.wayShareLocked \[data-way-lock="share"\] \{ display:none; \}/.test(HTML)
+  &&/const unlocks=homecomingUnlocks\(visited\)/.test(homecomingBlock)&&/homecomingVisitedChanged\(\); \}/.test(HTML),
+  'locks follow the existing Passport visit count, so returning visitors keep what they opened');
+ok(/function _homecomingCardKind\(\)\{ return cityMode==='public'\?'timelapse':'intent'; \}/.test(homecomingBlock)
+  &&/FIRST_ARRIVAL\.direct&&PLAZA_DIRECT_LINK\.ok&&cityMode==='owner'&&!VISITOR\.returning[\s\S]*?return \{\.\.\.none,toast:true\}/.test(homecomingBlock)
+  &&/if\(HOMECOMING&&plan&&plan\.toast\)\{ _homecomingRemember\('intent'\); _queueArrivalAction\(9500,\(\)=>_showGuideToast\(\)\)/.test(homecomingBlock),
+  'a public login arrives once per session, and the campaign plaza gets one guide line instead of a card');
+ok(/if\(hasFreshness\(\)\) return none;/.test(homecomingBlock)&&/if\(news\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('freshBanner'/.test(HTML),
+  'Town Gazette news on a return visit keeps priority over the arrival timelapse and the intent card');
+ok(['city_requested','aha_city_built','intent_chosen','aha_city_speaks','trace_left','return_visit']
+  .every(name=>new RegExp(`trackHomecoming\\('${name}'`).test(HTML))
+  &&/if\(ev\.__privacy==='homecoming'\)\{[\s\S]*?new Set\(\['ev','ts','entry','device','lang','result','count','step','channel','intent','mode','days'\]\)/.test(HTML),
+  'the six funnel events exist and their allowlist drops login, repository, session, and instance identity');
+['homecomingLaunchLabel','homecomingSampleCity','homecomingSkip','homecomingPlaqueKicker','homecomingPlaqueFacts','intentCardSkip',
+  'pathUnderstandSub','pathExploreSub','pathContributeSub','guideToast','exploreRide','exploreGuideRole','exploreGitberName','exploreTownWord',
+  'explorePassport','exploreEnd','exploreEndShort','exploreUnavailable','wayGo','wayLook','wayShare','wayLookLocked','wayShareLocked',
+  'wayLockNote','wayLookUnlocked','wayShareUnlocked']
+  .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Homecoming key ${key} is bilingual`));
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

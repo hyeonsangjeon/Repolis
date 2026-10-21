@@ -48,7 +48,11 @@ export async function runDiscoveryBrowserCases({run,ready,click,screenshot,delay
         await page.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,text:'\r'});
         await page.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
         assert.equal(await page.evaluate("document.getElementById('wayfindingTools').open"),true,'feature disclosure works from the keyboard');
-        assert.equal(await page.evaluate("['tourReplayBtn','questMenuBtn','creatorMenuBtn','repoRouteMenuBtn','growthMenuBtn','twinMenuBtn','postcardMenuBtn'].every(id=>document.getElementById(id).getClientRects().length>0)"),true,'all existing tools remain reachable');
+        const locked=await page.evaluate("({look:['tourReplayBtn','creatorMenuBtn','growthMenuBtn'].map(id=>document.getElementById(id).getClientRects().length>0),people:document.getElementById('nearbyPeople').getClientRects().length>0,hint:document.getElementById('wayLookHint').getClientRects().length>0,visited:__homecoming().unlocks.visited})");
+        if(locked.visited===0) assert(locked.look.every(shown=>!shown)&&locked.hint,'Look tools wait for the first opened house behind a visible hint');
+        assert(locked.people,'nearby people stay reachable before any house is opened');
+        await page.evaluate("__homecomingVisit(2);document.getElementById('wayShare').open=true");
+        assert.equal(await page.evaluate("['tourReplayBtn','creatorMenuBtn','repoRouteMenuBtn','growthMenuBtn','twinMenuBtn','postcardMenuBtn'].every(id=>document.getElementById(id).getClientRects().length>0)"),true,'every Look and Share tool is reachable after two opened houses');
       }
       await click(page,'menuBtn');
       const search=await page.evaluate("__taxiLocal('동영상 다운로드')");

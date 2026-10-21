@@ -257,6 +257,75 @@ export async function runFirstVisitTests(check){
     &&/loadResidentManifest\(\{owner:currentUser,fetchImpl:fetchOptionalArrival\}\)/.test(HTML)
     &&/loadLoreFragments\(\{fetchImpl:fetchOptionalArrival\}\)/.test(HTML),
     'public arrays validate before cache writes and awaited optional loaders reuse the same bounded fetch');
+
+  const homecoming=block('HOMECOMING_RUNTIME');
+  check(!!homecoming,'the Homecoming runtime is one extractable block');
+  const planSrc=homecoming.slice(homecoming.indexOf('function _homecomingSession(){'),homecoming.indexOf('function homecomingAfterEntry('));
+  const plan=(extra={},stored=null)=>{
+    const store={value:stored},context={
+      HOMECOMING:{townKey:'owner:hyeonsangjeon',memory:{timelapse:false,intent:false}},HOMECOMING_SESSION_KEY:'repolis:homecoming:v1',
+      sessionStorage:{getItem:()=>store.value,setItem:(_key,value)=>{ store.value=value; }},rememberHomecomingKey:(list,key)=>[...list,key],
+      REPOS:[{repo:'alpha'},{repo:'library',_isLibrary:true}],cityMode:'owner',_reqFocus:null,_reqGrowth:null,REPO_ROUTE_REQUEST:{valid:false},
+      BLUEPRINT_DEEP_LINK:{requested:false},FIRST_ARRIVAL:{direct:false},PLAZA_DIRECT_LINK:{ok:false},repoHashKey:()=>'',TOWN_GROWTH:{available:true},VISITOR:{returning:false},
+      hasFreshness:()=>false,
+      ...extra};
+    runInNewContext(planSrc+'\nglobalThis.result=homecomingPlanEntry();',context); return context.result;
+  };
+  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b),none={active:false,timelapse:false,card:false};
+  check(same(plan(),{active:true,timelapse:false,card:true}),'a first plain owner entry offers the intent card without a timelapse');
+  check(same(plan({VISITOR:{returning:true}}),none),'returning owner visitors keep the existing welcome-back and Gazette path');
+  check(same(plan({cityMode:'public',HOMECOMING:{townKey:'public:octo',memory:{timelapse:false,intent:false}}}),{active:true,timelapse:true,card:true}),
+    'a first plain public-town entry plays the arrival timelapse and then offers the card');
+  check(same(plan({cityMode:'public',hasFreshness:()=>true}),none)&&same(plan({hasFreshness:()=>true}),none),
+    'a returning visitor whose town has Gazette news sees that news instead of a replayed arrival or card');
+  check(same(plan({cityMode:'public',TOWN_GROWTH:{available:false}}),{active:true,timelapse:false,card:true}),
+    'a public town without birth-year history still gets the card but no timelapse');
+  check(same(plan({cityMode:'public',HOMECOMING:{townKey:'public:octo',memory:{timelapse:false,intent:false}}},
+    JSON.stringify({timelapse:['public:octo'],intent:['public:octo']})),none),'the same login replays nothing in the same browser session');
+  check(same(plan({cityMode:'public',HOMECOMING:{townKey:'public:octo',memory:{timelapse:false,intent:false}}},JSON.stringify({timelapse:['public:octo'],intent:[]})),none),
+    'a public login shares one arrival key: once the timelapse played, the card does not return in that session');
+  check(same(plan({FIRST_ARRIVAL:{direct:true},PLAZA_DIRECT_LINK:{ok:true}}),{active:false,timelapse:false,card:false,toast:true})
+    &&same(plan({FIRST_ARRIVAL:{direct:true},PLAZA_DIRECT_LINK:{ok:true},VISITOR:{returning:true}}),none)
+    &&same(plan({FIRST_ARRIVAL:{direct:true},PLAZA_DIRECT_LINK:{ok:true}},JSON.stringify({timelapse:[],intent:['owner:hyeonsangjeon']})),none),
+    'the campaign plaza keeps its covered card-free contract and offers one guide line to new visitors once per session');
+  check(same(plan({cityMode:'public',HOMECOMING:{townKey:'public:octo',memory:{timelapse:true,intent:true}},
+    sessionStorage:{getItem:()=>{ throw new Error('blocked'); },setItem:()=>{ throw new Error('blocked'); }}}),none),
+    'blocked session storage falls back to page memory instead of replaying');
+  for(const [name,extra] of [['portal',{cityMode:'portal'}],['focus',{_reqFocus:{repo:'alpha'}}],['growth link',{_reqGrowth:2020}],
+    ['route',{REPO_ROUTE_REQUEST:{valid:true}}],['blueprint',{BLUEPRINT_DEEP_LINK:{requested:true}}],['direct entry',{FIRST_ARRIVAL:{direct:true}}],
+    ['repo hash',{repoHashKey:()=>'alpha'}],['landmark-only catalog',{REPOS:[{repo:'library',_isLibrary:true}]}]])
+    check(same(plan(extra),none),`${name} arrivals keep their existing destination without a Homecoming interruption`);
+  check(/const homecoming=homecomingPlanEntry\(\);\s*document\.getElementById\('intro'\)\.classList\.add\('hidden'\); if\(!homecoming\.active\) showEntryHint\(\);/.test(HTML)
+    &&/homecomingAfterEntry\(homecoming\); \};/.test(HTML)&&HTML.indexOf('const homecoming=homecomingPlanEntry()')<HTML.indexOf("track('town_enter'"),
+    'Enter stays immediate: the plan is made once before banners and acts only after the existing arrival actions');
+  check(/_homecomingRemember\('timelapse'\); _queueArrivalAction\(620,\(\)=>_startArrivalTimelapse\(plan\.card\)\)/.test(homecoming)
+    &&/homecomingTimelapsePlan\(TOWN_GROWTH\.milestones\.length,\{reducedMotion:REDUCED\}\)/.test(homecoming)
+    &&/if\(plan\.mode==='still'\) homecomingTimelapseFinished\(\)/.test(homecoming),
+    'the timelapse is remembered before it plays once, and reduced motion shows only the present frame');
+  check(/id="intentCard" class="hidden" role="dialog" aria-modal="false"/.test(HTML)
+    &&/_homecomingRemember\(_homecomingCardKind\(\)\);\s*if\(_homecomingBusy\(\)\) return false;/.test(homecoming)
+    &&/setInterval\(\(\)=>\{ if\(_homecomingBusy\(\)\) closeIntentCard\('ignored'\); \},400\)/.test(homecoming)
+    &&/clearInterval\(HOMECOMING\.cardWatch\)/.test(homecoming),
+    'the intent card is non-modal, never interrupts an open panel or room, and leaves as soon as the visitor does something else');
+  const trackSrc=HTML.slice(HTML.indexOf('function track(eventName, payload){'),HTML.indexOf('function trackPortal(eventName,payload){'));
+  const traces=[],sent=[];
+  const analytics=(fetchImpl,beacon)=>{ const context={currentUser:'octo-cat',cityMode:'public',REPOS:[{}],dataSource:'repo-api',SESSION_ID:'s',INSTANCE_ID:'i',
+    instanceOrigin:()=>'external',repoPortalRequested:false,recentAnalyticsEvents:[],_DBG:false,ANALYTICS_ENDPOINT:'https://collector.test/event',
+    navigator:{sendBeacon:beacon},Blob:class{ constructor(parts){ sent.push(JSON.parse(parts[0])); } },fetch:fetchImpl,Date,JSON,Object,Set,
+    _homecomingTrace:(name)=>traces.push(name)};
+    runInNewContext(trackSrc+'\nglobalThis.track=track;',context); return context; };
+  let threw=false;
+  try{
+    analytics(()=>Promise.resolve({ok:false,status:400}),()=>false).track('aha_city_built',{__privacy:'homecoming',mode:'animate',count:9});
+    analytics(()=>Promise.reject(new Error('offline')),()=>{ throw new Error('beacon blocked'); }).track('portal_entry',{entry:'link'});
+    analytics(()=>{ throw new Error('no fetch'); },()=>false).track('intent_chosen',{__privacy:'homecoming',intent:'explore'});
+  }catch(error){ threw=true; }
+  const built=sent.find(event=>event.ev==='aha_city_built');
+  check(!threw&&traces.length===3&&built&&!('cityUser' in built)&&!('sessionId' in built)&&!('instanceId' in built)&&built.count===9,
+    'a collector that rejects unknown events, an offline beacon, or a missing fetch never breaks the town, and Homecoming events stay identity-free');
+  check(/function _placeIntroLanding\(on\)/.test(HTML)&&/window\.REPOLIS_CONFIG\?\.town\?\.canonical===true/.test(HTML)
+    &&/inner\.insertBefore\(introLaunch,introStartBtn\)/.test(HTML)&&/inner\.insertBefore\(introStartBtn,introLaunch\)/.test(HTML),
+    'only the canonical owner landing puts the login form before the sample-city button; every ready target keeps Enter first');
 }
 
 if(process.argv[1]===fileURLToPath(import.meta.url)){

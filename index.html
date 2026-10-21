@@ -108,8 +108,8 @@
   #firstRepoPicker[hidden], #firstRepoPager[hidden] { display: none; }
   #wayfindingTools { margin:8px 0; border-top:1px solid #dfd9ce; border-bottom:1px solid #dfd9ce; }
   #wayfindingTools > summary { min-height:44px; padding:12px 4px; cursor:pointer; font-size:13px; font-weight:700; }
-  #panel.firstRepoMode > #wayfindingTools { display:none; }
-  #panel.firstRepoMode > :is(#intentLens,#tourReplayBtn,#questMenuBtn,#creatorMenuBtn,#repoRouteMenuBtn,#growthMenuBtn,#twinMenuBtn,#postcardMenuBtn,#nearbySpeech,#nearbyPeople) { display: none; }
+  #panel.firstRepoMode > :is(#wayfindingTools,#wayShare,#wayGoTitle) { display:none; }
+  #panel.firstRepoMode > :is(#intentLens,#tourReplayBtn,#creatorMenuBtn,#repoRouteMenuBtn,#growthMenuBtn,#twinMenuBtn,#postcardMenuBtn,#nearbySpeech,#nearbyPeople) { display: none; }
   #firstRepoPicker h4 { margin: 0 0 6px; font-size: 16px; line-height: 1.35; }
   #firstRepoPicker p, #firstRepoStatus { margin: 6px 0 10px; color: #806444; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
   #firstRepoPicker button, #firstRepoPager button { min-height: 44px; padding: 8px 12px; border: 1px solid #d8c7ad;
@@ -126,22 +126,21 @@
   body.town-panel-open :is(#prompt,#actBtn,#emoteBar,#emoteBtn,#taxiBtn,#worldTreeTrigger) { visibility: hidden; pointer-events: none; }
   body.town-panel-open #greetToast { z-index: 10 !important; }
   @media (prefers-reduced-motion: reduce) { #panel, #passport, #station, #chat { transition: none; } }
-  #tourReplayBtn, #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn, #questMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
+  #tourReplayBtn, #postcardMenuBtn, #twinMenuBtn, #creatorMenuBtn, #growthMenuBtn, #repoRouteMenuBtn { width: 100%; min-height: 48px; margin: 0 0 9px; padding: 8px 10px; border: 1px solid #dfc9a6;
     border-radius: 12px; background: linear-gradient(135deg,#fffaf0,#f3e3ca); color: #5a3b24; cursor: pointer;
     display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; }
-  #tourReplayBtn:hover, #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover, #repoRouteMenuBtn:hover, #questMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
-  #tourReplayBtn:active, #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active, #repoRouteMenuBtn:active, #questMenuBtn:active { transform: translateY(1px); }
-  #tourReplayBtn .pmIcon, #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon, #repoRouteMenuBtn .pmIcon, #questMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  #tourReplayBtn:hover, #postcardMenuBtn:hover, #twinMenuBtn:hover, #creatorMenuBtn:hover, #growthMenuBtn:hover, #repoRouteMenuBtn:hover { border-color: #c89b62; background: linear-gradient(135deg,#fffdf7,#efdbbc); }
+  #tourReplayBtn:active, #postcardMenuBtn:active, #twinMenuBtn:active, #creatorMenuBtn:active, #growthMenuBtn:active, #repoRouteMenuBtn:active { transform: translateY(1px); }
+  #tourReplayBtn .pmIcon, #postcardMenuBtn .pmIcon, #twinMenuBtn .pmIcon, #creatorMenuBtn .pmIcon, #growthMenuBtn .pmIcon, #repoRouteMenuBtn .pmIcon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
     color: #fff8e7; background: linear-gradient(145deg,#365464,#173d55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); font-size: 17px; }
   #tourReplayBtn .pmIcon { background: linear-gradient(145deg,#5d7447,#294a3b); }
   #twinMenuBtn .pmIcon { background: linear-gradient(145deg,#6a4f86,#2e5667); }
   #creatorMenuBtn .pmIcon { background: linear-gradient(145deg,#ba783d,#6a4327); }
   #growthMenuBtn .pmIcon { background: linear-gradient(145deg,#6c5ea8,#345d7c); }
   #repoRouteMenuBtn .pmIcon { background: linear-gradient(145deg,#e07b42,#7f3f57); }
-  #questMenuBtn .pmIcon { background: linear-gradient(145deg,#2f766d,#244d63); }
-  #tourReplayBtn .pmCopy, #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy, #repoRouteMenuBtn .pmCopy, #questMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  #tourReplayBtn .pmTitle, #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle, #repoRouteMenuBtn .pmTitle, #questMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
-  #tourReplayBtn .pmSub, #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub, #repoRouteMenuBtn .pmSub, #questMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #tourReplayBtn .pmCopy, #postcardMenuBtn .pmCopy, #twinMenuBtn .pmCopy, #creatorMenuBtn .pmCopy, #growthMenuBtn .pmCopy, #repoRouteMenuBtn .pmCopy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #tourReplayBtn .pmTitle, #postcardMenuBtn .pmTitle, #twinMenuBtn .pmTitle, #creatorMenuBtn .pmTitle, #growthMenuBtn .pmTitle, #repoRouteMenuBtn .pmTitle { font-size: 12.5px; font-weight: 800; color: #4a2f1e; }
+  #tourReplayBtn .pmSub, #postcardMenuBtn .pmSub, #twinMenuBtn .pmSub, #creatorMenuBtn .pmSub, #growthMenuBtn .pmSub, #repoRouteMenuBtn .pmSub { font-size: 10.5px; color: #9b7c59; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #repoRouteMenuCount { flex:0 0 auto; min-width:34px; padding:4px 7px; border-radius:999px; color:#fff; background:#8e4f5d;
     font-size:10px; font-weight:900; text-align:center; }
   #repoRouteMenuCount[hidden] { display:none; }
@@ -1682,6 +1681,72 @@
     max-height: calc(var(--town-ui-height,100dvh) - 88px - env(safe-area-inset-top,0px)); overscroll-behavior: contain; }
   #mapWrap.hidden { visibility: hidden; }
   #mapLegend button { font-family: inherit; }
+  /* Homecoming (v1.97): owner landing, arrival plaque, intent card, guide toast, Go / Look / Share wayfinding */
+  #intro.homecoming-landing #introLaunch { border-top:0; padding-top:0; margin-bottom:14px; }
+  #intro.homecoming-landing #introLaunch .launchLabel { margin-bottom:10px; font-size:16px; line-height:1.45; letter-spacing:0; text-shadow:0 1px 4px rgba(16,32,28,.55); }
+  #intro.homecoming-landing #introUser { padding:13px 12px; font-size:15px; }
+  #intro.homecoming-landing #introLaunchGo { padding:12px 15px; font-size:14px; color:#7a3f12; background:#fff; box-shadow:0 8px 24px rgba(60,30,10,.25); }
+  #intro.homecoming-landing #startBtn { min-height:46px; margin:0 0 18px; padding:11px 18px; border:2px solid rgba(255,255,255,.78);
+    color:#fff; background:rgba(12,30,27,.55); box-shadow:none; font-size:14px; }
+  #intro.homecoming-landing #startBtn:hover { background:rgba(12,30,27,.72); }
+  #growthReplay.arrival .growthRangeLabel, #growthReplay.arrival #growthRange, #growthReplay.arrival .growthActions > button:not(#growthSkip) { display:none; }
+  #growthSkip[hidden] { display:none; }
+  #growthReplay .growthPlaque { position:absolute; z-index:2; left:50%; top:calc(72px + env(safe-area-inset-top,0px)); transform:translateX(-50%);
+    width:max-content; max-width:min(620px,calc(100vw - 32px)); padding:16px 22px 15px; border:1px solid rgba(255,214,140,.6); border-radius:18px;
+    color:#fff8e6; background:linear-gradient(135deg,rgba(31,25,58,.94),rgba(66,48,104,.94)); box-shadow:0 18px 46px rgba(10,6,24,.45);
+    text-align:center; animation:growthPlaqueIn .5s ease both; }
+  #growthReplay .growthPlaque[hidden] { display:none; }
+  .growthPlaqueKicker { color:#ffd88e; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .growthPlaqueName { margin-top:4px; font-size:24px; font-weight:900; line-height:1.25; overflow-wrap:anywhere; }
+  .growthPlaqueFacts { margin-top:6px; color:#e8dcff; font-size:12.5px; }
+  @keyframes growthPlaqueIn { from{ opacity:0; transform:translate(-50%,-10px); } to{ opacity:1; transform:translate(-50%,0); } }
+  #intentCard { position:fixed; z-index:14; left:50%; bottom:calc(70px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%);
+    width:min(560px,calc(100vw - 28px)); padding:16px 16px 10px; border-radius:20px; color:#3f2a18;
+    background:rgba(255,251,242,.97); backdrop-filter:blur(10px); box-shadow:0 18px 48px rgba(70,40,15,.3); animation:intentCardIn .35s ease both; }
+  #intentCard.hidden { display:none; }
+  #intentCard .intentCardCity { padding-right:46px; color:#9b6f3e; font-size:11.5px; font-weight:800; letter-spacing:.02em; overflow-wrap:anywhere; }
+  #intentCard h2 { margin:3px 46px 11px 0; font-size:19px; line-height:1.3; }
+  #intentCard .intentCardClose { position:absolute; top:10px; right:10px; width:44px; height:44px; border:0; border-radius:12px;
+    color:#6a4a22; background:#f0e3cc; font-family:inherit; font-size:20px; line-height:1; cursor:pointer; }
+  .intentCardChoices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .intentCardChoice { min-height:92px; display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:11px 12px;
+    border:1px solid #e1cfb2; border-radius:14px; color:#4a3522; background:#fffdf8; font:inherit; text-align:left; cursor:pointer; }
+  .intentCardChoice:hover { border-color:#c99d66; background:#fff8eb; }
+  .intentCardChoice .icon { font-size:20px; line-height:1; }
+  .intentCardChoice .copy { display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .intentCardChoice b { font-size:13px; line-height:1.3; }
+  .intentCardChoice small { color:#8a6a46; font-size:11px; line-height:1.4; }
+  #intentCard .intentCardSkip { display:block; min-height:44px; margin:6px auto 0; padding:8px 14px; border:0; color:#7d6040; background:transparent;
+    font-family:inherit; font-size:12.5px; font-weight:700; line-height:1.3; text-decoration:underline; cursor:pointer; }
+  @keyframes intentCardIn { from{ opacity:0; transform:translate(-50%,14px); } to{ opacity:1; transform:translate(-50%,0); } }
+  #guideToast { position:fixed; z-index:14; left:50%; bottom:calc(70px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%);
+    max-width:min(560px,calc(100vw - 28px)); min-height:48px; padding:11px 18px; border:1px solid #e1cfb2; border-radius:999px;
+    color:#4a2f1e; background:rgba(255,251,242,.97); box-shadow:0 10px 30px rgba(70,40,15,.24); font-family:inherit; font-size:13.5px; font-weight:800; line-height:1.35; cursor:pointer; }
+  #guideToast[hidden] { display:none; }
+  body.atelier-active #intentCard, body.undercroft-active #intentCard, body.tour-active #intentCard, body.growth-replay-active #intentCard,
+  body.atelier-active #guideToast, body.undercroft-active #guideToast, body.tour-active #guideToast, body.growth-replay-active #guideToast,
+  body.town-panel-open #guideToast { display:none !important; }
+  #tourCap.top { top:calc(70px + env(safe-area-inset-top,0px)); bottom:auto; }
+  .wayGroupTitle { padding:0 4px 6px; color:#b08a5e; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+  #wayShare { margin:0 0 8px; border-bottom:1px solid #dfd9ce; }
+  #wayShare > summary { min-height:44px; padding:12px 4px; cursor:pointer; font-size:13px; font-weight:700; }
+  .wayLockNote { margin-left:8px; color:#a07d55; font-size:11px; font-weight:700; }
+  .wayLockNote:empty { display:none; }
+  .wayLockHint { margin:4px 2px 10px; padding:9px 11px; border-radius:11px; color:#7d6040; background:#f6ecdb; font-size:11.5px; line-height:1.5; }
+  #panel:not(.wayLookLocked) #wayLookHint, #panel:not(.wayShareLocked) #wayShareHint { display:none; }
+  #panel.wayLookLocked [data-way-lock="look"], #panel.wayShareLocked [data-way-lock="share"] { display:none; }
+  .wayGroup.wayJustUnlocked > summary { border-radius:10px; animation:wayUnlock 1.2s ease 2; }
+  @keyframes wayUnlock { 0%,100%{ background:transparent; } 50%{ background:#fde7b9; } }
+  @media (max-width:520px) {
+    #intentCard { bottom:calc(12px + env(safe-area-inset-bottom,0px)); }
+    .intentCardChoices { grid-template-columns:1fr; }
+    .intentCardChoice { min-height:56px; flex-direction:row; align-items:center; }
+    #guideToast { bottom:calc(96px + env(safe-area-inset-bottom,0px)); }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    #growthReplay .growthPlaque, #intentCard { animation:none; }
+    .wayGroup.wayJustUnlocked > summary { animation:none; background:#fdf0d2; }
+  }
 </style>
 </head>
 <body>
@@ -1712,6 +1777,7 @@
 <div id="panel" class="hidden" role="dialog" aria-modal="true" data-i18n-aria="wayfinding" inert>
   <button class="townPanelClose" type="button" data-town-close="panel" data-i18n-aria="close">✕</button>
   <h3>Repolis · <span data-i18n="wayfinding">길찾기</span></h3>
+  <div id="wayGoTitle" class="wayGroupTitle" data-i18n="wayGo">가다</div>
   <input id="repoSearch" type="text" name="repository" placeholder="레포·언어·주제 검색…" data-i18n-ph="searchPh" data-i18n-aria="searchPh" autocomplete="off" />
   <section id="intentLens" aria-labelledby="intentLensTitle">
     <div id="intentLensTitle" data-i18n="intentLensTitle">무엇을 하러 왔나요?</div>
@@ -1721,40 +1787,40 @@
       <button class="intentLensChoice" type="button" data-intent="contribute"><span class="intentLensIcon" aria-hidden="true">🧩</span><span data-i18n="intentContribute">기여할 일 찾기</span></button>
     </div>
   </section>
-  <details id="wayfindingTools"><summary data-i18n="wayfindingTools">마을 · 사람 · 공유</summary>
+  <details id="wayfindingTools" class="wayGroup" data-way-group="look"><summary><span data-i18n="wayLook">보다</span><span class="wayLockNote" id="wayLookNote"></span></summary>
   <details id="nearbyPeople"><summary data-i18n="nearbyPeople">가까운 인물 선택</summary>
     <p id="nearbyPeopleEmpty" data-i18n="nearbyPeopleEmpty">가까운 인물에게 다가가 보세요.</p><div id="nearbyPeopleList"></div>
   </details>
-  <button id="tourReplayBtn" type="button">
+  <p class="wayLockHint" id="wayLookHint" data-i18n="wayLookLocked">집 1채를 열면 가이드 투어 다시 보기 · 마을 만든 사람 · 도시 성장 리플레이가 열려요.</p>
+  <button id="tourReplayBtn" type="button" data-way-lock="look">
     <span class="pmIcon" aria-hidden="true">🎬</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="tourReplay">가이드 투어 다시 보기</span><span class="pmSub" data-i18n="tourReplaySub">세계수 · 주민 · 레포 집 · 기존 명소</span></span>
   </button>
-  <button id="questMenuBtn" type="button">
-    <span class="pmIcon" aria-hidden="true">🧩</span>
-    <span class="pmCopy"><span class="pmTitle" data-i18n="questMenu">오픈소스 퀘스트</span><span class="pmSub" data-i18n="questMenuSub">현재 공개 이슈를 실제 레포 집과 연결</span></span>
-  </button>
-  <button id="creatorMenuBtn" type="button">
+  <button id="creatorMenuBtn" type="button" data-way-lock="look">
     <span class="pmIcon" aria-hidden="true">👤</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="creatorMenu">마을 만든 사람</span><span class="pmSub" data-i18n="creatorMenuSub">공개 GitHub 프로필과 대표 작업</span></span>
   </button>
-  <button id="repoRouteMenuBtn" type="button">
+  <button id="growthMenuBtn" type="button" data-way-lock="look">
+    <span class="pmIcon" aria-hidden="true">⏳</span>
+    <span class="pmCopy"><span class="pmTitle" data-i18n="growthMenu">도시 성장 리플레이</span><span class="pmSub" data-i18n="growthMenuSub">첫 레포부터 지금까지 마을이 자라는 장면</span></span>
+  </button>
+  <details id="nearbySpeech"><summary data-i18n="nearbySpeech">주변 대화 읽기</summary><div id="nearbySpeechText"></div></details>
+  </details>
+  <details id="wayShare" class="wayGroup" data-way-group="share"><summary><span data-i18n="wayShare">나누기</span><span class="wayLockNote" id="wayShareNote"></span></summary>
+  <p class="wayLockHint" id="wayShareHint" data-i18n="wayShareLocked">집 2채를 열면 둘러본 레포 길 공유 · Twin Towns · 타운 엽서가 열려요.</p>
+  <button id="repoRouteMenuBtn" type="button" data-way-lock="share">
     <span class="pmIcon" aria-hidden="true">🧭</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="routeMenu">Repo Route</span><span class="pmSub" data-i18n="routeMenuSub">직접 본 레포 2~3곳을 코스로 공유</span></span>
     <span id="repoRouteMenuCount" hidden aria-hidden="true"></span>
   </button>
-  <button id="growthMenuBtn" type="button">
-    <span class="pmIcon" aria-hidden="true">⏳</span>
-    <span class="pmCopy"><span class="pmTitle" data-i18n="growthMenu">도시 성장 리플레이</span><span class="pmSub" data-i18n="growthMenuSub">첫 레포부터 지금까지 마을이 자라는 장면</span></span>
-  </button>
-  <button id="twinMenuBtn" type="button">
+  <button id="twinMenuBtn" type="button" data-way-lock="share">
     <span class="pmIcon" aria-hidden="true">↔</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="twinMenu">Twin Towns</span><span class="pmSub" data-i18n="twinMenuSub">친구의 GitHub 마을과 연결하기</span></span>
   </button>
-  <button id="postcardMenuBtn" type="button">
+  <button id="postcardMenuBtn" type="button" data-way-lock="share">
     <span class="pmIcon" aria-hidden="true">📸</span>
     <span class="pmCopy"><span class="pmTitle" data-i18n="postcardMenu">타운 엽서 만들기</span><span class="pmSub" data-i18n="postcardMenuSub">지금 보이는 마을을 PNG로</span></span>
   </button>
-  <details id="nearbySpeech"><summary data-i18n="nearbySpeech">주변 대화 읽기</summary><div id="nearbySpeechText"></div></details>
   </details>
   <section id="firstRepoPicker" hidden aria-labelledby="firstRepoTitle">
     <h4 id="firstRepoTitle" data-i18n="firstRepoTitle">이 마을의 레포 하나 고르기</h4>
@@ -2228,6 +2294,11 @@
 
 <div id="growthReplay" class="hidden" aria-hidden="true">
   <div class="growthBackdrop" aria-hidden="true"></div>
+  <div id="growthPlaque" class="growthPlaque" hidden role="status" aria-live="polite" aria-atomic="true">
+    <div id="growthPlaqueKicker" class="growthPlaqueKicker"></div>
+    <div id="growthPlaqueName" class="growthPlaqueName"></div>
+    <div id="growthPlaqueFacts" class="growthPlaqueFacts"></div>
+  </div>
   <section class="growthPanel" role="dialog" aria-modal="true" aria-labelledby="growthTitle" aria-describedby="growthSummary">
     <button id="growthClose" class="growthClose" type="button" data-i18n-aria="growthClose" aria-label="닫기">✕</button>
     <div class="growthKicker" data-i18n="growthKicker">REPOLIS TIME MACHINE</div>
@@ -2242,6 +2313,7 @@
       <button id="growthPresent" type="button" data-i18n="growthPresent">현재로 이동</button>
       <button id="growthShare" type="button" data-i18n="growthShare">이 연도 링크 공유</button>
       <button id="growthPostcard" type="button" data-i18n="growthPostcard">이 시대 엽서 만들기</button>
+      <button id="growthSkip" class="primary" type="button" hidden data-i18n="homecomingSkip">건너뛰기 ⏭</button>
     </div>
     <div id="growthStatus" class="growthStatus" role="status" aria-live="polite" aria-atomic="true"></div>
   </section>
@@ -2291,6 +2363,18 @@
 </div>
 
 <div id="tourCap" class="hidden"><span class="tcDot" id="tourDot">✨</span><span class="tcTxt" id="tourTxt"></span><button class="tcSkip" id="tourSkip" data-i18n="tourSkip">건너뛰기 ⏭</button></div>
+<section id="intentCard" class="hidden" role="dialog" aria-modal="false" aria-labelledby="intentCardTitle" aria-describedby="intentCardCity" aria-hidden="true" inert>
+  <button id="intentCardClose" class="intentCardClose" type="button" data-i18n-aria="intentCardSkip" aria-label="건너뛰고 직접 걷기">✕</button>
+  <div id="intentCardCity" class="intentCardCity"></div>
+  <h2 id="intentCardTitle" data-i18n="intentLensTitle">무엇을 하러 왔나요?</h2>
+  <div class="intentCardChoices">
+    <button class="intentCardChoice" type="button" data-card-intent="understand"><span class="icon" aria-hidden="true">⌕</span><span class="copy"><b data-i18n="intentUnderstand">레포 하나 이해하기</b><small data-i18n="pathUnderstandSub">집 하나를 골라 전시실에서 원문과 소스 지도 보기</small></span></button>
+    <button class="intentCardChoice" type="button" data-card-intent="explore"><span class="icon" aria-hidden="true">🗺️</span><span class="copy"><b data-i18n="intentExplore">이 개발자의 도시 둘러보기</b><small data-i18n="pathExploreSub">구역 안내자가 이 도시의 집 세 곳을 소개해요</small></span></button>
+    <button class="intentCardChoice" type="button" data-card-intent="contribute"><span class="icon" aria-hidden="true">🧩</span><span class="copy"><b data-i18n="intentContribute">기여할 일 찾기</b><small data-i18n="pathContributeSub">지금 열린 공개 이슈를 실제 집 앞까지</small></span></button>
+  </div>
+  <button id="intentCardSkip" class="intentCardSkip" type="button" data-i18n="intentCardSkip">건너뛰고 직접 걷기</button>
+</section>
+<button id="guideToast" type="button" hidden data-i18n="guideToast">안내자가 세 곳을 안내할게요 — 🚕 눌러서 출발</button>
 <div id="starNudge" role="status">
   <span class="snTx" id="starNudgeTx" data-i18n="starNudge">이 마을이 마음에 드셨나요? Repolis는 오픈소스예요.</span>
   <a class="snGo" id="starNudgeGo" href="https://github.com/hyeonsangjeon/Repolis" target="_blank" rel="noopener" data-i18n="starNudgeGo">⭐ GitHub에서 Star</a>
@@ -2462,6 +2546,7 @@ import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-re
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
 import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
+import { HOMECOMING_LIMITS, homecomingCityName, homecomingStopCopy, homecomingTimelapsePlan, homecomingUnlocks, rememberHomecomingKey, selectHomecomingStops } from './assets/homecoming.js?v=homecoming-v1';
 import { DIRECT_ENTRY_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v4';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
@@ -2559,6 +2644,10 @@ function track(eventName, payload){
       const allowed=new Set(['ev','ts','entry','device','lang','result','count','tier','channel']);
       Object.keys(ev).forEach(key=>{ if(!allowed.has(key)) delete ev[key]; });
     }
+    if(ev.__privacy==='homecoming'){   // first-ten-minutes funnel: no login, repository, session or instance identity
+      const allowed=new Set(['ev','ts','entry','device','lang','result','count','step','channel','intent','mode','days']);
+      Object.keys(ev).forEach(key=>{ if(!allowed.has(key)) delete ev[key]; });
+    }
     recentAnalyticsEvents.push(ev); if(recentAnalyticsEvents.length > 150) recentAnalyticsEvents.shift();
     if(_DBG) console.debug('[track]', eventName, ev);
     if(ANALYTICS_ENDPOINT){ try{
@@ -2568,6 +2657,7 @@ function track(eventName, payload){
       if(navigator.sendBeacon){ try{ sent = navigator.sendBeacon(ANALYTICS_ENDPOINT, new Blob([body], {type:'text/plain'})); }catch(e){} }
       if(!sent && typeof fetch === 'function'){ fetch(ANALYTICS_ENDPOINT, {method:'POST', body, headers:{'content-type':'text/plain'}, keepalive:true}).catch(()=>{}); }
     }catch(e){} }
+    _homecomingTrace(eventName,ev);
   }catch(e){ /* analytics must never break the app */ }
 }
 function trackPortal(eventName,payload){
@@ -2971,7 +3061,18 @@ const I18N = {
     ruinListAria:'아카이브 레포 이름 명패',
     cityOfRepos:'레포들의 도시',
     introSub:'레포 하나가 집 한 채.<br>어떤 일을 하는 곳인지, 문을 열어 보세요.',
-    introControls:'조작', wayfindingTools:'마을 · 사람 · 공유',
+    introControls:'조작',
+    homecomingLaunchLabel:'GitHub 아이디 하나면, 당신의 레포들이 도시가 됩니다.', homecomingSampleCity:'샘플 도시 보기 · {user}',
+    homecomingSkip:'건너뛰기 ⏭', homecomingPlaqueKicker:'당신의 커밋이 지은 도시', homecomingPlaqueFacts:'공개 레포 집 {count}채 · {first}년부터',
+    intentCardSkip:'건너뛰고 직접 걷기', pathUnderstandSub:'집 하나를 골라 전시실에서 원문과 소스 지도 보기',
+    pathExploreSub:'구역 안내자가 이 도시의 집 세 곳을 소개해요', pathContributeSub:'지금 열린 공개 이슈를 실제 집 앞까지',
+    guideToast:'안내자가 세 곳을 안내할게요 — 🚕 눌러서 출발', exploreRide:'{title}으로 가요 · {repo}', exploreGuideRole:'안내자',
+    exploreGitberName:'깃버', exploreTownWord:'이 마을', explorePassport:'둘러본 집이 여권에 도장으로 남았어요.',
+    exploreEnd:'세 곳을 둘러봤어요. ☰ 길찾기의 “보다”와 “나누기”가 열렸어요.', exploreEndShort:'이 도시의 집을 둘러봤어요. ☰ 길찾기에서 더 찾아보세요.',
+    exploreUnavailable:'둘러볼 공개 레포 집이 아직 없어요.', wayGo:'가다', wayLook:'보다', wayShare:'나누기',
+    wayLookLocked:'집 1채를 열면 가이드 투어 다시 보기 · 마을 만든 사람 · 도시 성장 리플레이가 열려요.',
+    wayShareLocked:'집 2채를 열면 둘러본 레포 길 공유 · Twin Towns · 타운 엽서가 열려요.', wayLockNote:'🔒 집 {count}채 후',
+    wayLookUnlocked:'🔓 “보다”가 열렸어요 — ☰ 길찾기', wayShareUnlocked:'🔓 “나누기”가 열렸어요 — 둘러본 길을 친구에게 넘겨 보세요',
     introSubPublic:'{user} 님의 공개 레포로 지은 도시예요.<br>함께 걸으며 둘러보고,<br>🚉 역에서 또 다른 마을로 떠날 수 있어요.',
     introSubPortal:'공개 레포 하나를 먼저 불러왔어요.<br>3D 전시실에서 이 레포를 확인한 뒤,<br>원할 때 소유자의 마을 전체로 넓혀 보세요.',
     introLaunchLabel:'GitHub 사용자나 레포를 도시로 열기', introUserPh:'username · owner/repo · GitHub URL', introLaunchGo:'Repolis에서 열기 →',
@@ -3391,7 +3492,18 @@ const I18N = {
     ruinListAria:'Archived repository nameplates',
     cityOfRepos:'the city of repos',
     introSub:'Every house is a repository.<br>Open a door. Find out what lives inside.',
-    introControls:'Controls', wayfindingTools:'Town · people · sharing',
+    introControls:'Controls',
+    homecomingLaunchLabel:'Type a GitHub login. Your repos become a city you can walk.', homecomingSampleCity:'See the sample city · {user}',
+    homecomingSkip:'Skip ⏭', homecomingPlaqueKicker:'A city your commits built', homecomingPlaqueFacts:'{count} public repo houses since {first}',
+    intentCardSkip:'Skip and walk freely', pathUnderstandSub:'Pick one house and read its source in the exhibition',
+    pathExploreSub:'District guides introduce three houses in this city', pathContributeSub:'Take a current public issue to its real house',
+    guideToast:'A guide will show you three places — tap 🚕 to start', exploreRide:'Heading to {title} · {repo}', exploreGuideRole:'guide',
+    exploreGitberName:'Gitber', exploreTownWord:'this town', explorePassport:'The houses you toured are stamped in your passport.',
+    exploreEnd:'Three houses toured. “Look” and “Share” are open in ☰ Wayfinding.', exploreEndShort:'You toured this city’s houses. Find more in ☰ Wayfinding.',
+    exploreUnavailable:'There are no public repo houses to tour yet.', wayGo:'Go', wayLook:'Look', wayShare:'Share',
+    wayLookLocked:'Open one house to unlock the tour replay, the town creator and Growth Replay.',
+    wayShareLocked:'Open two houses to unlock route sharing, Twin Towns and postcards.', wayLockNote:'🔒 visit {count} to open',
+    wayLookUnlocked:'🔓 “Look” is open — ☰ Wayfinding', wayShareUnlocked:'🔓 “Share” is open — hand your path to a friend',
     introSubPublic:"A city built from {user}'s public repos.<br>Stroll around and explore —<br>or hop the train at 🚉 Station to visit another town.",
     introSubPortal:"One public repo loaded first.<br>Enter its 3D exhibition,<br>then expand into the owner's town when you choose.",
     introLaunchLabel:'Open a GitHub user or repository as a town', introUserPh:'username · owner/repo · GitHub URL', introLaunchGo:'Open in Repolis →',
@@ -3710,6 +3822,7 @@ function applyLang(){
   if(typeof window.__creatorLangRefresh==='function') window.__creatorLangRefresh();
   if(typeof window.__postcardLangRefresh==='function') window.__postcardLangRefresh();
   if(typeof window.__growthLangRefresh==='function') window.__growthLangRefresh();
+  if(typeof window.__homecomingLangRefresh==='function') window.__homecomingLangRefresh();
   if(typeof window.__worldTreeLangRefresh==='function') window.__worldTreeLangRefresh();
   if(typeof _refreshUndercroftLanguage==='function') _refreshUndercroftLanguage();
   { const _zb=document.getElementById('zoneBoard'); if(typeof renderZoneBoard==='function' && _zb && _zb.classList.contains('show') && _zb._zid) renderZoneBoard(_zb._zid); }
@@ -9995,7 +10108,7 @@ let VISITOR = (function(){ const KEY='repolisVisits'; let v={ n:0, first:0, last
   if(fresh){ v.n=(v.n||0)+1; if(!v.first) v.first=now; } v.last=now;
   try{ localStorage.setItem(KEY, JSON.stringify(v)); }catch(e){}
   const awayDays = prevLast ? Math.floor((now-prevLast)/86400000) : 0;
-  return { visits:v.n, firstTime:v.n<=1, returning:v.n>1, awayDays, longAway:(v.n>1 && awayDays>=7) };
+  return { visits:v.n, firstTime:v.n<=1, returning:v.n>1, awayDays, longAway:(v.n>1 && awayDays>=7), fresh };
 })();
 /*FRESHNESS:START*/
 function _freshNum(v){ v=Number(v); return Number.isFinite(v)?Math.max(0,v):0; }
@@ -10230,8 +10343,8 @@ function courseProximityTick(){ if(!course||!course.available||ride) return; con
   else showWave(tf('chronicleZoneFound',{name,zone:zoneNameById(it.id)}),3200); }
 /* ---- Guided onboarding tour: one compact living-town journey through existing interactions ---- */
 let tour=null, _tourBoost=false, _tourEndTimer=null;
-function tourCap(dot,html){ const e=document.getElementById('tourCap'); if(!e) return;
-  document.getElementById('tourDot').textContent=dot; document.getElementById('tourTxt').innerHTML=html; e.classList.remove('hidden'); }
+function tourCap(dot,html,top=false){ const e=document.getElementById('tourCap'); if(!e) return;
+  document.getElementById('tourDot').textContent=dot; document.getElementById('tourTxt').innerHTML=html; e.classList.toggle('top',!!top); e.classList.remove('hidden'); }
 function hideTourCap(){ const e=document.getElementById('tourCap'); if(e) e.classList.add('hidden'); }
 function tourCloseModals(){ try{ if(modal.classList.contains('show')) closeCard(); }catch(e){}
   try{ if(chronoModal.classList.contains('show')) closeChrono(); }catch(e){} try{ if(WORLD_TREE_UI.open) closeWorldTreeChronicle(); }catch(e){}
@@ -10248,13 +10361,13 @@ function buildTourSteps(){ const pop=REPOS.slice().sort((a,b)=>(b.stars||0)-(a.s
   if(repo) steps.push({kind:'repo',destination:repo,dot:'🏠',cap:'tourRepo',dwell:4.4});
   if(typeof CHRONO!=='undefined'&&CHRONO) steps.push({kind:'chrono',destination:lmCourseDest('chrono'),dot:'⏳',cap:'tourChrono',dwell:4.4});
   steps.push({kind:'passport',dot:'🛂',cap:'tourPassport',dwell:4.2}); return steps; }
-function startTour(){ if(!REPOS.length||(tour&&tour.active)) return; tourCloseModals();
+function startTour(options={}){ if(!REPOS.length||(tour&&tour.active)) return; tourCloseModals();
   if(_tourEndTimer){ clearTimeout(_tourEndTimer); _tourEndTimer=null; }
   try{ if(ride) endDrive(); if(sitting) standUp(); }catch(e){}
   player.position.set(2.6,0,-3.2); model.rotation.y=Math.PI; freeLook=false;
   const intro=document.getElementById('intro'); if(intro) intro.classList.add('hidden');
   document.body.classList.add('tour-active');
-  tour={steps:buildTourSteps(),i:0,active:true,waiting:false,_timer:null,_deadline:0}; _tourBoost=true; runTourStep(); }
+  tour={steps:options.steps||buildTourSteps(),mode:options.mode||'classic',endCap:options.endCap||null,i:0,active:true,waiting:false,_timer:null,_deadline:0}; _tourBoost=true; runTourStep(); }
 function tourTravel(destination,dwell){ if(!destination){ tourSchedule(dwell); return; } tour.waiting=true;
   if(!destination._courseResident&&activeNpc&&activeNpc.resident) activeNpc=null;
   try{ taxiTo(destination); if(REDUCED){ player.position.set(destination._pos.x,0,destination._pos.z); resolveColliders(player.position); arriveTaxi(destination); tourOnArrive(); } }
@@ -10264,7 +10377,7 @@ function tourShowPassport(step){ if(!tour||!tour.active) return; tour.waiting=tr
   tour._timer=setTimeout(()=>{ if(!tour||!tour.active) return; tour._timer=null; tour._deadline=0; tour.waiting=false; hideTourCap();
     try{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.remove('hidden'); renderPassport(); }catch(e){} tourSchedule(step.dwell); },delay); }
 function runTourStep(){ if(!tour||!tour.active) return; const s=tour.steps[tour.i]; if(!s){ endTour(true); return; }
-  tourCap(s.dot, t(s.cap));
+  tourCap(s.dot, s.html||t(s.cap));
   if(s.kind==='welcome'){ const n=NPCS.find(x=>x.kind==='taxi')||NPCS[0];
     if(n){ camYaw=Math.atan2(n.pos.x-player.position.x, n.pos.z-player.position.z); camPitch=0.20; camDist=18; n.group._bt=0.01; }
     tourSchedule(s.dwell);
@@ -10278,11 +10391,12 @@ function _pauseTourForAtelier(){ if(!tour||!tour.active||!tour._timer) return nu
   const remaining=Math.max(0,tour._deadline-performance.now()); clearTimeout(tour._timer); tour._timer=null; tour._deadline=0; return {remaining}; }
 function _resumeTourAfterAtelier(paused){ if(paused&&tour&&tour.active&&!tour._timer) _armTourTimer(paused.remaining); }
 function tourOnArrive(){ if(!tour||!tour.active||!tour.waiting) return; tour.waiting=false;
-  const s=tour.steps[tour.i]; if(s&&s.kind!=='passport') hideTourCap(); tourSchedule(s?s.dwell:3.2); }
+  const s=tour.steps[tour.i]; if(s&&s.arrivalHtml){ tourCap(s.arrivalDot||s.dot,s.arrivalHtml,true); homecomingStopReached(s); }
+  else if(s&&s.kind!=='passport') hideTourCap(); tourSchedule(s?s.dwell:3.2); }
 function tourNext(){ if(!tour||!tour.active) return; tour.i++; if(tour.i>=tour.steps.length) endTour(true); else runTourStep(); }
 function endTour(showEnd){ if(!tour) return; if(tour._timer) clearTimeout(tour._timer); tour._timer=null; tour._deadline=0; tour.active=false; _tourBoost=false;
   try{ endDrive(); taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; }catch(e){} tourCloseModals();
-  if(showEnd){ tourCap('✨', t('tourEnd')); _tourEndTimer=setTimeout(()=>{ hideTourCap(); document.body.classList.remove('tour-active'); _tourEndTimer=null; },3400); }
+  if(showEnd){ tourCap('✨', t(tour.endCap||'tourEnd')); _tourEndTimer=setTimeout(()=>{ hideTourCap(); document.body.classList.remove('tour-active'); _tourEndTimer=null; },3400); }
   else { hideTourCap(); document.body.classList.remove('tour-active'); } tour=null; }
 function renderCourse(){ const box=document.getElementById('courseBox'); if(!box) return;
   if(!REPOS.length){ box.style.display='none'; return; }
@@ -10773,7 +10887,7 @@ renderRepoRouteStudio(); renderRepoRouteHud();
 const questModal=document.getElementById('questModal'),questStudio=questModal.querySelector('.questStudio'),
   questClose=document.getElementById('questClose'),questStatus=document.getElementById('questStatus'),
   questList=document.getElementById('questList'),questEmpty=document.getElementById('questEmpty'),
-  questScan=document.getElementById('questScan'),questMenuBtn=document.getElementById('questMenuBtn');
+  questScan=document.getElementById('questScan');
 const CONTRIBUTION_QUESTS={
   open:false,loading:false,loaded:false,quests:[],active:null,status:null,error:'',entry:'menu',
   previousFocus:null,inert:[],requestId:0,abort:null,fetches:0,handedOff:false
@@ -10926,7 +11040,7 @@ function syncContributionQuestCardAction(repo,container=document.getElementById(
 }
 function _questFocusables(){ return [...questStudio.querySelectorAll('button:not([disabled]),a[href]')]
   .filter(element=>!element.hidden&&!element.closest('[hidden]')); }
-questMenuBtn.onclick=()=>openContributionQuestBoard('menu'); questClose.onclick=closeContributionQuestBoard; questScan.onclick=loadContributionQuests;
+questClose.onclick=closeContributionQuestBoard; questScan.onclick=loadContributionQuests;
 questModal.addEventListener('click',event=>{ if(event.target===questModal) closeContributionQuestBoard(); });
 questModal.addEventListener('keydown',event=>{
   if(event.isComposing||event.keyCode===229)return;
@@ -11312,7 +11426,7 @@ function lightVisitedHouse(repo, defer){ if(!repo||repo._litVisited) return; rep
   if(isNight && !defer){ _nightState=null; setNightState(true); } }
 function markVisited(repo){ if(repo._visited) return; repo._visited=true; visited++;
   document.getElementById('visitCount').textContent=visited; repo._row.classList.add('visited');
-  repo._ring.material.color.set(0x2f9d6a); lightVisitedHouse(repo); addRepoVisit(repo.repo); greetBuilding(repo); }
+  repo._ring.material.color.set(0x2f9d6a); lightVisitedHouse(repo); addRepoVisit(repo.repo); greetBuilding(repo); homecomingVisitedChanged(); }
 
 const promptEl=document.getElementById('prompt'); let nearest=null, nearNpc=null, nearHub=null, activeNpc=null;
 let nearInviteCircle=null;   // an active gathering that has waved you over (join it with Enter from a little further out than the walk-up reach)
@@ -11336,7 +11450,7 @@ function _starNudgeClose(how){ const el=document.getElementById('starNudge'); if
 function maybeStarNudge(reason){ if(_starNudgeShown||_starNudgeSeen()) return false;
   const el=document.getElementById('starNudge'); if(!el) return false;
   // exploring a repo happens inside its card, so wait for the visitor to step back out
-  if(modalOpen||(tour&&tour.active)||repositoryAtelierActive()){ _starNudgePending=reason; return false; }
+  if(modalOpen||(tour&&tour.active)||repositoryAtelierActive()||homecomingCardOpen()){ _starNudgePending=reason; return false; }
   const go=document.getElementById('starNudgeGo');
   if(go) go.href=(window.REPOLIS_CONFIG&&REPOLIS_CONFIG.project&&REPOLIS_CONFIG.project.url)||go.href;
   _starNudgeShown=true; _starNudgePending=null; el.classList.add('show'); track('star_nudge_shown',{reason}); return true; }
@@ -11416,14 +11530,15 @@ function showEntryHint(){ const hint=document.querySelector('.hint'); if(!hint||
   const onPointer=e=>{ if(e.target&&e.target.closest&&e.target.closest('#app,#joy')) off(); };
   const timer=setTimeout(off,9000); addEventListener('keydown',onKey,true); addEventListener('pointerdown',onPointer,true); }
 document.getElementById('startBtn').onclick=()=>{ if(!_claimTownEntry()) return;
-  document.getElementById('intro').classList.add('hidden'); showEntryHint();
+  const homecoming=homecomingPlanEntry();
+  document.getElementById('intro').classList.add('hidden'); if(!homecoming.active) showEntryHint();
   track('town_enter', { returning: !!VISITOR.returning });
   const rb=VISITOR.returning, news=hasFreshness(),blueprintPath=!blueprintDeepLinkBypass&&blueprintDeepLinkRepo()?BLUEPRINT_DEEP_LINK.path:null;
   if(cityMode==='public'){
-    if(!rb&&!_reqFocus) setTimeout(()=>{ try{ showWave(tf('arrived',{user:currentUser}),3600); }catch(e){} },850);
+    if(!rb&&!_reqFocus&&!homecoming.timelapse) setTimeout(()=>{ try{ showWave(tf('arrived',{user:currentUser}),3600); }catch(e){} },850);
     if(!REPO_ROUTE_REQUEST.valid) setTimeout(()=>{ try{ maybeStarNudge('personal_town'); }catch(e){} },14000); }   // a shared route earns this invitation only after completion
   if(rb&&cityMode!=='portal'&&!_reqFocus){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} },850); }   // welcome a familiar face back before Gazette / Chronicle
-  try{ if(cityMode!=='portal'&&!_reqFocus&&REPOS.length){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
+  try{ if(cityMode!=='portal'&&!_reqFocus&&REPOS.length&&!homecoming.card){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
       if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
   _queueArrivalAction(480,()=>{
@@ -11438,7 +11553,8 @@ document.getElementById('startBtn').onclick=()=>{ if(!_claimTownEntry()) return;
     else openRepoFromHash();
   });
   if(REPO_ROUTE_REQUEST.valid&&cityMode!=='portal') _queueArrivalAction(620,()=>startRepoRoute('link'));
-  else if(_reqGrowth&&cityMode!=='portal') _queueArrivalAction(620,()=>startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false})); };
+  else if(_reqGrowth&&cityMode!=='portal') _queueArrivalAction(620,()=>startTownGrowthReplay({entry:'link',year:_reqGrowth,autoplay:false}));
+  homecomingAfterEntry(homecoming); };
 const introLaunch=document.getElementById('introLaunch'),introLaunchLabel=introLaunch.querySelector('.launchLabel'),
   introLaunchForm=document.getElementById('introLaunchForm'),introLaunchHint=document.getElementById('introLaunchHint'),
   introPublicProof=document.getElementById('introPublicProof'),introProofStats=document.getElementById('introProofStats'),
@@ -11454,12 +11570,19 @@ function renderIntroProfileStatus(){
   introProfileStatus.textContent=introProfileResult?t(introProfileResult.key):'';
   introProfileStatus.dataset.tone=introProfileResult?.tone||'';
 }
+function _placeIntroLanding(on){
+  const intro=document.getElementById('intro'),inner=intro.querySelector('.inner');
+  intro.classList.toggle('homecoming-landing',on);   // canonical first screen: "your city" before the sample town
+  if(on&&introLaunch.nextElementSibling!==introStartBtn) inner.insertBefore(introLaunch,introStartBtn);
+  if(!on&&introStartBtn.nextElementSibling!==introLaunch) inner.insertBefore(introStartBtn,introLaunch);
+}
 function renderPublicIntro(){
   const summary=publicIntroSummary(),publicReady=cityMode==='public'&&!cityError&&summary.count>0&&!introChoosingAnother;
   const portalRepo=cityMode==='portal'&&!cityError&&repoPortalTarget?repoByKey(repoPortalTarget.repo):null;
   const portalReady=!!portalRepo&&!introChoosingAnother,blueprintRepo=blueprintDeepLinkRepo();
   const blueprintReady=!!blueprintRepo&&!introChoosingAnother;
   const routeReady=REPO_ROUTE_REQUEST.valid&&cityMode!=='portal'&&!cityError&&!introChoosingAnother,ready=publicReady||portalReady||routeReady;
+  const landing=!ready&&!blueprintReady&&cityMode==='owner'&&!cityError&&window.REPOLIS_CONFIG?.town?.canonical===true;
   document.getElementById('intro').classList.toggle('blueprint-link',blueprintReady);
   introLaunch.classList.toggle('ready',ready); introPublicProof.hidden=!ready; introLaunchForm.hidden=ready; introLaunchHint.hidden=ready;
   introPinProfile.hidden=!publicReady; introGrowth.hidden=!publicReady||!TOWN_GROWTH.available;
@@ -11492,7 +11615,9 @@ function renderPublicIntro(){
     introStartBtn.textContent=t('enterTownPublic');
   }else{
     introProfileResult=null; introProofActions.hidden=false; introTourBtn.hidden=false; introLaunchLabel.textContent=t('introLaunchLabel'); introStartBtn.textContent=t('enterTown');
+    if(landing){ introLaunchLabel.textContent=t('homecomingLaunchLabel'); introStartBtn.textContent=tf('homecomingSampleCity',{user:OWNER}); }
   }
+  _placeIntroLanding(landing);
   renderIntroProfileStatus();
   return {ready,publicReady,portalReady,blueprintReady,routeReady,choosingAnother:introChoosingAnother,summary};
 }
@@ -11516,7 +11641,7 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
   input.addEventListener('keydown',e=>e.stopPropagation());
   form.onsubmit=e=>{ e.preventDefault(); const target=parseRepoPortalInput(input.value);
     if(!target.ok){ if(err) err.textContent=t('introLaunchInvalid'); track('intro_launch_invalid'); trackPortal('feature_started',{entry:'intro',device:_repoPortalDevice(),lang:LANG,result:'invalid'}); input.focus(); return; }
-    if(err) err.textContent='';
+    if(err) err.textContent=''; trackHomecoming('city_requested',{entry:'intro',channel:target.kind});
     if(target.kind==='repo'){ location.href=createRepoPortalUrl(target,location.href); return; }
     const user=target.user; track('intro_personal_preview',{targetUser:user});
     const url=location.origin+location.pathname+(user.toLowerCase()===OWNER.toLowerCase()?'':'?user='+encodeURIComponent(user));
@@ -12176,14 +12301,16 @@ function _applyTownGrowthIndex(index,animate=true,source='control'){
 }
 function _finishTownGrowthReplay(){
   if(GROWTH_REPLAY.completed) return; GROWTH_REPLAY.completed=true; GROWTH_REPLAY.playing=false; _renderTownGrowthReplay();
-  _growthSetStatus('growthComplete'); if(!REDUCED) fireworksShow(10); maybeStarNudge('town_growth_replay');
+  const arrival=GROWTH_REPLAY.entry==='arrival';   // the first-visit timelapse ends on the city plaque, not on a Star request
+  _growthSetStatus('growthComplete'); if(!REDUCED) fireworksShow(10); if(!arrival) maybeStarNudge('town_growth_replay');
   track('town_growth_complete',{steps:TOWN_GROWTH.milestones.length,years:TOWN_GROWTH.lastYear-TOWN_GROWTH.firstYear});
+  if(arrival) homecomingTimelapseFinished();
 }
 function _updateTownGrowthReplay(dt){
   if(!GROWTH_REPLAY.active) return;
   if(GROWTH_REPLAY.aspect!==camera.aspect){ GROWTH_REPLAY.aspect=camera.aspect; _growthFitCamera(); }
   if(GROWTH_REPLAY.playing){ GROWTH_REPLAY.elapsed+=dt;
-    if(GROWTH_REPLAY.elapsed>=growthMilestoneSeconds(_growthSnapshot())){ GROWTH_REPLAY.elapsed=0;
+    if(GROWTH_REPLAY.elapsed>=(GROWTH_REPLAY.pace||growthMilestoneSeconds(_growthSnapshot()))){ GROWTH_REPLAY.elapsed=0;
       if(GROWTH_REPLAY.index>=TOWN_GROWTH.milestones.length-1) _finishTownGrowthReplay();
       else { const snapshot=_applyTownGrowthIndex(GROWTH_REPLAY.index+1,true,'play');
         if(snapshot&&snapshot.isPresent) _finishTownGrowthReplay(); } } }
@@ -12206,8 +12333,10 @@ function startTownGrowthReplay(options={}){
     playerVisible:player.visible,navVisible:navHolder.visible,camYaw,camPitch,camDist,freeLook,modalOpen,
     skyT,skyTarget,skyAuto,skyPhaseIdx,isNight,fogNear:scene.fog.near,fogFar:scene.fog.far,
     lod:BUILDING_LOD_PROTO.entries.map(entry=>({entry,forced:entry.forcedTier,tier:entry.tier,activeVisible:entry.active.visible}))};
-  GROWTH_REPLAY.previousFocus=(entry==='intro'||entry==='link')?menuBtn:document.activeElement;
+  GROWTH_REPLAY.previousFocus=(entry==='intro'||entry==='link'||entry==='arrival')?menuBtn:document.activeElement;
   GROWTH_REPLAY.active=true; GROWTH_REPLAY.playing=options.autoplay!==false&&!REDUCED; GROWTH_REPLAY.completed=false;
+  GROWTH_REPLAY.pace=Number.isFinite(options.pace)&&options.pace>0?options.pace:0;
+  growthReplay.classList.toggle('arrival',entry==='arrival'); document.getElementById('growthSkip').hidden=entry!=='arrival';
   GROWTH_REPLAY.elapsed=0; GROWTH_REPLAY.entry=entry; GROWTH_REPLAY.statusKey=''; GROWTH_REPLAY.aspect=camera.aspect;
   panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.add('hidden');
   document.getElementById('station').classList.add('hidden'); if(typeof closeMap==='function') closeMap();
@@ -12225,7 +12354,8 @@ function startTownGrowthReplay(options={}){
   track('town_growth_open',{entry,year:_growthSnapshot()?.year||null,steps:TOWN_GROWTH.milestones.length}); return true;
 }
 function closeTownGrowthReplay(){
-  if(!GROWTH_REPLAY.active) return false; if(POSTCARD.open) closePostcardStudio(); const saved=GROWTH_REPLAY.saved;
+  if(!GROWTH_REPLAY.active) return false; if(POSTCARD.open) closePostcardStudio(); const saved=GROWTH_REPLAY.saved,arrival=GROWTH_REPLAY.entry==='arrival';
+  growthReplay.classList.remove('arrival'); document.getElementById('growthSkip').hidden=true; document.getElementById('growthPlaque').hidden=true; GROWTH_REPLAY.pace=0;
   GROWTH_REPLAY.active=false; GROWTH_REPLAY.playing=false; GROWTH_REPLAY.reveals.length=0;
   for(const repo of REPOS){ repo._growthHidden=false; repo._growthReveal=1; repo._group.visible=true; repo._group.scale.set(1,1,1); }
   document.body.classList.remove('growth-replay-active'); growthReplay.classList.add('hidden'); growthReplay.setAttribute('aria-hidden','true');
@@ -12240,7 +12370,8 @@ function closeTownGrowthReplay(){
   _growthRestoreBackground(saved);
   GROWTH_REPLAY.saved=null; _growthClearLocation(); invalidateTownShadows('town-growth-restore'); track('town_growth_close',{year:_growthSnapshot()?.year||null});
   const previous=GROWTH_REPLAY.previousFocus; GROWTH_REPLAY.previousFocus=null;
-  setTimeout(()=>{ try{ (previous&&previous.isConnected?previous:menuBtn).focus(); }catch(e){} },0); flushStarNudge(); return true;
+  setTimeout(()=>{ try{ (previous&&previous.isConnected?previous:menuBtn).focus(); }catch(e){} },0); flushStarNudge();
+  if(arrival) homecomingTimelapseClosed(); return true;
 }
 function renderGrowthPassport(){
   if(!growthBox) return; if(!TOWN_GROWTH.available){ growthBox.style.display='none'; growthBox.innerHTML=''; return; }
@@ -12266,7 +12397,8 @@ growthPresent.onclick=()=>{ GROWTH_REPLAY.playing=false; GROWTH_REPLAY.completed
   _applyTownGrowthIndex(TOWN_GROWTH.milestones.length-1,true,'present'); };
 growthShare.onclick=shareTownGrowth;
 growthPostcard.onclick=()=>{ GROWTH_REPLAY.playing=false; _renderTownGrowthReplay(); openPostcardStudio('growth'); };
-growthClose.onclick=closeTownGrowthReplay; growthReplay.querySelector('.growthBackdrop').onclick=closeTownGrowthReplay;
+growthClose.onclick=closeTownGrowthReplay; growthReplay.querySelector('.growthBackdrop').onclick=()=>{ if(!homecomingSkipTimelapse()) closeTownGrowthReplay(); };
+document.getElementById('growthSkip').onclick=()=>homecomingSkipTimelapse();
 growthReplay.addEventListener('keydown',event=>{ if(event.isComposing||event.keyCode===229)return; if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeTownGrowthReplay(); return; }
   if(event.key!=='Tab') return; const items=_growthFocusables(); if(!items.length) return; const first=items[0],last=items[items.length-1];
   if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
@@ -12976,10 +13108,11 @@ function taxiTo(repo){ if(repositoryAtelierActive()) return false; standUp(); ri
   driveNameEl.textContent=repo.label; driveBar.style.display='flex'; }
 function endDrive(){ if(ride){ taxi.position.copy(TAXI_POS); taxi.rotation.y=-0.85; } ride=null; ridePostActionUntil=0; driveBar.style.display='none'; model.visible=true; }
 function arriveTaxi(repo){ ride=null; ridePostActionUntil=0; driveBar.style.display='none'; model.visible=true; _settleClearSightArrival(repo);
+  const exploreStop=!!(tour&&tour.active&&tour.mode==='explore');
   if(repo._tourTree){ openWorldTreeChronicle('tour'); return; }
   if(repo._courseResident){ const L=_residentLive(repo._courseResident), res=L&&L.res; if(L&&res){ const met=courseMark('resident',res.id); openChat(L._npc);
       if(met) showWave(tf('chronicleMet',{name:(res[LANG]||res.ko).name}),2800); } else openChat(); return; }
-  openChat();
+  if(!exploreStop) openChat();
   if(repo._courseHaunt){ const L=_residentLive(repo._courseHaunt), res=L&&L.res, f=L&&_resFavSpot(L), name=res?(res[LANG]||res.ko).name:'';
     if(courseMark('haunt',repo._courseHaunt)){ popSparkle(repo._pos.x,2.8,repo._pos.z,0x9bd8a8);
       addMsg('bot',tf('chronicleHauntFound',{name,place:f?(LANG==='ko'?f.ko:f.en):''}),{noHist:true}); } return; }
@@ -13003,7 +13136,7 @@ function arriveTaxi(repo){ ride=null; ridePostActionUntil=0; driveBar.style.disp
     if(k==='carousel'){ ridePostActionUntil=performance.now()+1000; setTimeout(()=>{ try{ boardCarousel(); }catch(e){} }, 800); }
     return;
   }
-  addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
+  if(!exploreStop) addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
   ridePostActionUntil=performance.now()+700; setTimeout(()=>openCard(repo),500); }
 
 /* ---- 🗺️ World map / minimap v1 — district overview + click/tap to ride to a district centre ---- */
@@ -13327,7 +13460,7 @@ function dispatchIntentLens(intent){
     if(!repo){ openFirstRepoPicker(); return true; }
     const entered=enterRepositoryAtelier(repo,{autoChat:false}); if(entered) closeIntentLensWayfinding(); return entered;
   }
-  if(intent==='explore'){ closeIntentLensWayfinding(); openMap(); return true; }
+  if(intent==='explore'){ closeIntentLensWayfinding(); if(!startExploreTour('intent')) openMap(); return true; }
   if(intent==='contribute') return openContributionQuestBoard('menu');
   return false;
 }
@@ -13335,6 +13468,234 @@ document.querySelectorAll('#intentLens [data-intent]').forEach(button=>{
   button.addEventListener('click',()=>dispatchIntentLens(button.dataset.intent));
 });
 /*INTENT_LENS:END*/
+/*HOMECOMING_RUNTIME:START*/
+/* v1.97 Homecoming — the first ten minutes. A canonical landing that asks for "your city" first, one
+   arrival timelapse that ends on a deterministic city plaque, a non-modal "what brings you here?" card,
+   a three-house tour chosen from the catalog and narrated by district guides, and Wayfinding groups that
+   open as houses are visited. Rules live in assets/homecoming.js; this block only wires existing UI.
+   Memory is one bounded sessionStorage list of town keys; events carry no login or repository name. */
+var HOMECOMING=null;
+const HOMECOMING_SESSION_KEY='repolis:homecoming:v1';
+const intentCard=document.getElementById('intentCard'),intentCardCity=document.getElementById('intentCardCity'),
+  guideToast=document.getElementById('guideToast'),growthPlaque=document.getElementById('growthPlaque');
+function _homecomingSession(){
+  try{ const raw=JSON.parse(sessionStorage.getItem(HOMECOMING_SESSION_KEY)||'null');
+    return {timelapse:Array.isArray(raw?.timelapse)?raw.timelapse:[],intent:Array.isArray(raw?.intent)?raw.intent:[]}; }
+  catch(e){ return {timelapse:[],intent:[]}; }
+}
+function _homecomingSeen(kind){ return !!HOMECOMING&&(HOMECOMING.memory[kind]||_homecomingSession()[kind].includes(HOMECOMING.townKey)); }
+function _homecomingRemember(kind){
+  if(!HOMECOMING) return; HOMECOMING.memory[kind]=true;
+  try{ const session=_homecomingSession(); session[kind]=rememberHomecomingKey(session[kind],HOMECOMING.townKey);
+    sessionStorage.setItem(HOMECOMING_SESSION_KEY,JSON.stringify({timelapse:session.timelapse,intent:session.intent})); }catch(e){}
+}
+function trackHomecoming(eventName,payload){
+  const safe={__privacy:'homecoming'};
+  for(const key of ['entry','device','lang','result','channel','intent','mode','days']){
+    const value=payload&&payload[key]; if(typeof value==='string'&&value.length<=32) safe[key]=value; }
+  for(const key of ['count','step']){ const value=payload&&payload[key]; if(Number.isInteger(value)&&value>=0&&value<=999) safe[key]=value; }
+  if(!safe.device) safe.device=_repoPortalDevice(); if(!safe.lang) safe.lang=LANG;
+  track(eventName,safe);
+}
+function _homecomingTrace(eventName,ev){   // a visitor leaves one trace: a share, a copied link, a postcard, a route, an issue
+  if(!ev||eventName==='trace_left') return; let channel=null;
+  if(eventName==='share_click'&&ev.ok===true) channel=String(ev.channel||'share');
+  else if((eventName==='postcard_share'||eventName==='postcard_download'||eventName==='postcard_copy')&&ev.ok===true) channel=eventName;
+  else if(eventName==='repo_route_share'&&ev.result==='success') channel='repo_route';
+  else if(eventName==='share_created'&&ev.result==='success') channel='portal_link';
+  else if(eventName==='contribution_quest_handoff') channel='quest_issue';
+  if(channel) trackHomecoming('trace_left',{channel:channel.slice(0,32)});
+}
+function homecomingCardOpen(){ return !!(HOMECOMING&&HOMECOMING.cardOpen); }
+function _homecomingTownRepos(){ return REPOS.filter(repo=>!repo._isLibrary); }
+function _homecomingCityName(){
+  return homecomingCityName(_homecomingTownRepos().map(repo=>({repo:repo.repo,lang:repo.lang,zone:repo._zone})),currentUser);
+}
+function _homecomingPlainEntry(){
+  return cityMode!=='portal'&&!_reqFocus&&!_reqGrowth&&!REPO_ROUTE_REQUEST.valid&&!BLUEPRINT_DEEP_LINK.requested
+    &&!FIRST_ARRIVAL.direct&&!repoHashKey()&&_homecomingTownRepos().length>0;
+}
+function _homecomingCardKind(){ return cityMode==='public'?'timelapse':'intent'; }   // one arrival per public login per session
+function homecomingPlanEntry(){
+  const none={active:false,timelapse:false,card:false};
+  if(HOMECOMING&&FIRST_ARRIVAL.direct&&PLAZA_DIRECT_LINK.ok&&cityMode==='owner'&&!VISITOR.returning&&!_homecomingSeen('intent')
+    &&_homecomingTownRepos().length) return {...none,toast:true};   // the campaign plaza stays covered and card-free: one guide line only
+  if(!HOMECOMING||!_homecomingPlainEntry()) return none;
+  if(hasFreshness()) return none;   // a returning visitor with Town Gazette news is greeted by that news, not a replayed arrival
+  const timelapse=cityMode==='public'&&TOWN_GROWTH.available&&!_homecomingSeen('timelapse');
+  const card=!_homecomingSeen(_homecomingCardKind())&&(cityMode==='public'||!VISITOR.returning);
+  return {active:timelapse||card,timelapse,card};
+}
+function homecomingAfterEntry(plan){
+  if(HOMECOMING&&plan&&plan.toast){ _homecomingRemember('intent'); _queueArrivalAction(9500,()=>_showGuideToast()); return true; }   // after the entry hint
+  if(!HOMECOMING||!plan||!plan.active) return false;
+  if(plan.timelapse){ _homecomingRemember('timelapse'); _queueArrivalAction(620,()=>_startArrivalTimelapse(plan.card)); return true; }
+  _queueArrivalAction(900,()=>_offerIntentCard({focus:false,entry:'sample'})); return true;
+}
+function _startArrivalTimelapse(withCard){
+  const plan=homecomingTimelapsePlan(TOWN_GROWTH.milestones.length,{reducedMotion:REDUCED});
+  HOMECOMING.timelapse=plan; HOMECOMING.cardAfterTimelapse=!!withCard;
+  const started=plan.mode!=='none'&&startTownGrowthReplay(plan.mode==='animate'
+    ?{entry:'arrival',autoplay:true,pace:plan.stepMs/1000}
+    :{entry:'arrival',autoplay:false,year:TOWN_GROWTH.lastYear});
+  if(!started){ HOMECOMING.cardAfterTimelapse=false; if(withCard) _offerIntentCard({focus:false,entry:'timelapse'}); return false; }
+  if(plan.mode==='still') homecomingTimelapseFinished();   // reduced motion and one-year towns see only the present frame
+  return true;
+}
+function _showGrowthPlaque(){
+  const name=_homecomingCityName();
+  document.getElementById('growthPlaqueKicker').textContent=t('homecomingPlaqueKicker');
+  document.getElementById('growthPlaqueName').textContent=LANG==='ko'?name.ko:name.en;
+  document.getElementById('growthPlaqueFacts').textContent=tf('homecomingPlaqueFacts',
+    {count:_homecomingTownRepos().length,first:TOWN_GROWTH.firstYear||'—'});
+  growthPlaque.hidden=false;
+}
+function homecomingTimelapseFinished(){
+  if(!HOMECOMING||!GROWTH_REPLAY.active||GROWTH_REPLAY.entry!=='arrival'||HOMECOMING.plaqueTimer) return false;
+  _showGrowthPlaque();
+  trackHomecoming('aha_city_built',{mode:HOMECOMING.timelapse?.mode||'animate',count:TOWN_GROWTH.milestones.length});
+  HOMECOMING.plaqueTimer=setTimeout(()=>{ HOMECOMING.plaqueTimer=null;
+    if(GROWTH_REPLAY.active&&GROWTH_REPLAY.entry==='arrival') closeTownGrowthReplay(); },HOMECOMING_LIMITS.plaqueMs);
+  return true;
+}
+function homecomingSkipTimelapse(){   // a tap jumps to the present and its plaque; a second tap leaves at once
+  if(!HOMECOMING||!GROWTH_REPLAY.active||GROWTH_REPLAY.entry!=='arrival') return false;
+  if(HOMECOMING.plaqueTimer){ clearTimeout(HOMECOMING.plaqueTimer); HOMECOMING.plaqueTimer=null; closeTownGrowthReplay(); return true; }
+  GROWTH_REPLAY.playing=false; _applyTownGrowthIndex(TOWN_GROWTH.milestones.length-1,false,'skip');
+  if(!GROWTH_REPLAY.completed) _finishTownGrowthReplay(); else homecomingTimelapseFinished();
+  return true;
+}
+function homecomingTimelapseClosed(){
+  if(!HOMECOMING) return;
+  if(HOMECOMING.plaqueTimer){ clearTimeout(HOMECOMING.plaqueTimer); HOMECOMING.plaqueTimer=null; }
+  growthPlaque.hidden=true;
+  if(HOMECOMING.cardAfterTimelapse){ HOMECOMING.cardAfterTimelapse=false; setTimeout(()=>_offerIntentCard({focus:true,entry:'timelapse'}),60); }
+}
+function _homecomingBusy(){
+  return modalOpen||!!TOWN_UI.active||document.getElementById('townTools').open||document.body.classList.contains('town-panel-open')
+    ||repositoryAtelierActive()||undercroftActive()||(tour&&tour.active)||GROWTH_REPLAY.active||!!ride||REPO_ROUTE.active
+    ||!chatEl.classList.contains('hidden')||window.REPOLIS_ARRIVAL.blocked;
+}
+function _renderIntentCard(){ const name=_homecomingCityName(); intentCardCity.textContent=LANG==='ko'?name.ko:name.en; }
+function _offerIntentCard(options={}){
+  if(!HOMECOMING||HOMECOMING.cardOpen) return false;
+  _homecomingRemember(_homecomingCardKind());
+  if(_homecomingBusy()) return false;   // the visitor is already doing something: never interrupt
+  HOMECOMING.cardOpen=true; HOMECOMING.cardEntry=options.entry||'sample'; _hideGuideToast();
+  _renderIntentCard(); intentCard.inert=false; intentCard.setAttribute('aria-hidden','false'); intentCard.classList.remove('hidden');
+  clearInterval(HOMECOMING.cardWatch); HOMECOMING.cardWatch=setInterval(()=>{ if(_homecomingBusy()) closeIntentCard('ignored'); },400);
+  if(options.focus) setTimeout(()=>{ try{ intentCard.querySelector('[data-card-intent]').focus({preventScroll:true}); }catch(e){} },40);
+  return true;
+}
+function closeIntentCard(reason='skip'){
+  if(!HOMECOMING||!HOMECOMING.cardOpen) return false;
+  const hadFocus=intentCard.contains(document.activeElement);
+  HOMECOMING.cardOpen=false; clearInterval(HOMECOMING.cardWatch); HOMECOMING.cardWatch=null;
+  intentCard.classList.add('hidden'); intentCard.setAttribute('aria-hidden','true'); intentCard.inert=true;
+  if(reason==='skip'&&_showGuideToast()&&hadFocus) guideToast.focus({preventScroll:true});
+  else if(hadFocus&&reason!=='choice') menuBtn.focus({preventScroll:true});
+  flushStarNudge(); return true;
+}
+function _showGuideToast(){
+  if(!HOMECOMING||_homecomingBusy()||!_homecomingTownRepos().length) return false;
+  guideToast.textContent=t('guideToast'); guideToast.hidden=false;
+  clearTimeout(HOMECOMING.toastTimer); HOMECOMING.toastTimer=setTimeout(_hideGuideToast,9000); return true;
+}
+function _hideGuideToast(){ guideToast.hidden=true; if(HOMECOMING) clearTimeout(HOMECOMING.toastTimer); }
+function _chooseHomecomingIntent(intent,entry){
+  if(!HOMECOMING||!HOMECOMING.cardOpen) return;
+  trackHomecoming('intent_chosen',{intent,entry}); HOMECOMING.intent=intent;
+  closeIntentCard('choice');
+  if(intent==='understand'&&!intentLensTargetRepo()&&panel.classList.contains('hidden')){   // the picker lives in Wayfinding
+    panel.classList.remove('hidden'); menuBtn.setAttribute('aria-expanded','true'); }
+  dispatchIntentLens(intent);
+  if(intent==='contribute'&&CONTRIBUTION_QUESTS.open) homecomingSpoke('quest');
+}
+/* Explore path: three distinct houses from the current catalog; Gitber drives, the district guide speaks */
+function _exploreGuide(zoneId){
+  const res=RESIDENTS.find(item=>item&&item.zone===zoneId&&!item.oracle&&!item.easterEgg&&(item[LANG]||item.ko)?.name);
+  if(res) return {name:(res[LANG]||res.ko).name,icon:zoneIconById(zoneId)||'🏡'};
+  return {name:t('exploreGitberName'),icon:'🚕'};
+}
+function buildExploreSteps(){
+  const pool=_homecomingTownRepos().map(repo=>({repo:repo.repo,stars:repo.stars,forks:repo.forks,visitors:repo.visitors,
+    trafficKnown:repo.trafficKnown,created:repo.created,pushed:repo.pushed,archived:!!repo.archived,lineage:repo.lineage||null,
+    zone:repo._zone||null,topics:repo.topics||[],height:repo._h||null}));
+  const steps=[];
+  selectHomecomingStops(pool,{referenceTimestamp:_now}).forEach((stop,index)=>{
+    const repo=repoByKey(stop.repo); if(!repo) return;
+    const zoneName=zoneNameById(repo._zone)||t('exploreTownWord'),guide=_exploreGuide(repo._zone),copy=homecomingStopCopy(stop,LANG,{zoneName});
+    steps.push({kind:'repo',destination:repo,dot:'🚕',explore:true,stop:index+1,dwell:6.4,
+      html:_esc(tf('exploreRide',{title:copy.title,repo:repo.label})),arrivalDot:guide.icon,
+      arrivalHtml:`<b>${_esc(guide.name)}</b> · ${_esc(zoneName)} ${_esc(t('exploreGuideRole'))} — ${_esc(copy.line)}`});
+  });
+  if(steps.length) steps.push({kind:'passport',dot:'🛂',cap:'explorePassport',dwell:4.2});
+  return steps;
+}
+function startExploreTour(entry='intent'){
+  if(!HOMECOMING||(tour&&tour.active)||GROWTH_REPLAY.active||repositoryAtelierActive()||undercroftActive()) return false;
+  const steps=buildExploreSteps(); if(!steps.length){ showWave(t('exploreUnavailable'),3200); return false; }
+  _hideGuideToast(); closeIntentCard('choice'); HOMECOMING.exploreReached=0; HOMECOMING.exploreEntry=entry;
+  startTour({steps,mode:'explore',endCap:homecomingUnlocks(visited).share?'exploreEnd':'exploreEndShort'});
+  return !!(tour&&tour.active);
+}
+function homecomingStopReached(step){
+  if(!HOMECOMING||!step||!step.explore||!tour||tour.mode!=='explore') return;
+  HOMECOMING.exploreReached++; if(HOMECOMING.exploreReached===2) homecomingSpoke('explore');
+}
+function homecomingSpoke(entry){ if(!HOMECOMING||HOMECOMING.spoke) return; HOMECOMING.spoke=true; trackHomecoming('aha_city_speaks',{entry}); }
+/* Go is always open; Look opens after one visited house, Share after two (the existing Passport visits) */
+function _applyWayLocks(announce){
+  if(!HOMECOMING) return; const unlocks=homecomingUnlocks(visited),was=HOMECOMING.unlocks||unlocks;
+  panel.classList.toggle('wayLookLocked',!unlocks.look); panel.classList.toggle('wayShareLocked',!unlocks.share);
+  document.getElementById('wayLookNote').textContent=unlocks.look?'':tf('wayLockNote',{count:HOMECOMING_LIMITS.unlockLook});
+  document.getElementById('wayShareNote').textContent=unlocks.share?'':tf('wayLockNote',{count:HOMECOMING_LIMITS.unlockShare});
+  HOMECOMING.unlocks=unlocks;
+  if(!announce) return;
+  if(unlocks.look&&!was.look) _announceWayUnlock('wayfindingTools','wayLookUnlocked');
+  if(unlocks.share&&!was.share) _announceWayUnlock('wayShare','wayShareUnlocked');
+}
+function _announceWayUnlock(id,key){
+  const group=document.getElementById(id); group.classList.remove('wayJustUnlocked'); void group.offsetWidth; group.classList.add('wayJustUnlocked');
+  setTimeout(()=>group.classList.remove('wayJustUnlocked'),2600);
+  if(!(tour&&tour.active)) showWave(t(key),3400);
+}
+function homecomingVisitedChanged(){
+  if(!HOMECOMING) return; _applyWayLocks(true);
+  if(tour&&tour.active&&tour.mode==='explore'&&HOMECOMING.unlocks.share) tour.endCap='exploreEnd';
+}
+intentCard.querySelectorAll('[data-card-intent]').forEach(button=>button.addEventListener('click',()=>_chooseHomecomingIntent(button.dataset.cardIntent,HOMECOMING.cardEntry||'card')));
+document.getElementById('intentCardSkip').onclick=()=>closeIntentCard('skip');
+document.getElementById('intentCardClose').onclick=()=>closeIntentCard('skip');
+document.querySelectorAll('#intentLens [data-intent]').forEach(button=>button.addEventListener('click',()=>{
+  trackHomecoming('intent_chosen',{intent:button.dataset.intent,entry:'panel'}); HOMECOMING.intent=button.dataset.intent;
+  if(button.dataset.intent==='contribute'&&CONTRIBUTION_QUESTS.open) homecomingSpoke('quest'); }));
+guideToast.onclick=()=>{ _hideGuideToast(); trackHomecoming('intent_chosen',{intent:'explore',entry:'toast'}); startExploreTour('toast'); };
+taxiBtn.addEventListener('click',event=>{ if(guideToast.hidden) return;   // "tap 🚕 to start" means the taxi while the toast is up
+  event.preventDefault(); event.stopImmediatePropagation(); guideToast.click(); },true);
+document.addEventListener('keydown',event=>{
+  if(!homecomingCardOpen()||event.isComposing||event.keyCode===229) return;
+  if(event.key==='Escape'&&!event.defaultPrevented){ event.preventDefault(); closeIntentCard(intentCard.contains(document.activeElement)?'skip':'ignored'); return; }
+  if(MOVE.has(event.code)&&!intentCard.contains(document.activeElement)) closeIntentCard('ignored');
+});
+addEventListener('pointerdown',event=>{ if(homecomingCardOpen()&&event.target?.closest?.('#app,#joy')) closeIntentCard('ignored'); },true);
+window.__homecomingLangRefresh=()=>{ _applyWayLocks(false); if(homecomingCardOpen()) _renderIntentCard();
+  if(!guideToast.hidden) guideToast.textContent=t('guideToast'); if(GROWTH_REPLAY.active&&!growthPlaque.hidden) _showGrowthPlaque(); };
+HOMECOMING={townKey:`${cityMode}:${String(currentUser||'').toLowerCase()}`,memory:{timelapse:false,intent:false},cardOpen:false,cardEntry:null,
+  cardWatch:null,intent:null,timelapse:null,cardAfterTimelapse:false,plaqueTimer:null,toastTimer:null,exploreReached:0,exploreEntry:null,spoke:false,unlocks:null};
+_applyWayLocks(false);
+if(VISITOR.returning&&VISITOR.fresh&&VISITOR.awayDays<=7) trackHomecoming('return_visit',{entry:cityMode,days:String(VISITOR.awayDays)});
+if(_DBG){
+  window.__homecoming=()=>({townKey:HOMECOMING.townKey,plan:homecomingPlanEntry(),cardOpen:HOMECOMING.cardOpen,cardEntry:HOMECOMING.cardEntry,
+    intent:HOMECOMING.intent,unlocks:{...HOMECOMING.unlocks},timelapse:HOMECOMING.timelapse,plaque:!growthPlaque.hidden,
+    toast:!guideToast.hidden,cityName:_homecomingCityName(),stops:buildExploreSteps().filter(step=>step.explore).map(step=>step.destination.repo),
+    session:_homecomingSession(),exploreReached:HOMECOMING.exploreReached,spoke:HOMECOMING.spoke});
+  window.__homecomingVisit=count=>{ _homecomingTownRepos().slice(0,Math.max(0,count|0)).forEach(markVisited); return window.__homecoming(); };
+  window.__homecomingOffer=()=>{ HOMECOMING.memory.intent=false; _offerIntentCard({focus:true,entry:'debug'}); return window.__homecoming(); };
+  window.__homecomingTimelapse=()=>{ HOMECOMING.memory.timelapse=false; _startArrivalTimelapse(false); return window.__homecoming(); };
+  window.__exploreTour=()=>{ startExploreTour('debug'); return window.__homecoming(); };
+}
+/*HOMECOMING_RUNTIME:END*/
 
 /* ---- 🎡 Ferris wheel ride: board the gondola at the bottom, rise for one slow free-look turn, then step back onto the ground ---- */
 function updateFerris(dt){ if(!FERRIS) return;
@@ -14600,9 +14961,11 @@ function _repositoryAtelierTransition(dt){
     if(A.t>=REPOSITORY_ATELIER_FADE){ A.state='inside'; A.phase=null; A.t=0; atelierFade.style.opacity='0'; atelierFade.classList.remove('blocking');
       if(!A.pendingExit&&A.blueprintDeepLinkPath){ const path=A.blueprintDeepLinkPath; A.blueprintDeepLinkPath=null;
         _openRepositoryBlueprint(false); _scanRepositoryBlueprint(path); }
+      homecomingSpoke('atelier');
       if(repoPortalRequested&&!A.ahaTracked){ A.ahaTracked=true;
-        trackPortal('aha_completed',{entry:'link',device:_repoPortalDevice(),lang:LANG,result:repoPortalResult?.result||'local',
-          latency:repoPortalLatencyBucket((typeof performance!=='undefined'?performance.now():Date.now())-repoPortalStartedAt)});
+        const portalEntry={entry:'link',device:_repoPortalDevice(),lang:LANG,result:repoPortalResult?.result||'local',
+          latency:repoPortalLatencyBucket((typeof performance!=='undefined'?performance.now():Date.now())-repoPortalStartedAt)};
+        trackPortal('portal_entry',portalEntry); trackPortal('aha_completed',portalEntry);   // v1.97 rename: the legacy name rides along for one release
         maybeStarNudge('repo_portal_aha'); }
       if(A.pendingExit){ A.pendingExit=false; exitRepositoryAtelier(); } } return 'interior';
   }

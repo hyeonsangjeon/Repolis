@@ -34,7 +34,10 @@ assert(card.indexOf('id="cardDesc"')<card.indexOf('id="cardActions"'));
 assert(card.indexOf('id="cardActions"')<card.indexOf('id="cardDetails"'));
 assert(!/<details id="cardDetails"[^>]*\bopen/.test(card),'card details are opt-in');
 const intro=section('<div id="intro"','<div id="tourCap"');
-assert(intro.indexOf('id="startBtn"')<intro.indexOf('id="introLaunchForm"'),'first action is entry, not setup');
+assert(intro.indexOf('id="startBtn"')<intro.indexOf('id="introLaunchForm"'),'forks and ready targets keep entry first in markup order');
+assert(html.includes("if(on&&introLaunch.nextElementSibling!==introStartBtn) inner.insertBefore(introLaunch,introStartBtn);")
+  &&html.includes("const landing=!ready&&!blueprintReady&&cityMode==='owner'&&!cityError&&window.REPOLIS_CONFIG?.town?.canonical===true;"),
+  'only the canonical owner landing moves the login form ahead of the sample city');
 assert(!/<details id="introControls"[^>]*\bopen/.test(intro));
 assert(html.includes("document.getElementById('cardDetails').open=false"),'each arrival starts compact');
 assert(html.includes('camera.near=5; camera.far=1100'),'aerial precision is scoped to replay');
