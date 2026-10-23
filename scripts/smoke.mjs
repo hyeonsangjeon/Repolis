@@ -169,6 +169,7 @@ const CITY_STATE_VALIDATOR = readFileSync(join(ROOT, 'scripts/validate_city_stat
 const RESIDENT_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/resident-profiles.js'), 'utf8');
 const RESIDENT_DIALOGUE_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/resident-dialogue.js'), 'utf8');
 const RESIDENT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'data/residents/index.json'), 'utf8'));
+const RESIDENT_PROFILE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/residents/profile.schema.json'), 'utf8'));
 const LORE_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/lore-fragments.js'), 'utf8');
 const TAXI_VOICE_SRC = readFileSync(join(ROOT, 'assets/taxi-voice.js'), 'utf8');
 const TAXI_BOUNDARY_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/taxi-boundary.js'), 'utf8');
@@ -2921,6 +2922,12 @@ await runNpcBudgetGovernorTests(ok);
 
 group('resident profiles — manifest-only boot, lazy detail, and local Bound fallback');
 await runResidentRuntimeTests(ok);
+ok(!/Date\.now|new Date\(\s*\)|performance\.now/.test(RESIDENT_RUNTIME_SRC)
+  && /const ageDays = residentAgeDays\(profile, cityState\)/.test(RESIDENT_RUNTIME_SRC)
+  && !('generated_at' in RESIDENT_PROFILE_SCHEMA.properties)
+  && RESIDENT_PROFILE_SCHEMA.properties.age.additionalProperties === false
+  && RESIDENT_MANIFEST.shared?.city_state?.as_of === CITY_STATE.era.as_of,
+  'date-free profiles measure newcomer age against the manifest city reference day, never the browser clock');
 
 group('resident Shared/Bound authority — generated registry and adversarial requests');
 await runResidentDialogueTests(ok);

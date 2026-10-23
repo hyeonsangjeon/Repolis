@@ -8,6 +8,19 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Date-free resident artifacts
+
+- The daily refresh no longer rewrites all resident profiles and the Worker registry. Profiles and the registry
+  carry no build clock, age count, day counter, or dated Shared reference; `generated_at` and the city reference
+  day (`as_of`, `last_sap_flow`) now live only in `data/residents/index.json`, and unchanged files are left as-is.
+- Profiles keep the public creation day. The browser measures newcomer age against the city reference day
+  (`era.as_of`, then `last_sap_flow`) without reading the wall clock; older profiles with `age.days` still work.
+- Personality signals record whether the latest push and release fall inside the 30- and 90-day windows instead
+  of day counts, so authority digests change only when a resident's public standing or Bound evidence changes.
+- The city's own scheduled `chore: refresh …` commits no longer become the Repolis resident's Bound memories, so
+  the bot's daily commit cannot rewrite that profile and the Worker registry. The history query reads 30 commit
+  candidates, so the repository's own latest commits are still found.
+
 ### Shared district rule and city card modules (v1.98, part 1)
 
 - The repository → district rule (keyword weights, language affinity, the junk/dormancy ruins rule and the tie-break)
