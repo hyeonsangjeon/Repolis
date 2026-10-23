@@ -2598,7 +2598,7 @@ import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-cre
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
 import { HOMECOMING_LIMITS, homecomingCityName, homecomingStopCopy, homecomingTimelapsePlan, homecomingUnlocks, rememberHomecomingKey, selectHomecomingStops } from './assets/homecoming.js?v=homecoming-v1';
 import { JOURNEY_LIMITS, createJourney, recordJourneyHouse, recordJourneyPath, recordJourneyTrace, summarizeJourney } from './assets/journey.js?v=journey-v1';
-import { DIRECT_ENTRY_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v4';
+import { DIRECT_ENTRY_LIMITS, PUBLIC_TOWN_CACHE_INDEX_KEY, PUBLIC_TOWN_CACHE_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, compactPublicTown, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parsePublicTownCacheKey, parseRepoPortalInput, planPublicTownCache, projectPublicRepo, projectPublicRepos, publicTownCacheKey, readPublicTownCache, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v5';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
 import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse, residentNewcomerLine } from './assets/resident-profiles.js?v=world-tree-phase4-v1';
@@ -2777,33 +2777,49 @@ async function fetchArrivalResponse(url,options={},limits=ARRIVAL_DATA_LIMITS,fe
 }
 const fetchOptionalArrival=(url,options)=>fetchArrivalResponse(url,options,{timeoutMs:ARRIVAL_DATA_LIMITS.optionalTimeoutMs});
 /*ARRIVAL_DATA:END*/
-function _normPublicRepos(raw, user){
-  return projectPublicRepos(raw,user);
+/*PUBLIC_TOWN_CACHE:START*/
+function _storageKeys(){ const keys=[]; try{ for(let i=0;i<localStorage.length;i++){ const key=localStorage.key(i); if(key!==null) keys.push(key); } }catch(e){} return keys; }
+function _rememberPublicTown(user){   // LRU touch; evicts before a new town is written, so a ninth entry never lands
+  let order=[]; try{ const index=JSON.parse(localStorage.getItem(PUBLIC_TOWN_CACHE_INDEX_KEY)||'null'); if(Array.isArray(index?.order)) order=index.order; }catch(e){}
+  const stored=_storageKeys().map(parsePublicTownCacheKey).filter(key=>key&&key.version===PUBLIC_TOWN_CACHE_LIMITS.version).map(key=>key.login);
+  const plan=planPublicTownCache(order,stored,user.toLowerCase());
+  plan.evict.forEach(login=>{ try{ localStorage.removeItem(publicTownCacheKey(login)); }catch(e){} });
+  try{ localStorage.setItem(PUBLIC_TOWN_CACHE_INDEX_KEY,JSON.stringify({order:plan.order})); }catch(e){}
 }
-function _publicCacheKey(u){ return 'repolis:public-user:'+u.toLowerCase()+':v1'; }
+function _readPublicTown(user){ try{ return readPublicTownCache(JSON.parse(localStorage.getItem(publicTownCacheKey(user))||'null'),user); }catch(e){ return null; } }
+function _storePublicTown(user,raw){
+  const text=JSON.stringify(compactPublicTown(raw,user,Date.now()));
+  if(text.length>PUBLIC_TOWN_CACHE_LIMITS.maxTownChars) return;
+  _rememberPublicTown(user);
+  try{ localStorage.setItem(publicTownCacheKey(user),text); }catch(e){}
+}
+// v1 kept every raw GitHub page (~5.9K characters per repo) and never evicted one; only the current version stays.
+_storageKeys().forEach(key=>{ const parsed=parsePublicTownCacheKey(key);
+  if(parsed&&parsed.version!==PUBLIC_TOWN_CACHE_LIMITS.version){ try{ localStorage.removeItem(key); }catch(e){} } });
 async function _loadPublicCity(user){
-  const key=_publicCacheKey(user), TTL=6*3600*1000;       // 6h fresh window
-  let cached=null; try{ cached=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
-  if(cached && Array.isArray(cached.repos) && (Date.now()-(cached.fetchedAt||0) < TTL))
-    return { repos:_normPublicRepos(cached.repos,user), source:'cache',
-      coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
+  const cached=_readPublicTown(user), age=cached?Date.now()-cached.fetchedAt:-1;
+  if(cached&&age>=0&&age<PUBLIC_TOWN_CACHE_LIMITS.freshTtlMs){ _rememberPublicTown(user);
+    return { repos:cached.repos, source:'cache',
+      coverage:{partial:cached.pageLength>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} }; }
   track('city_data_load_start', { targetUser:user });
+  let raw;
   try{
     const res = await fetchArrivalResponse('https://api.github.com/users/'+encodeURIComponent(user)+'/repos?per_page=100&sort=pushed',
       { headers:{ 'Accept':'application/vnd.github+json' } });
-    const raw = await res.json();
+    raw = await res.json();
     if(!Array.isArray(raw)) throw new ArrivalDataError('malformed');
-    try{ localStorage.setItem(key, JSON.stringify({ username:user, fetchedAt:Date.now(), repos:raw, source:'github-public' })); }catch(e){}
-    return { repos:_normPublicRepos(raw,user), source:'github-public',
-      coverage:{partial:raw.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
   }catch(e){
     const reason=arrivalDataReason(e);
-    if(cached && Array.isArray(cached.repos)) return { repos:_normPublicRepos(cached.repos,user), source:'stale-cache',
-      coverage:{partial:cached.repos.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:reason} };
+    if(cached){ _rememberPublicTown(user); return { repos:cached.repos, source:'stale-cache',
+      coverage:{partial:cached.pageLength>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:reason} }; }
     return { repos:[], source:'github-public', error:{ status:e.status||0, reason },
       coverage:{partial:false,error:reason} };
   }
+  _storePublicTown(user,raw);
+  return { repos:projectPublicRepos(raw,user), source:'github-public',
+    coverage:{partial:raw.length>=PORTABLE_TOWN_LIMITS.publicRepoRequestCap,error:null} };
 }
+/*PUBLIC_TOWN_CACHE:END*/
 
 let _ownerSnapshotPromise=null;
 function _ownerSnapshot(){

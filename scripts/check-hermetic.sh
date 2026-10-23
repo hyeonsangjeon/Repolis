@@ -20,6 +20,7 @@ node scripts/test-city-time.mjs
 node scripts/test-session-footprints.mjs
 node scripts/test-procedural-surfaces.mjs
 node scripts/test-fork-lineage.mjs
+node scripts/test-public-town-cache.mjs
 node scripts/test-repository-atelier-chat.mjs
 node scripts/test-repository-blueprint.mjs
 node scripts/test-repository-exhibit.mjs

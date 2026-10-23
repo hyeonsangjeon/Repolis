@@ -18,6 +18,7 @@ import { runInNewContext } from 'vm';
 import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
 import { runVisualGovernorTests } from './test-visual-governor.mjs';
 import { runFirstVisitTests } from './test-first-visit.mjs';
+import { runPublicTownCacheTests } from './test-public-town-cache.mjs';
 import { runLoreTests } from './test-lore.mjs';
 import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
@@ -783,7 +784,7 @@ ok(repoPortalLatencyBucket(999)==='under-1s'&&repoPortalLatencyBucket(1000)==='1
 
 const portalLoader=(HTML.match(/let _ownerSnapshotPromise=null;[\s\S]*?(?=\ntrack\('page_load'\);)/)||[''])[0];
 const portalTargetLoader=(portalLoader.match(/async function _loadRepoPortalTarget\(target\)\{[\s\S]*?\n\}/)||[''])[0];
-ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v4'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v5'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
   'the zero-build runtime imports one small dedicated Portal module');
 ok(!/document|window|localStorage|sessionStorage|fetch\(|Math\.random|THREE/.test(REPO_PORTAL_SRC),
   'parser, canonicalizer, projection, and link builders stay pure and browser-independent');
@@ -807,7 +808,7 @@ ok(/if\(!repoPortalTarget\) repoPortalResult=\{repo:null/.test(HTML)
 ok(/if\(repoPortalResult\.repo\)\{ REPOS=\[repoPortalResult\.repo\]/.test(HTML)
   &&/repoPortalFallback=true;[\s\S]*?REPOS=_ownerRepos\(await _ownerSnapshot\(\)\); cityMode='owner'/.test(HTML),
   'success builds one target first while failure preserves the existing owner town');
-ok(/return projectPublicRepos\(raw,user\)/.test(HTML)
+ok(/repos:projectPublicRepos\(raw,user\), source:'github-public'/.test(HTML)&&/repos: projectPublicRepos\(entry\.repos, owner, entry\.referenceMs\)/.test(REPO_PORTAL_SRC)
   &&!/derived "liveliness"|derived → yard size|never a real clone count/.test(HTML)
   &&/if\(repo\.trafficKnown===false\)\{[\s\S]*?starSignal[\s\S]*?forkSignal/.test(HTML),
   'all public towns share truthful unknown traffic and map only stars, forks, and recency to architecture');
@@ -906,6 +907,30 @@ ok(/## 11\. Repo Portal/.test(DOMAIN_MODEL)&&/Public API modes do not have traff
   &&/assets\/repo-portal\.js/.test(AGENTS_GUIDE)&&/id: repo-portal/.test(MANIFEST)
   &&/Repo Portal: `\?repo=owner\/repo/.test(LLMS_INDEX)&&/\[1\.87\.0\]/.test(CHANGELOG),
   'domain, limitations, agent guide, manifest, LLM index, and changelog stay in sync');
+
+group('Public town cache — allowlisted, LRU-bounded, and free of legacy raw pages');
+const publicTownCacheBlock=(HTML.match(/\/\*PUBLIC_TOWN_CACHE:START\*\/([\s\S]*?)\/\*PUBLIC_TOWN_CACHE:END\*\//)||[])[1]||'';
+const publicTownLoader=(publicTownCacheBlock.match(/async function _loadPublicCity\(user\)\{[\s\S]*?\n\}/)||[''])[0];
+ok(/async function _loadPublicCity\(user\)/.test(publicTownCacheBlock)&&(HTML.match(/async function _loadPublicCity\(/g)||[]).length===1
+  &&!/repolis:public-user:'\+|username:user|repos:raw/.test(HTML),
+  'the only public-town loader lives in the bounded cache block, and no raw GitHub page is written anywhere');
+ok(publicTownLoader.indexOf('_readPublicTown(user)')<publicTownLoader.indexOf("track('city_data_load_start'")
+  &&publicTownLoader.indexOf("track('city_data_load_start'")<publicTownLoader.indexOf('fetchArrivalResponse(')
+  &&publicTownLoader.indexOf("if(!Array.isArray(raw)) throw new ArrivalDataError('malformed')")<publicTownLoader.indexOf('_storePublicTown(user,raw)'),
+  'a fresh entry answers before any event or request, and only a validated page array is stored');
+ok(HTML.indexOf('parsed.version!==PUBLIC_TOWN_CACHE_LIMITS.version')>0
+  &&HTML.indexOf('parsed.version!==PUBLIC_TOWN_CACHE_LIMITS.version')<HTML.indexOf("if(cityMode === 'owner'){")
+  &&/\n_storageKeys\(\)\.forEach\(key=>\{ const parsed=parsePublicTownCacheKey\(key\);/.test(publicTownCacheBlock),
+  'the legacy purge runs once per boot in every city mode, before any town data loads');
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v5'/.test(HTML)
+  &&/PUBLIC_TOWN_CACHE_LIMITS, REPO_PORTAL_LIMITS/.test(HTML)&&/compactPublicTown/.test(HTML)&&/planPublicTownCache/.test(HTML),
+  'the runtime takes cache keys, entry shape, and LRU order from the pure Portal module');
+ok(/node scripts\/test-public-town-cache\.mjs/.test(readFileSync(join(ROOT,'scripts/check-hermetic.sh'),'utf8'))
+  &&/scripts\/test-public-town-cache\.mjs/.test(AGENTS_GUIDE)&&/PUBLIC_TOWN_CACHE/.test(AGENTS_GUIDE)
+  &&/public-town cache is small, short-lived, and per browser/.test(KNOWN_LIMITATIONS)
+  &&/At\s+most eight towns/.test(KNOWN_LIMITATIONS)&&/128K characters/.test(KNOWN_LIMITATIONS),
+  'the hermetic list, agent guide, and known limitations record the same cache bounds');
+await runPublicTownCacheTests(ok);
 
 group('Blueprint Deep Link — exact public source landmarks');
 const blueprintDeepUrl=createRepositoryBlueprintDeepLink('hyeonsangjeon/Repolis','src/agents','https://example.test/Repolis/?old=1#repo=x');
