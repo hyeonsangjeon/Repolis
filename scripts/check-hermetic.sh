@@ -10,9 +10,12 @@ node scripts/smoke.mjs
 node scripts/test-visual-governor.mjs
 node scripts/test-portable-town.mjs
 node scripts/test-homecoming.mjs
+node scripts/test-journey.mjs
 python3 scripts/test_city_state.py
 python3 scripts/validate_city_state.py
 python3 scripts/test_fork_lineage.py
+python3 scripts/test_resident_profiles.py
+python3 scripts/validate_resident_profiles.py
 node scripts/test-city-time.mjs
 node scripts/test-session-footprints.mjs
 node scripts/test-procedural-surfaces.mjs
@@ -22,6 +25,8 @@ node scripts/test-repository-atelier-chat.mjs
 node scripts/test-repository-blueprint.mjs
 node scripts/test-repository-exhibit.mjs
 node scripts/test-issue-code-scout.mjs
+node scripts/test-zone-classifier.mjs
+node scripts/test-city-card.mjs
 node scripts/validate-lore-fragments.mjs
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js

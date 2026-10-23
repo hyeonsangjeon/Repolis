@@ -1,3 +1,5 @@
+import { REPO_NEWCOMER_DAYS, repositoryAgeDays } from './city-time.js?v=world-tree-phase4-v1';
+
 export const RESIDENT_PROFILE_SCHEMA = 'repolis.resident-profile';
 export const RESIDENT_PROFILE_VERSION = 1;
 export const RESIDENT_MANIFEST_SCHEMA = 'repolis.resident-manifest';
@@ -16,6 +18,27 @@ function record(value) {
 
 function textBytes(value) {
   return new TextEncoder().encode(value).byteLength;
+}
+
+function referenceTimestamp(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const parsed = Date.parse(value.length === 10 ? `${value}T00:00:00Z` : value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+// Generated profiles store only the public creation day. Their age is measured against the city
+// reference day: data/city-state.json's era.as_of, else its last_sap_flow. The manifest's dated
+// Shared reference carries the same pair as city_state.as_of / last_sap_flow. No wall clock is read.
+export function residentAgeDays(profile, cityState) {
+  const reference = [cityState?.era?.as_of, cityState?.as_of, cityState?.last_sap_flow]
+    .map(referenceTimestamp)
+    .find(value => value !== null);
+  if (reference === undefined) return null;
+  return repositoryAgeDays({ created: profile?.age?.created_on }, reference);
+}
+
+function manifestSharedCity(manifest) {
+  return record(record(manifest?.shared)?.city_state);
 }
 
 function validProfileEntry(entry) {
@@ -131,6 +154,7 @@ export function bindResidentSlots(slots, manifest, repositories) {
   const repoMap = new Map(available.map(repo => [String(repo.repo).toLowerCase(), repo]));
   const profiles = new Map((manifest?.profiles || []).map(entry => [entry.slug, entry]));
   const activeById = new Map((manifest?.active_roster || []).map(entry => [entry.resident_id, entry]));
+  const sharedCity = manifestSharedCity(manifest);
   const used = new Set();
   const bound = [];
   for (let index = 0; index < (slots || []).length; index += 1) {
@@ -157,6 +181,7 @@ export function bindResidentSlots(slots, manifest, repositories) {
       jobColor: generated.job_color,
       jobProp: generated.job_prop,
       generated: true,
+      sharedCity,
       repoRecord: repo,
     } : {
       residentId: resident.id,
@@ -169,6 +194,7 @@ export function bindResidentSlots(slots, manifest, repositories) {
       jobColor: '#' + Number(resident.color || 0xd7af62).toString(16).padStart(6, '0'),
       jobProp: 'badge',
       generated: false,
+      sharedCity,
       repoRecord: repo,
     };
     if (/^#[a-f0-9]{6}$/i.test(resident.bound.jobColor)) {
@@ -257,9 +283,12 @@ function cap(value, max = 220) {
   return clipped.slice(0, boundary > max * 0.6 ? boundary : max - 1).trim() + '\u2026';
 }
 
-export function isResidentNewcomer(resident, profile) {
+export function isResidentNewcomer(resident, profile, cityState = resident?.bound?.sharedCity) {
   if (profile?.archived || resident?.bound?.repoRecord?.archived) return false;
-  if (Number.isFinite(profile?.age?.days)) return profile.age.days < 90;
+  const ageDays = residentAgeDays(profile, cityState);
+  if (ageDays !== null) return ageDays < REPO_NEWCOMER_DAYS;
+  // Profiles generated before the date-free contract, and portable profiles, carry their own age.
+  if (Number.isFinite(profile?.age?.days)) return profile.age.days < REPO_NEWCOMER_DAYS;
   return resident?.bound?.repoRecord?._newcomer === true;
 }
 

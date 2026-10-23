@@ -85,7 +85,7 @@ export async function runFirstVisitTests(check){
   const panelState={window:{REPOLIS_ARRIVAL:{blocked:true}},document,townPanels:panels,
     panel:menu,townTools:{open:false},townPanelBackdrop:{hidden:false},
     TOWN_UI:{active:panels[2],previousFocus:trigger.control},FIRST_REPO:{active:false},modalOpen:false,
-    clearTownInput:()=>{},refreshNearbyPeople:()=>{},_cacheTownLabelViewport:()=>{},
+    clearTownInput:()=>{},refreshNearbyPeople:()=>{},_cacheTownLabelViewport:()=>{},flushStarNudge:()=>{ panelState.starFlushes++; },starFlushes:0,
     getComputedStyle:()=>({visibility:'visible'}),requestAnimationFrame:callback=>callback()};
   runInNewContext(ui.slice(ui.indexOf('function closeTownPanels'),ui.indexOf('const townPanelObserver'))
     +'\nglobalThis.sync=syncTownPanels;',panelState);
@@ -102,6 +102,7 @@ export async function runFirstVisitTests(check){
   check(panelState.TOWN_UI.active===null&&passport.inert&&panelState.townPanelBackdrop.hidden
     &&!document.body.classList.contains('town-panel-open')&&document.activeElement===trigger.control,
     'resume reconciles a panel closed during recovery without retaining a hidden focus trap');
+  check(panelState.starFlushes===1,'only the last panel closing releases a Star invitation that waited behind it');
 
   const catalogContext={parseRepoPortalInput};
   runInNewContext(block('FIRST_REPO_CORE')+'\nglobalThis.page=firstRepoPage;',catalogContext);

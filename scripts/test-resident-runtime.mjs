@@ -2,7 +2,9 @@ import { createHash } from 'crypto';
 import {
   bindResidentSlots,
   createResidentProfileStore,
+  isResidentNewcomer,
   loadResidentManifest,
+  residentAgeDays,
   residentLocalResponse,
   residentNewcomerLine,
   validateResidentManifest,
@@ -20,7 +22,6 @@ export async function runResidentRuntimeTests(check) {
   const profile = {
     schema: 'repolis.resident-profile',
     version: 1,
-    generated_at: '2026-08-24T00:00:00Z',
     repo: {
       owner: 'example',
       name: 'alpha-lab',
@@ -30,7 +31,7 @@ export async function runResidentRuntimeTests(check) {
       language: 'Python',
       topics: ['ai'],
     },
-    age: { created_on: '2020-01-01', days: 2428, years: 6.65, basis: 'public_repository_created_at' },
+    age: { created_on: '2020-01-01', basis: 'public_repository_created_at' },
     job: { key: 'model_smith', labels: { ko: 'AI 모델 장인', en: 'AI model smith' } },
     personality: { key: 'steady_maintainer', labels: { ko: '꾸준한 유지보수자', en: 'steady maintainer' } },
     recent_concerns: [{
@@ -46,7 +47,7 @@ export async function runResidentRuntimeTests(check) {
       url: 'https://github.com/example/alpha-lab/releases/tag/v1.2.0',
       occurred_at: '2026-08-20T00:00:00Z',
     }],
-    shared: { city_state: { schema: 'repolis.city-state', version: 1, season: 'spring' } },
+    shared: { city_state: { schema: 'repolis.city-state', version: 1 } },
     archived: false,
     dialogue_available: true,
     provenance: { repository_visibility: 'public' },
@@ -64,6 +65,15 @@ export async function runResidentRuntimeTests(check) {
     profile_count: 2,
     active_count: 1,
     registry_digest: 'a'.repeat(64),
+    shared: {
+      city_state: {
+        schema: 'repolis.city-state',
+        version: 1,
+        as_of: '2026-08-24',
+        season: 'spring',
+        last_sap_flow: '2026-08-24T00:00:00Z',
+      },
+    },
     profiles: [
       {
         repo: 'alpha-lab', slug: 'alpha-lab', path: 'data/residents/alpha-lab.json',
@@ -110,6 +120,7 @@ export async function runResidentRuntimeTests(check) {
   check(roster.generated && roster.activeCount === 1
     && slots[0].bound.repo === 'alpha-lab'
     && slots[0].bound.repoRecord === repos[0]
+    && slots[0].bound.sharedCity === loaded.shared.city_state
     && slots[0].color === 0x8faef5
     && fetches === 1,
   'the bounded active roster reuses existing resident slots, binds a real repo building, and adds no detail fetch');
@@ -134,10 +145,8 @@ export async function runResidentRuntimeTests(check) {
     && !cross.text.includes('v1.2.0'),
   'local fallback answers only the selected resident memory and redirects cross-resident Bound questions');
 
-  const newcomerProfile = {
-    ...loadedProfile,
-    age: { ...loadedProfile.age, days: 89, years: 0.24 },
-  };
+  const createdOn = created_on => ({ ...loadedProfile, age: { ...loadedProfile.age, created_on } });
+  const newcomerProfile = createdOn('2026-05-27');
   const newcomer = residentLocalResponse({
     resident: slots[0], profile: newcomerProfile, question: 'hello', lang: 'en', manifest: loaded,
   });
@@ -150,6 +159,44 @@ export async function runResidentRuntimeTests(check) {
     && newcomer.text.length <= 180
     && newcomerAlt.length <= 180,
   'young residents use a short local newcomer voice without claiming old-world lore');
+
+  const settled = residentLocalResponse({
+    resident: slots[0], profile: createdOn('2026-05-26'), question: 'hello', lang: 'en', manifest: loaded,
+  });
+  check(residentAgeDays(createdOn('2026-05-27'), loaded.shared.city_state) === 89
+    && residentAgeDays(createdOn('2026-05-26'), loaded.shared.city_state) === 90
+    && isResidentNewcomer(slots[0], createdOn('2026-05-27'))
+    && !isResidentNewcomer(slots[0], createdOn('2026-05-26'))
+    && settled.intent === 'introduction',
+  'date-free profiles measure newcomer age from created_on against the manifest reference day at the 89/90-day boundary');
+
+  const cityState = { era: { as_of: '2026-08-24' }, last_sap_flow: '2026-09-30T00:00:00Z' };
+  check(residentAgeDays(newcomerProfile, cityState) === 89
+    && residentAgeDays(newcomerProfile, { last_sap_flow: '2026-08-24T18:30:00Z' }) === 89
+    && residentAgeDays(newcomerProfile, {}) === null
+    && residentAgeDays({ age: {} }, cityState) === null
+    && isResidentNewcomer(slots[0], createdOn('2026-05-26'), { era: { as_of: '2026-08-23' } }),
+  'resident age prefers city era.as_of, falls back to last_sap_flow, and stays unknown without a reference day');
+
+  const legacyResident = { ...slots[0], bound: { ...slots[0].bound, sharedCity: null } };
+  const legacyAge = days => ({ ...loadedProfile, age: { ...loadedProfile.age, days, years: 0 } });
+  const unloadedResident = { ...slots[0], bound: { ...slots[0].bound, repoRecord: { ...repos[0], _newcomer: true } } };
+  check(isResidentNewcomer(legacyResident, legacyAge(89))
+    && !isResidentNewcomer(legacyResident, legacyAge(2428))
+    && isResidentNewcomer(unloadedResident, null)
+    && !isResidentNewcomer(slots[0], null),
+  'older profiles keep their generated age.days and unloaded profiles keep the repo record newcomer fallback');
+
+  const wallClock = Date.now;
+  let farFuture;
+  try {
+    Date.now = () => Date.parse('2099-01-01T00:00:00Z');
+    farFuture = [isResidentNewcomer(slots[0], newcomerProfile), residentAgeDays(newcomerProfile, loaded.shared.city_state)];
+  } finally {
+    Date.now = wallClock;
+  }
+  check(farFuture[0] === true && farFuture[1] === 89,
+    'resident newcomer age ignores the browser clock');
 
   let drifted = true;
   const retryStore = createResidentProfileStore({
