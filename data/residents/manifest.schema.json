@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hyeonsangjeon.github.io/Repolis/data/residents/manifest.schema.json",
   "title": "Repolis resident manifest",
+  "description": "Boot manifest and the only resident artifact that carries the build clock and the dated Shared city reference.",
   "type": "object",
   "required": [
     "schema",
@@ -13,19 +14,39 @@
     "profile_count",
     "active_count",
     "registry_digest",
+    "shared",
     "profiles",
     "active_roster"
   ],
   "properties": {
     "schema": { "const": "repolis.resident-manifest" },
     "version": { "const": 1 },
-    "generated_at": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
     "owner": { "type": "string" },
     "profile_schema": { "const": "repolis.resident-profile" },
     "profile_version": { "const": 1 },
     "profile_count": { "type": "integer", "minimum": 0 },
     "active_count": { "type": "integer", "minimum": 0, "maximum": 9 },
     "registry_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "shared": {
+      "type": "object",
+      "required": ["city_state"],
+      "properties": {
+        "city_state": {
+          "type": "object",
+          "required": ["schema", "version", "as_of", "season", "last_sap_flow"],
+          "properties": {
+            "schema": { "const": "repolis.city-state" },
+            "version": { "const": 1 },
+            "as_of": { "type": "string", "format": "date" },
+            "season": { "type": ["string", "null"] },
+            "last_sap_flow": { "type": "string", "format": "date-time" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "profiles": {
       "type": "array",
       "items": {

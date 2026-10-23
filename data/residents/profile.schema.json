@@ -2,11 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hyeonsangjeon.github.io/Repolis/data/residents/profile.schema.json",
   "title": "Repolis resident profile",
+  "description": "Date-free public resident profile. The build clock and city reference day live only in data/residents/index.json.",
   "type": "object",
   "required": [
     "schema",
     "version",
-    "generated_at",
     "repo",
     "age",
     "job",
@@ -21,14 +21,55 @@
   "properties": {
     "schema": { "const": "repolis.resident-profile" },
     "version": { "const": 1 },
-    "generated_at": { "type": "string" },
     "repo": { "type": "object" },
-    "age": { "type": "object" },
+    "age": {
+      "type": "object",
+      "required": ["created_on", "basis"],
+      "properties": {
+        "created_on": { "type": "string", "format": "date" },
+        "basis": { "const": "public_repository_created_at" }
+      },
+      "additionalProperties": false
+    },
     "job": { "type": "object" },
-    "personality": { "type": "object" },
+    "personality": {
+      "type": "object",
+      "required": ["key", "labels", "basis", "signals"],
+      "properties": {
+        "key": { "type": "string" },
+        "labels": { "type": "object" },
+        "basis": { "type": "string" },
+        "signals": {
+          "type": "object",
+          "required": ["pushed_within_30_days", "released_within_90_days", "open_issue_count"],
+          "properties": {
+            "pushed_within_30_days": { "type": ["boolean", "null"] },
+            "released_within_90_days": { "type": ["boolean", "null"] },
+            "open_issue_count": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "recent_concerns": { "type": "array", "maxItems": 3 },
     "bound_memories": { "type": "array", "maxItems": 4 },
-    "shared": { "type": "object" },
+    "shared": {
+      "type": "object",
+      "required": ["city_state"],
+      "properties": {
+        "city_state": {
+          "type": "object",
+          "required": ["schema", "version"],
+          "properties": {
+            "schema": { "const": "repolis.city-state" },
+            "version": { "const": 1 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "archived": { "type": "boolean" },
     "dialogue_available": { "type": "boolean" },
     "provenance": { "type": "object" }

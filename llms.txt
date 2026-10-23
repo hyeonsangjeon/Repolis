@@ -33,6 +33,8 @@
 - [assets/procedural-surfaces.js](assets/procedural-surfaces.js): deterministic seeded facade/roof variants, UV phases, and bounded shared caches.
 - [docs/procedural-surface-pass-v2.md](docs/procedural-surface-pass-v2.md): rendering contract and reproducible desktop/LOW_END budget evidence.
 - [assets/contribution-library.json](assets/contribution-library.json): generated bilingual Contribution Library data.
+- [assets/zone-classifier.js](assets/zone-classifier.js): the deterministic repository → district rule the town uses and the planned city-card Worker will import; pinned by a 71-repo golden test.
+- [assets/city-card.js](assets/city-card.js): pure public-town card summary and deterministic 1200×630 OG / 600×300 README SVG; the caller supplies the city name.
 
 ## Main product systems
 

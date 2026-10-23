@@ -118,6 +118,8 @@ import {
   forkLineagePaletteIndex,
   projectForkLineage
 } from '../assets/fork-lineage.js';
+import { ZONE_IDS, ZONE_KEYWORDS, ZONE_LANGUAGE_AFFINITY, classifyRepoZone } from '../assets/zone-classifier.js';
+import { CITY_CARD_ZONE_COLORS } from '../assets/city-card.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -158,6 +160,8 @@ const WORLD_TREE_STATE_SRC = readFileSync(join(ROOT, 'assets/world-tree/world-tr
 const SESSION_FOOTPRINT_SRC = readFileSync(join(ROOT, 'assets/session-footprints.js'), 'utf8');
 const FORK_LINEAGE_SRC = readFileSync(join(ROOT, 'assets/fork-lineage.js'), 'utf8');
 const FORK_LINEAGE_BUILDER = readFileSync(join(ROOT, 'scripts/fork_lineage.py'), 'utf8');
+const ZONE_CLASSIFIER_SRC = readFileSync(join(ROOT, 'assets/zone-classifier.js'), 'utf8');
+const CITY_CARD_SRC = readFileSync(join(ROOT, 'assets/city-card.js'), 'utf8');
 const CITY_STATE = JSON.parse(readFileSync(join(ROOT, 'data/city-state.json'), 'utf8'));
 const CITY_STATE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/city-state.schema.json'), 'utf8'));
 const CITY_REPOS = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
@@ -166,6 +170,7 @@ const CITY_STATE_VALIDATOR = readFileSync(join(ROOT, 'scripts/validate_city_stat
 const RESIDENT_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/resident-profiles.js'), 'utf8');
 const RESIDENT_DIALOGUE_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/resident-dialogue.js'), 'utf8');
 const RESIDENT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'data/residents/index.json'), 'utf8'));
+const RESIDENT_PROFILE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/residents/profile.schema.json'), 'utf8'));
 const LORE_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/lore-fragments.js'), 'utf8');
 const TAXI_VOICE_SRC = readFileSync(join(ROOT, 'assets/taxi-voice.js'), 'utf8');
 const TAXI_BOUNDARY_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/taxi-boundary.js'), 'utf8');
@@ -2058,8 +2063,11 @@ const zcSrc = (HTML.match(/\/\*ZONECLASSIFIER:START\*\/([\s\S]*?)\/\*ZONECLASSIF
 ok(zcSrc.length > 0, 'ZONECLASSIFIER block extractable from index.html');
 ok(/const ZONE_CAT\s*=\s*\[/.test(zcSrc), 'ZONE_CAT district catalog exists');
 ok(/function zoneOf\(repo\)/.test(zcSrc), 'zoneOf() classifier exists');
-ok(/_now-new Date\(repo\.pushed\)/.test(zcSrc)&&!/Date\.now\(\)/.test(zcSrc),
+ok(/function zoneOf\(repo\)\{ return classifyRepoZone\(repo,_now\); \}/.test(zcSrc)
+  && /\(referenceTimestamp - new Date\(repo\.pushed\)\.getTime\(\)\)/.test(ZONE_CLASSIFIER_SRC) && !/Date\.now\(\)/.test(zcSrc + ZONE_CLASSIFIER_SRC),
   'district age uses the generated city reference instead of the viewer clock');
+ok(/from '\.\/assets\/zone-classifier\.js\?v=zone-classifier-v1'/.test(HTML) && /const ZKW = ZONE_KEYWORDS, ZLANG = ZONE_LANGUAGE_AFFINITY;/.test(zcSrc)
+  && !/const ZKW = \{|function _zoneHay/.test(HTML), 'keyword weights and the district rule come from the shared module, not an inline copy');
 ok(/const ZONE_SYN\s*=\s*\{/.test(HTML), 'ZONE_SYN travel-synonym namespace exists (separate from repoByKey)');
 ok(/function districtNav\(q\)\{/.test(HTML) && /const dz=districtNav\(q\);/.test(HTML), 'districtNav wired into _coreIntent (every taxi mode)');
 ok(/function zoneOf\(repo\)/.test(HTML) && /REPOS\.forEach\(r=>\{\s*r\._zone\s*=\s*zoneOf\(r\)/.test(HTML), 'every repo is assigned r._zone at build');
@@ -2075,7 +2083,8 @@ if (zcSrc && normSrc) {
   try {
     const rj = JSON.parse(readFileSync(join(ROOT, 'repos.json'), 'utf8'));
     repos = Array.isArray(rj) ? rj : (rj.repos || []);
-    const built = new Function('_now', `${zcSrc}\nreturn { ZONE_CAT, zoneOf };`)(cityReference);
+    const built = new Function('_now', 'ZONE_KEYWORDS', 'ZONE_LANGUAGE_AFFINITY', 'classifyRepoZone',
+      `${zcSrc}\nreturn { ZONE_CAT, zoneOf };`)(cityReference, ZONE_KEYWORDS, ZONE_LANGUAGE_AFFINITY, classifyRepoZone);
     CAT = built.ZONE_CAT; zoneOf = built.zoneOf;
   } catch (e) { console.log('  ✗ zoneOf harness: ' + e.message); }
   ok(!!(zoneOf && CAT && repos.length), 'zoneOf + ZONE_CAT + repos.json loaded for behavioral check');
@@ -2094,8 +2103,27 @@ if (zcSrc && normSrc) {
     // determinism: classifying twice yields identical labels
     const drift = repos.filter(r => zoneOf(r) !== zoneOf(r)).map(r => r.repo);
     ok(drift.length === 0, 'zoneOf is deterministic (same repo → same district across calls)');
+    ok(CAT.map(z => z.id).join() === ZONE_IDS.join(), 'ZONE_CAT lists the shared district ids in catalog order');
+    ok(CAT.every(z => CITY_CARD_ZONE_COLORS[z.id] === '#' + z.tone.toString(16).padStart(6, '0')),
+      'the city card draws every district in its ZONE_CAT tone');
   }
 }
+
+/* ── 9b) v1.98 shared pure modules: the district rule and the city card ──
+ *    The town imports the zone classifier and the planned city-card Worker will import both files, so they
+ *    stay free of browser, network, storage, timer, clock and random state (comments and quoted strings aside). */
+group('shared district rule + city card modules (v1.98)');
+const moduleCode = src => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/'(?:[^'\\\n]|\\.)*'/g, "''");
+const IMPURE_MODULE = /\b(window|document|navigator|location|localStorage|sessionStorage|indexedDB|caches|fetch|XMLHttpRequest|WebSocket|EventSource|performance|setTimeout|setInterval|requestAnimationFrame|queueMicrotask|crypto|process|require|globalThis|self)\b|Date\.now|new Date\(\s*\)|Math\.random|\bimport\(/;
+ok(!IMPURE_MODULE.test(moduleCode(ZONE_CLASSIFIER_SRC)) && !/^import /m.test(ZONE_CLASSIFIER_SRC) && ZONE_CLASSIFIER_SRC.length < 9000,
+  'the zone classifier is small and imports nothing; no browser, network, storage, timer, clock or random dependency');
+ok(!IMPURE_MODULE.test(moduleCode(CITY_CARD_SRC)) && CITY_CARD_SRC.length < 26000
+  && (CITY_CARD_SRC.match(/^import .*$/gm) || []).join('|') === "import { ZONE_IDS, classifyRepoZone } from './zone-classifier.js';|import { homecomingPrimaryLanguage } from './homecoming.js';",
+  'the city card imports only the zone classifier and the city plaque language rule; no browser, network, storage, timer, clock or random dependency');
+ok(!/avatar|email|\.owner\b|\.login\b/i.test(moduleCode(CITY_CARD_SRC)) && /repo\.private === true/.test(CITY_CARD_SRC),
+  'the city card reads no avatar, e-mail or owner field and skips private repositories');
+ok(/export function cityCardTextRuns\(/.test(CITY_CARD_SRC) && (CITY_CARD_SRC.match(/<text /g) || []).length === 1,
+  'all card text goes through one placement function and one <text> writer, ready for a glyph-path layer');
 
 /* ── 10) World Loop Integration: passport district progress · Village Chronicle ──
  *    repo-card actions/questions · deterministic zoneWhy · station-vs-district naming · debug hooks.
@@ -2917,6 +2945,12 @@ await runNpcBudgetGovernorTests(ok);
 
 group('resident profiles — manifest-only boot, lazy detail, and local Bound fallback');
 await runResidentRuntimeTests(ok);
+ok(!/Date\.now|new Date\(\s*\)|performance\.now/.test(RESIDENT_RUNTIME_SRC)
+  && /const ageDays = residentAgeDays\(profile, cityState\)/.test(RESIDENT_RUNTIME_SRC)
+  && !('generated_at' in RESIDENT_PROFILE_SCHEMA.properties)
+  && RESIDENT_PROFILE_SCHEMA.properties.age.additionalProperties === false
+  && RESIDENT_MANIFEST.shared?.city_state?.as_of === CITY_STATE.era.as_of,
+  'date-free profiles measure newcomer age against the manifest city reference day, never the browser clock');
 
 group('resident Shared/Bound authority — generated registry and adversarial requests');
 await runResidentDialogueTests(ok);

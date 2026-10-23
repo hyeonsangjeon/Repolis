@@ -37,6 +37,40 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
   three record points, the tab markup and keys, zero storage, network, and telemetry in the Journey runtime, and the Gazette
   eviction and new-house copy fixtures.
 
+### Date-free resident artifacts
+
+- The daily refresh no longer rewrites all resident profiles and the Worker registry. Profiles and the registry
+  carry no build clock, age count, day counter, or dated Shared reference; `generated_at` and the city reference
+  day (`as_of`, `last_sap_flow`) now live only in `data/residents/index.json`, and unchanged files are left as-is.
+- Profiles keep the public creation day. The browser measures newcomer age against the city reference day
+  (`era.as_of`, then `last_sap_flow`) without reading the wall clock; older profiles with `age.days` still work.
+- Personality signals record whether the latest push and release fall inside the 30- and 90-day windows instead
+  of day counts, so authority digests change only when a resident's public standing or Bound evidence changes.
+- The city's own scheduled `chore: refresh …` commits no longer become the Repolis resident's Bound memories, so
+  the bot's daily commit cannot rewrite that profile and the Worker registry. The history query reads 30 commit
+  candidates, so the repository's own latest commits are still found.
+
+### Shared district rule and city card modules (v1.98, part 1)
+
+- The repository → district rule (keyword weights, language affinity, the junk/dormancy ruins rule and the tie-break)
+  moved out of `index.html` into the pure `assets/zone-classifier.js`, so the town and the planned city-card Worker
+  share one rule. `index.html` keeps the `ZONE_CAT` names, icons and colors plus a one-line `zoneOf` adapter that
+  passes the town reference time; `zoneWhy` and the district board read the same tables under their old names.
+- `scripts/test-zone-classifier.mjs` pins the district of all 71 repositories as the inline classifier assigned them at
+  `848a258a` (`ai` 29, `infra` 15, `library` 11, `web` 8, `ruins` 5, `data` 3) plus 21 edge fixtures: empty values, no
+  topics, a long description, letter case, ties, the 420-day boundary and the Contribution Library landmark. A
+  one-off differential run of 200,000 generated inputs matched the inline version exactly; input it used to throw on
+  (a non-object, a non-array `topics`) now lands in Commons.
+- New pure `assets/city-card.js`: up to 100 public repositories become a card summary (repositories, stars, primary
+  language, district shares, the three most-starred houses, first year, skyline) and a deterministic 1200×630 OG or
+  600×300 README SVG in English or Korean. The caller supplies the city name, and the primary language comes from
+  the city plaque's own `homecomingPrimaryLanguage`, so card and plaque always agree. Repository names are drawn as
+  GitHub-style ASCII slugs, caller strings are cut to UTF-8 byte caps, control, bidi and invisible characters are
+  dropped, and one function places every string so a glyph-path layer can later replace the `<text>` writer.
+- `scripts/test-city-card.mjs` covers empty, one-house, 100-cap, archive-only, hostile-name and escaping cases and pins
+  the owner card's bytes; smoke adds purity guards for both modules. No client behavior, request, storage key, scene
+  resource or dependency changed: the town does not load the card yet, and no Worker exists.
+
 ### Homecoming (v1.97) — your city first, an arrival timelapse, three paths, and Wayfinding that opens as you visit
 
 - The canonical first screen leads with the GitHub login form ("GitHub 아이디 하나면, 당신의 레포들이 도시가 됩니다." /

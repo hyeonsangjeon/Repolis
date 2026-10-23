@@ -195,9 +195,11 @@ silhouette, nameplate, collision, and card identity. These effects require no ad
 ### 4.2 Repository-bound resident profiles
 
 The same daily public-data build emits one compact, schema-versioned profile per included repository.
-Age comes from `created_at`; job and personality come from bounded rules over language, topics, public
+Profiles keep only the public creation day; readers measure age against the city reference day that the
+manifest alone carries. Job and personality come from bounded rules over language, topics, public
 activity recency, releases, and the reported open-work count. At most three current public issue/PR titles
-and four release/commit/issue/PR memories survive strict sanitization and byte caps. Missing public history
+and four release/commit/issue/PR memories survive strict sanitization and byte caps; the city's own scheduled
+refresh commits are never memories. Missing public history
 stays empty with provenance rather than being invented. Archived profiles remain in data and the World Tree
 Roots, but `dialogue_available=false` keeps them out of the active 3D roster.
 
@@ -224,9 +226,10 @@ The Worker imports a generated registry. The client sends only a resident id, a 
 the bounded question, and at most six short history items. It never sends a repo name, profile JSON, Bound
 memory, role, system text, or prompt. The server chooses the resident and Bound source, quotes sanitized public
 evidence as untrusted data, and constructs the prompt. A question naming another repo returns a deterministic
-redirect to that house before model planning. The authority digest excludes the daily age/shared clock, so
-ordinary refreshes do not disable dialogue; a real Bound-source change fails closed to local behavior until the
-Worker registry is redeployed.
+redirect to that house before model planning. Profiles and the registry carry no build clock or day count,
+so ordinary refreshes keep the authority digest and do not disable dialogue; a real Bound-source change,
+including a personality crossing its push/release window, fails closed to local behavior until the Worker
+registry is redeployed.
 
 ### 4.3 Elder lore and newcomer time
 
