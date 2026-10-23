@@ -300,7 +300,7 @@ check(normalizeCardDay('20240229', Date.parse('2024-02-29T12:00:00Z')) === '2024
   }
   check(cardCityName(EMPTY_CARD_SUMMARY, 'x').en === 'Town of x' && cardCityName(null, 'x').ko === 'x의 마을', 'no houses is a plain town');
   const html = read('index.html');
-  check(/function _normPublicRepos\(raw, user\)\{\s*return projectPublicRepos\(raw,user\);/.test(html)
+  check(/return \{ repos:projectPublicRepos\(raw,user\), source:'github-public',/.test(html)
     && /function zoneOf\(repo\)\{ return classifyRepoZone\(repo,_now\); \}/.test(html)
     && /const _now=CITY_STATE\?cityReferenceTimestamp\(CITY_STATE,REPOS,Date\.now\(\)\):Date\.now\(\);/.test(html)
     && /homecomingCityName\(_homecomingTownRepos\(\)\.map\(repo=>\(\{repo:repo\.repo,lang:repo\.lang,zone:repo\._zone\}\)\),currentUser\)/.test(html)
