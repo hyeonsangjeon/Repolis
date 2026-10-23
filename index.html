@@ -920,20 +920,26 @@
     border-radius:12px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer;
     box-shadow:0 4px 14px rgba(60,30,10,.18); transition:background .15s,color .15s,border-color .15s; }
   #introTour:hover{ background:#fff; color:#c2702f; border-color:#fff; }
-  /* ⭐ one quiet, earned invitation to star the open-source project (never on first sight) */
+  /* ⭐ one quiet, earned invitation to star the open-source project (never on first sight).
+     It is as wide as its copy and stays clear of the round taxi / emote / action buttons on the right. */
   #starNudge{ position:fixed; z-index:29; left:50%; transform:translateX(-50%) translateY(14px);
     bottom:calc(74px + env(safe-area-inset-bottom,0px)); display:none; align-items:center; gap:10px;
-    max-width:min(560px,calc(100vw - 24px)); padding:10px 12px; border-radius:14px;
+    width:max-content; max-width:min(560px,calc(100vw - 224px)); padding:10px 12px; border-radius:14px;
     background:rgba(28,24,20,.93); color:#fff6e8; border:1px solid rgba(255,255,255,.24);
     box-shadow:0 10px 30px rgba(30,18,8,.34); font-size:13px; line-height:1.45;
     opacity:0; transition:opacity .28s ease, transform .28s ease; }
   #starNudge.show{ display:flex; opacity:1; transform:translateX(-50%) translateY(0); }
+  body.town-panel-open #starNudge{ display:none; }   /* never over an open Town UI panel; it comes back when the panel closes */
   #starNudge .snTx{ flex:1 1 auto; min-width:0; }
   #starNudge .snGo{ flex:0 0 auto; text-decoration:none; background:#f1c45a; color:#3a2a08;
     border-radius:10px; padding:9px 13px; font-weight:800; font-size:12.5px; white-space:nowrap; }
   #starNudge .snX{ flex:0 0 auto; background:transparent; border:0; color:#d9c7b3; cursor:pointer;
     font-size:15px; line-height:1; padding:6px 4px; }
-  @media (max-width:520px){ #starNudge{ font-size:12.5px; } #starNudge .snGo{ min-height:40px; display:grid; place-items:center; } }
+  @media (max-width:620px), (hover:none) and (pointer:coarse){ #starNudge .snGo{ min-height:44px; display:grid; place-items:center; } #starNudge .snX{ min-width:44px; min-height:44px; } }
+  /* narrow screens: the copy takes the left lane the interaction prompt uses, and the actions sit under it */
+  @media (max-width:620px){ #starNudge{ left:12px; right:112px; width:auto; max-width:none; transform:translateY(14px); flex-wrap:wrap; }
+    #starNudge.show{ transform:translateY(0); } #starNudge .snTx{ flex-basis:100%; } #starNudge .snX{ margin-left:auto; } }
+  @media (max-width:520px){ #starNudge{ font-size:12.5px; } }
   .card .hero { width: 100%; aspect-ratio: 2 / 1; height: auto; max-height: 230px; object-fit: cover; display: block;
     background: linear-gradient(135deg,#efe6d3,#e2d4bb); }
   .card .sociallabel { position: absolute; top: 12px; left: 12px; z-index: 3; display: none;
@@ -11635,8 +11641,9 @@ function _starNudgeClose(how){ const el=document.getElementById('starNudge'); if
   try{ localStorage.setItem(STAR_NUDGE_KEY,how); }catch(e){} }
 function maybeStarNudge(reason){ if(_starNudgeShown||_starNudgeSeen()) return false;
   const el=document.getElementById('starNudge'); if(!el) return false;
-  // exploring a repo happens inside its card, so wait for the visitor to step back out
-  if(modalOpen||(tour&&tour.active)||repositoryAtelierActive()||homecomingCardOpen()){ _starNudgePending=reason; return false; }
+  // exploring happens inside a card or an open Town UI panel (Passport, Wayfinding…), so wait for the visitor to step back out
+  if(modalOpen||(tour&&tour.active)||repositoryAtelierActive()||homecomingCardOpen()
+    ||TOWN_UI.active||document.body.classList.contains('town-panel-open')){ _starNudgePending=reason; return false; }
   const go=document.getElementById('starNudgeGo');
   if(go) go.href=(window.REPOLIS_CONFIG&&REPOLIS_CONFIG.project&&REPOLIS_CONFIG.project.url)||go.href;
   _starNudgeShown=true; _starNudgePending=null; el.classList.add('show'); track('star_nudge_shown',{reason}); return true; }
@@ -13564,15 +13571,18 @@ function closeTownPanels(except=null){
   for(const item of townPanels){ if(item.element!==except&&!item.element.classList.contains('hidden')) item.close(); }
   if(except!==townTools) townTools.open=false;
 }
+// Chrome keeps layout boxes for the content of a closed <details> (content-visibility), so rects alone
+// would accept a control focus() cannot reach, such as #passBtn after the Town tools menu folds.
+function townFocusVisible(el,root=null){
+  if(!el||el===document.body||el.hidden||el.closest('[inert]')||!el.getClientRects().length||getComputedStyle(el).visibility==='hidden')return false;
+  for(let parent=el.parentElement;parent&&parent!==root;parent=parent.parentElement){
+    if(parent.tagName==='DETAILS'&&!parent.open&&!parent.querySelector(':scope > summary')?.contains(el))return false;
+  }
+  return true;
+}
 function townFocusables(element){
   return [...element.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex="0"]')]
-    .filter(el=>{
-      if(el.hidden||el.closest('[inert]')||!el.getClientRects().length||getComputedStyle(el).visibility==='hidden')return false;
-      for(let parent=el.parentElement;parent&&parent!==element;parent=parent.parentElement){
-        if(parent.tagName==='DETAILS'&&!parent.open&&!parent.querySelector(':scope > summary')?.contains(el))return false;
-      }
-      return true;
-    });
+    .filter(el=>townFocusVisible(el,element));
 }
 function syncTownPanels(records=[]){
   const opening=records.filter(record=>record.type==='attributes'&&record.attributeName==='class'&&(record.oldValue||'').split(/\s+/).includes('hidden')
@@ -13590,15 +13600,16 @@ function syncTownPanels(records=[]){
       if(target&&!current.element.contains(document.activeElement)) target.focus({preventScroll:true});
     }else if(previous){
       const saved=TOWN_UI.previousFocus; TOWN_UI.previousFocus=null;
-      const target=saved&&saved!==document.body&&!saved.closest('[inert]')&&saved.getClientRects().length?saved:previous.trigger;
+      const target=townFocusVisible(saved)?saved:previous.trigger;
       requestAnimationFrame(()=>{ if(!TOWN_UI.active&&!modalOpen&&(document.activeElement===document.body||previous.element.contains(document.activeElement))) target?.focus({preventScroll:true}); });
     }
   }
   for(const item of townPanels){ const hidden=item.element.classList.contains('hidden'); item.element.inert=hidden||modalOpen; item.element.setAttribute('aria-hidden',String(hidden));
     item.element.setAttribute('role','dialog'); item.element.setAttribute('aria-modal',String(!hidden&&!modalOpen)); }
   if(current&&!modalOpen&&document.activeElement.closest('[aria-hidden="true"],.hidden')) townFocusables(current.element)[0]?.focus({preventScroll:true});
-  const open=!!current||townTools.open;
+  const open=!!current||townTools.open,closing=!open&&document.body.classList.contains('town-panel-open');
   townPanelBackdrop.hidden=!open; document.body.classList.toggle('town-panel-open',open);
+  if(closing) flushStarNudge();   // a Star invitation earned behind the panel waits for it to close
   if(current?.element===panel) refreshNearbyPeople();
   _cacheTownLabelViewport();
 }

@@ -1542,10 +1542,10 @@ ok((HTML.match(/starNudge:'/g)||[]).length===2 && (HTML.match(/starNudgeGo:'/g)|
 ok(/if\(passport\.repos\.length>=3\) maybeStarNudge\('repos_visited'\)/.test(HTML)
   &&/if\(cityMode==='public'\)\{[\s\S]*?maybeStarNudge\('personal_town'\)/.test(HTML), 'the invitation is earned: three explored repo houses, or time spent in a self-built town');
 ok(/if\(_starNudgeShown\|\|_starNudgeSeen\(\)\) return false/.test(HTML)
-  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\|\|repositoryAtelierActive\(\)\|\|homecomingCardOpen\(\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
+  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\|\|repositoryAtelierActive\(\)\|\|homecomingCardOpen\(\)\s*\|\|TOWN_UI\.active\|\|document\.body\.classList\.contains\('town-panel-open'\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
   &&/function flushStarNudge\(\)/.test(HTML)
   &&/clearRepoHash\(\); flushStarNudge\(\);/.test(HTML)
-  &&/localStorage\.setItem\(STAR_NUDGE_KEY,how\)/.test(HTML), 'it shows at most once per browser, waits out a modal or the tour, and returns when the visitor steps back out');
+  &&/localStorage\.setItem\(STAR_NUDGE_KEY,how\)/.test(HTML), 'it shows at most once per browser, waits out a modal, the tour or an open Town UI panel, and returns when the visitor steps back out');
 ok(/REPOLIS_CONFIG&&REPOLIS_CONFIG\.project&&REPOLIS_CONFIG\.project\.url/.test(HTML), 'a fork still credits the upstream project it runs on');
 ['town_enter','intro_launch_invalid','intro_personal_preview','star_nudge_shown','star_nudge_dismiss','project_star_click']
   .forEach(ev => ok(HTML.includes(`track('${ev}'`), `funnel event ${ev} is instrumented`));
@@ -4580,6 +4580,65 @@ ok(['city_requested','aha_city_built','intent_chosen','aha_city_speaks','trace_l
   'explorePassport','exploreEnd','exploreEndShort','exploreUnavailable','wayGo','wayLook','wayShare','wayLookLocked','wayShareLocked',
   'wayLockNote','wayLookUnlocked','wayShareUnlocked']
   .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Homecoming key ${key} is bilingual`));
+
+group('Town UI — the earned Star invitation fits phones and waits for open panels; the Passport returns focus to a visible control');
+const starNudgeRule=(HTML.match(/#starNudge\{ position:fixed;[^}]*\}/)||[''])[0];
+ok(/width:max-content; max-width:min\(560px,calc\(100vw - 224px\)\)/.test(starNudgeRule)
+  &&/@media \(max-width:620px\)\{ #starNudge\{ left:12px; right:112px; width:auto; max-width:none; transform:translateY\(14px\); flex-wrap:wrap; \}/.test(HTML)
+  &&/#starNudge\.show\{ transform:translateY\(0\); \} #starNudge \.snTx\{ flex-basis:100%; \}/.test(HTML),
+  'the Star invitation is as wide as its copy, stays clear of the round buttons on the right, and on narrow screens gives the copy a full row above its actions');
+ok(/@media \(max-width:620px\), \(hover:none\) and \(pointer:coarse\)\{ #starNudge \.snGo\{ min-height:44px;[^}]*\} #starNudge \.snX\{ min-width:44px; min-height:44px; \} \}/.test(HTML),
+  'the Star link and its close control keep 44px touch targets');
+ok(/body\.town-panel-open #starNudge\{ display:none; \}/.test(HTML)
+  &&/const open=!!current\|\|townTools\.open,closing=!open&&document\.body\.classList\.contains\('town-panel-open'\);[\s\S]{0,160}if\(closing\) flushStarNudge\(\);/.test(HTML),
+  'an invitation never covers an open Town UI panel, and one earned behind a panel follows the last panel closing');
+{
+  // behavioral: an invitation earned while the Passport is open waits, then shows once after it closes
+  const src=HTML.slice(HTML.indexOf('const STAR_NUDGE_KEY='),HTML.indexOf("(function(){ const x=document.getElementById('starNudgeX')"));
+  const shown=new Set(),timers=[],events=[];
+  const nudge={TOWN_UI:{active:{}},modalOpen:false,tour:null,repositoryAtelierActive:()=>false,homecomingCardOpen:()=>false,
+    document:{body:{classList:{contains:name=>name==='town-panel-open'&&!!nudge.TOWN_UI.active}},
+      getElementById:id=>id==='starNudge'?{classList:{add:c=>shown.add(c),remove:c=>shown.delete(c)}}:null},
+    localStorage:{getItem:()=>null,setItem:()=>{}},track:name=>events.push(name),setTimeout:fn=>timers.push(fn),window:{}};
+  runInNewContext(src+'\nglobalThis.api={maybeStarNudge,flushStarNudge,pending:()=>_starNudgePending};',nudge);
+  const waited=nudge.api.maybeStarNudge('repos_visited')===false&&!shown.has('show')&&nudge.api.pending()==='repos_visited';
+  nudge.api.flushStarNudge(); timers.splice(0).forEach(fn=>fn());
+  const stillWaiting=!shown.has('show')&&nudge.api.pending()==='repos_visited';
+  nudge.TOWN_UI.active=null; nudge.api.flushStarNudge(); timers.splice(0).forEach(fn=>fn());
+  ok(waited&&stillWaiting&&shown.has('show')&&events.join()==='star_nudge_shown'&&nudge.api.pending()===null,
+    'an invitation earned with the Passport open waits, survives a flush while a panel stays open, and shows once when it closes');
+}
+{
+  // behavioral: Escape on a Passport opened from the Town tools menu returns focus to the menu summary
+  const ui=(HTML.match(/\/\*TOWN_UI_RUNTIME:START\*\/([\s\S]*?)\/\*TOWN_UI_RUNTIME:END\*\//)||[,''])[1];
+  const doc={activeElement:null};
+  const node=(tagName,parentElement=null,extra={})=>{ const classes=new Set(extra.classes||[]); return Object.assign({tagName,parentElement,hidden:false,inert:false,attributes:{},
+    classList:{contains:c=>classes.has(c),add:c=>classes.add(c),remove:c=>classes.delete(c),toggle:(c,on)=>on?classes.add(c):classes.delete(c)},
+    setAttribute(name,value){ this.attributes[name]=value; },closest(selector){ for(let n=this;n;n=n.parentElement) if(selector==='[inert]'&&n.inert) return n; return null; },
+    // like Chrome, content folded inside a closed <details> still reports layout boxes
+    getClientRects(){ for(let n=this;n;n=n.parentElement) if(n.classList.contains('hidden')) return []; return [{}]; },
+    contains(target){ for(let n=target;n;n=n.parentElement) if(n===this) return true; return false; },
+    focus(){ doc.activeElement=this; },querySelector:()=>null,querySelectorAll:()=>[]},extra.props||{}); };
+  const body=node('BODY'),tools=node('DETAILS',body,{props:{open:true}}),summary=node('SUMMARY',tools),passBtn=node('BUTTON',node('DIV',tools));
+  tools.querySelector=selector=>selector===':scope > summary'?summary:null;
+  const passport=node('DIV',body,{classes:['hidden']}),passClose=node('BUTTON',passport); passport.querySelectorAll=()=>[passClose];
+  const menu=node('DIV',body,{classes:['hidden']}),menuBtn=node('BUTTON',body);
+  doc.body=body; doc.activeElement=passBtn;
+  const state={window:{REPOLIS_ARRIVAL:{blocked:false}},document:doc,panel:menu,townTools:tools,townPanelBackdrop:{hidden:true},
+    townPanels:[{element:menu,trigger:menuBtn,close:()=>menu.classList.add('hidden')},{element:passport,trigger:summary,close:()=>passport.classList.add('hidden')}],
+    TOWN_UI:{active:null,previousFocus:null},FIRST_REPO:{active:false},modalOpen:false,clearTownInput:()=>{},refreshNearbyPeople:()=>{},_cacheTownLabelViewport:()=>{},
+    getComputedStyle:()=>({visibility:'visible'}),requestAnimationFrame:fn=>fn(),flushStarNudge:()=>{ state.flushes++; },flushes:0};
+  runInNewContext(ui.slice(ui.indexOf('function closeTownPanels'),ui.indexOf('const townPanelObserver'))
+    +"\nglobalThis.sync=syncTownPanels; globalThis.visible=typeof townFocusVisible==='function'?townFocusVisible:null;",state);
+  passport.classList.remove('hidden'); state.sync([{type:'attributes',attributeName:'class',oldValue:'hidden',target:passport}]);
+  const opened=!tools.open&&doc.activeElement===passClose&&body.classList.contains('town-panel-open')&&state.flushes===0;
+  passport.classList.add('hidden'); state.sync([{type:'attributes',attributeName:'class',oldValue:'',target:passport}]);
+  ok(opened&&doc.activeElement===summary&&state.flushes===1&&!body.classList.contains('town-panel-open'),
+    'closing a Passport opened from the Town tools menu focuses the visible menu summary, not the folded Passport button');
+  ok(!!state.visible&&state.visible(summary)&&!state.visible(passBtn)&&!state.visible(body)&&!state.visible(null)
+    &&/const target=townFocusVisible\(saved\)\?saved:previous\.trigger;/.test(ui)&&/\.filter\(el=>townFocusVisible\(el,element\)\)/.test(ui),
+    'restore targets and panel focus traps share one check that treats folded <details> content as unfocusable');
+}
 
 group('Passport Journey (v1.98) — this visit\'s houses, paths and traces, held in page memory only');
 const JOURNEY_SRC=readFileSync(join(ROOT,'assets','journey.js'),'utf8');

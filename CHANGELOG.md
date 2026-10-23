@@ -8,6 +8,18 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Town UI fixes — the Star invitation on phones, and focus after the Passport
+
+- The earned Star invitation is as wide as its copy instead of half the screen. Below 621px it uses the left lane the
+  interaction prompt uses, clear of the taxi, emote and action buttons, and puts its Star link and close control under the
+  copy. At 390px the copy column grows from 43px to 240px (two lines instead of eight). Both controls are 44px touch
+  targets on narrow and touch screens. Desktop widths of 1024px and up are unchanged.
+- An invitation earned while a Town UI panel (Passport, Wayfinding, Station, map, chat) or the Town tools menu is open
+  waits and appears after the last one closes. One already on screen steps aside while a panel is open.
+- Escape on a Passport opened from the Town tools menu returns focus to the menu summary. The restore check used layout
+  boxes, which Chrome keeps for content inside a closed `<details>`, so it picked the folded Passport button and focus fell
+  to the page body. Restore targets and panel focus traps now share one check that treats folded content as unfocusable.
+
 ### Passport Journey and the public-town Gazette (v1.98, part 4b)
 
 - The Explorer Passport now has two tabs: **여권 / Passport** (Town Gazette, Village Chronicle, growth record, stamps, and
