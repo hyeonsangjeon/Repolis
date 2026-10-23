@@ -23,6 +23,8 @@ node scripts/test-repository-atelier-chat.mjs
 node scripts/test-repository-blueprint.mjs
 node scripts/test-repository-exhibit.mjs
 node scripts/test-issue-code-scout.mjs
+node scripts/test-zone-classifier.mjs
+node scripts/test-city-card.mjs
 node scripts/validate-lore-fragments.mjs
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js
