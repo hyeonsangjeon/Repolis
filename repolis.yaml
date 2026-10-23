@@ -75,6 +75,7 @@ entrypoints:
   library_builder: scripts/build-contribution-library.mjs
   grounding_worker: cloudflare-taxi/src/grounded.js
   realtime_worker: cloudflare/src
+  card_worker: cloudflare-card/src/index.js
   council_engine: council/engine.js
   client_regression: scripts/smoke.mjs
 
@@ -96,6 +97,14 @@ deploy:
     target: cloudflare-workers
     name: repolis-rt
     command: cd cloudflare && npx wrangler deploy
+  card_worker:
+    target: cloudflare-workers
+    name: repolis-card
+    command: cd cloudflare-card && npm ci && npx wrangler deploy
+    plan: workers-paid
+    bindings: [CARD_KV, CARD_RATE_LIMIT]
+    secrets: [GITHUB_TOKEN]
+    guide: cloudflare-card/README.md
 
 endpoints:
   grounding:
@@ -111,6 +120,11 @@ endpoints:
     required: false
     fallback: solo town
     fork_default: disabled
+  card:
+    routes: [GET /u/<login>, GET /card/<login>.png, GET /card/<login>.svg]
+    wired_in: not yet (share links switch in a later v1.98 step)
+    required: false
+    fallback: the site's own preview and Pages ?user= links
 
 features:
   - id: data-built-city
@@ -230,6 +244,7 @@ verify:
     - node scripts/validate-lore-fragments.mjs
     - node --check scholars.js
     - node --check cloudflare-taxi/src/grounded.js
+    - node scripts/test-city-card-worker.mjs
     - node --check assets/repo-route.js
     - node --check assets/contribution-quests.js
   ui: Serve locally and exercise changed flows in Chrome DevTools on desktop and 390x844 mobile with no console errors.

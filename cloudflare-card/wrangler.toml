@@ -1,0 +1,51 @@
+#:schema node_modules/wrangler/config-schema.json
+# Repolis city card Worker: share pages (/u/<login>) and city card images (/card/<login>.png|.svg)
+# for public GitHub towns. Separate from repolis-taxi (../cloudflare-taxi) and repolis-rt (../cloudflare).
+# Deploy steps, the token and the KV namespace are described in README.md.
+
+name = "repolis-card"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+# Card summaries only (card:v1:<login>): 24 h for a town, 1 h for an unknown login, an empty town or a GitHub error.
+# Create the namespace once, then replace the placeholder below with the printed id:
+#   npx wrangler kv namespace create CARD_KV
+[[kv_namespaces]]
+binding = "CARD_KV"
+id = "REPLACE_WITH_CARD_KV_ID"
+
+# New renders (a login KV has not seen, or a PNG not in the cache) per address per minute, counted per Cloudflare
+# location. namespace_id is any positive integer unique among this account's rate limiters.
+# Keep `limit` equal to RENDER_LIMIT in src/rate-limit.js, the fallback used when the binding is absent.
+[[ratelimits]]
+name = "CARD_RATE_LIMIT"
+namespace_id = "1098"
+
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
+# The site a share link sends people to (?user=<login>&ref=card), and whose preview image is the plain fallback.
+[vars]
+SITE_URL = "https://hyeonsangjeon.github.io/Repolis/"
+
+# Secret, never committed: a fine-grained GitHub token with public-repository read access only (README.md).
+#   npx wrangler secret put GITHUB_TOKEN
+# Without it the Worker asks GitHub anonymously (60 requests an hour per egress address), which is enough for wrangler dev.
+
+# The pre-rendered generic card loads as bytes and the site's README banner (../assets/banner.svg) as text.
+[[rules]]
+type = "Data"
+globs = ["**/*.png"]
+fallthrough = false
+
+[[rules]]
+type = "Text"
+globs = ["**/*.svg"]
+fallthrough = false
+
+# Persisted invocation logs would record request URLs, and with them logins. The Worker's own log lines carry only
+# route, result and reason; read them live with `npx wrangler tail`.
+[observability]
+enabled = false

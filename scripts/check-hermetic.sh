@@ -27,6 +27,12 @@ node scripts/test-repository-exhibit.mjs
 node scripts/test-issue-code-scout.mjs
 node scripts/test-zone-classifier.mjs
 node scripts/test-city-card.mjs
+node scripts/test-city-card-worker.mjs
+node --check cloudflare-card/src/index.js
+node --check cloudflare-card/scripts/build-generic-card.mjs
+node --check cloudflare-card/scripts/measure-cpu.mjs
+node --check cloudflare-card/test/render-png.local.mjs
+python3 -m py_compile cloudflare-card/scripts/build_glyphs.py
 node scripts/validate-lore-fragments.mjs
 node --check scholars.js
 node --check cloudflare-taxi/src/grounded.js

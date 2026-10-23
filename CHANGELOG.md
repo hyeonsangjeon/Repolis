@@ -8,6 +8,37 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### City card Worker `repolis-card` (v1.98, part 3) — code and local tests, not deployed
+
+- New Cloudflare Worker in `cloudflare-card/`. `GET /u/<login>` answers 200 HTML whose Open Graph tags carry the town's
+  city card — `og:title` is the city plaque name from `homecomingCityName`, `og:image` the absolute
+  `/card/<login>.png?d=YYYYMMDD` (UTC), `twitter:card=summary_large_image` — then moves people on to
+  `<SITE_URL>?user=<login>&ref=card` by meta refresh and `location.replace`. `GET /card/<login>.png` draws the 1200×630
+  card (Cache API, `s-maxage=86400`, `d=` the only query read, anything but yesterday, today or tomorrow becomes today);
+  `GET /card/<login>.svg` serves the 600×300 README card with `max-age=86400`. An invalid login or any other path is a
+  404 with the site's own preview. `lang=ko` asks for the Korean card.
+- GitHub is asked at most once per login a day, with the town's own request
+  (`/users/<login>/repos?per_page=100&sort=pushed`) and the town's own projection, reference day and district rule. KV
+  `CARD_KV` keeps only the `summarizeCityCard` summary (`card:v1:<login>`, 24 h); an unknown login, an empty town or a
+  GitHub failure keeps the empty summary for 1 h. The raw response, e-mail addresses, avatars and followers are never
+  stored or drawn. A refused (expired) `GITHUB_TOKEN` falls back to one anonymous request.
+- Every GitHub, KV, rate-limit or renderer failure still answers 200: the site's preview and the move on for `/u/`, a
+  pre-rendered plain card (`src/generic-card.png`) for the PNG, `assets/banner.svg` for the SVG. New renders are limited
+  to 30 a minute per address with the Workers Rate Limiting binding `CARD_RATE_LIMIT` (an isolate window when absent).
+  Log lines carry route, result and reason only; persisted Workers Logs stay off because invocation logs record URLs.
+- The PNG renderer has no font: card text is drawn as Noto Sans KR glyph outlines (SIL OFL 1.1, pinned google/fonts
+  commit and SHA-256) for a fixed vocabulary at weights 500–800, generated once by `scripts/build_glyphs.py` and
+  rasterized by `@resvg/resvg-wasm`. `cityCardSvg` gains a `drawText` option for this (default output and pinned hashes
+  unchanged). Characters outside the vocabulary fall back to ASCII or `-`, and such a Korean card is drawn in English.
+- Measured on an Apple M4: one render costs a median 24–27 ms of CPU in Node (p95 up to 50 ms) and 33 ms in
+  `wrangler dev`, above the Workers Free 10 ms limit, so the Worker needs Workers Paid. The Cache API has no effect on
+  `*.workers.dev`, so until a custom domain is attached every PNG request renders.
+- `scripts/test-city-card-worker.mjs` (160 hermetic checks, Node only) joins `scripts/check-hermetic.sh` with syntax
+  checks for the Worker entry and scripts; `cloudflare-card/test/render-png.local.mjs` pins real PNG hashes locally.
+  npm dependencies (`@resvg/resvg-wasm`, `wrangler`) live only in `cloudflare-card/` with a lockfile. Deployment, the
+  KV namespace, the token and the plan switch are owner steps in `cloudflare-card/README.md`; the site does not link to
+  the Worker yet.
+
 ### Town UI fixes — the Star invitation on phones, and focus after the Passport
 
 - The earned Star invitation is as wide as its copy instead of half the screen. Below 621px it uses the left lane the
