@@ -57,6 +57,7 @@ entrypoints:
   world_tree: assets/world-tree/createRepolisHero.js
   portable_town_projection: assets/world-tree/world-tree-state.js
   homecoming: assets/homecoming.js
+  passport_journey: assets/journey.js
   town_growth: assets/town-growth.js
   repo_portal: assets/repo-portal.js
   repo_route: assets/repo-route.js
@@ -236,6 +237,7 @@ verify:
     - node council/test-live.mjs
     - node scripts/smoke.mjs
     - node scripts/test-portable-town.mjs
+    - node scripts/test-public-town-cache.mjs
     - node scripts/test-session-footprints.mjs
     - python3 scripts/test_fork_lineage.py
     - node scripts/test-fork-lineage.mjs

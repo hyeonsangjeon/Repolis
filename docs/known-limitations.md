@@ -56,6 +56,14 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   is absent. The 100-repository unauthenticated list cap is surfaced as partial coverage. Public residents have
   deterministic local jobs and greetings, but no issue titles, owner resident records, Shared/Bound memory,
   daily sap record, realtime identity, or grounded backend.
+- **The public-town cache is small, short-lived, and per browser.** `?user=` and Twin Towns keep, per login,
+  only the raw fields the public projection reads for the repositories it accepts: about 47K characters for a
+  full 100-repository page instead of GitHub's roughly 588K-character raw page. An entry is fresh for six hours;
+  after that, one request refreshes it, and a failed request falls back to it as an explicitly stale town. At
+  most eight towns are kept, least recently used out first, and a town whose entry would exceed 128K characters
+  (near-maximum descriptions and topics on most repositories) renders live without being cached, so the cache
+  never holds much more than 1M characters, a fifth of Chrome's roughly 5.2M-character origin quota. The first
+  visit after this change deletes the older unbounded raw-page entries, so those towns are requested once more.
 - **Repo Portal is one unauthenticated request, not a proxy.** An arbitrary target uses one
   `GET /repos/{owner}/{repo}` request with no retry. A 15-minute LRU cache is limited to 30 entries and 512
   KiB; failed requests may use an explicitly labelled stale entry. Without one, the target error appears
@@ -131,6 +139,16 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
   a town without a tended, forked, rare-district, or tagged house tours fewer than three houses rather than inventing one.
   Look/Share unlocks follow the existing browser-wide Explorer Passport visits, so same-named houses visited in another town
   count. Funnel events carry no login, repository name, session, or instance identifier.
+- **The Passport Journey is this page's memory, not a history.** It lists houses opened through a repo card (the
+  `markVisited` point), so entering a Repository Atelier directly does not add a house. A reload starts an empty journey,
+  and nothing is stored or sent. After 24 houses and 12 traces it counts instead of listing. Its cumulative line reads the
+  browser-wide Explorer Passport, which stores repository names without their town; it counts only names in the current
+  catalog, so a same-named house opened in another town still counts here.
+- **Town Gazette keeps five towns.** Baselines for the five most recently visited owner or `?user=` towns stay in one
+  local key; a sixth town drops the least recently visited one. "N more houses" is net growth (new minus departed), so a
+  renamed repository or a public town whose 100-repository API window slid is not announced as a new house, and a town
+  that gained one house while losing another reports only the changes. Public-town snapshots follow the six-hour public
+  data cache, so changes made within that window appear on a later visit.
 - **Zero-build static runtime, on purpose.** `index.html` remains the primary runtime and imports a few
   local modules/assets directly. There is no bundler, `package.json`, or `node_modules` requirement for
   the site. Don't add a build step — it is a feature.

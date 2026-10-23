@@ -18,6 +18,7 @@ import { runInNewContext } from 'vm';
 import { runNpcBudgetGovernorTests } from './test-npc-budget-governor.mjs';
 import { runVisualGovernorTests } from './test-visual-governor.mjs';
 import { runFirstVisitTests } from './test-first-visit.mjs';
+import { runPublicTownCacheTests } from './test-public-town-cache.mjs';
 import { runLoreTests } from './test-lore.mjs';
 import { runResidentDialogueTests } from './test-resident-dialogue.mjs';
 import { runResidentRuntimeTests } from './test-resident-runtime.mjs';
@@ -26,6 +27,7 @@ import { runRepositoryBlueprintTests } from './test-repository-blueprint.mjs';
 import { runIssueCodeScoutTests } from './test-issue-code-scout.mjs';
 import { runTaxiBoundaryTests } from './test-taxi-boundary.mjs';
 import { runTaxiVoiceTests } from './test-taxi-voice.mjs';
+import { JOURNEY_COPY_KEYS } from '../assets/journey.js';
 import {
   CAMERA_OBSTRUCTION_DEFAULTS,
   CAMERA_ARRIVAL_OFFSETS,
@@ -169,6 +171,7 @@ const CITY_STATE_VALIDATOR = readFileSync(join(ROOT, 'scripts/validate_city_stat
 const RESIDENT_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/resident-profiles.js'), 'utf8');
 const RESIDENT_DIALOGUE_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/resident-dialogue.js'), 'utf8');
 const RESIDENT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'data/residents/index.json'), 'utf8'));
+const RESIDENT_PROFILE_SCHEMA = JSON.parse(readFileSync(join(ROOT, 'data/residents/profile.schema.json'), 'utf8'));
 const LORE_RUNTIME_SRC = readFileSync(join(ROOT, 'assets/lore-fragments.js'), 'utf8');
 const TAXI_VOICE_SRC = readFileSync(join(ROOT, 'assets/taxi-voice.js'), 'utf8');
 const TAXI_BOUNDARY_SRC = readFileSync(join(ROOT, 'cloudflare-taxi/src/taxi-boundary.js'), 'utf8');
@@ -781,7 +784,7 @@ ok(repoPortalLatencyBucket(999)==='under-1s'&&repoPortalLatencyBucket(1000)==='1
 
 const portalLoader=(HTML.match(/let _ownerSnapshotPromise=null;[\s\S]*?(?=\ntrack\('page_load'\);)/)||[''])[0];
 const portalTargetLoader=(portalLoader.match(/async function _loadRepoPortalTarget\(target\)\{[\s\S]*?\n\}/)||[''])[0];
-ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v4'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v5'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
   'the zero-build runtime imports one small dedicated Portal module');
 ok(!/document|window|localStorage|sessionStorage|fetch\(|Math\.random|THREE/.test(REPO_PORTAL_SRC),
   'parser, canonicalizer, projection, and link builders stay pure and browser-independent');
@@ -805,7 +808,7 @@ ok(/if\(!repoPortalTarget\) repoPortalResult=\{repo:null/.test(HTML)
 ok(/if\(repoPortalResult\.repo\)\{ REPOS=\[repoPortalResult\.repo\]/.test(HTML)
   &&/repoPortalFallback=true;[\s\S]*?REPOS=_ownerRepos\(await _ownerSnapshot\(\)\); cityMode='owner'/.test(HTML),
   'success builds one target first while failure preserves the existing owner town');
-ok(/return projectPublicRepos\(raw,user\)/.test(HTML)
+ok(/repos:projectPublicRepos\(raw,user\), source:'github-public'/.test(HTML)&&/repos: projectPublicRepos\(entry\.repos, owner, entry\.referenceMs\)/.test(REPO_PORTAL_SRC)
   &&!/derived "liveliness"|derived → yard size|never a real clone count/.test(HTML)
   &&/if\(repo\.trafficKnown===false\)\{[\s\S]*?starSignal[\s\S]*?forkSignal/.test(HTML),
   'all public towns share truthful unknown traffic and map only stars, forks, and recency to architecture');
@@ -904,6 +907,30 @@ ok(/## 11\. Repo Portal/.test(DOMAIN_MODEL)&&/Public API modes do not have traff
   &&/assets\/repo-portal\.js/.test(AGENTS_GUIDE)&&/id: repo-portal/.test(MANIFEST)
   &&/Repo Portal: `\?repo=owner\/repo/.test(LLMS_INDEX)&&/\[1\.87\.0\]/.test(CHANGELOG),
   'domain, limitations, agent guide, manifest, LLM index, and changelog stay in sync');
+
+group('Public town cache — allowlisted, LRU-bounded, and free of legacy raw pages');
+const publicTownCacheBlock=(HTML.match(/\/\*PUBLIC_TOWN_CACHE:START\*\/([\s\S]*?)\/\*PUBLIC_TOWN_CACHE:END\*\//)||[])[1]||'';
+const publicTownLoader=(publicTownCacheBlock.match(/async function _loadPublicCity\(user\)\{[\s\S]*?\n\}/)||[''])[0];
+ok(/async function _loadPublicCity\(user\)/.test(publicTownCacheBlock)&&(HTML.match(/async function _loadPublicCity\(/g)||[]).length===1
+  &&!/repolis:public-user:'\+|username:user|repos:raw/.test(HTML),
+  'the only public-town loader lives in the bounded cache block, and no raw GitHub page is written anywhere');
+ok(publicTownLoader.indexOf('_readPublicTown(user)')<publicTownLoader.indexOf("track('city_data_load_start'")
+  &&publicTownLoader.indexOf("track('city_data_load_start'")<publicTownLoader.indexOf('fetchArrivalResponse(')
+  &&publicTownLoader.indexOf("if(!Array.isArray(raw)) throw new ArrivalDataError('malformed')")<publicTownLoader.indexOf('_storePublicTown(user,raw)'),
+  'a fresh entry answers before any event or request, and only a validated page array is stored');
+ok(HTML.indexOf('parsed.version!==PUBLIC_TOWN_CACHE_LIMITS.version')>0
+  &&HTML.indexOf('parsed.version!==PUBLIC_TOWN_CACHE_LIMITS.version')<HTML.indexOf("if(cityMode === 'owner'){")
+  &&/\n_storageKeys\(\)\.forEach\(key=>\{ const parsed=parsePublicTownCacheKey\(key\);/.test(publicTownCacheBlock),
+  'the legacy purge runs once per boot in every city mode, before any town data loads');
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v5'/.test(HTML)
+  &&/PUBLIC_TOWN_CACHE_LIMITS, REPO_PORTAL_LIMITS/.test(HTML)&&/compactPublicTown/.test(HTML)&&/planPublicTownCache/.test(HTML),
+  'the runtime takes cache keys, entry shape, and LRU order from the pure Portal module');
+ok(/node scripts\/test-public-town-cache\.mjs/.test(readFileSync(join(ROOT,'scripts/check-hermetic.sh'),'utf8'))
+  &&/scripts\/test-public-town-cache\.mjs/.test(AGENTS_GUIDE)&&/PUBLIC_TOWN_CACHE/.test(AGENTS_GUIDE)
+  &&/public-town cache is small, short-lived, and per browser/.test(KNOWN_LIMITATIONS)
+  &&/At\s+most eight towns/.test(KNOWN_LIMITATIONS)&&/128K characters/.test(KNOWN_LIMITATIONS),
+  'the hermetic list, agent guide, and known limitations record the same cache bounds');
+await runPublicTownCacheTests(ok);
 
 group('Blueprint Deep Link — exact public source landmarks');
 const blueprintDeepUrl=createRepositoryBlueprintDeepLink('hyeonsangjeon/Repolis','src/agents','https://example.test/Repolis/?old=1#repo=x');
@@ -1540,10 +1567,10 @@ ok((HTML.match(/starNudge:'/g)||[]).length===2 && (HTML.match(/starNudgeGo:'/g)|
 ok(/if\(passport\.repos\.length>=3\) maybeStarNudge\('repos_visited'\)/.test(HTML)
   &&/if\(cityMode==='public'\)\{[\s\S]*?maybeStarNudge\('personal_town'\)/.test(HTML), 'the invitation is earned: three explored repo houses, or time spent in a self-built town');
 ok(/if\(_starNudgeShown\|\|_starNudgeSeen\(\)\) return false/.test(HTML)
-  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\|\|repositoryAtelierActive\(\)\|\|homecomingCardOpen\(\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
+  &&/if\(modalOpen\|\|\(tour&&tour\.active\)\|\|repositoryAtelierActive\(\)\|\|homecomingCardOpen\(\)\s*\|\|TOWN_UI\.active\|\|document\.body\.classList\.contains\('town-panel-open'\)\)\{ _starNudgePending=reason; return false; \}/.test(HTML)
   &&/function flushStarNudge\(\)/.test(HTML)
   &&/clearRepoHash\(\); flushStarNudge\(\);/.test(HTML)
-  &&/localStorage\.setItem\(STAR_NUDGE_KEY,how\)/.test(HTML), 'it shows at most once per browser, waits out a modal or the tour, and returns when the visitor steps back out');
+  &&/localStorage\.setItem\(STAR_NUDGE_KEY,how\)/.test(HTML), 'it shows at most once per browser, waits out a modal, the tour or an open Town UI panel, and returns when the visitor steps back out');
 ok(/REPOLIS_CONFIG&&REPOLIS_CONFIG\.project&&REPOLIS_CONFIG\.project\.url/.test(HTML), 'a fork still credits the upstream project it runs on');
 ['town_enter','intro_launch_invalid','intro_personal_preview','star_nudge_shown','star_nudge_dismiss','project_star_click']
   .forEach(ev => ok(HTML.includes(`track('${ev}'`), `funnel event ${ev} is instrumented`));
@@ -2525,7 +2552,7 @@ group('Town Gazette — public repo changes since the last marked-read visit');
 const freshnessSrc=(HTML.match(/\/\*FRESHNESS:START\*\/([\s\S]*?)\/\*FRESHNESS:END\*\//)||[,''])[1];
 ok(freshnessSrc.length>0, 'pure freshness diff block is extractable');
 if(freshnessSrc){
-  const {diffRepoFreshness}=new Function(`${freshnessSrc}; return {diffRepoFreshness};`)();
+  const {diffRepoFreshness,rememberFreshnessTown,freshnessNewsCopy}=new Function(`${freshnessSrc}; return {diffRepoFreshness,rememberFreshnessTown,freshnessNewsCopy};`)();
   const state=(o={})=>({visitors:0,views:0,clones:0,stars:0,forks:0,pushed:'',release_tag:'',...o});
   const prev={at:100,repos:{alpha:state({visitors:10,views:20,stars:2,pushed:'2026-01-01'}),gone:state({stars:1})}};
   const reordered={at:200,repos:{gone:state({stars:1}),alpha:state({visitors:10,views:20,stars:2,pushed:'2026-01-01'})}};
@@ -2539,10 +2566,32 @@ if(freshnessSrc){
   ok(viral.items[0].repo==='newRepo', 'extreme metric growth is capped and cannot outrank a newly arrived repo');
   const correction=diffRepoFreshness({at:1,repos:{alpha:state({visitors:10})}},{at:2,repos:{alpha:state({visitors:2})}});
   ok(correction.total===0, 'negative-only metric corrections never become misleading loss news');
+  const snap=at=>({at,repos:{}}); let towns={v:1,towns:{},order:[]};
+  ['public:a','public:b','public:c','public:d','public:e'].forEach((town,i)=>{ towns=rememberFreshnessTown(towns,town,snap(i),5); });
+  ok(towns.order.join()==='public:e,public:d,public:c,public:b,public:a'&&Object.keys(towns.towns).length===5, 'five towns keep five baselines, newest first');
+  const sixth=rememberFreshnessTown(towns,'public:f',snap(6),5);
+  ok(sixth.order.join()==='public:f,public:e,public:d,public:c,public:b'&&!sixth.towns['public:a']&&Object.keys(sixth.towns).length===5,
+    'a sixth town pushes out the least recently visited one');
+  const revisited=rememberFreshnessTown(towns,'public:a',towns.towns['public:a'],5), later=rememberFreshnessTown(revisited,'public:f',snap(6),5);
+  ok(revisited.towns['public:a']===towns.towns['public:a']&&revisited.order[0]==='public:a'&&later.towns['public:a']&&!later.towns['public:b'],
+    'a revisit keeps its unread baseline and is no longer the first town to go');
+  ok(rememberFreshnessTown({v:1,towns:{x:snap(1)},order:['ghost','x']},'y',snap(2),5).order.join()==='y,x'
+    &&rememberFreshnessTown(null,'owner:me',snap(1),5).order.join()==='owner:me', 'order entries without a snapshot are dropped and a missing store starts fresh');
+  ok(freshnessNewsCopy({added:0,removed:0,updated:0,total:0})===null&&freshnessNewsCopy(null)===null, 'no change, no news copy');
+  const plain=freshnessNewsCopy({added:0,removed:0,updated:3,total:3}),renamed=freshnessNewsCopy({added:1,removed:1,updated:0,total:2});
+  ok(plain.banner==='freshBanner'&&plain.grew===null&&plain.params.count===3&&renamed.banner==='freshBanner'&&renamed.grew===null,
+    'updates and a renamed repo (one in, one out) keep the existing banner and never claim a new house');
+  ok(freshnessNewsCopy({added:2,removed:0,updated:0,total:2}).banner==='freshBannerNew'&&freshnessNewsCopy({added:1,removed:0,updated:0,total:1}).banner==='freshBannerNewOne',
+    'a town that only grew says how many more houses it has');
+  const mixed=freshnessNewsCopy({added:3,removed:1,updated:2,total:6}),single=freshnessNewsCopy({added:1,removed:0,updated:4,total:5});
+  ok(mixed.banner==='freshBannerGrew'&&mixed.grew==='freshGrew'&&mixed.params.grew===2&&mixed.params.count===6
+    &&single.banner==='freshBannerGrewOne'&&single.grew==='freshGrewOne', 'net growth is announced together with the total number of changes');
 }
 ok(/const FRESHNESS_KEY='repolisFreshness:v1', FRESHNESS_MAX_TOWNS=5/.test(HTML), 'freshness snapshots use one versioned local-only store capped at five towns');
 ok(/function _freshTownKey\(\)\{ return \(cityMode==='owner'\?'owner:':'public:'\)\+String\(currentUser/.test(HTML), 'owner and public-user town baselines are independently scoped');
-ok(/freshnessStore\.order=\[freshnessTown\][\s\S]*?slice\(0,FRESHNESS_MAX_TOWNS\)/.test(HTML), 'snapshot LRU pruning is wired');
+ok(/function _freshSetBaseline\(snapshot\)\{ freshnessStore=rememberFreshnessTown\(freshnessStore,freshnessTown,snapshot,FRESHNESS_MAX_TOWNS\); _freshSaveStore\(\); \}/.test(HTML)
+  &&/else if\(freshnessBaseline&&freshnessTrackable&&freshnessStore\.order\[0\]!==freshnessTown\) _freshSetBaseline\(freshnessBaseline\);/.test(HTML),
+  'snapshot LRU pruning is wired, and a revisit moves its town forward without touching the baseline');
 ok(/cityError=\{status:0,reason:'data_load'\}/.test(HTML), 'owner repos.json failure becomes an explicit city load error');
 ok(/const freshnessTrackable=cityMode!=='portal'&&REPOS\.length>0&&!cityError/.test(HTML)&&/if\(!freshnessBaseline&&freshnessTrackable\)/.test(HTML),
   'only a successful non-empty full-town load can diff or establish a baseline');
@@ -2921,6 +2970,12 @@ await runNpcBudgetGovernorTests(ok);
 
 group('resident profiles — manifest-only boot, lazy detail, and local Bound fallback');
 await runResidentRuntimeTests(ok);
+ok(!/Date\.now|new Date\(\s*\)|performance\.now/.test(RESIDENT_RUNTIME_SRC)
+  && /const ageDays = residentAgeDays\(profile, cityState\)/.test(RESIDENT_RUNTIME_SRC)
+  && !('generated_at' in RESIDENT_PROFILE_SCHEMA.properties)
+  && RESIDENT_PROFILE_SCHEMA.properties.age.additionalProperties === false
+  && RESIDENT_MANIFEST.shared?.city_state?.as_of === CITY_STATE.era.as_of,
+  'date-free profiles measure newcomer age against the manifest city reference day, never the browser clock');
 
 group('resident Shared/Bound authority — generated registry and adversarial requests');
 await runResidentDialogueTests(ok);
@@ -4539,7 +4594,7 @@ ok(/function _homecomingCardKind\(\)\{ return cityMode==='public'\?'timelapse':'
   &&/FIRST_ARRIVAL\.direct&&PLAZA_DIRECT_LINK\.ok&&cityMode==='owner'&&!VISITOR\.returning[\s\S]*?return \{\.\.\.none,toast:true\}/.test(homecomingBlock)
   &&/if\(HOMECOMING&&plan&&plan\.toast\)\{ _homecomingRemember\('intent'\); _queueArrivalAction\(9500,\(\)=>_showGuideToast\(\)\)/.test(homecomingBlock),
   'a public login arrives once per session, and the campaign plaza gets one guide line instead of a card');
-ok(/if\(hasFreshness\(\)\) return none;/.test(homecomingBlock)&&/if\(news\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('freshBanner'/.test(HTML),
+ok(/if\(hasFreshness\(\)\) return none;/.test(homecomingBlock)&&/if\(news\) setTimeout\(\(\)=>\{ try\{ const copy=freshnessNewsCopy\(repoFreshness\); showWave\(tf\(copy\.banner,copy\.params\)/.test(HTML),
   'Town Gazette news on a return visit keeps priority over the arrival timelapse and the intent card');
 ok(['city_requested','aha_city_built','intent_chosen','aha_city_speaks','trace_left','return_visit']
   .every(name=>new RegExp(`trackHomecoming\\('${name}'`).test(HTML))
@@ -4550,6 +4605,104 @@ ok(['city_requested','aha_city_built','intent_chosen','aha_city_speaks','trace_l
   'explorePassport','exploreEnd','exploreEndShort','exploreUnavailable','wayGo','wayLook','wayShare','wayLookLocked','wayShareLocked',
   'wayLockNote','wayLookUnlocked','wayShareUnlocked']
   .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Homecoming key ${key} is bilingual`));
+
+group('Town UI — the earned Star invitation fits phones and waits for open panels; the Passport returns focus to a visible control');
+const starNudgeRule=(HTML.match(/#starNudge\{ position:fixed;[^}]*\}/)||[''])[0];
+ok(/width:max-content; max-width:min\(560px,calc\(100vw - 224px\)\)/.test(starNudgeRule)
+  &&/@media \(max-width:620px\)\{ #starNudge\{ left:12px; right:112px; width:auto; max-width:none; transform:translateY\(14px\); flex-wrap:wrap; \}/.test(HTML)
+  &&/#starNudge\.show\{ transform:translateY\(0\); \} #starNudge \.snTx\{ flex-basis:100%; \}/.test(HTML),
+  'the Star invitation is as wide as its copy, stays clear of the round buttons on the right, and on narrow screens gives the copy a full row above its actions');
+ok(/@media \(max-width:620px\), \(hover:none\) and \(pointer:coarse\)\{ #starNudge \.snGo\{ min-height:44px;[^}]*\} #starNudge \.snX\{ min-width:44px; min-height:44px; \} \}/.test(HTML),
+  'the Star link and its close control keep 44px touch targets');
+ok(/body\.town-panel-open #starNudge\{ display:none; \}/.test(HTML)
+  &&/const open=!!current\|\|townTools\.open,closing=!open&&document\.body\.classList\.contains\('town-panel-open'\);[\s\S]{0,160}if\(closing\) flushStarNudge\(\);/.test(HTML),
+  'an invitation never covers an open Town UI panel, and one earned behind a panel follows the last panel closing');
+{
+  // behavioral: an invitation earned while the Passport is open waits, then shows once after it closes
+  const src=HTML.slice(HTML.indexOf('const STAR_NUDGE_KEY='),HTML.indexOf("(function(){ const x=document.getElementById('starNudgeX')"));
+  const shown=new Set(),timers=[],events=[];
+  const nudge={TOWN_UI:{active:{}},modalOpen:false,tour:null,repositoryAtelierActive:()=>false,homecomingCardOpen:()=>false,
+    document:{body:{classList:{contains:name=>name==='town-panel-open'&&!!nudge.TOWN_UI.active}},
+      getElementById:id=>id==='starNudge'?{classList:{add:c=>shown.add(c),remove:c=>shown.delete(c)}}:null},
+    localStorage:{getItem:()=>null,setItem:()=>{}},track:name=>events.push(name),setTimeout:fn=>timers.push(fn),window:{}};
+  runInNewContext(src+'\nglobalThis.api={maybeStarNudge,flushStarNudge,pending:()=>_starNudgePending};',nudge);
+  const waited=nudge.api.maybeStarNudge('repos_visited')===false&&!shown.has('show')&&nudge.api.pending()==='repos_visited';
+  nudge.api.flushStarNudge(); timers.splice(0).forEach(fn=>fn());
+  const stillWaiting=!shown.has('show')&&nudge.api.pending()==='repos_visited';
+  nudge.TOWN_UI.active=null; nudge.api.flushStarNudge(); timers.splice(0).forEach(fn=>fn());
+  ok(waited&&stillWaiting&&shown.has('show')&&events.join()==='star_nudge_shown'&&nudge.api.pending()===null,
+    'an invitation earned with the Passport open waits, survives a flush while a panel stays open, and shows once when it closes');
+}
+{
+  // behavioral: Escape on a Passport opened from the Town tools menu returns focus to the menu summary
+  const ui=(HTML.match(/\/\*TOWN_UI_RUNTIME:START\*\/([\s\S]*?)\/\*TOWN_UI_RUNTIME:END\*\//)||[,''])[1];
+  const doc={activeElement:null};
+  const node=(tagName,parentElement=null,extra={})=>{ const classes=new Set(extra.classes||[]); return Object.assign({tagName,parentElement,hidden:false,inert:false,attributes:{},
+    classList:{contains:c=>classes.has(c),add:c=>classes.add(c),remove:c=>classes.delete(c),toggle:(c,on)=>on?classes.add(c):classes.delete(c)},
+    setAttribute(name,value){ this.attributes[name]=value; },closest(selector){ for(let n=this;n;n=n.parentElement) if(selector==='[inert]'&&n.inert) return n; return null; },
+    // like Chrome, content folded inside a closed <details> still reports layout boxes
+    getClientRects(){ for(let n=this;n;n=n.parentElement) if(n.classList.contains('hidden')) return []; return [{}]; },
+    contains(target){ for(let n=target;n;n=n.parentElement) if(n===this) return true; return false; },
+    focus(){ doc.activeElement=this; },querySelector:()=>null,querySelectorAll:()=>[]},extra.props||{}); };
+  const body=node('BODY'),tools=node('DETAILS',body,{props:{open:true}}),summary=node('SUMMARY',tools),passBtn=node('BUTTON',node('DIV',tools));
+  tools.querySelector=selector=>selector===':scope > summary'?summary:null;
+  const passport=node('DIV',body,{classes:['hidden']}),passClose=node('BUTTON',passport); passport.querySelectorAll=()=>[passClose];
+  const menu=node('DIV',body,{classes:['hidden']}),menuBtn=node('BUTTON',body);
+  doc.body=body; doc.activeElement=passBtn;
+  const state={window:{REPOLIS_ARRIVAL:{blocked:false}},document:doc,panel:menu,townTools:tools,townPanelBackdrop:{hidden:true},
+    townPanels:[{element:menu,trigger:menuBtn,close:()=>menu.classList.add('hidden')},{element:passport,trigger:summary,close:()=>passport.classList.add('hidden')}],
+    TOWN_UI:{active:null,previousFocus:null},FIRST_REPO:{active:false},modalOpen:false,clearTownInput:()=>{},refreshNearbyPeople:()=>{},_cacheTownLabelViewport:()=>{},
+    getComputedStyle:()=>({visibility:'visible'}),requestAnimationFrame:fn=>fn(),flushStarNudge:()=>{ state.flushes++; },flushes:0};
+  runInNewContext(ui.slice(ui.indexOf('function closeTownPanels'),ui.indexOf('const townPanelObserver'))
+    +"\nglobalThis.sync=syncTownPanels; globalThis.visible=typeof townFocusVisible==='function'?townFocusVisible:null;",state);
+  passport.classList.remove('hidden'); state.sync([{type:'attributes',attributeName:'class',oldValue:'hidden',target:passport}]);
+  const opened=!tools.open&&doc.activeElement===passClose&&body.classList.contains('town-panel-open')&&state.flushes===0;
+  passport.classList.add('hidden'); state.sync([{type:'attributes',attributeName:'class',oldValue:'',target:passport}]);
+  ok(opened&&doc.activeElement===summary&&state.flushes===1&&!body.classList.contains('town-panel-open'),
+    'closing a Passport opened from the Town tools menu focuses the visible menu summary, not the folded Passport button');
+  ok(!!state.visible&&state.visible(summary)&&!state.visible(passBtn)&&!state.visible(body)&&!state.visible(null)
+    &&/const target=townFocusVisible\(saved\)\?saved:previous\.trigger;/.test(ui)&&/\.filter\(el=>townFocusVisible\(el,element\)\)/.test(ui),
+    'restore targets and panel focus traps share one check that treats folded <details> content as unfocusable');
+}
+
+group('Passport Journey (v1.98) — this visit\'s houses, paths and traces, held in page memory only');
+const JOURNEY_SRC=readFileSync(join(ROOT,'assets','journey.js'),'utf8');
+const journeyBlock=(HTML.match(/\/\*JOURNEY_RUNTIME:START\*\/([\s\S]*?)\/\*JOURNEY_RUNTIME:END\*\//)||[,''])[1];
+ok((HTML.match(/from '\.\/assets\/journey\.js\?v=journey-v1'/g)||[]).length===1&&journeyBlock.length>0
+  &&!/\bwindow\b|\bdocument\b|fetch\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|Date\.now|new Date|Math\.random/.test(JOURNEY_SRC),
+  'pure Journey rules are imported once and stay deterministic and storage-free');
+ok(!/fetch\(|XMLHttpRequest|WebSocket|sendBeacon|localStorage|sessionStorage|indexedDB|caches\.|new THREE|track\(|trackHomecoming\(|trackPortal\(|groundedAsk|webllmAsk|proxyAsk/.test(journeyBlock)
+  &&/var JOURNEY=null;/.test(journeyBlock)&&/JOURNEY=\{state:createJourney\(\),tab:'stamps'\};/.test(journeyBlock),
+  'the Journey adds no request, storage key, telemetry event, model call or scene resource; it lives in one page-memory object');
+ok(!/savePassport\(|passport\.(?:repos|stamps)\.(?:push|splice|pop|shift)|passport\.(?:repos|stamps|first|last)\s*=|['"]repolis[A-Za-z:]/.test(journeyBlock)
+  &&/passportRepos:passport\.repos/.test(journeyBlock), 'cumulative numbers only read the existing repolisPassport value; no new storage key appears');
+ok(/function markVisited\(repo\)\{ journeyHouseOpened\(repo\); if\(repo\._visited\) return;/.test(HTML)&&/first:!repo\._visited\}\);/.test(journeyBlock),
+  'houses are recorded at the markVisited point, including houses already in the Passport');
+ok(/function _homecomingIntent\(intent,entry\)\{ trackHomecoming\('intent_chosen',\{intent,entry\}\); HOMECOMING\.intent=intent; journeyPathChosen\(intent,entry\); \}/.test(HTML)
+  &&(HTML.match(/trackHomecoming\('intent_chosen'/g)||[]).length===1&&(HTML.match(/_homecomingIntent\(/g)||[]).length===4,
+  'paths are recorded where intent_chosen fires: the intent card, the Wayfinding panel and the guide toast');
+ok(/if\(channel\)\{ trackHomecoming\('trace_left',\{channel:channel\.slice\(0,32\)\}\); journeyTraceLeft\(channel\); \}/.test(HTML),
+  'traces are recorded where trace_left fires');
+ok(/<div class="passTabs" role="tablist" data-i18n-aria="passTabsAria"/.test(HTML)
+  &&/id="passTabStamps" type="button" role="tab" aria-selected="true" aria-controls="passPanelStamps" tabindex="0"/.test(HTML)
+  &&/id="passTabJourney" type="button" role="tab" aria-selected="false" aria-controls="passPanelJourney" tabindex="-1"/.test(HTML)
+  &&/id="passPanelStamps" role="tabpanel" aria-labelledby="passTabStamps" tabindex="0"/.test(HTML)
+  &&/id="passPanelJourney" role="tabpanel" aria-labelledby="passTabJourney" tabindex="0" hidden/.test(HTML),
+  'the Passport has two labelled tabs over two focusable panels, and the existing Passport stays the default');
+ok(/passTabStamps\.tabIndex=journey\?-1:0; passTabJourney\.tabIndex=journey\?0:-1;/.test(journeyBlock)
+  &&/event\.key==='ArrowRight'\|\|event\.key==='ArrowLeft'/.test(journeyBlock)&&/event\.key==='Home'/.test(journeyBlock)&&/event\.key==='End'/.test(journeyBlock)
+  &&/event\.isComposing\|\|event\.keyCode===229/.test(journeyBlock)&&!/'Escape'|'Tab'/.test(journeyBlock),
+  'roving tabs move with arrows and Home/End, ignore IME composition, and leave Tab and Escape to the existing panel owner');
+ok(/renderDistrictProgress\(\); syncPassportTabs\(\); \}/.test(HTML)&&/selectPassportTab\(tour\.mode==='explore'\?'journey':'stamps'\); renderPassport\(\);/.test(HTML),
+  'the Passport keeps its tab across close and reopen, and the Explore tour ends on the Journey tab');
+ok(/passportEl\.classList\.add\('hidden'\); setNav\(repo\); showWave\(tf\('journeyNav'/.test(journeyBlock)&&!/taxiTo\(/.test(journeyBlock)
+  &&/replaceChildren\(/.test(journeyBlock)&&!/innerHTML/.test(journeyBlock),
+  'journey houses lead back by walking navigation, and every row is built from text nodes, never parsed HTML');
+ok(/\.passTab, button\.journeyRow \{ min-height: 44px; \}/.test(HTML)&&/\.passTab:focus-visible, \.passPanel:focus-visible, \.journeyRow:focus-visible \{ outline:/.test(HTML),
+  'tabs and journey rows keep 44px touch targets and a visible focus ring');
+[...JOURNEY_COPY_KEYS,'passTabsAria','passTabStamps','passTabJourney','journeyHousesTitle','journeyPathsTitle','journeyTracesTitle','journeyTimes',
+  'journeyNewTag','journeyArchivedTag','journeyMemoryNote','journeyNav','freshGrew','freshGrewOne','freshBannerNew','freshBannerNewOne','freshBannerGrew','freshBannerGrewOne']
+  .forEach(key=>ok((HTML.match(new RegExp('[\\s,{]'+key+":[\\\"'`]",'g'))||[]).length===2,`Journey/Gazette key ${key} is bilingual`));
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

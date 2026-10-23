@@ -39,6 +39,60 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
   KV namespace, the token and the plan switch are owner steps in `cloudflare-card/README.md`; the site does not link to
   the Worker yet.
 
+### Town UI fixes — the Star invitation on phones, and focus after the Passport
+
+- The earned Star invitation is as wide as its copy instead of half the screen. Below 621px it uses the left lane the
+  interaction prompt uses, clear of the taxi, emote and action buttons, and puts its Star link and close control under the
+  copy. At 390px the copy column grows from 43px to 240px (two lines instead of eight). Both controls are 44px touch
+  targets on narrow and touch screens. Desktop widths of 1024px and up are unchanged.
+- An invitation earned while a Town UI panel (Passport, Wayfinding, Station, map, chat) or the Town tools menu is open
+  waits and appears after the last one closes. One already on screen steps aside while a panel is open.
+- Escape on a Passport opened from the Town tools menu returns focus to the menu summary. The restore check used layout
+  boxes, which Chrome keeps for content inside a closed `<details>`, so it picked the folded Passport button and focus fell
+  to the page body. Restore targets and panel focus traps now share one check that treats folded content as unfocusable.
+
+### Passport Journey and the public-town Gazette (v1.98, part 4b)
+
+- The Explorer Passport now has two tabs: **여권 / Passport** (Town Gazette, Village Chronicle, growth record, stamps, and
+  district progress, unchanged and still the default) and **여정 / Journey**. Journey shows this page visit in order: the
+  houses opened (recorded at the existing `markVisited` point, with district, a "처음 / New" tag for houses new to the
+  Passport, an archive tag, and a revisit count), the paths walked (Explore, Understand, Contribute, recorded where
+  `intent_chosen` fires), and the traces left (a Repo Route with its stop names, a contribution issue's house and number,
+  postcards, and town, Repo Portal, Twin Towns, Growth Replay, and profile-portal links, recorded where `trace_left` fires).
+  It lists up to 24 houses and 12 traces and counts the rest. A house row walks back to that house; it never calls a taxi.
+- The journey is one in-page object. Closing and reopening the Passport keeps it and the chosen tab; a reload starts a new
+  journey. Its cumulative line only reads the existing `repolisPassport` value and counts just the current town's catalog,
+  so houses opened in another town never inflate this town's number. No storage key, request, telemetry event, model call,
+  scene resource, or dependency was added.
+- The Explore tour's last step now opens the Journey tab ("둘러본 집이 여권의 여정에 순서대로 남았어요." / "The houses you
+  toured are now in your passport’s Journey, in order."); the classic tour keeps the Passport tab.
+- The tabs follow the WAI-ARIA tab pattern: ←/→ and Home/End switch tabs, Tab enters the panel, and Escape and the focus trap
+  stay with the existing Town UI panel owner. Tabs and journey rows keep 44 px touch targets on coarse pointers.
+- The `?user=` Town Gazette was checked in a real browser before any change: a first visit stores a baseline, a later visit
+  with changes shows "📰 지난 방문 이후 레포 N곳에 변화…" and the Gazette, and a sixth town drops the oldest. Two gaps
+  were fixed. The Gazette and its return toast now say "지난번보다 집 N채가 늘었어요" / "N more houses than last time" when
+  the town's house count grew; the count is net of departures, so a renamed repository is never announced as a new house.
+  A revisit now counts as recent, so the town you just came back to is no longer the first baseline dropped. The five-town
+  cap is unchanged: a measured owner snapshot (71 repositories) is about 8.8 K characters and a 100-repository public one
+  about 14.2 K.
+- Pure rules live in `assets/journey.js` with hermetic fixtures in `scripts/test-journey.mjs` (empty visit, same-house
+  revisit, over-cap, public town, archived house, Korean and long names, traces, immutability). The smoke suite guards the
+  three record points, the tab markup and keys, zero storage, network, and telemetry in the Journey runtime, and the Gazette
+  eviction and new-house copy fixtures.
+
+### Date-free resident artifacts
+
+- The daily refresh no longer rewrites all resident profiles and the Worker registry. Profiles and the registry
+  carry no build clock, age count, day counter, or dated Shared reference; `generated_at` and the city reference
+  day (`as_of`, `last_sap_flow`) now live only in `data/residents/index.json`, and unchanged files are left as-is.
+- Profiles keep the public creation day. The browser measures newcomer age against the city reference day
+  (`era.as_of`, then `last_sap_flow`) without reading the wall clock; older profiles with `age.days` still work.
+- Personality signals record whether the latest push and release fall inside the 30- and 90-day windows instead
+  of day counts, so authority digests change only when a resident's public standing or Bound evidence changes.
+- The city's own scheduled `chore: refresh …` commits no longer become the Repolis resident's Bound memories, so
+  the bot's daily commit cannot rewrite that profile and the Worker registry. The history query reads 30 commit
+  candidates, so the repository's own latest commits are still found.
+
 ### Shared district rule and city card modules (v1.98, part 1)
 
 - The repository → district rule (keyword weights, language affinity, the junk/dormancy ruins rule and the tie-break)
