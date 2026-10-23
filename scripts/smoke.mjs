@@ -26,6 +26,7 @@ import { runRepositoryBlueprintTests } from './test-repository-blueprint.mjs';
 import { runIssueCodeScoutTests } from './test-issue-code-scout.mjs';
 import { runTaxiBoundaryTests } from './test-taxi-boundary.mjs';
 import { runTaxiVoiceTests } from './test-taxi-voice.mjs';
+import { JOURNEY_COPY_KEYS } from '../assets/journey.js';
 import {
   CAMERA_OBSTRUCTION_DEFAULTS,
   CAMERA_ARRIVAL_OFFSETS,
@@ -2526,7 +2527,7 @@ group('Town Gazette — public repo changes since the last marked-read visit');
 const freshnessSrc=(HTML.match(/\/\*FRESHNESS:START\*\/([\s\S]*?)\/\*FRESHNESS:END\*\//)||[,''])[1];
 ok(freshnessSrc.length>0, 'pure freshness diff block is extractable');
 if(freshnessSrc){
-  const {diffRepoFreshness}=new Function(`${freshnessSrc}; return {diffRepoFreshness};`)();
+  const {diffRepoFreshness,rememberFreshnessTown,freshnessNewsCopy}=new Function(`${freshnessSrc}; return {diffRepoFreshness,rememberFreshnessTown,freshnessNewsCopy};`)();
   const state=(o={})=>({visitors:0,views:0,clones:0,stars:0,forks:0,pushed:'',release_tag:'',...o});
   const prev={at:100,repos:{alpha:state({visitors:10,views:20,stars:2,pushed:'2026-01-01'}),gone:state({stars:1})}};
   const reordered={at:200,repos:{gone:state({stars:1}),alpha:state({visitors:10,views:20,stars:2,pushed:'2026-01-01'})}};
@@ -2540,10 +2541,32 @@ if(freshnessSrc){
   ok(viral.items[0].repo==='newRepo', 'extreme metric growth is capped and cannot outrank a newly arrived repo');
   const correction=diffRepoFreshness({at:1,repos:{alpha:state({visitors:10})}},{at:2,repos:{alpha:state({visitors:2})}});
   ok(correction.total===0, 'negative-only metric corrections never become misleading loss news');
+  const snap=at=>({at,repos:{}}); let towns={v:1,towns:{},order:[]};
+  ['public:a','public:b','public:c','public:d','public:e'].forEach((town,i)=>{ towns=rememberFreshnessTown(towns,town,snap(i),5); });
+  ok(towns.order.join()==='public:e,public:d,public:c,public:b,public:a'&&Object.keys(towns.towns).length===5, 'five towns keep five baselines, newest first');
+  const sixth=rememberFreshnessTown(towns,'public:f',snap(6),5);
+  ok(sixth.order.join()==='public:f,public:e,public:d,public:c,public:b'&&!sixth.towns['public:a']&&Object.keys(sixth.towns).length===5,
+    'a sixth town pushes out the least recently visited one');
+  const revisited=rememberFreshnessTown(towns,'public:a',towns.towns['public:a'],5), later=rememberFreshnessTown(revisited,'public:f',snap(6),5);
+  ok(revisited.towns['public:a']===towns.towns['public:a']&&revisited.order[0]==='public:a'&&later.towns['public:a']&&!later.towns['public:b'],
+    'a revisit keeps its unread baseline and is no longer the first town to go');
+  ok(rememberFreshnessTown({v:1,towns:{x:snap(1)},order:['ghost','x']},'y',snap(2),5).order.join()==='y,x'
+    &&rememberFreshnessTown(null,'owner:me',snap(1),5).order.join()==='owner:me', 'order entries without a snapshot are dropped and a missing store starts fresh');
+  ok(freshnessNewsCopy({added:0,removed:0,updated:0,total:0})===null&&freshnessNewsCopy(null)===null, 'no change, no news copy');
+  const plain=freshnessNewsCopy({added:0,removed:0,updated:3,total:3}),renamed=freshnessNewsCopy({added:1,removed:1,updated:0,total:2});
+  ok(plain.banner==='freshBanner'&&plain.grew===null&&plain.params.count===3&&renamed.banner==='freshBanner'&&renamed.grew===null,
+    'updates and a renamed repo (one in, one out) keep the existing banner and never claim a new house');
+  ok(freshnessNewsCopy({added:2,removed:0,updated:0,total:2}).banner==='freshBannerNew'&&freshnessNewsCopy({added:1,removed:0,updated:0,total:1}).banner==='freshBannerNewOne',
+    'a town that only grew says how many more houses it has');
+  const mixed=freshnessNewsCopy({added:3,removed:1,updated:2,total:6}),single=freshnessNewsCopy({added:1,removed:0,updated:4,total:5});
+  ok(mixed.banner==='freshBannerGrew'&&mixed.grew==='freshGrew'&&mixed.params.grew===2&&mixed.params.count===6
+    &&single.banner==='freshBannerGrewOne'&&single.grew==='freshGrewOne', 'net growth is announced together with the total number of changes');
 }
 ok(/const FRESHNESS_KEY='repolisFreshness:v1', FRESHNESS_MAX_TOWNS=5/.test(HTML), 'freshness snapshots use one versioned local-only store capped at five towns');
 ok(/function _freshTownKey\(\)\{ return \(cityMode==='owner'\?'owner:':'public:'\)\+String\(currentUser/.test(HTML), 'owner and public-user town baselines are independently scoped');
-ok(/freshnessStore\.order=\[freshnessTown\][\s\S]*?slice\(0,FRESHNESS_MAX_TOWNS\)/.test(HTML), 'snapshot LRU pruning is wired');
+ok(/function _freshSetBaseline\(snapshot\)\{ freshnessStore=rememberFreshnessTown\(freshnessStore,freshnessTown,snapshot,FRESHNESS_MAX_TOWNS\); _freshSaveStore\(\); \}/.test(HTML)
+  &&/else if\(freshnessBaseline&&freshnessTrackable&&freshnessStore\.order\[0\]!==freshnessTown\) _freshSetBaseline\(freshnessBaseline\);/.test(HTML),
+  'snapshot LRU pruning is wired, and a revisit moves its town forward without touching the baseline');
 ok(/cityError=\{status:0,reason:'data_load'\}/.test(HTML), 'owner repos.json failure becomes an explicit city load error');
 ok(/const freshnessTrackable=cityMode!=='portal'&&REPOS\.length>0&&!cityError/.test(HTML)&&/if\(!freshnessBaseline&&freshnessTrackable\)/.test(HTML),
   'only a successful non-empty full-town load can diff or establish a baseline');
@@ -4546,7 +4569,7 @@ ok(/function _homecomingCardKind\(\)\{ return cityMode==='public'\?'timelapse':'
   &&/FIRST_ARRIVAL\.direct&&PLAZA_DIRECT_LINK\.ok&&cityMode==='owner'&&!VISITOR\.returning[\s\S]*?return \{\.\.\.none,toast:true\}/.test(homecomingBlock)
   &&/if\(HOMECOMING&&plan&&plan\.toast\)\{ _homecomingRemember\('intent'\); _queueArrivalAction\(9500,\(\)=>_showGuideToast\(\)\)/.test(homecomingBlock),
   'a public login arrives once per session, and the campaign plaza gets one guide line instead of a card');
-ok(/if\(hasFreshness\(\)\) return none;/.test(homecomingBlock)&&/if\(news\) setTimeout\(\(\)=>\{ try\{ showWave\(tf\('freshBanner'/.test(HTML),
+ok(/if\(hasFreshness\(\)\) return none;/.test(homecomingBlock)&&/if\(news\) setTimeout\(\(\)=>\{ try\{ const copy=freshnessNewsCopy\(repoFreshness\); showWave\(tf\(copy\.banner,copy\.params\)/.test(HTML),
   'Town Gazette news on a return visit keeps priority over the arrival timelapse and the intent card');
 ok(['city_requested','aha_city_built','intent_chosen','aha_city_speaks','trace_left','return_visit']
   .every(name=>new RegExp(`trackHomecoming\\('${name}'`).test(HTML))
@@ -4557,6 +4580,45 @@ ok(['city_requested','aha_city_built','intent_chosen','aha_city_speaks','trace_l
   'explorePassport','exploreEnd','exploreEndShort','exploreUnavailable','wayGo','wayLook','wayShare','wayLookLocked','wayShareLocked',
   'wayLockNote','wayLookUnlocked','wayShareUnlocked']
   .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Homecoming key ${key} is bilingual`));
+
+group('Passport Journey (v1.98) — this visit\'s houses, paths and traces, held in page memory only');
+const JOURNEY_SRC=readFileSync(join(ROOT,'assets','journey.js'),'utf8');
+const journeyBlock=(HTML.match(/\/\*JOURNEY_RUNTIME:START\*\/([\s\S]*?)\/\*JOURNEY_RUNTIME:END\*\//)||[,''])[1];
+ok((HTML.match(/from '\.\/assets\/journey\.js\?v=journey-v1'/g)||[]).length===1&&journeyBlock.length>0
+  &&!/\bwindow\b|\bdocument\b|fetch\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|Date\.now|new Date|Math\.random/.test(JOURNEY_SRC),
+  'pure Journey rules are imported once and stay deterministic and storage-free');
+ok(!/fetch\(|XMLHttpRequest|WebSocket|sendBeacon|localStorage|sessionStorage|indexedDB|caches\.|new THREE|track\(|trackHomecoming\(|trackPortal\(|groundedAsk|webllmAsk|proxyAsk/.test(journeyBlock)
+  &&/var JOURNEY=null;/.test(journeyBlock)&&/JOURNEY=\{state:createJourney\(\),tab:'stamps'\};/.test(journeyBlock),
+  'the Journey adds no request, storage key, telemetry event, model call or scene resource; it lives in one page-memory object');
+ok(!/savePassport\(|passport\.(?:repos|stamps)\.(?:push|splice|pop|shift)|passport\.(?:repos|stamps|first|last)\s*=|['"]repolis[A-Za-z:]/.test(journeyBlock)
+  &&/passportRepos:passport\.repos/.test(journeyBlock), 'cumulative numbers only read the existing repolisPassport value; no new storage key appears');
+ok(/function markVisited\(repo\)\{ journeyHouseOpened\(repo\); if\(repo\._visited\) return;/.test(HTML)&&/first:!repo\._visited\}\);/.test(journeyBlock),
+  'houses are recorded at the markVisited point, including houses already in the Passport');
+ok(/function _homecomingIntent\(intent,entry\)\{ trackHomecoming\('intent_chosen',\{intent,entry\}\); HOMECOMING\.intent=intent; journeyPathChosen\(intent,entry\); \}/.test(HTML)
+  &&(HTML.match(/trackHomecoming\('intent_chosen'/g)||[]).length===1&&(HTML.match(/_homecomingIntent\(/g)||[]).length===4,
+  'paths are recorded where intent_chosen fires: the intent card, the Wayfinding panel and the guide toast');
+ok(/if\(channel\)\{ trackHomecoming\('trace_left',\{channel:channel\.slice\(0,32\)\}\); journeyTraceLeft\(channel\); \}/.test(HTML),
+  'traces are recorded where trace_left fires');
+ok(/<div class="passTabs" role="tablist" data-i18n-aria="passTabsAria"/.test(HTML)
+  &&/id="passTabStamps" type="button" role="tab" aria-selected="true" aria-controls="passPanelStamps" tabindex="0"/.test(HTML)
+  &&/id="passTabJourney" type="button" role="tab" aria-selected="false" aria-controls="passPanelJourney" tabindex="-1"/.test(HTML)
+  &&/id="passPanelStamps" role="tabpanel" aria-labelledby="passTabStamps" tabindex="0"/.test(HTML)
+  &&/id="passPanelJourney" role="tabpanel" aria-labelledby="passTabJourney" tabindex="0" hidden/.test(HTML),
+  'the Passport has two labelled tabs over two focusable panels, and the existing Passport stays the default');
+ok(/passTabStamps\.tabIndex=journey\?-1:0; passTabJourney\.tabIndex=journey\?0:-1;/.test(journeyBlock)
+  &&/event\.key==='ArrowRight'\|\|event\.key==='ArrowLeft'/.test(journeyBlock)&&/event\.key==='Home'/.test(journeyBlock)&&/event\.key==='End'/.test(journeyBlock)
+  &&/event\.isComposing\|\|event\.keyCode===229/.test(journeyBlock)&&!/'Escape'|'Tab'/.test(journeyBlock),
+  'roving tabs move with arrows and Home/End, ignore IME composition, and leave Tab and Escape to the existing panel owner');
+ok(/renderDistrictProgress\(\); syncPassportTabs\(\); \}/.test(HTML)&&/selectPassportTab\(tour\.mode==='explore'\?'journey':'stamps'\); renderPassport\(\);/.test(HTML),
+  'the Passport keeps its tab across close and reopen, and the Explore tour ends on the Journey tab');
+ok(/passportEl\.classList\.add\('hidden'\); setNav\(repo\); showWave\(tf\('journeyNav'/.test(journeyBlock)&&!/taxiTo\(/.test(journeyBlock)
+  &&/replaceChildren\(/.test(journeyBlock)&&!/innerHTML/.test(journeyBlock),
+  'journey houses lead back by walking navigation, and every row is built from text nodes, never parsed HTML');
+ok(/\.passTab, button\.journeyRow \{ min-height: 44px; \}/.test(HTML)&&/\.passTab:focus-visible, \.passPanel:focus-visible, \.journeyRow:focus-visible \{ outline:/.test(HTML),
+  'tabs and journey rows keep 44px touch targets and a visible focus ring');
+[...JOURNEY_COPY_KEYS,'passTabsAria','passTabStamps','passTabJourney','journeyHousesTitle','journeyPathsTitle','journeyTracesTitle','journeyTimes',
+  'journeyNewTag','journeyArchivedTag','journeyMemoryNote','journeyNav','freshGrew','freshGrewOne','freshBannerNew','freshBannerNewOne','freshBannerGrew','freshBannerGrewOne']
+  .forEach(key=>ok((HTML.match(new RegExp('[\\s,{]'+key+":[\\\"'`]",'g'))||[]).length===2,`Journey/Gazette key ${key} is bilingual`));
 
 console.log('\n──────────────────────────────');
 console.log(fail === 0 ? '✅ ALL GREEN — ' + pass + ' checks passed' : '❌ ' + fail + ' FAILED / ' + pass + ' passed');

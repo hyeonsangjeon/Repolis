@@ -57,6 +57,7 @@ entrypoints:
   world_tree: assets/world-tree/createRepolisHero.js
   portable_town_projection: assets/world-tree/world-tree-state.js
   homecoming: assets/homecoming.js
+  passport_journey: assets/journey.js
   town_growth: assets/town-growth.js
   repo_portal: assets/repo-portal.js
   repo_route: assets/repo-route.js

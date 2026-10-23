@@ -186,6 +186,39 @@
   .stamp.got .ico { filter: none; }
   .stamp.got .nm { color: #2f7d5b; }
   .stamp.got::after { content: "✓"; position: absolute; top: 4px; right: 6px; font-size: 10px; font-weight: 800; color: #2f9d6a; }
+  /* 🧭 Passport tabs (v1.98) — the Passport (Gazette, Chronicle, stamps) and this visit's Journey */
+  .passTabs { display: flex; gap: 4px; margin: 0 0 10px; padding: 3px; border-radius: 12px; background: #f4e7d1; }
+  .passTab { position: relative; flex: 1; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    border: 0; border-radius: 9px; background: transparent; color: #7d5f3a; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+  .passTab:hover { color: #5b4128; }
+  .passTab[aria-selected="true"] { background: #fffdf8; color: #6b4a26; box-shadow: 0 1px 4px rgba(120,80,30,.18); }
+  .passTab:focus-visible, .passPanel:focus-visible, .journeyRow:focus-visible { outline: 2px solid #c47a1c; outline-offset: 2px; }
+  .passTab.news::after { content: ""; position: absolute; top: 6px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: #ef7b45; }
+  .passTabCount { min-width: 18px; padding: 1px 6px; border-radius: 999px; background: #e3f3ea; color: #276b4d; font-size: 10.5px; line-height: 1.4; }
+  .passTabCount[hidden], .passPanel[hidden] { display: none; }
+  .passPanel { border-radius: 12px; }
+  .journeyHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 2px 2px 0; }
+  .journeyHead .jh { margin: 0; font-size: 12.5px; font-weight: 800; color: #6b4a26; line-height: 1.45; word-break: keep-all; overflow-wrap: anywhere; }
+  .journeyHead .jc { flex: 0 0 auto; font-size: 11px; font-weight: 800; color: #2f7d5b; background: #eef9f2; border: 1px solid #9fd8b9; border-radius: 999px; padding: 2px 8px; }
+  .journeySub { margin: 4px 2px 0; font-size: 10.5px; color: #7a5a33; line-height: 1.45; word-break: keep-all; overflow-wrap: anywhere; }
+  .journeySec { margin-top: 12px; }
+  .journeySec h4 { margin: 0 2px 5px; font-size: 11px; font-weight: 800; letter-spacing: .03em; color: #8a6a44; }
+  .journeyEmpty { margin: 0; padding: 8px 9px; font-size: 11px; color: #7a5a33; line-height: 1.5; border: 1.5px dashed #e3d2b6; border-radius: 11px; background: #fffdf8; }
+  .journeyList { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .journeyRow { width: 100%; display: flex; align-items: center; gap: 7px; padding: 6px; border: 1px solid #f0e3cc; border-radius: 10px;
+    background: #fffdf8; color: #5b4128; font: inherit; text-align: left; }
+  button.journeyRow { cursor: pointer; }
+  button.journeyRow:hover { background: #fff3d6; border-color: #ecd49a; }
+  .journeyRow .jo { flex: 0 0 auto; min-width: 22px; height: 22px; padding: 0 3px; display: grid; place-items: center; border-radius: 7px; background: #f6ead6; color: #7a5a33; font-size: 11px; font-weight: 800; }
+  .journeyRow .jm { flex: 1; min-width: 0; }
+  .journeyRow .jn { display: block; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .journeyRow .jd { display: block; margin-top: 1px; font-size: 10px; color: #7a5a33; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .journeyTag { flex: 0 0 auto; padding: 1px 6px; font-size: 9.5px; font-weight: 800; white-space: nowrap; color: #7a5a33; background: #fff3d6; border: 1px solid #edd8a6; border-radius: 999px; }
+  .journeyTag.new { color: #2f7d5b; background: #eef9f2; border-color: #9fd8b9; }
+  .journeyTag.arch { color: #56703f; background: #f0f5e8; border-color: #c5d8b0; }
+  .journeyMore { margin: 6px 2px 0; font-size: 10.5px; color: #8a6a44; line-height: 1.45; }
+  .journeyTotals { margin: 12px 2px 0; padding-top: 9px; border-top: 1px dashed #e8d6ba; font-size: 10.5px; font-weight: 700; color: #7a5a33; line-height: 1.45; }
+  .journeyNote { margin: 5px 2px 0; font-size: 10px; color: #8a6a44; line-height: 1.45; }
   /* 🚉 GitHub Station — travel to another user's town */
   #station { position: fixed; z-index: 13; top: 70px; right: 14px; width: 320px; max-width: calc(100vw - 28px);
     background: rgba(255,251,242,.97); backdrop-filter: blur(10px); border-radius: 18px;
@@ -271,6 +304,7 @@
     border: 1px solid #b9d9d1; border-radius: 999px; padding: 2px 8px; }
   .freshSub { font-size: 10.5px; color: #6d8d86; line-height: 1.4; margin: 0 2px 7px; }
   .freshSummary { font-size: 10px; color: #78958e; margin: 0 2px 6px; }
+  .freshGrew { font-size: 12px; font-weight: 800; color: #24604f; margin: 0 2px 5px; }
   .freshItem { width: 100%; display: flex; align-items: center; gap: 7px; border: 0; background: transparent; padding: 6px;
     border-radius: 10px; color: #405f58; font: inherit; text-align: left; }
   button.freshItem { cursor: pointer; }
@@ -1499,6 +1533,7 @@
     #station .squick button { min-height: 36px; }
     .freshItem { min-height: 40px; }
     .freshRead { min-height: 42px; }
+    .passTab, button.journeyRow { min-height: 44px; }
     .chatIn button { min-width: 48px; min-height: 44px; }
     .msg .ride { min-height: 38px; }
     .msg .alt { display: inline-flex; align-items: center; min-height: 32px; }
@@ -1840,6 +1875,11 @@
   <button class="townPanelClose" type="button" data-town-close="passport" data-i18n-aria="close">✕</button>
   <h3>🛂 <span data-i18n="passportTitle">탐험 여권</span></h3>
   <div class="psub" data-i18n="passportSub">마을을 거닐며 스탬프를 모아요.</div>
+  <div class="passTabs" role="tablist" data-i18n-aria="passTabsAria" aria-label="여권 보기">
+    <button class="passTab" id="passTabStamps" type="button" role="tab" aria-selected="true" aria-controls="passPanelStamps" tabindex="0"><span aria-hidden="true">🛂</span><span data-i18n="passTabStamps">여권</span></button>
+    <button class="passTab" id="passTabJourney" type="button" role="tab" aria-selected="false" aria-controls="passPanelJourney" tabindex="-1"><span aria-hidden="true">🧭</span><span data-i18n="passTabJourney">여정</span><span class="passTabCount" id="passTabJourneyCount" hidden></span></button>
+  </div>
+  <div class="passPanel" id="passPanelStamps" role="tabpanel" aria-labelledby="passTabStamps" tabindex="0">
   <div class="growthBox" id="growthBox" style="display:none;"></div>
   <div class="freshBox" id="freshBox" style="display:none;"></div>
   <div class="courseBox" id="courseBox" style="display:none;"></div>
@@ -1848,6 +1888,10 @@
   <div class="pDistricts" id="pDistricts"></div>
   <div class="pZones" id="pZones"></div>
   <div class="pHint" data-i18n="passportHint">현자·도서관·운하·광장에 가까이 가면 스탬프를 받아요.</div>
+  </div>
+  <div class="passPanel" id="passPanelJourney" role="tabpanel" aria-labelledby="passTabJourney" tabindex="0" hidden>
+    <div class="journeyBox" id="journeyBox"></div>
+  </div>
 </div>
 
 <div id="mapWrap" class="hidden" role="dialog" aria-modal="true" aria-label="World map">
@@ -2547,6 +2591,7 @@ import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?
 import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
 import { HOMECOMING_LIMITS, homecomingCityName, homecomingStopCopy, homecomingTimelapsePlan, homecomingUnlocks, rememberHomecomingKey, selectHomecomingStops } from './assets/homecoming.js?v=homecoming-v1';
+import { JOURNEY_LIMITS, createJourney, recordJourneyHouse, recordJourneyPath, recordJourneyTrace, summarizeJourney } from './assets/journey.js?v=journey-v1';
 import { DIRECT_ENTRY_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parseRepoPortalInput, projectPublicRepo, projectPublicRepos, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v4';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
@@ -2950,6 +2995,27 @@ const I18N = {
     freshAdded:'새 레포가 마을에 들어왔어요', freshRemoved:'이 레포는 마을을 떠났어요', freshRelease:'새 릴리스 {tag}',
     freshPushed:'새 커밋 활동', freshGrowth:'지표가 자랐어요', freshRead:'✓ 소식 읽음으로 표시',
     freshBanner:'📰 지난 방문 이후 레포 {count}곳에 변화가 있어요. 여권에서 마을 소식을 확인하세요!', freshNav:'🧭 {repo}의 현재 집을 가리킬게요.',
+    freshGrew:'🏗️ 지난번보다 집 {grew}채가 늘었어요.', freshGrewOne:'🏗️ 지난번보다 집 1채가 늘었어요.',
+    freshBannerNew:'📰 지난번보다 집 {grew}채가 늘었어요. 여권에서 마을 소식을 확인하세요!', freshBannerNewOne:'📰 지난번보다 집 1채가 늘었어요. 여권에서 마을 소식을 확인하세요!',
+    freshBannerGrew:'📰 지난번보다 집 {grew}채가 늘고, 모두 {count}곳에 변화가 있어요. 여권에서 마을 소식을 확인하세요!',
+    freshBannerGrewOne:'📰 지난번보다 집 1채가 늘고, 모두 {count}곳에 변화가 있어요. 여권에서 마을 소식을 확인하세요!',
+    passTabsAria:'여권 보기', passTabStamps:'여권', passTabJourney:'여정',
+    journeyEmpty:'{login}의 마을에서 아직 여정을 시작하지 않았어요.', journeyHeadNoHouse:'{login}의 마을에서 길은 골랐고, 아직 연 집은 없어요.',
+    journeyHeadOne:'{login}의 마을에서 집 한 채를 열었어요.', journeyHeadMany:'{login}의 마을에서 집 {count}채를 열었어요.',
+    journeyLast:'마지막으로 멈춘 곳 · {repo}', journeyNewAll:'모두 여권에 새로 남은 집이에요.', journeyNewSome:'그중 {count}채는 여권에 새로 남았어요.',
+    journeyNewNone:'모두 여권에 있던 집이에요. 다시 찾아왔네요.', journeyHousesTitle:'연 집', journeyPathsTitle:'걸은 길', journeyTracesTitle:'남긴 흔적',
+    journeyHousesEmpty:'아직 연 집이 없어요. 집 앞에서 Enter를 누르거나 🚕 깃버에게 물어보세요.',
+    journeyPathsEmpty:'아직 고른 길이 없어요. ☰ 길찾기에서 탐방·이해·기여 중 하나를 골라 보세요.', journeyPathsNotYet:'아직 걷지 않은 길',
+    journeyPathExplore:'탐방', journeyPathUnderstand:'이해', journeyPathContribute:'기여',
+    journeyTracesEmptyLocked:'아직 남긴 흔적이 없어요. 집 {count}채를 열면 ☰ 나누기가 열려요.',
+    journeyTracesEmptyOpen:'아직 남긴 흔적이 없어요. ☰ 나누기에서 Repo Route나 엽서를 남겨 보세요.',
+    journeyTraceRoute:'Repo Route 공유', journeyTraceIssue:'기여할 이슈로 이동', journeyTracePortal:'Repo Portal 링크 복사',
+    journeyTracePostcard:'타운 엽서 공유', journeyTracePostcardSave:'타운 엽서 저장', journeyTraceTownLink:'마을 링크 복사',
+    journeyTraceReadme:'GitHub 프로필 포털 복사', journeyTraceTwin:'Twin Towns 링크 공유', journeyTraceGrowth:'성장 리플레이 링크 공유', journeyTraceShare:'링크 공유',
+    journeyTimes:'{count}번', journeyNewTag:'처음', journeyArchivedTag:'🌼 아카이브',
+    journeyMoreHouses:'외 {count}채는 목록에 넣지 않고 세기만 했어요.', journeyMoreTraces:'외 흔적 {count}개는 세기만 했어요.',
+    journeyTotals:'여권 누적 · 이 마을 집 {visited}/{total}채 · 스탬프 {stamps}/{stampTotal}개',
+    journeyMemoryNote:'여정은 이 페이지에만 머물러요. 새로 고치면 새 여정이 시작되고, 어디에도 보내지 않아요.', journeyNav:'🧭 {repo} 집을 다시 가리킬게요.',
     growthMenu:'도시 성장 리플레이', growthMenuSub:'첫 레포부터 지금까지 마을이 자라는 장면',
     growthPassportTitle:'도시 성장 기록', growthPassportSummary:'{first} → {last} · 레포 탄생 연도 {steps}개', growthPassportOpen:'⏳ 도시가 자라는 장면 보기',
     growthKicker:'REPOLIS TIME MACHINE', growthTitle:'{year}년 · 도시의 {step}번째 장면', growthTitlePresent:'{year}년 · 현재의 마을',
@@ -3068,7 +3134,7 @@ const I18N = {
     intentCardSkip:'건너뛰고 직접 걷기', pathUnderstandSub:'집 하나를 골라 전시실에서 원문과 소스 지도 보기',
     pathExploreSub:'구역 안내자가 이 도시의 집 세 곳을 소개해요', pathContributeSub:'지금 열린 공개 이슈를 실제 집 앞까지',
     guideToast:'안내자가 세 곳을 안내할게요 — 🚕 눌러서 출발', exploreRide:'{title}으로 가요 · {repo}', exploreGuideRole:'안내자',
-    exploreGitberName:'깃버', exploreTownWord:'이 마을', explorePassport:'둘러본 집이 여권에 도장으로 남았어요.',
+    exploreGitberName:'깃버', exploreTownWord:'이 마을', explorePassport:'둘러본 집이 여권의 여정에 순서대로 남았어요.',
     exploreEnd:'세 곳을 둘러봤어요. ☰ 길찾기의 “보다”와 “나누기”가 열렸어요.', exploreEndShort:'이 도시의 집을 둘러봤어요. ☰ 길찾기에서 더 찾아보세요.',
     exploreUnavailable:'둘러볼 공개 레포 집이 아직 없어요.', wayGo:'가다', wayLook:'보다', wayShare:'나누기',
     wayLookLocked:'집 1채를 열면 가이드 투어 다시 보기 · 마을 만든 사람 · 도시 성장 리플레이가 열려요.',
@@ -3381,6 +3447,27 @@ const I18N = {
     freshAdded:'A new repo moved into town', freshRemoved:'This repo left the town', freshRelease:'New release {tag}',
     freshPushed:'Fresh commit activity', freshGrowth:'Its metrics grew', freshRead:'✓ Mark Gazette read',
     freshBanner:'📰 {count} repos changed since your last visit. Open the Passport for the Town Gazette!', freshNav:'🧭 Pointing to {repo}\'s current house.',
+    freshGrew:'🏗️ {grew} more houses than last time.', freshGrewOne:'🏗️ One more house than last time.',
+    freshBannerNew:'📰 {grew} more houses than last time. Open the Passport for the Town Gazette!', freshBannerNewOne:'📰 One more house than last time. Open the Passport for the Town Gazette!',
+    freshBannerGrew:'📰 {grew} more houses than last time, {count} changes in all. Open the Passport for the Town Gazette!',
+    freshBannerGrewOne:'📰 One more house than last time, {count} changes in all. Open the Passport for the Town Gazette!',
+    passTabsAria:'Passport views', passTabStamps:'Passport', passTabJourney:'Journey',
+    journeyEmpty:'Your journey in {login}’s town hasn’t started yet.', journeyHeadNoHouse:'You picked a path in {login}’s town but haven’t opened a house yet.',
+    journeyHeadOne:'You opened one house in {login}’s town.', journeyHeadMany:'You opened {count} houses in {login}’s town.',
+    journeyLast:'Last stop · {repo}', journeyNewAll:'Every one of them is new in your passport.', journeyNewSome:'New in your passport: {count}',
+    journeyNewNone:'All of them were already in your passport. Welcome back.', journeyHousesTitle:'Houses opened', journeyPathsTitle:'Paths walked', journeyTracesTitle:'Traces left',
+    journeyHousesEmpty:'No houses opened yet. Press Enter at a door or ask 🚕 Gitber.',
+    journeyPathsEmpty:'No path chosen yet. Pick Explore, Understand or Contribute in ☰ Wayfinding.', journeyPathsNotYet:'Not walked yet',
+    journeyPathExplore:'Explore', journeyPathUnderstand:'Understand', journeyPathContribute:'Contribute',
+    journeyTracesEmptyLocked:'No traces yet. Open {count} houses and ☰ Share opens.',
+    journeyTracesEmptyOpen:'No traces yet. Leave a Repo Route or a postcard from ☰ Share.',
+    journeyTraceRoute:'Shared a Repo Route', journeyTraceIssue:'Went to an issue to contribute', journeyTracePortal:'Copied a Repo Portal link',
+    journeyTracePostcard:'Shared a town postcard', journeyTracePostcardSave:'Saved a town postcard', journeyTraceTownLink:'Copied the town link',
+    journeyTraceReadme:'Copied the GitHub profile portal', journeyTraceTwin:'Shared a Twin Towns link', journeyTraceGrowth:'Shared a Growth Replay link', journeyTraceShare:'Shared a link',
+    journeyTimes:'×{count}', journeyNewTag:'New', journeyArchivedTag:'🌼 Archived',
+    journeyMoreHouses:'{count} more counted but not listed.', journeyMoreTraces:'+{count} more traces counted but not listed.',
+    journeyTotals:'Passport so far · houses here {visited}/{total} · stamps {stamps}/{stampTotal}',
+    journeyMemoryNote:'The journey stays on this page only. A reload starts a new one, and nothing is sent anywhere.', journeyNav:'🧭 Pointing back to {repo}.',
     growthMenu:'Town Growth Replay', growthMenuSub:'Watch the town grow from its first repo to now',
     growthPassportTitle:'Town growth record', growthPassportSummary:'{first} → {last} · {steps} repo-birth years', growthPassportOpen:'⏳ Watch this town grow',
     growthKicker:'REPOLIS TIME MACHINE', growthTitle:'{year} · scene {step} of this city', growthTitlePresent:'{year} · the town today',
@@ -3499,7 +3586,7 @@ const I18N = {
     intentCardSkip:'Skip and walk freely', pathUnderstandSub:'Pick one house and read its source in the exhibition',
     pathExploreSub:'District guides introduce three houses in this city', pathContributeSub:'Take a current public issue to its real house',
     guideToast:'A guide will show you three places — tap 🚕 to start', exploreRide:'Heading to {title} · {repo}', exploreGuideRole:'guide',
-    exploreGitberName:'Gitber', exploreTownWord:'this town', explorePassport:'The houses you toured are stamped in your passport.',
+    exploreGitberName:'Gitber', exploreTownWord:'this town', explorePassport:'The houses you toured are now in your passport’s Journey, in order.',
     exploreEnd:'Three houses toured. “Look” and “Share” are open in ☰ Wayfinding.', exploreEndShort:'You toured this city’s houses. Find more in ☰ Wayfinding.',
     exploreUnavailable:'There are no public repo houses to tour yet.', wayGo:'Go', wayLook:'Look', wayShare:'Share',
     wayLookLocked:'Open one house to unlock the tour replay, the town creator and Growth Replay.',
@@ -10110,6 +10197,17 @@ function diffRepoFreshness(previous,current){ const old=(previous&&previous.repo
   for(const name of Object.keys(old).sort()){ if(now[name]) continue; removed++; items.push({repo:name,type:'removed',score:700000,deltas:{}}); }
   items.sort((a,b)=>b.score-a.score||a.repo.localeCompare(b.repo));
   return {from:(previous&&previous.at)||0,to:(current&&current.at)||0,added,removed,updated,total:added+removed+updated,items}; }
+/* the most recently visited towns keep their baselines; a revisit moves its town forward without moving the baseline */
+function rememberFreshnessTown(store,town,snapshot,max){ const towns={},order=[];
+  for(const key of [town].concat(Array.isArray(store&&store.order)?store.order:[])){ if(order.length>=max||order.indexOf(key)>=0) continue;
+    const value=key===town?snapshot:(store&&store.towns&&store.towns[key]); if(value){ towns[key]=value; order.push(key); } }
+  return {v:1,towns,order}; }
+/* "more houses" is the town's net growth, so a renamed repo or a slid 100-repo window is never announced as a new house */
+function freshnessNewsCopy(diff){ const total=(diff&&diff.total)||0; if(!total) return null;
+  const grew=Math.max(0,((diff&&diff.added)||0)-((diff&&diff.removed)||0));
+  if(!grew) return {banner:'freshBanner',grew:null,params:{count:total,grew:0}};
+  const one=grew===1, only=grew===total;
+  return {banner:only?(one?'freshBannerNewOne':'freshBannerNew'):(one?'freshBannerGrewOne':'freshBannerGrew'),grew:one?'freshGrewOne':'freshGrew',params:{count:total,grew}}; }
 /*FRESHNESS:END*/
 const FRESHNESS_KEY='repolisFreshness:v1', FRESHNESS_MAX_TOWNS=5;
 function _freshTownKey(){ return (cityMode==='owner'?'owner:':'public:')+String(currentUser||OWNER).toLowerCase(); }
@@ -10122,10 +10220,9 @@ let freshnessStore=_freshLoad(), freshnessTown=_freshTownKey(), freshnessCurrent
 const freshnessTrackable=cityMode!=='portal'&&REPOS.length>0&&!cityError;
 let repoFreshness=freshnessTrackable&&freshnessBaseline?diffRepoFreshness(freshnessBaseline,freshnessCurrent):diffRepoFreshness(null,{at:freshnessCurrent.at,repos:{}});
 function _freshSaveStore(){ try{ localStorage.setItem(FRESHNESS_KEY,JSON.stringify(freshnessStore)); }catch(e){} }
-function _freshSetBaseline(snapshot){ freshnessStore.towns[freshnessTown]=snapshot;
-  freshnessStore.order=[freshnessTown].concat(freshnessStore.order.filter(k=>k!==freshnessTown)).slice(0,FRESHNESS_MAX_TOWNS);
-  for(const k of Object.keys(freshnessStore.towns)) if(freshnessStore.order.indexOf(k)<0) delete freshnessStore.towns[k]; _freshSaveStore(); }
+function _freshSetBaseline(snapshot){ freshnessStore=rememberFreshnessTown(freshnessStore,freshnessTown,snapshot,FRESHNESS_MAX_TOWNS); _freshSaveStore(); }
 if(!freshnessBaseline&&freshnessTrackable){ freshnessBaseline=freshnessCurrent; _freshSetBaseline(freshnessBaseline); }
+else if(freshnessBaseline&&freshnessTrackable&&freshnessStore.order[0]!==freshnessTown) _freshSetBaseline(freshnessBaseline);   // a revisit counts as recent; its baseline still waits for mark-read
 function hasFreshness(){ return !!(freshnessTrackable&&freshnessBaseline&&repoFreshness&&repoFreshness.total>0); }
 function markFreshnessRead(){ if(!freshnessTrackable) return false; freshnessCurrent=_freshCapture(); freshnessBaseline=freshnessCurrent; _freshSetBaseline(freshnessBaseline);
   repoFreshness=diffRepoFreshness(freshnessBaseline,freshnessCurrent); syncFreshnessNotice(); renderFreshness(); track('town_gazette_read'); return true; }
@@ -10163,12 +10260,14 @@ function _freshDetail(item){ const d=item.deltas||{}, bits=[];
   else if(item.release) bits.push(tf('freshRelease',{tag:item.release})); else if(item.pushed) bits.push(t('freshPushed')); else bits.push(t('freshGrowth'));
   if(d.visitors) bits.push('👁 +'+d.visitors); if(d.views) bits.push('↗ +'+d.views); if(d.clones) bits.push('⬇ +'+d.clones);
   if(d.stars) bits.push('★ +'+d.stars); if(d.forks) bits.push('⑂ +'+d.forks); return bits.join(' · '); }
-function syncFreshnessNotice(){ const b=document.getElementById('passBtn'); if(b) b.classList.toggle('news',hasFreshness()); }
+function syncFreshnessNotice(){ const b=document.getElementById('passBtn'), tab=document.getElementById('passTabStamps');
+  if(b) b.classList.toggle('news',hasFreshness()); if(tab) tab.classList.toggle('news',hasFreshness()); }
 function renderFreshness(){ const box=document.getElementById('freshBox'); if(!box) return; syncFreshnessNotice();
   if(!hasFreshness()){ box.style.display='none'; box.innerHTML=''; return; } box.style.display='';
-  const rows=repoFreshness.items.slice(0,5), from=_freshDate(repoFreshness.from);
+  const rows=repoFreshness.items.slice(0,5), from=_freshDate(repoFreshness.from), news=freshnessNewsCopy(repoFreshness);
   let html=`<div class="freshHead"><span class="ft">📰 ${_esc(t('freshTitle'))}</span><span class="fc">${repoFreshness.total}</span></div>`
     +`<div class="freshSub">${_esc(tf('freshSince',{date:from||'—'}))}</div>`
+    +(news&&news.grew?`<div class="freshGrew">${_esc(tf(news.grew,news.params))}</div>`:'')
     +`<div class="freshSummary">${_esc(tf('freshSummary',{updated:repoFreshness.updated,added:repoFreshness.added,removed:repoFreshness.removed}))}</div>`;
   for(const item of rows){ const repo=REPOS.find(r=>r.repo===item.repo), name=repo?repo.label:item.repo;
     const ico=item.type==='added'?'✨':item.type==='removed'?'−':item.type==='release'?'🏷️':item.type==='pushed'?'🚀':'📈';
@@ -10191,8 +10290,112 @@ function renderPassport(){ renderFreshness(); renderCourse(); renderGrowthPasspo
   document.getElementById('pZones').innerHTML = missing.length
     ? (t('passportZonesLeft')+missing.map(l=>`<span class="z">${t(l.key).split(' · ')[0]}</span>`).join(', '))
     : t('passportAllZones');
-  renderDistrictProgress(); }
+  renderDistrictProgress(); syncPassportTabs(); }
 syncFreshnessNotice();
+/*JOURNEY_RUNTIME:START*/
+/* v1.98 Passport Journey — the houses opened, the paths chosen and the traces left during this page visit,
+   recorded where markVisited, intent_chosen and trace_left already fire. Rules live in assets/journey.js.
+   The journey is one in-memory object: closing the Passport keeps it, a reload starts a new one, and it is
+   never stored or sent. Cumulative numbers only read the existing Passport. */
+var JOURNEY=null;
+const passTabStamps=document.getElementById('passTabStamps'),passTabJourney=document.getElementById('passTabJourney'),
+  passPanelStamps=document.getElementById('passPanelStamps'),passPanelJourney=document.getElementById('passPanelJourney'),
+  journeyBox=document.getElementById('journeyBox'),passTabJourneyCount=document.getElementById('passTabJourneyCount');
+function journeyHouseOpened(repo){   // before markVisited flips _visited, so "first" means new to the Passport
+  if(!JOURNEY||!repo||repo._isLibrary) return;
+  JOURNEY.state=recordJourneyHouse(JOURNEY.state,{repo:repo.repo,label:repo.label||repo.repo,zone:repo._zone||'',
+    archived:!!(repo._ruin||repo.archived),first:!repo._visited});
+  _journeyChanged();
+}
+function journeyPathChosen(intent,entry){ if(!JOURNEY) return; JOURNEY.state=recordJourneyPath(JOURNEY.state,intent,entry); _journeyChanged(); }
+function journeyTraceLeft(channel){
+  if(!JOURNEY) return; const trace={channel};
+  if(channel==='repo_route') trace.stops=REPO_ROUTE.selected.map(name=>repoByKey(name)?.label||name);
+  else if(channel==='quest_issue'&&CONTRIBUTION_QUESTS.active){ const quest=CONTRIBUTION_QUESTS.active; trace.repo=repoByKey(quest.repo)?.label||quest.repo; trace.number=quest.number; }
+  else if(channel==='portal_link'){ const repo=repositoryAtelierActive()?REPOSITORY_ATELIER?.repo:(repoPortalTarget&&repoByKey(repoPortalTarget.repo)); if(repo) trace.repo=repo.label; }
+  JOURNEY.state=recordJourneyTrace(JOURNEY.state,trace); _journeyChanged();
+}
+function _journeyChanged(){
+  const count=JOURNEY.state.houses.length+JOURNEY.state.moreHouses;
+  passTabJourneyCount.textContent=count?String(count):''; passTabJourneyCount.hidden=!count;
+  if(JOURNEY.tab==='journey'&&!passportEl.classList.contains('hidden')) renderJourney();
+}
+function _journeyContext(){
+  return {login:currentUser||OWNER,townRepos:REPOS.filter(repo=>!repo._isLibrary).map(repo=>repo.repo),passportRepos:passport.repos,
+    stamps:passport.stamps.filter(id=>PASS_LANDMARKS.some(lm=>lm.id===id)).length,stampTotal:PASS_LANDMARKS.length,
+    shareOpen:homecomingUnlocks(visited).share,shareAt:HOMECOMING_LIMITS.unlockShare};
+}
+function _journeyNode(tag,className,text){ const node=document.createElement(tag); if(className) node.className=className; if(text!=null) node.textContent=text; return node; }
+function _journeyLine(copy,className='journeySub'){ return copy?_journeyNode('p',className,tf(copy.key,copy.params)):null; }
+function _journeySection(titleKey){ const section=_journeyNode('section','journeySec'); section.append(_journeyNode('h4','',t(titleKey))); return section; }
+function _journeyTag(text,kind=''){ return _journeyNode('span','journeyTag'+(kind?' '+kind:''),text); }
+function _journeyRow(tag,icon,name,detail,tags){
+  const row=_journeyNode(tag,'journeyRow'),meta=_journeyNode('span','jm'); if(tag==='button') row.type='button';
+  meta.append(_journeyNode('span','jn',name)); if(detail) meta.append(_journeyNode('span','jd',detail));
+  row.append(_journeyNode('span','jo',icon),meta,...tags.filter(Boolean));
+  const item=_journeyNode('li'); item.append(row); return item;
+}
+function renderJourney(){
+  if(!JOURNEY||!journeyBox) return;
+  const view=summarizeJourney(JOURNEY.state,_journeyContext()),copy=view.copy,times=count=>count>1?_journeyTag(tf('journeyTimes',{count})):null;
+  const head=_journeyNode('div','journeyHead'); head.append(_journeyNode('p','jh',tf(copy.headline.key,copy.headline.params)));
+  if(view.houseCount) head.append(_journeyNode('span','jc',String(view.houseCount)));
+  const houses=_journeySection('journeyHousesTitle'),paths=_journeySection('journeyPathsTitle'),traces=_journeySection('journeyTracesTitle');
+  if(copy.housesEmpty) houses.append(_journeyLine(copy.housesEmpty,'journeyEmpty'));
+  else {
+    const list=_journeyNode('ol','journeyList');
+    for(const item of view.houses){   // walking navigation back to a house, like the Gazette rows (never a taxi)
+      const repo=repoByKey(item.repo),zone=item.zone?[zoneIconById(item.zone),zoneNameById(item.zone)].filter(Boolean).join(' '):'';
+      const row=_journeyRow(repo?'button':'div',String(item.order),repo?repo.label:item.label,zone,[item.first?_journeyTag(t('journeyNewTag'),'new'):null,
+        item.archived?_journeyTag(t('journeyArchivedTag'),'arch'):null,times(item.visits)]);
+      if(repo) row.firstChild.onclick=()=>{ passportEl.classList.add('hidden'); setNav(repo); showWave(tf('journeyNav',{repo:repo.label}),2800); };
+      list.append(row);
+    }
+    houses.append(list); if(copy.moreHouses) houses.append(_journeyLine(copy.moreHouses,'journeyMore'));
+  }
+  if(copy.pathsEmpty) paths.append(_journeyLine(copy.pathsEmpty,'journeyEmpty'));
+  else {
+    const list=_journeyNode('ul','journeyList');
+    for(const item of view.paths) list.append(_journeyRow('div',item.icon,t(item.key),'',[times(item.count)]));
+    paths.append(list);
+    if(copy.pathsNotYet) paths.append(_journeyNode('p','journeyMore',[t(copy.pathsNotYet.key),...view.unwalked.map(item=>t(item.key))].join(' · ')));
+  }
+  if(copy.tracesEmpty) traces.append(_journeyLine(copy.tracesEmpty,'journeyEmpty'));
+  else {
+    const list=_journeyNode('ul','journeyList');
+    for(const item of view.traces) list.append(_journeyRow('div',item.icon,t(item.key),item.detail,[times(item.times)]));
+    traces.append(list); if(copy.moreTraces) traces.append(_journeyLine(copy.moreTraces,'journeyMore'));
+  }
+  journeyBox.replaceChildren(...[head,_journeyLine(copy.last),_journeyLine(copy.first),houses,paths,traces,
+    _journeyLine(copy.totals,'journeyTotals'),_journeyNode('p','journeyNote',t('journeyMemoryNote'))].filter(Boolean));
+}
+function syncPassportTabs(){
+  if(!JOURNEY) return; const journey=JOURNEY.tab==='journey';
+  passTabStamps.setAttribute('aria-selected',String(!journey)); passTabJourney.setAttribute('aria-selected',String(journey));
+  passTabStamps.tabIndex=journey?-1:0; passTabJourney.tabIndex=journey?0:-1;
+  passPanelStamps.hidden=journey; passPanelJourney.hidden=!journey;
+  passTabStamps.classList.toggle('news',hasFreshness());
+  if(journey) renderJourney();
+}
+function selectPassportTab(tab,options={}){
+  if(!JOURNEY) return; JOURNEY.tab=tab==='journey'?'journey':'stamps'; syncPassportTabs();
+  if(options.focus) (JOURNEY.tab==='journey'?passTabJourney:passTabStamps).focus({preventScroll:true});
+}
+passTabStamps.addEventListener('click',()=>selectPassportTab('stamps'));
+passTabJourney.addEventListener('click',()=>selectPassportTab('journey'));
+passTabStamps.parentElement.addEventListener('keydown',event=>{   // roving tabs: arrows and Home/End move between them, Tab leaves the list
+  if(!JOURNEY||event.isComposing||event.keyCode===229||event.altKey||event.ctrlKey||event.metaKey) return;
+  const order=['stamps','journey'],index=order.indexOf(JOURNEY.tab); let next=null;
+  if(event.key==='ArrowRight'||event.key==='ArrowLeft') next=order[(index+(event.key==='ArrowRight'?1:order.length-1))%order.length];
+  else if(event.key==='Home') next=order[0]; else if(event.key==='End') next=order[order.length-1];
+  if(!next) return; event.preventDefault(); event.stopPropagation(); selectPassportTab(next,{focus:true});
+});
+JOURNEY={state:createJourney(),tab:'stamps'};
+if(_DBG){
+  window.__journey=()=>({tab:JOURNEY.tab,limits:JOURNEY_LIMITS,state:JOURNEY.state,view:summarizeJourney(JOURNEY.state,_journeyContext())});
+  window.__journeyTab=tab=>{ selectPassportTab(tab); return JOURNEY.tab; };
+}
+/*JOURNEY_RUNTIME:END*/
 /* ───────── 🪧 District board — the hub info panel (reuses the passport/course district data, no new backend) ───────── */
 const zoneBoard=document.getElementById('zoneBoard');
 function zoneBasis(z){ // deterministic "why this district" line — top keyword hits + dominant language across its repos (no LLM)
@@ -10357,7 +10560,8 @@ function tourTravel(destination,dwell){ if(!destination){ tourSchedule(dwell); r
 function tourShowPassport(step){ if(!tour||!tour.active) return; tour.waiting=true; if(tour._timer) clearTimeout(tour._timer);
   const delay=1600; tour._deadline=performance.now()+delay;
   tour._timer=setTimeout(()=>{ if(!tour||!tour.active) return; tour._timer=null; tour._deadline=0; tour.waiting=false; hideTourCap();
-    try{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.remove('hidden'); renderPassport(); }catch(e){} tourSchedule(step.dwell); },delay); }
+    try{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); passportEl.classList.remove('hidden');
+      selectPassportTab(tour.mode==='explore'?'journey':'stamps'); renderPassport(); }catch(e){} tourSchedule(step.dwell); },delay); }
 function runTourStep(){ if(!tour||!tour.active) return; const s=tour.steps[tour.i]; if(!s){ endTour(true); return; }
   tourCap(s.dot, s.html||t(s.cap));
   if(s.kind==='welcome'){ const n=NPCS.find(x=>x.kind==='taxi')||NPCS[0];
@@ -11406,7 +11610,7 @@ function lightVisitedHouse(repo, defer){ if(!repo||repo._litVisited) return; rep
     const halo=new THREE.Mesh(new THREE.SphereGeometry(0.92,14,12), new THREE.MeshBasicMaterial({color:0xffd06a,transparent:true,opacity:0.34,depthWrite:false,blending:THREE.AdditiveBlending}));
     lamp.add(halo); (repo._lodPrototype?.active||repo._group).add(lamp); lamp.userData.buildingLodActive=true; repo._visitMark=lamp; }
   if(isNight && !defer){ _nightState=null; setNightState(true); } }
-function markVisited(repo){ if(repo._visited) return; repo._visited=true; visited++;
+function markVisited(repo){ journeyHouseOpened(repo); if(repo._visited) return; repo._visited=true; visited++;
   document.getElementById('visitCount').textContent=visited; repo._row.classList.add('visited');
   repo._ring.material.color.set(0x2f9d6a); lightVisitedHouse(repo); addRepoVisit(repo.repo); greetBuilding(repo); homecomingVisitedChanged(); }
 
@@ -11521,7 +11725,7 @@ document.getElementById('startBtn').onclick=()=>{ if(!_claimTownEntry()) return;
     if(!REPO_ROUTE_REQUEST.valid) setTimeout(()=>{ try{ maybeStarNudge('personal_town'); }catch(e){} },14000); }   // a shared route earns this invitation only after completion
   if(rb&&cityMode!=='portal'&&!_reqFocus){ setTimeout(()=>{ try{ showWave(_welcomeBackLine(),3600); }catch(e){} },850); }   // welcome a familiar face back before Gazette / Chronicle
   try{ if(cityMode!=='portal'&&!_reqFocus&&REPOS.length&&!homecoming.card){ const c=getCourse(), delay=rb?4700:(cityMode==='public'?4600:1000);
-      if(news) setTimeout(()=>{ try{ showWave(tf('freshBanner',{count:repoFreshness.total}),4200); }catch(e){} },delay);
+      if(news) setTimeout(()=>{ try{ const copy=freshnessNewsCopy(repoFreshness); showWave(tf(copy.banner,copy.params),4200); }catch(e){} },delay);
       else if(c.available) setTimeout(()=>{ try{ showWave(t('courseBanner'),4200); }catch(e){} },delay); } }catch(e){}
   _queueArrivalAction(480,()=>{
     if(BLUEPRINT_DEEP_LINK.ok&&blueprintDeepLinkBypass) return;
@@ -13486,7 +13690,7 @@ function _homecomingTrace(eventName,ev){   // a visitor leaves one trace: a shar
   else if(eventName==='repo_route_share'&&ev.result==='success') channel='repo_route';
   else if(eventName==='share_created'&&ev.result==='success') channel='portal_link';
   else if(eventName==='contribution_quest_handoff') channel='quest_issue';
-  if(channel) trackHomecoming('trace_left',{channel:channel.slice(0,32)});
+  if(channel){ trackHomecoming('trace_left',{channel:channel.slice(0,32)}); journeyTraceLeft(channel); }
 }
 function homecomingCardOpen(){ return !!(HOMECOMING&&HOMECOMING.cardOpen); }
 function _homecomingTownRepos(){ return REPOS.filter(repo=>!repo._isLibrary); }
@@ -13584,9 +13788,10 @@ function _showGuideToast(){
   clearTimeout(HOMECOMING.toastTimer); HOMECOMING.toastTimer=setTimeout(_hideGuideToast,9000); return true;
 }
 function _hideGuideToast(){ guideToast.hidden=true; if(HOMECOMING) clearTimeout(HOMECOMING.toastTimer); }
+function _homecomingIntent(intent,entry){ trackHomecoming('intent_chosen',{intent,entry}); HOMECOMING.intent=intent; journeyPathChosen(intent,entry); }
 function _chooseHomecomingIntent(intent,entry){
   if(!HOMECOMING||!HOMECOMING.cardOpen) return;
-  trackHomecoming('intent_chosen',{intent,entry}); HOMECOMING.intent=intent;
+  _homecomingIntent(intent,entry);
   closeIntentCard('choice');
   if(intent==='understand'&&!intentLensTargetRepo()&&panel.classList.contains('hidden')){   // the picker lives in Wayfinding
     panel.classList.remove('hidden'); menuBtn.setAttribute('aria-expanded','true'); }
@@ -13650,9 +13855,9 @@ intentCard.querySelectorAll('[data-card-intent]').forEach(button=>button.addEven
 document.getElementById('intentCardSkip').onclick=()=>closeIntentCard('skip');
 document.getElementById('intentCardClose').onclick=()=>closeIntentCard('skip');
 document.querySelectorAll('#intentLens [data-intent]').forEach(button=>button.addEventListener('click',()=>{
-  trackHomecoming('intent_chosen',{intent:button.dataset.intent,entry:'panel'}); HOMECOMING.intent=button.dataset.intent;
+  _homecomingIntent(button.dataset.intent,'panel');
   if(button.dataset.intent==='contribute'&&CONTRIBUTION_QUESTS.open) homecomingSpoke('quest'); }));
-guideToast.onclick=()=>{ _hideGuideToast(); trackHomecoming('intent_chosen',{intent:'explore',entry:'toast'}); startExploreTour('toast'); };
+guideToast.onclick=()=>{ _hideGuideToast(); _homecomingIntent('explore','toast'); startExploreTour('toast'); };
 taxiBtn.addEventListener('click',event=>{ if(guideToast.hidden) return;   // "tap 🚕 to start" means the taxi while the toast is up
   event.preventDefault(); event.stopImmediatePropagation(); guideToast.click(); },true);
 document.addEventListener('keydown',event=>{
