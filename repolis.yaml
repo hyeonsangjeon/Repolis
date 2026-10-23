@@ -57,6 +57,7 @@ entrypoints:
   world_tree: assets/world-tree/createRepolisHero.js
   portable_town_projection: assets/world-tree/world-tree-state.js
   homecoming: assets/homecoming.js
+  passport_journey: assets/journey.js
   town_growth: assets/town-growth.js
   repo_portal: assets/repo-portal.js
   repo_route: assets/repo-route.js
@@ -67,6 +68,8 @@ entrypoints:
   session_footprints: assets/session-footprints.js
   fork_lineage: assets/fork-lineage.js
   procedural_surfaces: assets/procedural-surfaces.js
+  zone_classifier: assets/zone-classifier.js
+  city_card: assets/city-card.js
   data_builder: scripts/build_repos.py
   launch_config: repolis.config.js
   library_builder: scripts/build-contribution-library.mjs
