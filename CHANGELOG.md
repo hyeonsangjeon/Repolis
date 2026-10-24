@@ -8,6 +8,8 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+## [1.98.0] — 2026-10-24
+
 ### City card links (v1.98, part 4d) — a shared town previews as that city
 
 - A public town's share links now point at the card Worker. The station's 🔗 Copy link and the postcard's share link
@@ -22,7 +24,7 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
   empty); `createTownReadmePortal` takes an optional card base. Smoke covers both, the fork-safe config and the
   share-link fallbacks.
 
-### City card Worker `repolis-card` (v1.98, part 3) — code and local tests, not deployed
+### City card Worker `repolis-card` (v1.98, part 3) — link previews and README cards for any public town
 
 - New Cloudflare Worker in `cloudflare-card/`. `GET /u/<login>` answers 200 HTML whose Open Graph tags carry the town's
   city card — `og:title` is the city plaque name from `homecomingCityName`, `og:image` the absolute
@@ -50,8 +52,22 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 - `scripts/test-city-card-worker.mjs` (160 hermetic checks, Node only) joins `scripts/check-hermetic.sh` with syntax
   checks for the Worker entry and scripts; `cloudflare-card/test/render-png.local.mjs` pins real PNG hashes locally.
   npm dependencies (`@resvg/resvg-wasm`, `wrangler`) live only in `cloudflare-card/` with a lockfile. Deployment, the
-  KV namespace, the token and the plan switch are owner steps in `cloudflare-card/README.md`; the site does not link to
-  the Worker yet.
+  KV namespace, the token and the plan switch are owner steps in `cloudflare-card/README.md`. The canonical Worker went
+  live on 2026-10-24 at `https://repolis-card.wingnut0310.workers.dev`, with the owner's `CARD_KV` namespace id in
+  `cloudflare-card/wrangler.toml` (#150); a fork creates its own namespace.
+
+### Public-town data cache bound
+
+- `?user=` and Twin Towns loads kept GitHub's raw `/users/<login>/repos` page under `repolis:public-user:<login>:v1`
+  and never evicted it: about 588 K characters per 100 repositories, so about eight large towns filled Chrome's
+  ~5.24 M-character origin quota, after which every Passport, Gazette and course write failed silently.
+- The cache now keeps only the raw fields `projectPublicRepo` reads, for the rows it accepts, plus the page length and
+  projection reference, under `:v2` (about 47 K characters for a full 100-repository page). Cached and live loads
+  project identically, and the 6-hour fresh window, the labelled stale fallback and `coverage.partial` stay.
+- At most 8 towns are kept, least recently used first out, and a town whose entry would exceed 128 K characters is not
+  cached, so the whole cache stays near 1 M characters. Every other cache version, including the legacy v1 pages, is
+  removed once per boot before any town data loads. `scripts/test-public-town-cache.mjs` (26 checks) joins
+  `scripts/check-hermetic.sh`. No request, dependency, timer or telemetry event was added.
 
 ### Town UI fixes — the Star invitation on phones, and focus after the Passport
 
@@ -125,8 +141,10 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
   GitHub-style ASCII slugs, caller strings are cut to UTF-8 byte caps, control, bidi and invisible characters are
   dropped, and one function places every string so a glyph-path layer can later replace the `<text>` writer.
 - `scripts/test-city-card.mjs` covers empty, one-house, 100-cap, archive-only, hostile-name and escaping cases and pins
-  the owner card's bytes; smoke adds purity guards for both modules. No client behavior, request, storage key, scene
-  resource or dependency changed: the town does not load the card yet, and no Worker exists.
+  the owner card's bytes; smoke adds purity guards for both modules. This part changed no client behavior, request,
+  storage key, scene resource or dependency; the Worker (part 3) and the share links (part 4d) above put the card to use.
+
+## [1.97.0] — 2026-10-21
 
 ### Homecoming (v1.97) — your city first, an arrival timelapse, three paths, and Wayfinding that opens as you visit
 
@@ -162,7 +180,7 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
   suite checks every deep-link and returning-visitor exclusion. One bounded sessionStorage list is the only new state; no
   request, model call, scene resource, or dependency was added.
 
-### Guide patch (v1.96) — Gitber phrasing coverage, mobile finish, wording, local server command
+### Guide patch — Gitber phrasing coverage, mobile finish, wording, local server command
 
 - Gitber Local search now understands Korean transliterations (도커, 쿠버네티스, 파이썬, 리액트, 에이전트, …) as the
   words themselves, treats related-concept synonyms as half-weight evidence, and never lets a two-letter name token
@@ -181,6 +199,81 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
   default resets the burst of module loads and leaves the town unopened. The merged scenario spec is checked in as
   `docs/scenario-redesign-aha-moments.md`. No server, model, request, storage key or scene resource was added.
 
+### First discovery — task-first search, readable repo cards and visible source maps (#141)
+
+- Gitber search keeps what a repository is for apart from explicit traffic or ranking requests: popularity alone no
+  longer matches a task query, unrelated fallback alternatives are gone, and unknown public traffic stays unknown.
+  `scripts/test-gitber-search.mjs` adds 42 behavioral cases.
+- Repo cards lead with identity, the public description and the visible Atelier and demo actions; metrics and
+  suggested questions follow. The close control stays fixed, long text scrolls, and keyboard focus survives the
+  disclosures.
+- The Blueprint source map is framed after explicit map access, keeps mobile file lists collapsible, restores the exact
+  camera on close, and shows its node colors again by reusing the existing instance-color material.
+- The entry screen is simpler, with the ready town behind it, and town search and the three goals sit above the
+  optional tools. Growth Replay's aerial camera alone uses near 5 / far 1100, which removes the large road-fragment
+  artifact, and restores the originals exactly; it adds bounded reading time, unobscured framing and a landscape side
+  panel. Room resources stay at 25 geometries, 16 materials and 3 canvas textures, with no automatic README or AI request.
+
+### Source-backed Repository Atelier (#135)
+
+- The Atelier entry view leads with the exact public `owner/repo` and its original description; Core, statistics and
+  history remain as supporting exhibits in the same room and canvas atlases.
+- A new explicit README reader shows the original headings, code blocks with copy, source lines, branch or ref, the
+  document blob SHA and the read time. It makes one exact-repository README GET per visit (8-second deadline,
+  128 KiB JSON / 64 KiB text, six complete sections, twelve code blocks, 24 KiB excerpt) with no retries, media,
+  storage, inferred commands or command execution, and cancels on exit or rebind.
+- Entering no longer asks the AI anything automatically. Scoped chat history and its five-started-call limit are
+  unchanged.
+
+### Readable town names and reliable panel controls (#133)
+
+- Resident and scholar name sprites are size-bounded and chosen by priority: at most 6 on desktop and 4 on phones or
+  LOW_END, 32/28 px tall, engaged people first, clear of speech, UI, control gutters and safe areas, and absent at the
+  near plane or behind the camera. Roles and dialogue actions stay reachable through native buttons in Wayfinding's
+  nearby-person list. Sign planes are capped from their projected corners without simplifying houses, characters or
+  the World Tree. Near name rectangles shrank from about 744 to 128 px wide on desktop and 685 to 112 px on mobile.
+- Repo cards scroll independently under a fixed 48 px Close button and keep their repository and scroll position
+  across Atelier entry, resize and exit. Escape and Tab go to the one visible panel, native IME editing and the tour,
+  recovery, room, Blueprint and chat close rules are kept, and a held Escape cannot cascade through scenes. Suggested
+  questions and related chat actions are native named buttons.
+
+### Repository Atelier answers from verified public documents (#126–#132)
+
+- Atelier chat reports "not found" replies, and replies that lack the requested facts, as explicit failures instead of
+  general-knowledge answers, and keeps failed replies out of chat history. Closing the chat with no earlier focus
+  target returns focus to the visible exit button instead of the hidden taxi button (#126, #127).
+- With the owner's server-only GitHub credential configured, a question now reads fresh exact-repository metadata
+  (`private:false`, canonical owner/repo), then the complete bounded README or LICENSE, then makes one
+  Entra-authenticated synthesis call, with no MCP planner or intermediate knowledge-base answer. Sources in the
+  Korean and English UI name the actual public document. Installations without the credential keep the MCP-first path,
+  and a configured credential never falls back to anonymous reads (#128–#130).
+- Token requests send an explicitly serialized OAuth form body and refuse redirects (#131). Synthesis uses the model's
+  streaming transport and returns only a complete reply with valid usage, within 512 KiB, 2,048 events and 128 KiB of
+  text; partial text never enters chat history (#132). The 400-token completion cap, the 25-second Worker and
+  30-second client deadlines, and the five-started-call visit limit are unchanged.
+
+### First-visit path — bounded speech, a repository picker and honest recovery (#123)
+
+- At most two nearby speech bubbles show at once, sized, wrapped and kept inside the margins; the HUD is more compact,
+  and panels, inputs and focus each have one owner.
+- Understand in the Intent Lens offers up to six repositories from the current public catalog and enters the exact
+  Repository Atelier without starting a chat.
+- The town counts as ready only after a real render, boot loads are bounded, and Korean and English recovery screens
+  keep the exact destination, including a cancellable Blueprint and the restored context.
+- Atelier chat waits up to 30 seconds for a complete reply (a 9.5-second client timer used to cut off normal answers)
+  and tells timeouts, refusals, rate limits, missing search setup and invalid replies apart.
+- A read-only PR quality gate (`.github/workflows/pr-quality.yml`) runs the same command list as
+  `bash scripts/check-hermetic.sh`.
+
+### Budgeted resident AI (#117, #118)
+
+- Resident dialogue budgets are versioned: a cap revision replaces the day's cap while keeping that day's ledger, and
+  an older Worker revision cannot undo a newer cap. `npcConfig` reports the ambient and visitor-dialogue budgets
+  separately.
+- The visitor-to-resident dialogue cap rose from $0.05 to $10 a day (revision 2); the ambient ledger stays at $0.15.
+- The canonical Worker allows model-powered ambient chatter (`NPC_AMBIENT_ENABLED = "true"`) behind the owner-only KV
+  switches and the durable daily cap; blocked or unavailable calls keep the scripted lines. The code default stays off.
+
 ### Covered plaza and Repository Atelier direct entry
 
 - `?view=plaza&lang=en` now provides an English-first campaign link that keeps the portal cover up, skips the
@@ -198,6 +291,8 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 - Creator Hall now reports Stars across every public repository in the account, including forks intentionally
   omitted from the 3D town, while the town catalog and building rules remain unchanged.
+
+## [1.96.0] — 2026-09-03
 
 ### Procedural Surface Pass v2
 
