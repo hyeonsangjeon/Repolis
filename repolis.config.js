@@ -2,7 +2,7 @@
  *
  * Leave townOwner blank on GitHub Pages: a fork at <login>.github.io/<repo>
  * automatically becomes <login>'s town. For a custom domain, set townOwner.
- * Canonical AI/realtime services are intentionally disabled for every other
+ * Canonical AI/realtime/card services are intentionally disabled for every other
  * owner so a fork never spends or reports through the upstream deployment.
  */
 (function () {
@@ -37,6 +37,7 @@
       grounded: canonicalServices ? 'https://repolis-taxi.wingnut0310.workers.dev/' : '',
       realtime: canonicalServices ? 'wss://repolis-rt.wingnut0310.workers.dev' : '',
       analytics: canonicalServices ? 'https://repolis-metrics.wingnut0310.workers.dev/event' : '',
+      card: canonicalServices ? 'https://repolis-card.wingnut0310.workers.dev/' : '',
     }),
   });
 })();

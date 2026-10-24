@@ -15,7 +15,27 @@ export const POSTCARD_FORMATS = Object.freeze({
 const GITHUB_LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
 const DEFAULT_PORTAL_BASE = 'https://hyeonsangjeon.github.io/Repolis/';
 
-export function createTownReadmePortal(user, baseUrl = DEFAULT_PORTAL_BASE) {
+// The card Worker (services.card): /u/<login> previews as that city, /card/<login>.svg is a README card redrawn daily.
+function cardServiceRoot(cardBase) {
+  if (!cardBase) return null;
+  let root;
+  try { root = new URL(String(cardBase)); }
+  catch (error) { return null; }
+  if (root.protocol !== 'https:') return null;
+  root.search = '';
+  root.hash = '';
+  if (!root.pathname.endsWith('/')) root.pathname += '/';
+  return root;
+}
+
+export function createCardShareUrl(user, cardBase) {
+  const login = String(user || '').trim().toLowerCase();
+  const root = cardServiceRoot(cardBase);
+  if (!root || !GITHUB_LOGIN.test(login)) return '';
+  return new URL(`u/${login}`, root).href;
+}
+
+export function createTownReadmePortal(user, baseUrl = DEFAULT_PORTAL_BASE, cardBase = '') {
   const login = String(user || '').trim().toLowerCase();
   if (!GITHUB_LOGIN.test(login)) throw new TypeError('invalid-github-login');
 
@@ -31,10 +51,11 @@ export function createTownReadmePortal(user, baseUrl = DEFAULT_PORTAL_BASE) {
   const town = new URL(root.href);
   town.searchParams.set('user', login);
   town.searchParams.set('ref', 'profile-readme');
-  const banner = new URL('assets/banner.svg', root);
+  const card = cardServiceRoot(cardBase);
+  const banner = card ? new URL(`card/${login}.svg`, card) : new URL('assets/banner.svg', root);
   const alt = `Walk @${login}'s GitHub town in Repolis`;
   const html = `<a href="${town.href}"><img src="${banner.href}" alt="${alt}" width="600"></a>`;
-  return Object.freeze({ login, townUrl: town.href, bannerUrl: banner.href, alt, html });
+  return Object.freeze({ login, townUrl: town.href, bannerUrl: banner.href, alt, html, live: Boolean(card) });
 }
 
 export function hashPostcardSeed(value) {

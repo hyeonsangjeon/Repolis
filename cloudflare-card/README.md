@@ -6,8 +6,9 @@ fixed tags after a redirect, so a share link has to answer with its own tags. Th
 card image. The town itself never depends on it: if the Worker is down, only links that point at it lose their preview.
 
 It is separate from the grounding Worker [`../cloudflare-taxi`](../cloudflare-taxi) (`repolis-taxi`) and the realtime
-Worker [`../cloudflare`](../cloudflare) (`repolis-rt`). Pointing the site's share buttons at it (`services.card` in
-`repolis.config.js`) is a later step; deploying it changes nothing on the site.
+Worker [`../cloudflare`](../cloudflare) (`repolis-rt`). The canonical site points public-town share links and the
+profile README card at it through `services.card` in `repolis.config.js`; forks keep Pages links and the self-hosted
+banner.
 
 ## Routes
 

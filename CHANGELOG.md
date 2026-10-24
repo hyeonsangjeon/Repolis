@@ -8,6 +8,20 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### City card links (v1.98, part 4d) — a shared town previews as that city
+
+- A public town's share links now point at the card Worker. The station's 🔗 Copy link and the postcard's share link
+  copy `https://repolis-card.wingnut0310.workers.dev/u/<login>`, whose link preview is that person's city card and which
+  moves visitors on to `?user=<login>&ref=card`. Growth replays, Twin Towns and route shares keep their Pages links
+  because the Worker forwards only the login, and the owner town keeps the site's own link and preview.
+- The profile README portal embeds the Worker's 600×300 README card (`/card/<login>.svg`, redrawn daily) instead of the
+  fixed banner. Its link still opens `?user=<login>&ref=profile-readme` on Pages.
+- `services.card` in `repolis.config.js` names the Worker for the canonical site only. Forks, custom domains and local
+  clones get an empty value and keep the Pages links and the self-hosted banner.
+- New pure `createCardShareUrl` in `assets/town-postcard.js` (an https card base and a valid GitHub login, otherwise
+  empty); `createTownReadmePortal` takes an optional card base. Smoke covers both, the fork-safe config and the
+  share-link fallbacks.
+
 ### City card Worker `repolis-card` (v1.98, part 3) — code and local tests, not deployed
 
 - New Cloudflare Worker in `cloudflare-card/`. `GET /u/<login>` answers 200 HTML whose Open Graph tags carry the town's

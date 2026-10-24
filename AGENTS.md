@@ -131,11 +131,11 @@ reproducible public source timestamp.
 | **Card worker** | `cd cloudflare-card && npm ci && npx wrangler deploy` | Updates `repolis-card` (share previews + card images). First deploy needs Workers Paid, the `CARD_KV` id and the `GITHUB_TOKEN` secret: [`cloudflare-card/README.md`](cloudflare-card/README.md). |
 
 The canonical site gets its Worker defaults from `repolis.config.js`:
-`services.grounded` → `https://repolis-taxi.wingnut0310.workers.dev/`, and
-`services.realtime` → `wss://repolis-rt.wingnut0310.workers.dev`. GitHub Pages forks infer their
-own owner and receive empty service defaults, so the taxi falls back to keyless **Local search**
-and the city stays solo. **No backend is required to run.** The card Worker (`repolis-card`) is deployed on its
-own and the site does not link to it yet.
+`services.grounded` → `https://repolis-taxi.wingnut0310.workers.dev/`,
+`services.realtime` → `wss://repolis-rt.wingnut0310.workers.dev`, and
+`services.card` → `https://repolis-card.wingnut0310.workers.dev/` (public-town share links and the README card).
+GitHub Pages forks infer their own owner and receive empty service defaults, so the taxi falls back to keyless
+**Local search**, the city stays solo, and share links stay on Pages. **No backend is required to run.**
 
 Worker secrets live in Cloudflare (set via `npx wrangler secret put …`) and local `.dev.vars` — see
 [`cloudflare-taxi/README.md`](cloudflare-taxi/README.md). Never put a real key in tracked files.
