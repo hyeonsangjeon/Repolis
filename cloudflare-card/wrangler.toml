@@ -9,11 +9,11 @@ compatibility_date = "2026-09-01"
 workers_dev = true
 
 # Card summaries only (card:v1:<login>): 24 h for a town, 1 h for an unknown login, an empty town or a GitHub error.
-# Create the namespace once, then replace the placeholder below with the printed id:
+# The owner's namespace, created once with the command below. A fork creates its own and puts the printed id here:
 #   npx wrangler kv namespace create CARD_KV
 [[kv_namespaces]]
 binding = "CARD_KV"
-id = "REPLACE_WITH_CARD_KV_ID"
+id = "69b1de812b7745c189e503557bfb0ceb"
 
 # New renders (a login KV has not seen, or a PNG not in the cache) per address per minute, counted per Cloudflare
 # location. namespace_id is any positive integer unique among this account's rate limiters.
