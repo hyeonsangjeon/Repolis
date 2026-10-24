@@ -564,8 +564,8 @@ check(normalizeCardDay('20240229', Date.parse('2024-02-29T12:00:00Z')) === '2024
   const code = toml.replace(/#.*$/gm, '');
   check(/^name = "repolis-card"$/m.test(code) && /^main = "src\/index\.js"$/m.test(code) && /^workers_dev = true$/m.test(code) && !/account_id/.test(code),
     'wrangler.toml: repolis-card on workers.dev, no account_id');
-  check(/\[\[kv_namespaces\]\]\s+binding = "CARD_KV"\s+id = "REPLACE_WITH_CARD_KV_ID"/.test(code)
-    && toml.includes('npx wrangler kv namespace create CARD_KV'), 'KV binding CARD_KV with the placeholder id and how to create it');
+  check(/\[\[kv_namespaces\]\]\s+binding = "CARD_KV"\s+id = "(?:REPLACE_WITH_CARD_KV_ID|[0-9a-f]{32})"/.test(code)
+    && toml.includes('npx wrangler kv namespace create CARD_KV'), 'KV binding CARD_KV with a namespace id (or the placeholder) and how to create it');
   check(/\[vars\]\s+SITE_URL = "https:\/\/hyeonsangjeon\.github\.io\/Repolis\/"/.test(code) && !/GITHUB_TOKEN\s*=/.test(toml)
     && toml.includes('npx wrangler secret put GITHUB_TOKEN'), 'SITE_URL var; GITHUB_TOKEN only as a secret');
   check(new RegExp(`\\[\\[ratelimits\\]\\]\\s+name = "CARD_RATE_LIMIT"\\s+namespace_id = "\\d+"\\s+\\[ratelimits\\.simple\\]\\s+limit = ${RENDER_LIMIT.limit}\\s+period = ${RENDER_LIMIT.periodMs / 1000}`).test(code),
