@@ -40,6 +40,7 @@ import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } f
 import { summarizePublicTown } from '../assets/public-town-proof.js';
 import {
   POSTCARD_FORMATS,
+  createCardShareUrl,
   createTownPostcardIdentity,
   createTownReadmePortal,
   summarizeTownRepos,
@@ -304,11 +305,12 @@ const customConfig = launchConfig('town.example.com');
 const localConfig = launchConfig('localhost');
 ok(canonicalConfig.town.owner==='hyeonsangjeon' && canonicalConfig.town.canonical
   && /^https:/.test(canonicalConfig.services.grounded) && /^wss:/.test(canonicalConfig.services.realtime)
-  && /^https:/.test(canonicalConfig.services.analytics), 'canonical Pages host keeps the live optional services');
+  && /^https:/.test(canonicalConfig.services.analytics) && canonicalConfig.services.card==='https://repolis-card.wingnut0310.workers.dev/',
+  'canonical Pages host keeps the live optional services');
 ok(forkConfig.town.owner==='octocat' && forkConfig.town.source==='github-pages' && !forkConfig.town.canonical
-  && forkConfig.services.grounded==='' && forkConfig.services.realtime==='' && forkConfig.services.analytics==='', 'a Pages fork infers its owner and cannot call upstream Workers');
-ok(customConfig.services.grounded==='' && customConfig.services.realtime==='' && customConfig.services.analytics==='', 'an undeclared custom domain gets safe service-off defaults');
-ok(localConfig.services.grounded==='' && localConfig.services.realtime==='' && localConfig.services.analytics==='', 'a local template clone cannot call canonical services without explicit dev opt-in');
+  && forkConfig.services.grounded==='' && forkConfig.services.realtime==='' && forkConfig.services.analytics==='' && forkConfig.services.card==='', 'a Pages fork infers its owner and cannot call upstream Workers');
+ok(customConfig.services.grounded==='' && customConfig.services.realtime==='' && customConfig.services.analytics==='' && customConfig.services.card==='', 'an undeclared custom domain gets safe service-off defaults');
+ok(localConfig.services.grounded==='' && localConfig.services.realtime==='' && localConfig.services.analytics==='' && localConfig.services.card==='', 'a local template clone cannot call canonical services without explicit dev opt-in');
 ok(/<script src="repolis\.config\.js"><\/script>\s*<script src="scholars\.js"><\/script>/.test(HTML)
   &&/window\.REPOLIS_CONFIG\?\.town\?\.owner/.test(HTML)
   &&/CFG\.town\?\.owner/.test(SCHOLARS_SRC), 'runtime config loads before scholars and owns both city and persona identity');
@@ -1628,6 +1630,19 @@ ok(readmePortal.townUrl === 'https://example.github.io/town/?user=octo-cat&ref=p
 let invalidPortalRejected = false;
 try { createTownReadmePortal('not/a/login'); } catch (error) { invalidPortalRejected = error instanceof TypeError; }
 ok(invalidPortalRejected, 'the README portal rejects values outside the GitHub login grammar');
+const cardPortal = createTownReadmePortal('Octo-Cat', 'https://example.github.io/town/', 'https://repolis-card.example.workers.dev');
+ok(cardPortal.townUrl === 'https://example.github.io/town/?user=octo-cat&ref=profile-readme'
+  && cardPortal.bannerUrl === 'https://repolis-card.example.workers.dev/card/octo-cat.svg' && cardPortal.live === true
+  && cardPortal.html.includes('src="https://repolis-card.example.workers.dev/card/octo-cat.svg"') && readmePortal.live === false,
+  'with a card service the README portal embeds the daily card and still links to the Pages town');
+ok(createTownReadmePortal('octo-cat', 'https://example.github.io/town/', 'http://repolis-card.example.workers.dev').bannerUrl === 'https://example.github.io/town/assets/banner.svg'
+  && createTownReadmePortal('octo-cat', 'https://example.github.io/town/', 'not a url').live === false,
+  'a card base that is not https falls back to the self-hosted banner');
+ok(createCardShareUrl('Octo-Cat', 'https://repolis-card.example.workers.dev') === 'https://repolis-card.example.workers.dev/u/octo-cat'
+  && createCardShareUrl('octo-cat', 'https://repolis-card.example.workers.dev/?x=1#y') === 'https://repolis-card.example.workers.dev/u/octo-cat'
+  && createCardShareUrl('octo-cat', '') === '' && createCardShareUrl('octo-cat', 'http://repolis-card.example.workers.dev') === ''
+  && createCardShareUrl('not/a/login', 'https://repolis-card.example.workers.dev') === '',
+  'card share links are https /u/<login> on the card service, and empty without a service or a valid login');
 const postcardLanguageSummary = summarizeTownRepos(postcardRepos);
 const postcardRepoSummary = summarizeTownRepos(postcardRepos.map(repo => ({ ...repo, lang: 'Other' })));
 ok(postcardLanguageSummary.type === 'languages' && postcardLanguageSummary.items[0].name === 'JavaScript'
@@ -1694,10 +1709,15 @@ ok(/navigator\.canShare\(\{files:\[file\]\}\)/.test(postcardBlock)
   && /URL\.createObjectURL\(POSTCARD\.blob\)/.test(postcardBlock)
   && /navigator\.clipboard&&navigator\.clipboard\.writeText/.test(postcardBlock),
   'native PNG file sharing includes the exact URL with download and copy-link fallbacks');
-ok(/id="postcardReadme"/.test(HTML) && /createTownReadmePortal\(currentUser,_postcardPublishedBase\(\)\)/.test(postcardBlock)
+ok(/id="postcardReadme"/.test(HTML) && /createTownReadmePortal\(currentUser,_postcardPublishedBase\(\),CARD_SERVICE\)/.test(postcardBlock)
   && /track\('share_click',\{channel:'profile_readme',ok\}\)/.test(postcardBlock)
   && /maybeStarNudge\('profile_readme'\)/.test(postcardBlock),
   'the postcard studio copies a persistent profile portal and schedules its earned star invitation');
+ok(/const CARD_SERVICE = window\.REPOLIS_CONFIG\?\.services\?\.card \|\| '';/.test(HTML)
+  && /if\(cityMode==='public'&&!replay\)\{ const card=createCardShareUrl\(currentUser,CARD_SERVICE\); if\(card\) return card; \}/.test(postcardBlock)
+  && /if\(replay\)\{ params\.set\('growth',growth\); params\.set\('ref','growth-replay'\); \}/.test(postcardBlock)
+  && /cityMode==='public' \? \(createCardShareUrl\(currentUser,CARD_SERVICE\)\|\|baseUrl\(\)\+'\?user='\+encodeURIComponent\(currentUser\)\)/.test(HTML),
+  'public-town share links use the fork-safe card service with the Pages ?user= link as fallback, and a growth replay keeps its own query');
 ok(/postcardCaptureBlank/.test(postcardBlock) && /postcardCaptureContext/.test(postcardBlock)
   && /postcardCaptureSecurity/.test(postcardBlock) && /forceBlank/.test(postcardBlock)
   && /forceFallback/.test(postcardBlock),

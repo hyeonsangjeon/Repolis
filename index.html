@@ -2591,7 +2591,7 @@ import { CANAL_FERRY_DEFAULTS, sampleCanalFerryRoute } from './assets/canal-ferr
 import { RAIN_GARDEN_DEFAULTS, sampleRainGarden, seedRainDrop, wrapRainDropY } from './assets/rain-garden.js?v=weather-bell-v1';
 import { CITY_STATE_SCHEMA, CITY_STATE_VERSION, REPO_NEWCOMER_DAYS, cityReferenceTimestamp, constructionScaffoldPlan, projectCityTime, resolveCitySeason, seasonPalette } from './assets/city-time.js?v=world-tree-phase4-v1';
 import { PORTABLE_TOWN_LIMITS, SAP_FLOW_LIMITS, UNDERCROFT_LIMITS, bindPortableResidentSlots, projectPortableTown, projectUndercroftArchive, projectWorldTreeChronicle, projectWorldTreeGrowth, resolveSapFlowMode } from './assets/world-tree/world-tree-state.js?v=undercroft-v1';
-import { analyzeTownFrame, composeTownPostcard, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v2';
+import { analyzeTownFrame, composeTownPostcard, createCardShareUrl, createTownPostcardIdentity, createTownReadmePortal, flipPixelRows, postcardCanvasToBlob, postcardCaptureSize, postcardFormatForViewport, summarizeTownRepos } from './assets/town-postcard.js?v=town-postcard-v3';
 import { summarizePublicTown } from './assets/public-town-proof.js?v=personal-ready-v1';
 import { createTwinTownLink, createTwinTownMatch } from './assets/twin-towns.js?v=twin-towns-v1';
 import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-creator.js?v=creator-hall-v1';
@@ -2624,6 +2624,7 @@ try {
    repo before any owner catalog and opens its Repository Atelier.
    The owner city stays the premium / full-data experience. ================ */
 const OWNER = window.REPOLIS_CONFIG?.town?.owner || 'hyeonsangjeon';
+const CARD_SERVICE = window.REPOLIS_CONFIG?.services?.card || '';   // repolis-card; empty on forks, custom domains and local clones
 document.title = `Repolis · ${OWNER}'s City of Repos`;
 let REPOS = [], CITY_STATE = null, RESIDENT_MANIFEST = null, RESIDENT_MANIFEST_STATE = 'local',
     LORE_FRAGMENTS = null, LORE_FRAGMENT_STATE = 'local';
@@ -12069,7 +12070,7 @@ if(cityMode!=='portal'&&!cityError&&REPOS.length&&GH_LOGIN_RE.test(_reqTwin)&&_r
   inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){ e.preventDefault(); depart(inp.value); } });
 
   shareBtn.onclick=async()=>{ const link = cityMode==='portal'&&repoPortalTarget ? createRepoPortalUrl(repoPortalTarget,location.href)
-      : (cityMode==='public' ? (baseUrl()+'?user='+encodeURIComponent(currentUser)) : baseUrl());
+      : (cityMode==='public' ? (createCardShareUrl(currentUser,CARD_SERVICE)||baseUrl()+'?user='+encodeURIComponent(currentUser)) : baseUrl());
     let ok=false; try{ await navigator.clipboard.writeText(link); ok=true; }
     catch(e){ try{ const ta=document.createElement('textarea'); ta.value=link; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); document.body.removeChild(ta); }catch(_){ } }
     if(cityMode==='portal') trackPortal('share_created',{entry:'station',device:_repoPortalDevice(),lang:LANG,result:ok?'success':'error',channel:'clipboard'});
@@ -12137,9 +12138,12 @@ const POSTCARD={open:false,busy:false,blob:null,entry:'menu',previousFocus:null,
 function _postcardShareUrl(){
   const base=location.origin+location.pathname,params=new URLSearchParams();
   if(cityMode==='portal'&&repoPortalTarget) return createRepoPortalUrl(repoPortalTarget,base);
-  if(cityMode==='public') params.set('user',currentUser);
   const growth=new URLSearchParams(location.search).get('growth');
-  if(document.body.classList.contains('growth-replay-active')&&/^\d{4}$/.test(growth||'')){ params.set('growth',growth); params.set('ref','growth-replay'); }
+  const replay=document.body.classList.contains('growth-replay-active')&&/^\d{4}$/.test(growth||'');
+  // A public town shares its card link so the preview is that city; the Worker forwards only the login, so a replay keeps its Pages query.
+  if(cityMode==='public'&&!replay){ const card=createCardShareUrl(currentUser,CARD_SERVICE); if(card) return card; }
+  if(cityMode==='public') params.set('user',currentUser);
+  if(replay){ params.set('growth',growth); params.set('ref','growth-replay'); }
   const query=params.toString(); return query?base+'?'+query:base;
 }
 function _postcardPublishedBase(){
@@ -12148,7 +12152,7 @@ function _postcardPublishedBase(){
   const project=window.REPOLIS_CONFIG?.project||{};
   return 'https://'+(project.owner||'hyeonsangjeon')+'.github.io/'+(project.repository||'Repolis')+'/';
 }
-function _postcardReadmePortal(){ return createTownReadmePortal(currentUser,_postcardPublishedBase()); }
+function _postcardReadmePortal(){ return createTownReadmePortal(currentUser,_postcardPublishedBase(),CARD_SERVICE); }
 function _postcardIdentity(){ return createTownPostcardIdentity(currentUser,REPOS); }
 function _postcardRendererMemory(){ const memory=renderer.info.memory||{};
   return {geometries:memory.geometries||0,textures:memory.textures||0,programs:(renderer.info.programs||[]).length}; }

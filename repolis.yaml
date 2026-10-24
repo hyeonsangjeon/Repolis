@@ -121,10 +121,12 @@ endpoints:
     fallback: solo town
     fork_default: disabled
   card:
+    url: https://repolis-card.wingnut0310.workers.dev/
     routes: [GET /u/<login>, GET /card/<login>.png, GET /card/<login>.svg]
-    wired_in: not yet (share links switch in a later v1.98 step)
+    wired_in: repolis.config.js -> index.html (public-town share links, profile README card)
     required: false
     fallback: the site's own preview and Pages ?user= links
+    fork_default: disabled
 
 features:
   - id: data-built-city
