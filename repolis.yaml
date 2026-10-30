@@ -53,6 +53,7 @@ data:
 
 entrypoints:
   app: index.html
+  gallery: gallery.html
   scholars: scholars.js
   world_tree: assets/world-tree/createRepolisHero.js
   portable_town_projection: assets/world-tree/world-tree-state.js

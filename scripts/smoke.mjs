@@ -204,14 +204,14 @@ group('README hero leads with one current story, CTA, and bounded media');
 const heroCopy = 'Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.';
 const heroCopyKo = 'Repolis는 공개 GitHub 레포를 직접 걸어 다니는 3D 마을로 바꿉니다. 트래픽이 건물을 만들고, 주민이 살아가며, 깃버가 원하는 프로젝트까지 데려갑니다.';
 ok(README_EN.includes(`**${heroCopy}**`) && README_KO.includes(`**${heroCopyKo}**`), 'EN/KO heroes carry one copyable product sentence');
-const heroOrderEn = [README_EN.indexOf(`**${heroCopy}**`), README_EN.indexOf('alt="Enter the live Repolis town" height="40"'),
+const heroOrderEn = [README_EN.indexOf(`**${heroCopy}**`), README_EN.indexOf('alt="Build my GitHub city in Repolis" height="40"'),
   README_EN.indexOf('assets/demo.gif'), README_EN.indexOf('🎬 <strong>15-second demo:</strong>'),
   README_EN.indexOf('<code>WASD</code> / touch to walk'), README_EN.indexOf('>Star Repolis</a>'), README_EN.indexOf('daily%20refresh')];
-const heroOrderKo = [README_KO.indexOf(`**${heroCopyKo}**`), README_KO.indexOf('alt="지금 Repolis 라이브 마을 입장" height="40"'),
+const heroOrderKo = [README_KO.indexOf(`**${heroCopyKo}**`), README_KO.indexOf('alt="내 GitHub 도시 만들기" height="40"'),
   README_KO.indexOf('assets/demo.ko.gif'), README_KO.indexOf('🎬 <strong>15초 데모:</strong>'),
   README_KO.indexOf('<code>WASD</code> / 터치로 걷기'), README_KO.indexOf('>Star 남기기</a>'), README_KO.indexOf('daily%20refresh')];
-ok(heroOrderEn.every(i => i >= 0) && heroOrderEn.every((i, n) => n === 0 || heroOrderEn[n - 1] < i), 'English hero orders story → live CTA → demo → caption → controls → Star → utility proof');
-ok(heroOrderKo.every(i => i >= 0) && heroOrderKo.every((i, n) => n === 0 || heroOrderKo[n - 1] < i), 'Korean hero orders story → live CTA → demo → caption → controls → Star → utility proof');
+ok(heroOrderEn.every(i => i >= 0) && heroOrderEn.every((i, n) => n === 0 || heroOrderEn[n - 1] < i), 'English hero orders story → own-city CTA → demo → caption → controls → Star → utility proof');
+ok(heroOrderKo.every(i => i >= 0) && heroOrderKo.every((i, n) => n === 0 || heroOrderKo[n - 1] < i), 'Korean hero orders story → own-city CTA → demo → caption → controls → Star → utility proof');
 ok(/traffic → buildings · ask Gitber → taxi ride → real repo card/.test(README_EN)
   &&/트래픽 → 건물 · 깃버에게 질문 → 택시 이동 → 실제 레포 카드/.test(README_KO), 'visible EN/KO captions describe what the existing demo proves');
 ok(/<code>Enter<\/code> \/ tap to open · no sign-up or build/.test(README_EN)
@@ -219,11 +219,22 @@ ok(/<code>Enter<\/code> \/ tap to open · no sign-up or build/.test(README_EN)
 ok((README_EN.match(/href="https:\/\/github\.com\/hyeonsangjeon\/Repolis">Star Repolis<\/a>/g)||[]).length===1
   &&(README_KO.match(/href="https:\/\/github\.com\/hyeonsangjeon\/Repolis">Star 남기기<\/a>/g)||[]).length===1, 'each hero contains exactly one calm repository Star CTA');
 ok((HTML.split(heroCopy).length - 1) === 3 && !HTML.includes('6-pin grid'), 'description, Open Graph, and Twitter share the current positioning');
-ok(/href="https:\/\/hyeonsangjeon\.github\.io\/Repolis\/\?view=plaza&amp;lang=en"><img[^>]+height="40"/.test(README_EN)
-  &&/href="https:\/\/hyeonsangjeon\.github\.io\/Repolis\/\?view=plaza&amp;lang=ko"><img[^>]+height="40"/.test(README_KO)
-  &&/href="https:\/\/hyeonsangjeon\.github\.io\/Repolis\/\?launch=1"><img[^>]+height="32"/.test(README_EN)
-  &&/template_name=Repolis&amp;template_owner=hyeonsangjeon"><img[^>]+height="32"/.test(README_EN)
-  &&/alt="내 GitHub로 Repolis 보기" height="32"/.test(README_KO), 'EN/KO heroes distinguish one primary live entry from secondary preview and template actions');
+const heroCtas = text => [...text.slice(0, text.indexOf('assets/demo')).matchAll(/<a href="([^"]+)"><img[^>]+height="(\d+)"/g)].map(match => `${match[2]} ${match[1]}`);
+ok(heroCtas(README_EN).join('\n') === ['40 https://hyeonsangjeon.github.io/Repolis/?launch=1',
+  '32 https://hyeonsangjeon.github.io/Repolis/?view=plaza&amp;lang=en', '32 https://hyeonsangjeon.github.io/Repolis/gallery.html',
+  '32 https://github.com/new?template_name=Repolis&amp;template_owner=hyeonsangjeon'].join('\n')
+  && heroCtas(README_KO).join('\n') === ['40 https://hyeonsangjeon.github.io/Repolis/?launch=1',
+  '32 https://hyeonsangjeon.github.io/Repolis/?view=plaza&amp;lang=ko', '32 https://hyeonsangjeon.github.io/Repolis/gallery.html?lang=ko',
+  '32 https://github.com/new?template_name=Repolis&amp;template_owner=hyeonsangjeon'].join('\n'),
+  'EN/KO heroes lead with one own-city entry, then the live town, the city gallery, and the template as secondary actions');
+const cardSectionEn = README_EN.indexOf('## Your city, as a card'), cardSectionKo = README_KO.indexOf('## 카드가 된 내 도시');
+ok(cardSectionEn > README_EN.indexOf('assets/launch.gif') && cardSectionEn < README_EN.indexOf('## From preview to your own city')
+  && cardSectionKo > README_KO.indexOf('assets/launch.ko.gif') && cardSectionKo < README_KO.indexOf('## 미리보기에서 내 도시까지')
+  && README_EN.includes('src="https://repolis-card.wingnut0310.workers.dev/card/hyeonsangjeon.svg"')
+  && README_KO.includes('src="https://repolis-card.wingnut0310.workers.dev/card/hyeonsangjeon.svg?lang=ko"')
+  && /opt-in/.test(README_EN.slice(cardSectionEn, README_EN.indexOf('## From preview to your own city')))
+  && /본인 동의제/.test(README_KO.slice(cardSectionKo, README_KO.indexOf('## 미리보기에서 내 도시까지'))),
+  'the live city card and the opt-in gallery come right after the username proof and before the adoption table');
 ok(README_EN.indexOf('## What the demo proves') < README_EN.indexOf('## A village that lives')
   && README_KO.indexOf('## 이 데모가 보여 주는 것') < README_KO.indexOf('## 실제로 살아가는 마을'), 'proof and adoption appear before the long feature narrative');
 ok(/No token, account connection, or fork is required/.test(README_EN)
