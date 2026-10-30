@@ -1,0 +1,7 @@
+{
+  "schema": "repolis.gallery",
+  "version": 1,
+  "towns": [
+    { "login": "hyeonsangjeon", "consent": "owner" }
+  ]
+}

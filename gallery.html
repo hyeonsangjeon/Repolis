@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Repolis city gallery</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%98%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+<link rel="canonical" href="https://hyeonsangjeon.github.io/Repolis/gallery.html" />
+<meta name="description" content="GitHub towns as city cards. Type a GitHub login to make yours, walk it in 3D, and put it on your profile." />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Repolis" />
+<meta property="og:title" content="Repolis city gallery" />
+<meta property="og:description" content="GitHub towns as city cards. Type a GitHub login to make yours, walk it in 3D, and put it on your profile." />
+<meta property="og:url" content="https://hyeonsangjeon.github.io/Repolis/gallery.html" />
+<meta property="og:image" content="https://repolis-card.wingnut0310.workers.dev/card/hyeonsangjeon.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A Repolis city card: a GitHub account's public repos drawn as a skyline by district" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Repolis city gallery" />
+<meta name="twitter:description" content="GitHub towns as city cards. Type a GitHub login to make yours, walk it in 3D, and put it on your profile." />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0d1726;
+    --panel: #14243a;
+    --panel-2: #1a2d47;
+    --line: rgba(242, 184, 75, 0.28);
+    --gold: #f2b84b;
+    --ink: #f4ecdc;
+    --muted: #a9b6c6;
+    --teal: #178f86;
+    --teal-2: #1fa89d;
+    --error: #ffb4a8;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(1200px 600px at 50% -200px, #1d3352 0%, var(--bg) 60%) no-repeat, var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  a { color: var(--gold); }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .wrap { width: min(1080px, 100%); margin: 0 auto; padding: 0 16px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; }
+  .brand { color: var(--ink); text-decoration: none; font-weight: 700; letter-spacing: 0.02em; }
+  .brand span { color: var(--gold); }
+  .lang { font-size: 14px; }
+  h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin: 28px 0 10px; }
+  h2 { font-size: 22px; margin: 0 0 4px; }
+  .lead { color: var(--ink); font-size: 18px; max-width: 46em; margin: 0 0 10px; }
+  .disclaimer { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+  .note { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  form label { display: block; font-weight: 600; margin-bottom: 8px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  input {
+    flex: 1 1 260px; min-width: 0; min-height: 48px; padding: 0 14px;
+    background: #0b1422; color: var(--ink); border: 1px solid #36506f; border-radius: 10px; font-size: 17px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px;
+    border-radius: 10px; border: 1px solid #36506f; background: var(--panel-2); color: var(--ink);
+    font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--gold); }
+  .btn.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .btn.primary:hover { background: var(--teal-2); }
+  .btn.ghost { background: transparent; }
+  form .btn { min-height: 48px; }
+  .error { color: var(--error); margin: 8px 0 0; font-size: 14px; }
+  #result { margin-top: 20px; }
+  .card-frame { display: block; max-width: 600px; border-radius: 12px; overflow: hidden; background: #0b1422; }
+  .card-frame img { display: block; width: 100%; height: auto; aspect-ratio: 2 / 1; }
+  .card-text { display: grid; place-items: center; aspect-ratio: 2 / 1; padding: 16px; text-align: center; color: var(--muted); border: 1px dashed #36506f; border-radius: 12px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  textarea { width: 100%; margin-top: 8px; background: #0b1422; color: var(--ink); border: 1px solid #36506f; border-radius: 10px; padding: 10px; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  section.gallery { margin: 40px 0 24px; }
+  .towns { list-style: none; padding: 0; margin: 16px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+  .town { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
+  .town .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .badge { font-size: 12px; color: var(--bg); background: var(--gold); border-radius: 999px; padding: 2px 8px; font-weight: 700; }
+  footer { color: var(--muted); font-size: 14px; padding: 24px 0 40px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+  footer a { margin-right: 14px; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: no-preference) { .btn { transition: border-color 0.15s, background 0.15s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">🏘️ <span>Repolis</span></a>
+    <a class="lang" id="langSwitch" href="?lang=ko" hreflang="ko">한국어</a>
+  </header>
+
+  <main>
+    <section aria-labelledby="pageHeading">
+      <h1 id="pageHeading" data-t="heading">Your GitHub, as a city</h1>
+      <p class="lead" data-t="lead">Type a GitHub login. Its public repos become a city card you can walk in 3D and pin to a profile README.</p>
+      <p class="disclaimer"><span data-t="disclaimer">Public GitHub metadata only · Not an endorsement or affiliation · Removed on request</span> · <a id="removalLink" href="https://github.com/hyeonsangjeon/Repolis/issues/new?template=gallery-removal.md" target="_blank" rel="noopener" data-t="removalLink">Ask for removal</a></p>
+
+      <div class="panel">
+        <form id="maker" novalidate>
+          <label for="login" data-t="inputLabel">GitHub login, owner/repo, or repository URL</label>
+          <div class="row">
+            <input id="login" name="login" type="text" placeholder="octocat" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go" maxlength="320" aria-describedby="makerError" />
+            <button class="btn primary" type="submit" data-t="makeButton">Show my city</button>
+          </div>
+          <p id="makerError" class="error" role="alert" hidden></p>
+        </form>
+
+        <div id="result" hidden>
+          <p id="resultNote" class="note" hidden></p>
+          <a id="resultCardLink" class="card-frame" href="./"><img id="resultCard" width="600" height="300" alt="" decoding="async" /></a>
+          <div id="resultCardText" class="card-text" hidden></div>
+          <p id="resultCardStatus" class="note" aria-live="polite"></p>
+          <div class="actions">
+            <a id="resultWalk" class="btn primary" href="./" data-t="walk">Walk this city</a>
+            <button id="copyShare" class="btn" type="button" data-t="copyShare">Copy share link</button>
+            <button id="copyReadme" class="btn" type="button" data-t="copyReadme">Copy README card</button>
+            <a id="resultJoin" class="btn ghost" href="https://github.com/hyeonsangjeon/Repolis/issues/new?template=gallery-join.md" target="_blank" rel="noopener" data-t="join">Ask to join the gallery</a>
+          </div>
+          <p class="note" data-t="joinNote">Joining opens a GitHub issue from your account; that issue is your consent.</p>
+          <p id="copyStatus" class="note" aria-live="polite"></p>
+          <textarea id="copyFallback" rows="3" readonly hidden aria-label="Text to copy"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery" aria-labelledby="galleryHeading">
+      <h2 id="galleryHeading" data-t="galleryHeading">Cities in the gallery</h2>
+      <p class="note" data-t="galleryNote">Listed with each account’s consent. The first town belongs to the Repolis author.</p>
+      <ul id="towns" class="towns"></ul>
+      <p id="galleryEmpty" class="note" hidden data-t="galleryEmpty">No cities are listed here yet.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a id="backToTown" href="./" data-t="backToTown">Back to Repolis</a>
+    <a id="repoLink" href="https://github.com/hyeonsangjeon/Repolis" data-t="repository">GitHub repository</a>
+    <a id="templateLink" href="https://github.com/new?template_name=Repolis&amp;template_owner=hyeonsangjeon" data-t="template">Use the template</a>
+  </footer>
+</div>
+
+<script src="repolis.config.js"></script>
+<script type="module">
+import { validateGallery, galleryTownLinks, galleryRemovalRequestUrl, parseGalleryLogin, galleryLang, galleryText } from './assets/gallery.js?v=gallery-v1';
+
+const config = window.REPOLIS_CONFIG || {};
+const project = config.project || {};
+const services = config.services || {};
+const lang = galleryLang(location.search, navigator.language);
+const t = (key, values) => galleryText(lang, key, values);
+const linkOptions = {
+  pagesBase: new URL('./', location.href).href,
+  cardBase: services.card || '',
+  projectUrl: project.url || 'https://github.com/hyeonsangjeon/Repolis',
+  lang,
+};
+const owners = [project.owner, config.town && config.town.owner].filter(Boolean);
+const $ = id => document.getElementById(id);
+
+function applyCopy() {
+  document.documentElement.lang = lang;
+  document.title = t('title');
+  document.querySelectorAll('[data-t]').forEach(node => { node.textContent = t(node.dataset.t); });
+  $('login').placeholder = t('inputPlaceholder');
+  const other = lang === 'ko' ? 'en' : 'ko';
+  const switchUrl = new URL(location.href);
+  switchUrl.searchParams.set('lang', other);
+  $('langSwitch').href = switchUrl.pathname + switchUrl.search;
+  $('langSwitch').hreflang = other;
+  $('langSwitch').textContent = t('langSwitch');
+  $('removalLink').href = galleryRemovalRequestUrl(linkOptions.projectUrl);
+  if (project.url) $('repoLink').href = project.url;
+  if (project.templateUrl) $('templateLink').href = project.templateUrl;
+}
+
+function cardImage(links, alt) {
+  const img = document.createElement('img');
+  img.src = links.cardSvg;
+  img.width = 600;
+  img.height = 300;
+  img.alt = alt;
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  return img;
+}
+
+function townTile(town) {
+  const links = galleryTownLinks(town.login, linkOptions);
+  const item = document.createElement('li');
+  item.className = 'town';
+  const frame = document.createElement('a');
+  frame.href = links.walkUrl;
+  if (links.cardSvg) {
+    frame.className = 'card-frame';
+    const img = cardImage(links, t('cardAlt', { login: links.login }));
+    img.addEventListener('error', () => {
+      frame.className = 'card-text';
+      frame.textContent = `@${links.login}`;
+    }, { once: true });
+    frame.append(img);
+  } else {
+    frame.className = 'card-text';
+    frame.textContent = `@${links.login}`;
+  }
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const name = document.createElement('a');
+  name.href = links.walkUrl;
+  name.textContent = `@${links.login}`;
+  meta.append(name);
+  if (town.kind === 'owner') {
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = t('ownerBadge');
+    meta.append(badge);
+  }
+  item.append(frame, meta);
+  return item;
+}
+
+async function loadGallery() {
+  const list = $('towns');
+  let towns = [];
+  try {
+    const response = await fetch('data/gallery.json', { cache: 'no-cache' });
+    if (response.ok) towns = validateGallery(await response.json(), { owners, projectUrl: linkOptions.projectUrl }).towns;
+  } catch (error) { towns = []; }
+  list.replaceChildren(...towns.map(townTile));
+  $('galleryEmpty').hidden = towns.length > 0;
+}
+
+let current = null;
+
+function showResult(parsed) {
+  const links = galleryTownLinks(parsed.login, linkOptions);
+  current = links;
+  $('result').hidden = false;
+  $('resultNote').hidden = !parsed.fromRepo;
+  $('resultNote').textContent = parsed.fromRepo ? t('fromRepo', { login: links.login }) : '';
+  $('resultWalk').href = links.walkUrl;
+  $('resultCardLink').href = links.walkUrl;
+  $('resultJoin').href = links.joinUrl;
+  $('copyStatus').textContent = '';
+  $('copyFallback').hidden = true;
+  const img = $('resultCard');
+  const text = $('resultCardText');
+  if (links.cardSvg) {
+    $('resultCardLink').hidden = false;
+    text.hidden = true;
+    $('resultCardStatus').textContent = t('cardLoading');
+    img.alt = t('cardAlt', { login: links.login });
+    img.onload = () => { if (current === links) $('resultCardStatus').textContent = ''; };
+    img.onerror = () => {
+      if (current !== links) return;
+      $('resultCardLink').hidden = true;
+      text.hidden = false;
+      text.textContent = `@${links.login}`;
+      $('resultCardStatus').textContent = t('cardUnavailable');
+    };
+    img.src = links.cardSvg;
+  } else {
+    $('resultCardLink').hidden = true;
+    text.hidden = false;
+    text.textContent = `@${links.login}`;
+    $('resultCardStatus').textContent = t('noCardService');
+  }
+}
+
+async function copyText(value) {
+  const status = $('copyStatus');
+  const fallback = $('copyFallback');
+  try {
+    if (!navigator.clipboard || !window.isSecureContext) throw new Error('clipboard-unavailable');
+    await navigator.clipboard.writeText(value);
+    fallback.hidden = true;
+    status.textContent = t('copied');
+  } catch (error) {
+    fallback.value = value;
+    fallback.hidden = false;
+    fallback.focus();
+    fallback.select();
+    status.textContent = t('copyFailed');
+  }
+}
+
+$('maker').addEventListener('submit', event => {
+  event.preventDefault();
+  const parsed = parseGalleryLogin($('login').value);
+  const error = $('makerError');
+  if (!parsed.ok) {
+    error.textContent = t('invalid');
+    error.hidden = false;
+    $('login').setAttribute('aria-invalid', 'true');
+    return;
+  }
+  error.hidden = true;
+  error.textContent = '';
+  $('login').removeAttribute('aria-invalid');
+  showResult(parsed);
+});
+$('copyShare').addEventListener('click', () => { if (current) copyText(current.shareUrl); });
+$('copyReadme').addEventListener('click', () => { if (current) copyText(current.readmeHtml); });
+
+applyCopy();
+loadGallery();
+</script>
+</body>
+</html>

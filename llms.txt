@@ -14,6 +14,7 @@
 ## Runtime and data
 
 - [index.html](index.html): primary Three.js runtime, UI, navigation, residents, exploration, i18n, and day/night.
+- [gallery.html](gallery.html): standalone city gallery: a login → city card maker (share link, README card) and the opt-in list in `data/gallery.json`; rules in `assets/gallery.js`.
 - [repolis.config.js](repolis.config.js): fork owner inference and safe optional-service defaults.
 - [repos.json](repos.json): generated repository/traffic array; never hand-edit.
 - [scripts/build_repos.py](scripts/build_repos.py): rebuilds `repos.json` from committed traffic logs plus `gh api`.

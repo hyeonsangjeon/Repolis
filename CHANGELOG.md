@@ -8,6 +8,27 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### City gallery, stage 1, and a your-city-first README
+
+- New standalone page `gallery.html`, with no 3D scene. A visitor types a GitHub login, `owner/repo` or repository URL
+  and gets that city's 600×300 card. From there they can walk the town (`?user=<login>&ref=gallery`), copy the
+  `/u/<login>` share link, copy the same README card the town's "Put this town on my GitHub profile" makes, or open
+  an issue asking to be listed. Below the maker is the list of towns in the gallery. Korean and English follow
+  `?lang=` or the browser.
+- The list in `data/gallery.json` is hand-written and opt-in. It holds only the site owner's town and accounts that
+  opened the new `gallery-join` issue themselves; that issue URL is kept as the entry's `consent`. Stage 1 lists the
+  Repolis author only. The page states "Public GitHub metadata only · Not an endorsement or affiliation · Removed on
+  request" with a link to the new `gallery-removal` issue, which needs no reason.
+- The page makes one data request (the list) and loads card images from `services.card`. It sends no telemetry, stores
+  nothing and never writes HTML from data. Forks, custom domains and local clones have no card service, so they show
+  text tiles and Pages links.
+- New pure `assets/gallery.js`: consent-list validation, per-town links and the KO/EN copy table. New hermetic
+  `scripts/test-gallery.mjs` (51 checks) covers the list, links, input parsing, copy parity, the static page and both
+  templates, and runs in `scripts/check-hermetic.sh`.
+- README (EN/KO): the first button is now **Build my city** (`?launch=1`). The live town, the new city gallery and the
+  template follow as secondary buttons. A new "Your city, as a card" section after the username proof shows the
+  author's live city card. The Smoke README hero group pins the new order.
+
 ## [1.98.0] — 2026-10-24
 
 ### City card links (v1.98, part 4d) — a shared town previews as that city

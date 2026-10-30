@@ -9,13 +9,14 @@
 **Public GitHub repos become a walkable 3D town. Traffic shapes the buildings, residents live there, and Gitber drives you to the right project.**
 
 <p>
-  <a href="https://hyeonsangjeon.github.io/Repolis/?view=plaza&amp;lang=en"><img src="https://img.shields.io/badge/-%E2%96%B6%20ENTER%20LIVE%20TOWN-178f86?style=for-the-badge" alt="Enter the live Repolis town" height="40"></a><br>
-  <sub><strong>Start here:</strong> enter the live Repolis plaza now.</sub>
+  <a href="https://hyeonsangjeon.github.io/Repolis/?launch=1"><img src="https://img.shields.io/badge/-%E2%96%B6%20BUILD%20MY%20CITY-178f86?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Build my GitHub city in Repolis" height="40"></a><br>
+  <sub><strong>Start here:</strong> type a GitHub login and walk the city its public repos build.</sub>
 </p>
 <p>
-  <a href="https://hyeonsangjeon.github.io/Repolis/?launch=1"><img src="https://img.shields.io/badge/-TRY%20MY%20GITHUB-24292f?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Try Repolis with my GitHub" height="32"></a>
+  <a href="https://hyeonsangjeon.github.io/Repolis/?view=plaza&amp;lang=en"><img src="https://img.shields.io/badge/-ENTER%20LIVE%20TOWN-24292f?style=for-the-badge" alt="Enter the live Repolis town" height="32"></a>
+  <a href="https://hyeonsangjeon.github.io/Repolis/gallery.html"><img src="https://img.shields.io/badge/-CITY%20GALLERY-14243a?style=for-the-badge" alt="Open the Repolis city gallery" height="32"></a>
   <a href="https://github.com/new?template_name=Repolis&amp;template_owner=hyeonsangjeon"><img src="https://img.shields.io/badge/-USE%20THIS%20TEMPLATE-c56a26?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Use the Repolis template" height="32"></a><br>
-  <sub>Preview your public repos · or copy the template to build your own town.</sub>
+  <sub>Walk the author's live town · see city cards · or copy the template to run your own Repolis.</sub>
 </p>
 
 <a href="https://hyeonsangjeon.github.io/Repolis/"><img src="assets/demo.gif" alt="Repolis demo: a living traffic-shaped GitHub town, Gitber search, taxi ride, and real repository card" width="92%"></a>
@@ -39,7 +40,7 @@
 | Gitber searches in natural language, then drives to the result | repository discovery becomes an interaction rather than another list |
 | `?user=<login>` rebuilds the town from any public GitHub account | you can try the same engine with your work before cloning or configuring anything |
 
-**Fastest proof:** open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)** and enter your login or one `owner/repo`. A username builds the public town; a repository opens that project first. No token, account connection, or fork is required.
+**Fastest proof:** open **[Build my city](https://hyeonsangjeon.github.io/Repolis/?launch=1)** and enter your login or one `owner/repo`. A username builds the public town; a repository opens that project first. No token, account connection, or fork is required.
 
 <div align="center">
 
@@ -50,6 +51,18 @@
 </div>
 
 If you find this useful for presenting repositories, **[star Repolis](https://github.com/hyeonsangjeon/Repolis)**. Your star helps other developers discover the template.
+
+## Your city, as a card
+
+<div align="center">
+
+<a href="https://hyeonsangjeon.github.io/Repolis/gallery.html"><img src="https://repolis-card.wingnut0310.workers.dev/card/hyeonsangjeon.svg" alt="The Repolis author's city card, redrawn daily from public GitHub metadata" width="600"></a>
+
+<sub>🪪 <strong>Redrawn daily</strong> from public metadata · this one is the author's town</sub>
+
+</div>
+
+Make yours in the **[city gallery](https://hyeonsangjeon.github.io/Repolis/gallery.html)**: type a login, walk the city, and copy the card into a profile README. A shared `…/u/<login>` link previews as that person's city card in chat apps and social posts. Being listed in the gallery is opt-in: the account itself asks through an issue, and removal needs no reason.
 
 ## From preview to your own city
 
@@ -64,6 +77,7 @@ If you find this useful for presenting repositories, **[star Repolis](https://gi
 | watch my open-source history unfold | open **Town Growth Replay** from Wayfinding, the Passport, or my completed public-town preview | a creation-date timeline where repo houses rise year by year, with a shareable year link and era postcard |
 | connect with another developer | click **Connect with a friend** after a preview, or open **Twin Towns** in the city menu | a two-person link that opens both towns and their shared languages or topics |
 | keep my town on my GitHub profile | click **Put this town on my GitHub profile** when the preview is ready, or use **Town Postcard Studio** | a 600px portal that always opens my personalized town |
+| get my city card without opening the 3D town | type a login in the **[city gallery](https://hyeonsangjeon.github.io/Repolis/gallery.html)** | the card, its share link, the README snippet, and an opt-in request to be listed |
 | publish my own Repolis | use the template, enable Actions + Pages, run **Refresh Repolis data** once | your fork owner's public repos become the default town; no PAT required |
 | grow buildings from real traffic | optionally add the `GH_PAT` Actions secret | cumulative views, visitors, and clones enrich the city each day |
 
@@ -142,7 +156,7 @@ GTM_DIR=data python3 scripts/build_repos.py
 
 ## Build your own city
 
-The quickest preview requires no fork. Open **[Try my GitHub](https://hyeonsangjeon.github.io/Repolis/?launch=1)**, share `https://hyeonsangjeon.github.io/Repolis/?user=<login>`, enter the English owner plaza with `?view=plaza&lang=en`, point one project at `https://hyeonsangjeon.github.io/Repolis/?repo=<owner>/<repo>&ref=repo-portal`, or enter its exhibition directly with `?repo=<owner>/<repo>&view=atelier&lang=en`.
+The quickest preview requires no fork. Open **[Build my city](https://hyeonsangjeon.github.io/Repolis/?launch=1)**, share `https://hyeonsangjeon.github.io/Repolis/?user=<login>`, enter the English owner plaza with `?view=plaza&lang=en`, point one project at `https://hyeonsangjeon.github.io/Repolis/?repo=<owner>/<repo>&ref=repo-portal`, or enter its exhibition directly with `?repo=<owner>/<repo>&view=atelier&lang=en`.
 
 To publish a persistent city built from repository metadata:
 
