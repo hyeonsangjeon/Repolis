@@ -11,6 +11,7 @@ node scripts/test-visual-governor.mjs
 node scripts/test-portable-town.mjs
 node scripts/test-homecoming.mjs
 node scripts/test-journey.mjs
+node scripts/test-gallery.mjs
 python3 scripts/test_city_state.py
 python3 scripts/validate_city_state.py
 python3 scripts/test_fork_lineage.py
