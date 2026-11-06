@@ -8,6 +8,8 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+## [1.99.0] — 2026-11-06
+
 ### Taxi arrival card (v1.99, part 2) — one visible conversation surface
 
 - At a normal house stop, the repo card now hides the previous taxi chat, including its header. Closing the card
