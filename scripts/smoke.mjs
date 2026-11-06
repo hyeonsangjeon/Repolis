@@ -56,6 +56,7 @@ import {
   BLUEPRINT_DEEP_LINK_LIMITS,
   DIRECT_ENTRY_LIMITS,
   REPO_PORTAL_LIMITS,
+  arrivalRef,
   createPlazaDirectLink,
   createRepoOwnerTownUrl,
   createRepoPortalUrl,
@@ -795,9 +796,9 @@ ok(repoPortalLatencyBucket(999)==='under-1s'&&repoPortalLatencyBucket(1000)==='1
   &&repoPortalLatencyBucket(3000)==='3-10s'&&repoPortalLatencyBucket(10000)==='10s-plus',
   'funnel latency uses four coarse buckets rather than exact request timing');
 
-const portalLoader=(HTML.match(/let _ownerSnapshotPromise=null;[\s\S]*?(?=\ntrack\('page_load'\);)/)||[''])[0];
+const portalLoader=(HTML.match(/let _ownerSnapshotPromise=null;[\s\S]*?(?=\ntrack\('page_load',)/)||[''])[0];
 const portalTargetLoader=(portalLoader.match(/async function _loadRepoPortalTarget\(target\)\{[\s\S]*?\n\}/)||[''])[0];
-ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v5'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v6'/.test(HTML)&&REPO_PORTAL_SRC.length<30*1024,
   'the zero-build runtime imports one small dedicated Portal module');
 ok(!/document|window|localStorage|sessionStorage|fetch\(|Math\.random|THREE/.test(REPO_PORTAL_SRC),
   'parser, canonicalizer, projection, and link builders stay pure and browser-independent');
@@ -935,7 +936,7 @@ ok(HTML.indexOf('parsed.version!==PUBLIC_TOWN_CACHE_LIMITS.version')>0
   &&HTML.indexOf('parsed.version!==PUBLIC_TOWN_CACHE_LIMITS.version')<HTML.indexOf("if(cityMode === 'owner'){")
   &&/\n_storageKeys\(\)\.forEach\(key=>\{ const parsed=parsePublicTownCacheKey\(key\);/.test(publicTownCacheBlock),
   'the legacy purge runs once per boot in every city mode, before any town data loads');
-ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v5'/.test(HTML)
+ok(/from '\.\/assets\/repo-portal\.js\?v=repo-portal-v6'/.test(HTML)
   &&/PUBLIC_TOWN_CACHE_LIMITS, REPO_PORTAL_LIMITS/.test(HTML)&&/compactPublicTown/.test(HTML)&&/planPublicTownCache/.test(HTML),
   'the runtime takes cache keys, entry shape, and LRU order from the pure Portal module');
 ok(/node scripts\/test-public-town-cache\.mjs/.test(readFileSync(join(ROOT,'scripts/check-hermetic.sh'),'utf8'))
@@ -4629,13 +4630,45 @@ ok(/if\(hasFreshness\(\)\) return none;/.test(homecomingBlock)&&/if\(news\) setT
   'Town Gazette news on a return visit keeps priority over the arrival timelapse and the intent card');
 ok(['city_requested','aha_city_built','intent_chosen','aha_city_speaks','trace_left','return_visit']
   .every(name=>new RegExp(`trackHomecoming\\('${name}'`).test(HTML))
-  &&/if\(ev\.__privacy==='homecoming'\)\{[\s\S]*?new Set\(\['ev','ts','entry','device','lang','result','count','step','channel','intent','mode','days'\]\)/.test(HTML),
+  &&/if\(ev\.__privacy==='homecoming'\)\{[\s\S]*?new Set\(\['ev','ts','entry','device','lang','result','count','step','channel','intent','mode','days','ref'\]\)/.test(HTML),
   'the six funnel events exist and their allowlist drops login, repository, session, and instance identity');
 ['homecomingLaunchLabel','homecomingSampleCity','homecomingSkip','homecomingPlaqueKicker','homecomingPlaqueFacts','intentCardSkip',
   'pathUnderstandSub','pathExploreSub','pathContributeSub','guideToast','exploreRide','exploreGuideRole','exploreGitberName','exploreTownWord',
   'explorePassport','exploreEnd','exploreEndShort','exploreUnavailable','wayGo','wayLook','wayShare','wayLookLocked','wayShareLocked',
   'wayLockNote','wayLookUnlocked','wayShareUnlocked']
   .forEach(key=>ok((HTML.match(new RegExp(key+":[\\\"']",'g'))||[]).length===2,`Homecoming key ${key} is bilingual`));
+
+group('Arrival ref (v1.99) - bounded attribution without incoming identities');
+for(const ref of ['gallery','card','profile-readme','repo-portal','blueprint','twin-town','growth-replay']){
+  ok(arrivalRef('?user=octocat&ref='+ref)===ref,`arrival ref accepts ${ref}`);
+}
+for(const [search,expected] of [
+  ['', ''], ['?user=octocat', ''], ['?ref=', ''], ['?ref=+%20', ''],
+  ['?ref=%20CaRd%20', 'card'], ['ref=GALLERY', 'gallery'], ['?ref=zzz', 'other'],
+  ['?ref=octocat', 'other'], ['?ref=octocat/Hello-World', 'other'],
+  ['?ref=https%3A%2F%2Fgithub.com%2Foctocat', 'other'], ['?ref=%00card', 'other'],
+  ['?ref='+ 'x'.repeat(64), 'other'], ['?ref='+ ' '.repeat(61)+'card', 'other'],
+  ['?ref='+ 'card'.repeat(10000), 'other'], ['?ref=card&ref=gallery', 'card'],
+  [null, ''], [{ref:'card'}, ''],
+]) ok(arrivalRef(search)===expected,`arrival ref fixture ${JSON.stringify(search)?.slice(0,100)} becomes ${JSON.stringify(expected)}`);
+ok((HTML.match(/const ARRIVAL_REF = arrivalRef\(location\.search\);/g)||[]).length===1
+  &&/track\('page_load',ARRIVAL_REF\?\{ref:ARRIVAL_REF\}:\{\}\);/.test(HTML),
+  'boot captures ref once and page_load omits the key for an untagged visit');
+const arrivalTrack=(HTML.match(/function track\(eventName, payload\)\{[\s\S]*?\n\}/)||[''])[0];
+const arrivalHomecoming=(HTML.match(/function trackHomecoming\(eventName,payload\)\{[\s\S]*?\n\}/)||[''])[0];
+ok(/if\(ARRIVAL_REF\) safe\.ref=ARRIVAL_REF;\s*track\(eventName,safe\);/.test(arrivalHomecoming),
+  'all homecoming events inherit only the immutable boot ref, not caller-supplied ref');
+for(const ref of ['card','other','']){
+  const events=[],sandbox={ARRIVAL_REF:ref,currentUser:'fixture-login',cityMode:'public',REPOS:[],dataSource:'fixture',
+    SESSION_ID:'fixture-session',INSTANCE_ID:'fixture-instance',instanceOrigin:()=> 'fixture',repoPortalRequested:false,
+    recentAnalyticsEvents:events,_DBG:false,ANALYTICS_ENDPOINT:null,_homecomingTrace:()=>{},_repoPortalDevice:()=> 'mobile',LANG:'en',
+    Date:class{getTime(){return 0;}getHours(){return 0;}getDay(){return 0;}}};
+  runInNewContext(arrivalTrack+'\n'+arrivalHomecoming+"\ntrackHomecoming('city_requested',{ref:'https://github.com/fixture-login',user:'fixture-login',count:1});",sandbox);
+  const ev=events[0];
+  ok(!!ev&&ev.ev==='city_requested'&&ev.device==='mobile'&&ev.lang==='en'
+    &&JSON.stringify(Object.keys(ev).sort())===JSON.stringify(['ev','ts','count','device','lang',...(ref?['ref']:[])].sort())
+    &&(ref?ev.ref===ref:!Object.hasOwn(ev,'ref')),`homecoming runtime retains ${ref||'no ref'} without identities or payload override`);
+}
 
 group('Town UI — the earned Star invitation fits phones and waits for open panels; the Passport returns focus to a visible control');
 const starNudgeRule=(HTML.match(/#starNudge\{ position:fixed;[^}]*\}/)||[''])[0];

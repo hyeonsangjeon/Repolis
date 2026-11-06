@@ -8,6 +8,17 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Arrival attribution (v1.99, part 2) — distinguish card and gallery arrivals without raw ref values
+
+- The pure `arrivalRef(search)` accepts only `gallery`, `card`, `profile-readme`, `repo-portal`, `blueprint`,
+  `twin-town` and `growth-replay`, after trimming and lowercasing. Values over 64 decoded characters and other
+  nonempty values become `other`; missing or blank values omit the event field. Raw logins, repository names and
+  URLs are never returned.
+- The boot-time value accompanies `page_load` and every anonymous Homecoming funnel event. Existing link formats,
+  other privacy allowlists and the fork's empty analytics endpoint are unchanged. No new request, storage key,
+  identifier, timer or dependency. The metrics receiver's support for `ref` requires a separate owner check.
+- Smoke adds 29 parser, integration and runtime checks, including attempted payload overrides and identity stripping.
+
 ### City gallery, stage 1, and a your-city-first README
 
 - New standalone page `gallery.html`, with no 3D scene. A visitor types a GitHub login, `owner/repo` or repository URL

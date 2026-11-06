@@ -2598,7 +2598,7 @@ import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-cre
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
 import { HOMECOMING_LIMITS, homecomingCityName, homecomingStopCopy, homecomingTimelapsePlan, homecomingUnlocks, rememberHomecomingKey, selectHomecomingStops } from './assets/homecoming.js?v=homecoming-v1';
 import { JOURNEY_LIMITS, createJourney, recordJourneyHouse, recordJourneyPath, recordJourneyTrace, summarizeJourney } from './assets/journey.js?v=journey-v1';
-import { DIRECT_ENTRY_LIMITS, PUBLIC_TOWN_CACHE_INDEX_KEY, PUBLIC_TOWN_CACHE_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, compactPublicTown, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parsePublicTownCacheKey, parseRepoPortalInput, planPublicTownCache, projectPublicRepo, projectPublicRepos, publicTownCacheKey, readPublicTownCache, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v5';
+import { DIRECT_ENTRY_LIMITS, PUBLIC_TOWN_CACHE_INDEX_KEY, PUBLIC_TOWN_CACHE_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, arrivalRef, compactPublicTown, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parsePublicTownCacheKey, parseRepoPortalInput, planPublicTownCache, projectPublicRepo, projectPublicRepos, publicTownCacheKey, readPublicTownCache, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v6';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
 import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse, residentNewcomerLine } from './assets/resident-profiles.js?v=world-tree-phase4-v1';
@@ -2632,6 +2632,7 @@ let REPOS = [], CITY_STATE = null, RESIDENT_MANIFEST = null, RESIDENT_MANIFEST_S
 /* --- which town are we in? --- */
 const GH_LOGIN_RE = GITHUB_LOGIN_RE;
 const _QUERY = new URLSearchParams(location.search);
+const ARRIVAL_REF = arrivalRef(location.search);
 const _repoRoute = resolveRepoPortalRequest(location.search, OWNER);
 const PLAZA_DIRECT_LINK = resolvePlazaDirectLink(location.search,location.hash);
 const ATELIER_DIRECT_LINK = resolveRepositoryAtelierDirectLink(location.search,location.hash);
@@ -2698,7 +2699,7 @@ function track(eventName, payload){
       Object.keys(ev).forEach(key=>{ if(!allowed.has(key)) delete ev[key]; });
     }
     if(ev.__privacy==='homecoming'){   // first-ten-minutes funnel: no login, repository, session or instance identity
-      const allowed=new Set(['ev','ts','entry','device','lang','result','count','step','channel','intent','mode','days']);
+      const allowed=new Set(['ev','ts','entry','device','lang','result','count','step','channel','intent','mode','days','ref']);
       Object.keys(ev).forEach(key=>{ if(!allowed.has(key)) delete ev[key]; });
     }
     recentAnalyticsEvents.push(ev); if(recentAnalyticsEvents.length > 150) recentAnalyticsEvents.shift();
@@ -2895,7 +2896,7 @@ async function _loadRepoPortalTarget(target){
   }
 }
 
-track('page_load');
+track('page_load',ARRIVAL_REF?{ref:ARRIVAL_REF}:{});
 trackPortal('feature_seen',{entry:repoPortalRequested?'link':'intro',device:_repoPortalDevice(),lang:_repoPortalLang()});
 
 if(cityMode === 'owner'){
@@ -13712,6 +13713,7 @@ function trackHomecoming(eventName,payload){
     const value=payload&&payload[key]; if(typeof value==='string'&&value.length<=32) safe[key]=value; }
   for(const key of ['count','step']){ const value=payload&&payload[key]; if(Number.isInteger(value)&&value>=0&&value<=999) safe[key]=value; }
   if(!safe.device) safe.device=_repoPortalDevice(); if(!safe.lang) safe.lang=LANG;
+  if(ARRIVAL_REF) safe.ref=ARRIVAL_REF;
   track(eventName,safe);
 }
 function _homecomingTrace(eventName,ev){   // a visitor leaves one trace: a share, a copied link, a postcard, a route, an issue
