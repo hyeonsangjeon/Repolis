@@ -33,6 +33,15 @@ const ATELIER_DIRECT_REQUIRED_QUERY_KEYS = new Set(['repo', 'view']);
 const PLAZA_DIRECT_QUERY_KEYS = new Set(['view', 'lang']);
 const PLAZA_DIRECT_REQUIRED_QUERY_KEYS = new Set(['view']);
 
+const ARRIVAL_REFS = new Set(['gallery', 'card', 'profile-readme', 'repo-portal', 'blueprint', 'twin-town', 'growth-replay']);
+
+export function arrivalRef(search) {
+  const raw = new URLSearchParams(typeof search === 'string' ? search : '').get('ref') || '';
+  if (raw.length > 64) return 'other';
+  const value = raw.trim().toLowerCase();
+  return value ? (ARRIVAL_REFS.has(value) ? value : 'other') : '';
+}
+
 function invalid(reason) {
   return Object.freeze({ ok: false, reason });
 }
