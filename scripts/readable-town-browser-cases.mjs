@@ -260,6 +260,54 @@ export async function runReadableTownBrowserCases({ run, ready, click, screensho
       return { before, restored, escaped, chipName, chatActions, ime, menuPose };
     });
 
+    await run({ name: `readable-taxi-card-${suffix}`, group: 'readable-town', query: '?dbg=1',
+      lang, mobile, lowEnd: mobile, reduced: mobile }, async s => {
+      const { page } = s; await ready(page); await click(page, 'startBtn');
+      if (await page.evaluate("!document.getElementById('intentCard').classList.contains('hidden')")) await click(page, 'intentCardSkip');
+      await pointerClick(page, 'taxiBtn', mobile);
+      await page.evaluate("const select=document.getElementById('modeSel');select.value='local';select.dispatchEvent(new Event('change'))");
+      await pointerClick(page, 'chatText', mobile);
+      const question = lang === 'ko' ? '동영상 다운로드' : 'video download';
+      await page.send('Input.insertText', { text: question }); await pointerClick(page, 'chatSend', mobile);
+      await page.until("!!document.querySelector('#chatLog .ride')");
+      assert((await page.evaluate("document.getElementById('chatLog').textContent")).includes(question));
+      await page.evaluate("document.querySelector('#chatLog .ride').id='taxiCardTestRide'");
+      await pointerClick(page, 'taxiCardTestRide', mobile);
+      await page.until('__ride()!==null');
+      const pose = await page.evaluate('__taxiPos()'); await delay(350);
+      assert.notDeepEqual(await page.evaluate('__taxiPos()'), pose, 'taxi actually moves to the house');
+      await page.until('__modal()&&__ride()===null', 120000); await delay(650);
+      const arrived = await page.evaluate(`(()=>{const chat=document.getElementById('chat');return {
+        repo:document.getElementById('cardStars').textContent,log:document.getElementById('chatLog').innerHTML,
+        npc:__npc().active,hidden:chat.getBoundingClientRect().height===0,inert:chat.inert,focus:document.activeElement.id};})()`);
+      assert(arrived.repo.includes('youtube-dl-nas')); assert.equal(arrived.npc, 'taxi');
+      assert.equal(arrived.hidden, !baseline); assert(arrived.inert); assert.equal(arrived.focus, 'closeBtn');
+      await screenshot(page, `${prefix}-readable-taxi-card-${suffix}`);
+      if (!baseline) {
+        await pointerClick(page, 'atelierBtn', mobile); await page.until(inside);
+        await page.evaluate("__atelierAction('ask')"); await page.until("document.activeElement.id==='chatText'");
+        assert(await page.evaluate("document.getElementById('chat').getBoundingClientRect().height>0"), 'arrival suspension cannot hide the in-room chat');
+        await press(page, 'Escape'); await press(page, 'Escape'); await page.until(outside);
+        assert.equal(await page.evaluate('__modal()'), true);
+        assert.equal(await page.evaluate("document.getElementById('chat').getBoundingClientRect().height"), 0, 'returning to the arrival card hides exterior chat again');
+        assert.equal(await page.evaluate("document.getElementById('chatLog').innerHTML"), arrived.log);
+        await page.evaluate("document.getElementById('closeBtn').focus()");
+      }
+      await press(page, 'Tab', 'Tab', 8);
+      assert.equal(await page.evaluate("document.activeElement.matches('#cardDetails > summary')"), true, 'folded card content is not focusable');
+      await press(page, 'Tab'); assert.equal(await page.evaluate('document.activeElement.id'), 'closeBtn');
+      if (lang === 'ko') await pointerClick(page, 'closeBtn', mobile); else await press(page, 'Escape');
+      await page.until('!__modal()'); await delay(150);
+      const restored = await page.evaluate(`(()=>{const chat=document.getElementById('chat');return {
+        log:document.getElementById('chatLog').innerHTML,npc:__npc().active,focus:document.activeElement.id,
+        visible:!chat.inert&&!chat.classList.contains('hidden')&&chat.getBoundingClientRect().height>0};})()`);
+      assert.equal(restored.log, arrived.log); assert.equal(restored.npc, arrived.npc); assert(restored.visible);
+      if (!baseline) assert.equal(restored.focus, 'chatText');
+      await screenshot(page, `${prefix}-readable-taxi-chat-${suffix}`);
+      await press(page, 'Escape'); await page.until("document.getElementById('chat').classList.contains('hidden')");
+      return { repo: arrived.repo, hiddenDuringCard: arrived.hidden, historyPreserved: true, focus: restored.focus };
+    });
+
     if (!baseline) await run({ name: `readable-fast-return-${suffix}`, group: 'readable-town', query: '?dbg=1',
       lang, mobile, lowEnd: mobile, reduced: mobile }, async s => {
       const { page } = s; await ready(page); await click(page, 'startBtn');

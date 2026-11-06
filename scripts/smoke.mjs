@@ -1735,7 +1735,7 @@ ok(/postcardCaptureBlank/.test(postcardBlock) && /postcardCaptureContext/.test(p
   'blank, lost-context, CORS/security, generic capture, and forced fallback paths stay visible and testable');
 ok(/if\(ride\|\|ferris\|\|carousel\|\|canalFerryRide\|\|performance\.now\(\)<ridePostActionUntil\)/.test(postcardBlock)
   && (HTML.match(/postcardMotionBusy:/g) || []).length === 2
-  && /ridePostActionUntil=performance\.now\(\)\+700; setTimeout\(\(\)=>openCard\(repo\),500\)/.test(HTML),
+  && /ridePostActionUntil=performance\.now\(\)\+700; setTimeout\(\(\)=>exploreStop\?openCard\(repo\):openTaxiArrivalCard\(repo\),500\)/.test(HTML),
   'moving rides and delayed arrival UI cannot overlap the postcard dialog');
 ['postcard_open', 'postcard_render', 'postcard_share', 'postcard_download'].forEach(event =>
   ok(postcardBlock.includes(`track('${event}'`), `postcard event ${event} is instrumented`));
@@ -2240,7 +2240,7 @@ ok(/_courseResident:live\.res\.id/.test(tourBlock)
   && /if\(repo\._courseResident\)[\s\S]*?openChat\(L\._npc\)/.test(HTML),
   'resident arrival opens the existing local greeting interaction');
 ok(/tourRepo:/.test(HTML) && /Repository Atelier/.test(tourBlock + HTML)
-  && /setTimeout\(\(\)=>openCard\(repo\),500\)/.test(HTML),
+  && /setTimeout\(\(\)=>exploreStop\?openCard\(repo\):openTaxiArrivalCard\(repo\),500\)/.test(HTML),
   'the linked repo arrival opens its existing card and exposes Repository Atelier');
 ok(/function tourTravel\(destination,dwell\)[\s\S]*?if\(REDUCED\)\{ player\.position\.set[\s\S]*?arriveTaxi\(destination\); tourOnArrive\(\)/.test(tourBlock),
   'reduced motion keeps equivalent spatial stops and real interactions without animated taxi travel');

@@ -8,6 +8,18 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Taxi arrival card (v1.99, part 2) — one visible conversation surface
+
+- At a normal house stop, the repo card now hides the previous taxi chat, including its header. Closing the card
+  by button or Escape restores the arrival conversation and focuses its input (or a reachable chat control while
+  input is disabled). History, active NPC, queued questions and in-flight replies stay intact; no chat-close or
+  chat-open lifecycle is invoked by this visual suspension.
+- Hub, landmark, resident, library and exploration-tour arrivals keep their existing behavior. The shown-card
+  CSS rule stops hiding chat when the card is suspended inside the Atelier, and a normal card opening clears it.
+- First-visit fixtures add 23 checks for presentation-only suspension, focus fallback, late replies, queue identity,
+  stale ownership and seven destination paths (116 total). The local-only readable-town browser gate adds a real
+  local search / moving taxi / card / chat loop in KO/EN on mobile and desktop; screenshots stay outside the repo.
+
 ### City gallery, stage 1, and a your-city-first README
 
 - New standalone page `gallery.html`, with no 3D scene. A visitor types a GitHub login, `owner/repo` or repository URL

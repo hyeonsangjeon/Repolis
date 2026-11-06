@@ -1415,6 +1415,7 @@
     box-shadow: 0 16px 48px rgba(70,40,15,.32); display: flex; flex-direction: column; overflow: hidden;
     transform-origin: bottom right; transition: opacity .2s ease, transform .2s ease; }
   #chat.hidden { opacity: 0; transform: scale(.92) translateY(8px); pointer-events: none; visibility: hidden; }
+  #modal.show.taxiArrivalCard ~ #chat { display: none; }
   body.town-panel-open #chat { bottom: max(12px,calc(100dvh - var(--town-ui-top,0px) - var(--town-ui-height,100dvh) + 12px));
     max-height: calc(var(--town-ui-height,100dvh) - 88px); }
   #chat .chatHead { flex: 0 0 auto; }
@@ -11299,6 +11300,7 @@ window.addEventListener('hashchange',()=>{ if(_repoHashGuard) return; const k=re
 
 function openCard(repo){ if(repo._isLibrary){ openLibrary(); return; }
   starTrailVisit(repo); lanternWatchVisit(repo); courseMark('repo',repo.repo);
+  modal.classList.remove('taxiArrivalCard'); modal._taxiArrivalNpc=null;
   if(!modal.classList.contains('show')) modal._previousFocus=document.activeElement;
   clearTownInput(); modalOpen=true; modal.inert=false; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal._repoKey=repo.repo||null; setRepoHash(repo);
   document.getElementById('cardScroll').scrollTop=0;
@@ -11375,9 +11377,20 @@ function refreshRepoCardLineage(repo){
   const link=document.createElement('a'); link.href=lineage.url; link.target='_blank'; link.rel='noopener'; link.textContent=t('lineageOpen'); copy.append(link);
   box.append(crest,copy); box.hidden=false;
 }
+// Keep the live chat intact underneath the card, including queued or in-flight replies.
+function openTaxiArrivalCard(repo){
+  openCard(repo);
+  if(repo._isLibrary||repositoryAtelierActive()||chatEl.classList.contains('hidden')) return;
+  modal._taxiArrivalNpc=activeNpc; modal.classList.add('taxiArrivalCard');
+}
 function closeCard(){ if(!modal.classList.contains('show')) return; const previous=modal._previousFocus;
-  modalOpen=false; modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); modal.inert=true;
+  const resumeChat=modal.classList.contains('taxiArrivalCard')&&modal._taxiArrivalNpc===activeNpc
+    &&!chatEl.classList.contains('hidden')&&!repositoryAtelierActive();
+  modalOpen=false; modal.classList.remove('show','taxiArrivalCard'); modal._taxiArrivalNpc=null; modal.setAttribute('aria-hidden','true'); modal.inert=true;
   modal._repoKey=null; modal._previousFocus=null; clearTownInput(); clearRepoHash(); flushStarNudge();
+  if(resumeChat){ syncTownPanels(); scrollChat();
+    const input=!chatText.disabled&&townFocusVisible(chatText)?chatText:townFocusables(chatEl)[0];
+    if(input){ input.focus({preventScroll:true}); return; } }
   const target=previous&&previous.isConnected&&!previous.closest('[inert],.hidden')&&previous.getClientRects().length?previous:menuBtn;
   target.focus({preventScroll:true}); }
 /* ───────── 🚕 Repo-card actions — reuse the existing taxi/chat flow (no new backend) ───────── */
@@ -13350,7 +13363,7 @@ function arriveTaxi(repo){ ride=null; ridePostActionUntil=0; driveBar.style.disp
     return;
   }
   if(!exploreStop) addMsg('bot',(LANG==='ko'?`🚕 <b>${repo.label}</b> 집에 도착했어요! 문을 열어드릴게요 🚪`:`🚕 We've arrived at <b>${repo.label}</b>! Opening the door for you 🚪`),{noHist:true});
-  ridePostActionUntil=performance.now()+700; setTimeout(()=>openCard(repo),500); }
+  ridePostActionUntil=performance.now()+700; setTimeout(()=>exploreStop?openCard(repo):openTaxiArrivalCard(repo),500); }
 
 /* ---- 🗺️ World map / minimap v1 — district overview + click/tap to ride to a district centre ---- */
 var _mapReady=false;                                                 // hoisted flag: applyLang() runs before this module, so gate its syncMapChrome() call
