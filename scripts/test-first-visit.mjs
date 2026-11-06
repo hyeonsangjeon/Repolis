@@ -46,6 +46,69 @@ export async function runFirstVisitTests(check){
   check(['liveCount','entryCount','entryTotalCount','allCount'].every(id=>tools.includes(`id="${id}"`))
     &&/id="townTools"[\s\S]*?<summary/.test(tools),'one native disclosure retains every existing visitor counter');
 
+  const taxiCard=HTML.slice(HTML.indexOf('function openTaxiArrivalCard(repo){'),HTML.indexOf('/* ───────── 🚕 Repo-card actions'));
+  check(/#modal\.show\.taxiArrivalCard ~ #chat\s*\{ display: none; \}/.test(HTML)
+    &&HTML.indexOf('id="modal"')<HTML.indexOf('id="chat"'),
+    'only a shown taxi-arrival card visually suspends its sibling chat, even if a reply reopens chat');
+  check(!/closeChat\(|openChat\(|cancelMarketRequest\(|queuedChatQuestions|pendingChatNpc|chatHistory\s*=|chatLog\.innerHTML\s*=/.test(taxiCard),
+    'taxi card suspension never cancels a request, drains a queue, replaces history or reopens an NPC');
+  check(/modal\.classList\.remove\('taxiArrivalCard'\); modal\._taxiArrivalNpc=null;/.test(HTML.slice(HTML.indexOf('function openCard(repo){'),HTML.indexOf('function refreshRepoCardLineage'))),
+    'a regular card opening clears stale taxi-arrival ownership');
+  const taxiCardFixture=({hidden=false,inside=false,library=false,disabled=false}={})=>{
+    const classes=new Set(),chatClasses=new Set(hidden?['hidden']:[]),log=['question','answer','arrival'],queue=['pending'];
+    const list=set=>({contains:key=>set.has(key),add:(...keys)=>keys.forEach(key=>set.add(key)),remove:(...keys)=>keys.forEach(key=>set.delete(key))});
+    const ctx={document:{activeElement:null},activeNpc:{kind:'taxi'},modalOpen:false,chatHistory:log,queuedChatQuestions:queue,pendingChatNpc:{kind:'scholar'},
+      modal:{classList:list(classes),setAttribute(){},inert:true},chatEl:{classList:list(chatClasses)},
+      repositoryAtelierActive:()=>inside,clearTownInput(){},clearRepoHash(){},flushStarNudge(){},
+      townFocusVisible:el=>!el.disabled,townFocusables:()=>[ctx.fallback],
+      syncTownPanels:()=>{ctx.synced=true;},scrollChat:()=>{ctx.scrolled=true;},
+      openCard:()=>{if(!library){classes.add('show');ctx.modalOpen=true;}},synced:false,scrolled:false};
+    const focusable=id=>({id,focus:()=>{ctx.document.activeElement=id;}});
+    ctx.chatText={...focusable('chatText'),disabled};ctx.menuBtn=focusable('menuBtn');ctx.fallback=focusable('chatClose');
+    runInNewContext(taxiCard+'\nglobalThis.api={openTaxiArrivalCard,closeCard};',ctx);
+    const npc=ctx.activeNpc,pending=ctx.pendingChatNpc;ctx.api.openTaxiArrivalCard({_isLibrary:library});
+    return {ctx,classes,log,queue,npc,pending};
+  };
+  for(const disabled of [false,true]){
+    const {ctx,classes,log,queue,npc,pending}=taxiCardFixture({disabled});
+    check(classes.has('taxiArrivalCard')&&ctx.modal._taxiArrivalNpc===npc&&!ctx.chatEl.classList.contains('hidden'),
+      'normal house arrival suspends presentation, not the live chat lifecycle');
+    log.push('late reply');queue.push('another question');ctx.api.closeCard();
+    check(!classes.has('show')&&!classes.has('taxiArrivalCard')&&ctx.modal._taxiArrivalNpc===null&&ctx.synced&&ctx.scrolled
+      &&ctx.document.activeElement===(disabled?'chatClose':'chatText'),
+      'closing a taxi card restores visible input focus, or a reachable control while input is disabled');
+    check(ctx.chatHistory===log&&log.at(-1)==='late reply'&&ctx.queuedChatQuestions===queue&&queue.length===2
+      &&ctx.pendingChatNpc===pending&&ctx.activeNpc===npc,
+      'in-flight output, queued questions, pending NPC and the existing conversation survive card close');
+    ctx.document.activeElement='elsewhere';ctx.api.closeCard();
+    check(ctx.document.activeElement==='elsewhere','closing the already-closed card does not steal focus again');
+  }
+  for(const options of [{hidden:true},{inside:true},{library:true}]){
+    const {ctx,classes}=taxiCardFixture(options);ctx.api.closeCard();
+    check(!classes.has('taxiArrivalCard')&&!ctx.synced,'closed chat, Atelier and library paths never gain taxi-card restoration');
+  }
+  for(const change of ['npc','closed']){
+    const {ctx}=taxiCardFixture();
+    if(change==='npc')ctx.activeNpc={kind:'scholar'};else ctx.chatEl.classList.add('hidden');
+    ctx.api.closeCard();check(!ctx.synced&&ctx.document.activeElement==='menuBtn',
+      'a later NPC switch or explicit chat close cannot resurrect the old arrival conversation');
+  }
+  const taxiArrival=HTML.slice(HTML.indexOf('function arriveTaxi(repo){'),HTML.indexOf('/* ---- 🗺️ World map'));
+  for(const [name,repo,explore,expected] of [
+    ['house',{},false,'chat,message,taxi-card'],['explore',{},true,'card'],
+    ['hub',{_zoneDest:true},false,'chat,message'],['landmark',{_landmark:'station'},false,'chat,message'],
+    ['tree',{_tourTree:true},false,'tree'],['resident',{_courseResident:'r'},false,'chat'],
+    ['haunt',{_courseHaunt:'r'},false,'chat'],
+  ]){
+    const calls=[],timers=[],ctx={ride:{},ridePostActionUntil:0,driveBar:{style:{}},model:{},_settleClearSightArrival(){},
+      tour:{active:explore,mode:'explore'},performance:{now:()=>0},setTimeout:fn=>timers.push(fn),
+      openChat:()=>calls.push('chat'),addMsg:()=>calls.push('message'),openCard:()=>calls.push('card'),
+      openTaxiArrivalCard:()=>calls.push('taxi-card'),openWorldTreeChronicle:()=>calls.push('tree'),
+      _residentLive:()=>null,courseMark:()=>false,ZONES:[],LANG:'en',t:()=>''};
+    runInNewContext(taxiArrival+'\nglobalThis.arriveTaxi=arriveTaxi;',ctx);ctx.arriveTaxi(repo);timers.forEach(fn=>fn());
+    check(calls.join(',')===expected,`${name} arrival keeps its own destination UI and only normal houses suspend chat`);
+  }
+
   let keyHandler,worldActions=0;
   const keyboard={document:{activeElement:{tagName:'BODY'}},keys:{},MOVE:new Set(['Space']),
     addEventListener:(_type,handler)=>{ keyHandler=handler; },townInputBlocked:()=>false,
