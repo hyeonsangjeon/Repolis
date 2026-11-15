@@ -30,9 +30,9 @@
 "stars": 201,
 "forks": 48,
 "fork": false,
-"views": 4321,
-"visitors": 2306,
-"clones": 3173,
+"views": 4330,
+"visitors": 2310,
+"clones": 3183,
 "size": 16634,
 "open_issues": 0,
 "license": "MIT",
@@ -46,7 +46,7 @@
 "first_seen": "2025-07-02",
 "social": "https://repository-images.githubusercontent.com/149748615/d9b76edc-f71d-4ef2-954a-5d2615b6c315",
 "social_custom": true,
-"score": 18.377,
+"score": 18.381,
 "rank": 0
 },
 {
@@ -72,10 +72,10 @@
 "stars": 29,
 "forks": 4,
 "fork": false,
-"views": 4661,
-"visitors": 1193,
-"clones": 34067,
-"size": 57099,
+"views": 4668,
+"visitors": 1200,
+"clones": 34180,
+"size": 57315,
 "open_issues": 8,
 "license": "MIT",
 "archived": false,
@@ -83,12 +83,12 @@
 "release_tag": "gdpval-sandbox-v1.0.0",
 "release_date": "2026-07-10",
 "created": "2026-02-24",
-"pushed": "2026-11-13",
+"pushed": "2026-11-15",
 "tracked": true,
 "first_seen": "2026-02-26",
 "social": "https://repository-images.githubusercontent.com/1165924985/01ea1813-25a2-4604-87dd-f71bf795447a",
 "social_custom": true,
-"score": 17.057,
+"score": 17.065,
 "rank": 1
 },
 {
@@ -165,10 +165,10 @@
 "stars": 47,
 "forks": 19,
 "fork": false,
-"views": 769,
-"visitors": 406,
-"clones": 5401,
-"size": 62894,
+"views": 770,
+"visitors": 407,
+"clones": 5413,
+"size": 62978,
 "open_issues": 2,
 "license": "MIT",
 "archived": false,
@@ -176,12 +176,12 @@
 "release_tag": "v1.99.0",
 "release_date": "2026-11-06",
 "created": "2026-06-21",
-"pushed": "2026-11-13",
+"pushed": "2026-11-14",
 "tracked": true,
 "first_seen": "2026-06-21",
 "social": "https://repository-images.githubusercontent.com/1276174879/869f53a2-9c23-4b94-a319-62efd9e19316",
 "social_custom": true,
-"score": 15.758,
+"score": 15.762,
 "rank": 3
 },
 {
@@ -196,7 +196,7 @@
 "fork": false,
 "views": 225,
 "visitors": 124,
-"clones": 3819,
+"clones": 3832,
 "size": 18357,
 "open_issues": 0,
 "license": "",
@@ -210,7 +210,7 @@
 "first_seen": "2026-05-09",
 "social": "https://repository-images.githubusercontent.com/1176412666/40a9785e-78a6-4ce3-b389-765d98ebfbf6",
 "social_custom": true,
-"score": 12.666,
+"score": 12.669,
 "rank": 4
 },
 {
@@ -290,8 +290,8 @@
 "stars": 10,
 "forks": 3,
 "fork": false,
-"views": 766,
-"visitors": 335,
+"views": 768,
+"visitors": 336,
 "clones": 691,
 "size": 2612,
 "open_issues": 0,
@@ -306,7 +306,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/69f8f4963db9ca1ebe5e243cbbfa2c3ace3bcea705e56feca4e287977b553468/hyeonsangjeon/PDF2LLM-Tuning-Studio",
 "social_custom": false,
-"score": 12.426,
+"score": 12.429,
 "rank": 6
 },
 {
@@ -388,7 +388,7 @@
 "fork": false,
 "views": 462,
 "visitors": 247,
-"clones": 944,
+"clones": 945,
 "size": 37141,
 "open_issues": 2,
 "license": "MIT",
@@ -402,7 +402,7 @@
 "first_seen": "2026-06-13",
 "social": "https://repository-images.githubusercontent.com/1254165127/30e8c2e8-7e4e-4639-9649-e199cfa9eb94",
 "social_custom": true,
-"score": 11.924,
+"score": 11.925,
 "rank": 8
 },
 {
@@ -434,7 +434,7 @@
 "fork": false,
 "views": 223,
 "visitors": 73,
-"clones": 380,
+"clones": 381,
 "size": 4510,
 "open_issues": 4,
 "license": "Apache-2.0",
@@ -448,7 +448,7 @@
 "first_seen": "2026-06-19",
 "social": "https://repository-images.githubusercontent.com/79776003/3be0b451-3b6f-4ed3-a127-ccdf6a19fbeb",
 "social_custom": true,
-"score": 11.551,
+"score": 11.553,
 "rank": 9
 },
 {
@@ -476,7 +476,7 @@
 "fork": false,
 "views": 217,
 "visitors": 110,
-"clones": 3693,
+"clones": 3696,
 "size": 11200,
 "open_issues": 2,
 "license": "MIT",
@@ -519,7 +519,7 @@
 "fork": false,
 "views": 130,
 "visitors": 99,
-"clones": 1058,
+"clones": 1061,
 "size": 24771,
 "open_issues": 3,
 "license": "MIT",
@@ -533,7 +533,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/634d341e6162941213728b92da90fa08bd8be23644bf0d27093be33a912969a5/hyeonsangjeon/AIsketcher",
 "social_custom": false,
-"score": 10.867,
+"score": 10.869,
 "rank": 11
 },
 {
@@ -567,9 +567,9 @@
 "stars": 3,
 "forks": 0,
 "fork": false,
-"views": 191,
-"visitors": 140,
-"clones": 1467,
+"views": 192,
+"visitors": 141,
+"clones": 1468,
 "size": 1676,
 "open_issues": 2,
 "license": "MIT",
@@ -583,7 +583,7 @@
 "first_seen": "2026-06-18",
 "social": "https://repository-images.githubusercontent.com/1087109477/988980f9-0e15-45bd-baaa-68f903bc4212",
 "social_custom": true,
-"score": 10.746,
+"score": 10.754,
 "rank": 12
 },
 {
@@ -750,8 +750,8 @@
 "stars": 2,
 "forks": 0,
 "fork": false,
-"views": 198,
-"visitors": 112,
+"views": 199,
+"visitors": 113,
 "clones": 609,
 "size": 69140,
 "open_issues": 0,
@@ -766,7 +766,7 @@
 "first_seen": "2026-07-11",
 "social": "https://repository-images.githubusercontent.com/1297286251/2356dc07-82ec-4bcc-bba3-51033234186c",
 "social_custom": true,
-"score": 9.766,
+"score": 9.775,
 "rank": 16
 },
 {
@@ -792,7 +792,7 @@
 "fork": false,
 "views": 164,
 "visitors": 75,
-"clones": 2340,
+"clones": 2347,
 "size": 5118,
 "open_issues": 4,
 "license": "MIT",
@@ -806,7 +806,7 @@
 "first_seen": "2026-07-14",
 "social": "https://opengraph.githubassets.com/8354efebd5dac750c68e6d47e785d4e4bd35931db304d9bcf633a35a26911b0a/hyeonsangjeon/foundry-cost-aware-model-routing",
 "social_custom": false,
-"score": 9.762,
+"score": 9.764,
 "rank": 17
 },
 {
@@ -830,7 +830,7 @@
 "fork": false,
 "views": 128,
 "visitors": 113,
-"clones": 108,
+"clones": 109,
 "size": 562,
 "open_issues": 0,
 "license": "",
@@ -844,7 +844,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/4fb4ad92a22e3d1f1e549906946d5a786e436f0ea3d9f16d4416dce6192da952/hyeonsangjeon/dataplatform",
 "social_custom": false,
-"score": 9.678,
+"score": 9.685,
 "rank": 18
 },
 {
@@ -868,9 +868,9 @@
 "stars": 7,
 "forks": 1,
 "fork": false,
-"views": 113,
-"visitors": 91,
-"clones": 114,
+"views": 114,
+"visitors": 92,
+"clones": 116,
 "size": 289,
 "open_issues": 1,
 "license": "MIT",
@@ -884,7 +884,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/fcd4d5e5b4228bbe8fa5cd1b1945d7cbbae0b6afbd3e7b1e58c0237bf55fa5ce/hyeonsangjeon/strands-bedrock-agents-cookbook",
 "social_custom": false,
-"score": 9.299,
+"score": 9.322,
 "rank": 19
 },
 {
@@ -899,7 +899,7 @@
 "fork": false,
 "views": 140,
 "visitors": 83,
-"clones": 179,
+"clones": 183,
 "size": 26830,
 "open_issues": 0,
 "license": "MIT",
@@ -913,7 +913,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/f2f50d90442f4aa7ba632c91ed8d39f1feee5e893856dee28f0c8911ddc45e11/hyeonsangjeon/Amazon-Bedrock-Guardrails-Toolkit",
 "social_custom": false,
-"score": 9.106,
+"score": 9.121,
 "rank": 20
 },
 {
@@ -928,7 +928,7 @@
 "fork": false,
 "views": 359,
 "visitors": 44,
-"clones": 1639,
+"clones": 1640,
 "size": 4671,
 "open_issues": 0,
 "license": "MIT",
@@ -942,7 +942,7 @@
 "first_seen": "2026-09-11",
 "social": "https://opengraph.githubassets.com/5ac85209836c33a0ee188d341aaf7fdceae71fbd99dc360a60d0ff3a60d6857c/hyeonsangjeon/prompt-compression-billing-bench",
 "social_custom": false,
-"score": 8.988,
+"score": 8.989,
 "rank": 21
 },
 {
@@ -1034,7 +1034,7 @@
 "fork": false,
 "views": 54,
 "visitors": 30,
-"clones": 79,
+"clones": 80,
 "size": 7,
 "open_issues": 0,
 "license": "",
@@ -1048,7 +1048,7 @@
 "first_seen": "2026-06-19",
 "social": "https://opengraph.githubassets.com/395cfb4be50f578c64250923b455cff79faf810dade5b7e3bcdeba612e78c046/hyeonsangjeon/mariadb-galera-cluster",
 "social_custom": false,
-"score": 8.056,
+"score": 8.065,
 "rank": 24
 },
 {
@@ -1183,7 +1183,7 @@
 "fork": false,
 "views": 53,
 "visitors": 29,
-"clones": 145,
+"clones": 146,
 "size": 4786,
 "open_issues": 0,
 "license": "",
@@ -1197,7 +1197,7 @@
 "first_seen": "2026-07-25",
 "social": "https://opengraph.githubassets.com/f398d6632ef38e3d33e5b78e6e689b9376893a2cac0f3e291e82d04e98ac9803/hyeonsangjeon/multilingual-oss-map",
 "social_custom": false,
-"score": 7.439,
+"score": 7.444,
 "rank": 28
 },
 {
@@ -1221,7 +1221,7 @@
 "fork": false,
 "views": 30,
 "visitors": 16,
-"clones": 564,
+"clones": 565,
 "size": 1624,
 "open_issues": 19,
 "license": "MIT",
@@ -1235,7 +1235,7 @@
 "first_seen": "2026-07-10",
 "social": "https://opengraph.githubassets.com/7143ab45c9f26b1aac95d572140e2e5cb7967d0cd806501e66523610c14ba602/hyeonsangjeon/polaris-agent",
 "social_custom": false,
-"score": 7.269,
+"score": 7.27,
 "rank": 29
 },
 {
@@ -1370,7 +1370,7 @@
 "fork": false,
 "views": 32,
 "visitors": 31,
-"clones": 88,
+"clones": 89,
 "size": 1,
 "open_issues": 0,
 "license": "",
@@ -1384,7 +1384,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/619a41156504774b7d1ecabdedbb8758a373809cb322861e6767013a63e69a02/hyeonsangjeon/alpine-nginx-perl",
 "social_custom": false,
-"score": 6.954,
+"score": 6.962,
 "rank": 33
 },
 {
@@ -1399,7 +1399,7 @@
 "fork": false,
 "views": 12,
 "visitors": 8,
-"clones": 142,
+"clones": 144,
 "size": 277,
 "open_issues": 0,
 "license": "MIT",
@@ -1413,7 +1413,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/179760fe792da299bb007ecaa299b0ec763273f3e3f38399bb496a349f68d457/hyeonsangjeon/aws-llm-dashboard",
 "social_custom": false,
-"score": 6.88,
+"score": 6.889,
 "rank": 34
 },
 {
@@ -1428,7 +1428,7 @@
 "fork": false,
 "views": 26,
 "visitors": 7,
-"clones": 151,
+"clones": 152,
 "size": 2051,
 "open_issues": 0,
 "license": "MIT",
@@ -1442,7 +1442,7 @@
 "first_seen": "2025-07-02",
 "social": "https://opengraph.githubassets.com/a88d4c9f44bae0b1dec62cd71063bb68717d4b95e1cb251bd6f64dd9c831d07d/hyeonsangjeon/FSI-Gameday-General-Immersion-Day",
 "social_custom": false,
-"score": 6.817,
+"score": 6.821,
 "rank": 35
 },
 {
@@ -1457,7 +1457,7 @@
 "fork": false,
 "views": 72,
 "visitors": 25,
-"clones": 157,
+"clones": 158,
 "size": 223,
 "open_issues": 2,
 "license": "",
@@ -1471,7 +1471,7 @@
 "first_seen": "2026-10-27",
 "social": "https://opengraph.githubassets.com/99bf0ca06aee4698d52d14453ee128e5fe4ba64b564ce4b1569dcda9fca423a4/hyeonsangjeon/ai-genius-s6e2-demo",
 "social_custom": false,
-"score": 6.802,
+"score": 6.806,
 "rank": 36
 },
 {
@@ -1486,7 +1486,7 @@
 "fork": false,
 "views": 39,
 "visitors": 11,
-"clones": 253,
+"clones": 254,
 "size": 1930,
 "open_issues": 0,
 "license": "MIT",
@@ -1500,7 +1500,7 @@
 "first_seen": "2026-06-24",
 "social": "https://repository-images.githubusercontent.com/1276576416/4e1478c3-d225-4965-b423-c2e4ec4b4a2c",
 "social_custom": true,
-"score": 6.708,
+"score": 6.71,
 "rank": 37
 },
 {
@@ -1733,8 +1733,8 @@
 "stars": 2,
 "forks": 0,
 "fork": false,
-"views": 10,
-"visitors": 10,
+"views": 11,
+"visitors": 11,
 "clones": 72,
 "size": 5,
 "open_issues": 0,
@@ -1749,7 +1749,7 @@
 "first_seen": "2026-06-18",
 "social": "https://opengraph.githubassets.com/0940fb087ffdd225223a561a68abab45c4ba7464c48c4f33c4d11573717f2579/hyeonsangjeon/python-xmas-tree",
 "social_custom": false,
-"score": 5.951,
+"score": 6.038,
 "rank": 44
 },
 {
@@ -2623,5 +2623,46 @@
 "url": "https://github.com/AccuInsight/skcc-accuinsight-examples"
 },
 "rank": 72
+},
+{
+"repo": "tune-shrink-serve",
+"desc": "Tune, shrink, serve: Mi:dm 2.0 × KorMedMCQA — Unsloth LoRA → TorchAO INT4 (PTQ/QAT) → vLLM, measured on one H100. PyTorch Day Korea 2026.",
+"lang": "Python",
+"topics": [
+"int4",
+"korean",
+"kormedmcqa",
+"llm-serving",
+"lora",
+"pytorch",
+"qat",
+"quantization",
+"torchao",
+"unsloth",
+"vllm"
+],
+"url": "https://github.com/hyeonsangjeon/tune-shrink-serve",
+"home": "",
+"stars": 0,
+"forks": 0,
+"fork": false,
+"views": 0,
+"visitors": 0,
+"clones": 0,
+"size": 951,
+"open_issues": 0,
+"license": "MIT",
+"archived": false,
+"default_branch": "main",
+"release_tag": "",
+"release_date": "",
+"created": "2026-11-15",
+"pushed": "2026-11-15",
+"tracked": true,
+"first_seen": "2026-11-15",
+"social": "https://opengraph.githubassets.com/a4cf55d0b9a13721b33f223aeb4d6f4eb1c83c8d074eb7e9c909e549b9c3b907/hyeonsangjeon/tune-shrink-serve",
+"social_custom": false,
+"score": 0.0,
+"rank": 73
 }
 ]
