@@ -51,3 +51,4 @@ node --check scripts/readable-town-browser-cases.mjs
 node --check scripts/repository-exhibit-browser-cases.mjs
 node --check scripts/repository-exhibit-fixtures.mjs
 node --check scripts/discovery-browser-cases.mjs
+node --check scripts/gallery-browser-cases.mjs

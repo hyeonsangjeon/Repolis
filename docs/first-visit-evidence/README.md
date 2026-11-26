@@ -185,7 +185,7 @@ The original `c17abcda` release record ran the **22-command AGENTS.md hermetic b
 The browser runner uses only Node's built-in APIs and an already-running local static server plus isolated Chrome CDP browser. No package install or production URL is required:
 
 ```bash
-python3 -m http.server 8000 --bind 127.0.0.1
+python3 -m http.server 8000 --bind 127.0.0.1 --protocol HTTP/1.1
 # In another terminal, start your installed Chrome with an unused debugging port
 # and a fresh user-data directory; do not attach the test to your everyday profile.
 # Example macOS executable: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
@@ -197,6 +197,14 @@ node scripts/test-first-visit-browser.mjs
 ```
 
 Optional `FIRST_VISIT_GROUP` selects one or more comma-separated groups from `matrix,failures,policy,viewport,regressions`; `FIRST_VISIT_CASE=<substring>` narrows a run further. `FIRST_VISIT_OUTPUT` selects an evidence directory; otherwise the runner creates a fresh temporary directory. Non-local hosts and selectors matching no cases fail closed. `FIRST_VISIT_REFERENCE=76f3b1d` with only `FIRST_VISIT_GROUP=viewport` reads historical HTML via `git show` for observations only; it never checks out or alters the working tree. Shared modules/catalog must remain matched for an A/B comparison. Historical violation counts are observations, not assertions that old behavior passes the new bounds.
+
+For Gallery Walk, select `FIRST_VISIT_GROUP=gallery`. It clicks the owner tile and submits an external
+repo URL in the maker at 390 × 844 and 1440 × 900, both KO and EN, with the opposite town language saved.
+It also checks legacy and conflicting links, owner submit, and the empty, failed, partial and cached town
+paths. GitHub API and card images are local browser fixtures; Three.js still loads from its pinned CDN.
+To reproduce the pre-change observations, serve a separate untouched export of the v1.99 source before
+this change, point `REPOLIS_TEST_URL` at that server, and set `GALLERY_BASELINE=1` while running the
+current test harness. Use a separate `FIRST_VISIT_OUTPUT` for each run.
 
 **Still unverified:** physical iOS/Android devices, native virtual keyboards, Safari/Firefox, hardware/driver-induced context loss and production latency. The context-loss extension, shortened viewport, touch and hardware flags are emulations. Nameplates and world signage remain world-space. No Star/traffic/conversion gain is promised.
 

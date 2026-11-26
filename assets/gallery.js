@@ -95,12 +95,14 @@ export function galleryTownLinks(login, { pagesBase = DEFAULT_PAGES_BASE, cardBa
   walk.searchParams.set('user', id);
   walk.searchParams.set('ref', 'gallery');
   const cardShare = createCardShareUrl(id, cardBase);
+  const shareUrl = cardShare || walk.href;
+  walk.searchParams.set('lang', lang === 'ko' ? 'ko' : 'en');
   const portal = createTownReadmePortal(id, root.href, cardBase);
   const cardSvg = portal.live ? portal.bannerUrl + (lang === 'ko' ? '?lang=ko' : '') : '';
   return Object.freeze({
     login: id,
     walkUrl: walk.href,
-    shareUrl: cardShare || walk.href,
+    shareUrl,
     cardSvg,
     readmeHtml: portal.html,
     joinUrl: issueUrl(projectUrl, 'gallery-join.md', `Gallery: add @${id}`),

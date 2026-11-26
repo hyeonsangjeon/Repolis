@@ -8,6 +8,13 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Fixed
+
+- Gallery Walk links open the selected town in the gallery's language without changing the saved language preference. Existing
+  Gallery links also enter directly when they contain only a valid login and the Gallery ref. Empty or unavailable towns still
+  show recovery instead of taking visitors to another town. Card and README share URLs are unchanged.
+- Submitting the site owner's login from the ordinary launch form enters the owner town without returning to the input.
+
 ## [1.99.0] — 2026-11-06
 
 ### Taxi arrival card (v1.99, part 2) — one visible conversation surface
