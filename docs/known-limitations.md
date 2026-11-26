@@ -7,10 +7,10 @@ change around a constraint that can't move. Pair this with [`AGENTS.md`](../AGEN
 
 - **Traffic is daily, not live.** The city reflects yesterday's cumulative totals. `repos.json` updates
   once per day via `.github/workflows/refresh.yml`; there is no real-time traffic feed.
-- **Traffic needs an external collector.** GitHub's traffic API only keeps a rolling **14-day** window,
-  so lifetime visitor/clone totals come from a separate private collector
-  ([`github-traffic-monitor`](https://github.com/hyeonsangjeon/github-traffic-monitor)). A fork without a
-  collector will show stars/forks/issues but flat/zero visitor·clone·view history.
+- **Traffic depends on recorded daily observations.** The included refresh job reconciles GitHub's
+  rolling 14-day traffic window when configured with traffic access. Earlier gaps require a saved
+  observation, never an estimate. Visitor scores sum daily unique counts, not distinct people across
+  the full history. See [previewing and recovering a traffic window](traffic-recovery.md).
 - **`repos.json` is generated.** Hand edits are overwritten on the next refresh. Change
   `scripts/build_repos.py` instead.
 - **Resident profiles are generated and public-only.** `data/residents/*.json` contains only bounded,
