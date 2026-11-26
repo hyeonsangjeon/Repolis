@@ -2,6 +2,7 @@
  * No network, clock, storage or random source: the page's static copy and the consent list are read from disk. */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import {
   GALLERY_COPY, GALLERY_LIMITS, GALLERY_SCHEMA, GALLERY_VERSION, galleryLang, galleryRemovalRequestUrl, galleryText,
   galleryTownLinks, parseGalleryLogin, validateGallery,
@@ -12,6 +13,7 @@ const check = (condition, message) => { assert(condition, message); checks++; };
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const SRC = read('assets/gallery.js');
 const PAGE = read('gallery.html');
+const TOWN = read('index.html');
 const LIST = JSON.parse(read('data/gallery.json'));
 const JOIN = read('.github/ISSUE_TEMPLATE/gallery-join.md');
 const REMOVAL = read('.github/ISSUE_TEMPLATE/gallery-removal.md');
@@ -66,24 +68,64 @@ check(validateGallery(list({ login: 'forkowner', consent: 'owner' }), { owners: 
 
 /* ---- links ---- */
 const live = galleryTownLinks('OctoCat', { pagesBase: `${PAGES}gallery.html?lang=ko#x`, cardBase: CARD, projectUrl: PROJECT });
-check(live.login === 'octocat' && live.walkUrl === `${PAGES}?user=octocat&ref=gallery`, 'walking opens ?user=<login>&ref=gallery from the site root');
+check(live.login === 'octocat' && live.walkUrl === `${PAGES}?user=octocat&ref=gallery&lang=en`, 'walking opens the town in the gallery language from the site root');
 check(live.shareUrl === `${CARD}u/octocat` && live.cardSvg === `${CARD}card/octocat.svg`, 'the canonical site shares /u/<login> and shows the README card');
 check(live.readmeHtml === `<a href="${PAGES}?user=octocat&ref=profile-readme"><img src="${CARD}card/octocat.svg" alt="Walk @octocat's GitHub town in Repolis" width="600"></a>`,
   'the README card is the same portal the town’s own “Put this town on my GitHub profile” copies');
 check(live.joinUrl === `${PROJECT}/issues/new?template=gallery-join.md&title=Gallery%3A+add+%40octocat`
   && live.removalUrl === `${PROJECT}/issues/new?template=gallery-removal.md&title=Gallery%3A+remove+%40octocat`,
   'join and removal open the matching issue templates with the login in the title');
-check(galleryTownLinks('octocat', { pagesBase: PAGES, cardBase: CARD, lang: 'ko' }).cardSvg === `${CARD}card/octocat.svg?lang=ko`,
-  'the Korean page asks for the Korean card');
+const korean = galleryTownLinks('octocat', { pagesBase: PAGES, cardBase: CARD, lang: 'ko' });
+check(korean.walkUrl === `${PAGES}?user=octocat&ref=gallery&lang=ko` && korean.cardSvg === `${CARD}card/octocat.svg?lang=ko`
+  && korean.shareUrl === live.shareUrl && korean.readmeHtml === live.readmeHtml, 'Korean Walk and preview do not change card or README shares');
 const fork = galleryTownLinks('octocat', { pagesBase: 'https://forkowner.github.io/Repolis/gallery.html', cardBase: '', projectUrl: PROJECT });
 check(fork.cardSvg === '' && fork.shareUrl === 'https://forkowner.github.io/Repolis/?user=octocat&ref=gallery'
   && fork.readmeHtml.includes('https://forkowner.github.io/Repolis/assets/banner.svg'), 'without a card service the links stay on the site and draw no card');
+check(fork.walkUrl === fork.shareUrl + '&lang=en', 'even without a card service the Walk carries language and the copied link stays unchanged');
 check(galleryTownLinks('octocat', { cardBase: 'http://insecure.example/' }).cardSvg === '', 'a non-https card service is ignored');
 check(galleryTownLinks('octocat', { projectUrl: 'https://evil.example/x/y' }).joinUrl.startsWith(`${PROJECT}/issues/new?`),
   'issue links never leave GitHub');
 check(galleryRemovalRequestUrl(PROJECT) === `${PROJECT}/issues/new?template=gallery-removal.md&title=Gallery%3A+remove+%40`,
   'the disclaimer’s removal link needs no login');
 assert.throws(() => galleryTownLinks('bad login', { pagesBase: PAGES }), /invalid-github-login/); checks++;
+
+/* ---- the actual pre-module Gallery entry and language gate ---- */
+const bootScript = TOWN.match(/<script>\s*(\/\*GALLERY_DIRECT_LINK:START\*\/[\s\S]*?)<\/script>/)[1];
+function townBoot(search, { hash = '', saved = 'en', language = 'en-US' } = {}) {
+  const context = { location: { search, hash: hash === '#' ? '' : hash, href: PAGES + search + hash }, document: { documentElement: {} }, navigator: { language }, URLSearchParams,
+    localStorage: { getItem: () => saved, setItem: () => assert.fail('boot language must not write a preference') } };
+  const route = runInNewContext(bootScript + '\nJSON.stringify(GALLERY_DIRECT_LINK)', context);
+  return { route: JSON.parse(route), lang: context.document.documentElement.lang };
+}
+for (const [query, user, lang, saved, bootLang] of [
+  ['?user=octocat&ref=gallery&lang=ko', 'octocat', 'ko', 'en', 'ko'],
+  ['?lang=en&ref=gallery&user=Octo-Cat', 'Octo-Cat', 'en', 'ko', 'en'],
+  ['?user=%6Fctocat&r%65f=gallery', 'octocat', null, 'ko', 'ko'],
+]) {
+  const actual = townBoot(query, { saved });
+  check(actual.route?.user === user && actual.route.lang === lang && actual.lang === bootLang, `exact Gallery route: ${query}`);
+}
+const legacy = townBoot('?user=octocat&ref=gallery', { saved: null, language: 'ko-KR' });
+check(legacy.route?.lang === null && legacy.lang === 'ko', 'legacy links use the normal browser fallback with no preference');
+const walkQuery = '?user=octocat&ref=gallery&lang=ko';
+for (const query of [
+  '?ref=gallery', '?user=octocat&lang=ko', '?user=&ref=gallery&lang=ko', '?user=%40octocat&ref=gallery&lang=ko',
+  '?user=octocat%0A&ref=gallery&lang=ko', '?user=octocat%20&ref=gallery&lang=ko', '?user=-octocat&ref=gallery&lang=ko',
+  '?user=octocat-&ref=gallery&lang=ko', '?user=octo/cat&ref=gallery&lang=ko', `?user=${'a'.repeat(40)}&ref=gallery&lang=ko`,
+  '?user=octocat&ref=Gallery&lang=ko', '?user=octocat&ref=gallery+&lang=ko', '?user=octocat&ref=gallery&lang=',
+  '?user=octocat&ref=gallery&lang=KO', '?user=octocat&ref=gallery&lang=%', '?user=octocat&ref=gallery&lang=k=o',
+  '?user=octocat&ref=gallery&lang=ko&', '?user=octocat&&ref=gallery', '?user=octocat&ref=gallery&lang', '??user=octocat&ref=gallery',
+  '?user=octocat&ref=gallery&%75ser=other', '?user=octocat&ref=gallery&r%65f=card', '?user=octocat&ref=gallery&lang=ko&lang=en',
+  ...['repo=octocat/a', 'view=plaza', 'view=atelier', 'view=blueprint', 'path=README.md', 'route=a,b',
+    'focus=a', 'growth=2020', 'twin=other', 'launch=1', 'dbg', 'extra=x'].map(conflict => `${walkQuery}&${conflict}`),
+  '?user=octocat&ref=card&lang=ko', '?user=octocat&ref=profile-readme&lang=ko', '?user=octocat&lang=ko',
+]) {
+  const actual = townBoot(query);
+  check(actual.route === null && actual.lang === 'en', `malformed, conflicting or non-Gallery route keeps ordinary boot: ${query}`);
+}
+const hash = townBoot(walkQuery, { hash: '#repo=alpha' });
+check(hash.route === null && hash.lang === 'en', 'a repo hash keeps its existing entry route and language');
+check(townBoot(walkQuery, { hash: '#' }).route === null, 'even an empty fragment is not an exact Gallery entry link');
 
 /* ---- the maker's input ---- */
 const parsed = value => parseGalleryLogin(value);
@@ -115,7 +157,7 @@ check(staticCopy.length >= 15 && staticCopy.every(([, key, text]) => GALLERY_COP
 check(PAGE.includes(`<title>${GALLERY_COPY.en.title}</title>`) && PAGE.includes(`<meta name="description" content="${GALLERY_COPY.en.description}" />`),
   'title and description come from the same copy');
 check(PAGE.indexOf('<script src="repolis.config.js"></script>') > 0 && PAGE.indexOf('<script src="repolis.config.js"></script>') < PAGE.indexOf('<script type="module">')
-  && PAGE.includes("from './assets/gallery.js?v=gallery-v1'"), 'the page reads the fork-aware config before importing the rules');
+  && PAGE.includes("from './assets/gallery.js?v=gallery-v2'"), 'the page reads the fork-aware config before importing the rules');
 check(PAGE.includes("fetch('data/gallery.json'") && (PAGE.match(/fetch\(/g) || []).length === 1, 'the page makes exactly one data request: the consent list');
 check(!/sendBeacon|localStorage|sessionStorage|indexedDB|document\.cookie|services\.analytics|track\(/.test(PAGE), 'the page sends no telemetry and stores nothing');
 check(PAGE.includes('template=gallery-removal.md') && PAGE.includes('rel="noopener"'), 'the removal path is on the page before any script runs');

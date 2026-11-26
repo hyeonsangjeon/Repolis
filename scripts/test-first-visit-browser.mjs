@@ -1,6 +1,6 @@
 /* Local-only browser gate. Requires an existing static server and isolated Chrome CDP endpoint.
  * REPOLIS_TEST_URL=http://127.0.0.1:8000/ BROWSER_CDP_URL=http://127.0.0.1:9222 node scripts/test-first-visit-browser.mjs
- * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat,readable-town,exhibit,discovery and FIRST_VISIT_CASE=<comma-separated substrings> select a smaller run.
+ * FIRST_VISIT_GROUP=matrix,failures,policy,viewport,regressions,atelier-chat,readable-town,exhibit,discovery,gallery and FIRST_VISIT_CASE=<comma-separated substrings> select a smaller run.
  * FIRST_VISIT_REFERENCE=<commit SHA> replays only viewport observations against historical HTML.
  */
 import assert from 'node:assert/strict';
@@ -10,12 +10,13 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
-import { createRepositoryBlueprintDeepLink, parseRepoPortalInput } from '../assets/repo-portal.js';
+import { compactPublicTown, createRepositoryBlueprintDeepLink, parseRepoPortalInput, publicTownCacheKey } from '../assets/repo-portal.js';
 import { createRepoRouteUrl } from '../assets/repo-route.js';
 import { authorizeRepositoryAtelierRequest } from '../cloudflare-taxi/src/repository-atelier.js';
 import { runReadableTownBrowserCases } from './readable-town-browser-cases.mjs';
 import { runRepositoryExhibitBrowserCases } from './repository-exhibit-browser-cases.mjs';
 import { runDiscoveryBrowserCases } from './discovery-browser-cases.mjs';
+import { runGalleryBrowserCases } from './gallery-browser-cases.mjs';
 import { exhibitDocumentFixture } from './repository-exhibit-fixtures.mjs';
 
 const base=new URL(process.env.REPOLIS_TEST_URL||'http://127.0.0.1:8000/');
@@ -25,7 +26,8 @@ const output=process.env.FIRST_VISIT_OUTPUT||await mkdtemp(join(tmpdir(),'repoli
 await mkdir(output,{recursive:true});
 const results=[],groups=(process.env.FIRST_VISIT_GROUP||'').split(',').filter(Boolean),only=process.env.FIRST_VISIT_CASE||'';
 const reference=process.env.FIRST_VISIT_REFERENCE||'';
-assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat','readable-town','exhibit','discovery'].includes(group)),'Unknown browser gate group');
+assert(groups.every(group=>['matrix','failures','policy','viewport','regressions','atelier-chat','readable-town','exhibit','discovery','gallery'].includes(group)),'Unknown browser gate group');
+assert(process.env.GALLERY_BASELINE!=='1'||(groups.length===1&&groups[0]==='gallery'),'Gallery baseline requires the gallery group and an untouched static server');
 if(reference) assert(groups.length===1&&(groups[0]==='viewport'||(groups[0]==='readable-town'&&process.env.READABLE_BASELINE==='1')
   ||(groups[0]==='exhibit'&&process.env.EXHIBIT_BASELINE==='1')||(groups[0]==='discovery'&&process.env.DISCOVERY_BASELINE==='1'))
   &&/^[a-f0-9]{7,40}$/.test(reference),'Historical observations require a commit SHA and an explicit observation group');
@@ -197,6 +199,10 @@ async function session(test){
     body:(Buffer.isBuffer(body)?body:Buffer.from(typeof body==='string'?body:JSON.stringify(body))).toString('base64')});
   const intercept=async event=>{
     const url=new URL(event.request.url),fail=test.failure;
+    if(test.group==='gallery'&&url.hostname==='cards.gallery.test') return fulfill(event,200,
+      '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300"><rect width="600" height="300" fill="#172e44"/><path d="M80 228V135l44-42 46 42v93zm88 0V102l55-52 55 52v126zm108 0V148l43-44 44 44v80zm86 0V113l51-47 51 47v115zm100 0v-70l33-34 34 34v70z" fill="#86d9c3"/></svg>',
+      'image/svg+xml');
+    if(test.emptyOwner&&url.origin===base.origin&&url.pathname===new URL('repos.json',base).pathname) return fulfill(event,200,[]);
     if(['opengraph.githubassets.com','avatars.githubusercontent.com'].includes(url.hostname)){
       const pixel=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7ioAAAAASUVORK5CYII=','base64');
       return fulfill(event,200,pixel,'image/png');
@@ -252,14 +258,18 @@ async function session(test){
         }
         return fulfill(event,200,tree);
       }
-      if(url.pathname.startsWith('/users/')) return fulfill(event,200,test.empty?[]:publicCatalog);
+      if(url.pathname.startsWith('/users/')) return fulfill(event,200,test.empty?[]:(test.partial?[...publicCatalog,...Array(97).fill(null)]:publicCatalog));
       if(test.mismatched) return fulfill(event,200,{...publicRepo('alpha'),full_name:'wrong-owner/alpha',owner:{login:'wrong-owner'}});
       return fulfill(event,200,{...publicRepo('alpha'),...test.repoOverrides});
+    }
+    if(test.group==='gallery'&&url.origin!==base.origin&&url.hostname!=='cdn.jsdelivr.net'){
+      return page.send('Fetch.failRequest',{requestId:event.requestId,errorReason:'BlockedByClient'});
     }
     return page.send('Fetch.continueRequest',{requestId:event.requestId});
   };
   page.on('Fetch.requestPaused',event=>{ intercept(event).catch(error=>interceptionErrors.push(String(error))); });
   await page.send('Fetch.enable',{patterns:[{urlPattern:'*api.github.com/*'},{urlPattern:'*opengraph.githubassets.com/*'},{urlPattern:'*avatars.githubusercontent.com/*'},...(test.failPath?[{urlPattern:'*'+test.failPath+'*'}]:[]),
+    ...(test.group==='gallery'?[{urlPattern:'*'}]:[]),
     ...(referenceHtml||test.bootstrapReject?[{urlPattern:base.origin+base.pathname+'*',resourceType:'Document'}]:[])]});
   await page.send('Network.setBlockedURLs',{urls:['*workers.dev*']});
   await page.send('Emulation.setDeviceMetricsOverride',{width:test.mobile?390:1440,height:test.mobile?844:900,deviceScaleFactor:1,mobile:!!test.mobile});
@@ -267,8 +277,30 @@ async function session(test){
   if(test.exhibitReadme) await browser.send('Browser.grantPermissions',{browserContextId:context.browserContextId,origin:base.origin,permissions:['clipboardReadWrite','clipboardSanitizedWrite']});
   if(test.reduced) await page.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   if(test.atelierTransport) fixture=await atelierTransportFixture();
-  const stored=test.direct?(test.lang==='ko'?'en':'ko'):test.lang;
-  let source=probe+`\nlocalStorage.setItem('repolisLang','${stored}');`;
+  const stored=test.stored||(test.direct?(test.lang==='ko'?'en':'ko'):test.lang);
+  const seedLanguage=`localStorage.setItem('repolisLang','${stored}');`;
+  let source=probe+'\n'+(test.group==='gallery'?"if(!localStorage.getItem('repolisLang')) ":'')+seedLanguage;
+  if(test.group==='gallery') source+=`\n{
+    const observer=new MutationObserver(()=>{
+      const loading=document.getElementById('loadingText');
+      if(!loading) return;
+      const lang=document.documentElement.lang;
+      __browserGate.boot={lang,text:loading.querySelector('[data-boot-lang="'+lang+'"]')?.textContent||loading.textContent};
+      observer.disconnect();
+    });
+    observer.observe(document,{childList:true,subtree:true});
+    if(location.pathname.endsWith('/gallery.html')){
+      let config;
+      Object.defineProperty(window,'REPOLIS_CONFIG',{get:()=>config,set:value=>{
+        config={...value,services:{...value.services,card:'https://cards.gallery.test/'}};
+      }});
+    }
+  }`;
+  if(test.publicCache){
+    const age=test.publicCache==='stale'?7*60*60*1000:0;
+    source+=`\nlocalStorage.setItem(${JSON.stringify(publicTownCacheKey('fixture-town'))},
+      ${JSON.stringify(JSON.stringify(compactPublicTown(publicCatalog,'fixture-town',Date.parse('2026-09-08T14:00:00Z')-age)))});`;
+  }
   if(fixture) source+=`\n{
     let config;
     Object.defineProperty(window,'REPOLIS_CONFIG',{configurable:true,get:()=>config,set:value=>{
@@ -331,6 +363,7 @@ async function run(test,work){
   if((groups.length&&!groups.includes(test.group))||(only&&!only.split(',').some(selector=>test.name.includes(selector.trim())))) return;
   const s=await session(test); let result;
   try{
+    if(test.group==='gallery') await s.page.send('Page.bringToFront');
     await s.page.send('Page.navigate',{url:new URL(test.query||'',s.fixture?s.fixture.origin+base.pathname:base).href});
     const evidence=await work(s,test);
     const state=await snapshot(s.page);
@@ -932,5 +965,6 @@ for(const mobile of [false,true]) for(const lang of ['en','ko']) await run({
 await runReadableTownBrowserCases({run,ready,click,screenshot,delay,inside,outside,output});
 await runRepositoryExhibitBrowserCases({run,ready,click,screenshot,delay,inside,outside,output});
 await runDiscoveryBrowserCases({run,ready,click,screenshot,delay,inside,outside});
+await runGalleryBrowserCases({run,ready,click,screenshot,delay,apiRequests});
 assert(results.length>0,'No browser scenarios matched the requested selector');
 console.log(`First-visit browser gate: ${results.length} passed; evidence: ${output}`);

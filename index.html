@@ -4,8 +4,29 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <script>
+/*GALLERY_DIRECT_LINK:START*/
+// Keep the exact route available to boot copy and recovery even if a module cannot load.
+const GALLERY_DIRECT_LINK=(function(search,hash){
+  if(hash||!search) return null;
+  const parts=search.slice(1).split('&'),values=new Map();
+  if(parts.length!==2&&parts.length!==3) return null;
+  for(const part of parts){
+    const pair=part.split('=');
+    if(pair.length!==2||part.includes('+')) return null;
+    let key,value;
+    try{ [key,value]=pair.map(decodeURIComponent); }catch(e){ return null; }
+    if(!['user','ref','lang'].includes(key)||values.has(key)||/[\u0000-\u001f\u007f]/.test(value)) return null;
+    values.set(key,value);
+  }
+  const user=values.get('user'),lang=values.get('lang')??null;
+  // Match the portal's unadorned GitHub login, not its forgiving form-input grammar.
+  if(!user||!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(user)||values.get('ref')!=='gallery'
+    ||(lang!==null&&lang!=='ko'&&lang!=='en')) return null;
+  return {user,lang};
+})(location.search,location.hash||location.href.endsWith('#'));
+/*GALLERY_DIRECT_LINK:END*/
 (function(){
-  let bootLang='';
+  let bootLang=GALLERY_DIRECT_LINK?.lang||'';
   try{
     const bootQuery=new URLSearchParams(location.search),bootKeys=[...bootQuery.keys()],bootView=bootQuery.get('view');
     const bootAllowed=bootView==='plaza'?new Set(['view','lang']):(bootView==='atelier'?new Set(['repo','view','lang']):null);
@@ -2498,7 +2519,8 @@
       target:'The requested repository could not be opened. No other repository was substituted.'}
   };
   const overlay=document.getElementById('cityError'),loading=document.getElementById('loading'),intro=document.getElementById('intro');
-  let reason=null,details=null,bootReady=false,target=null,restoring=false,restored=false,focusBefore=null,loadingBefore='',inertBefore=[];
+  let reason=null,details=null,bootReady=false,target=GALLERY_DIRECT_LINK?'https://github.com/'+GALLERY_DIRECT_LINK.user:null,
+    restoring=false,restored=false,focusBefore=null,loadingBefore='',inertBefore=[];
   intro.inert=true;
   const lang=()=>document.documentElement.lang==='ko'?'ko':'en';
   let watchdog=setTimeout(()=>fail('stalled'),45000);
@@ -2599,7 +2621,7 @@ import { selectTownCreatorFields, summarizeTownCreator } from './assets/town-cre
 import { buildTownGrowthTimeline, createTownGrowthShareUrl, townGrowthIndexForYear, townGrowthSnapshot } from './assets/town-growth.js?v=town-growth-v1';
 import { HOMECOMING_LIMITS, homecomingCityName, homecomingStopCopy, homecomingTimelapsePlan, homecomingUnlocks, rememberHomecomingKey, selectHomecomingStops } from './assets/homecoming.js?v=homecoming-v1';
 import { JOURNEY_LIMITS, createJourney, recordJourneyHouse, recordJourneyPath, recordJourneyTrace, summarizeJourney } from './assets/journey.js?v=journey-v1';
-import { DIRECT_ENTRY_LIMITS, PUBLIC_TOWN_CACHE_INDEX_KEY, PUBLIC_TOWN_CACHE_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, arrivalRef, compactPublicTown, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parsePublicTownCacheKey, parseRepoPortalInput, planPublicTownCache, projectPublicRepo, projectPublicRepos, publicTownCacheKey, readPublicTownCache, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v6';
+import { DIRECT_ENTRY_LIMITS, PUBLIC_TOWN_CACHE_INDEX_KEY, PUBLIC_TOWN_CACHE_LIMITS, REPO_PORTAL_LIMITS, GITHUB_LOGIN_RE, arrivalRef, compactPublicTown, createPlazaDirectLink, createRepoOwnerTownUrl, createRepoPortalUrl, createRepositoryBlueprintDeepLink, parsePublicTownCacheKey, parseRepoPortalInput, planPublicTownCache, projectPublicRepo, projectPublicRepos, publicTownCacheKey, readPublicTownCache, repoPortalLatencyBucket, resolvePlazaDirectLink, resolveRepoPortalRequest, resolveRepositoryAtelierDirectLink, resolveRepositoryBlueprintDeepLink } from './assets/repo-portal.js?v=repo-portal-v6';
 import { REPO_ROUTE_LIMITS, createRepoRouteUrl, resolveRepoRouteRequest } from './assets/repo-route.js?v=repo-route-v1';
 import { CONTRIBUTION_QUEST_LIMITS, createContributionQuestSearchUrl, selectContributionQuests } from './assets/contribution-quests.js?v=open-source-quests-v1';
 import { bindResidentSlots, createResidentProfileStore, loadResidentManifest, residentLocalResponse, residentNewcomerLine } from './assets/resident-profiles.js?v=world-tree-phase4-v1';
@@ -2637,7 +2659,7 @@ const ARRIVAL_REF = arrivalRef(location.search);
 const _repoRoute = resolveRepoPortalRequest(location.search, OWNER);
 const PLAZA_DIRECT_LINK = resolvePlazaDirectLink(location.search,location.hash);
 const ATELIER_DIRECT_LINK = resolveRepositoryAtelierDirectLink(location.search,location.hash);
-const DIRECT_ENTRY_LANG = PLAZA_DIRECT_LINK.ok?PLAZA_DIRECT_LINK.lang:(ATELIER_DIRECT_LINK.ok?ATELIER_DIRECT_LINK.lang:null);
+const DIRECT_ENTRY_LANG = GALLERY_DIRECT_LINK?.lang??(PLAZA_DIRECT_LINK.ok?PLAZA_DIRECT_LINK.lang:(ATELIER_DIRECT_LINK.ok?ATELIER_DIRECT_LINK.lang:null));
 const BLUEPRINT_DEEP_LINK = resolveRepositoryBlueprintDeepLink(location.search,location.hash);
 const _reqUser = (_QUERY.get('user') || '').trim().replace(/^@+/,'');
 const _reqTwin = (_QUERY.get('twin') || '').trim();
@@ -2904,9 +2926,10 @@ if(cityMode === 'owner'){
   const cityStateLoad=_cityStateSnapshot().catch(error=>{ console.warn('city-state.json load failed',error); return null; });
   try { REPOS=_ownerRepos(await _ownerSnapshot()); CITY_STATE=await cityStateLoad; }
   catch(e){ cityError={status:0,reason:'data_load'}; cityError.cause=arrivalDataReason(e); console.error('repos.json load failed', e); }
+  if(GALLERY_DIRECT_LINK&&!cityError&&!REPOS.length) cityError={status:0,reason:'empty'};
   track(REPOS.length ? 'city_data_load_success' : 'city_data_load_fail', { repoCount:REPOS.length });
 } else if(cityMode === 'public') {
-  try{ const _l = (function(){ let l=localStorage.getItem('repolisLang'); if(l!=='ko'&&l!=='en') l=(navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en'; return l; })();
+  try{ const _l = _repoPortalLang();
     const le=document.getElementById('loadingText'); if(le) le.textContent = _l==='ko' ? (currentUser+' 님의 레포를 불러오는 중…') : ('Fetching '+currentUser+"'s repos…"); }catch(e){}
   const pub = await _loadPublicCity(currentUser);
   REPOS = pub.repos || []; dataSource = pub.source || 'github-public'; cityError = pub.error || null;
@@ -3331,7 +3354,7 @@ const I18N = {
     exhibitCopy:'코드 복사', exhibitCopied:'원문 코드를 복사했습니다.', exhibitCopyFailed:'복사하지 못했습니다. 코드에서 직접 선택해 복사하세요.',
     exhibitLinks:'발췌에 나온 링크', exhibitMetadata:'공개 메타데이터 · 원문 설명',
     atelierChatAuto:'이 레포를 설명해 주세요.', atelierChatSearching:'{repo} 공개 정보를 GitHub MCP에서 찾고 있어요 🔍',
-    atelierDirectOpening:'{repo} 전시실로 이동하는 중…', plazaDirectOpening:'Repolis 광장으로 이동하는 중…',
+    atelierDirectOpening:'{repo} 전시실로 이동하는 중…', plazaDirectOpening:'Repolis 광장으로 이동하는 중…', galleryDirectOpening:'{user} 님의 마을로 이동하는 중…',
     atelierChatLimit:'이번 방문의 대화 5회를 모두 사용했어요. 전시실을 나갔다 다시 입장하면 새 대화를 시작할 수 있어요.',
     atelierChatUnavailable:'{repo}의 공개 정보를 지금 불러오지 못했어요. 다른 레포로 대신 답하지 않을게요.',
     atelierChatNotFound:'{repo}의 공개 근거를 확인하지 못했어요. GitHub 링크에서 직접 확인해 주세요.',
@@ -3783,7 +3806,7 @@ const I18N = {
     exhibitCopy:'Copy code', exhibitCopied:'Original code copied.', exhibitCopyFailed:'Copy failed. Select and copy the code directly.',
     exhibitLinks:'Links in these excerpts', exhibitMetadata:'Public metadata · original description',
     atelierChatAuto:'Explain this repository.', atelierChatSearching:'Searching GitHub MCP for public information about {repo} 🔍',
-    atelierDirectOpening:'Entering the {repo} exhibition…', plazaDirectOpening:'Entering the Repolis plaza…',
+    atelierDirectOpening:'Entering the {repo} exhibition…', plazaDirectOpening:'Entering the Repolis plaza…', galleryDirectOpening:"Entering {user}'s town…",
     atelierChatLimit:'You used all 5 chats for this visit. Exit and re-enter the Atelier to start a new conversation.',
     atelierChatUnavailable:'Public information for {repo} is unavailable right now. I will not substitute another repository.',
     atelierChatNotFound:'I could not verify public sources for {repo}. Open its GitHub link to check the repository directly.',
@@ -11867,9 +11890,16 @@ introTryAnother.onclick=()=>{ introChoosingAnother=true; introProfileResult=null
     if(!target.ok){ if(err) err.textContent=t('introLaunchInvalid'); track('intro_launch_invalid'); trackPortal('feature_started',{entry:'intro',device:_repoPortalDevice(),lang:LANG,result:'invalid'}); input.focus(); return; }
     if(err) err.textContent=''; trackHomecoming('city_requested',{entry:'intro',channel:target.kind});
     if(target.kind==='repo'){ location.href=createRepoPortalUrl(target,location.href); return; }
-    const user=target.user; track('intro_personal_preview',{targetUser:user});
-    const url=location.origin+location.pathname+(user.toLowerCase()===OWNER.toLowerCase()?'':'?user='+encodeURIComponent(user));
-    location.href=url; }; renderPublicIntro(); })();
+    const user=target.user,root=location.origin+location.pathname; track('intro_personal_preview',{targetUser:user});
+    if(user.toLowerCase()===OWNER.toLowerCase()){
+      const search=location.search,hasHash=location.hash||location.href.endsWith('#');
+      const plainIntro=!hasHash&&(!search||search==='?launch=1'||(search.startsWith('?user=')&&GH_LOGIN_RE.test(search.slice(6))));
+      if(!plainIntro) location.href=root;
+      else if(cityMode==='owner') introStartBtn.click();
+      else location.href=createPlazaDirectLink(location.href,LANG);
+      return;
+    }
+    location.href=root+'?user='+encodeURIComponent(user); }; renderPublicIntro(); })();
 (function(){ const it=document.getElementById('introTour'); if(it) it.onclick=()=>{ if(!_claimTownEntry()) return; document.getElementById('intro').classList.add('hidden');
     document.getElementById('loading').style.display='none'; _queueArrivalAction(650,()=>startTour()); };
   const replay=document.getElementById('tourReplayBtn'); if(replay) replay.onclick=()=>{ panel.classList.add('hidden'); menuBtn.setAttribute('aria-expanded','false'); startTour(); };
@@ -11891,7 +11921,12 @@ function _scheduleRepositoryAtelierDirectEntry(){
   if(!repositoryAtelierDirectLinkRepo()) return false;
   return _scheduleCoveredDirectEntry(tf('atelierDirectOpening',{repo:ATELIER_DIRECT_LINK.target.slug}),ATELIER_DIRECT_LINK.target.slug);
 }
+function _scheduleGalleryDirectEntry(){
+  if(!GALLERY_DIRECT_LINK||!REPOS.length||cityMode==='portal'||GALLERY_DIRECT_LINK.user.toLowerCase()!==currentUser.toLowerCase()) return false;
+  return _scheduleCoveredDirectEntry(tf('galleryDirectOpening',{user:currentUser}));
+}
 if(!_schedulePlazaDirectEntry()) _scheduleRepositoryAtelierDirectEntry();
+if(GALLERY_DIRECT_LINK) _scheduleGalleryDirectEntry();
 
 /* ====================== ↔ TWIN TOWNS (two-person referral bridge) ====================== */
 const twinModal=document.getElementById('twinModal'),twinStudio=twinModal.querySelector('.twinStudio'),
