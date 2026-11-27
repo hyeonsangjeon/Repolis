@@ -262,7 +262,10 @@ export async function runReadableTownBrowserCases({ run, ready, click, screensho
 
     await run({ name: `readable-taxi-card-${suffix}`, group: 'readable-town', query: '?dbg=1',
       lang, mobile, lowEnd: mobile, reduced: mobile }, async s => {
-      const { page } = s; await ready(page); await click(page, 'startBtn');
+      const { page } = s; await ready(page);
+      const expectsIntent = await page.evaluate("window.__homecoming?.()?.plan.card===true");
+      await click(page, 'startBtn');
+      if (expectsIntent) await page.until("!document.getElementById('intentCard').classList.contains('hidden')");
       if (await page.evaluate("!document.getElementById('intentCard').classList.contains('hidden')")) await click(page, 'intentCardSkip');
       // During this first-visit prompt, tapping the taxi intentionally starts a guided tour.
       await page.until("document.getElementById('guideToast')?.hidden!==false",15000);
