@@ -4000,10 +4000,14 @@ ok(/makePark\(MEMORIAL_TREE_POS\.x,MEMORIAL_TREE_POS\.z,true\)/.test(HTML)
 ok(/const stage='full'/.test(memorialTreeBlock)
   && /createRepolisHero\(\{seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage\}\)/.test(memorialTreeBlock), 'desktop and touch tiers both use the exact full Solar Archive hero');
 ok(/world-tree-state\.js\?v=undercroft-v1/.test(HTML)
-  &&/hero\.runtime\.nodes\['living-system'\]\.scale\.setScalar\(WORLD_TREE_GROWTH\.scale\)/.test(memorialTreeBlock)
+  &&/const living=hero\.runtime\.nodes\['living-system'\];\s*living\.scale\.setScalar\(WORLD_TREE_GROWTH\.scale\);\s*living\.scale\.y\*=MEM_TREE_SKYLINE_LIFT/.test(memorialTreeBlock)
   &&/const collider=\{x,z,r:11\.6,_memorialTree:true\}/.test(memorialTreeBlock)
   &&/growthScale:WORLD_TREE_GROWTH\.scale/.test(memorialTreeBlock),
   'bounded generated-state growth scales the living silhouette while preserving the established root collider and factory');
+ok(/7\.2\*MEM_TREE_SKYLINE_LIFT/.test(memorialTreeBlock)
+  && /CrownApex:\[0,nativeBox\.max\.y,0\]/.test(memorialTreeBlock)
+  && /InteractionFocus:\[0,2\.4,-3\]/.test(memorialTreeBlock),
+  'the crown halo and apex follow the lifted tree, but the Chronicle target stays at pedestrian height');
 ok(/function makeWorldTreeSapFlow\(\)/.test(HTML)
   &&/new THREE\.Points\(geometry,material\)/.test(HTML)
   &&/WORLD_TREE_SAP_MODE==='travel'/.test(HTML)
@@ -4018,6 +4022,19 @@ ok(/id="worldTreeTrigger"[\s\S]*?aria-haspopup="dialog"[\s\S]*?aria-keyshortcuts
   &&/worldTreeAtScreen\(cx,cy\)/.test(HTML)
   &&/\(e\.code==='Enter'\|\|e\.code==='Space'\)&&nearWorldTree&&!nearNpc/.test(HTML),
   'World Tree supports named pointer, touch, Enter, and Space activation through the existing landmark controls');
+{
+  const between=runInNewContext(worldTreeChronicleBlock.match(/function _worldTreeBuildingBetween\(from,to\)\{[\s\S]*?\n\}/)[0]+'\n_worldTreeBuildingBetween',{
+    resolveCameraObstruction,CAMERA_BLOCKERS:[{x:0,z:6,r:2,cameraMinY:0,cameraMaxY:7}],
+    _wtSightQuery:{padding:0,minDistance:0,surfaceEpsilon:0},_wtSightResult:{}
+  });
+  const point=(x,y,z)=>({x,y,z,distanceTo:p=>Math.hypot(p.x-x,p.y-y,p.z-z)});
+  const focus=point(0,4,12),street=point(0,3,0);
+  ok(between(focus,street)&&!between(focus,point(8,3,0))&&!between(point(0,18,12),street)
+    && /#worldTreeTrigger\[hidden\]\s*\{\s*display:\s*none/.test(HTML)
+    && /&&_worldTreeAnchorVisible\(\)/.test(worldTreeChronicleBlock)
+    && /return !!hit&&!_worldTreeBuildingBetween\(hit\.point,camera\.position\)/.test(HTML),
+    'a house hides the Chronicle anchor until the corner clears; a visible crown remains independently tappable above the roof');
+}
 ok(/worldTreeModal\.addEventListener\('keydown',event=>\{ if\(event\.key==='Escape'\)/.test(worldTreeChronicleBlock)
   &&/event\.key!=='Tab'/.test(worldTreeChronicleBlock)
   &&/WORLD_TREE_UI\.previousFocus=source\|\|document\.activeElement\|\|worldTreeTrigger/.test(worldTreeChronicleBlock)
@@ -4377,6 +4394,12 @@ ok(/treeBox=_memHeroBox\(MEMORIAL_TREE\.group\)\.expandByScalar\(3\)/.test(HTML)
   && (HTML.match(/frustumCulled=false/g)||[]).length>=3
   && /WorldTree_DynamicDepthProxies/.test(HTML)
   && /RESIDENTS_LIVE\.forEach\(L=>_registerWorldTreeOccluderGroup\(L\.group\)\)/.test(HTML), 'three instanced proxy draws cover static buildings, props, and nearby moving avatars');
+ok(/Math\.hypot\(b\._x,b\._z\)<=RINGS\[0\]\.r\+\.01/.test(HTML)
+  && /BLOOM_DARK_MATERIAL,boxes\.length\+plazaFacades\.length/.test(HTML)
+  && /wall!==g&&!wall\.userData\.worldTreeFacade/.test(HTML)
+  && /wb\.userData\.worldTreeFacade=true/.test(HTML)
+  && /unitBox\.premultiply\(wall\.matrix\)\.premultiply\(b\._group\.matrixWorld\)/.test(HTML),
+  'first-ring facades mask the night reveal in the existing depth batch, without masking whole yards');
 ok(/_registerWorldTreeOccluderGroup\(g\)/.test(HTML)
   && /_unregisterWorldTreeOccluderGroup\(p\.group\)/.test(HTML)
   && /dynamicOccluderGroups\.delete/.test(HTML), 'remote peer avatar proxies enter and leave the bloom depth cache without leaks');
