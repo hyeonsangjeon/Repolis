@@ -1670,6 +1670,7 @@ const GALLERY_DIRECT_LINK=(function(search,hash){
   #worldTreeTrigger { position:fixed; z-index:9; min-width:48px; height:48px; padding:0 14px 0 10px; border:1px solid rgba(255,232,178,.72);
     border-radius:999px; color:#fff4ce; background:rgba(55,37,22,.74); box-shadow:0 5px 18px rgba(34,20,9,.3);
     display:flex; align-items:center; gap:7px; font:22px/1 system-ui,sans-serif; cursor:pointer; transform:translate(-50%,-50%); backdrop-filter:blur(5px); }
+  #worldTreeTrigger[hidden] { display:none; }
   #worldTreeTrigger .wtLabel { font:800 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif; letter-spacing:.02em; white-space:nowrap; }
   #worldTreeTrigger:hover { background:rgba(78,51,27,.86); }
   #worldTreeTrigger:focus-visible { outline:3px solid #ffe19a; outline-offset:3px; }
@@ -4298,16 +4299,26 @@ function _ensureWorldTreeOccluders(){
   if(!MEMORIAL_TREE||MEMORIAL_TREE.occludersReady) return; scene.updateMatrixWorld(true);
   const treeBox=_memHeroBox(MEMORIAL_TREE.group).expandByScalar(3),proxyGroup=new THREE.Group(),boxes=[];
   proxyGroup.name='WorldTree_BloomOccluderProxies'; proxyGroup.layers.set(MEM_TREE_LIGHT_LAYER); scene.add(proxyGroup);
-  for(const b of buildings){ const g=b._body||b._group; if(!g) continue; const box=new THREE.Box3().setFromObject(g); if(box.intersectsBox(treeBox)) boxes.push(box); }
-  if(boxes.length){ const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),BLOOM_DARK_MATERIAL,boxes.length),d=new THREE.Object3D();
+  const plazaFacades=[];
+  for(const b of buildings){ const g=b._body||b._group; if(!g) continue;
+    if(b._lodSpec&&Math.hypot(b._x,b._z)<=RINGS[0].r+.01){
+      // The full-detail group can be detached by LOD; place its local walls using the persistent house root.
+      for(const wall of g.parent.children){ if(wall!==g&&!wall.userData.worldTreeFacade) continue;
+        if(!wall.geometry.boundingBox) wall.geometry.computeBoundingBox();
+        const bounds=wall.geometry.boundingBox,size=bounds.getSize(new THREE.Vector3());
+        const unitBox=new THREE.Matrix4().makeScale(size.x,size.y,size.z).setPosition(bounds.getCenter(new THREE.Vector3()));
+        wall.updateMatrix(); plazaFacades.push(unitBox.premultiply(wall.matrix).premultiply(b._group.matrixWorld)); }
+    } else { const box=new THREE.Box3().setFromObject(g); if(box.intersectsBox(treeBox)) boxes.push(box); } }
+  if(boxes.length||plazaFacades.length){ const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),BLOOM_DARK_MATERIAL,boxes.length+plazaFacades.length),d=new THREE.Object3D();
     boxes.forEach((box,i)=>{ const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()).addScalar(0.15); d.position.copy(center); d.scale.copy(size); d.updateMatrix(); mesh.setMatrixAt(i,d.matrix); });
+    plazaFacades.forEach((matrix,i)=>mesh.setMatrixAt(boxes.length+i,matrix));
     mesh.name='WorldTree_BuildingDepthProxies'; mesh.frustumCulled=false; mesh.layers.set(MEM_TREE_LIGHT_LAYER); proxyGroup.add(mesh); }
   const colliders=EXTRA_COLLIDERS.filter(c=>!c._memorialTree&&Math.hypot(c.x-MEMORIAL_TREE.collider.x,c.z-MEMORIAL_TREE.collider.z)<22);
   if(colliders.length){ const mesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(1,1,4,8),BLOOM_DARK_MATERIAL,colliders.length),d=new THREE.Object3D();
     colliders.forEach((c,i)=>{ d.position.set(c.x,2,c.z); d.scale.set(c.r||0.5,1,c.r||0.5); d.updateMatrix(); mesh.setMatrixAt(i,d.matrix); });
     mesh.name='WorldTree_PropDepthProxies'; mesh.frustumCulled=false; mesh.layers.set(MEM_TREE_LIGHT_LAYER); proxyGroup.add(mesh); }
   const dynamicProxy=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),BLOOM_DARK_MATERIAL,64); dynamicProxy.name='WorldTree_DynamicDepthProxies'; dynamicProxy.frustumCulled=false; dynamicProxy.layers.set(MEM_TREE_LIGHT_LAYER); dynamicProxy.count=0; proxyGroup.add(dynamicProxy);
-  MEMORIAL_TREE.staticProxyCount=boxes.length+colliders.length; MEMORIAL_TREE.proxyGroup=proxyGroup; MEMORIAL_TREE.dynamicProxy=dynamicProxy;
+  MEMORIAL_TREE.staticProxyCount=boxes.length+plazaFacades.length+colliders.length; MEMORIAL_TREE.proxyGroup=proxyGroup; MEMORIAL_TREE.dynamicProxy=dynamicProxy;
   _registerWorldTreeOccluderGroup(model); RESIDENTS_LIVE.forEach(L=>_registerWorldTreeOccluderGroup(L.group)); MEMORIAL_TREE.occludersReady=true;
 }
 function _updateWorldTreeBloomProjection(){
@@ -5880,6 +5891,7 @@ function makeRiver(ctrl, opt={}){
 const MEMORIAL_TREE_SEED=20260711, MEMORIAL_TREE_POS=new THREE.Vector3(15,0,48), MEM_TREE_LITE=LOW_END||IS_MOBILE;
 let MEMORIAL_TREE=null;
 const MEM_TREE_HERO_SCALE=2, MEM_TREE_HERO_NATIVE_SCALE=0.96, MEM_TREE_LIGHT_LAYER=2, MEM_TREE_HERO_VARIANT='solar-archive', MEM_TREE_FACTORY_SHA='e2ba93eac7c13517005dd4ab4203a05b6b568ebf8f9b17a353b8cf39012281df';
+const MEM_TREE_SKYLINE_LIFT=1.32;
 function _memHeroBox(root){
   root.updateMatrixWorld(true); const box=new THREE.Box3();
   root.traverse(o=>{ if(!o.visible||!o.geometry||o.isSprite) return; let local;
@@ -5913,16 +5925,19 @@ function makeMemorialTree(x,z){
   if(MEMORIAL_TREE) return MEMORIAL_TREE;
   const stage='full', hero=createRepolisHero({seed:MEMORIAL_TREE_SEED,variant:MEM_TREE_HERO_VARIANT,stage}), root=hero.root;
   root.traverse(o=>{ if(o.isMesh) o.castShadow=false; });   // plugin motion stays live without stale moving shadows under Repolis's frozen-shadow policy
-  hero.runtime.nodes['living-system'].scale.setScalar(WORLD_TREE_GROWTH.scale);
+  // Lift the skyline, not the root island, ring path or street-level interactions.
+  const living=hero.runtime.nodes['living-system'];
+  living.scale.setScalar(WORLD_TREE_GROWTH.scale);
+  living.scale.y*=MEM_TREE_SKYLINE_LIFT;
   const nativeBox=_memHeroBox(root); root.name='RepolisWorldTreeSolarArchive'; root.scale.setScalar(MEM_TREE_HERO_SCALE);
   root.position.set(x,-nativeBox.min.y*MEM_TREE_HERO_SCALE,z); scene.add(root); const environment=_memHeroEnvironment(root); invalidateTownShadows('world-tree-added');
   let light=null; root.traverse(o=>{ if(o.isPointLight){ light=o; o.name='WorldTree_GuideLight'; o.castShadow=false; } });
   const crowns=[hero.runtime.meshes['amber-foliage'],hero.runtime.meshes['cyan-foliage']].filter(Boolean);
   new Set(crowns.map(leaves=>leaves.geometry)).forEach(geometry=>{ geometry.computeBoundingBox(); geometry.computeBoundingSphere(); });
-  const glowHalos=[[0,1.1,0.3,7.5,9.5,0.16],[0,7.2,-0.6,14.5,10.5,0.08]].map(([hx,hy,hz,sw,sh,nightOpacity],i)=>{
+  const glowHalos=[[0,1.1,0.3,7.5,9.5,0.16],[0,7.2*MEM_TREE_SKYLINE_LIFT,-0.6,14.5,10.5,0.08]].map(([hx,hy,hz,sw,sh,nightOpacity],i)=>{
     const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW_TEX,color:i?0xffb347:0xff8f2f,transparent:true,opacity:0,depthWrite:false,depthTest:true,fog:false,blending:THREE.AdditiveBlending}));
     halo.name=i?'WorldTree_CrownHalo':'WorldTree_RootHalo'; halo.position.set(hx,hy,hz); halo.scale.set(sw*WORLD_TREE_GROWTH.haloScale,sh*WORLD_TREE_GROWTH.haloScale,1); halo.userData.nightOpacity=nightOpacity; root.add(halo); return halo; });
-  const sockets={}, customSockets={TaxiArrival:[0,nativeBox.min.y,-5.4],InteractionFocus:[0,2.4,-3],Foundation:[0,nativeBox.min.y,0],Crotch:[0,4.8,0],CrownApex:[0,nativeBox.max.y,0],GlowFocus:[0,1,1.4]};
+  const sockets={}, customSockets={TaxiArrival:[0,nativeBox.min.y,-5.4],InteractionFocus:[0,2.4,-3],Foundation:[0,nativeBox.min.y,0],Crotch:[0,4.8*MEM_TREE_SKYLINE_LIFT,0],CrownApex:[0,nativeBox.max.y,0],GlowFocus:[0,1,1.4]};
   Object.entries(customSockets).forEach(([name,p])=>{ const s=new THREE.Object3D(); s.name='WorldTree_Socket_'+name; s.position.set(...p); root.add(s); sockets[name]=s; });
   ['left-foundation:tip','right-foundation:tip','left-crown:tip','right-crown:tip','center-left-spire:tip','center-right-spire:tip','left-rear:tip','right-rear:tip'].forEach((id,i)=>{ const s=hero.runtime.sockets[id]; if(s) sockets['Bough'+String(i+1).padStart(2,'0')]=s; });
   const collider={x,z,r:11.6,_memorialTree:true}; EXTRA_COLLIDERS.push(collider);
@@ -5986,7 +6001,9 @@ function makePark(cx, cz, memorial=false){   // 🌳 a calm rest park set off th
   // evening lighting (night-aware guild lantern)
   makeGuildLantern(cx+Math.cos(toPlaza-0.7)*(memorial?15.2:4.6), cz+Math.sin(toPlaza-0.7)*(memorial?15.2:4.6));
   // wooden signpost at the plaza-facing entrance
-  const signG=new THREE.Group(); signG.position.set(cx+Math.cos(toPlaza)*(memorial?15.4:4.7), 0, cz+Math.sin(toPlaza)*(memorial?15.4:4.7)); signG.rotation.y=Math.PI/2-toPlaza; scene.add(signG);
+  // Frame the view from the plaza between the existing lantern and sign; leave the trunk in the gap.
+  const signAngle=memorial?toPlaza+1.1:toPlaza, signRadius=memorial?15.4:4.7;
+  const signG=new THREE.Group(); signG.position.set(cx+Math.cos(signAngle)*signRadius,0,cz+Math.sin(signAngle)*signRadius); signG.rotation.y=Math.PI/2-toPlaza; scene.add(signG);
   const post=rbox(0.16,2.1,0.16,0x7a5230,0.03); post.position.y=1.05; outline(post,0.03); signG.add(post);
   const arm=rbox(0.16,0.16,0.5,0x7a5230,0.03); arm.position.set(0,1.9,0.18); signG.add(arm);
   const board=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.62), new THREE.MeshBasicMaterial({map:signTexture('Park · 공원',0x6fbf73),transparent:true})); board.position.set(0,1.78,0.1); signG.add(board);
@@ -6318,6 +6335,7 @@ function addGarage(g,w,d,yr,roofColor){
 /* ---- grand-house parts: wings, porch, balcony, portico, cupola, dormer ---- */
 function addWing(g, ww, wh, wd, wall, roofColor, x, surface){
   const repeat=surfaceWallRepeat(surface.family,ww,wh),wb=rbox(ww,wh,wd,wall,0.16);
+  wb.userData.worldTreeFacade=true;
   _applySurfaceMaterial(wb,surface.texture,wall,repeat.x,repeat.y,`${surface.seed}:wall`,null,{legacyMaterial:false}); bakeVGrad(wb); wb.position.set(x,wh/2,0); outline(wb,0.05); g.add(wb);
   const wr=makeRoof('hip', ww*0.92, wh, roofColor,`${surface.seed}:roof`); wr.position.x=x; g.add(wr);
   const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.66,0.66), basic(0xffe4a0)); gl.position.set(x,wh*0.55,wd/2+0.05); g.add(gl);
@@ -6511,7 +6529,7 @@ function makeBuilding(repo){
   const plinth=rbox(w+0.26, 0.5, d+0.26, 0x8f8676, bodyR); plinth.position.y=0.25; outline(plinth,0.05); g.add(plinth);
   repo._cw=(w*0.5+0.6)*((kind==='manor'||kind==='mansion')?1.4:(kind==='villa')?1.18:1);
   let topH=h, topW=w;
-  if(kind==='shop'){ const uh=Math.max(1.8,h*0.34),repeat=surfaceWallRepeat(wstyle,w*.62,uh),up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); _applySurfaceMaterial(up,wtex,repo.wall,repeat.x,repeat.y,`${surfaceSeedKey}:upper`,null,{preserveCloneSequence:true}); bakeVGrad(up); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
+  if(kind==='shop'){ const uh=Math.max(1.8,h*0.34),repeat=surfaceWallRepeat(wstyle,w*.62,uh),up=rbox(w*0.62,uh,d*0.62,repo.wall,0.14); up.userData.worldTreeFacade=true; _applySurfaceMaterial(up,wtex,repo.wall,repeat.x,repeat.y,`${surfaceSeedKey}:upper`,null,{preserveCloneSequence:true}); bakeVGrad(up); up.position.y=h+uh/2; outline(up,0.05); g.add(up); topH=h+uh; topW=w*0.62; }
   // side wings for grand residences (저택)
   if(kind==='villa'){ addWing(g, w*0.52, h*0.66, d*0.8, repo.wall, repo.roof, w*0.66,{family:wstyle,texture:wtex,seed:`${surfaceSeedKey}:right-wing`}); }
   else if(kind==='manor'||kind==='mansion'){ const wh=h*(kind==='mansion'?0.8:0.72), wx=w*0.72;
@@ -10881,6 +10899,23 @@ function renderWorldTreeChronicle(){
 function _worldTreeFocusables(){ return [...worldTreePanel.querySelectorAll('button:not([disabled]),input:not([disabled])')]
   .filter(element=>!element.hidden&&!element.closest('[hidden]')); }
 let _wtTopbarRight=0,_wtHalfW=50,_wtLang='';
+const _wtSightQuery={padding:0,minDistance:0,surfaceEpsilon:0},_wtSightResult={};
+const _wtSightOrigin=new THREE.Vector3(Infinity,Infinity,Infinity);
+let _wtAnchorBlocked=false;
+function _worldTreeBuildingBetween(from,to){
+  const q=_wtSightQuery;
+  q.focusX=from.x; q.focusY=from.y; q.focusZ=from.z;
+  q.desiredX=to.x; q.desiredY=to.y; q.desiredZ=to.z; q.requestedDistance=from.distanceTo(to);
+  return resolveCameraObstruction(q,CAMERA_BLOCKERS,_wtSightResult).blocked;
+}
+function _worldTreeAnchorVisible(){
+  // The anchor and houses are fixed in world space. Looking around in place needs no new query.
+  if(camera.position.distanceToSquared(_wtSightOrigin)>.09){
+    _wtSightOrigin.copy(camera.position);
+    _wtAnchorBlocked=_worldTreeBuildingBetween(WORLD_TREE_TRIGGER_WORLD,camera.position);
+  }
+  return !_wtAnchorBlocked;
+}
 function _wtMeasure(){ const bar=document.getElementById('topbar'); _wtTopbarRight=bar?bar.getBoundingClientRect().right:0; _wtHalfW=((worldTreeTrigger.offsetWidth||88)/2)+6; _wtLang=LANG; }
 addEventListener('resize',()=>{ _wtTopbarRight=0; });
 function _updateWorldTreeTrigger(){
@@ -10891,7 +10926,7 @@ function _updateWorldTreeTrigger(){
   camera.getWorldDirection(WORLD_TREE_TRIGGER_DIRECTION); WORLD_TREE_TRIGGER_TOWARD.copy(WORLD_TREE_TRIGGER_WORLD).sub(camera.position);
   WORLD_TREE_TRIGGER_PROJECTED.copy(WORLD_TREE_TRIGGER_WORLD).project(camera);
   const visible=WORLD_TREE_TRIGGER_TOWARD.dot(WORLD_TREE_TRIGGER_DIRECTION)>0&&WORLD_TREE_TRIGGER_PROJECTED.z>=-1&&WORLD_TREE_TRIGGER_PROJECTED.z<=1
-    &&Math.abs(WORLD_TREE_TRIGGER_PROJECTED.x)<=.94&&Math.abs(WORLD_TREE_TRIGGER_PROJECTED.y)<=.9;
+    &&Math.abs(WORLD_TREE_TRIGGER_PROJECTED.x)<=.94&&Math.abs(WORLD_TREE_TRIGGER_PROJECTED.y)<=.9&&_worldTreeAnchorVisible();
   worldTreeTrigger.hidden=!visible; if(!visible) return false;
   if(!_wtTopbarRight||_wtLang!==LANG) _wtMeasure();   // one layout read per resize or language switch, never per frame
   let x=(WORLD_TREE_TRIGGER_PROJECTED.x*.5+.5)*innerWidth, y=(-WORLD_TREE_TRIGGER_PROJECTED.y*.5+.5)*innerHeight;
@@ -15881,7 +15916,8 @@ const _ray=new THREE.Raycaster(), _ndc=new THREE.Vector2();
 function peerAtScreen(cx,cy){ if(!peers.size) return null; const r=dom.getBoundingClientRect(); _ndc.x=((cx-r.left)/r.width)*2-1; _ndc.y=-((cy-r.top)/r.height)*2+1; _ray.setFromCamera(_ndc,camera); let best=null,bd=Infinity; for(const [id,p] of peers){ const hit=_ray.intersectObject(p.group,true); if(hit.length&&hit[0].distance<bd){ bd=hit[0].distance; best={id,p}; } } return best; }
 function worldTreeAtScreen(cx,cy){ if(!MEMORIAL_TREE||!MEMORIAL_TREE.group.visible) return false; const r=dom.getBoundingClientRect();
   _ndc.x=((cx-r.left)/r.width)*2-1; _ndc.y=-((cy-r.top)/r.height)*2+1; _ray.setFromCamera(_ndc,camera);
-  return _ray.intersectObject(MEMORIAL_TREE.group,true).length>0; }
+  const hit=_ray.intersectObject(MEMORIAL_TREE.group,true)[0];
+  return !!hit&&!_worldTreeBuildingBetween(hit.point,camera.position); }
 function greetPeer(id,p){ emoteT=EMOTES.wave.dur; emoteKind='wave'; if(p) emoteBubble(p.group,'wave'); rtSend({t:'wave',id:guestId(),to:id}); showWave(LANG==='ko'?`${(p&&p.name)||'방문자'}에게 인사했어요 👋`:`Waved at ${(p&&p.name)||'visitor'} 👋`); }
 function tapAt(cx,cy){ if(undercroftActive()){ undercroftAct(); return; } if(repositoryAtelierActive()){ if(_repositoryBlueprintAtScreen(cx,cy)) return; repositoryAtelierAct(); return; } const g=peerAtScreen(cx,cy); if(g){ greetPeer(g.id,g.p); return; }
   if(worldTreeAtScreen(cx,cy)){ openWorldTreeChronicle('pointer',worldTreeTrigger); return; } doAct(); }

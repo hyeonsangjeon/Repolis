@@ -8,6 +8,12 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+### Changed
+
+- **World Tree:** The tree rises higher above the rooftops without widening the root island or its walking path.
+  The park sign stands to one side of the plaza approach. Buildings now hide the Chronicle button when they
+  block its anchor, but you can still tap a visible branch above a roof.
+
 ## [1.99.1] — 2026-11-27
 
 ### Fixed
