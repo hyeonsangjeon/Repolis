@@ -8,12 +8,21 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 
 ## [Unreleased]
 
+## [1.99.1] — 2026-11-27
+
 ### Fixed
 
-- Gallery Walk links open the selected town in the gallery's language without changing the saved language preference. Existing
-  Gallery links also enter directly when they contain only a valid login and the Gallery ref. Empty or unavailable towns still
-  show recovery instead of taking visitors to another town. Card and README share URLs are unchanged.
-- Submitting the site owner's login from the ordinary launch form enters the owner town without returning to the input.
+- **Gallery:** Walk links open the selected town in one click, in the gallery's language, without changing the visitor's saved
+  language. Older gallery links still work. Empty or unavailable towns show recovery instead of sending the visitor to a
+  different town. Entering the site owner's login on the launch form now opens the town without a second prompt.
+  Card and README share URLs are unchanged. ([#158](https://github.com/hyeonsangjeon/Repolis/pull/158))
+- **Atelier chat:** On phones in landscape, the input, Send, and Close stay visible above the on-screen keyboard.
+  Verified on a Galaxy Z Flip4 with the Samsung keyboard: rotating back to portrait preserved the unsent Korean text
+  and the current room. ([#160](https://github.com/hyeonsangjeon/Repolis/pull/160))
+- **Repository traffic:** The collector now reconciles daily views and clones across GitHub's available reporting window.
+  Recovered the missing November 15, 20, and 25 UTC records for Repolis without filling unknown dates with zeros.
+  These are GitHub repository statistics, not visits to the 3D town.
+  ([#157](https://github.com/hyeonsangjeon/Repolis/pull/157), [#159](https://github.com/hyeonsangjeon/Repolis/pull/159))
 
 ## [1.99.0] — 2026-11-06
 
