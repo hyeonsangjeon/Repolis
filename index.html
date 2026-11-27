@@ -2651,7 +2651,7 @@ import { REPOSITORY_BLUEPRINT_LIMITS, createRepositoryBlueprintMemoryCache, crea
 import { REPOSITORY_EXHIBIT_LIMITS, projectRepositoryExhibit, repositoryExhibitLink, createRepositoryExhibitVisit, loadRepositoryExhibitVisit, cancelRepositoryExhibitVisit } from './assets/repository-exhibit.js?v=repository-exhibit-v1';
 import { ISSUE_CODE_SCOUT_LIMITS, scoutIssueCodePaths } from './assets/issue-code-scout.js?v=issue-code-scout-v1';
 import { TOWN_LABEL_LIMITS, createTownLabelLayout, handleTownPanelKey, layoutTownLabels, readableCardForeground, stableTownLabelFocus } from './assets/town-labels.js?v=readable-town-v1';
-import { PROCEDURAL_SURFACE_FAMILIES, PROCEDURAL_SURFACE_LIMITS, PROCEDURAL_SURFACE_VERSION, createSurfaceRng, disposeBoundedSurfaceCache, getOrCreateBoundedSurface, normalizeSurfaceFamily, surfacePixelHash, surfaceTextureKey, surfaceUvTransform, surfaceVariant, surfaceWallRepeat } from './assets/procedural-surfaces.js?v=procedural-surface-v2-3';
+import { PROCEDURAL_SURFACE_FAMILIES, PROCEDURAL_SURFACE_LIMITS, PROCEDURAL_SURFACE_VERSION, createSurfaceRng, disposeBoundedSurfaceCache, getOrCreateBoundedSurface, normalizeSurfaceFamily, pickNightInteriors, surfacePixelHash, surfaceTextureKey, surfaceUvTransform, surfaceVariant, surfaceWallRepeat } from './assets/procedural-surfaces.js?v=procedural-surface-v2-4';
 import { ZONE_KEYWORDS, ZONE_LANGUAGE_AFFINITY, classifyRepoZone } from './assets/zone-classifier.js?v=zone-classifier-v1';
 
 // Own rejected startup awaits without treating unrelated host promises as town failures.
@@ -5204,7 +5204,28 @@ bakeRadial(groundGeo, r=>{
 const ground = new THREE.Mesh(groundGeo, texMat(GRASS_TEX, (GROUND_R*2)/GTILE, (GROUND_R*2)/GTILE, false));
 ground.material.vertexColors=true;
 ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
-const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5,40), texMat(SAND_TEX,7,7,false));
+function makePlazaPaving(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=SURFACE_COMPACT?256:512;
+  const x=cv.getContext('2d'),random=createSurfaceRng('plaza:limestone'),unit=cv.width/512;
+  x.scale(unit,unit); x.translate(256,256); x.fillStyle='#aa9e8a'; x.fillRect(-256,-256,512,512);
+  const stone=['#d4c8b1','#d0c4ae','#c4bba7','#d9cbb4','#c7c2af','#ccbea9'];
+  // Stagger the radial joints; a fine light lip reads at walking distance without outlining every stone.
+  for(let row=0;row<10;row++){
+    const inner=78+row*18,outer=inner+18,count=Math.round(Math.PI*(outer+inner)/34),step=2*Math.PI/count;
+    const start=row%2*step*.5, gap=.78/outer;
+    for(let i=0;i<count;i++){
+      const a=start+i*step+gap,b=start+(i+1)*step-gap;
+      x.fillStyle=stone[Math.floor(random()*stone.length)]; x.beginPath();
+      x.arc(0,0,outer-.65,a,b); x.arc(0,0,inner+.65,b,a,true); x.closePath(); x.fill();
+      x.strokeStyle='rgba(255,245,222,.46)'; x.lineWidth=1.15; x.beginPath(); x.arc(0,0,inner+1.5,a,b); x.stroke();
+    }
+  }
+  x.globalAlpha=.16;
+  for(let z=-256;z<256;z+=64) for(let u=-256;u<256;u+=64) x.drawImage(SAND_TEX.image,u,z,64,64);
+  const map=_surfacePrivateUuid('plaza:paving',()=>new THREE.CanvasTexture(cv));
+  map.colorSpace=THREE.SRGBColorSpace; map.name='PlazaLimestone'; return map;
+}
+const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5,40), texMat(makePlazaPaving(),1,1,false));
 plaza.rotation.x=-Math.PI/2; plaza.position.y=0.02; plaza.receiveShadow=true; scene.add(plaza);
 // ✦ the sages' rune-circle — a starlight glyph on the plaza floor, brightening at night
 const runeCircle=new THREE.Group(); runeCircle.position.y=0.04; scene.add(runeCircle);
@@ -5237,10 +5258,20 @@ rim.rotation.x=-Math.PI/2; rim.position.y=0.025; scene.add(rim);
   m2.position.y=0.09; m2.receiveShadow=true; scene.add(m2);
   const fy=0.17;
   // basin: stone wall ring + coping + dark base + animated water
-  const wall=new THREE.Mesh(new THREE.CylinderGeometry(1.72,1.86,0.52,30,1,true), toon(0xd6c8a6)); wall.position.y=fy+0.26; wall.receiveShadow=true; scene.add(wall);
-  const cope=new THREE.Mesh(new THREE.TorusGeometry(1.78,0.12,8,30), toon(0xc3b289)); cope.rotation.x=Math.PI/2; cope.position.y=fy+0.52; scene.add(cope);
+  function tintStone(geo,shade){
+    const pos=geo.attributes.position,norm=geo.attributes.normal,rgb=new Float32Array(pos.count*3);
+    for(let i=0;i<pos.count;i++) shade(pos.getY(i),norm.getZ(i)).toArray(rgb,i*3);
+    geo.setAttribute('color',new THREE.BufferAttribute(rgb,3)); return geo;
+  }
+  const dry=new THREE.Color(0xf4ead8),wet=new THREE.Color(0x8e9a91),lip=new THREE.Color(0xfff7df),tone=new THREE.Color();
+  const wallGeo=tintStone(new THREE.CylinderGeometry(1.72,1.86,0.52,30,6,true),y=>
+    tone.copy(dry).lerp(wet,.15+.72*_sstep(.005,.12,y)));
+  const wall=new THREE.Mesh(wallGeo,toon(0xd6c8a6)); wall.material.vertexColors=true; wall.position.y=fy+.26; wall.receiveShadow=true; scene.add(wall);
+  const copeGeo=tintStone(new THREE.TorusGeometry(1.78,.12,8,30),(_y,nz)=>tone.copy(wet).lerp(lip,_sstep(-.35,.75,-nz)));
+  const cope=new THREE.Mesh(copeGeo,toon(0xd6c8a6)); cope.material.vertexColors=true; cope.rotation.x=Math.PI/2; cope.position.y=fy+.52; scene.add(cope);
   const base=new THREE.Mesh(new THREE.CircleGeometry(1.7,30), basic(0x215c75)); base.rotation.x=-Math.PI/2; base.position.y=fy+0.06; scene.add(base);
-  const basin=makeWater(1.64,40); basin.position.y=fy+0.46; scene.add(basin);
+  const basin=makeWater(1.74,40); basin.position.y=fy+0.46;
+  basin.material.uniforms.uDeep.value.setHex(0x27687b); basin.material.uniforms.uDeepN.value.setHex(0x142e43); scene.add(basin);
   // central pedestal + upper bowl + animated water + finial
   const ped=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.34,0.92,16), toon(0xe6d8b6)); ped.position.y=fy+0.52+0.46; ped.castShadow=true; scene.add(ped);
   const bowl=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.42,0.16,22), toon(0xd6c8a6)); bowl.position.y=fy+1.42; bowl.castShadow=true; scene.add(bowl);
@@ -6393,9 +6424,8 @@ const _winTex=(function(){
 })();
 
 /* warm room interior — lit windows read as cozy rooms at night (lamp, curtains, furniture, recessed frame) */
-const _roomTex=(function(){
-  const S=4, W=44, H=52;
-  const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const x=cv.getContext('2d'); x.scale(S,S);
+function paintRoomPane(x,kind){
+  const W=44,H=52;
   const g=x.createLinearGradient(0,3,0,H-3); g.addColorStop(0,'#fff3cf'); g.addColorStop(0.45,'#ffd98c'); g.addColorStop(1,'#b9793c');
   x.fillStyle=g; rr(x,3,3,W-6,H-6,5); x.fill();
   x.save(); rr(x,3,3,W-6,H-6,5); x.clip();
@@ -6403,8 +6433,29 @@ const _roomTex=(function(){
   x.fillStyle=lg; x.fillRect(0,0,W,28);
   x.strokeStyle='rgba(120,80,40,0.5)'; x.lineWidth=1; x.beginPath(); x.moveTo(W/2,4); x.lineTo(W/2,10); x.stroke();
   x.fillStyle='#fff7df'; x.beginPath(); x.arc(W/2,11,2.2,0,Math.PI*2); x.fill();
-  x.fillStyle='rgba(150,96,50,0.55)'; x.fillRect(4,H-15,W-8,8);
-  x.fillStyle='rgba(120,74,38,0.5)'; x.fillRect(8,H-19,12,5);
+  if(kind==='books'){
+    for(const y of [25,41]){
+      x.fillStyle='#62493f'; x.fillRect(5,y,34,2.5);
+      [8,11,7,10,8,12].forEach((height,i)=>{
+        x.fillStyle=['#80503c','#4a6960','#9e7748'][i%3]; x.fillRect(7+i*5,y-height,3.8,height);
+      });
+    }
+  } else if(kind==='terminal'){
+    x.fillStyle='#624338'; x.fillRect(4,36,36,2.5); x.fillRect(8,38,2,7); x.fillRect(34,38,2,7);
+    for(const [left,top] of [[6,19],[23,17]]){
+      x.fillStyle='#3d4744'; x.fillRect(left,top,15,12); x.fillRect(left+6,top+12,2,4); x.fillRect(left+3,top+15,9,1.5);
+      x.fillStyle='#7ca89a'; x.fillRect(left+2,top+2,11,7);
+      x.fillStyle='#e3e7c4'; x.fillRect(left+3,top+4,5,1.5);
+    }
+  } else if(kind==='media'){
+    x.fillStyle='#43504c'; x.fillRect(5,17,34,18);
+    x.fillStyle='#f4ce7c';
+    [3,7,12,6,3,8,12,5,3].forEach((h,i)=>x.fillRect(7+i*3.5,26-h/2,2.2,h));
+    x.fillStyle='#725039'; x.fillRect(5,37,34,3);
+  } else {
+    x.fillStyle='rgba(150,96,50,0.55)'; x.fillRect(4,H-15,W-8,8);
+    x.fillStyle='rgba(120,74,38,0.5)'; x.fillRect(8,H-19,12,5);
+  }
   ['l','r'].forEach(side=>{ const cw=10, x0=side==='l'?3:W-3-cw;
     const cg=x.createLinearGradient(x0,0,x0+cw,0);
     if(side==='l'){ cg.addColorStop(0,'rgba(206,128,60,0.92)'); cg.addColorStop(1,'rgba(230,170,96,0.32)'); }
@@ -6415,8 +6466,25 @@ const _roomTex=(function(){
   x.restore();
   x.strokeStyle='#6e4f33'; x.lineWidth=2.2; x.beginPath(); x.moveTo(W/2,4); x.lineTo(W/2,H-4); x.moveTo(4,H/2); x.lineTo(W-4,H/2); x.stroke();
   x.lineWidth=3.2; x.strokeStyle='#5b4026'; rr(x,3,3,W-6,H-6,5); x.stroke();
+}
+const _roomTex=(function(){
+  const cv=document.createElement('canvas'); cv.width=44*4; cv.height=52*4;
+  const x=cv.getContext('2d'); x.scale(4,4); paintRoomPane(x,'home');
   const t=new THREE.CanvasTexture(cv); t.anisotropy=MAXANISO; t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true; return t;
 })();
+let interiorMaps=null;
+function nightInteriorMap(kind){
+  if(!kind) return _roomTex;
+  if(!interiorMaps) interiorMaps=_surfacePrivateUuid('window:interiors',()=>{
+    const roles=['books','terminal','media'],cv=document.createElement('canvas');
+    cv.width=88*roles.length; cv.height=104; const x=cv.getContext('2d');
+    roles.forEach((role,i)=>{ x.setTransform(2,0,0,2,i*88,0); paintRoomPane(x,role); });
+    const atlas=new THREE.CanvasTexture(cv); atlas.colorSpace=THREE.SRGBColorSpace; atlas.anisotropy=MAXANISO;
+    return Object.fromEntries(roles.map((role,i)=>{ const view=i?atlas.clone():atlas;
+      view.repeat.set(1/roles.length,1); view.offset.x=i/roles.length; view.name='WindowInterior:'+role; return [role,view]; }));
+  });
+  return interiorMaps[kind]||_roomTex;
+}
 
 /* modern flat-roof tech: tilted solar array + glowing skylight + HVAC unit */
 function addRoofTech(g,w,topH){
@@ -6628,6 +6696,7 @@ function makeBuilding(repo){
   repo._group=g; repo._pos=new THREE.Vector3(repo._x,0,repo._z); repo._visited=false; buildings.push(repo);
 }
 REPOS.forEach(makeBuilding);
+const nightInteriorPilots=pickNightInteriors(REPOS.filter(b=>!b._ruin&&b._windows.some(w=>w.userData.lit)));
 /*FORK_LINEAGE:START*/
 const FORK_LINEAGE_RECORDS=REPOS.filter(repo=>repo._lineage&&repo._group&&repo._sign);
 let FORK_LINEAGE_CREST_MESH=null;
@@ -8238,7 +8307,7 @@ function setNightState(night){
   npcFaces.forEach(m=>m.emissive.setHex(night?0x4a3a24:0x000000));   // softer than the player so the hero still reads brightest
   buildings.forEach(b=>{
     (b._windows||[]).forEach(w=>{ const m=w.material;
-      if(night){ if(!b._ruin&&w.userData.lit){ m.map=_roomTex; m.color.copy(_cRoom).multiplyScalar((0.5+0.5*b._activity)*w.userData.j); }
+      if(night){ if(!b._ruin&&w.userData.lit){ m.map=nightInteriorMap(nightInteriorPilots.get(b.repo)); m.color.copy(_cRoom).multiplyScalar((0.5+0.5*b._activity)*w.userData.j); }
                  else { m.map=_winTex; m.color.setHex(0x2b3442); } }
       else { m.map=_winTex; m.color.setHex(DAY_GLASS); }
       m.needsUpdate=true; });

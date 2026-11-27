@@ -55,6 +55,26 @@ export function normalizeSurfaceFamily(family) {
   return PROCEDURAL_SURFACE_FAMILIES.includes(family) ? family : 'stucco';
 }
 
+const INTERIOR_TOPICS = {
+  books: ['cookbook', 'documentation', 'handbook'],
+  terminal: ['terminal', 'browser-terminal', 'web-terminal', 'terminal-emulator'],
+  media: ['audio', 'audio-processing', 'media-management', 'video-downloader'],
+};
+
+// At most one already-lit, public house per motif. Generic rooms need no new art.
+export function pickNightInteriors(houses) {
+  const selected = new Map(), used = new Set();
+  const rank = house => Number.isFinite(house.rank) ? house.rank : Infinity;
+  const eligible = houses.filter(h => h?.repo && !h.archived && !h.private && Array.isArray(h.topics));
+  eligible.sort((a,b) => rank(a)-rank(b) || (a.repo < b.repo ? -1 : a.repo > b.repo ? 1 : 0));
+  for (const h of eligible) {
+    const type = Object.keys(INTERIOR_TOPICS).find(key => !used.has(key) && INTERIOR_TOPICS[key].some(t => h.topics.includes(t)));
+    if (type) { selected.set(h.repo,type); used.add(type); }
+    if (used.size === 3) break;
+  }
+  return selected;
+}
+
 export function surfaceVariant(seed, compact = false) {
   const count = compact
     ? PROCEDURAL_SURFACE_LIMITS.compactVariants

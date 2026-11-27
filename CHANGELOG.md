@@ -13,6 +13,8 @@ This file keeps the current product era (`1.50.0` onward) easy to scan. Earlier 
 - **World Tree:** The tree rises higher above the rooftops without widening the root island or its walking path.
   The park sign stands to one side of the plaza approach. Buildings now hide the Chronicle button when they
   block its anchor, but you can still tap a visible branch above a roof.
+- **Plaza fountain:** Radial limestone paving, a wet stone band and a brighter lip make the basin easier to read from the arrival path.
+- **Night windows:** Up close, up to three houses show bookshelves, terminal screens or an audio waveform based on their public topics. Unlit windows, daytime glass and distant houses keep their previous appearance.
 
 ## [1.99.1] — 2026-11-27
 

@@ -3831,9 +3831,19 @@ ok(/updateLanternWatch\(clock\.elapsedTime\)/.test(HTML), 'the main world loop u
 group('Procedural Surface Pass v2 - bounded deterministic facade and roof detail');
 const proceduralSurfaceBlock = (HTML.match(/\/\*PROCEDURAL_SURFACES:START\*\/([\s\S]*?)\/\*PROCEDURAL_SURFACES:END\*\//) || [, ''])[1];
 ok(proceduralSurfaceBlock.length > 0
-  && /procedural-surfaces\.js\?v=procedural-surface-v2-3/.test(HTML)
+  && /procedural-surfaces\.js\?v=procedural-surface-v2-4/.test(HTML)
   && /PROCEDURAL_SURFACE_FAMILIES/.test(HTML),
   'surface runtime and pure deterministic helper remain explicit and extractable');
+ok(/texMat\(makePlazaPaving\(\),1,1,false\)/.test(HTML)
+  && /_surfacePrivateUuid\('plaza:paving'/.test(HTML)
+  && /basin\.material\.uniforms\.uDeep\.value\.setHex/.test(HTML),
+  'paving is baked once on the existing plaza disc and only the fountain overrides the shared water palette');
+ok(/pickNightInteriors\(REPOS\.filter\(b=>!b\._ruin&&b\._windows\.some\(w=>w\.userData\.lit\)\)\)/.test(HTML)
+  && /if\(!b\._ruin&&w\.userData\.lit\)\{ m\.map=nightInteriorMap\(nightInteriorPilots\.get\(b\.repo\)\)/.test(HTML)
+  && /else \{ m\.map=_winTex; m\.color\.setHex\(DAY_GLASS\)/.test(HTML)
+  && /if\(!kind\) return _roomTex;/.test(HTML)
+  && /const view=i\?atlas\.clone\(\):atlas/.test(HTML),
+  'near-window pilots share one atlas, preserve ordinary rooms and only replace an existing lit pane at night');
 ok(/\[\s*'brick',[\s\S]*?'siding',[\s\S]*?'panel',[\s\S]*?'stone',[\s\S]*?'stucco',[\s\S]*?'timber',[\s\S]*?'board',[\s\S]*?'metal'/.test(PROCEDURAL_SURFACE_SRC)
   && /surfaceTextureKey\(kind, family, variant\)/.test(PROCEDURAL_SURFACE_SRC)
   && /surfaceVariant\(seed, compact = false\)/.test(PROCEDURAL_SURFACE_SRC),
