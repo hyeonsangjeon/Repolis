@@ -264,6 +264,8 @@ export async function runReadableTownBrowserCases({ run, ready, click, screensho
       lang, mobile, lowEnd: mobile, reduced: mobile }, async s => {
       const { page } = s; await ready(page); await click(page, 'startBtn');
       if (await page.evaluate("!document.getElementById('intentCard').classList.contains('hidden')")) await click(page, 'intentCardSkip');
+      // During this first-visit prompt, tapping the taxi intentionally starts a guided tour.
+      await page.until("document.getElementById('guideToast')?.hidden!==false",15000);
       await pointerClick(page, 'taxiBtn', mobile);
       await page.evaluate("const select=document.getElementById('modeSel');select.value='local';select.dispatchEvent(new Event('change'))");
       await pointerClick(page, 'chatText', mobile);
@@ -306,6 +308,40 @@ export async function runReadableTownBrowserCases({ run, ready, click, screensho
       await screenshot(page, `${prefix}-readable-taxi-chat-${suffix}`);
       await press(page, 'Escape'); await page.until("document.getElementById('chat').classList.contains('hidden')");
       return { repo: arrived.repo, hiddenDuringCard: arrived.hidden, historyPreserved: true, focus: restored.focus };
+    });
+
+    if (mobile && !baseline) await run({name:`readable-short-ime-${suffix}`, group:'readable-town', query:'?dbg=1',
+      lang, mobile, lowEnd:true, reduced:true}, async ({page})=>{
+      await ready(page); await click(page,'startBtn');
+      await page.evaluate("__card('Repolis');__atelierEnter('Repolis',{autoChat:false})"); await page.until(inside);
+      await page.evaluate("__atelierAction('ask')"); await page.until("document.activeElement.id==='chatText'");
+      await page.send('Input.insertText',{text:'한글'});
+      await page.send('Emulation.setDeviceMetricsOverride',{width:922,height:325,deviceScaleFactor:1,mobile:true});
+      await page.until("matchMedia('(orientation: landscape) and (pointer: coarse)').matches");
+      // Replay the settled viewport measured on hardware; this does not emulate a keyboard.
+      await page.evaluate(`(()=>{
+        const v=visualViewport;
+        Object.defineProperties(v,{height:{configurable:true,value:105},offsetTop:{configurable:true,value:34}});
+        v.dispatchEvent(new Event('resize'));
+      })()`);
+      await page.until("getComputedStyle(document.getElementById('chat')).transform==='none'");
+      const layout=await page.evaluate(`(()=>{
+        const panel=document.getElementById('chat').getBoundingClientRect(),v=visualViewport;
+        const controls=['chatText','chatSend','chatClose'].map(id=>{
+          const el=document.getElementById(id),b=el.getBoundingClientRect();
+          return {id,visible:b.left>=Math.max(panel.left,v.offsetLeft)&&b.right<=Math.min(panel.right,v.offsetLeft+v.width)
+            &&b.top>=Math.max(panel.top,v.offsetTop)&&b.bottom<=Math.min(panel.bottom,v.offsetTop+v.height),
+            hit:el.contains(document.elementFromPoint(b.left+b.width/2,b.top+b.height/2)),height:b.height};
+        });
+        return {panel:panel.toJSON(), top:v.offsetTop, height:v.height, controls};
+      })()`);
+      assert(layout.controls.every(c=>c.visible&&c.hit&&c.height>=44),JSON.stringify(layout));
+      await page.evaluate("delete visualViewport.height; delete visualViewport.offsetTop; visualViewport.dispatchEvent(new Event('resize'))");
+      await page.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+      await page.until("!document.documentElement.hasAttribute('data-short-chat')");
+      assert.equal(await page.evaluate("document.getElementById('chatText').value"),'한글');
+      await pointerClick(page,'chatClose',true); await pointerClick(page,'atelierExit',true); await page.until(outside);
+      return layout;
     });
 
     if (!baseline) await run({ name: `readable-fast-return-${suffix}`, group: 'readable-town', query: '?dbg=1',
