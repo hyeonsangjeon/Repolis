@@ -7,6 +7,7 @@ import {
   disposeBoundedSurfaceCache,
   getOrCreateBoundedSurface,
   normalizeSurfaceFamily,
+  pickNightInteriors,
   surfacePixelHash,
   surfaceTextureKey,
   surfaceUvTransform,
@@ -66,5 +67,20 @@ assert.equal(cache.size, 0);
 const pixels = new Uint8Array([0, 16, 128, 255, 8, 24, 64, 255]);
 assert.equal(surfacePixelHash(pixels), surfacePixelHash(pixels.slice()));
 assert.notEqual(surfacePixelHash(pixels), surfacePixelHash(new Uint8Array([...pixels, 1])));
+
+const houses = [
+  {repo:'archive', topics:['audio'], rank:0, archived:true},
+  {repo:'not-public', topics:['terminal'], rank:0, private:true},
+  {repo:'docs', topics:['documentation'], rank:1},
+  {repo:'audio', topics:['media-management'], rank:2},
+  {repo:'shell', topics:['web-terminal'], rank:3},
+  {repo:'another-shell', topics:['terminal'], rank:4},
+  {repo:'one-name-is-not-evidence-audio', topics:[]},
+];
+assert.deepEqual([...pickNightInteriors(houses)], [['docs','books'],['audio','media'],['shell','terminal']]);
+assert.deepEqual([...pickNightInteriors([...houses].reverse())], [...pickNightInteriors(houses)]);
+assert.equal(pickNightInteriors([houses.at(-1)]).size, 0);
+assert.equal(pickNightInteriors([{repo:'one',topics:['cookbook','terminal']}]).size, 1);
+assert.deepEqual([...pickNightInteriors([{repo:'z',topics:['cookbook']},{repo:'a',topics:['cookbook']}])], [['a','books']]);
 
 console.log('ALL GREEN - procedural surface determinism, variants, UV scale, bounded cache, and disposal fixtures');
